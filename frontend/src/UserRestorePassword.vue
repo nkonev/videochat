@@ -56,10 +56,20 @@ export default {
     hideAlert() {
       this.error = "";
     },
+    setTopTitle() {
+        this.chatStore.title = this.$vuetify.locale.t('$vuetify.password_restoration');
+        setTitle(this.$vuetify.locale.t('$vuetify.password_restoration'));
+    },
+  },
+  watch: {
+        '$vuetify.locale.current': {
+            handler: function (newValue, oldValue) {
+                this.setTopTitle();
+            },
+        },
   },
   mounted() {
-    this.chatStore.title = this.$vuetify.locale.t('$vuetify.password_restoration');
-    setTitle(this.$vuetify.locale.t('$vuetify.password_restoration'));
+      this.setTopTitle();
   },
   beforeUnmount() {
     this.chatStore.title = null;

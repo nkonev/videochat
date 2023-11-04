@@ -27,10 +27,20 @@ export default {
       onResendClick() {
           this.$router.push({name: registration_resend_email_name} )
       },
+      setTopTitle() {
+          this.chatStore.title = this.$vuetify.locale.t('$vuetify.registration_pending_confirmation_title');
+          setTitle(this.$vuetify.locale.t('$vuetify.registration_pending_confirmation_title'));
+      },
+  },
+  watch: {
+        '$vuetify.locale.current': {
+            handler: function (newValue, oldValue) {
+                this.setTopTitle();
+            },
+        },
   },
   mounted() {
-    this.chatStore.title = this.$vuetify.locale.t('$vuetify.registration_pending_confirmation_title');
-    setTitle(this.$vuetify.locale.t('$vuetify.registration_pending_confirmation_title'));
+      this.setTopTitle();
   },
   beforeUnmount() {
     this.chatStore.title = null;

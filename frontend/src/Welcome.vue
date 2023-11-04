@@ -97,11 +97,20 @@
             return undefined
         }
       },
-
+      setTopTitle() {
+          this.chatStore.title = this.$vuetify.locale.t('$vuetify.welcome');
+          setTitle(this.$vuetify.locale.t('$vuetify.welcome'));
+      },
+    },
+    watch: {
+        '$vuetify.locale.current': {
+            handler: function (newValue, oldValue) {
+                this.setTopTitle();
+            },
+        },
     },
     mounted() {
-      this.chatStore.title = this.$vuetify.locale.t('$vuetify.welcome');
-      setTitle(this.$vuetify.locale.t('$vuetify.welcome'));
+        this.setTopTitle();
     },
     beforeUnmount() {
       setTitle(null);

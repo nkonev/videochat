@@ -94,10 +94,20 @@ export default {
     onResendClick() {
         this.$router.push({name: registration_resend_email_name} )
     },
+    setTopTitle() {
+        this.chatStore.title = this.$vuetify.locale.t('$vuetify.registration');
+        setTitle(this.$vuetify.locale.t('$vuetify.registration'));
+    },
+  },
+  watch: {
+        '$vuetify.locale.current': {
+            handler: function (newValue, oldValue) {
+                this.setTopTitle();
+            },
+        },
   },
   mounted() {
-    this.chatStore.title = this.$vuetify.locale.t('$vuetify.registration');
-    setTitle(this.$vuetify.locale.t('$vuetify.registration'));
+      this.setTopTitle();
   },
   beforeUnmount() {
     this.chatStore.title = null;
