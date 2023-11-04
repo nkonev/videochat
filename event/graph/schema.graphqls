@@ -9,11 +9,6 @@ type User {
     shortInfo:           String
 }
 
-type UserOnline {
-    id:     Int64!
-    online:  Boolean!
-}
-
 type EmbedMessageResponse {
     id:     Int64!
     chatId: Int64
@@ -211,9 +206,11 @@ type GlobalEvent {
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 
-type UserVideoStatusEvent {
+type UserEvent {
     userId:     Int64!
-    isInVideo:  Boolean!
+    online:  Boolean
+    isInVideo:  Boolean
+    eventType:                String!
 }
 
 type Query {
@@ -223,6 +220,5 @@ type Query {
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
-    userOnlineEvents(userIds: [Int64!]!): [UserOnline!]!
-    userVideoStatusEvents(userIds: [Int64!]!): [UserVideoStatusEvent!]!
+    userEvents(userIds: [Int64!]!): [UserEvent!]!
 }

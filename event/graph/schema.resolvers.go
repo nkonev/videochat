@@ -131,17 +131,18 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	return cam, nil
 }
 
-// UserOnlineEvents is the resolver for the userOnlineEvents field.
-func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserOnline, error) {
+// UserEvents is the resolver for the userEvents field.
+func (r *subscriptionResolver) UserEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserEvent, error) {
+	// user online
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
 	}
 	logger.GetLogEntry(ctx).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
 
-	var cam = make(chan []*model.UserOnline)
+	var cam = make(chan []*model.UserEvent)
 
-	subscribeHandler, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
+	subscribeHandlerUserOnline, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.GetLogEntry(ctx).Errorf("In processing UserOnline panic recovered: %v", err)
@@ -150,10 +151,10 @@ func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []i
 
 		switch typedEvent := event.(type) {
 		case dto.ArrayUserOnline:
-			var batch = []*model.UserOnline{}
+			var batch = []*model.UserEvent{}
 			for _, userOnline := range typedEvent {
 				if utils.Contains(userIds, userOnline.UserId) {
-					batch = append(batch, convertToUserOnline(&userOnline))
+					batch = append(batch, convertToUserOnline(userOnline))
 				}
 			}
 			if len(batch) > 0 {
@@ -169,37 +170,7 @@ func (r *subscriptionResolver) UserOnlineEvents(ctx context.Context, userIds []i
 		return nil, err
 	}
 
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				logger.GetLogEntry(ctx).Infof("Closing UserOnline channel for user %v", authResult.UserId)
-				err := r.Bus.Unsubscribe(subscribeHandler)
-				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserOnline channel for user %v", authResult.UserId)
-				}
-				close(cam)
-				return
-			}
-		}
-	}()
-
-	r.HttpClient.AskForUserOnline(userIds, ctx)
-
-	return cam, nil
-}
-
-// UserVideoStatusEvents is the resolver for the userVideoStatusEvents field.
-func (r *subscriptionResolver) UserVideoStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserVideoStatusEvent, error) {
-	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		return nil, errors.New("Unable to get auth context")
-	}
-	logger.GetLogEntry(ctx).Infof("Subscribing to UserVideoStatus channel as user %v", authResult.UserId)
-
-	var cam = make(chan []*model.UserVideoStatusEvent)
-
-	subscribeHandler, err := r.Bus.Subscribe(dto.GENERAL, func(event eventbus.Event, t time.Time) {
+	subscribeHandlerVideoCallStatus, err := r.Bus.Subscribe(dto.GENERAL, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.GetLogEntry(ctx).Errorf("In processing UserVideoStatus panic recovered: %v", err)
@@ -210,10 +181,10 @@ func (r *subscriptionResolver) UserVideoStatusEvents(ctx context.Context, userId
 		case dto.GeneralEvent:
 			var videoCallUsersCallStatusChangedEvent = typedEvent.VideoCallUsersCallStatusChangedEvent
 			if videoCallUsersCallStatusChangedEvent != nil {
-				var batch = []*model.UserVideoStatusEvent{}
+				var batch = []*model.UserEvent{}
 				for _, userCallStatus := range videoCallUsersCallStatusChangedEvent.Users {
 					if utils.Contains(userIds, userCallStatus.UserId) {
-						batch = append(batch, convertToUserCallStatusChanged(&userCallStatus))
+						batch = append(batch, convertToUserCallStatusChanged(typedEvent, userCallStatus))
 					}
 				}
 				if len(batch) > 0 {
@@ -234,16 +205,25 @@ func (r *subscriptionResolver) UserVideoStatusEvents(ctx context.Context, userId
 		for {
 			select {
 			case <-ctx.Done():
+				logger.GetLogEntry(ctx).Infof("Closing UserOnline channel for user %v", authResult.UserId)
+				err := r.Bus.Unsubscribe(subscribeHandlerUserOnline)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserOnline channel for user %v", authResult.UserId)
+				}
+
 				logger.GetLogEntry(ctx).Infof("Closing UserVideoStatus channel for user %v", authResult.UserId)
-				err := r.Bus.Unsubscribe(subscribeHandler)
+				err = r.Bus.Unsubscribe(subscribeHandlerVideoCallStatus)
 				if err != nil {
 					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserVideoStatus channel for user %v", authResult.UserId)
 				}
+
 				close(cam)
 				return
 			}
 		}
 	}()
+
+	r.HttpClient.AskForUserOnline(userIds, ctx)
 
 	return cam, nil
 }
@@ -263,16 +243,18 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertToUserOnline(u *dto.UserOnline) *model.UserOnline {
-	return &model.UserOnline{
-		ID:     u.UserId,
-		Online: u.Online,
+func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserCallStatusChangedDto) *model.UserEvent {
+	return &model.UserEvent{
+		EventType: event.EventType,
+		UserID:    u.UserId,
+		IsInVideo: &u.IsInVideo,
 	}
 }
-func convertToUserCallStatusChanged(u *dto.VideoCallUserCallStatusChangedDto) *model.UserVideoStatusEvent {
-	return &model.UserVideoStatusEvent{
-		UserID:    u.UserId,
-		IsInVideo: u.IsInVideo,
+func convertToUserOnline(userOnline dto.UserOnline) *model.UserEvent {
+	return &model.UserEvent{
+		EventType: "user_online",
+		UserID: userOnline.UserId,
+		Online: &userOnline.Online,
 	}
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {

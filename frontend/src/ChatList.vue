@@ -122,7 +122,7 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
-    userStatusMixin('userOnlineTetATetInChatList'),
+    userStatusMixin('tetATetInChatList'),
   ],
   props:['embedded'],
   data() {
@@ -425,29 +425,22 @@ export default {
     getUserIdsSubscribeTo() {
       return this.tetAtetParticipants
     },
-    onUserOnlineChanged(rawData) {
-          const dtos = rawData?.data?.userOnlineEvents;
+    onUserStatusChanged(rawData) {
+          const dtos = rawData?.data?.userEvents;
           if (dtos) {
               this.items.forEach(item => {
+                if (item.tetATet) {
                   dtos.forEach(dtoItem => {
-                      if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.id).length) {
-                          item.online = dtoItem.online;
-                      }
+                    if (dtoItem.online !== null && item.participants.filter((p) => p.id == dtoItem.userId).length) {
+                      item.online = dtoItem.online;
+                    }
+                    if (dtoItem.isInVideo !== null && item.participants.filter((p)=> p.id == dtoItem.userId).length) {
+                      item.isInVideo = dtoItem.isInVideo;
+                    }
                   })
+                }
               })
           }
-    },
-    onUserVideoStatusChanged(rawData) {
-      const dtos = rawData?.data?.userVideoStatusEvents;
-      if (dtos) {
-        this.items.forEach(item => {
-          dtos.forEach(dtoItem => {
-            if (item.tetATet && item.participants.filter((p)=> p.id == dtoItem.userId).length) {
-              item.isInVideo = dtoItem.isInVideo;
-            }
-          })
-        })
-      }
     },
     onChangeUnreadMessages(dto) {
           const chatId = dto.chatId;

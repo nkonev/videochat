@@ -163,19 +163,16 @@ type User struct {
 	ShortInfo *string `json:"shortInfo"`
 }
 
-type UserOnline struct {
-	ID     int64 `json:"id"`
-	Online bool  `json:"online"`
+type UserEvent struct {
+	UserID    int64  `json:"userId"`
+	Online    *bool  `json:"online"`
+	IsInVideo *bool  `json:"isInVideo"`
+	EventType string `json:"eventType"`
 }
 
 type UserTypingDto struct {
 	Login         string `json:"login"`
 	ParticipantID int64  `json:"participantId"`
-}
-
-type UserVideoStatusEvent struct {
-	UserID    int64 `json:"userId"`
-	IsInVideo bool  `json:"isInVideo"`
 }
 
 type UserWithAdmin struct {

@@ -1,7 +1,7 @@
 import {graphQlClient} from "@/graphql/graphql";
 import {hasLength} from "@/utils";
 
-// requires getUserIdsSubscribeTo(), onUserOnlineChanged(), onUserVideoStatusChanged()
+// requires getUserIdsSubscribeTo(), onUserStatusChanged()
 export default (nameForLog) => {
     return {
         data() {
@@ -33,18 +33,9 @@ export default (nameForLog) => {
                 const userIds = this.getUserIdsSubscribeTo();
                 return `
                     subscription {
-                        userOnlineEvents(userIds:[${userIds}]) {
-                            id
-                            online
-                        }
-                    }`
-            },
-            getUserVideoStatusSubscriptionQuery() {
-                const userIds = this.getUserIdsSubscribeTo();
-                return `
-                    subscription {
-                        userVideoStatusEvents(userIds:[${userIds}]) {
+                        userEvents(userIds:[${userIds}]) {
                             userId
+                            online
                             isInVideo
                         }
                     }`
@@ -54,13 +45,9 @@ export default (nameForLog) => {
                 // unsubscribe from the previous for case re-subscribing on user list change
                 this.graphQlUnsubscribe();
 
-                const subscriptionElement1 = { name: 'userOnline ' + nameForLog };
-                this.performSubscription(subscriptionElement1, this.getUserOnlineSubscriptionQuery, this.onUserOnlineChanged)
+                const subscriptionElement1 = { name: 'userStatus ' + nameForLog };
+                this.performSubscription(subscriptionElement1, this.getUserOnlineSubscriptionQuery, this.onUserStatusChanged)
                 this.subscriptionElements.push(subscriptionElement1);
-
-                const subscriptionElement2 = { name: 'userVideoStatus ' + nameForLog };
-                this.performSubscription(subscriptionElement2, this.getUserVideoStatusSubscriptionQuery, this.onUserVideoStatusChanged)
-                this.subscriptionElements.push(subscriptionElement2);
             },
             performSubscription(subscriptionElement, getGraphQlSubscriptionQuery, handler) {
                 // unsubscribe from the previous for case restart

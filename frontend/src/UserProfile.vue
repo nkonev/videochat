@@ -105,7 +105,7 @@ import userStatusMixin from "@/mixins/userStatusMixin";
 
 export default {
   mixins: [
-    userStatusMixin('userOnlineInProfile')
+    userStatusMixin('userProfile')
   ],
   data() {
     return {
@@ -152,21 +152,14 @@ export default {
       })
     },
 
-    onUserOnlineChanged(rawData) {
-      const dtos = rawData?.data?.userOnlineEvents;
+    onUserStatusChanged(rawData) {
+      const dtos = rawData?.data?.userEvents;
       if (dtos) {
         dtos?.forEach(dtoItem => {
-          if (dtoItem.id == this.userId) {
+          if (dtoItem.online !== null && this.userId == dtoItem.userId) {
             this.online = dtoItem.online;
           }
-        })
-      }
-    },
-    onUserVideoStatusChanged(rawData) {
-      const dtos = rawData?.data?.userVideoStatusEvents;
-      if (dtos) {
-        dtos?.forEach(dtoItem => {
-          if (dtoItem.userId == this.userId) {
+          if (dtoItem.isInVideo !== null && this.userId == dtoItem.userId) {
             this.isInVideo = dtoItem.isInVideo;
           }
         })

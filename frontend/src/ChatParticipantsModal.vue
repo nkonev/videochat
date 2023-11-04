@@ -187,7 +187,7 @@
     }
 
     export default {
-        mixins: [userStatusMixin('userOnlineInChatParticipants')],
+        mixins: [userStatusMixin('chatParticipants')],
         data () {
             return {
                 show: false,
@@ -346,25 +346,16 @@
                     return []
                 }
             },
-            onUserOnlineChanged(rawData) {
-                const dtos = rawData?.data?.userOnlineEvents;
+            onUserStatusChanged(rawData) {
+                const dtos = rawData?.data?.userEvents;
                 if (this.participantsDto?.participants && dtos) {
                     this.participantsDto.participants.forEach(item => {
                         dtos.forEach(dtoItem => {
-                            if (dtoItem.id == item.id) {
+                            if (dtoItem.online !== null && item.id == dtoItem.userId) {
                                 item.online = dtoItem.online;
                             }
-                        })
-                    })
-                }
-            },
-            onUserVideoStatusChanged(rawData) {
-                const dtos = rawData?.data?.userVideoStatusEvents;
-                if (this.participantsDto?.participants && dtos) {
-                    this.participantsDto.participants.forEach(item => {
-                        dtos.forEach(dtoItem => {
-                            if (item.id == dtoItem.userId) {
-                                item.isInVideo = dtoItem.isInVideo;
+                            if (dtoItem.isInVideo !== null && item.id == dtoItem.userId) {
+                              item.isInVideo = dtoItem.isInVideo;
                             }
                         })
                     })

@@ -154,7 +154,7 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
-    userStatusMixin('userOnlineInUserList'),
+    userStatusMixin('userList'),
   ],
   data() {
     return {
@@ -354,29 +354,21 @@ export default {
     getUserIdsSubscribeTo() {
         return this.items.map(item => item.id);
     },
-    onUserOnlineChanged(rawData) {
-          const dtos = rawData?.data?.userOnlineEvents;
+    onUserStatusChanged(rawData) {
+          const dtos = rawData?.data?.userEvents;
           if (dtos) {
               this.items.forEach(item => {
                   dtos.forEach(dtoItem => {
-                      if (item.id == dtoItem.id) {
+                      if (dtoItem.online !== null && item.id == dtoItem.userId) {
                           item.online = dtoItem.online;
                       }
+                      if (dtoItem.isInVideo !== null && item.id == dtoItem.userId) {
+                          item.isInVideo = dtoItem.isInVideo;
+                      }
+
                   })
               })
           }
-    },
-    onUserVideoStatusChanged(rawData) {
-        const dtos = rawData?.data?.userVideoStatusEvents;
-        if (dtos) {
-            this.items.forEach(item => {
-                dtos.forEach(dtoItem => {
-                    if (item.id == dtoItem.userId) {
-                        item.isInVideo = dtoItem.isInVideo;
-                    }
-                })
-            })
-        }
     },
   },
   created() {
