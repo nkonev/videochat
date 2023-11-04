@@ -271,6 +271,12 @@
               return this.$nextTick();
           })
         },
+        afterScrollRestored(el) {
+            el?.parentElement?.scrollBy({
+              top: !this.isTopDirection() ? 14 : -20,
+              behavior: "instant",
+            });
+        },
         updateTopAndBottomIds() {
           this.startingFromItemIdTop = this.getMinimumItemId();
           this.startingFromItemIdBottom = this.getMaximumItemId();

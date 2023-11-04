@@ -7,6 +7,7 @@ export const directionBottom = 'bottom';
 // bottomElementSelector(), topElementSelector(), getItemId(id),
 // load(), onFirstLoad(), initialDirection(), saveScroll(), scrollerSelector(),
 // reduceTop(), reduceBottom()
+// onScrollCallback(), afterScrollRestored()
 // onScroll() should be called from template
 export default (name) => {
   return {
@@ -82,6 +83,9 @@ export default (name) => {
         const el = document.querySelector(q);
         console.debug("Restored scroll to element id", restored, "in", name, "selector", q, "element", el);
         el?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
+        if (this.afterScrollRestored) {
+          this.afterScrollRestored(el)
+        }
       },
 
       resetInfiniteScrollVars() {
