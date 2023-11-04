@@ -279,6 +279,7 @@ export default {
                                       login
                                       avatar
                                       admin
+                                      shortInfo
                                     }
                                     promoteMessageEvent {
                                       totalCount

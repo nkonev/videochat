@@ -531,6 +531,7 @@ export default {
         if (item.tetATet && this.getTetATetParticipantIds([item]).includes(user.id)) { // replaces content of tet-a-tet. It's better to move it to chat
           item.avatar = user.avatar;
           item.name = user.login;
+          item.shortInfo = user.shortInfo;
         }
       });
     },
