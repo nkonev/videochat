@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker push-docker clean
+.PHONY: check-env download package-docker push-docker clean clean-cache
 
 download:
 	npm install
@@ -35,3 +35,7 @@ push-docker:
 
 clean:
 	rm -rf $(DIST) $(BUILDDIR)
+
+# https://vitejs.dev/guide/dep-pre-bundling.html
+clean-cache:
+	rm -rf node_modules/.vite node_modules/.cache
