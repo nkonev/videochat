@@ -33,7 +33,7 @@ export default (nameForLog) => {
                 const userIds = this.getUserIdsSubscribeTo();
                 return `
                     subscription {
-                        userEvents(userIds:[${userIds}]) {
+                        userStatusEvents(userIds:[${userIds}]) {
                             userId
                             online
                             isInVideo

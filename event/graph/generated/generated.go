@@ -215,9 +215,9 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		ChatEvents   func(childComplexity int, chatID int64) int
-		GlobalEvents func(childComplexity int) int
-		UserEvents   func(childComplexity int, userIds []int64) int
+		ChatEvents       func(childComplexity int, chatID int64) int
+		GlobalEvents     func(childComplexity int) int
+		UserStatusEvents func(childComplexity int, userIds []int64) int
 	}
 
 	UserEvent struct {
@@ -275,7 +275,7 @@ type QueryResolver interface {
 type SubscriptionResolver interface {
 	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
-	UserEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserEvent, error)
+	UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserEvent, error)
 }
 
 type executableSchema struct {
@@ -1124,17 +1124,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.GlobalEvents(childComplexity), true
 
-	case "Subscription.userEvents":
-		if e.complexity.Subscription.UserEvents == nil {
+	case "Subscription.userStatusEvents":
+		if e.complexity.Subscription.UserStatusEvents == nil {
 			break
 		}
 
-		args, err := ec.field_Subscription_userEvents_args(context.TODO(), rawArgs)
+		args, err := ec.field_Subscription_userStatusEvents_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Subscription.UserEvents(childComplexity, args["userIds"].([]int64)), true
+		return e.complexity.Subscription.UserStatusEvents(childComplexity, args["userIds"].([]int64)), true
 
 	case "UserEvent.eventType":
 		if e.complexity.UserEvent.EventType == nil {
@@ -1574,7 +1574,7 @@ type Query {
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
-    userEvents(userIds: [Int64!]!): [UserEvent!]!
+    userStatusEvents(userIds: [Int64!]!): [UserEvent!]!
 }
 `, BuiltIn: false},
 }
@@ -1614,7 +1614,7 @@ func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Subscription_userEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Subscription_userStatusEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []int64
@@ -7235,8 +7235,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _Subscription_userEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
-	fc, err := ec.fieldContext_Subscription_userEvents(ctx, field)
+func (ec *executionContext) _Subscription_userStatusEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_userStatusEvents(ctx, field)
 	if err != nil {
 		return nil
 	}
@@ -7249,7 +7249,7 @@ func (ec *executionContext) _Subscription_userEvents(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().UserEvents(rctx, fc.Args["userIds"].([]int64))
+		return ec.resolvers.Subscription().UserStatusEvents(rctx, fc.Args["userIds"].([]int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7280,7 +7280,7 @@ func (ec *executionContext) _Subscription_userEvents(ctx context.Context, field 
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_userEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_userStatusEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -7307,7 +7307,7 @@ func (ec *executionContext) fieldContext_Subscription_userEvents(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Subscription_userEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Subscription_userStatusEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -11133,8 +11133,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_chatEvents(ctx, fields[0])
 	case "globalEvents":
 		return ec._Subscription_globalEvents(ctx, fields[0])
-	case "userEvents":
-		return ec._Subscription_userEvents(ctx, fields[0])
+	case "userStatusEvents":
+		return ec._Subscription_userStatusEvents(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}

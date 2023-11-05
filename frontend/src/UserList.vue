@@ -361,7 +361,7 @@ export default {
         return this.items.map(item => item.id);
     },
     onUserStatusChanged(rawData) {
-          const dtos = rawData?.data?.userEvents;
+          const dtos = rawData?.data?.userStatusEvents;
           if (dtos) {
               this.items.forEach(item => {
                   dtos.forEach(dtoItem => {

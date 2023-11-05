@@ -131,8 +131,8 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	return cam, nil
 }
 
-// UserEvents is the resolver for the userEvents field.
-func (r *subscriptionResolver) UserEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserEvent, error) {
+// UserStatusEvents is the resolver for the userStatusEvents field.
+func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserEvent, error) {
 	// user online
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {

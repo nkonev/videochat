@@ -432,7 +432,7 @@ export default {
       return this.tetAtetParticipants
     },
     onUserStatusChanged(rawData) {
-          const dtos = rawData?.data?.userEvents;
+          const dtos = rawData?.data?.userStatusEvents;
           if (dtos) {
               this.items.forEach(item => {
                 if (item.tetATet) {

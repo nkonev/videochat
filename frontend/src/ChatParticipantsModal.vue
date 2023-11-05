@@ -347,7 +347,7 @@
                 }
             },
             onUserStatusChanged(rawData) {
-                const dtos = rawData?.data?.userEvents;
+                const dtos = rawData?.data?.userStatusEvents;
                 if (this.participantsDto?.participants && dtos) {
                     this.participantsDto.participants.forEach(item => {
                         dtos.forEach(dtoItem => {
