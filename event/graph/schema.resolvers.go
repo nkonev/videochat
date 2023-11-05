@@ -132,7 +132,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 }
 
 // UserStatusEvents is the resolver for the userStatusEvents field.
-func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserEvent, error) {
+func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserStatusEvent, error) {
 	// user online
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -140,7 +140,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 	}
 	logger.GetLogEntry(ctx).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
 
-	var cam = make(chan []*model.UserEvent)
+	var cam = make(chan []*model.UserStatusEvent)
 
 	subscribeHandlerUserOnline, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
 		defer func() {
@@ -151,7 +151,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 
 		switch typedEvent := event.(type) {
 		case dto.ArrayUserOnline:
-			var batch = []*model.UserEvent{}
+			var batch = []*model.UserStatusEvent{}
 			for _, userOnline := range typedEvent {
 				if utils.Contains(userIds, userOnline.UserId) {
 					batch = append(batch, convertToUserOnline(userOnline))
@@ -181,7 +181,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 		case dto.GeneralEvent:
 			var videoCallUsersCallStatusChangedEvent = typedEvent.VideoCallUsersCallStatusChangedEvent
 			if videoCallUsersCallStatusChangedEvent != nil {
-				var batch = []*model.UserEvent{}
+				var batch = []*model.UserStatusEvent{}
 				for _, userCallStatus := range videoCallUsersCallStatusChangedEvent.Users {
 					if utils.Contains(userIds, userCallStatus.UserId) {
 						batch = append(batch, convertToUserCallStatusChanged(typedEvent, userCallStatus))
@@ -243,15 +243,15 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserCallStatusChangedDto) *model.UserEvent {
-	return &model.UserEvent{
+func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserCallStatusChangedDto) *model.UserStatusEvent {
+	return &model.UserStatusEvent{
 		EventType: event.EventType,
 		UserID:    u.UserId,
 		IsInVideo: &u.IsInVideo,
 	}
 }
-func convertToUserOnline(userOnline dto.UserOnline) *model.UserEvent {
-	return &model.UserEvent{
+func convertToUserOnline(userOnline dto.UserOnline) *model.UserStatusEvent {
+	return &model.UserStatusEvent{
 		EventType: "user_online",
 		UserID:    userOnline.UserId,
 		Online:    &userOnline.Online,

@@ -171,7 +171,7 @@ type PreviewCreatedEvent struct {
 	CorrelationID *string `json:"correlationId"`
 }
 
-type UserEvent struct {
+type UserStatusEvent struct {
 	UserID    int64  `json:"userId"`
 	Online    *bool  `json:"online"`
 	IsInVideo *bool  `json:"isInVideo"`

@@ -206,7 +206,7 @@ type GlobalEvent {
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 
-type UserEvent {
+type UserStatusEvent {
     userId:     Int64!
     online:  Boolean
     isInVideo:  Boolean
@@ -220,5 +220,5 @@ type Query {
 type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
-    userStatusEvents(userIds: [Int64!]!): [UserEvent!]!
+    userStatusEvents(userIds: [Int64!]!): [UserStatusEvent!]!
 }
