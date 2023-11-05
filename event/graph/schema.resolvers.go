@@ -91,7 +91,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	logger.GetLogEntry(ctx).Infof("Subscribing to globalEvents channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.GlobalEvent)
-	subscribeHandler, err := r.Bus.Subscribe(dto.USER_EVENTS, func(event eventbus.Event, t time.Time) {
+	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_USER_EVENTS, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.GetLogEntry(ctx).Errorf("In processing GlobalEvents panic recovered: %v", err)

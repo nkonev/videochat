@@ -7,7 +7,7 @@ import (
 )
 
 const CHAT_EVENTS = "events.chat"
-const USER_EVENTS = "events.user"
+const GLOBAL_USER_EVENTS = "events.user"
 const USER_ONLINE = "user.online"
 
 const GENERAL = "events.general"
@@ -71,7 +71,7 @@ type GlobalUserEvent struct {
 }
 
 func (GlobalUserEvent) Name() eventbus.EventName {
-	return USER_EVENTS
+	return GLOBAL_USER_EVENTS
 }
 
 type PreviewCreatedEvent struct {
