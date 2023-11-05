@@ -218,7 +218,7 @@ public class UserProfileController {
         }
         List<Record> result = new ArrayList<>();
         for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
-            if (userAccountEntity.id().equals(userAccountPrincipal.getId())) {
+            if (userAccountPrincipal != null && userAccountEntity.id().equals(userAccountPrincipal.getId())) {
                 result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
             } else {
                 result.add(UserAccountConverter.convertToUserAccountDTO(userAccountEntity));
@@ -233,7 +233,7 @@ public class UserProfileController {
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
         final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-        if (userAccountEntity.id().equals(userAccountPrincipal.getId())) {
+        if (userAccountPrincipal != null && userAccountEntity.id().equals(userAccountPrincipal.getId())) {
             return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
         } else {
             return UserAccountConverter.convertToUserAccountDTO(userAccountEntity);
