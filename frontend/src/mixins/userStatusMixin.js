@@ -60,7 +60,7 @@ export default (nameForLog) => {
                         this.setError(null, `Error in onNext ${subscriptionElement.name} subscription`);
                         return
                     }
-                    handler(e);
+                    handler(e?.data?.userStatusEvents);
                 }
                 const onError_ = (e) => {
                     if (Array.isArray(e)) {

@@ -152,8 +152,7 @@ export default {
       })
     },
 
-    onUserStatusChanged(rawData) {
-      const dtos = rawData?.data?.userStatusEvents;
+    onUserStatusChanged(dtos) {
       if (dtos) {
         dtos?.forEach(dtoItem => {
           if (dtoItem.online !== null && this.userId == dtoItem.userId) {

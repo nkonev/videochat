@@ -360,8 +360,7 @@ export default {
     getUserIdsSubscribeTo() {
         return this.items.map(item => item.id);
     },
-    onUserStatusChanged(rawData) {
-          const dtos = rawData?.data?.userStatusEvents;
+    onUserStatusChanged(dtos) {
           if (dtos) {
               this.items.forEach(item => {
                   dtos.forEach(dtoItem => {

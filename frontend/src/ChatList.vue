@@ -431,8 +431,7 @@ export default {
     getUserIdsSubscribeTo() {
       return this.tetAtetParticipants
     },
-    onUserStatusChanged(rawData) {
-          const dtos = rawData?.data?.userStatusEvents;
+    onUserStatusChanged(dtos) {
           if (dtos) {
               this.items.forEach(item => {
                 if (item.tetATet) {
