@@ -20,6 +20,7 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 	res.AddToRegistryIfNeed(dto.UserEvent{})
 	res.AddToRegistryIfNeed([]dto.UserOnline{})
 	res.AddToRegistryIfNeed(dto.GeneralEvent{})
+	res.AddToRegistryIfNeed(dto.UserAccount{})
 	return res
 }
 

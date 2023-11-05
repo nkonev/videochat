@@ -68,7 +68,7 @@ func CreateAaaChannel(connection *rabbitmq.Connection, onMessage AaaUserProfileU
 				},
 			})
 
-			err := channel.ExchangeDeclare(AaaEventsExchange, "direct", true, false, false, false, nil)
+			err := channel.ExchangeDeclare(AaaEventsExchange, "fanout", true, false, false, false, nil)
 			if err != nil {
 				return err
 			}

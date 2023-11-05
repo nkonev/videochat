@@ -59,6 +59,7 @@ func main() {
 		fx.Invoke(
 			runEcho,
 			listener.CreateEventsChannel,
+			listener.CreateAaaChannel,
 		),
 	)
 	app.Run()

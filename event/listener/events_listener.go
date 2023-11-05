@@ -81,6 +81,18 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during sending to bus : %v", err)
 				return err
 			}
+		case dto.UserAccount:
+			err := json.Unmarshal(bytesData, &bindTo)
+			if err != nil {
+				Logger.Errorf("Error during deserialize notification %v", err)
+				return err
+			}
+
+			err = bus.PublishAsync(bindTo)
+			if err != nil {
+				Logger.Errorf("Error during sending to bus : %v", err)
+				return err
+			}
 
 		default:
 			Logger.Errorf("Unexpected type : %v", anInstance)

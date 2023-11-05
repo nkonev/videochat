@@ -12,7 +12,11 @@ import (
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
 
+const AaaEventsExchange = "aaa-profile-events-exchange"
+
 type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
+
+type AaaEventsChannel struct{ *rabbitmq.Channel }
 
 func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -74,6 +78,31 @@ func CreateEventsChannel(connection *rabbitmq.Connection, onMessage EventsListen
 			}
 
 			tempQueue := createAndBind(fanoutQueueName, "", AsyncEventsFanoutExchange, channel)
+			listen(channel, tempQueue, onMessage, lc)
+			return nil
+		},
+	)}
+}
+
+func CreateAaaChannel(connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) *AaaEventsChannel {
+	var fanoutQueueName = "event-aaa-profile-events-" + uuid.New().String()
+
+	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		connection,
+		func(channel *rabbitmq.Channel) error {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					Logger.Infof("Stopping queue listening '%v'", fanoutQueueName)
+					return channel.Close()
+				},
+			})
+
+			err := channel.ExchangeDeclare(AaaEventsExchange, "fanout", true, false, false, false, nil)
+			if err != nil {
+				return err
+			}
+
+			tempQueue := createAndBind(fanoutQueueName, "", AaaEventsExchange, channel)
 			listen(channel, tempQueue, onMessage, lc)
 			return nil
 		},

@@ -208,9 +208,27 @@ type GlobalEvent {
 
 type UserStatusEvent {
     userId:     Int64!
-    online:  Boolean
+    online:     Boolean
     isInVideo:  Boolean
-    eventType:                String!
+    eventType:  String!
+}
+
+type OAuth2Identifiers {
+    facebookId: String
+    vkontakteId: String
+    googleId: String
+    keycloakId: String
+}
+
+type UserAccountEvent {
+    id:         Int64!
+    login:      String!
+    avatar:     String # url
+    avatarBig:  String # url
+    shortInfo: String
+    lastLoginDateTime: Time
+    oauth2Identifiers: OAuth2Identifiers
+    eventType:  String!
 }
 
 type Query {
@@ -221,4 +239,5 @@ type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
     userStatusEvents(userIds: [Int64!]!): [UserStatusEvent!]!
+    userAccountEvents(userIds: [Int64!]!): UserAccountEvent!
 }

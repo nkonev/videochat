@@ -182,6 +182,13 @@ type ComplexityRoot struct {
 		NotificationType func(childComplexity int) int
 	}
 
+	OAuth2Identifiers struct {
+		FacebookID  func(childComplexity int) int
+		GoogleID    func(childComplexity int) int
+		KeycloakID  func(childComplexity int) int
+		VkontakteID func(childComplexity int) int
+	}
+
 	Participant struct {
 		Avatar    func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -215,9 +222,21 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		ChatEvents       func(childComplexity int, chatID int64) int
-		GlobalEvents     func(childComplexity int) int
-		UserStatusEvents func(childComplexity int, userIds []int64) int
+		ChatEvents        func(childComplexity int, chatID int64) int
+		GlobalEvents      func(childComplexity int) int
+		UserAccountEvents func(childComplexity int, userIds []int64) int
+		UserStatusEvents  func(childComplexity int, userIds []int64) int
+	}
+
+	UserAccountEvent struct {
+		Avatar            func(childComplexity int) int
+		AvatarBig         func(childComplexity int) int
+		EventType         func(childComplexity int) int
+		ID                func(childComplexity int) int
+		LastLoginDateTime func(childComplexity int) int
+		Login             func(childComplexity int) int
+		Oauth2Identifiers func(childComplexity int) int
+		ShortInfo         func(childComplexity int) int
 	}
 
 	UserStatusEvent struct {
@@ -276,6 +295,7 @@ type SubscriptionResolver interface {
 	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
 	UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserStatusEvent, error)
+	UserAccountEvents(ctx context.Context, userIds []int64) (<-chan *model.UserAccountEvent, error)
 }
 
 type executableSchema struct {
@@ -986,6 +1006,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotificationDto.NotificationType(childComplexity), true
 
+	case "OAuth2Identifiers.facebookId":
+		if e.complexity.OAuth2Identifiers.FacebookID == nil {
+			break
+		}
+
+		return e.complexity.OAuth2Identifiers.FacebookID(childComplexity), true
+
+	case "OAuth2Identifiers.googleId":
+		if e.complexity.OAuth2Identifiers.GoogleID == nil {
+			break
+		}
+
+		return e.complexity.OAuth2Identifiers.GoogleID(childComplexity), true
+
+	case "OAuth2Identifiers.keycloakId":
+		if e.complexity.OAuth2Identifiers.KeycloakID == nil {
+			break
+		}
+
+		return e.complexity.OAuth2Identifiers.KeycloakID(childComplexity), true
+
+	case "OAuth2Identifiers.vkontakteId":
+		if e.complexity.OAuth2Identifiers.VkontakteID == nil {
+			break
+		}
+
+		return e.complexity.OAuth2Identifiers.VkontakteID(childComplexity), true
+
 	case "Participant.avatar":
 		if e.complexity.Participant.Avatar == nil {
 			break
@@ -1124,6 +1172,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.GlobalEvents(childComplexity), true
 
+	case "Subscription.userAccountEvents":
+		if e.complexity.Subscription.UserAccountEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_userAccountEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.UserAccountEvents(childComplexity, args["userIds"].([]int64)), true
+
 	case "Subscription.userStatusEvents":
 		if e.complexity.Subscription.UserStatusEvents == nil {
 			break
@@ -1135,6 +1195,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.UserStatusEvents(childComplexity, args["userIds"].([]int64)), true
+
+	case "UserAccountEvent.avatar":
+		if e.complexity.UserAccountEvent.Avatar == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.Avatar(childComplexity), true
+
+	case "UserAccountEvent.avatarBig":
+		if e.complexity.UserAccountEvent.AvatarBig == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.AvatarBig(childComplexity), true
+
+	case "UserAccountEvent.eventType":
+		if e.complexity.UserAccountEvent.EventType == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.EventType(childComplexity), true
+
+	case "UserAccountEvent.id":
+		if e.complexity.UserAccountEvent.ID == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.ID(childComplexity), true
+
+	case "UserAccountEvent.lastLoginDateTime":
+		if e.complexity.UserAccountEvent.LastLoginDateTime == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.LastLoginDateTime(childComplexity), true
+
+	case "UserAccountEvent.login":
+		if e.complexity.UserAccountEvent.Login == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.Login(childComplexity), true
+
+	case "UserAccountEvent.oauth2Identifiers":
+		if e.complexity.UserAccountEvent.Oauth2Identifiers == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.Oauth2Identifiers(childComplexity), true
+
+	case "UserAccountEvent.shortInfo":
+		if e.complexity.UserAccountEvent.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.UserAccountEvent.ShortInfo(childComplexity), true
 
 	case "UserStatusEvent.eventType":
 		if e.complexity.UserStatusEvent.EventType == nil {
@@ -1562,9 +1678,27 @@ type GlobalEvent {
 
 type UserStatusEvent {
     userId:     Int64!
-    online:  Boolean
+    online:     Boolean
     isInVideo:  Boolean
-    eventType:                String!
+    eventType:  String!
+}
+
+type OAuth2Identifiers {
+    facebookId: String
+    vkontakteId: String
+    googleId: String
+    keycloakId: String
+}
+
+type UserAccountEvent {
+    id:         Int64!
+    login:      String!
+    avatar:     String # url
+    avatarBig:  String # url
+    shortInfo: String
+    lastLoginDateTime: Time
+    oauth2Identifiers: OAuth2Identifiers
+    eventType:  String!
 }
 
 type Query {
@@ -1575,6 +1709,7 @@ type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
     userStatusEvents(userIds: [Int64!]!): [UserStatusEvent!]!
+    userAccountEvents(userIds: [Int64!]!): UserAccountEvent!
 }
 `, BuiltIn: false},
 }
@@ -1611,6 +1746,21 @@ func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Conte
 		}
 	}
 	args["chatId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_userAccountEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []int64
+	if tmp, ok := rawArgs["userIds"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+		arg0, err = ec.unmarshalNInt642ᚕint64ᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userIds"] = arg0
 	return args, nil
 }
 
@@ -6179,6 +6329,170 @@ func (ec *executionContext) fieldContext_NotificationDto_chatTitle(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _OAuth2Identifiers_facebookId(ctx context.Context, field graphql.CollectedField, obj *model.OAuth2Identifiers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OAuth2Identifiers_facebookId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FacebookID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OAuth2Identifiers_facebookId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OAuth2Identifiers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OAuth2Identifiers_vkontakteId(ctx context.Context, field graphql.CollectedField, obj *model.OAuth2Identifiers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OAuth2Identifiers_vkontakteId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VkontakteID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OAuth2Identifiers_vkontakteId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OAuth2Identifiers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OAuth2Identifiers_googleId(ctx context.Context, field graphql.CollectedField, obj *model.OAuth2Identifiers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OAuth2Identifiers_googleId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GoogleID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OAuth2Identifiers_googleId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OAuth2Identifiers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OAuth2Identifiers_keycloakId(ctx context.Context, field graphql.CollectedField, obj *model.OAuth2Identifiers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OAuth2Identifiers_keycloakId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.KeycloakID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OAuth2Identifiers_keycloakId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OAuth2Identifiers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Participant_id(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Participant_id(ctx, field)
 	if err != nil {
@@ -7310,6 +7624,440 @@ func (ec *executionContext) fieldContext_Subscription_userStatusEvents(ctx conte
 	if fc.Args, err = ec.field_Subscription_userStatusEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_userAccountEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_userAccountEvents(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().UserAccountEvents(rctx, fc.Args["userIds"].([]int64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.UserAccountEvent):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNUserAccountEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountEvent(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserAccountEvent_id(ctx, field)
+			case "login":
+				return ec.fieldContext_UserAccountEvent_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_UserAccountEvent_avatar(ctx, field)
+			case "avatarBig":
+				return ec.fieldContext_UserAccountEvent_avatarBig(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_UserAccountEvent_shortInfo(ctx, field)
+			case "lastLoginDateTime":
+				return ec.fieldContext_UserAccountEvent_lastLoginDateTime(ctx, field)
+			case "oauth2Identifiers":
+				return ec.fieldContext_UserAccountEvent_oauth2Identifiers(ctx, field)
+			case "eventType":
+				return ec.fieldContext_UserAccountEvent_eventType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAccountEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_userAccountEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_login(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_login(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_avatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Avatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_avatarBig(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_avatarBig(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvatarBig, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_avatarBig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_lastLoginDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastLoginDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_lastLoginDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_oauth2Identifiers(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_oauth2Identifiers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Oauth2Identifiers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OAuth2Identifiers)
+	fc.Result = res
+	return ec.marshalOOAuth2Identifiers2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐOAuth2Identifiers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_oauth2Identifiers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "facebookId":
+				return ec.fieldContext_OAuth2Identifiers_facebookId(ctx, field)
+			case "vkontakteId":
+				return ec.fieldContext_OAuth2Identifiers_vkontakteId(ctx, field)
+			case "googleId":
+				return ec.fieldContext_OAuth2Identifiers_googleId(ctx, field)
+			case "keycloakId":
+				return ec.fieldContext_OAuth2Identifiers_keycloakId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OAuth2Identifiers", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_eventType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EventType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_eventType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -10879,6 +11627,43 @@ func (ec *executionContext) _NotificationDto(ctx context.Context, sel ast.Select
 	return out
 }
 
+var oAuth2IdentifiersImplementors = []string{"OAuth2Identifiers"}
+
+func (ec *executionContext) _OAuth2Identifiers(ctx context.Context, sel ast.SelectionSet, obj *model.OAuth2Identifiers) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, oAuth2IdentifiersImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OAuth2Identifiers")
+		case "facebookId":
+
+			out.Values[i] = ec._OAuth2Identifiers_facebookId(ctx, field, obj)
+
+		case "vkontakteId":
+
+			out.Values[i] = ec._OAuth2Identifiers_vkontakteId(ctx, field, obj)
+
+		case "googleId":
+
+			out.Values[i] = ec._OAuth2Identifiers_googleId(ctx, field, obj)
+
+		case "keycloakId":
+
+			out.Values[i] = ec._OAuth2Identifiers_keycloakId(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var participantImplementors = []string{"Participant"}
 
 func (ec *executionContext) _Participant(ctx context.Context, sel ast.SelectionSet, obj *model.Participant) graphql.Marshaler {
@@ -11135,9 +11920,73 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_globalEvents(ctx, fields[0])
 	case "userStatusEvents":
 		return ec._Subscription_userStatusEvents(ctx, fields[0])
+	case "userAccountEvents":
+		return ec._Subscription_userAccountEvents(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
+}
+
+var userAccountEventImplementors = []string{"UserAccountEvent"}
+
+func (ec *executionContext) _UserAccountEvent(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountEventImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAccountEvent")
+		case "id":
+
+			out.Values[i] = ec._UserAccountEvent_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+
+			out.Values[i] = ec._UserAccountEvent_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "avatar":
+
+			out.Values[i] = ec._UserAccountEvent_avatar(ctx, field, obj)
+
+		case "avatarBig":
+
+			out.Values[i] = ec._UserAccountEvent_avatarBig(ctx, field, obj)
+
+		case "shortInfo":
+
+			out.Values[i] = ec._UserAccountEvent_shortInfo(ctx, field, obj)
+
+		case "lastLoginDateTime":
+
+			out.Values[i] = ec._UserAccountEvent_lastLoginDateTime(ctx, field, obj)
+
+		case "oauth2Identifiers":
+
+			out.Values[i] = ec._UserAccountEvent_oauth2Identifiers(ctx, field, obj)
+
+		case "eventType":
+
+			out.Values[i] = ec._UserAccountEvent_eventType(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
 }
 
 var userStatusEventImplementors = []string{"UserStatusEvent"}
@@ -12005,6 +12854,20 @@ func (ec *executionContext) marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	return res
 }
 
+func (ec *executionContext) marshalNUserAccountEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountEvent(ctx context.Context, sel ast.SelectionSet, v model.UserAccountEvent) graphql.Marshaler {
+	return ec._UserAccountEvent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserAccountEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountEvent(ctx context.Context, sel ast.SelectionSet, v *model.UserAccountEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserAccountEvent(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNUserStatusEvent2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserStatusEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserStatusEvent) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -12476,6 +13339,13 @@ func (ec *executionContext) marshalONotificationDto2ᚖnkonevᚗnameᚋeventᚋg
 		return graphql.Null
 	}
 	return ec._NotificationDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOOAuth2Identifiers2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐOAuth2Identifiers(ctx context.Context, sel ast.SelectionSet, v *model.OAuth2Identifiers) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._OAuth2Identifiers(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx context.Context, sel ast.SelectionSet, v *model.Participant) graphql.Marshaler {

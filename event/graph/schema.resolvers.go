@@ -228,6 +228,82 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 	return cam, nil
 }
 
+// UserAccountEvents is the resolver for the userAccountEvents field.
+func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []int64) (<-chan *model.UserAccountEvent, error) {
+	// user online
+	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		return nil, errors.New("Unable to get auth context")
+	}
+	logger.GetLogEntry(ctx).Infof("Subscribing to UserAccount channel as user %v", authResult.UserId)
+
+	var cam = make(chan *model.UserAccountEvent)
+
+	subscribeHandler, err := r.Bus.Subscribe(dto.AAA, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+			}
+		}()
+
+		switch typedEvent := event.(type) {
+		case dto.UserAccount:
+			var anEvent = convertUserAccountEvent(typedEvent)
+			cam <- anEvent
+			break
+		default:
+			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+		}
+	})
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		return nil, err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				logger.GetLogEntry(ctx).Infof("Closing UserAccount channel for user %v", authResult.UserId)
+				err := r.Bus.Unsubscribe(subscribeHandler)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount channel for user %v", authResult.UserId)
+				}
+
+				close(cam)
+				return
+			}
+		}
+	}()
+
+	return cam, nil
+}
+
+func convertUserAccountEvent(event dto.UserAccount) *model.UserAccountEvent {
+	return &model.UserAccountEvent{
+		ID:                event.Id,
+		Login:             event.Login,
+		Avatar:            event.Avatar,
+		AvatarBig:         event.AvatarBig,
+		ShortInfo:         event.ShortInfo,
+		LastLoginDateTime: event.LastLoginDateTime,
+		Oauth2Identifiers: convertOauth2Identifiers(event.Oauth2Identifiers),
+		EventType:         "user_account",
+	}
+}
+
+func convertOauth2Identifiers(identifiers *dto.Oauth2Identifiers) *model.OAuth2Identifiers {
+	if identifiers == nil {
+		return nil
+	}
+	return &model.OAuth2Identifiers{
+		FacebookID:  identifiers.FacebookId,
+		VkontakteID: identifiers.VkontakteId,
+		GoogleID:    identifiers.GoogleId,
+		KeycloakID:  identifiers.KeycloakId,
+	}
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -237,12 +313,6 @@ func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subsc
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
 func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserCallStatusChangedDto) *model.UserStatusEvent {
 	return &model.UserStatusEvent{
 		EventType: event.EventType,

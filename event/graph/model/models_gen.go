@@ -143,6 +143,13 @@ type NotificationDto struct {
 	ChatTitle        string    `json:"chatTitle"`
 }
 
+type OAuth2Identifiers struct {
+	FacebookID  *string `json:"facebookId"`
+	VkontakteID *string `json:"vkontakteId"`
+	GoogleID    *string `json:"googleId"`
+	KeycloakID  *string `json:"keycloakId"`
+}
+
 type Participant struct {
 	ID        int64   `json:"id"`
 	Login     string  `json:"login"`
@@ -169,6 +176,17 @@ type PreviewCreatedEvent struct {
 	PreviewURL    *string `json:"previewUrl"`
 	AType         *string `json:"aType"`
 	CorrelationID *string `json:"correlationId"`
+}
+
+type UserAccountEvent struct {
+	ID                int64              `json:"id"`
+	Login             string             `json:"login"`
+	Avatar            *string            `json:"avatar"`
+	AvatarBig         *string            `json:"avatarBig"`
+	ShortInfo         *string            `json:"shortInfo"`
+	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
+	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
+	EventType         string             `json:"eventType"`
 }
 
 type UserStatusEvent struct {
