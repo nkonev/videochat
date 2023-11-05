@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.dto.UserAccountDTO;
+import com.github.nkonev.aaa.dto.UserAccountEventDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -17,9 +18,9 @@ public class EventReceiver {
     private final ConcurrentLinkedQueue<UserAccountDTO> queue = new ConcurrentLinkedQueue<>();
 
     @RabbitListener(queues = QUEUE_PROFILE_TEST)
-    public void listen(UserAccountDTO message) {
+    public void listen(UserAccountEventDTO message) {
         LOGGER.info("Received <" + message + ">");
-        queue.add(message);
+        queue.add(message.userAccount());
     }
 
     public void clear() {
