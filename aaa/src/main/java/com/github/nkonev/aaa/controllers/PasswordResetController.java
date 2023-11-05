@@ -110,7 +110,7 @@ public class PasswordResetController {
         userAccount = userAccountRepository.save(userAccount);
 
         var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
-        SecurityUtils.authenticate(auth);
+        SecurityUtils.setToContext(auth);
         loginListener.onApplicationEvent(auth);
     }
 

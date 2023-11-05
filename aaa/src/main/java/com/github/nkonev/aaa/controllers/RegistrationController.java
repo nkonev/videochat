@@ -117,7 +117,7 @@ public class RegistrationController {
         userConfirmationTokenRepository.deleteById(stringUuid);
 
         var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
-        SecurityUtils.authenticate(auth);
+        SecurityUtils.setToContext(auth);
         loginListener.onApplicationEvent(auth);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();

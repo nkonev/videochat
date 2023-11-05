@@ -60,7 +60,7 @@ public abstract class AbstractOAuth2UserService {
 
             logger().info("{}Id successfully merged to exists user '{}', id={}", getOauthName(), principal.getUsername(), principal.getId());
 
-            SecurityUtils.authenticate(principal);
+            SecurityUtils.setToContext(principal);
 
             return principal;
         } else {

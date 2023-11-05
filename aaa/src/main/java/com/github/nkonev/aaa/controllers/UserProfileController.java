@@ -10,6 +10,7 @@ import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.security.OAuth2Providers;
+import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.OAuth2ProvidersService;
 import com.github.nkonev.aaa.services.UserService;
@@ -217,7 +218,7 @@ public class UserProfileController {
         }
         List<Record> result = new ArrayList<>();
         for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
-            if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
+            if (userAccountEntity.id().equals(userAccountPrincipal.getId())) {
                 result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
             } else {
                 result.add(UserAccountConverter.convertToUserAccountDTO(userAccountEntity));
@@ -232,7 +233,7 @@ public class UserProfileController {
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
         final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-        if (userAccountPrincipal != null && userAccountPrincipal.getId().equals(userAccountEntity.id())) {
+        if (userAccountEntity.id().equals(userAccountPrincipal.getId())) {
             return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
         } else {
             return UserAccountConverter.convertToUserAccountDTO(userAccountEntity);
@@ -271,7 +272,7 @@ public class UserProfileController {
         exists = UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
-        aaaUserDetailsService.refreshUserDetails(exists);
+        SecurityUtils.convertAndSetToContext(exists);
         notifier.notifyProfileUpdated(exists);
 
         return UserAccountConverter.convertToEditUserDto(exists);
@@ -303,7 +304,7 @@ public class UserProfileController {
         exists = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
-        aaaUserDetailsService.refreshUserDetails(exists);
+        SecurityUtils.convertAndSetToContext(exists);
 
         notifier.notifyProfileUpdated(exists);
 
@@ -389,7 +390,7 @@ public class UserProfileController {
         };
         userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
-        aaaUserDetailsService.refreshUserDetails(userAccount);
+        SecurityUtils.convertAndSetToContext(userAccount);
     }
 
     @GetMapping(Constants.Urls.PUBLIC_API + "/oauth2/providers")
