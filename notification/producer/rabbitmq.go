@@ -16,7 +16,7 @@ const AsyncEventsFanoutExchange = "async-events-exchange"
 
 func (rp *RabbitEventPublisher) Publish(participantId int64, notifyDto *dto.NotificationDto, eventType string, ctx context.Context) error {
 
-	event := dto.UserEvent{
+	event := dto.GlobalUserEvent{
 		EventType:             eventType,
 		UserId:                participantId,
 		UserNotificationEvent: notifyDto,

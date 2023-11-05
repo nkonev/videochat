@@ -99,7 +99,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserEvent:
+		case dto.GlobalUserEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
 				cam <- convertToGlobalEvent(&typedEvent)
 			}
@@ -458,7 +458,7 @@ func convertPinnedMessageEvent(e *dto.PinnedMessageEvent) *model.PinnedMessageEv
 		TotalCount: e.TotalCount,
 	}
 }
-func convertToGlobalEvent(e *dto.UserEvent) *model.GlobalEvent {
+func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
 	var ret = &model.GlobalEvent{
 		EventType: e.EventType,
