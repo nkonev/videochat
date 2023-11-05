@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker test push-docker clean
+.PHONY: check-env download package-docker test push-docker clean install-graphql
 
 download:
 	echo "Nothing to download"
@@ -13,6 +13,12 @@ STATIC_JSON := ./handlers/static/git.json
 
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"event\"}" > $(STATIC_JSON)
+
+install-graphql:
+	go install github.com/99designs/gqlgen@v0.17.20
+
+generate-graphql:
+	gqlgen generate
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1
