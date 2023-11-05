@@ -1,6 +1,6 @@
 import {graphQlClient} from "@/graphql/graphql";
 
-// expects methods setError, onNextSubscriptionElement, getGraphQlSubscriptionQuery, and additionalActionAfterGraphQlSubscription
+// expects methods setError, onNextSubscriptionElement, getGraphQlSubscriptionQuery
 export default (nameForLog) => {
     return {
         data() {
@@ -47,10 +47,6 @@ export default (nameForLog) => {
                         complete: onComplete,
                     },
                 );
-
-                if (this.additionalActionAfterGraphQlSubscription) {
-                    this.additionalActionAfterGraphQlSubscription();
-                }
             },
             graphQlUnsubscribe() {
                 console.log(`Unsubscribing from ${nameForLog}`);

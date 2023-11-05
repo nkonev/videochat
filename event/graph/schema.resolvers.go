@@ -247,9 +247,11 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserAccount:
-			var anEvent = convertUserAccountEvent(typedEvent)
-			cam <- anEvent
+		case dto.UserAccountEvent:
+			if typedEvent.UserAccount != nil && utils.Contains(userIds, typedEvent.UserAccount.Id) {
+				var anEvent = convertUserAccountEvent(typedEvent)
+				cam <- anEvent
+			}
 			break
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
@@ -279,19 +281,40 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 	return cam, nil
 }
 
-func convertUserAccountEvent(event dto.UserAccount) *model.UserAccountEvent {
-	return &model.UserAccountEvent{
-		ID:                event.Id,
-		Login:             event.Login,
-		Avatar:            event.Avatar,
-		AvatarBig:         event.AvatarBig,
-		ShortInfo:         event.ShortInfo,
-		LastLoginDateTime: event.LastLoginDateTime,
-		Oauth2Identifiers: convertOauth2Identifiers(event.Oauth2Identifiers),
-		EventType:         "user_account",
-	}
-}
+// Query returns generated.QueryResolver implementation.
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Subscription returns generated.SubscriptionResolver implementation.
+func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
+
+type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func convertUserAccountEvent(event dto.UserAccountEvent) *model.UserAccountEvent {
+	ret := model.UserAccountEvent{}
+	ret.EventType = event.EventType
+
+	userAccount := event.UserAccount
+	if userAccount != nil {
+		ret.UserAccountEvent = &model.UserAccountDto{
+			ID:                userAccount.Id,
+			Login:             userAccount.Login,
+			Avatar:            userAccount.Avatar,
+			AvatarBig:         userAccount.AvatarBig,
+			ShortInfo:         userAccount.ShortInfo,
+			LastLoginDateTime: userAccount.LastLoginDateTime,
+			Oauth2Identifiers: convertOauth2Identifiers(userAccount.Oauth2Identifiers),
+		}
+	}
+
+	return &ret
+}
 func convertOauth2Identifiers(identifiers *dto.Oauth2Identifiers) *model.OAuth2Identifiers {
 	if identifiers == nil {
 		return nil
@@ -303,16 +326,6 @@ func convertOauth2Identifiers(identifiers *dto.Oauth2Identifiers) *model.OAuth2I
 		KeycloakID:  identifiers.KeycloakId,
 	}
 }
-
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
-// Subscription returns generated.SubscriptionResolver implementation.
-func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
-
-type queryResolver struct{ *Resolver }
-type subscriptionResolver struct{ *Resolver }
-
 func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserCallStatusChangedDto) *model.UserStatusEvent {
 	return &model.UserStatusEvent{
 		EventType: event.EventType,

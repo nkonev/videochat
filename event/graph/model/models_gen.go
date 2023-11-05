@@ -178,7 +178,7 @@ type PreviewCreatedEvent struct {
 	CorrelationID *string `json:"correlationId"`
 }
 
-type UserAccountEvent struct {
+type UserAccountDto struct {
 	ID                int64              `json:"id"`
 	Login             string             `json:"login"`
 	Avatar            *string            `json:"avatar"`
@@ -186,7 +186,11 @@ type UserAccountEvent struct {
 	ShortInfo         *string            `json:"shortInfo"`
 	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
 	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
-	EventType         string             `json:"eventType"`
+}
+
+type UserAccountEvent struct {
+	EventType        string          `json:"eventType"`
+	UserAccountEvent *UserAccountDto `json:"userAccountEvent"`
 }
 
 type UserStatusEvent struct {

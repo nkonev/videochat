@@ -220,7 +220,7 @@ type OAuth2Identifiers {
     keycloakId: String
 }
 
-type UserAccountEvent {
+type UserAccountDto {
     id:         Int64!
     login:      String!
     avatar:     String # url
@@ -228,7 +228,11 @@ type UserAccountEvent {
     shortInfo: String
     lastLoginDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
+}
+
+type UserAccountEvent {
     eventType:  String!
+    userAccountEvent: UserAccountDto
 }
 
 type Query {

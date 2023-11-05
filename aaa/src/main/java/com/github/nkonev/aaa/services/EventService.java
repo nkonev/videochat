@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.UserAccountEventDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,8 @@ public class EventService {
     private RabbitTemplate rabbitTemplate;
 
     public void notifyProfileUpdated(UserAccount userAccount) {
-        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", UserAccountConverter.convertToUserAccountDTO(userAccount), message -> {
-            message.getMessageProperties().setType("dto.UserAccount");
+        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", new UserAccountEventDTO(UserAccountConverter.convertToUserAccountDTO(userAccount), "user_account_changed"), message -> {
+            message.getMessageProperties().setType("dto.UserAccountEvent");
             return message;
         });
     }

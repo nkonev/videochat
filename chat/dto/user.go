@@ -9,6 +9,11 @@ type User struct {
 	ShortInfo null.String `json:"shortInfo"`
 }
 
+type UserAccountEvent struct {
+	UserAccount *User `json:"userAccount"`
+	EventType string `json:"eventType"`
+}
+
 type UserWithAdmin struct {
 	User
 	Admin bool `json:"admin"`

@@ -22,6 +22,11 @@ type UserAccount struct {
 	Oauth2Identifiers *Oauth2Identifiers `json:"oauth2Identifiers"`
 }
 
-func (UserAccount) Name() eventbus.EventName {
+type UserAccountEvent struct {
+	UserAccount *UserAccount `json:"userAccount"`
+	EventType string `json:"eventType"`
+}
+
+func (UserAccountEvent) Name() eventbus.EventName {
 	return AAA
 }

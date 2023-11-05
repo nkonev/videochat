@@ -136,13 +136,14 @@ import bus, {
 import {searchString, goToPreserving, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-  hasLength, isSetEqual,
+  hasLength, isSetEqual, replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
   setTitle
 } from "@/utils";
 import Mark from "mark.js";
 import userStatusMixin from "@/mixins/userStatusMixin";
+import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -154,7 +155,8 @@ export default {
     infiniteScrollMixin(scrollerName),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
-    userStatusMixin('userList'),
+    graphqlSubscriptionMixin('userAccountEvents'),
+    userStatusMixin('userStatusInUserList'),
   ],
   data() {
     return {
@@ -167,6 +169,9 @@ export default {
     ...mapStores(useChatStore),
     showProgress() {
       return this.chatStore.progressCount > 0
+    },
+    itemIds() {
+      return this.items.map(i => i.id);
     },
   },
 
@@ -319,6 +324,7 @@ export default {
     onLoggedOut() {
       this.reset();
       this.graphQlUserStatusUnsubscribe();
+      this.graphQlUnsubscribe();
     },
 
     canDrawUsers() {
@@ -376,6 +382,43 @@ export default {
               })
           }
     },
+
+    getGraphQlSubscriptionQuery() {
+      const userIds = this.getUserIdsSubscribeTo();
+      return `
+                subscription {
+                  userAccountEvents(userIds:[${userIds}]) {
+                    userAccountEvent {
+                      id
+                      login
+                      avatar
+                      avatarBig
+                      shortInfo
+                      lastLoginDateTime
+                      oauth2Identifiers {
+                        facebookId
+                        vkontakteId
+                        googleId
+                        keycloakId
+                      }
+                    }
+                    eventType
+                  }
+                }
+            `
+    },
+    onNextSubscriptionElement(e) {
+      const d = e.data?.userAccountEvents;
+      if (d.eventType === 'user_account_changed') {
+        this.changeItem(d.userAccountEvent);
+        this.performMarking();
+      }
+    },
+    changeItem(dto) {
+      console.log("Replacing item", dto);
+      replaceInArray(this.items, dto);
+    },
+
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
@@ -386,7 +429,15 @@ export default {
               this.setTopTitle();
           },
       },
-
+      itemIds: function(newValue, oldValue) {
+        if (newValue.length == 0) {
+          this.graphQlUnsubscribe();
+        } else {
+          if (!isSetEqual(oldValue, newValue)) {
+            this.graphQlSubscribe();
+          }
+        }
+      },
   },
   async mounted() {
     this.markInstance = new Mark("div#user-list-items .user-name");
@@ -407,6 +458,7 @@ export default {
   beforeUnmount() {
     this.uninstallScroller();
     this.graphQlUserStatusUnsubscribe();
+    this.graphQlUnsubscribe();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);

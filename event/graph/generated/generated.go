@@ -228,15 +228,19 @@ type ComplexityRoot struct {
 		UserStatusEvents  func(childComplexity int, userIds []int64) int
 	}
 
-	UserAccountEvent struct {
+	UserAccountDto struct {
 		Avatar            func(childComplexity int) int
 		AvatarBig         func(childComplexity int) int
-		EventType         func(childComplexity int) int
 		ID                func(childComplexity int) int
 		LastLoginDateTime func(childComplexity int) int
 		Login             func(childComplexity int) int
 		Oauth2Identifiers func(childComplexity int) int
 		ShortInfo         func(childComplexity int) int
+	}
+
+	UserAccountEvent struct {
+		EventType        func(childComplexity int) int
+		UserAccountEvent func(childComplexity int) int
 	}
 
 	UserStatusEvent struct {
@@ -1196,19 +1200,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.UserStatusEvents(childComplexity, args["userIds"].([]int64)), true
 
-	case "UserAccountEvent.avatar":
-		if e.complexity.UserAccountEvent.Avatar == nil {
+	case "UserAccountDto.avatar":
+		if e.complexity.UserAccountDto.Avatar == nil {
 			break
 		}
 
-		return e.complexity.UserAccountEvent.Avatar(childComplexity), true
+		return e.complexity.UserAccountDto.Avatar(childComplexity), true
 
-	case "UserAccountEvent.avatarBig":
-		if e.complexity.UserAccountEvent.AvatarBig == nil {
+	case "UserAccountDto.avatarBig":
+		if e.complexity.UserAccountDto.AvatarBig == nil {
 			break
 		}
 
-		return e.complexity.UserAccountEvent.AvatarBig(childComplexity), true
+		return e.complexity.UserAccountDto.AvatarBig(childComplexity), true
+
+	case "UserAccountDto.id":
+		if e.complexity.UserAccountDto.ID == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.ID(childComplexity), true
+
+	case "UserAccountDto.lastLoginDateTime":
+		if e.complexity.UserAccountDto.LastLoginDateTime == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.LastLoginDateTime(childComplexity), true
+
+	case "UserAccountDto.login":
+		if e.complexity.UserAccountDto.Login == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.Login(childComplexity), true
+
+	case "UserAccountDto.oauth2Identifiers":
+		if e.complexity.UserAccountDto.Oauth2Identifiers == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.Oauth2Identifiers(childComplexity), true
+
+	case "UserAccountDto.shortInfo":
+		if e.complexity.UserAccountDto.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.ShortInfo(childComplexity), true
 
 	case "UserAccountEvent.eventType":
 		if e.complexity.UserAccountEvent.EventType == nil {
@@ -1217,40 +1256,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountEvent.EventType(childComplexity), true
 
-	case "UserAccountEvent.id":
-		if e.complexity.UserAccountEvent.ID == nil {
+	case "UserAccountEvent.userAccountEvent":
+		if e.complexity.UserAccountEvent.UserAccountEvent == nil {
 			break
 		}
 
-		return e.complexity.UserAccountEvent.ID(childComplexity), true
-
-	case "UserAccountEvent.lastLoginDateTime":
-		if e.complexity.UserAccountEvent.LastLoginDateTime == nil {
-			break
-		}
-
-		return e.complexity.UserAccountEvent.LastLoginDateTime(childComplexity), true
-
-	case "UserAccountEvent.login":
-		if e.complexity.UserAccountEvent.Login == nil {
-			break
-		}
-
-		return e.complexity.UserAccountEvent.Login(childComplexity), true
-
-	case "UserAccountEvent.oauth2Identifiers":
-		if e.complexity.UserAccountEvent.Oauth2Identifiers == nil {
-			break
-		}
-
-		return e.complexity.UserAccountEvent.Oauth2Identifiers(childComplexity), true
-
-	case "UserAccountEvent.shortInfo":
-		if e.complexity.UserAccountEvent.ShortInfo == nil {
-			break
-		}
-
-		return e.complexity.UserAccountEvent.ShortInfo(childComplexity), true
+		return e.complexity.UserAccountEvent.UserAccountEvent(childComplexity), true
 
 	case "UserStatusEvent.eventType":
 		if e.complexity.UserStatusEvent.EventType == nil {
@@ -1690,7 +1701,7 @@ type OAuth2Identifiers {
     keycloakId: String
 }
 
-type UserAccountEvent {
+type UserAccountDto {
     id:         Int64!
     login:      String!
     avatar:     String # url
@@ -1698,7 +1709,11 @@ type UserAccountEvent {
     shortInfo: String
     lastLoginDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
+}
+
+type UserAccountEvent {
     eventType:  String!
+    userAccountEvent: UserAccountDto
 }
 
 type Query {
@@ -7681,22 +7696,10 @@ func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserAccountEvent_id(ctx, field)
-			case "login":
-				return ec.fieldContext_UserAccountEvent_login(ctx, field)
-			case "avatar":
-				return ec.fieldContext_UserAccountEvent_avatar(ctx, field)
-			case "avatarBig":
-				return ec.fieldContext_UserAccountEvent_avatarBig(ctx, field)
-			case "shortInfo":
-				return ec.fieldContext_UserAccountEvent_shortInfo(ctx, field)
-			case "lastLoginDateTime":
-				return ec.fieldContext_UserAccountEvent_lastLoginDateTime(ctx, field)
-			case "oauth2Identifiers":
-				return ec.fieldContext_UserAccountEvent_oauth2Identifiers(ctx, field)
 			case "eventType":
 				return ec.fieldContext_UserAccountEvent_eventType(ctx, field)
+			case "userAccountEvent":
+				return ec.fieldContext_UserAccountEvent_userAccountEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserAccountEvent", field.Name)
 		},
@@ -7715,8 +7718,8 @@ func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_id(ctx, field)
+func (ec *executionContext) _UserAccountDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7746,9 +7749,9 @@ func (ec *executionContext) _UserAccountEvent_id(ctx context.Context, field grap
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7759,8 +7762,8 @@ func (ec *executionContext) fieldContext_UserAccountEvent_id(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_login(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_login(ctx, field)
+func (ec *executionContext) _UserAccountDto_login(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_login(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7790,9 +7793,9 @@ func (ec *executionContext) _UserAccountEvent_login(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7803,8 +7806,8 @@ func (ec *executionContext) fieldContext_UserAccountEvent_login(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_avatar(ctx, field)
+func (ec *executionContext) _UserAccountDto_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_avatar(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7831,9 +7834,9 @@ func (ec *executionContext) _UserAccountEvent_avatar(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7844,8 +7847,8 @@ func (ec *executionContext) fieldContext_UserAccountEvent_avatar(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_avatarBig(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_avatarBig(ctx, field)
+func (ec *executionContext) _UserAccountDto_avatarBig(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_avatarBig(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7872,9 +7875,9 @@ func (ec *executionContext) _UserAccountEvent_avatarBig(ctx context.Context, fie
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_avatarBig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_avatarBig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7885,8 +7888,8 @@ func (ec *executionContext) fieldContext_UserAccountEvent_avatarBig(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_shortInfo(ctx, field)
+func (ec *executionContext) _UserAccountDto_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_shortInfo(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7913,9 +7916,9 @@ func (ec *executionContext) _UserAccountEvent_shortInfo(ctx context.Context, fie
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7926,8 +7929,8 @@ func (ec *executionContext) fieldContext_UserAccountEvent_shortInfo(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_lastLoginDateTime(ctx, field)
+func (ec *executionContext) _UserAccountDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_lastLoginDateTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7954,9 +7957,9 @@ func (ec *executionContext) _UserAccountEvent_lastLoginDateTime(ctx context.Cont
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_lastLoginDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7967,8 +7970,8 @@ func (ec *executionContext) fieldContext_UserAccountEvent_lastLoginDateTime(ctx 
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountEvent_oauth2Identifiers(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountEvent_oauth2Identifiers(ctx, field)
+func (ec *executionContext) _UserAccountDto_oauth2Identifiers(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_oauth2Identifiers(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7995,9 +7998,9 @@ func (ec *executionContext) _UserAccountEvent_oauth2Identifiers(ctx context.Cont
 	return ec.marshalOOAuth2Identifiers2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐOAuth2Identifiers(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountEvent_oauth2Identifiers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_oauth2Identifiers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserAccountEvent",
+		Object:     "UserAccountDto",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -8057,6 +8060,63 @@ func (ec *executionContext) fieldContext_UserAccountEvent_eventType(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountEvent_userAccountEvent(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountEvent_userAccountEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserAccountEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserAccountDto)
+	fc.Result = res
+	return ec.marshalOUserAccountDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountEvent_userAccountEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserAccountDto_id(ctx, field)
+			case "login":
+				return ec.fieldContext_UserAccountDto_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_UserAccountDto_avatar(ctx, field)
+			case "avatarBig":
+				return ec.fieldContext_UserAccountDto_avatarBig(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_UserAccountDto_shortInfo(ctx, field)
+			case "lastLoginDateTime":
+				return ec.fieldContext_UserAccountDto_lastLoginDateTime(ctx, field)
+			case "oauth2Identifiers":
+				return ec.fieldContext_UserAccountDto_oauth2Identifiers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAccountDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -11927,6 +11987,61 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 }
 
+var userAccountDtoImplementors = []string{"UserAccountDto"}
+
+func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAccountDto")
+		case "id":
+
+			out.Values[i] = ec._UserAccountDto_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+
+			out.Values[i] = ec._UserAccountDto_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "avatar":
+
+			out.Values[i] = ec._UserAccountDto_avatar(ctx, field, obj)
+
+		case "avatarBig":
+
+			out.Values[i] = ec._UserAccountDto_avatarBig(ctx, field, obj)
+
+		case "shortInfo":
+
+			out.Values[i] = ec._UserAccountDto_shortInfo(ctx, field, obj)
+
+		case "lastLoginDateTime":
+
+			out.Values[i] = ec._UserAccountDto_lastLoginDateTime(ctx, field, obj)
+
+		case "oauth2Identifiers":
+
+			out.Values[i] = ec._UserAccountDto_oauth2Identifiers(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userAccountEventImplementors = []string{"UserAccountEvent"}
 
 func (ec *executionContext) _UserAccountEvent(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountEvent) graphql.Marshaler {
@@ -11937,40 +12052,6 @@ func (ec *executionContext) _UserAccountEvent(ctx context.Context, sel ast.Selec
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("UserAccountEvent")
-		case "id":
-
-			out.Values[i] = ec._UserAccountEvent_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "login":
-
-			out.Values[i] = ec._UserAccountEvent_login(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "avatar":
-
-			out.Values[i] = ec._UserAccountEvent_avatar(ctx, field, obj)
-
-		case "avatarBig":
-
-			out.Values[i] = ec._UserAccountEvent_avatarBig(ctx, field, obj)
-
-		case "shortInfo":
-
-			out.Values[i] = ec._UserAccountEvent_shortInfo(ctx, field, obj)
-
-		case "lastLoginDateTime":
-
-			out.Values[i] = ec._UserAccountEvent_lastLoginDateTime(ctx, field, obj)
-
-		case "oauth2Identifiers":
-
-			out.Values[i] = ec._UserAccountEvent_oauth2Identifiers(ctx, field, obj)
-
 		case "eventType":
 
 			out.Values[i] = ec._UserAccountEvent_eventType(ctx, field, obj)
@@ -11978,6 +12059,10 @@ func (ec *executionContext) _UserAccountEvent(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "userAccountEvent":
+
+			out.Values[i] = ec._UserAccountEvent_userAccountEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13462,6 +13547,13 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	}
 	res := graph_types.MarshalUUID(v)
 	return res
+}
+
+func (ec *executionContext) marshalOUserAccountDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountDto(ctx context.Context, sel ast.SelectionSet, v *model.UserAccountDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserAccountDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx context.Context, sel ast.SelectionSet, v *model.UserTypingDto) graphql.Marshaler {
