@@ -163,7 +163,7 @@
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
-    import {deepCopy, findIndex, hasLength, isArrEqual, moveToFirstPosition, replaceInArray} from "@/utils";
+    import {deepCopy, findIndex, hasLength, isSetEqual, moveToFirstPosition, replaceInArray} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -312,7 +312,7 @@
             },
             closeModal() {
                 console.debug("Closing ChatParticipantsModal");
-                this.graphQlUnsubscribe();
+                this.graphQlUserStatusUnsubscribe();
 
                 this.loading = false;
                 this.show = false;
@@ -546,10 +546,10 @@
                 const oldArr = oldValue?.participants.map((p)=> p.id );
                 const newArr = newValue?.participants.map((p)=> p.id );
                 if (newArr == null || newArr.length == 0) {
-                    this.graphQlUnsubscribe();
+                    this.graphQlUserStatusUnsubscribe();
                 } else {
-                    if (!isArrEqual(oldArr, newArr)) {
-                        this.graphQlSubscribe();
+                    if (!isSetEqual(oldArr, newArr)) {
+                        this.graphQlUserStatusSubscribe();
                     }
                 }
             }

@@ -102,6 +102,7 @@ import {deepCopy, hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
+import bus, {LOGGED_OUT, PROFILE_SET} from "@/bus/bus";
 
 export default {
   mixins: [
@@ -198,15 +199,30 @@ export default {
       this.chatStore.title = aTitle;
       setTitle(aTitle);
     },
+    onLoggedOut() {
+      this.graphQlUserStatusUnsubscribe();
+    },
+    onProfileSet() {
+      this.loadUser();
+      this.graphQlUserStatusSubscribe();
+    },
+    canDrawUsers() {
+      return !!this.chatStore.currentUser
+    },
   },
   mounted() {
+    bus.on(LOGGED_OUT, this.onLoggedOut);
+    bus.on(PROFILE_SET, this.onProfileSet);
     this.setMainTitle()
 
-    this.loadUser();
-    this.graphQlSubscribe();
+    if (this.canDrawUsers()) {
+      this.onProfileSet();
+    }
   },
   beforeUnmount() {
-    this.graphQlUnsubscribe();
+    bus.off(LOGGED_OUT, this.onLoggedOut);
+    bus.off(PROFILE_SET, this.onProfileSet);
+    this.graphQlUserStatusUnsubscribe();
     this.unsetMainTitle();
 
     this.viewableUser = null;

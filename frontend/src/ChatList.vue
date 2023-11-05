@@ -103,7 +103,7 @@ import {
   dynamicSortMultiple,
   findIndex,
   hasLength,
-  isArrEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
+  isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
   setTitle
@@ -303,7 +303,7 @@ export default {
       await this.reloadItems();
     },
     onLoggedOut() {
-      this.graphQlUnsubscribe();
+      this.graphQlUserStatusUnsubscribe();
       this.reset();
     },
 
@@ -570,10 +570,10 @@ export default {
       },
       tetAtetParticipants: function(newValue, oldValue) {
           if (newValue.length == 0) {
-              this.graphQlUnsubscribe();
+              this.graphQlUserStatusUnsubscribe();
           } else {
-              if (!isArrEqual(oldValue, newValue)) {
-                  this.graphQlSubscribe();
+              if (!isSetEqual(oldValue, newValue)) {
+                  this.graphQlUserStatusSubscribe();
               }
           }
       },
@@ -606,7 +606,7 @@ export default {
   },
 
   beforeUnmount() {
-    this.graphQlUnsubscribe();
+    this.graphQlUserStatusUnsubscribe();
     this.uninstallScroller();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);

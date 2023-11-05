@@ -164,21 +164,19 @@ export const formatSize = (size) => {
 
 export const publicallyAvailableForSearchChatsQuery = "__AVAILABLE_FOR_SEARCH";
 
-export const isArrEqual = (a, b) => {
+export const isSetEqual = (a, b) => {
     if (a == null && b == null) {
         return true
-    }
-    if (a == null && b != null) {
+    } else if (a == null && b != null) {
         return false
-    }
-    if (a != null && b == null) {
+    } else if (a != null && b == null) {
         return false
+    } else {
+      const first = new Set(a);
+      const second = new Set(b);
+      return first.size === second.size &&
+        [...first].every((x) => second.has(x))
     }
-    if (a != null && b != null) {
-        return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
-    }
-    console.error("Unexpected branch", a, b);
-    return true
 }
 
 export function dynamicSort(property) {

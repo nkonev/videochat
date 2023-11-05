@@ -41,9 +41,9 @@ export default (nameForLog) => {
                     }`
             },
 
-            graphQlSubscribe() {
+            graphQlUserStatusSubscribe() {
                 // unsubscribe from the previous for case re-subscribing on user list change
-                this.graphQlUnsubscribe();
+                this.graphQlUserStatusUnsubscribe();
 
                 const subscriptionElement1 = { name: 'userStatus ' + nameForLog };
                 this.performSubscription(subscriptionElement1, this.getUserOnlineSubscriptionQuery, this.onUserStatusChanged)
@@ -99,7 +99,7 @@ export default (nameForLog) => {
                     subscriptionElement.timeout = null;
                 }
             },
-            graphQlUnsubscribe() {
+            graphQlUserStatusUnsubscribe() {
                 console.log(`Unsubscribing from all subscriptions`);
                 for (const subscriptionElement of this.subscriptionElements) {
                     this.doUnsubscribe(subscriptionElement);

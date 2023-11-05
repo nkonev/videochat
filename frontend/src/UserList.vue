@@ -136,10 +136,10 @@ import bus, {
 import {searchString, goToPreserving, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-    hasLength,
-    replaceOrAppend,
-    replaceOrPrepend,
-    setTitle
+  hasLength, isSetEqual,
+  replaceOrAppend,
+  replaceOrPrepend,
+  setTitle
 } from "@/utils";
 import Mark from "mark.js";
 import userStatusMixin from "@/mixins/userStatusMixin";
@@ -272,7 +272,7 @@ export default {
                 this.pageBottom += 1;
             }
           }
-          this.graphQlSubscribe();
+          this.graphQlUserStatusSubscribe();
           this.performMarking();
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
@@ -318,6 +318,7 @@ export default {
     },
     onLoggedOut() {
       this.reset();
+      this.graphQlUserStatusUnsubscribe();
     },
 
     canDrawUsers() {
@@ -385,6 +386,7 @@ export default {
               this.setTopTitle();
           },
       },
+
   },
   async mounted() {
     this.markInstance = new Mark("div#user-list-items .user-name");
@@ -404,7 +406,7 @@ export default {
 
   beforeUnmount() {
     this.uninstallScroller();
-    this.graphQlUnsubscribe();
+    this.graphQlUserStatusUnsubscribe();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
