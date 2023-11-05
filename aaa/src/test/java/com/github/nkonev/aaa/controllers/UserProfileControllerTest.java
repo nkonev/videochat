@@ -15,10 +15,9 @@ import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.services.EventReceiver;
-import com.google.common.util.concurrent.Uninterruptibles;
+import org.awaitility.Awaitility;
 import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.github.nkonev.aaa.TestConstants.*;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -57,6 +57,20 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @Autowired
     private EventReceiver receiver;
 
+    @BeforeAll
+    public static void ba() {
+        Awaitility.setDefaultTimeout(Duration.ofSeconds(30));
+    }
+
+    @BeforeEach
+    public void be() {
+        receiver.clear();
+    }
+
+    @AfterEach
+    public void ae() {
+        receiver.clear();
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileControllerTest.class);
 
@@ -81,7 +95,6 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void fullyAuthenticatedUserCanChangeHerProfile() throws Exception {
-        receiver.clear();
         UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
         final String initialPassword = userAccount.password();
 
@@ -113,13 +126,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andReturn();
 
-        for (int i=0; i<10; ++i) {
-            if (receiver.size() > 0) {
-                break;
-            } else {
-                Uninterruptibles.sleepUninterruptibly(Duration.of(1, ChronoUnit.SECONDS));
-            }
-        }
+        await().ignoreExceptions().until(() -> receiver.size(), s -> s > 0);
         Assertions.assertEquals(1, receiver.size());
         final UserAccountDTO userAccountEvent = receiver.getLast();
         Assertions.assertEquals(newLogin, userAccountEvent.login());
