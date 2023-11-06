@@ -30,9 +30,9 @@
                             {{getEmbedHeadLite(item)}}
                         </div>
                     </template>
-                    <div class="message-item-text" v-html="item.embedMessage.text"></div>
+                    <div :class="embedClass()" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" class="message-item-text ml-0" :class="item.embedMessage  ? 'after-embed': ''"></v-container>
+                <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" :class="messageClass(item)"></v-container>
             </div>
         </div>
     </div>
@@ -170,6 +170,19 @@
             },
             onShowContextMenu(event, item) {
                 this.$emit('customcontextmenu', event, item)
+            },
+            embedClass() {
+                return this.isMobile() ? ['message-item-text', 'message-item-text-mobile'] : ['message-item-text']
+            },
+            messageClass(item) {
+              let classes = ['message-item-text', 'ml-0'];
+              if (this.isMobile()) {
+                classes.push('message-item-text-mobile');
+              }
+              if (item.embedMessage) {
+                classes.push('after-embed');
+              }
+              return classes
             },
         },
         created() {
