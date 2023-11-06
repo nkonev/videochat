@@ -251,12 +251,10 @@
               replaceOrPrepend(this.items, items);
             }
 
-            if (!this.hasInitialHash && !this.loadedHash && items.length < PAGE_SIZE) {
+            if (items.length < PAGE_SIZE) {
               if (this.isTopDirection()) {
-                //console.log("Setting this.loadedTop");
                 this.loadedTop = true;
               } else {
-                //console.log("Setting this.loadedBottom");
                 this.loadedBottom = true;
               }
             }
@@ -361,6 +359,7 @@
             // during scrolling we disable adding new elements, so some messages can appear on server, so
             // we set loadedBottom to false in order to force infiniteScrollMixin to fetch new messages during scrollBottom()
             this.loadedBottom = false;
+            this.loadedTop = false;
           }
         },
         isScrolledToBottom() {

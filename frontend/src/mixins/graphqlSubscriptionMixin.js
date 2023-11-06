@@ -33,7 +33,7 @@ export default (nameForLog) => {
                     }
                 }
                 const onComplete = () => {
-                    console.log(`Got compete in ${nameForLog} subscription`);
+                    console.log(`Got complete in ${nameForLog} subscription`);
                 }
 
                 console.log(`Subscribing to ${nameForLog}`);

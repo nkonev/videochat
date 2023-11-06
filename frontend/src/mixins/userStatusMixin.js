@@ -72,7 +72,7 @@ export default (nameForLog) => {
                     }
                 }
                 const onComplete_ = () => {
-                    console.log(`Got compete in ${subscriptionElement.name} subscription`);
+                    console.log(`Got complete in ${subscriptionElement.name} subscription`);
                 }
 
                 console.log(`Subscribing to ${subscriptionElement.name}`);
