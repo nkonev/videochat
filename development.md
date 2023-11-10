@@ -678,3 +678,37 @@ http://localhost:8081/front2/blog/
 https://sflanders.net/2018/11/06/makefile-basics/
 https://stackoverflow.com/questions/448910/what-is-the-difference-between-the-gnu-makefile-variable-assignments-a
 https://stackoverflow.com/questions/25185607/whats-the-difference-between-parenthesis-and-curly-bracket-syntax-in-ma
+
+```json
+[
+ {
+  "eventType": "forSelf",
+  "userId": 123,
+  "type": "UserSelfProfileDTO",
+  "data": {
+    "id": 123,
+    "login": "vasya",
+    "canEdit": true
+  }
+ },
+ {
+  "eventType": "forRole",
+  "roles": ["ROLE_ADMIN", "ROLE_MODERATOR"],
+  "type": "UserAdminProfileDTO",
+  "data": {
+    "id": 123,
+    "login": "vasya",
+    "canEdit": true
+  }
+ },
+ {
+  "eventType": "forRole",
+  "roles": ["ROLE_USER"],
+  "type": "UserAccountDTO",
+  "data": {
+   "id": 123,
+   "login": "vasya"
+  }
+ }
+]
+```
