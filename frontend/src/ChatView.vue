@@ -472,7 +472,7 @@ export default {
       }
     },
     onPanelResized(e) {
-      if (!this.isMobile()) {
+      if (!this.prevMessageEditSize && !this.isMobile()) {
         //console.log(">>> onPanelResized", e)
         const pane = e[e.length - 1];
         this.messageEditSize = pane.size;
