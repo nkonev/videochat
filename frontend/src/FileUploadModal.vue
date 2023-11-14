@@ -44,7 +44,7 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn variant="outlined" min-width="0" v-if="messageIdToAttachFiles && !fileInputQueueHasElements" @click="onAttachFilesToMessage()" :title="$vuetify.locale.t('$vuetify.attach_files_to_message')"><v-icon size="large">mdi-attachment-plus</v-icon></v-btn>
+                    <v-btn variant="outlined" min-width="0" v-if="shouldShowAttachExistingFilesToMessage" @click="onAttachFilesToMessage()" :title="$vuetify.locale.t('$vuetify.attach_files_to_message')"><v-icon size="large">mdi-attachment-plus</v-icon></v-btn>
                     <template v-if="!limitError && fileInputQueueHasElements">
                         <v-btn color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                     </template>
@@ -284,6 +284,9 @@ export default {
         },
         fileInputQueueHasElements() {
             return !!this.inputFiles.length
+        },
+        shouldShowAttachExistingFilesToMessage() {
+          return this.messageIdToAttachFiles && !this.fileUploadingQueueHasElements && !this.fileInputQueueHasElements
         }
     },
     mounted() {
