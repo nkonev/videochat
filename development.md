@@ -682,30 +682,33 @@ https://stackoverflow.com/questions/25185607/whats-the-difference-between-parent
 ```json
 [
  {
-  "eventType": "forSelf",
+  "forWho": "forSelf",
   "userId": 123,
   "type": "UserSelfProfileDTO",
-  "data": {
+  "eventType": "user_account_changed",
+  "userAccount": {
     "id": 123,
     "login": "vasya",
     "canEdit": true
   }
  },
  {
-  "eventType": "forRole",
-  "roles": ["ROLE_ADMIN", "ROLE_MODERATOR"],
+  "forWho": "forRole",
+  "forWhoRoles": ["ROLE_ADMIN", "ROLE_MODERATOR"],
   "type": "UserAdminProfileDTO",
-  "data": {
+  "eventType": "user_account_changed",
+  "userAccount": {
     "id": 123,
     "login": "vasya",
     "canEdit": true
   }
  },
  {
-  "eventType": "forRole",
-  "roles": ["ROLE_USER"],
+  "forWho": "forRole",
+  "forWhoRoles": ["ROLE_USER"],
   "type": "UserAccountDTO",
-  "data": {
+  "eventType": "user_account_changed",
+  "userAccount": {
    "id": 123,
    "login": "vasya"
   }

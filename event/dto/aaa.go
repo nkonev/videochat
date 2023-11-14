@@ -23,8 +23,11 @@ type UserAccount struct {
 }
 
 type UserAccountEvent struct {
-	UserAccount *UserAccount `json:"userAccount"`
+	ForWho string `json:"forWho"`
+	UserId *int64 `json:"userId"` // nullable
+	ForWhoRoles *[]string `json:"forWhoRoles"` // nullable
 	EventType string `json:"eventType"`
+	UserAccount *UserAccount `json:"userAccount"`
 }
 
 func (UserAccountEvent) Name() eventbus.EventName {
