@@ -314,7 +314,13 @@
           await this.onSearchStringChanged()
         },
         async onSearchStringChanged() {
-          await this.reloadItems();
+          if (!hasLength(this.highlightMessageId)) { // if is required for case
+            // user searched for some text ("telegram", or "www")
+            // then in one of found messages user clicks on the original of the answered (which jumps to th original)
+            // without this fix because of two events (a. search string changed (see in the search mixin), b. route changed (see here in watch))
+            // the message list is loaded 2 times and as a result the second load resets both scrolling and highlighting)
+            await this.reloadItems();
+          }
         },
         setHash() {
           this.hasInitialHash = hasLength(this.highlightMessageId);
