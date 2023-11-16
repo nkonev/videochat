@@ -11,6 +11,7 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 /**
@@ -24,37 +25,31 @@ public class AaaSecurityService {
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-    public boolean hasSessionManagementPermission(UserAccountDetailsDTO userAccount) {
+    private UserAccount deleted;
+
+    @PostConstruct
+    public void postConstruct() {
+        deleted = userAccountRepository.findByUsername(Constants.DELETED).orElseThrow();
+    }
+
+    public boolean hasSessionManagementPermission(PrincipalToCheck userAccount) {
         if (userAccount==null){
             return false;
         }
-        return roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()));
+        return userAccount.isAdmin();
     }
 
-    public boolean canLock(UserAccountDetailsDTO userAccount, LockDTO lockDTO) {
+    public boolean canLock(PrincipalToCheck userAccount, LockDTO lockDTO) {
         if (userAccount==null){
             return false;
         }
         if (lockDTO!=null && userAccount.getId().equals(lockDTO.userId())){
             return false;
         }
-        if (roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()))){
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean hasSettingsPermission(UserAccountDetailsDTO userAccount) {
-        return Optional
-                .ofNullable(userAccount)
-                .map(u -> u.getAuthorities()
-                        .contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name())))
-                .orElse(false);
+        return userAccount.isAdmin();
     }
 
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
-        UserAccount deleted = userAccountRepository.findByUsername(Constants.DELETED).orElseThrow();
         if (deleted.id().equals(userIdToDelete)){
             return false;
         }
@@ -71,31 +66,30 @@ public class AaaSecurityService {
                 .ofNullable(userAccount).isPresent();
     }
 
-    public boolean canChangeRole(UserAccountDetailsDTO currentUser, long userAccountId) {
+    public boolean canChangeRole(PrincipalToCheck currentUser, long userAccountId) {
         UserAccount userAccount = userAccountRepository.findById(userAccountId).orElseThrow();
         return lockAndDelete(currentUser, userAccount);
     }
 
-    public boolean canLock(UserAccountDetailsDTO currentUser, UserAccount userAccount) {
+    public boolean canLock(PrincipalToCheck currentUser, UserAccount userAccount) {
         return lockAndDelete(currentUser, userAccount);
     }
 
-    public boolean canDelete(UserAccountDetailsDTO currentUser, UserAccount userAccount) {
+    public boolean canDelete(PrincipalToCheck currentUser, UserAccount userAccount) {
         return lockAndDelete(currentUser, userAccount);
     }
 
-    public boolean canChangeRole(UserAccountDetailsDTO currentUser, UserAccount userAccount) {
+    public boolean canChangeRole(PrincipalToCheck currentUser, UserAccount userAccount) {
         return lockAndDelete(currentUser, userAccount);
     }
 
-    private boolean lockAndDelete(UserAccountDetailsDTO currentUser, UserAccount userAccount) {
+    private boolean lockAndDelete(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) {
             return false;
         }
         if (currentUser == null) {
-            return  false;
+            return false;
         }
-        UserAccount deleted = userAccountRepository.findByUsername(Constants.DELETED).orElseThrow();
         if (deleted.id().equals(userAccount.id())){
             return false;
         }

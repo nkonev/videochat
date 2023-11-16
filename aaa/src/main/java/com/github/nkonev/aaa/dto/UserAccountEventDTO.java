@@ -1,18 +1,17 @@
 package com.github.nkonev.aaa.dto;
 
-import java.util.Set;
 
 public record UserAccountEventDTO(
     ForWho forWho,
-    Set<UserRole> forWhoRoles,
     Long userId, // nullable
     String eventType,
 
-    UserAccountDTO userAccount
+    Object userAccount
 ) {
 
     public enum ForWho {
         FOR_MYSELF,
-        FOR_ROLE,
+        FOR_ROLE_USER,
+        FOR_ROLE_ADMIN,
     }
 }

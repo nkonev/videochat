@@ -14,6 +14,7 @@ import java.util.Set;
 
 import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_PROFILE_EVENTS_NAME;
 import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_ONLINE_EVENTS_NAME;
+import static com.github.nkonev.aaa.converter.UserAccountConverter.convertToUserAccountDetailsDTO;
 
 @Service
 public class EventService {
@@ -21,25 +22,25 @@ public class EventService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    private UserAccountConverter userAccountConverter;
+
     public void notifyProfileUpdated(UserAccount userAccount) {
         var data = Set.of(
             new UserAccountEventDTO(
                 UserAccountEventDTO.ForWho.FOR_MYSELF,
-                null,
                 userAccount.id(),
                 "user_account_changed",
-                UserAccountConverter.convertToUserAccountDTOExtended(userAccount)
+                userAccountConverter.convertToUserAccountDTOExtended(convertToUserAccountDetailsDTO(userAccount), userAccount)
             ),
             new UserAccountEventDTO(
-                UserAccountEventDTO.ForWho.FOR_ROLE,
-                Set.of(UserRole.ROLE_ADMIN),
+                UserAccountEventDTO.ForWho.FOR_ROLE_ADMIN,
                 null,
                 "user_account_changed",
-                UserAccountConverter.convertToUserAccountDTO(userAccount)
+                userAccountConverter.convertToUserAccountDTOExtendedForAdmin(userAccount)
             ),
             new UserAccountEventDTO(
-                UserAccountEventDTO.ForWho.FOR_ROLE,
-                Set.of(UserRole.ROLE_USER),
+                UserAccountEventDTO.ForWho.FOR_ROLE_USER,
                 null,
                 "user_account_changed",
                 UserAccountConverter.convertToUserAccountDTO(userAccount)

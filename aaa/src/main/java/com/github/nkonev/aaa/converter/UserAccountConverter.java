@@ -130,6 +130,30 @@ public class UserAccountConverter {
         );
     }
 
+    public com.github.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtendedForAdmin(UserAccount userAccount) {
+        if (userAccount == null) { return null; }
+        com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
+        if (aaaSecurityService.hasSessionManagementPermissionForAdmin()){
+            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), Set.of(userAccount.role()));
+        } else {
+            dataDTO = null;
+        }
+        return new UserAccountDTOExtended(
+            userAccount.id(),
+            userAccount.username(),
+            userAccount.avatar(),
+            userAccount.avatarBig(),
+            userAccount.shortInfo(),
+            dataDTO,
+            userAccount.lastLoginDateTime(),
+            convertOauth(userAccount.oauth2Identifiers()),
+            aaaSecurityService.canLock(currentUser, userAccount),
+            aaaSecurityService.canDelete(currentUser, userAccount),
+            aaaSecurityService.canChangeRole(currentUser, userAccount)
+        );
+    }
+
+
     private static void validateUserPassword(String password) {
         Assert.notNull(password, "password must be set");
         if (password.length() < Constants.MIN_PASSWORD_LENGTH || password.length() > Constants.MAX_PASSWORD_LENGTH) {

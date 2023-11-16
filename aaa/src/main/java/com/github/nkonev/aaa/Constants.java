@@ -53,6 +53,8 @@ public class Constants {
 
     public static final String DELETED = "deleted";
 
+    public static final Long NonExistentUser = -65000L;
+
     public static final Set<String> FORBIDDEN_USERNAMES = Set.of(DELETED, "all", "here");
 
     public static final int MIN_PASSWORD_LENGTH = 6;
