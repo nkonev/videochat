@@ -5,10 +5,7 @@ import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.LockDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.dto.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -20,7 +17,7 @@ import java.util.Optional;
 @Service
 public class AaaSecurityService {
     @Autowired
-    private RoleHierarchy roleHierarchy;
+    private UserRoleService userRoleService;
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -55,8 +52,8 @@ public class AaaSecurityService {
         }
         return Optional
                 .ofNullable(userAccount)
-                .map(u -> u.getAuthorities()
-                        .contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name())) &&
+                .map(u ->
+                        userRoleService.isAdmin(u) &&
                         !u.getId().equals(userIdToDelete))
                 .orElse(false);
     }
@@ -96,6 +93,6 @@ public class AaaSecurityService {
         if (userAccount.id().equals(currentUser.getId())){
             return false;
         }
-        return roleHierarchy.getReachableGrantedAuthorities(currentUser.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()));
+        return currentUser.isAdmin();
     }
 }

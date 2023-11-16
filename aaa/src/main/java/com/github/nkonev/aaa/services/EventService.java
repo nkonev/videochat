@@ -3,7 +3,6 @@ package com.github.nkonev.aaa.services;
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.UserAccountEventDTO;
-import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ public class EventService {
                 UserAccountEventDTO.ForWho.FOR_ROLE_ADMIN,
                 null,
                 "user_account_changed",
-                userAccountConverter.convertToUserAccountDTOExtendedForAdmin(userAccount)
+                userAccountConverter.convertToUserAccountDTOExtended(userAccount)
             ),
             new UserAccountEventDTO(
                 UserAccountEventDTO.ForWho.FOR_ROLE_USER,

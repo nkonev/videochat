@@ -16,8 +16,8 @@ public sealed interface PrincipalToCheck permits KnownAdmin, UserToCheck {
         return new KnownAdmin();
     }
 
-    static PrincipalToCheck ofUserAccount(UserAccountDetailsDTO userAccount, RoleHierarchy roleHierarchy) {
-        return new UserToCheck(userAccount, roleHierarchy);
+    static PrincipalToCheck ofUserAccount(UserAccountDetailsDTO userAccount, UserRoleService userRoleService) {
+        return new UserToCheck(userAccount, userRoleService);
     }
 }
 
@@ -38,16 +38,16 @@ final class UserToCheck implements PrincipalToCheck {
 
     private final UserAccountDetailsDTO userAccount;
 
-    private final RoleHierarchy roleHierarchy;
+    private final UserRoleService userRoleService;
 
-    UserToCheck(UserAccountDetailsDTO userAccount, RoleHierarchy roleHierarchy) {
+    UserToCheck(UserAccountDetailsDTO userAccount, UserRoleService userRoleService) {
         this.userAccount = userAccount;
-        this.roleHierarchy = roleHierarchy;
+        this.userRoleService = userRoleService;
     }
 
     @Override
     public boolean isAdmin() {
-        return roleHierarchy.getReachableGrantedAuthorities(userAccount.getAuthorities()).contains(new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()));
+        return userRoleService.isAdmin(userAccount);
     }
 
     @Override
