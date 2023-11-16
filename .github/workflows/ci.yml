@@ -36,7 +36,7 @@ jobs:
           sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build and test with Maven
         run: |
-          (cd aaa; make check-env clean package test)
+          (cd aaa; make check-env clean download package test)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
@@ -288,7 +288,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
         run: |
-          (cd aaa; make check-env clean package-java)
+          (cd aaa; make check-env clean download package-java)
           (cd frontend; make check-env clean download package)
           (cd chat; make check-env clean download generate package-go)
           (cd event; make check-env clean download generate package-go)

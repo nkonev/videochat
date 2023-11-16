@@ -1,7 +1,7 @@
 .PHONY: check-env download package-docker test push-docker clean
 
 download:
-	echo "Nothing to download"
+	./mvnw dependency:resolve
 
 check-env:
 	docker version && java -version
