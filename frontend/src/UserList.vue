@@ -28,7 +28,7 @@
 
                 <template v-slot:default>
                     <v-list-item-title>
-                        <span class="user-name" v-html="getUserName(item)"></span>
+                        <span class="user-name" v-html="getUserNameOverride(item)"></span>
                     </v-list-item-title>
                     <v-list-item-subtitle>
                       <v-chip
@@ -176,6 +176,13 @@ export default {
   },
 
   methods: {
+    getUserNameOverride(item) {
+      if (item.additionalData && !item.additionalData.enabled) {
+        return "<s>" + this.getUserName(item) + "</s>"
+      } else {
+        return this.getUserName(item)
+      }
+    },
     hasLength,
     getMaxItemsLength() {
         return 240
