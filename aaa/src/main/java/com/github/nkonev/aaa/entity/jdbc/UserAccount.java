@@ -22,7 +22,8 @@ public record UserAccount(
 
     boolean expired,
     boolean locked,
-    boolean enabled, // synonym to "confirmed"
+    boolean enabled,
+    boolean confirmed,
     @NotNull UserRole role, // synonym to "authority"
     String email,
     LocalDateTime lastLoginDateTime,
@@ -41,6 +42,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
@@ -60,6 +62,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
@@ -79,6 +82,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
@@ -98,6 +102,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
@@ -117,6 +122,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 newEmail,
                 lastLoginDateTime,
@@ -136,6 +142,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
@@ -155,6 +162,7 @@ public record UserAccount(
                 expired,
                 newLocked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
@@ -174,10 +182,31 @@ public record UserAccount(
                 expired,
                 locked,
                 newEnabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,
                 oauth2Identifiers
+        );
+    }
+
+    public UserAccount withConfirmed(boolean newConfirmed) {
+        return new UserAccount(
+            id,
+            creationType,
+            username,
+            password,
+            avatar,
+            avatarBig,
+            shortInfo,
+            expired,
+            locked,
+            enabled,
+            newConfirmed,
+            role,
+            email,
+            lastLoginDateTime,
+            oauth2Identifiers
         );
     }
 
@@ -193,6 +222,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newRole,
                 email,
                 lastLoginDateTime,
@@ -212,6 +242,7 @@ public record UserAccount(
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 role,
                 email,
                 lastLoginDateTime,

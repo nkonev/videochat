@@ -177,7 +177,7 @@ export default {
 
   methods: {
     getUserNameOverride(item) {
-      if (item.additionalData && !item.additionalData.enabled) {
+      if (item.additionalData && !item.additionalData.confirmed) {
         return "<s>" + this.getUserName(item) + "</s>"
       } else {
         return this.getUserName(item)
