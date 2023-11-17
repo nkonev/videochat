@@ -32,6 +32,7 @@ public record UserAccountDTOExtended (
         boolean enabled,
         boolean expired,
         boolean locked,
+        boolean confirmed,
         Set<UserRole> roles
     ) { }
 

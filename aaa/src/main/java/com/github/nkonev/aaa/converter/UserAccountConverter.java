@@ -112,7 +112,7 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
         if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
-            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), Set.of(userAccount.role()));
+            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Set.of(userAccount.role()));
         } else {
             dataDTO = null;
         }
