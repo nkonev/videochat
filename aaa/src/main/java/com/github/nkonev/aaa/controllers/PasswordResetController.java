@@ -39,8 +39,8 @@ public class PasswordResetController {
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
-    @Value("${custom.password-reset.token.ttl-minutes}")
-    private long passwordResetTokenTtlMinutes;
+    @Value("${custom.password-reset.token.ttl}")
+    private Duration passwordResetTokenTtl;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -70,9 +70,12 @@ public class PasswordResetController {
         }
         UserAccount userAccount = userAccountOptional.get();
 
-        Duration ttl = Duration.ofMinutes(passwordResetTokenTtlMinutes);
+        if (!userAccount.confirmed() || !userAccount.enabled() || userAccount.locked() || userAccount.expired()) {
+            LOGGER.warn("Skipping sent request password reset email '{}' because this account isn't ready", email);
+            return; // we care for precondition
+        }
 
-        PasswordResetToken passwordResetToken = new PasswordResetToken(uuid, userAccount.id(), ttl.getSeconds());
+        PasswordResetToken passwordResetToken = new PasswordResetToken(uuid, userAccount.id(), passwordResetTokenTtl.getSeconds());
 
         passwordResetToken = passwordResetTokenRepository.save(passwordResetToken);
 

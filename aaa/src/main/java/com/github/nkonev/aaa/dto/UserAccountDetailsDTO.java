@@ -31,7 +31,8 @@ public record UserAccountDetailsDTO (
     String password, // password hash
     boolean expired,
     boolean locked,
-    boolean enabled, // synonym to "confirmed"
+    boolean enabled,
+    boolean confirmed,
 
     Collection<GrantedAuthority> roles,
     String email
@@ -47,6 +48,7 @@ public record UserAccountDetailsDTO (
             boolean expired,
             boolean locked,
             boolean enabled,
+            boolean confirmed,
             Collection<GrantedAuthority> roles,
             String email,
             LocalDateTime lastLoginDateTime,
@@ -56,7 +58,7 @@ public record UserAccountDetailsDTO (
                 new UserAccountDTO(
                     id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers
                 ),
-                new HashMap<>(), null, null, password, expired, locked, enabled, roles, email
+                new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email
         );
     }
 
@@ -87,7 +89,7 @@ public record UserAccountDetailsDTO (
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return enabled && confirmed;
     }
 
     @Override
@@ -103,14 +105,6 @@ public record UserAccountDetailsDTO (
     @Override
     public String getName() {
         return this.userAccountDTO.login();
-    }
-
-    public boolean isExpired() {
-        return expired;
-    }
-
-    public boolean isLocked() {
-        return locked;
     }
 
     public Collection<GrantedAuthority> getRoles() {
@@ -168,6 +162,7 @@ public record UserAccountDetailsDTO (
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 roles,
                 email
         );

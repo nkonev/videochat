@@ -55,12 +55,12 @@ custom:
   confirmation:
     registration:
       token:
-        ttl-minutes: 5
+        ttl: 5m
   password-reset:
     email:
       subject: "Password reset"
     token:
-      ttl-minutes: 5
+      ttl: 5m
   online-estimation: 10m
   schedulers:
     user-online:

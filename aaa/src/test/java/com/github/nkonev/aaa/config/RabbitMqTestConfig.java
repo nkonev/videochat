@@ -16,7 +16,7 @@ public class RabbitMqTestConfig {
 
     @Bean
     public Exchange aaaExchange() {
-        return new DirectExchange(EXCHANGE_PROFILE_EVENTS_NAME, true, false);
+        return new FanoutExchange(EXCHANGE_PROFILE_EVENTS_NAME, true, false);
     }
 
     @Bean

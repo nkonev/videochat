@@ -32,6 +32,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
 
+import static com.github.nkonev.aaa.TestConstants.HEADER_SET_COOKIE;
 import static com.github.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.blankString;
@@ -75,6 +76,17 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
                 .andReturn();
         String createAccountStr = createAccountRequest.getResponse().getContentAsString();
         LOGGER.info(createAccountStr);
+
+        // we cannot login without confirmation
+        mockMvc.perform(
+                post(SecurityConfig.API_LOGIN_URL)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .param(SecurityConfig.USERNAME_PARAMETER, username)
+                    .param(SecurityConfig.PASSWORD_PARAMETER, password)
+                    .with(csrf())
+            )
+            .andExpect(status().is4xxClientError())
+            .andExpect(header().stringValues(HEADER_SET_COOKIE, Matchers.not(Matchers.hasItem(SESSION_COOKIE_NAME))));
 
         // confirm
         // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html

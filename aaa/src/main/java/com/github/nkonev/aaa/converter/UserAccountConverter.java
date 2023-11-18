@@ -56,6 +56,7 @@ public class UserAccountConverter {
                 userAccount.expired(),
                 userAccount.locked(),
                 userAccount.enabled(),
+                userAccount.confirmed(),
                 Collections.singletonList(convertRole(userAccount.role())),
                 userAccount.email(),
                 userAccount.lastLoginDateTime(),
@@ -114,7 +115,7 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
         if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
-            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), Set.of(userAccount.role()));
+            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Set.of(userAccount.role()));
         } else {
             dataDTO = null;
         }
@@ -143,7 +144,8 @@ public class UserAccountConverter {
     public static UserAccount buildUserAccountEntityForInsert(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, PasswordEncoder passwordEncoder) {
         final boolean expired = false;
         final boolean locked = false;
-        final boolean enabled = false;
+        final boolean enabled = true;
+        final boolean confirmed = false;
 
         final UserRole newUserRole = getDefaultUserRole();
 
@@ -167,6 +169,7 @@ public class UserAccountConverter {
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newUserRole,
                 userAccountDTO.email(),
                 null,
@@ -206,6 +209,7 @@ public class UserAccountConverter {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
+        final boolean confirmed = true;
 
         final UserRole newUserRole = getDefaultUserRole();
 
@@ -220,6 +224,7 @@ public class UserAccountConverter {
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newUserRole,
                 null,
                 null,
@@ -231,6 +236,7 @@ public class UserAccountConverter {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
+        final boolean confirmed = true;
 
         final UserRole newUserRole = getDefaultUserRole();
 
@@ -245,6 +251,7 @@ public class UserAccountConverter {
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newUserRole,
                 null,
                 null,
@@ -256,6 +263,7 @@ public class UserAccountConverter {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
+        final boolean confirmed = true;
 
         final UserRole newUserRole = getDefaultUserRole();
 
@@ -270,6 +278,7 @@ public class UserAccountConverter {
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newUserRole,
                 null,
                 null,
@@ -281,6 +290,7 @@ public class UserAccountConverter {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
+        final boolean confirmed = true;
 
         final UserRole newUserRole = hasAdminRole ? UserRole.ROLE_ADMIN : getDefaultUserRole();
 
@@ -295,6 +305,7 @@ public class UserAccountConverter {
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newUserRole,
                 null,
                 null,
@@ -306,6 +317,7 @@ public class UserAccountConverter {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
+        final boolean confirmed = true;
 
         final UserRole newUserRole = getDefaultUserRole();
 
@@ -320,6 +332,7 @@ public class UserAccountConverter {
                 expired,
                 locked,
                 enabled,
+                confirmed,
                 newUserRole,
                 null,
                 null,

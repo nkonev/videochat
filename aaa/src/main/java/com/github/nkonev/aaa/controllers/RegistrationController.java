@@ -42,8 +42,8 @@ public class RegistrationController {
     @Autowired
     private AsyncEmailService asyncEmailService;
 
-    @Value("${custom.confirmation.registration.token.ttl-minutes}")
-    private long userConfirmationTokenTtlMinutes;
+    @Value("${custom.confirmation.registration.token.ttl}")
+    private Duration userConfirmationTokenTtl;
 
     @Autowired
     private UserService userService;
@@ -57,10 +57,9 @@ public class RegistrationController {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
     private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
-        Assert.isTrue(!userAccount.enabled(), "user account mustn't be enabled");
+        Assert.isTrue(!userAccount.confirmed(), "user account mustn't be confirmed");
 
-        Duration ttl = Duration.ofMinutes(userConfirmationTokenTtlMinutes);
-        long seconds = ttl.getSeconds(); // Redis requires seconds
+        long seconds = userConfirmationTokenTtl.getSeconds(); // Redis requires seconds
 
         UUID tokenUuid = UUID.randomUUID();
         UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid.toString(), userAccount.id(), seconds);
@@ -106,12 +105,12 @@ public class RegistrationController {
             return "redirect:" + customConfig.getRegistrationConfirmExitUserNotFoundUrl();
         }
         UserAccount userAccount = userAccountOptional.get();
-        if (userAccount.enabled()) {
+        if (userAccount.confirmed()) {
             LOGGER.warn("Somebody attempts secondary confirm already confirmed user account with email='{}'", userAccount);
             return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
         }
 
-        userAccount = userAccount.withEnabled(true);
+        userAccount = userAccount.withConfirmed(true);
         userAccount = userAccountRepository.save(userAccount);
 
         userConfirmationTokenRepository.deleteById(stringUuid);
@@ -132,9 +131,9 @@ public class RegistrationController {
             return; // we care for for email leak
         }
         UserAccount userAccount = userAccountOptional.get();
-        if (userAccount.enabled()) {
+        if (userAccount.confirmed()) {
             // this account already confirmed
-            LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this user account already enabled", email);
+            LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this user account already confirmed", email);
             return; // we care for for email leak
         }
 
