@@ -8,9 +8,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.security.OAuth2Providers;
-import com.github.nkonev.aaa.security.SecurityUtils;
+import com.github.nkonev.aaa.security.*;
 import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.OAuth2ProvidersService;
 import com.github.nkonev.aaa.services.UserService;
@@ -66,6 +64,9 @@ public class UserProfileController {
 
     @Autowired
     private OAuth2ProvidersService oAuth2ProvidersService;
+
+    @Autowired
+    private UserRoleService userRoleService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -202,7 +203,7 @@ public class UserProfileController {
     }
 
     private Function<UserAccount, com.github.nkonev.aaa.dto.UserAccountDTOExtended> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {
-        return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(currentUser, userAccount);
+        return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(currentUser, userRoleService), userAccount);
     }
 
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.LIST)
@@ -351,7 +352,7 @@ public class UserProfileController {
         userAccount = userAccount.withLocked(lockDTO.lock());
         userAccount = userAccountRepository.save(userAccount);
 
-        return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
+        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
     @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
@@ -366,7 +367,7 @@ public class UserProfileController {
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         userAccount = userAccount.withRole(role);
         userAccount = userAccountRepository.save(userAccount);
-        return userAccountConverter.convertToUserAccountDTOExtended(userAccountDetailsDTO, userAccount);
+        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
     @PreAuthorize("@aaaSecurityService.canSelfDelete(#userAccountDetailsDTO)")

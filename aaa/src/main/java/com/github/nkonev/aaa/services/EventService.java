@@ -2,18 +2,18 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.UserAccountEventDTO;
+import com.github.nkonev.aaa.dto.UserAccountEventGroupDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import com.github.nkonev.aaa.security.PrincipalToCheck;
+import com.github.nkonev.aaa.security.UserRoleService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
 
 import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_PROFILE_EVENTS_NAME;
 import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_ONLINE_EVENTS_NAME;
-import static com.github.nkonev.aaa.converter.UserAccountConverter.convertToUserAccountDetailsDTO;
 
 @Service
 public class EventService {
@@ -24,29 +24,19 @@ public class EventService {
     @Autowired
     private UserAccountConverter userAccountConverter;
 
+    @Autowired
+    private UserRoleService userRoleService;
+
     public void notifyProfileUpdated(UserAccount userAccount) {
-        var data = Set.of(
-            new UserAccountEventDTO(
-                UserAccountEventDTO.ForWho.FOR_MYSELF,
-                userAccount.id(),
-                "user_account_changed",
-                userAccountConverter.convertToUserAccountDTOExtended(convertToUserAccountDetailsDTO(userAccount), userAccount)
-            ),
-            new UserAccountEventDTO(
-                UserAccountEventDTO.ForWho.FOR_ROLE_ADMIN,
-                null,
-                "user_account_changed",
-                userAccountConverter.convertToUserAccountDTOExtended(userAccount)
-            ),
-            new UserAccountEventDTO(
-                UserAccountEventDTO.ForWho.FOR_ROLE_USER,
-                null,
-                "user_account_changed",
-                UserAccountConverter.convertToUserAccountDTO(userAccount)
-            )
+        var data = new UserAccountEventGroupDTO(
+            userAccount.id(),
+            "user_account_changed",
+            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(UserAccountConverter.convertToUserAccountDetailsDTO(userAccount), userRoleService), userAccount),
+            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.knownAdmin(), userAccount),
+            UserAccountConverter.convertToUserAccountDTO(userAccount)
         );
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("[]dto.UserAccountEvent");
+            message.getMessageProperties().setType("dto.UserAccountEventGroup");
             return message;
         });
     }
