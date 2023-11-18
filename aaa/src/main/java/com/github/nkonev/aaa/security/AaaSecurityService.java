@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.security;
 
 import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.LockDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -37,72 +38,68 @@ public class AaaSecurityService {
     }
 
     public boolean hasSessionManagementPermission(UserAccountDetailsDTO userAccount) {
-        if (userAccount==null){
-            return false;
-        }
-        return userRoleService.isAdmin(userAccount);
+        return hasSessionManagementPermission(PrincipalToCheck.ofUserAccount(userAccount, userRoleService));
     }
 
     public boolean canLock(UserAccountDetailsDTO userAccount, LockDTO lockDTO) {
         if (userAccount==null){
             return false;
         }
-        if (lockDTO!=null && userAccount.getId().equals(lockDTO.userId())){
+        if (lockDTO==null){
             return false;
         }
-        return userRoleService.isAdmin(userAccount);
+        return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), lockDTO.userId());
     }
 
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
-        if (deleted.id().equals(userIdToDelete)){
-            return false;
-        }
-        return Optional
-                .ofNullable(userAccount)
-                .map(u ->
-                        userRoleService.isAdmin(u) &&
-                        !u.getId().equals(userIdToDelete))
-                .orElse(false);
+        return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), userIdToDelete);
     }
 
     public boolean canSelfDelete(UserAccountDetailsDTO userAccount) {
-        return Optional
-                .ofNullable(userAccount).isPresent();
-    }
-
-    public boolean canChangeRole(PrincipalToCheck currentUser, long userAccountId) {
-        UserAccount userAccount = userAccountRepository.findById(userAccountId).orElseThrow();
-        return lockAndDelete(currentUser, userAccount);
+        return Optional.ofNullable(userAccount).isPresent();
     }
 
     public boolean canChangeRole(UserAccountDetailsDTO currentUser, long userAccountId) {
-        UserAccount userAccount = userAccountRepository.findById(userAccountId).orElseThrow();
-        return lockAndDelete(currentUser, userAccount);
+        return lockAndDelete(PrincipalToCheck.ofUserAccount(currentUser, userRoleService), userAccountId);
     }
 
     public boolean canLock(PrincipalToCheck currentUser, UserAccount userAccount) {
-        return lockAndDelete(currentUser, userAccount);
+        if (userAccount == null) {
+            return false;
+        }
+        return lockAndDelete(currentUser, userAccount.id());
     }
 
     public boolean canDelete(PrincipalToCheck currentUser, UserAccount userAccount) {
-        return lockAndDelete(currentUser, userAccount);
+        if (userAccount == null) {
+            return false;
+        }
+        return lockAndDelete(currentUser, userAccount.id());
     }
 
     public boolean canChangeRole(PrincipalToCheck currentUser, UserAccount userAccount) {
-        return lockAndDelete(currentUser, userAccount);
+        if (userAccount == null) {
+            return false;
+        }
+        return lockAndDelete(currentUser, userAccount.id());
     }
 
-    private boolean lockAndDelete(PrincipalToCheck currentUser, UserAccount userAccount) {
-        if (userAccount == null) {
+    private boolean lockAndDelete(PrincipalToCheck currentUser, Long subjectUserAccountId) {
+        var maybeUserAccount = userAccountRepository.findById(subjectUserAccountId);
+        if (maybeUserAccount.isEmpty()) {
+            return false;
+        }
+
+        if (subjectUserAccountId == null) {
             return false;
         }
         if (currentUser == null) {
             return false;
         }
-        if (deleted.id().equals(userAccount.id())){
+        if (deleted.id().equals(subjectUserAccountId)){
             return false;
         }
-        if (userAccount.id().equals(currentUser.getId())){
+        if (subjectUserAccountId.equals(currentUser.getId())){
             return false;
         }
         return currentUser.isAdmin();
