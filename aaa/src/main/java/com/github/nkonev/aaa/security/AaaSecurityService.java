@@ -36,14 +36,21 @@ public class AaaSecurityService {
         return userAccount.isAdmin();
     }
 
-    public boolean canLock(PrincipalToCheck userAccount, LockDTO lockDTO) {
+    public boolean hasSessionManagementPermission(UserAccountDetailsDTO userAccount) {
+        if (userAccount==null){
+            return false;
+        }
+        return userRoleService.isAdmin(userAccount);
+    }
+
+    public boolean canLock(UserAccountDetailsDTO userAccount, LockDTO lockDTO) {
         if (userAccount==null){
             return false;
         }
         if (lockDTO!=null && userAccount.getId().equals(lockDTO.userId())){
             return false;
         }
-        return userAccount.isAdmin();
+        return userRoleService.isAdmin(userAccount);
     }
 
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
