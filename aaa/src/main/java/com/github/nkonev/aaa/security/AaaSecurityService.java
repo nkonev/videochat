@@ -75,6 +75,11 @@ public class AaaSecurityService {
         return lockAndDelete(currentUser, userAccount);
     }
 
+    public boolean canChangeRole(UserAccountDetailsDTO currentUser, long userAccountId) {
+        UserAccount userAccount = userAccountRepository.findById(userAccountId).orElseThrow();
+        return lockAndDelete(currentUser, userAccount);
+    }
+
     public boolean canLock(PrincipalToCheck currentUser, UserAccount userAccount) {
         return lockAndDelete(currentUser, userAccount);
     }
