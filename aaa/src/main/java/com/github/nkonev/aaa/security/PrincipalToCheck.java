@@ -47,11 +47,17 @@ final class UserToCheck implements PrincipalToCheck {
 
     @Override
     public boolean isAdmin() {
+        if (userAccount == null) {
+            return false;
+        }
         return userRoleService.isAdmin(userAccount);
     }
 
     @Override
     public Long getId() {
+        if (userAccount == null) {
+            return null;
+        }
         return userAccount.getId();
     }
 }
