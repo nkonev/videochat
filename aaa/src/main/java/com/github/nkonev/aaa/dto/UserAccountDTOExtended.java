@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 public record UserAccountDTOExtended (
-    @JsonUnwrapped
+    @JsonUnwrapped // todo use converters from jackson annotation
     UserAccountDTO userAccountDTO,
 
     DataDTO additionalData,
