@@ -396,17 +396,43 @@ export default {
                 subscription {
                   userAccountEvents(userIds:[${userIds}]) {
                     userAccountEvent {
-                      id
-                      login
-                      avatar
-                      avatarBig
-                      shortInfo
-                      lastLoginDateTime
-                      oauth2Identifiers {
-                        facebookId
-                        vkontakteId
-                        googleId
-                        keycloakId
+                      ... on UserAccountExtendedDto {
+                        id
+                        login
+                        avatar
+                        avatarBig
+                        shortInfo
+                        lastLoginDateTime
+                        oauth2Identifiers {
+                          facebookId
+                          vkontakteId
+                          googleId
+                          keycloakId
+                        }
+                        additionalData {
+                          enabled
+                          expired
+                          locked
+                          confirmed
+                          roles
+                        }
+                        canLock
+                        canDelete
+                        canChangeRole
+                      }
+                      ... on UserAccountDto {
+                        id
+                        login
+                        avatar
+                        avatarBig
+                        shortInfo
+                        lastLoginDateTime
+                        oauth2Identifiers {
+                          facebookId
+                          vkontakteId
+                          googleId
+                          keycloakId
+                        }
                       }
                     }
                     eventType

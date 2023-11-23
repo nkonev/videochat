@@ -110,8 +110,6 @@ func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
 
-const CHANNEL_PREFIX_CHAT_MESSAGES = "chatMessages"
-
 func SetToArray(set map[int64]bool) []int64 {
 	var ownerIds []int64
 	for k, _ := range set {
@@ -131,6 +129,19 @@ func GetIndexOf(ids []int64, elem int64) int {
 
 func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
+}
+
+func GetIndexOfString(ids []string, elem string) int {
+	for i := 0; i < len(ids); i++ {
+		if ids[i] == elem {
+			return i
+		}
+	}
+	return -1
+}
+
+func ContainsString(ids []string, elem string) bool {
+	return GetIndexOfString(ids, elem) != -1
 }
 
 func Remove(ids []int64, elem int64) []int64 {

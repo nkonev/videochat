@@ -230,9 +230,33 @@ type UserAccountDto {
     oauth2Identifiers: OAuth2Identifiers
 }
 
+type DataDTO {
+    enabled: Boolean!
+    expired: Boolean!
+    locked: Boolean!
+    confirmed: Boolean!
+    roles: [String!]!
+}
+
+type UserAccountExtendedDto {
+    id:         Int64!
+    login:      String!
+    avatar:     String # url
+    avatarBig:  String # url
+    shortInfo: String
+    lastLoginDateTime: Time
+    oauth2Identifiers: OAuth2Identifiers
+    additionalData: DataDTO!
+    canLock: Boolean!
+    canDelete: Boolean!
+    canChangeRole: Boolean!
+}
+
+union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto
+
 type UserAccountEvent {
     eventType:  String!
-    userAccountEvent: UserAccountDto
+    userAccountEvent: UserAccountEventDto
 }
 
 type Query {

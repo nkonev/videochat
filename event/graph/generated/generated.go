@@ -99,6 +99,14 @@ type ComplexityRoot struct {
 		UnreadMessages     func(childComplexity int) int
 	}
 
+	DataDTO struct {
+		Confirmed func(childComplexity int) int
+		Enabled   func(childComplexity int) int
+		Expired   func(childComplexity int) int
+		Locked    func(childComplexity int) int
+		Roles     func(childComplexity int) int
+	}
+
 	DisplayMessageDto struct {
 		BlogPost       func(childComplexity int) int
 		CanDelete      func(childComplexity int) int
@@ -241,6 +249,20 @@ type ComplexityRoot struct {
 	UserAccountEvent struct {
 		EventType        func(childComplexity int) int
 		UserAccountEvent func(childComplexity int) int
+	}
+
+	UserAccountExtendedDto struct {
+		AdditionalData    func(childComplexity int) int
+		Avatar            func(childComplexity int) int
+		AvatarBig         func(childComplexity int) int
+		CanChangeRole     func(childComplexity int) int
+		CanDelete         func(childComplexity int) int
+		CanLock           func(childComplexity int) int
+		ID                func(childComplexity int) int
+		LastLoginDateTime func(childComplexity int) int
+		Login             func(childComplexity int) int
+		Oauth2Identifiers func(childComplexity int) int
+		ShortInfo         func(childComplexity int) int
 	}
 
 	UserStatusEvent struct {
@@ -575,6 +597,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatUnreadMessageChanged.UnreadMessages(childComplexity), true
+
+	case "DataDTO.confirmed":
+		if e.complexity.DataDTO.Confirmed == nil {
+			break
+		}
+
+		return e.complexity.DataDTO.Confirmed(childComplexity), true
+
+	case "DataDTO.enabled":
+		if e.complexity.DataDTO.Enabled == nil {
+			break
+		}
+
+		return e.complexity.DataDTO.Enabled(childComplexity), true
+
+	case "DataDTO.expired":
+		if e.complexity.DataDTO.Expired == nil {
+			break
+		}
+
+		return e.complexity.DataDTO.Expired(childComplexity), true
+
+	case "DataDTO.locked":
+		if e.complexity.DataDTO.Locked == nil {
+			break
+		}
+
+		return e.complexity.DataDTO.Locked(childComplexity), true
+
+	case "DataDTO.roles":
+		if e.complexity.DataDTO.Roles == nil {
+			break
+		}
+
+		return e.complexity.DataDTO.Roles(childComplexity), true
 
 	case "DisplayMessageDto.blogPost":
 		if e.complexity.DisplayMessageDto.BlogPost == nil {
@@ -1263,6 +1320,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountEvent.UserAccountEvent(childComplexity), true
 
+	case "UserAccountExtendedDto.additionalData":
+		if e.complexity.UserAccountExtendedDto.AdditionalData == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.AdditionalData(childComplexity), true
+
+	case "UserAccountExtendedDto.avatar":
+		if e.complexity.UserAccountExtendedDto.Avatar == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.Avatar(childComplexity), true
+
+	case "UserAccountExtendedDto.avatarBig":
+		if e.complexity.UserAccountExtendedDto.AvatarBig == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.AvatarBig(childComplexity), true
+
+	case "UserAccountExtendedDto.canChangeRole":
+		if e.complexity.UserAccountExtendedDto.CanChangeRole == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanChangeRole(childComplexity), true
+
+	case "UserAccountExtendedDto.canDelete":
+		if e.complexity.UserAccountExtendedDto.CanDelete == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanDelete(childComplexity), true
+
+	case "UserAccountExtendedDto.canLock":
+		if e.complexity.UserAccountExtendedDto.CanLock == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanLock(childComplexity), true
+
+	case "UserAccountExtendedDto.id":
+		if e.complexity.UserAccountExtendedDto.ID == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.ID(childComplexity), true
+
+	case "UserAccountExtendedDto.lastLoginDateTime":
+		if e.complexity.UserAccountExtendedDto.LastLoginDateTime == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.LastLoginDateTime(childComplexity), true
+
+	case "UserAccountExtendedDto.login":
+		if e.complexity.UserAccountExtendedDto.Login == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.Login(childComplexity), true
+
+	case "UserAccountExtendedDto.oauth2Identifiers":
+		if e.complexity.UserAccountExtendedDto.Oauth2Identifiers == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.Oauth2Identifiers(childComplexity), true
+
+	case "UserAccountExtendedDto.shortInfo":
+		if e.complexity.UserAccountExtendedDto.ShortInfo == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.ShortInfo(childComplexity), true
+
 	case "UserStatusEvent.eventType":
 		if e.complexity.UserStatusEvent.EventType == nil {
 			break
@@ -1711,9 +1845,33 @@ type UserAccountDto {
     oauth2Identifiers: OAuth2Identifiers
 }
 
+type DataDTO {
+    enabled: Boolean!
+    expired: Boolean!
+    locked: Boolean!
+    confirmed: Boolean!
+    roles: [String!]!
+}
+
+type UserAccountExtendedDto {
+    id:         Int64!
+    login:      String!
+    avatar:     String # url
+    avatarBig:  String # url
+    shortInfo: String
+    lastLoginDateTime: Time
+    oauth2Identifiers: OAuth2Identifiers
+    additionalData: DataDTO!
+    canLock: Boolean!
+    canDelete: Boolean!
+    canChangeRole: Boolean!
+}
+
+union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto
+
 type UserAccountEvent {
     eventType:  String!
-    userAccountEvent: UserAccountDto
+    userAccountEvent: UserAccountEventDto
 }
 
 type Query {
@@ -3510,6 +3668,226 @@ func (ec *executionContext) fieldContext_ChatUnreadMessageChanged_lastUpdateDate
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDTO_enabled(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDTO_enabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Enabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDTO_enabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDTO",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDTO_expired(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDTO_expired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Expired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDTO_expired(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDTO",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDTO_locked(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDTO_locked(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Locked, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDTO_locked(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDTO",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDTO_confirmed(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDTO_confirmed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Confirmed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDTO_confirmed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDTO",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DataDTO_roles(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DataDTO_roles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Roles, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DataDTO_roles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DataDTO",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8088,9 +8466,9 @@ func (ec *executionContext) _UserAccountEvent_userAccountEvent(ctx context.Conte
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserAccountDto)
+	res := resTmp.(model.UserAccountEventDto)
 	fc.Result = res
-	return ec.marshalOUserAccountDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountDto(ctx, field.Selections, res)
+	return ec.marshalOUserAccountEventDto2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountEventDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserAccountEvent_userAccountEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8100,23 +8478,498 @@ func (ec *executionContext) fieldContext_UserAccountEvent_userAccountEvent(ctx c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UserAccountEventDto does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_login(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_login(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_avatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Avatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_avatarBig(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_avatarBig(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvatarBig, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_avatarBig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_shortInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_lastLoginDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastLoginDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_oauth2Identifiers(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_oauth2Identifiers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Oauth2Identifiers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OAuth2Identifiers)
+	fc.Result = res
+	return ec.marshalOOAuth2Identifiers2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐOAuth2Identifiers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_oauth2Identifiers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserAccountDto_id(ctx, field)
-			case "login":
-				return ec.fieldContext_UserAccountDto_login(ctx, field)
-			case "avatar":
-				return ec.fieldContext_UserAccountDto_avatar(ctx, field)
-			case "avatarBig":
-				return ec.fieldContext_UserAccountDto_avatarBig(ctx, field)
-			case "shortInfo":
-				return ec.fieldContext_UserAccountDto_shortInfo(ctx, field)
-			case "lastLoginDateTime":
-				return ec.fieldContext_UserAccountDto_lastLoginDateTime(ctx, field)
-			case "oauth2Identifiers":
-				return ec.fieldContext_UserAccountDto_oauth2Identifiers(ctx, field)
+			case "facebookId":
+				return ec.fieldContext_OAuth2Identifiers_facebookId(ctx, field)
+			case "vkontakteId":
+				return ec.fieldContext_OAuth2Identifiers_vkontakteId(ctx, field)
+			case "googleId":
+				return ec.fieldContext_OAuth2Identifiers_googleId(ctx, field)
+			case "keycloakId":
+				return ec.fieldContext_OAuth2Identifiers_keycloakId(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserAccountDto", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OAuth2Identifiers", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_additionalData(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_additionalData(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataDto)
+	fc.Result = res
+	return ec.marshalNDataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_additionalData(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_DataDTO_enabled(ctx, field)
+			case "expired":
+				return ec.fieldContext_DataDTO_expired(ctx, field)
+			case "locked":
+				return ec.fieldContext_DataDTO_locked(ctx, field)
+			case "confirmed":
+				return ec.fieldContext_DataDTO_confirmed(ctx, field)
+			case "roles":
+				return ec.fieldContext_DataDTO_roles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DataDTO", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_canLock(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canLock(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanLock, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canLock(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_canDelete(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canDelete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanDelete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_canChangeRole(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canChangeRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanChangeRole, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canChangeRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10852,6 +11705,29 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _UserAccountEventDto(ctx context.Context, sel ast.SelectionSet, obj model.UserAccountEventDto) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.UserAccountDto:
+		return ec._UserAccountDto(ctx, sel, &obj)
+	case *model.UserAccountDto:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserAccountDto(ctx, sel, obj)
+	case model.UserAccountExtendedDto:
+		return ec._UserAccountExtendedDto(ctx, sel, &obj)
+	case *model.UserAccountExtendedDto:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserAccountExtendedDto(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -11160,6 +12036,62 @@ func (ec *executionContext) _ChatUnreadMessageChanged(ctx context.Context, sel a
 		case "lastUpdateDateTime":
 
 			out.Values[i] = ec._ChatUnreadMessageChanged_lastUpdateDateTime(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dataDTOImplementors = []string{"DataDTO"}
+
+func (ec *executionContext) _DataDTO(ctx context.Context, sel ast.SelectionSet, obj *model.DataDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dataDTOImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DataDTO")
+		case "enabled":
+
+			out.Values[i] = ec._DataDTO_enabled(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "expired":
+
+			out.Values[i] = ec._DataDTO_expired(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "locked":
+
+			out.Values[i] = ec._DataDTO_locked(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "confirmed":
+
+			out.Values[i] = ec._DataDTO_confirmed(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "roles":
+
+			out.Values[i] = ec._DataDTO_roles(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -11987,7 +12919,7 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 }
 
-var userAccountDtoImplementors = []string{"UserAccountDto"}
+var userAccountDtoImplementors = []string{"UserAccountDto", "UserAccountEventDto"}
 
 func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountDto) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountDtoImplementors)
@@ -12063,6 +12995,89 @@ func (ec *executionContext) _UserAccountEvent(ctx context.Context, sel ast.Selec
 
 			out.Values[i] = ec._UserAccountEvent_userAccountEvent(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userAccountExtendedDtoImplementors = []string{"UserAccountExtendedDto", "UserAccountEventDto"}
+
+func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountExtendedDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountExtendedDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAccountExtendedDto")
+		case "id":
+
+			out.Values[i] = ec._UserAccountExtendedDto_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+
+			out.Values[i] = ec._UserAccountExtendedDto_login(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "avatar":
+
+			out.Values[i] = ec._UserAccountExtendedDto_avatar(ctx, field, obj)
+
+		case "avatarBig":
+
+			out.Values[i] = ec._UserAccountExtendedDto_avatarBig(ctx, field, obj)
+
+		case "shortInfo":
+
+			out.Values[i] = ec._UserAccountExtendedDto_shortInfo(ctx, field, obj)
+
+		case "lastLoginDateTime":
+
+			out.Values[i] = ec._UserAccountExtendedDto_lastLoginDateTime(ctx, field, obj)
+
+		case "oauth2Identifiers":
+
+			out.Values[i] = ec._UserAccountExtendedDto_oauth2Identifiers(ctx, field, obj)
+
+		case "additionalData":
+
+			out.Values[i] = ec._UserAccountExtendedDto_additionalData(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canLock":
+
+			out.Values[i] = ec._UserAccountExtendedDto_canLock(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canDelete":
+
+			out.Values[i] = ec._UserAccountExtendedDto_canDelete(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "canChangeRole":
+
+			out.Values[i] = ec._UserAccountExtendedDto_canChangeRole(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12748,6 +13763,16 @@ func (ec *executionContext) marshalNChatEvent2ᚖnkonevᚗnameᚋeventᚋgraph�
 	return ec._ChatEvent(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNDataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx context.Context, sel ast.SelectionSet, v *model.DataDto) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DataDTO(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNDisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12901,6 +13926,38 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
@@ -13549,11 +14606,11 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	return res
 }
 
-func (ec *executionContext) marshalOUserAccountDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountDto(ctx context.Context, sel ast.SelectionSet, v *model.UserAccountDto) graphql.Marshaler {
+func (ec *executionContext) marshalOUserAccountEventDto2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountEventDto(ctx context.Context, sel ast.SelectionSet, v model.UserAccountEventDto) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._UserAccountDto(ctx, sel, v)
+	return ec._UserAccountEventDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx context.Context, sel ast.SelectionSet, v *model.UserTypingDto) graphql.Marshaler {

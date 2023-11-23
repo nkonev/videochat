@@ -8,6 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type UserAccountEventDto interface {
+	IsUserAccountEventDto()
+}
+
 type AllUnreadMessages struct {
 	AllUnreadMessages int64 `json:"allUnreadMessages"`
 }
@@ -58,6 +62,14 @@ type ChatUnreadMessageChanged struct {
 	ChatID             int64     `json:"chatId"`
 	UnreadMessages     int64     `json:"unreadMessages"`
 	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
+}
+
+type DataDto struct {
+	Enabled   bool     `json:"enabled"`
+	Expired   bool     `json:"expired"`
+	Locked    bool     `json:"locked"`
+	Confirmed bool     `json:"confirmed"`
+	Roles     []string `json:"roles"`
 }
 
 type DisplayMessageDto struct {
@@ -188,10 +200,28 @@ type UserAccountDto struct {
 	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
 }
 
+func (UserAccountDto) IsUserAccountEventDto() {}
+
 type UserAccountEvent struct {
-	EventType        string          `json:"eventType"`
-	UserAccountEvent *UserAccountDto `json:"userAccountEvent"`
+	EventType        string              `json:"eventType"`
+	UserAccountEvent UserAccountEventDto `json:"userAccountEvent"`
 }
+
+type UserAccountExtendedDto struct {
+	ID                int64              `json:"id"`
+	Login             string             `json:"login"`
+	Avatar            *string            `json:"avatar"`
+	AvatarBig         *string            `json:"avatarBig"`
+	ShortInfo         *string            `json:"shortInfo"`
+	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
+	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
+	AdditionalData    *DataDto           `json:"additionalData"`
+	CanLock           bool               `json:"canLock"`
+	CanDelete         bool               `json:"canDelete"`
+	CanChangeRole     bool               `json:"canChangeRole"`
+}
+
+func (UserAccountExtendedDto) IsUserAccountEventDto() {}
 
 type UserStatusEvent struct {
 	UserID    int64  `json:"userId"`

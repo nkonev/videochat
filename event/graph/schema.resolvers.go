@@ -249,13 +249,29 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		switch typedEvent := event.(type) {
 		case dto.UserAccountEventGroup:
 			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
-			// if I'm an admin then prepare dto with admin's fields
-			// else if I'm un user then prepare dto with user's fields
-			if typedEvent.ForRoleUser != nil && utils.Contains(userIds, typedEvent.UserId) {
-				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
-				cam <- anEvent
+			if authResult.UserId == typedEvent.UserId && utils.Contains(userIds, typedEvent.UserId) {
+				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForMyself)
+				if anEvent != nil {
+					cam <- anEvent
+				}
+				break
 			}
-			break
+			// if I'm an admin then prepare dto with admin's fields
+			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") && utils.Contains(userIds, typedEvent.UserId) {
+				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
+				if anEvent != nil {
+					cam <- anEvent
+				}
+				break
+			}
+			// else if I'm un user then prepare dto with user's fields
+			if utils.ContainsString(authResult.Roles, "ROLE_USER") && utils.Contains(userIds, typedEvent.UserId) {
+				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
+				if anEvent != nil {
+					cam <- anEvent
+				}
+				break
+			}
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
@@ -299,23 +315,50 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertUserAccountEvent(eventType string, forRoleUser *dto.UserAccount) *model.UserAccountEvent {
-	ret := model.UserAccountEvent{}
-	ret.EventType = eventType
-
-	if forRoleUser != nil {
+func convertUserAccountEvent(eventType string, aDto *dto.UserAccount) *model.UserAccountEvent {
+	if aDto != nil {
+		ret := model.UserAccountEvent{}
+		ret.EventType = eventType
 		ret.UserAccountEvent = &model.UserAccountDto{
-			ID:                forRoleUser.Id,
-			Login:             forRoleUser.Login,
-			Avatar:            forRoleUser.Avatar,
-			AvatarBig:         forRoleUser.AvatarBig,
-			ShortInfo:         forRoleUser.ShortInfo,
-			LastLoginDateTime: forRoleUser.LastLoginDateTime,
-			Oauth2Identifiers: convertOauth2Identifiers(forRoleUser.Oauth2Identifiers),
+			ID:                aDto.Id,
+			Login:             aDto.Login,
+			Avatar:            aDto.Avatar,
+			AvatarBig:         aDto.AvatarBig,
+			ShortInfo:         aDto.ShortInfo,
+			LastLoginDateTime: aDto.LastLoginDateTime,
+			Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
 		}
+		return &ret
 	}
+	return nil
+}
+func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountEvent {
+	if aDto != nil {
+		ret := model.UserAccountEvent{}
+		ret.EventType = eventType
 
-	return &ret
+		ret.UserAccountEvent = &model.UserAccountExtendedDto{
+			ID:                aDto.Id,
+			Login:             aDto.Login,
+			Avatar:            aDto.Avatar,
+			AvatarBig:         aDto.AvatarBig,
+			ShortInfo:         aDto.ShortInfo,
+			LastLoginDateTime: aDto.LastLoginDateTime,
+			Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
+			AdditionalData: &model.DataDto{
+				Enabled:   aDto.AdditionalData.Enabled,
+				Expired:   aDto.AdditionalData.Expired,
+				Locked:    aDto.AdditionalData.Locked,
+				Confirmed: aDto.AdditionalData.Confirmed,
+				Roles:     aDto.AdditionalData.Roles,
+			},
+			CanLock:       aDto.CanLock,
+			CanDelete:     aDto.CanDelete,
+			CanChangeRole: aDto.CanChangeRole,
+		}
+		return &ret
+	}
+	return nil
 }
 func convertOauth2Identifiers(identifiers *dto.Oauth2Identifiers) *model.OAuth2Identifiers {
 	if identifiers == nil {
