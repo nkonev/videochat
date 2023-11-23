@@ -16,14 +16,14 @@ func CreateAaaUserProfileUpdateListener(not services.Events) AaaUserProfileUpdat
 		s := string(data)
 		Logger.Debugf("Received %v", s)
 
-		var u *dto.UserAccountEvent
+		var u *dto.UserAccountEventGroup
 		err := json.Unmarshal(data, &u)
 		if err != nil {
-			Logger.Errorf("Error during deserialize UserAccountEvent %v", err)
+			Logger.Errorf("Error during deserialize UserAccountEventGroup %v", err)
 			return nil
 		}
 		if u.EventType == "user_account_changed" {
-			not.NotifyAboutProfileChanged(u.UserAccount)
+			not.NotifyAboutProfileChanged(u.ForRoleUser)
 		}
 
 		return nil

@@ -247,8 +247,8 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserAccountEvent:
-			if typedEvent.UserAccount != nil && utils.Contains(userIds, typedEvent.UserAccount.Id) {
+		case dto.UserAccountEventGroup:
+			if typedEvent.ForRoleUser != nil && utils.Contains(userIds, typedEvent.UserId) {
 				var anEvent = convertUserAccountEvent(typedEvent)
 				cam <- anEvent
 			}
@@ -296,11 +296,11 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertUserAccountEvent(event dto.UserAccountEvent) *model.UserAccountEvent {
+func convertUserAccountEvent(event dto.UserAccountEventGroup) *model.UserAccountEvent {
 	ret := model.UserAccountEvent{}
 	ret.EventType = event.EventType
 
-	userAccount := event.UserAccount
+	userAccount := event.ForRoleUser
 	if userAccount != nil {
 		ret.UserAccountEvent = &model.UserAccountDto{
 			ID:                userAccount.Id,

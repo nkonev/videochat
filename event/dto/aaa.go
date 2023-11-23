@@ -22,14 +22,30 @@ type UserAccount struct {
 	Oauth2Identifiers *Oauth2Identifiers `json:"oauth2Identifiers"`
 }
 
-type UserAccountEvent struct {
-	ForWho string `json:"forWho"`
-	UserId *int64 `json:"userId"` // nullable
-	ForWhoRoles *[]string `json:"forWhoRoles"` // nullable
-	EventType string `json:"eventType"`
-	UserAccount *UserAccount `json:"userAccount"`
+type DataDTO struct {
+	Enabled bool `json:"enabled"`
+	Expired bool `json:"expired"`
+	Locked bool `json:"locked"`
+	Confirmed bool `json:"confirmed"`
+	Roles []string `json:"roles"`
 }
 
-func (UserAccountEvent) Name() eventbus.EventName {
+type UserAccountExtended struct {
+	UserAccount
+	AdditionalData DataDTO `json:"additionalData"`
+	CanLock bool `json:"canLock"`
+	CanDelete bool `json:"canDelete"`
+	CanChangeRole bool `json:"canChangeRole"`
+}
+
+type UserAccountEventGroup struct {
+	UserId int64 `json:"userId"`
+	EventType string `json:"eventType"`
+	ForMyself *UserAccountExtended `json:"forMyself"`
+	ForRoleAdmin *UserAccountExtended `json:"forRoleAdmin"`
+	ForRoleUser  *UserAccount `json:"forRoleUser"`
+}
+
+func (UserAccountEventGroup) Name() eventbus.EventName {
 	return AAA
 }
