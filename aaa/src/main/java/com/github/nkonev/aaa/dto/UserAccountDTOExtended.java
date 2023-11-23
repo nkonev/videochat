@@ -1,12 +1,15 @@
 package com.github.nkonev.aaa.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
 public record UserAccountDTOExtended (
-    @JsonUnwrapped // todo use converters from jackson annotation
+    @JsonUnwrapped
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     UserAccountDTO userAccountDTO,
 
     DataDTO additionalData,
@@ -18,7 +21,20 @@ public record UserAccountDTOExtended (
     boolean canChangeRole
 ) {
 
-    public UserAccountDTOExtended(Long id, String login, String avatar, String avatarBig, String shortInfo, DataDTO managementData, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauthIdentifiers, boolean canLock, boolean canDelete, boolean canChangeRole) {
+    @JsonCreator
+    public UserAccountDTOExtended(
+        @JsonProperty("id") Long id,
+        @JsonProperty("login") String login,
+        @JsonProperty("avatar") String avatar,
+        @JsonProperty("avatarBig") String avatarBig,
+        @JsonProperty("shortInfo") String shortInfo,
+        @JsonProperty("additionalData") DataDTO managementData,
+        @JsonProperty("lastLoginDateTime") LocalDateTime lastLoginDateTime,
+        @JsonProperty("oauth2Identifiers") OAuth2IdentifiersDTO oauthIdentifiers,
+        @JsonProperty("canLock") boolean canLock,
+        @JsonProperty("canDelete") boolean canDelete,
+        @JsonProperty("canChangeRole") boolean canChangeRole
+    ) {
         this(
             new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers),
             managementData,
