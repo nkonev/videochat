@@ -248,6 +248,9 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 
 		switch typedEvent := event.(type) {
 		case dto.UserAccountEventGroup:
+			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
+			// if I'm an admin then prepare dto with admin's fields
+			// else if I'm un user then prepare dto with user's fields
 			if typedEvent.ForRoleUser != nil && utils.Contains(userIds, typedEvent.UserId) {
 				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
 				cam <- anEvent
