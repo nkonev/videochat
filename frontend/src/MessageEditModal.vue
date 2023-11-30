@@ -7,24 +7,27 @@
                 color="indigo"
                 height="56"
             >
-                <v-btn
+                <span class="d-flex mx-2">
+                    <v-btn
+                      icon
+                      dark
+                      @click="closeModal()"
+                    >
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                </span>
+                <span class="d-flex flex-grow-1">
+                  <v-toolbar-title>{{ isNew ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
+                </span>
+                <span class="d-flex mx-2">
+                  <v-btn
                     icon
                     dark
-                    @click="closeModal()"
-                >
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-                <v-toolbar-title>{{ isNew ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
-
-                <v-spacer/>
-                <v-btn
-                  icon
-                  dark
-                  v-if="showPaste"
-                  @click="onPaste()"
-                >
-                  <v-icon>mdi-content-paste</v-icon>
-                </v-btn>
+                    @click="onPaste()"
+                  >
+                    <v-icon>mdi-content-paste</v-icon>
+                  </v-btn>
+                  </span>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
@@ -77,8 +80,10 @@ import {hasLength} from "@/utils";
               })
             },
             onPaste() {
-              navigator.clipboard.readText().then((text)=>{
-                bus.emit(ADD_MESSAGE_TEXT, text);
+              this.$nextTick(()=> {
+                navigator.clipboard.readText().then((text)=>{
+                  bus.emit(ADD_MESSAGE_TEXT, text);
+                })
               })
             },
         },
