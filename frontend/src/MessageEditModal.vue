@@ -15,6 +15,16 @@
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
                 <v-toolbar-title>{{ isNew ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
+
+                <v-spacer/>
+                <v-btn
+                  icon
+                  dark
+                  v-if="showPaste"
+                  @click="onPaste()"
+                >
+                  <v-icon>mdi-content-paste</v-icon>
+                </v-btn>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
@@ -26,18 +36,21 @@
 
 <script>
 import bus, {
+  ADD_MESSAGE_TEXT,
   CLOSE_EDIT_MESSAGE,
   OPEN_EDIT_MESSAGE,
   SET_EDIT_MESSAGE_MODAL,
 } from "./bus/bus";
     import MessageEdit from "@/MessageEdit.vue";
     import heightMixin from "@/mixins/heightMixin";
+import {hasLength} from "@/utils";
 
     export default {
         data() {
             return {
                 show: false,
                 messageId: null,
+                showPaste: false,
             }
         },
         mixins:[
@@ -49,11 +62,24 @@ import bus, {
                 this.messageId = dto?.id;
                 this.$nextTick(()=>{
                     bus.emit(SET_EDIT_MESSAGE_MODAL, {dto, isNew: this.isNew});
-                })
+                });
+                this.setShowPaste();
             },
             closeModal() {
                 this.show = false;
                 this.messageId = null;
+                this.showPaste = false;
+            },
+            setShowPaste() {
+              navigator.clipboard.readText().then((text)=>{
+                const trimmedText = text.trim();
+                this.showPaste = hasLength(trimmedText);
+              })
+            },
+            onPaste() {
+              navigator.clipboard.readText().then((text)=>{
+                bus.emit(ADD_MESSAGE_TEXT, text);
+              })
             },
         },
         watch: {
@@ -81,7 +107,7 @@ import bus, {
         beforeUnmount() {
             bus.off(OPEN_EDIT_MESSAGE, this.showModal);
             bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
-        }
+        },
     }
 </script>
 

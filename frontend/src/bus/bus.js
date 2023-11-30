@@ -34,6 +34,7 @@ export const SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const INCREMENT_FILE_ITEM_FILE_COUNT = "incrementFileItemFileCount";
 export const MEDIA_LINK_SET = "mediaLinkSet";
 export const EMBED_LINK_SET = "embedLinkSet";
+export const  ADD_MESSAGE_TEXT = "addMsgText";
 export const PREVIEW_CREATED = "previewCreated";
 export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";
 
