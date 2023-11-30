@@ -10,7 +10,6 @@ generate: generate-git
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./handlers/static-api/git.json
-CURR := $(shell pwd)
 
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"video\"}" > $(STATIC_JSON)
@@ -29,7 +28,7 @@ package-docker:
 	mkdir -p $(BUILDDIR) && \
 	cp $(EXECUTABLE) $(BUILDDIR) && cp ./Dockerfile $(BUILDDIR) && \
 	echo "Will build docker video image" && \
- 	docker build --build-arg BINARY=$(EXECUTABLE) -t $(IMAGE) $(BUILDDIR)
+ 	docker build -t $(IMAGE) $(BUILDDIR)
 
 package: package-go package-docker
 

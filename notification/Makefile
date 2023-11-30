@@ -28,7 +28,7 @@ package-docker:
 	mkdir -p $(BUILDDIR) && \
 	cp $(EXECUTABLE) $(BUILDDIR) && cp ./Dockerfile $(BUILDDIR) && \
 	echo "Will build docker notification image" && \
- 	docker build --build-arg BINARY=$(EXECUTABLE) -t $(IMAGE) $(BUILDDIR)
+ 	docker build -t $(IMAGE) $(BUILDDIR)
 
 package: package-go package-docker
 
