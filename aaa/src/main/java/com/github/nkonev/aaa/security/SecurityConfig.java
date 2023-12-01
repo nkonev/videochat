@@ -84,9 +84,6 @@ public class SecurityConfig {
     private OAuth2ExceptionHandler OAuth2ExceptionHandler;
 
     @Autowired
-    private NoOpAuthorizedClientRepository noOpAuthorizedClientRepository;
-
-    @Autowired
     private CustomConfig customConfig;
 
     @Value("${csrf.cookie.secure:false}")
@@ -136,7 +133,6 @@ public class SecurityConfig {
 
         http.oauth2Login(oauth2Login ->
                 oauth2Login
-                        .authorizedClientRepository(noOpAuthorizedClientRepository)
                         .userInfoEndpoint(userInfoEndpoint ->
                                 userInfoEndpoint.userService(aaaOAuth2LoginUserService)
                                         .oidcUserService(aaaOAuth2AuthorizationCodeUserService)
