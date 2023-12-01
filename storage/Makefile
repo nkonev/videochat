@@ -28,7 +28,7 @@ package-docker:
 	mkdir -p $(BUILDDIR) && \
 	cp $(EXECUTABLE) $(BUILDDIR) && cp ./Dockerfile $(BUILDDIR) && \
 	echo "Will build docker storage image" && \
- 	docker build --build-arg -t $(IMAGE) $(BUILDDIR)
+ 	docker build -t $(IMAGE) $(BUILDDIR)
 
 package: package-go package-docker
 
