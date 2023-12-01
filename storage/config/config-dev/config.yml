@@ -29,6 +29,7 @@ types:
     - ".mov"
   audio:
     - ".mp3"
+    - ".m4a"
   plainText:
     - ".txt"
 
