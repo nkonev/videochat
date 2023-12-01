@@ -5,6 +5,8 @@ import (
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
@@ -13,19 +15,23 @@ import (
 type UsersVideoStatusNotifierService struct {
 	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
+	tracer             trace.Tracer
 }
 
 func NewUsersVideoStatusNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *UsersVideoStatusNotifierService {
+	trcr := otel.Tracer("scheduler/new-users-video-notifier")
 	return &UsersVideoStatusNotifierService{
 		scheduleService: scheduleService,
 		conf:            conf,
+		tracer:          trcr,
 	}
 }
 
 func (srv *UsersVideoStatusNotifierService) doJob() {
+	ctx, span := srv.tracer.Start(context.Background(), "scheduler.UsersVideoStatusNotifier")
+	defer span.End()
 
 	Logger.Debugf("Invoked periodic UsersVideoStatusNotifier")
-	ctx := context.Background()
 	srv.scheduleService.NotifyAllChatsAboutUsersVideoStatus(ctx)
 
 	Logger.Debugf("End of UsersVideoStatusNotifier")

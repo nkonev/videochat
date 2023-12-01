@@ -6,6 +6,8 @@ import (
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
@@ -34,12 +36,14 @@ type ActualizePreviewsService struct {
 	minioClient        *s3.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	previewService     *services.PreviewService
+	tracer             trace.Tracer
 }
 
 func (srv *ActualizePreviewsService) doJob() {
-	ct := context.Background()
+	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ActualizePreviews")
+	defer span.End()
 	filenameChatPrefix := "chat/"
-	srv.processFiles(filenameChatPrefix, ct)
+	srv.processFiles(filenameChatPrefix, ctx)
 }
 
 func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c context.Context) {
@@ -103,9 +107,11 @@ func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c c
 }
 
 func NewActualizePreviewsService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizePreviewsService {
+	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
 	return &ActualizePreviewsService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,
 		previewService:     previewService,
+		tracer:             trcr,
 	}
 }

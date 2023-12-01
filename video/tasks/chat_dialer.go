@@ -5,6 +5,8 @@ import (
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
@@ -19,22 +21,28 @@ type ChatDialerService struct {
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
 	dialStatusPublisher     *producer.RabbitDialStatusPublisher
 	chatClient              *client.RestClient
+	tracer             trace.Tracer
 }
 
 func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *config.ExtendedConfig, rabbitMqInvitePublisher *producer.RabbitInvitePublisher, dialStatusPublisher *producer.RabbitDialStatusPublisher, chatClient *client.RestClient) *ChatDialerService {
+	trcr := otel.Tracer("scheduler/chat-dialer")
 	return &ChatDialerService{
 		redisService:            scheduleService,
 		conf:                    conf,
 		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
 		dialStatusPublisher:     dialStatusPublisher,
 		chatClient:              chatClient,
+		tracer:             trcr,
 	}
 }
 
 func (srv *ChatDialerService) doJob() {
 
+	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ChatDialer")
+	defer span.End()
+
 	Logger.Debugf("Invoked periodic ChatDialer")
-	ctx := context.Background()
+
 	chats, err := srv.redisService.GetDialChats(ctx)
 	if err != nil {
 		Logger.Errorf("Error %v", err)

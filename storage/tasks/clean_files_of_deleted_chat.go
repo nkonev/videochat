@@ -7,6 +7,8 @@ import (
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
@@ -35,11 +37,13 @@ type CleanFilesOfDeletedChatService struct {
 	minioClient        *s3.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	chatClient         *client.RestClient
+	tracer             trace.Tracer
 }
 
 func (srv *CleanFilesOfDeletedChatService) doJob() {
-	ct := context.Background()
-	srv.processChats(ct)
+	ctx, span := srv.tracer.Start(context.Background(), "scheduler.cleanFilesOfDeletedChat")
+	defer span.End()
+	srv.processChats(ctx)
 }
 
 func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
@@ -117,9 +121,11 @@ func(srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatId
 }
 
 func NewCleanFilesOfDeletedChatService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
+	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
 	return &CleanFilesOfDeletedChatService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,
 		chatClient:         chatClient,
+		tracer:             trcr,
 	}
 }
