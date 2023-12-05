@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
@@ -148,4 +149,13 @@ func checkUserLimit(minioClient *s3.InternalMinioClient, bucketName string, user
 		return false, consumption, available, nil
 	}
 	return true, consumption, available, nil
+}
+
+func cacheableResponse(c echo.Context, ttl time.Duration) {
+	cacheControlValue := fmt.Sprintf("public, max-age=%v", ttl.Seconds())
+	c.Response().Header().Set("Cache-Control", cacheControlValue)
+}
+
+func avatarCacheableResponse(c echo.Context) {
+	cacheableResponse(c, viper.GetDuration("response.cache.avatar"))
 }

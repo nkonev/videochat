@@ -201,21 +201,21 @@ func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) 
 	return count, nil
 }
 
-func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, error) {
+func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, time.Duration, error) {
 	ttl := viper.GetDuration("minio.publicDownloadTtl")
 
 	u, err := h.minio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
 	if err != nil {
-		return "", err
+		return "", time.Second, err
 	}
 
 	err = ChangeMinioUrl(u)
 	if err != nil {
-		return "", err
+		return "", time.Second, err
 	}
 
 	downloadUrl := fmt.Sprintf("%v", u)
-	return downloadUrl, nil
+	return downloadUrl, ttl, nil
 }
 
 func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {

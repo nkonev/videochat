@@ -96,3 +96,8 @@ schedulers:
   actualizePreviewsTask:
     enabled: true
     interval: 60s
+
+response:
+  cache:
+    preview: 24h
+    avatar: 48h

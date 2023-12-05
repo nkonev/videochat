@@ -884,7 +884,7 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
-
+	h.previewCacheableResponse(c)
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
 
@@ -929,6 +929,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
 	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	h.previewCacheableResponse(c)
 
 	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
 }
@@ -972,12 +973,19 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
 	if err != nil {
 		return err
 	}
 
-	return c.Redirect(http.StatusTemporaryRedirect, downloadUrl)
+	cacheableResponse(c, ttl)
+	c.Response().Header().Set("Location", downloadUrl)
+	c.Response().WriteHeader(http.StatusTemporaryRedirect)
+	return nil
+}
+
+func (h *FilesHandler) previewCacheableResponse(c echo.Context) {
+	cacheableResponse(c, viper.GetDuration("response.cache.preview"))
 }
 
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
@@ -1025,10 +1033,13 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
 	if err != nil {
 		return err
 	}
 
-	return c.Redirect(http.StatusTemporaryRedirect, downloadUrl)
+	cacheableResponse(c, ttl)
+	c.Response().Header().Set("Location", downloadUrl)
+	c.Response().WriteHeader(http.StatusTemporaryRedirect)
+	return nil
 }

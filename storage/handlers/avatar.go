@@ -135,6 +135,7 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
 
+	avatarCacheableResponse(c)
 	return c.Stream(http.StatusOK, info.ContentType, object)
 }
 
