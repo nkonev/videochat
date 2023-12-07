@@ -110,6 +110,14 @@ type MultipartFinishingPart struct {
 	PartNumber int64 `json:"partNumber"`
 }
 
+func (h *FilesHandler) checkFileDoesNorExists(ctx context.Context, bucketName, aKey string) error {
+	_, err := h.minio.StatObject(ctx, bucketName, aKey, minio.StatObjectOptions{})
+	if err == nil {
+		return errors.New(fmt.Sprintf("Already exists: %v", aKey))
+	}
+	return nil
+}
+
 func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -156,10 +164,10 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
-	_, err = h.minio.StatObject(context.Background(), bucketName, aKey, minio.StatObjectOptions{})
-	if err == nil {
-		GetLogEntry(c.Request().Context()).Errorf("Already exists: %v", aKey)
-		return c.NoContent(http.StatusConflict)
+	err = h.checkFileDoesNorExists(c.Request().Context(), bucketName, aKey)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Infof(err.Error())
+		return c.JSON(http.StatusConflict, &utils.H{"status": "error", "message": err.Error()})
 	}
 
 	// check enough size taking on account free disk space probe (see LimitsHandler)
