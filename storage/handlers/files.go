@@ -141,7 +141,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	chatFileItemUuid := uuid.New().String() // TODO leave null by default
+	chatFileItemUuid := uuid.New().String() // it's kinda last resort, actually it should be set on frontend in TipTapEditor.vue preallocatedCandidateFileItemId
 
 	fileItemUuidString := reqDto.FileItemUuid
 	if fileItemUuidString != nil && *fileItemUuidString != "" {
