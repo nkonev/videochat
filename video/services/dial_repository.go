@@ -52,20 +52,20 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 }
 
 func dialChatMembersKey(chatId int64) string {
-	return fmt.Sprintf("dialchat%v", chatId)
+	return fmt.Sprintf("dialchat:%v", chatId)
 }
 
 func getAllDialChats() string {
-	return "dialchat*"
+	return "dialchat:*"
 }
 
 func dialMetaKey(chatId int64) string {
-	return fmt.Sprintf("dialmeta%v", chatId)
+	return fmt.Sprintf("dialmeta:%v", chatId)
 }
 
 func chatIdFromKey(key string) (int64, error) {
 	var str string
-	_, err := fmt.Sscanf(key, "dialchat%s", &str)
+	_, err := fmt.Sscanf(key, "dialchat:%s", &str)
 	if err != nil {
 		return 0, err
 	}
@@ -78,9 +78,6 @@ func chatIdFromKey(key string) (int64, error) {
 
 func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, error) {
 	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
-	//if err == redisV8.Nil {
-	//	return -1, "", nil
-	//}
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
 		return 0, err
