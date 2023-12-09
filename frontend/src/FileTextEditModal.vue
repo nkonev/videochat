@@ -49,7 +49,9 @@
                 this.filename = fileInfoDto.filename;
                 this.fileId = fileInfoDto.id;
                 this.loading = true;
-                axios.get(fileInfoDto.url).then(response => {
+                const url = new URL( location.origin + fileInfoDto.url);
+                url.searchParams.append('cache', false);
+                axios.get(url).then(response => {
                     this.editableText = response.data;
                 }).finally(() => {
                     this.loading = false;

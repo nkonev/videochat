@@ -152,8 +152,10 @@ func checkUserLimit(minioClient *s3.InternalMinioClient, bucketName string, user
 }
 
 func cacheableResponse(c echo.Context, ttl time.Duration) {
-	cacheControlValue := fmt.Sprintf("public, max-age=%v", ttl.Seconds())
-	c.Response().Header().Set("Cache-Control", cacheControlValue)
+	if c.Request().URL.Query().Get("cache") != "false" {
+		cacheControlValue := fmt.Sprintf("public, max-age=%v", ttl.Seconds())
+		c.Response().Header().Set("Cache-Control", cacheControlValue)
+	}
 }
 
 func avatarCacheableResponse(c echo.Context) {
