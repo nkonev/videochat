@@ -23,6 +23,14 @@ const behalfUserIdConstant = "behalfUserId" // also it is dial owner - person wh
 
 const NoUser = -1
 
+const CallStatusInviting = "inviting"
+const CallStatusInCall = "inCall"
+
+const UserCallStatusKey = "status"
+const UserCallChatIdKey = "chatId"
+
+
+
 func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, behalfUserId int64) error {
 	expiration := viper.GetDuration("dialExpire")
 
@@ -48,11 +56,26 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		return err
 	}
 
+	err = s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallStatusKey, CallStatusInviting, UserCallChatIdKey, chatId).Err()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
+		return err
+	}
+	_, err = s.redisClient.Expire(ctx, dialChatUserCallsKey(userId), expiration).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
+		return err
+	}
+
 	return nil
 }
 
 func dialChatMembersKey(chatId int64) string {
 	return fmt.Sprintf("dialchat:%v", chatId)
+}
+
+func dialChatUserCallsKey(chatId int64) string {
+	return fmt.Sprintf("call:%v", chatId)
 }
 
 func getAllDialChats() string {
@@ -121,6 +144,14 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
 			return err
 		}
+
+		// remove "call" on zero members
+		err = s.redisClient.Del(ctx, dialChatUserCallsKey(userId)).Err()
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
+			return err
+		}
+
 	}
 	return nil
 }
