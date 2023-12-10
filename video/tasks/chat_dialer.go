@@ -77,6 +77,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		return
 	}
 
+	// this is sending call invitations to all the ivitees
 	for _, chatInviteName := range inviteNames {
 		invitation := dto.VideoCallInvitation{
 			ChatId:   chatId,
@@ -89,7 +90,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		}
 	}
 
-	// send state changes
+	// send state changes to owner (behalfUserId) of call
 	var videoIsInvitingDto = dto.VideoIsInvitingDto{
 		ChatId:       chatId,
 		UserIds:      userIdsToDial,
