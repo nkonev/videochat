@@ -187,7 +187,6 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 
 		// oppositeUserOfVideo is need for case when your counterpart enters into call and this (oppositeUserOfVideo == nil) prevents us to start calling him back
 		// and we(behalf user) doesn't have incoming call
-		// TODO rewrite this logic using call:<userId>
 		if oppositeUserOfVideo == nil && oppositeUser != nil {
 			// we should call the counterpart (opposite user)
 			vh.addToCallingOrRemove(c, *oppositeUser, true, chatId, userPrincipalDto)
