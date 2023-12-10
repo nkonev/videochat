@@ -99,6 +99,7 @@ func chatIdFromKey(key string) (int64, error) {
 	return parseInt64, nil
 }
 
+// indeed returns call's owner
 func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, error) {
 	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
 	if err != nil {

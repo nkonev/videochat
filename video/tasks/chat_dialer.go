@@ -123,6 +123,7 @@ func (srv *ChatDialerService) SendDialStatusChanged(ctx context.Context, behalfU
 	}
 }
 
+// removes users from dial who were removed from chat
 func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, chatId int64) {
 	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
 	if err != nil {

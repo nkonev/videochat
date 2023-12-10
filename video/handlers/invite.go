@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -37,6 +38,7 @@ func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *cli
 	}
 }
 
+// used by owner to add or remove from dial list
 func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -54,7 +56,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return err0
 	}
 
-	call, err0 := utils.ParseBoolean(c.QueryParam("call"))
+	addToCallCall, err0 := utils.ParseBoolean(c.QueryParam("call"))
 	if err0 != nil {
 		return err0
 	}
@@ -66,10 +68,10 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.addToCalling(c, callee, call, chatId, userPrincipalDto))
+	return c.NoContent(vh.addToCalling(c, callee, addToCallCall, chatId, userPrincipalDto))
 }
 
-func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, call bool, chatId int64, userPrincipalDto *auth.AuthResult) int {
+func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, addToCallCall bool, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	// check participant's access to chat
 	if ok, err := vh.chatClient.CheckAccess(callee, chatId, c.Request().Context()); err != nil {
 		return http.StatusInternalServerError
@@ -89,13 +91,13 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, call bool, c
 		return http.StatusAccepted
 	}
 
-	if call {
+	if addToCallCall {
 		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId)
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return http.StatusInternalServerError
 		}
-	} else {
+	} else { // else remove from call
 		err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), callee, chatId)
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -114,30 +116,15 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, call bool, c
 			return http.StatusInternalServerError
 		}
 
-		if inviteNames, err := vh.chatClient.GetChatNameForInvite(chatId, behalfUserId, []int64{callee}, c.Request().Context()); err != nil {
-			Logger.Error(err, "Failed during getting chat invite names")
-		} else if len(inviteNames) == 1 {
-			chatName := inviteNames[0]
-			// here send missed call notification
-			var missedCall = dto.NotificationEvent{
-				EventType:              MissedCall,
-				ChatId:                 chatId,
-				UserId:                 callee,
-				MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
-				ByUserId:               userPrincipalDto.UserId,
-				ByLogin:                userPrincipalDto.UserLogin,
-			}
-			err = vh.notificationPublisher.Publish(missedCall)
-			if err != nil {
-				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-				return http.StatusInternalServerError
-			}
-		}
+		// if we remove user from call - send them MissedCall notification
+		// TODO also add to if: && (GET call:calleeUserId).status == "calling" && .chatId == chatId
+		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, []int64{callee})
 	}
 
 	return http.StatusOK
 }
 
+// user enters to call somehow, either by clicking green tube or opening .../video link
 func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -197,6 +184,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 			}
 		}
 
+		// TODO in case opposite user has wrong status - send http 4xx to refuse - do it in addToCalling
 		// and we(behalf user) doesn't have incoming call
 		if oppositeUserOfVideo == nil && oppositeUser != nil {
 			// we should call the counterpart (opposite user)
@@ -204,6 +192,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		}
 	}
 
+	// TODO call it in case opposite user has incoming call
 	// duplicate "take the phone" (pressing green tube) which cancels ringing logic for opposite user (or myself)
 	vh.cancelCallingLogic(c, chatId, userPrincipalDto)
 
@@ -232,6 +221,12 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 	return c.NoContent(vh.cancelCallingLogic(c, chatId, userPrincipalDto))
 }
 
+// TODO not here but somewhere
+//  make periodically
+//  run over all ~rooms~ chats
+//  according room's contend and call:<userId>
+//  send updates for VideoIsInvitingDto
+
 func (vh *InviteHandler) cancelCallingLogic(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
@@ -242,12 +237,14 @@ func (vh *InviteHandler) cancelCallingLogic(c echo.Context, chatId int64, userPr
 		return http.StatusOK
 	}
 
+	// we remove callee from DialList
 	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
+	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the behalfUserId (call's owner)
 	var videoIsInvitingDto = dto.VideoIsInvitingDto{
 		ChatId:       chatId,
 		UserIds:      []int64{userPrincipalDto.UserId},
@@ -264,6 +261,7 @@ func (vh *InviteHandler) cancelCallingLogic(c echo.Context, chatId int64, userPr
 	return http.StatusOK
 }
 
+// owner stops call by exiting
 func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -317,29 +315,37 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if chatNames, err := vh.chatClient.GetChatNameForInvite(chatId, behalfUserId, usersToDial, c.Request().Context()); err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-	} else {
-		for _, chatName := range chatNames {
-			// here send missed call notification
-			var missedCall = dto.NotificationEvent{
-				EventType:              MissedCall,
-				ChatId:                 chatId,
-				UserId:                 chatName.UserId,
-				MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
-				ByUserId:               userPrincipalDto.UserId,
-				ByLogin:                userPrincipalDto.UserLogin,
-			}
-			err = vh.notificationPublisher.Publish(missedCall)
-			if err != nil {
-				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			}
-		}
-	}
+	// for all participants to dial - send MissedCall notification
+	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, usersToDial)
 
 	return c.NoContent(http.StatusOK)
 }
 
+func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Context, userPrincipalDto *auth.AuthResult, usersToDial []int64) {
+	if len(usersToDial) > 0 {
+		if chatNames, err := vh.chatClient.GetChatNameForInvite(chatId, userPrincipalDto.UserId, usersToDial, ctx); err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error %v", err)
+		} else {
+			for _, chatName := range chatNames {
+				// here send missed call notification
+				var missedCall = dto.NotificationEvent{
+					EventType:              MissedCall,
+					ChatId:                 chatId,
+					UserId:                 chatName.UserId,
+					MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
+					ByUserId:               userPrincipalDto.UserId,
+					ByLogin:                userPrincipalDto.UserLogin,
+				}
+				err = vh.notificationPublisher.Publish(missedCall)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error %v", err)
+				}
+			}
+		}
+	}
+}
+
+// send current dial statuses to WebSocket
 func (vh *InviteHandler) AskDials(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
