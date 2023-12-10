@@ -71,7 +71,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 	return c.NoContent(vh.addToCallingOrRemove(c, callee, addToCallCall, chatId, userPrincipalDto))
 }
 
-// TODO check here (and return 4xx) if we can't invite user (they are already in call)
+// TODO check here (and return 4xx) if we can't invite user (in case addToCallCall == true) (they're already in the call)
 func (vh *InviteHandler) addToCallingOrRemove(c echo.Context, callee int64, addToCallCall bool, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	// check participant's access to chat
 	if ok, err := vh.chatClient.CheckAccess(callee, chatId, c.Request().Context()); err != nil {
@@ -124,7 +124,7 @@ func (vh *InviteHandler) addToCallingOrRemove(c echo.Context, callee int64, addT
 	return http.StatusOK
 }
 
-// TODO rewrite this method accoring ownership of call (behalfUserId) to make more readable
+// TODO rewrite this method accoring ownership of call (behalfUserId) to make it more readable
 // user enters to call somehow, either by clicking green tube or opening .../video link
 func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
@@ -195,12 +195,12 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 
 	// we call it in case opposite user has incoming (this) call
 	// react on "take the phone" (pressing green tube) which cancels ringing logic for opposite user (or myself)
-	vh.cancelCallingLogic(c, chatId, userPrincipalDto)
+	vh.removeFromCallingList(c, chatId, userPrincipalDto)
 
 	return c.NoContent(http.StatusOK)
 }
 
-func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
+func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		Logger.Errorf("Error during getting auth context")
@@ -219,11 +219,14 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.cancelCallingLogic(c, chatId, userPrincipalDto))
+	return c.NoContent(vh.removeFromCallingList(c, chatId, userPrincipalDto))
 }
 
 // TODO not here but (seems) in chat_dialer.go
-//  periodically send dto.VideoCallInvitation
+//  a) periodically send dto.VideoCallInvitation[true|false] (call particular user to video call)
+//  b) periodically send dto.VideoIsInvitingDto (update progressbar in ChatParticipats.vue) which transforms to dto.VideoDialChanges
+
+// TODO come up with an algorithms
 //  run over all rooms, then get room's chats, then get chat's participants
 //  according room's contend and call:<userId>
 //  send updates for VideoIsInvitingDto
@@ -232,7 +235,8 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 //  add status "inviting", "closing"
 //  when we set closing - send "false" and decrease ttl to 30 sec
 
-func (vh *InviteHandler) cancelCallingLogic(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
+
+func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)

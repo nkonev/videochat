@@ -523,7 +523,7 @@ export default {
     this.chatStore.showCallButton = false;
     this.chatStore.showHangButton = true;
 
-    await axios.put(`/api/video/${this.chatId}/dial/start`);
+    await axios.put(`/api/video/${this.chatId}/dial/enter`);
 
     if (!this.chatStore.showRecordStopButton && this.chatStore.canMakeRecord) {
       this.chatStore.showRecordStartButton = true;
@@ -540,7 +540,7 @@ export default {
     this.startRoom();
   },
   beforeUnmount() {
-    axios.put(`/api/video/${this.chatId}/dial/stop`);
+    axios.put(`/api/video/${this.chatId}/dial/exit`);
     this.stopRoom().then(()=>{
       console.log("Cleaning videoContainerDiv");
       this.videoContainerDiv = null;
