@@ -226,6 +226,8 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 //  a) periodically send dto.VideoCallInvitation[true|false] (call particular user to video call)
 //  b) periodically send dto.VideoIsInvitingDto (update progressbar in ChatParticipats.vue) which transforms to dto.VideoDialChanges
 
+// TODO question: how not to overwhelm the system by iterating over all the users and all the chats ?
+
 // TODO come up with an algorithms
 //  run over all rooms, then get room's chats, then get chat's participants
 //  according room's contend and call:<userId>
