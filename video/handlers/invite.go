@@ -222,20 +222,30 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 	return c.NoContent(vh.removeFromCallingList(c, chatId, userPrincipalDto))
 }
 
-// TODO not here but (seems) in chat_dialer.go
+
+// question: how not to overwhelm the system by iterating over all the users and all the chats ?
+// answer: using opened rooms and rooms are going to be closed - see livekit's room.empty_timeout
+
+// TODO not here but in chat_dialer.go :: makeDial()
+//  also, it's subscription on chat events;
 //  a) periodically send dto.VideoCallInvitation[true|false] (call particular user to video call)
-//  b) periodically send dto.VideoIsInvitingDto (update progressbar in ChatParticipats.vue) which transforms to dto.VideoDialChanges
+//  b) periodically send dto.VideoIsInvitingDto (update progressbar in ChatParticipants.vue) which transforms to dto.VideoDialChanges
+//  implement the algorithm:
+//  run over all rooms (see livekit's room.empty_timeout), then get room's chats, then get chat's participants
+//  if (we have chat participant but no their counterpart in the room) {
+//    if (EXISTS call:<userId>) {
+//      send VideoCallInvitation(true)
+//    } else {
+//      send VideoCallInvitation(false)
+//    }
+//    send dto.VideoIsInvitingDto -> dto.VideoDialChanges(false)
+//  } else if (we have chat participant and we have their counterpart in the room) {
+//    send dto.VideoIsInvitingDto -> dto.VideoDialChanges(true)
+//  }
 
-// TODO question: how not to overwhelm the system by iterating over all the users and all the chats ?
-
-// TODO come up with an algorithms
-//  run over all rooms, then get room's chats, then get chat's participants
-//  according room's contend and call:<userId>
-//  send updates for VideoIsInvitingDto
-
-// TODO rework dto.VideoCallInvitation in manner to remove App.vue's timer
+// TODO consider reworking dto.VideoCallInvitation in manner to remove App.vue's timer
 //  add status "inviting", "closing"
-//  when we set closing - send "false" and decrease ttl to 30 sec
+//  when we have "closing" - send "false" all the time empty room exists
 
 
 func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
