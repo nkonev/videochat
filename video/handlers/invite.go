@@ -247,6 +247,7 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 //  add status "inviting", "closing"
 //  when we have "closing" - send "false" all the time empty room exists
 
+// TODO consider removing setting green/red button from ChatView.vue, ChatVideo.vue and move them to event/ mechanism
 
 func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
