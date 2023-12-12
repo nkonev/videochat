@@ -590,10 +590,8 @@ export default {
     this.chatStore.avatar = null;
     this.chatStore.showGoToBlogButton = null;
 
-    if (this.$route.name == chat_name) { // not to change in case we enter to call by clicking on blinking snackbar
-      this.chatStore.showCallButton = false;
-      this.chatStore.showHangButton = false;
-    }
+    this.chatStore.showCallButton = false;
+    this.chatStore.showHangButton = false;
 
     this.chatStore.isShowSearch = false;
     this.chatStore.chatUsersCount = 0;
