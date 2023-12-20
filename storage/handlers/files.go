@@ -171,7 +171,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 
 	// check enough size taking on account free disk space probe (see LimitsHandler)
-	ok, consumption, available, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, reqDto.FileSize)
+	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.minio, bucketName, userPrincipalDto, reqDto.FileSize)
 	if err != nil {
 		return err
 	}
@@ -341,7 +341,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	// end check
 
 	fileSize := int64(len(bindTo.Text))
-	userLimitOk, _, _, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, fileSize)
+	userLimitOk, _, _, err := checkUserLimit(c.Request().Context(), h.minio, bucketName, userPrincipalDto, fileSize)
 	if err != nil {
 		return err
 	}
@@ -708,7 +708,7 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ok, consumption, available, err := checkUserLimit(h.minio, bucketName, userPrincipalDto, desiredSize)
+	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.minio, bucketName, userPrincipalDto, desiredSize)
 	if err != nil {
 		return err
 	}

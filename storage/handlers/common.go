@@ -119,22 +119,25 @@ func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
 	}
 }
 
-func calcUserFilesConsumption(minioClient *s3.InternalMinioClient, bucketName string) int64 {
+func calcUserFilesConsumption(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string) (int64, error) {
 	var totalBucketConsumption int64
-	doneCh := make(chan struct{})
-	defer close(doneCh)
 
 	Logger.Debugf("Listing bucket '%v':", bucketName)
-	for objInfo := range minioClient.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{Recursive: true}) {
+	for objInfo := range minioClient.ListObjects(ctx, bucketName, minio.ListObjectsOptions{Recursive: true}) {
 		totalBucketConsumption += objInfo.Size
 	}
-	return totalBucketConsumption
+	return totalBucketConsumption, nil
 }
 
-func checkUserLimit(minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
+func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
 	// TODO take on account userId
-	consumption := calcUserFilesConsumption(minioClient, bucketName)
+	consumption, err := calcUserFilesConsumption(ctx, minioClient, bucketName)
+	if err != nil {
+		Logger.Errorf("Error during getting consumption %v", err)
+		return false, 0, 0, err
+	}
+
 	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")) || !limitsEnabled
 
 	maxAllowed, err := getMaxAllowedConsumption(isUnlimited)
@@ -143,6 +146,7 @@ func checkUserLimit(minioClient *s3.InternalMinioClient, bucketName string, user
 		return false, 0, 0, err
 	}
 	available := maxAllowed - consumption
+	Logger.Infof("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
 
 	if desiredSize > available {
 		Logger.Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
