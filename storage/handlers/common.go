@@ -111,8 +111,7 @@ func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
 		if err != nil {
 			return 0, err
 		}
-		// Available blocks * size per block = available space in bytes
-		u := int64(stat.Bavail * uint64(stat.Bsize))
+		u := int64(stat.Blocks * uint64(stat.Bsize))
 		return u, nil
 	} else {
 		return viper.GetInt64("limits.default.all.users.limit"), nil
@@ -146,7 +145,7 @@ func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bu
 		return false, 0, 0, err
 	}
 	available := maxAllowed - consumption
-	Logger.Infof("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
+	Logger.Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
 
 	if desiredSize > available {
 		Logger.Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)

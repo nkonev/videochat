@@ -77,7 +77,7 @@ aaa:
 limits:
   enabled: false
   stat:
-    dir: "."
+    dir: "/"
   default:
     # 512 megabytes
     all.users.limit: 536870912
@@ -90,11 +90,11 @@ redis:
 
 schedulers:
   cleanFilesOfDeletedChatTask:
-    enabled: true
+    enabled: false
     interval: 60s
     batchChats: 20
   actualizePreviewsTask:
-    enabled: true
+    enabled: false
     interval: 60s
 
 response:
