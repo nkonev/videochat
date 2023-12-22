@@ -336,12 +336,24 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+
+		responseDto, err := getChat(tx, mc.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		if err != nil {
+			return err
+		}
+		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		if err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+
 		message, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
 
-		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, chatId)
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
 		if err != nil {
 			return err
 		}
@@ -363,7 +375,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	return errOuter
 }
 
-func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, chatId int64) (string, error) {
+func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, chatId int64) (string, error) {
 	chatBasic, err := tx.GetChatBasic(chatId)
 	if err != nil {
 		return "", err
@@ -373,6 +385,7 @@ func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, err error, chatI
 		chatName = ""
 	}
 	return chatName, nil
+
 }
 
 func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input *CreateMessageDto, receiver *db.Message) error {
@@ -517,7 +530,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 		}
 
-		chatNameForNotification, err := mc.getChatNameForNotification(tx, err, chatId)
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
 		if err != nil {
 			return err
 		}
