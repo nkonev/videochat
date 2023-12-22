@@ -366,7 +366,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 		mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message)
-		mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx)
+		//mc.notificator.ChatNotifyMessageCount(participantIds, c, chatId, tx) - it's included in NotifyAboutChangeChat
 		return c.JSON(http.StatusCreated, message)
 	})
 	if errOuter != nil {
