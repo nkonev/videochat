@@ -233,7 +233,7 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 //  implement the algorithm:
 //  run over all rooms (see livekit's room.empty_timeout), then get room's chats, then get chat's participants
 //  if (we have chat participant but no their counterpart in the room) {
-//    if (EXISTS call:<userId>) {
+//    if (EXISTS user_call_state:<userId>) {
 //      send VideoCallInvitation(true)
 //    } else {
 //      send VideoCallInvitation(false)
