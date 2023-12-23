@@ -273,7 +273,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		if chat == nil {
 			return c.NoContent(http.StatusNotFound)
 		} else {
-			copiedChat, err := ch.getChatWithAdminedUsers(c, chat, ch.db)
+			copiedChat, err := getChatWithAdminedUsers(c, chat, ch.db)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
@@ -284,7 +284,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func (ch *ChatHandler) getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
+func getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
 	var copiedChat = &dto.ChatDtoWithAdmin{}
 	err := deepcopy.Copy(copiedChat, chat)
 	if err != nil {
@@ -385,7 +385,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -488,7 +488,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0); err != nil {
 			return err
 		} else {
-			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
@@ -533,7 +533,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0); err != nil {
 			return err
 		} else {
-			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
@@ -589,7 +589,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0); err != nil {
 			return err
 		} else {
-			copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+			copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
@@ -680,7 +680,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
 		if err != nil {
 			return err
 		}
@@ -727,7 +727,7 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
 		if err != nil {
 			return err
 		}
@@ -778,7 +778,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
 		if err != nil {
 			return err
 		}
@@ -877,7 +877,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := ch.getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
 		if err != nil {
 			return err
 		}
@@ -1133,7 +1133,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := ch.getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}

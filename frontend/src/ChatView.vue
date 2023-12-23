@@ -36,7 +36,7 @@
 
                   <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               </pane>
-              <pane class="message-edit-pane" v-if="!isMobile()" :size="messageEditSize">
+              <pane class="message-edit-pane" v-if="!isMobile()" :size="messageEditCurrentSize">
                 <MessageEdit :chatId="this.chatId"/>
               </pane>
             </splitpanes>
@@ -82,6 +82,7 @@ import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
+import debounce from "lodash/debounce";
 
 const chatDtoFactory = () => {
   return {
@@ -114,7 +115,7 @@ export default {
       writingUsers: [],
       showTooltip: true,
       broadcastMessage: null,
-      messageEditSize: MESSAGE_EDIT_PANE_SIZE_INITIAL, // percents
+      messageEditCurrentSize: MESSAGE_EDIT_PANE_SIZE_INITIAL, // percents
       prevMessageEditSize: null, // percents
       onTopVideoSize: ONTOP_VIDEO_PANE_SIZE,
       messageListSize: null,
@@ -455,41 +456,39 @@ export default {
     },
     onEditingBigTextStart() {
       if (!this.prevMessageEditSize && !this.isMobile()) {
-        this.prevMessageEditSize = this.messageEditSize;
-        this.messageEditSize = MESSAGE_EDIT_PANE_SIZE_EXPANDED;
+        this.prevMessageEditSize = this.messageEditCurrentSize;
+        this.messageEditCurrentSize = MESSAGE_EDIT_PANE_SIZE_EXPANDED;
         this.$nextTick(()=>{
-          this.messageListSize = this.shouldShowVideoOnTop() ? (100 - this.messageEditSize - this.onTopVideoSize) : (100 - this.messageEditSize);
+          this.messageListSize = this.shouldShowVideoOnTop() ? (100 - this.messageEditCurrentSize - this.onTopVideoSize) : (100 - this.messageEditCurrentSize);
         })
       }
     },
     onEditingEnd() {
       if (this.prevMessageEditSize && !this.isMobile()) {
-        this.messageEditSize = this.prevMessageEditSize;
+        this.messageEditCurrentSize = this.prevMessageEditSize;
         this.prevMessageEditSize = null;
         this.$nextTick(()=>{
-          this.messageListSize = this.shouldShowVideoOnTop() ? (100 - this.messageEditSize - this.onTopVideoSize) : (100 - this.messageEditSize);
+          this.messageListSize = this.shouldShowVideoOnTop() ? (100 - this.messageEditCurrentSize - this.onTopVideoSize) : (100 - this.messageEditCurrentSize);
         })
       }
     },
     onPanelResized(e) {
-      this.$nextTick(()=> {
-        if (!this.prevMessageEditSize && !this.isMobile()) {
-          //console.log(">>> onPanelResized", e)
-          const pane = e[e.length - 1];
-          this.messageEditSize = pane.size;
-        }
-      })
+      if (!this.prevMessageEditSize && !this.isMobile()) {
+        console.log(">>> onPanelResized", e)
+        const pane = e[e.length - 1];
+        this.messageEditCurrentSize = pane.size;
+      }
     },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
     },
     onPanelAdd(e) {
       if (!this.isMobile()) {
-        const tmp = this.messageEditSize;
-        this.messageEditSize = null;
+        const tmp = this.messageEditCurrentSize;
+        this.messageEditCurrentSize = null;
         this.$nextTick(() => {
-          this.messageEditSize = tmp;
-          //console.log(">>> onPanelAdd", e, this.messageEditSize);
+          this.messageEditCurrentSize = tmp;
+          //console.log(">>> onPanelAdd", e, this.messageEditCurrentSize);
         }).then(() => {
           this.messageListSize = 100 - tmp - this.onTopVideoSize;
         })
@@ -497,11 +496,11 @@ export default {
     },
     onPanelRemove(e) {
       if (!this.isMobile()) {
-        const tmp = this.messageEditSize;
-        this.messageEditSize = null;
+        const tmp = this.messageEditCurrentSize;
+        this.messageEditCurrentSize = null;
         this.$nextTick(() => {
-          this.messageEditSize = tmp;
-          //console.log(">>> onPanelRemove", e, this.messageEditSize);
+          this.messageEditCurrentSize = tmp;
+          //console.log(">>> onPanelRemove", e, this.messageEditCurrentSize);
         }).then(() => {
           this.messageListSize = 100 - tmp;
         })
@@ -526,7 +525,7 @@ export default {
     },
   },
   created() {
-
+    this.onPanelResized = debounce(this.onPanelResized, 2000, {leading:false, trailing:true})
   },
   async mounted() {
     this.chatStore.title = `Chat #${this.chatId}`;
@@ -590,10 +589,8 @@ export default {
     this.chatStore.avatar = null;
     this.chatStore.showGoToBlogButton = null;
 
-    if (this.$route.name == chat_name) { // not to change in case we enter to call by clicking on blinking snackbar
-      this.chatStore.showCallButton = false;
-      this.chatStore.showHangButton = false;
-    }
+    this.chatStore.showCallButton = false;
+    this.chatStore.showHangButton = false;
 
     this.chatStore.isShowSearch = false;
     this.chatStore.chatUsersCount = 0;
