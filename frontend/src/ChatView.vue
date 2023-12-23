@@ -536,11 +536,7 @@ export default {
     if (this.chatStore.currentUser) {
       await this.onProfileSet();
     }
-
-    if (this.$route.name == chat_name) { // not to change in case we enter to call by clicking on blinking snackbar
-      this.chatStore.showCallButton = true;
-      this.chatStore.showHangButton = false;
-    }
+    this.chatStore.showCallManagement = true;
 
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLogout);
@@ -588,9 +584,7 @@ export default {
     setTitle(null);
     this.chatStore.avatar = null;
     this.chatStore.showGoToBlogButton = null;
-
-    this.chatStore.showCallButton = false;
-    this.chatStore.showHangButton = false;
+    this.chatStore.showCallManagement = false;
 
     this.chatStore.isShowSearch = false;
     this.chatStore.chatUsersCount = 0;

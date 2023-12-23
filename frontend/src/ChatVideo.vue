@@ -188,6 +188,7 @@ export default {
       track.detach();
       this.removeComponent(participant.identity, track);
 
+      this.chatStore.setCallStateReady();
       this.refreshLocalMicrophoneAppBarButtons();
     },
     removeComponent(userIdentity, track) {
@@ -310,6 +311,7 @@ export default {
             this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
 
             this.refreshLocalMicrophoneAppBarButtons();
+            this.chatStore.setCallStateInCall();
           } catch (e) {
             this.setError(e, "Error during reacting on local track published");
           }
@@ -520,8 +522,6 @@ export default {
 
     this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
     this.chatStore.showDrawer = false;
-    this.chatStore.showCallButton = false;
-    this.chatStore.showHangButton = true;
 
     await axios.put(`/api/video/${this.chatId}/dial/enter`);
 
@@ -547,8 +547,8 @@ export default {
       this.inRestarting = false;
     });
 
-    this.chatStore.showCallButton = true;
-    this.chatStore.showHangButton = false;
+    this.chatStore.canShowMicrophoneButton = false;
+
     this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
 
     this.chatStore.videoChatUsersCount = 0;

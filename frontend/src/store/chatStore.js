@@ -4,14 +4,17 @@ import axios from "axios";
 import {isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 
+export const callStateReady = "ready"
+export const callStateInCall = "inCall"
+
 export const useChatStore = defineStore('chat', {
   state: () => {
     return {
         currentUser: null,
         notificationsCount: 0,
         notificationsSettings: {},
-        showCallButton: false,
-        showHangButton: false,
+        showCallManagement: false,
+        callState: callStateReady,
         shouldPhoneBlink: false,
         availableOAuth2Providers: [],
         showAlert: false,
@@ -110,7 +113,19 @@ export const useChatStore = defineStore('chat', {
         this.fileUploadingQueue = this.fileUploadingQueue.filter((item) => {
             return item.id != id;
         });
-    }
+    },
+    isInCall() {
+      return this.callState == callStateInCall
+    },
+    isReady() {
+      return this.callState == callStateReady
+    },
+    setCallStateReady() {
+      this.callState = callStateReady
+    },
+    setCallStateInCall() {
+      this.callState = callStateInCall
+    },
   },
 
 })

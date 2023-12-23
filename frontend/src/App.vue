@@ -23,43 +23,50 @@
               <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
           </v-badge>
 
-          <template v-if="showSearchButton || !isMobile()">
-              <v-badge v-if="chatStore.showCallButton || chatStore.showHangButton"
-                       :content="chatStore.videoChatUsersCount"
-                       :model-value="!!chatStore.videoChatUsersCount"
-                       color="green"
-                       overlap
-                       offset-y="1.8em"
-              >
-                  <v-btn v-if="chatStore.showCallButton" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
-                      <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
-                  </v-btn>
-                  <v-btn v-if="chatStore.showHangButton" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
-                      <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
-                  </v-btn>
-              </v-badge>
-          </template>
+          <template v-if="chatStore.showCallManagement">
+            <template v-if="showSearchButton || !isMobile()">
+                <v-badge
+                         :content="chatStore.videoChatUsersCount"
+                         :model-value="!!chatStore.videoChatUsersCount"
+                         color="green"
+                         overlap
+                         offset-y="1.8em"
+                >
+                    <v-btn v-if="chatStore.isReady()" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
+                        <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
+                    </v-btn>
+                    <v-btn v-else-if="chatStore.isInCall()" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+                        <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
+                    </v-btn>
+                </v-badge>
+            </template>
 
-          <template v-if="chatStore.canShowMicrophoneButton && chatStore.showHangButton && !isMobile()">
-            <v-btn v-if="chatStore.showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
-            <v-btn v-if="chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+            <template v-if="!isMobile()">
+              <template v-if="chatStore.isInCall()">
+                <template v-if="chatStore.canShowMicrophoneButton">
+                  <v-btn v-if="chatStore.showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
+                  <v-btn v-if="chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+                </template>
+
+                <v-btn icon @click="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
+                  <v-icon>mdi-monitor-screenshot</v-icon>
+                </v-btn>
+                <v-btn icon @click="addVideoSource()" :title="$vuetify.locale.t('$vuetify.source_add')">
+                  <v-icon>mdi-video-plus</v-icon>
+                </v-btn>
+              </template>
+
+              <v-btn v-if="chatStore.showRecordStartButton" icon @click="startRecord()" :loading="chatStore.initializingStaringVideoRecord" :title="$vuetify.locale.t('$vuetify.start_record')">
+                <v-icon>mdi-record-rec</v-icon>
+              </v-btn>
+              <v-btn v-if="chatStore.showRecordStopButton" icon @click="stopRecord()" :loading="chatStore.initializingStoppingVideoRecord" :title="$vuetify.locale.t('$vuetify.stop_record')">
+                <v-icon color="red">mdi-stop</v-icon>
+              </v-btn>
+            </template>
           </template>
 
           <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
             <v-icon>mdi-postage-stamp</v-icon>
-          </v-btn>
-
-          <v-btn v-if="chatStore.showHangButton && !isMobile()" icon @click="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
-            <v-icon>mdi-monitor-screenshot</v-icon>
-          </v-btn>
-          <v-btn v-if="chatStore.showHangButton && !isMobile()" icon @click="addVideoSource()" :title="$vuetify.locale.t('$vuetify.source_add')">
-            <v-icon>mdi-video-plus</v-icon>
-          </v-btn>
-          <v-btn v-if="chatStore.showRecordStartButton && !isMobile()" icon @click="startRecord()" :loading="chatStore.initializingStaringVideoRecord" :title="$vuetify.locale.t('$vuetify.start_record')">
-            <v-icon>mdi-record-rec</v-icon>
-          </v-btn>
-          <v-btn v-if="chatStore.showRecordStopButton && !isMobile()" icon @click="stopRecord()" :loading="chatStore.initializingStoppingVideoRecord" :title="$vuetify.locale.t('$vuetify.stop_record')">
-            <v-icon color="red">mdi-stop</v-icon>
           </v-btn>
 
           <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">

@@ -95,10 +95,10 @@ export default {
       bus.emit(OPEN_CHAT_EDIT, this.chatId);
     },
     shouldDisplayCopyCallLink() {
-      return (this.chatStore.showCallButton || this.chatStore.showHangButton) && this.isMobile()
+      return (this.chatStore.showCallManagement) && this.isMobile()
     },
     shouldDisplayCopyCallLinkDesktop() {
-      return (this.chatStore.showCallButton || this.chatStore.showHangButton) && !this.isMobile()
+      return (this.chatStore.showCallManagement) && !this.isMobile()
     },
     shouldDisplayAddVideoSource() {
       return this.$route.name == videochat_name && this.isMobile()
