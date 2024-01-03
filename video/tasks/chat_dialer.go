@@ -82,6 +82,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		invitation := dto.VideoCallInvitation{
 			ChatId:   chatId,
 			ChatName: chatInviteName.Name,
+			//Status: TODO extract from redis model
 		}
 
 		err = srv.rabbitMqInvitePublisher.Publish(&invitation, chatInviteName.UserId)

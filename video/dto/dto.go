@@ -34,7 +34,7 @@ type VideoCallRecordingChangedDto struct {
 type VideoIsInvitingDto struct {
 	ChatId       int64   `json:"chatId"`
 	UserIds      []int64 `json:"userIds"` // invitee
-	Status       bool    `json:"status"`  // true means inviting in process for this person(it sends it periodically), false means invitring stopped (it is sent one time)
+	Status       bool    `json:"status"`  // true means inviting in process for this person(it sends it periodically), false means inviting stopped (it is sent one time)
 	BehalfUserId int64   `json:"behalfUserId"`
 }
 
@@ -52,11 +52,14 @@ type ChatName struct {
 	UserId int64  `json:"userId"` // userId chatName for
 }
 
+// for new call participant
 type VideoCallInvitation struct {
 	ChatId   int64  `json:"chatId"`
 	ChatName string `json:"chatName"`
+	Status   string `json:"status"`
 }
 
+// for call owner
 type VideoDialChanged struct {
 	UserId int64 `json:"userId"`
 	Status bool  `json:"status"`

@@ -119,6 +119,7 @@ func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64)
 	return parsedBehalfUserId, nil
 }
 
+// TODO here and in RemoveDial() not to remove immediately, but switch status and set expiration equal to room is closing timeout
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {
 	_, err := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId).Result()
 	if err != nil {
@@ -157,6 +158,7 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 	return nil
 }
 
+// aka remove all dials or close call
 func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64) error {
 	// remove "dialchat"
 	err := s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
@@ -171,6 +173,14 @@ func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64) erro
 		logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
 		return err
 	}
+
+	// TODO remove "call" on zero members
+	//err = s.redisClient.Del(ctx, dialChatUserCallsKey(userId)).Err()
+	//if err != nil {
+	//	logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
+	//	return err
+	//}
+
 	return nil
 }
 
