@@ -714,6 +714,11 @@ export default {
 <style lang="scss">
 @use './styles/settings';
 
+// removes extraneous scroll at right side of the screen on Chrome
+html {
+  overflow-y: unset !important;
+}
+
 .search-icon {
   opacity: settings.$list-item-icon-opacity;
 }
