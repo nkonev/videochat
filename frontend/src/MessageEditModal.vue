@@ -19,15 +19,6 @@
                 <span class="d-flex flex-grow-1">
                   <v-toolbar-title>{{ isNew ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
                 </span>
-                <span class="d-flex mx-2">
-                  <v-btn
-                    icon
-                    dark
-                    @click="onPaste()"
-                  >
-                    <v-icon>mdi-content-paste</v-icon>
-                  </v-btn>
-                  </span>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
@@ -38,15 +29,13 @@
 </template>
 
 <script>
-import bus, {
-  ADD_MESSAGE_TEXT,
-  CLOSE_EDIT_MESSAGE,
-  OPEN_EDIT_MESSAGE,
-  SET_EDIT_MESSAGE_MODAL,
-} from "./bus/bus";
+    import bus, {
+      CLOSE_EDIT_MESSAGE,
+      OPEN_EDIT_MESSAGE,
+      SET_EDIT_MESSAGE_MODAL,
+    } from "./bus/bus";
     import MessageEdit from "@/MessageEdit.vue";
     import heightMixin from "@/mixins/heightMixin";
-import {hasLength} from "@/utils";
 
     export default {
         data() {
@@ -66,25 +55,11 @@ import {hasLength} from "@/utils";
                 this.$nextTick(()=>{
                     bus.emit(SET_EDIT_MESSAGE_MODAL, {dto, isNew: this.isNew});
                 });
-                this.setShowPaste();
             },
             closeModal() {
                 this.show = false;
                 this.messageId = null;
                 this.showPaste = false;
-            },
-            setShowPaste() {
-              navigator.clipboard.readText().then((text)=>{
-                const trimmedText = text.trim();
-                this.showPaste = hasLength(trimmedText);
-              })
-            },
-            onPaste() {
-              this.$nextTick(()=> {
-                navigator.clipboard.readText().then((text)=>{
-                  bus.emit(ADD_MESSAGE_TEXT, text);
-                })
-              })
             },
         },
         watch: {
