@@ -75,7 +75,11 @@ export default {
       app.use(vuetify);
       app.use(pinia);
       const containerEl = document.createElement("div");
-      containerEl.className = 'video-component-wrapper';
+      if (this.videoIsOnTop) {
+        containerEl.className = 'video-component-wrapper-position-top';
+      } else {
+        containerEl.className = 'video-component-wrapper-position-side';
+      }
 
       if (position == first) {
         this.insertChildAtIndex(this.videoContainerDiv, containerEl, 0);
@@ -596,7 +600,7 @@ export default {
 </style>
 
 <style lang="stylus">
-.video-component-wrapper {
+.video-component-wrapper-position-top {
   display contents
 }
 
