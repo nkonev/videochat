@@ -34,7 +34,7 @@ import bus, {
   PREVIEW_CREATED,
   OPEN_FILE_UPLOAD_MODAL,
   MEDIA_LINK_SET,
-  EMBED_LINK_SET, ADD_MESSAGE_TEXT
+  EMBED_LINK_SET,
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
@@ -157,9 +157,6 @@ export default {
 
         this.setIframe(link);
     },
-    addText(text) {
-        this.editor.commands.insertContent(text)
-    },
     setFileItemUuid(fileItemUuid) {
         this.preallocatedCandidateFileItemId = fileItemUuid;
     },
@@ -168,7 +165,6 @@ export default {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
-    bus.on(ADD_MESSAGE_TEXT, this.addText);
     this.regenerateNewFileItemUuid();
 
     const imagePluginInstance = buildImageHandler(
@@ -258,7 +254,6 @@ export default {
     bus.off(PREVIEW_CREATED, this.onPreviewCreated);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
-    bus.off(ADD_MESSAGE_TEXT, this.addText);
     this.resetFileItemUuid();
 
     this.editor.destroy();
