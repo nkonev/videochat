@@ -367,9 +367,9 @@ export default {
     },
     getOnScreenPosition(publication) {
       if (publication.source == 'screen_share') {
-        return second
+        return first
       }
-      return first
+      return second
     },
     refreshLocalMicrophoneAppBarButtons() {
       const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
