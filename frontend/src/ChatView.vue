@@ -1,6 +1,6 @@
 <template>
     <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
-      <pane size="25" v-if="!isMobile()">
+      <pane size="25" v-if="!isMobile() && !isVideoRoute()">
         <ChatList :embedded="true"/>
       </pane>
       <pane>
@@ -11,7 +11,7 @@
                 <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
               </pane>
 
-              <pane style="width: 100%" :class="isMobile() ? 'message-pane-mobile' : ''" :size="messageListSize">
+              <pane style="width: 100%" :class="messageListPaneClass()" :size="messageListSize">
                   <v-tooltip
                     v-if="broadcastMessage"
                     :model-value="showTooltip"
@@ -21,7 +21,7 @@
                     <span v-html="broadcastMessage"></span>
                   </v-tooltip>
 
-                  <div v-if="pinnedPromoted" :key="pinnedPromotedKey" :class="!isMobile() ? 'pinned-promoted' : ['pinned-promoted', 'pinned-promoted-mobile']" :title="$vuetify.locale.t('$vuetify.pinned_message')">
+                  <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
                     <v-alert
                       closable
                       color="red-lighten-4"
@@ -506,6 +506,14 @@ export default {
         })
       }
     },
+    messageListPaneClass() {
+      const classes = [];
+      classes.push('message-pane');
+      if (this.isMobile()) {
+        classes.push('message-pane-mobile');
+      }
+      return classes;
+    },
   },
   watch: {
     '$route': {
@@ -602,12 +610,11 @@ export default {
 @import "pinned.styl"
 
 .pinned-promoted {
-  position: fixed
+  position: absolute
   z-index: 4;
-  margin-right: 284px;
 }
-.pinned-promoted-mobile {
-    margin-right: unset;
+.message-pane {
+  position: relative
 }
 .message-pane-mobile {
     align-items: unset;

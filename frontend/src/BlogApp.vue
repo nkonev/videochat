@@ -128,6 +128,11 @@ export default {
 <style lang="stylus">
 @import "constants.styl"
 
+// removes extraneous scroll at right side of the screen on Chrome
+html {
+  overflow-y: unset !important;
+}
+
 .colored-link {
     color: $linkColor;
     text-decoration none
