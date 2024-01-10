@@ -130,6 +130,7 @@ export default {
         pageTop: 0,
         pageBottom: 0,
         markInstance: null,
+        routeName: null,
     }
   },
   computed: {
@@ -560,6 +561,7 @@ export default {
     ChatListContextMenu
   },
   created() {
+    this.routeName = this.$route.name;
     this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true})
   },
   watch: {
@@ -599,7 +601,7 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
 
-    if (this.$route.name == chat_list_name) {
+    if (this.routeName == chat_list_name) {
       this.chatStore.isShowSearch = true;
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
@@ -625,7 +627,9 @@ export default {
     setTitle(null);
     this.chatStore.title = null;
 
-    this.chatStore.isShowSearch = false;
+    if (this.routeName == chat_list_name) {
+      this.chatStore.isShowSearch = false;
+    }
   }
 }
 </script>
