@@ -75,7 +75,7 @@ func dialChatMembersKey(chatId int64) string {
 }
 
 func dialChatUserCallsKey(chatId int64) string {
-	return fmt.Sprintf("call:%v", chatId)
+	return fmt.Sprintf("user_call_state:%v", chatId)
 }
 
 func getAllDialChats() string {
@@ -147,7 +147,7 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 			return err
 		}
 
-		// remove "call" on zero members
+		// remove "user_call_state" on zero members
 		err = s.redisClient.Del(ctx, dialChatUserCallsKey(userId)).Err()
 		if err != nil {
 			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
@@ -159,29 +159,28 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 }
 
 // aka remove all dials or close call
-func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64) error {
+func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64, usersOfDial []int64) {
 	// remove "dialchat"
 	err := s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
-		return err
+		return
 	}
 
 	// remove "dialmeta"
 	err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
-		return err
+		return
 	}
 
-	// TODO remove "call" on zero members
-	//err = s.redisClient.Del(ctx, dialChatUserCallsKey(userId)).Err()
-	//if err != nil {
-	//	logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
-	//	return err
-	//}
-
-	return nil
+	// remove "user_call_state"
+	for _, userId := range usersOfDial {
+		err = s.redisClient.Del(ctx, dialChatUserCallsKey(userId)).Err()
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
+		}
+	}
 }
 
 func (s *DialRedisRepository) GetDialChats(ctx context.Context) ([]int64, error) {

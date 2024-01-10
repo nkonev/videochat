@@ -320,7 +320,7 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	err = vh.dialRedisRepository.RemoveDial(c.Request().Context(), chatId)
+	vh.dialRedisRepository.RemoveDial(c.Request().Context(), chatId, usersToDial)
 
 	var videoIsInvitingDto = dto.VideoIsInvitingDto{
 		ChatId:       chatId,
