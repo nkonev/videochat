@@ -567,7 +567,9 @@ export default {
   watch: {
       '$vuetify.locale.current': {
           handler: function (newValue, oldValue) {
+            if (this.routeName == chat_list_name) {
               this.setTopTitle();
+            }
           },
       },
       tetAtetParticipants: function(newValue, oldValue) {
@@ -582,7 +584,6 @@ export default {
   },
   async mounted() {
     this.markInstance = new Mark("div#chat-list-items .chat-name");
-    this.setTopTitle();
 
     if (this.canDrawChats()) {
       await this.onProfileSet();
@@ -602,6 +603,7 @@ export default {
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
 
     if (this.routeName == chat_list_name) {
+      this.setTopTitle();
       this.chatStore.isShowSearch = true;
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
@@ -624,10 +626,11 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
 
-    setTitle(null);
-    this.chatStore.title = null;
 
     if (this.routeName == chat_list_name) {
+      setTitle(null);
+      this.chatStore.title = null;
+
       this.chatStore.isShowSearch = false;
     }
   }
