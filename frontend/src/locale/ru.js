@@ -228,5 +228,6 @@ export default {
     file_download: "Скачать файл",
     chats_not_found: "Чаты не найдены",
     users_not_found: "Пользователи не найдены",
-    messages_not_found: "Сообщения не найдены"
+    messages_not_found: "Сообщения не найдены",
+    chat_not_found: "Чат не найден или вы в нём не состоите"
 }
