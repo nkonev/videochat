@@ -327,7 +327,7 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	vh.dialRedisRepository.RemoveAllDials(c.Request().Context(), chatId, usersToDial)
+	vh.dialRedisRepository.RemoveAllDials(c.Request().Context(), chatId)
 
 	err = vh.dialStatusPublisher.Publish(chatId, usersToDial, false, ownerId)
 
