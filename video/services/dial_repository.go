@@ -19,7 +19,7 @@ func NewDialRedisRepository(redisClient *redisV8.Client) *DialRedisRepository {
 	}
 }
 
-const behalfUserIdConstant = "behalfUserId" // also it is dial owner - person who starts the dial
+const ownerIdConstant = "ownerId" // also it is dial owner - person who starts the dial
 
 const NoUser = -1
 
@@ -31,7 +31,7 @@ const UserCallChatIdKey = "chatId"
 
 
 
-func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, behalfUserId int64) error {
+func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, ownerId int64) error {
 	expiration := viper.GetDuration("dialExpire")
 
 	err := s.redisClient.SAdd(ctx, dialChatMembersKey(chatId), userId).Err()
@@ -45,7 +45,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		return err
 	}
 
-	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), behalfUserIdConstant, behalfUserId).Err()
+	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), ownerIdConstant, ownerId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
 		return err
@@ -99,27 +99,7 @@ func chatIdFromKey(key string) (int64, error) {
 	return parseInt64, nil
 }
 
-// indeed returns call's owner
-func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, error) {
-	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
-		return 0, err
-	}
-	if len(val) == 0 {
-		return NoUser, nil
-	}
-
-	s2 := val[behalfUserIdConstant]
-	parsedBehalfUserId, err := utils.ParseInt64(s2)
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during parsing userId %v", err)
-		return 0, err
-	}
-	return parsedBehalfUserId, nil
-}
-
-// TODO here and in RemoveDial() not to remove immediately, but switch status and set expiration equal to room is closing timeout
+// TODO here and in RemoveAllDials() not to remove immediately, but switch status and set expiration equal to room is closing timeout
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {
 	_, err := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId).Result()
 	if err != nil {
@@ -159,7 +139,7 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 }
 
 // aka remove all dials or close call
-func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64, usersOfDial []int64) {
+func (s *DialRedisRepository) RemoveAllDials(ctx context.Context, chatId int64, usersOfDial []int64) {
 	// remove "dialchat"
 	err := s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
 	if err != nil {
@@ -182,6 +162,8 @@ func (s *DialRedisRepository) RemoveDial(ctx context.Context, chatId int64, user
 		}
 	}
 }
+
+
 
 func (s *DialRedisRepository) GetDialChats(ctx context.Context) ([]int64, error) {
 	keys, err := s.redisClient.Keys(ctx, getAllDialChats()).Result()
@@ -224,4 +206,23 @@ func (s *DialRedisRepository) GetUsersToDial(ctx context.Context, chatId int64) 
 		ret = append(ret, parseInt64)
 	}
 	return ret, nil
+}
+
+// returns call's owner
+func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, error) {
+	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
+		return 0, err
+	}
+	if len(val) == 0 {
+		return NoUser, nil
+	}
+
+	parsedOwnerId, err := utils.ParseInt64(val[ownerIdConstant])
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during parsing userId %v", err)
+		return 0, err
+	}
+	return parsedOwnerId, nil
 }

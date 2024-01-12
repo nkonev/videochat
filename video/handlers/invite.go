@@ -68,58 +68,71 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.addToCallingOrRemove(c, callee, addToCallCall, chatId, userPrincipalDto))
+	if (addToCallCall) {
+		return c.NoContent(vh.addToCalling(c, callee, chatId, userPrincipalDto))
+	} else {
+		return c.NoContent(vh.removeFromCalling(c, callee, chatId, userPrincipalDto))
+	}
+}
+
+func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) (bool, int) {
+	// check participant's access to chat
+	if ok, err := vh.chatClient.CheckAccess(callee, chatId, ctx); err != nil {
+		return false, http.StatusInternalServerError
+	} else if !ok {
+		return false, http.StatusUnauthorized
+	}
+
+	ownerId, err := vh.dialRedisRepository.GetDialMetadata(ctx, chatId)
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error %v", err)
+		return false, http.StatusInternalServerError
+	}
+	if ownerId == services.NoUser {
+		// ok
+	} else if userPrincipalDto.UserId != ownerId {
+		logger.GetLogEntry(ctx).Infof("Call already started in this chat %v by %v", chatId, ownerId)
+		return false, http.StatusAccepted
+	}
+	return true, 0
 }
 
 // TODO check here (and return 4xx) if we can't invite user (in case addToCallCall == true) (they're already in the call)
-func (vh *InviteHandler) addToCallingOrRemove(c echo.Context, callee int64, addToCallCall bool, chatId int64, userPrincipalDto *auth.AuthResult) int {
-	// check participant's access to chat
-	if ok, err := vh.chatClient.CheckAccess(callee, chatId, c.Request().Context()); err != nil {
-		return http.StatusInternalServerError
-	} else if !ok {
-		return http.StatusUnauthorized
+func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
+	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
+	if !ok {
+		return code
 	}
 
-	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	err := vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
-	if behalfUserId == services.NoUser {
-		// ok
-	} else if userPrincipalDto.UserId != behalfUserId {
-		logger.GetLogEntry(c.Request().Context()).Infof("Call already started in this chat %v by %v", chatId, behalfUserId)
-		return http.StatusAccepted
+
+	return http.StatusOK
+}
+
+func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
+	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
+	if !ok {
+		return code
 	}
 
-	if addToCallCall {
-		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return http.StatusInternalServerError
-		}
-	} else { // else remove from call
-		err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), callee, chatId)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return http.StatusInternalServerError
-		}
-
-		var videoIsInvitingDto = dto.VideoIsInvitingDto{
-			ChatId:       chatId,
-			UserIds:      []int64{callee},
-			Status:       false,
-			BehalfUserId: userPrincipalDto.UserId,
-		}
-		err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return http.StatusInternalServerError
-		}
-
-		// if we remove user from call - send them MissedCall notification
-		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, []int64{callee})
+	err := vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), callee, chatId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return http.StatusInternalServerError
 	}
+
+	err = vh.dialStatusPublisher.Publish(chatId, []int64{callee}, false, userPrincipalDto.UserId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return http.StatusInternalServerError
+	}
+
+	// if we remove user from call - send them MissedCall notification
+	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, []int64{callee})
 
 	return http.StatusOK
 }
@@ -189,7 +202,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		// and we(behalf user) doesn't have incoming call
 		if oppositeUserOfVideo == nil && oppositeUser != nil {
 			// we should call the counterpart (opposite user)
-			vh.addToCallingOrRemove(c, *oppositeUser, true, chatId, userPrincipalDto)
+			vh.addToCalling(c, *oppositeUser, chatId, userPrincipalDto)
 		}
 	}
 
@@ -248,12 +261,12 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 //  when we have "closing" - send "false" all the time empty room exists
 
 func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
-	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	ownerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
-	if behalfUserId == services.NoUser {
+	if ownerId == services.NoUser {
 		return http.StatusOK
 	}
 
@@ -264,14 +277,8 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, use
 		return http.StatusInternalServerError
 	}
 
-	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the behalfUserId (call's owner)
-	var videoIsInvitingDto = dto.VideoIsInvitingDto{
-		ChatId:       chatId,
-		UserIds:      []int64{userPrincipalDto.UserId},
-		Status:       false,
-		BehalfUserId: behalfUserId,
-	}
-	err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the ownerId (call's owner)
+	err = vh.dialStatusPublisher.Publish(chatId, []int64{userPrincipalDto.UserId}, false, ownerId)
 
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -301,16 +308,16 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	behalfUserId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	ownerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	if behalfUserId == services.NoUser {
+	if ownerId == services.NoUser {
 		return c.NoContent(http.StatusOK)
 	}
 
-	if behalfUserId != userPrincipalDto.UserId {
+	if ownerId != userPrincipalDto.UserId {
 		return c.NoContent(http.StatusOK)
 	}
 
@@ -320,15 +327,9 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	vh.dialRedisRepository.RemoveDial(c.Request().Context(), chatId, usersToDial)
+	vh.dialRedisRepository.RemoveAllDials(c.Request().Context(), chatId, usersToDial)
 
-	var videoIsInvitingDto = dto.VideoIsInvitingDto{
-		ChatId:       chatId,
-		UserIds:      usersToDial,
-		Status:       false,
-		BehalfUserId: behalfUserId,
-	}
-	err = vh.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	err = vh.dialStatusPublisher.Publish(chatId, usersToDial, false, ownerId)
 
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)

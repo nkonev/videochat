@@ -58,7 +58,7 @@ func (srv *ChatDialerService) doJob() {
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
-	behalfUserId, err := srv.redisService.GetDialMetadata(ctx, chatId)
+	ownerId, err := srv.redisService.GetDialMetadata(ctx, chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return
@@ -71,7 +71,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 
 	Logger.Infof("Calling userIds %v from chat %v", userIdsToDial, chatId)
 
-	inviteNames, err := srv.chatClient.GetChatNameForInvite(chatId, behalfUserId, userIdsToDial, ctx)
+	inviteNames, err := srv.chatClient.GetChatNameForInvite(chatId, ownerId, userIdsToDial, ctx)
 	if err != nil {
 		Logger.Error(err, "Failed during getting chat invite names")
 		return
@@ -91,34 +91,22 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		}
 	}
 
-	// send state changes to owner (behalfUserId) of call
-	var videoIsInvitingDto = dto.VideoIsInvitingDto{
-		ChatId:       chatId,
-		UserIds:      userIdsToDial,
-		Status:       true,
-		BehalfUserId: behalfUserId,
-	}
-	err = srv.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	// send state changes to owner (ownerId) of call
+	err = srv.dialStatusPublisher.Publish(chatId, userIdsToDial, true, ownerId)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
 		return
 	}
 }
 
-func (srv *ChatDialerService) SendDialStatusChanged(ctx context.Context, behalfUserId int64, chatId int64) {
+func (srv *ChatDialerService) SendDialStatusChanged(ctx context.Context, ownerId int64, chatId int64) {
 	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return
 	}
 
-	var videoIsInvitingDto = dto.VideoIsInvitingDto{
-		ChatId:       chatId,
-		UserIds:      userIdsToDial,
-		Status:       true,
-		BehalfUserId: behalfUserId,
-	}
-	err = srv.dialStatusPublisher.Publish(&videoIsInvitingDto)
+	err = srv.dialStatusPublisher.Publish(chatId, userIdsToDial, true, ownerId)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
 		return

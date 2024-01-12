@@ -146,20 +146,25 @@ func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePubl
 	}
 }
 
-func (rp *RabbitDialStatusPublisher) Publish(req *dto.VideoIsInvitingDto) error {
+func (rp *RabbitDialStatusPublisher) Publish(
+	chatId       int64,
+	userIds      []int64,
+	status       bool,
+	ownerId int64,
+) error {
 	var dials = []*dto.VideoDialChanged{}
-	for _, userId := range req.UserIds {
+	for _, userId := range userIds {
 		dials = append(dials, &dto.VideoDialChanged{
 			UserId: userId,
-			Status: req.Status,
+			Status: status,
 		})
 	}
 
 	event := dto.GlobalUserEvent{
 		EventType: "video_dial_status_changed",
-		UserId:    req.BehalfUserId,
+		UserId:    ownerId,
 		VideoParticipantDialEvent: &dto.VideoDialChanges{
-			ChatId: req.ChatId,
+			ChatId: chatId,
 			Dials:  dials,
 		},
 	}
