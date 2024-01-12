@@ -242,7 +242,7 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 // TODO not here but in chat_dialer.go :: makeDial()
 //  also, it's subscription on chat events;
 //  a) periodically send dto.VideoCallInvitation[true|false] (call particular user to video call)
-//  b) periodically send dto.VideoIsInvitingDto (update progressbar in ChatParticipants.vue) which transforms to dto.VideoDialChanges
+//  b) periodically send dto.VideoDialChanges (update progressbar in ChatParticipants.vue)
 //  implement the algorithm:
 //  run over all rooms (see livekit's room.empty_timeout), then get room's chats, then get chat's participants
 //  if (we have chat participant but no their counterpart in the room) {
