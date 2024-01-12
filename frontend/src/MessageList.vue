@@ -76,7 +76,7 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
-    import {chat_name, messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
+    import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
     import Mark from "mark.js";
 

@@ -110,6 +110,7 @@
             <template v-slot:actions>
               <v-btn
                 text
+                v-if="chatStore.errorColor == 'error'"
                 @click="refreshPage()"
               >
                 Refresh

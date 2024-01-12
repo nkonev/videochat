@@ -32,7 +32,7 @@
                     </v-alert>
                   </div>
 
-                  <MessageList :chatDto="chatDto"/>
+                  <MessageList v-if="isAllowedMessageList()" :chatDto="chatDto"/>
 
                   <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               </pane>
@@ -109,7 +109,7 @@ export default {
   ],
   data() {
     return {
-      chatDto: chatDtoFactory(),
+      chatDto: null,
       pinnedPromoted: null,
       pinnedPromotedKey: +new Date(),
       writingUsers: [],
@@ -138,9 +138,9 @@ export default {
   },
   methods: {
     onProfileSet() {
-      const promise = this.getInfo();
-      this.graphQlSubscribe();
-      return promise
+      return this.getInfo().then(()=>{
+        this.graphQlSubscribe();
+      })
     },
     onLogout() {
       this.partialReset();
@@ -178,16 +178,17 @@ export default {
       });
     },
     getInfo() {
-      this.fetchPromotedMessage();
       return this.fetchAndSetChat().catch(reason => {
         if (reason.response.status == 404) {
           this.goToChatList();
+          this.setWarning(this.$vuetify.locale.t('$vuetify.chat_not_found'));
           return Promise.reject();
         } else {
           return Promise.resolve();
         }
       }).then(() => {
         // async call
+        this.fetchPromotedMessage();
         axios.get(`/api/video/${this.chatId}/users`)
           .then(response => response.data)
           .then(data => {
@@ -425,6 +426,9 @@ export default {
     isAllowedVideo() {
       return this.chatStore.currentUser && this.$route.name == videochat_name && !this.isSwitching && this.chatDto?.participantIds?.length
     },
+    isAllowedMessageList() {
+      return this.chatStore.currentUser && !!this.chatDto
+    },
     onVideoCallChanged(dto) {
       if (dto.chatId == this.chatId) {
         this.chatStore.videoChatUsersCount = dto.usersCount;
@@ -587,6 +591,8 @@ export default {
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.off(MESSAGE_EDITING_BIG_TEXT_START, this.onEditingBigTextStart);
     bus.on(MESSAGE_EDITING_END, this.onEditingEnd);
+
+    this.chatDto = null;
 
     this.chatStore.title = null;
     setTitle(null);
