@@ -101,7 +101,7 @@ func chatIdFromKey(key string) (int64, error) {
 
 // TODO here and in RemoveAllDials() not to remove immediately, but switch status and set expiration on user_call_status key equal to "room is closing" timeout
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {
-	_, err := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId).Result()
+	_, err := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId).Result() // TODO instead of it - just change status on "canceling"
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
 		return err
@@ -112,7 +112,7 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 		logger.GetLogEntry(ctx).Errorf("Error during performing SCARD %v", err)
 		return err
 	}
-	if card == 0 { // TODO paraphrase this logic (most probably put it in scheduler) to run periodically, and if all the clients were removed - then run...
+	if card == 0 { // TODO create run periodically task, which checks if there are any active calls (dialChatMembersKey) by chatId and if zero - then remove the entire construction
 		// remove "dialchat" on zero members
 		err = s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
 		if err != nil {
