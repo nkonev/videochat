@@ -74,8 +74,8 @@ func dialChatMembersKey(chatId int64) string {
 	return fmt.Sprintf("dialchat:%v", chatId)
 }
 
-func dialChatUserCallsKey(chatId int64) string {
-	return fmt.Sprintf("user_call_state:%v", chatId)
+func dialChatUserCallsKey(userId int64) string {
+	return fmt.Sprintf("user_call_state:%v", userId)
 }
 
 func getAllDialChats() string {
