@@ -163,7 +163,7 @@
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
-    import {deepCopy, findIndex, hasLength, isSetEqual, moveToFirstPosition, replaceInArray} from "@/utils";
+    import {deepCopy, findIndex, hasLength, isCalling, isSetEqual, moveToFirstPosition, replaceInArray} from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -368,7 +368,7 @@
                     innerLoop:
                     for (const videoDialChanged of dto.dials) {
                         if (participant.id == videoDialChanged.userId) {
-                            participant.callingTo = videoDialChanged.status;
+                            participant.callingTo = isCalling(videoDialChanged.status);
                             break innerLoop
                         }
                     }

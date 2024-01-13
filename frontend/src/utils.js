@@ -237,3 +237,7 @@ export const renameFilePart = (file, newFileName) => {
   const renamedFile = formData.get(partName);
   return renamedFile
 }
+
+export const isCalling = (status) => {
+  return status == "inviting"
+}

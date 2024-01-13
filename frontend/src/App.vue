@@ -179,7 +179,7 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import {getBlogLink, hasLength, isChatRoute} from "@/utils";
+import {getBlogLink, hasLength, isCalling, isChatRoute} from "@/utils";
 import {
     chat_list_name,
     chat_name,
@@ -555,7 +555,7 @@ export default {
           this.invitedVideoChatName = null;
         },
         onVideoCallInvited(data) {
-          if (data.status == "inviting") {
+          if (isCalling(data.status)) {
             this.invitedVideoChatId = data.chatId;
             this.invitedVideoChatName = data.chatName;
             this.invitedVideoChatAlert = true;

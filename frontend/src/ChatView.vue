@@ -59,7 +59,7 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {hasLength, isChatRoute, setTitle} from "@/utils";
+import {hasLength, isCalling, isChatRoute, setTitle} from "@/utils";
 import bus, {
   CHAT_DELETED,
   CHAT_EDITED,
@@ -446,10 +446,10 @@ export default {
       this.chatStore.showChatEditButton = false;
     },
     onChatDialStatusChange(dto) {
-      if (this.chatDto.tetATet) {
+      if (this.chatDto.tetATet && dto.chatId == this.chatId) {
         for (const videoDialChanged of dto.dials) {
           if (this.chatStore.currentUser.id != videoDialChanged.userId) {
-            this.chatStore.shouldPhoneBlink = videoDialChanged.status;
+            this.chatStore.shouldPhoneBlink = isCalling(videoDialChanged.status);
           }
         }
       }
