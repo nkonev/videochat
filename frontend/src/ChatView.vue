@@ -11,7 +11,7 @@
                 <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
               </pane>
 
-              <pane style="width: 100%" :class="messageListPaneClass()" :size="messageListSize">
+              <pane style="width: 100%; background: white" :class="messageListPaneClass()" :size="messageListSize">
                   <v-tooltip
                     v-if="broadcastMessage"
                     :model-value="showTooltip"
