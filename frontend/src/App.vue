@@ -551,7 +551,7 @@ export default {
         },
         resetVideoInvitation() {
           this.invitedVideoChatAlert = false;
-          this.invitedVideoChatId = 0;
+          // this.invitedVideoChatId = 0; // we don't reset it in order to let asynchronous core read the value (if we do this - async mount() -> fetchAndSetChat() in ChatView.vue gonna go to error due to chatId == 0)
           this.invitedVideoChatName = null;
         },
         onVideoCallInvited(data) {
