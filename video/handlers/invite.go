@@ -94,7 +94,7 @@ func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, 
 		logger.GetLogEntry(ctx).Infof("Call already started in this chat %v by %v", chatId, ownerId)
 		return false, http.StatusAccepted
 	}
-	return true, 0
+	return true, http.StatusOK
 }
 
 // TODO check here (and return 4xx) if we can't invite user (in case addToCallCall == true) (they're already in the call)
@@ -119,16 +119,9 @@ func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId 
 		return code
 	}
 
-	err := vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), callee, chatId)
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return http.StatusInternalServerError
-	}
-
-	err = vh.dialStatusPublisher.Publish(chatId, []int64{callee}, false, userPrincipalDto.UserId)
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return http.StatusInternalServerError
+	code = vh.removeFromCallingList(c, chatId, callee)
+	if code != http.StatusOK {
+		return code
 	}
 
 	// if we remove user from call - send them MissedCall notification
@@ -208,7 +201,7 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 
 	// we call it in case opposite user has incoming (this) call
 	// react on "take the phone" (pressing green tube) which cancels ringing logic for opposite user (or myself)
-	vh.removeFromCallingList(c, chatId, userPrincipalDto)
+	vh.removeFromCallingList(c, chatId, userPrincipalDto.UserId)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -232,7 +225,7 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.removeFromCallingList(c, chatId, userPrincipalDto))
+	return c.NoContent(vh.removeFromCallingList(c, chatId, userPrincipalDto.UserId))
 }
 
 
@@ -260,7 +253,7 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 //  add status "inviting", "closing"
 //  when we have "closing" - send "false" all the time empty room exists
 
-func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, userPrincipalDto *auth.AuthResult) int {
+func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, callee int64) int {
 	ownerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -271,14 +264,14 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, use
 	}
 
 	// we remove callee from DialList
-	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, chatId)
+	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), callee, chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
 	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the ownerId (call's owner)
-	err = vh.dialStatusPublisher.Publish(chatId, []int64{userPrincipalDto.UserId}, false, ownerId)
+	err = vh.dialStatusPublisher.Publish(chatId, []int64{callee}, false, ownerId)
 
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
