@@ -627,10 +627,10 @@ export default {
   z-index: 4;
 }
 .message-pane {
-  position: relative
+  position: relative // needed for the correct displaying .pinned-promoted
 }
 .message-pane-mobile {
-    align-items: unset; // needed for the correct displaying pinned message
+    align-items: unset;
 }
 
 .new-fab {
