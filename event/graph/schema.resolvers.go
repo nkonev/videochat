@@ -583,6 +583,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 		ret.VideoCallInvitation = &model.VideoCallInvitationDto{
 			ChatID:   videoChatInvite.ChatId,
 			ChatName: videoChatInvite.ChatName,
+			Status:   videoChatInvite.Status,
 		}
 	}
 

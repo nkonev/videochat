@@ -23,11 +23,12 @@ type InviteHandler struct {
 	notificationPublisher *producer.RabbitNotificationsPublisher
 	userService           *services.UserService
 	chatDialerService     *tasks.ChatDialerService
+	chatInvitationService *services.ChatInvitationService
 }
 
-const MissedCall = "missed_call"
+const EventMissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService, chatInvitationService *services.ChatInvitationService) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,
@@ -35,6 +36,7 @@ func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *cli
 		notificationPublisher: notificationPublisher,
 		userService:           userService,
 		chatDialerService:     chatDialerService,
+		chatInvitationService: chatInvitationService,
 	}
 }
 
@@ -51,14 +53,14 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return err
 	}
 
-	callee, err0 := utils.ParseInt64(c.QueryParam("userId"))
-	if err0 != nil {
-		return err0
+	callee, err := utils.ParseInt64(c.QueryParam("userId"))
+	if err != nil {
+		return err
 	}
 
-	addToCallCall, err0 := utils.ParseBoolean(c.QueryParam("call"))
-	if err0 != nil {
-		return err0
+	addToCallCall, err := utils.ParseBoolean(c.QueryParam("call"))
+	if err != nil {
+		return err
 	}
 
 	// check my access to chat
@@ -97,14 +99,26 @@ func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, 
 	return true, http.StatusOK
 }
 
-// TODO check here (and return 4xx) if we can't invite user (in case addToCallCall == true) (they're already in the call)
 func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
 	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
 	if !ok {
 		return code
 	}
 
-	err := vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId)
+	status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), callee)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return http.StatusInternalServerError
+	}
+
+	if !services.CanOverrideCallStatus(status) {
+		return http.StatusConflict
+	}
+
+	// for better user experience
+	vh.chatInvitationService.SendInvitations(c.Request().Context(), chatId, userPrincipalDto.UserId, []int64{callee})
+
+	err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId, services.CallStatusInviting)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
@@ -119,12 +133,12 @@ func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId 
 		return code
 	}
 
-	code = vh.removeFromCallingList(c, chatId, callee)
+	code = vh.removeFromCallingList(c, chatId, []int64{callee}, services.CallStatusRemoving)
 	if code != http.StatusOK {
 		return code
 	}
 
-	// if we remove user from call - send them MissedCall notification
+	// if we remove user from call - send them EventMissedCall notification
 	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, []int64{callee})
 
 	return http.StatusOK
@@ -188,7 +202,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	// remove myself from a call
 	// we call it in case opposite/owner user has incoming (this) call
 	// react on "take the phone" (pressing green tube) which cancels ringing logic for opposite/owner user (or myself)
-	vh.removeFromCallingList(c, chatId, userPrincipalDto.UserId)
+	vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -205,7 +219,7 @@ func getOppositeUserOfTetAtTet(users []int64, me int64) *int64 {
 	return oppositeUser
 }
 
-func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
+func (vh *InviteHandler) ProcessAcceptCall(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		Logger.Errorf("Error during getting auth context")
@@ -224,9 +238,30 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.removeFromCallingList(c, chatId, userPrincipalDto.UserId))
+	return c.NoContent(vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall))
 }
 
+func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		Logger.Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	// check my access to chat
+	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	return c.NoContent(vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusCancelling))
+}
 
 // question: how not to overwhelm the system by iterating over all the users and all the chats ?
 // answer: using opened rooms and rooms are going to be closed - see livekit's room.empty_timeout
@@ -252,7 +287,9 @@ func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
 //  add status "inviting", "closing"
 //  when we have "closing" - send "false" all the time empty room exists
 
-func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, callee int64) int {
+
+
+func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, usersOfDial []int64, callStatus string) int {
 	ownerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -262,26 +299,54 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, cal
 		return http.StatusOK
 	}
 
-	// we remove callee from DialList
-	err = vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), callee, chatId)
+	// we remove callee by setting status
+	for _, userId := range usersOfDial {
+		err = vh.setUserStatus(c.Request().Context(), userId, chatId, callStatus)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		}
+	}
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
 	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the ownerId (call's owner)
-	err = vh.dialStatusPublisher.Publish(chatId, []int64{callee}, false, ownerId)
+	err = vh.dialStatusPublisher.Publish(chatId, usersOfDial, false, ownerId)
 
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
+	// send the new status immediately
+	vh.chatInvitationService.SendInvitations(c.Request().Context(), chatId, ownerId, usersOfDial)
+
 	return http.StatusOK
 }
 
+func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64, callStatus string) error {
+	err := vh.dialRedisRepository.SetUserStatus(ctx, callee, callStatus)
+	if err != nil {
+		return err
+	}
+	if services.ShouldProlong(callStatus) {
+		err = vh.dialRedisRepository.ResetExpiration(ctx, callee) // TODO provide mechanism for removing orphans - we run over all the rooms, and if user does not belong to any - we remove him
+		if err != nil {
+			return err
+		}
+	}
+	if services.ShouldRemoveAutomaticallyAfterTimeout(callStatus) {
+		err = vh.dialRedisRepository.SetCurrentTimeForCancellation(ctx, callee)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 // owner stops call by exiting
-func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
+func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		Logger.Errorf("Error during getting auth context")
@@ -319,16 +384,10 @@ func (vh *InviteHandler) ProcessAsOwnerLeave(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	vh.dialRedisRepository.RemoveAllDials(c.Request().Context(), chatId)
+	// the owner removes all the dials by setting status
+	vh.removeFromCallingList(c, chatId, usersToDial, services.CallStatusRemoving)
 
-	err = vh.dialStatusPublisher.Publish(chatId, usersToDial, false, ownerId)
-
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	// for all participants to dial - send MissedCall notification
+	// for all participants to dial - send EventMissedCall notification
 	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, usersToDial)
 
 	return c.NoContent(http.StatusOK)
@@ -342,7 +401,7 @@ func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Co
 			for _, chatName := range chatNames {
 				// here send missed call notification
 				var missedCall = dto.NotificationEvent{
-					EventType:              MissedCall,
+					EventType:              EventMissedCall,
 					ChatId:                 chatId,
 					UserId:                 chatName.UserId,
 					MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
@@ -378,6 +437,17 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	vh.chatDialerService.SendDialStatusChanged(c.Request().Context(), userPrincipalDto.UserId, chatId)
+	userIdsToDial, err := vh.dialRedisRepository.GetUsersToDial(c.Request().Context(), chatId)
+	if err != nil {
+		Logger.Warnf("Error %v", err)
+		return c.NoContent(http.StatusOK)
+	}
+
+	err = vh.dialStatusPublisher.Publish(chatId, userIdsToDial, true, userPrincipalDto.UserId)
+	if err != nil {
+		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
+		return c.NoContent(http.StatusOK)
+	}
+
 	return c.NoContent(http.StatusOK)
 }

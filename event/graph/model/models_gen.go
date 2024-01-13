@@ -238,6 +238,7 @@ type UserTypingDto struct {
 type VideoCallInvitationDto struct {
 	ChatID   int64  `json:"chatId"`
 	ChatName string `json:"chatName"`
+	Status   string `json:"status"`
 }
 
 type VideoCallScreenShareChangedDto struct {

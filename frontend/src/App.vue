@@ -248,11 +248,7 @@ import MessageEdit from "@/MessageEdit.vue";
 import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 
-const reactOnAnswerThreshold = 4 * 1000; // ms
 const audio = new Audio(`${prefix}/call.mp3`);
-const invitedVideoChatAlertTimeout = reactOnAnswerThreshold;
-
-let invitedVideoChatAlertTimer;
 
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
@@ -265,7 +261,6 @@ export default {
     ],
     data() {
         return {
-            lastAnswered: 0,
             showSearchButton: true,
             showWebsocketRestored: false,
             invitedVideoChatId: 0,
@@ -331,17 +326,12 @@ export default {
             console.debug("createCall");
             const routerNewState = { name: videochat_name};
             goToPreserving(this.$route, this.$router, routerNewState);
-            this.updateLastAnsweredTimestamp();
         },
         stopCall() {
             console.debug("stopping Call");
             this.chatStore.leavingVideoAcceptableParam = true;
             const routerNewState = { name: chat_name };
             goToPreserving(this.$route, this.$router, routerNewState);
-            this.updateLastAnsweredTimestamp();
-        },
-        updateLastAnsweredTimestamp() {
-            this.lastAnswered = +new Date();
         },
 
         onProfileSet(){
@@ -436,6 +426,7 @@ export default {
                       videoCallInvitation {
                         chatId
                         chatName
+                        status
                       }
                       videoParticipantDialEvent {
                         chatId
@@ -558,42 +549,35 @@ export default {
           this.showWebsocketRestored = false;
           bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
+        resetVideoInvitation() {
+          this.invitedVideoChatAlert = false;
+          this.invitedVideoChatId = 0;
+          this.invitedVideoChatName = null;
+        },
         onVideoCallInvited(data) {
-          if ((+new Date() - this.lastAnswered) > reactOnAnswerThreshold) {
+          if (data.status == "inviting") {
             this.invitedVideoChatId = data.chatId;
             this.invitedVideoChatName = data.chatName;
             this.invitedVideoChatAlert = true;
-
-            // restart the timer
-            if (invitedVideoChatAlertTimer) {
-              clearInterval(invitedVideoChatAlertTimer);
-            }
-            // set auto-close snackbar
-            invitedVideoChatAlertTimer = setTimeout(()=>{
-              this.invitedVideoChatAlert = false;
-              invitedVideoChatAlertTimer = null;
-            }, invitedVideoChatAlertTimeout);
 
             audio.play().catch(error => {
               console.warn("Unable to play sound", error);
               bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
             })
+          } else {
+            this.resetVideoInvitation();
           }
         },
         onClickInvitation() {
           axios.put(`/api/video/${this.invitedVideoChatId}/dial/accept`).then(()=>{
             const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
             goToPreserving(this.$route, this.$router, routerNewState);
-            this.invitedVideoChatId = 0;
-            this.invitedVideoChatName = null;
-            this.invitedVideoChatAlert = false;
-            this.updateLastAnsweredTimestamp();
+            this.resetVideoInvitation();
           });
         },
         onClickCancelInvitation() {
           axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{
-            this.invitedVideoChatAlert = false;
-            this.updateLastAnsweredTimestamp();
+            this.resetVideoInvitation();
           });
         },
         onMicrophone() {

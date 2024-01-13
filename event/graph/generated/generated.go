@@ -280,6 +280,7 @@ type ComplexityRoot struct {
 	VideoCallInvitationDto struct {
 		ChatID   func(childComplexity int) int
 		ChatName func(childComplexity int) int
+		Status   func(childComplexity int) int
 	}
 
 	VideoCallScreenShareChangedDto struct {
@@ -1453,6 +1454,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VideoCallInvitationDto.ChatName(childComplexity), true
 
+	case "VideoCallInvitationDto.status":
+		if e.complexity.VideoCallInvitationDto.Status == nil {
+			break
+		}
+
+		return e.complexity.VideoCallInvitationDto.Status(childComplexity), true
+
 	case "VideoCallScreenShareChangedDto.chatId":
 		if e.complexity.VideoCallScreenShareChangedDto.ChatID == nil {
 			break
@@ -1772,6 +1780,7 @@ type VideoRecordingChangedDto {
 type VideoCallInvitationDto {
     chatId: Int64!
     chatName: String!
+    status: String!
 }
 
 type VideoDialChanged {
@@ -5853,6 +5862,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoCallInvitation(ctx con
 				return ec.fieldContext_VideoCallInvitationDto_chatId(ctx, field)
 			case "chatName":
 				return ec.fieldContext_VideoCallInvitationDto_chatName(ctx, field)
+			case "status":
+				return ec.fieldContext_VideoCallInvitationDto_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VideoCallInvitationDto", field.Name)
 		},
@@ -9309,6 +9320,50 @@ func (ec *executionContext) _VideoCallInvitationDto_chatName(ctx context.Context
 }
 
 func (ec *executionContext) fieldContext_VideoCallInvitationDto_chatName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoCallInvitationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VideoCallInvitationDto_status(ctx context.Context, field graphql.CollectedField, obj *model.VideoCallInvitationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoCallInvitationDto_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoCallInvitationDto_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VideoCallInvitationDto",
 		Field:      field,
@@ -13187,6 +13242,13 @@ func (ec *executionContext) _VideoCallInvitationDto(ctx context.Context, sel ast
 		case "chatName":
 
 			out.Values[i] = ec._VideoCallInvitationDto_chatName(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+
+			out.Values[i] = ec._VideoCallInvitationDto_status(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

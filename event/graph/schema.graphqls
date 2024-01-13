@@ -157,6 +157,7 @@ type VideoRecordingChangedDto {
 type VideoCallInvitationDto {
     chatId: Int64!
     chatName: String!
+    status: String!
 }
 
 type VideoDialChanged {

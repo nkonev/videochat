@@ -63,6 +63,7 @@ func main() {
 			services.NewStateChangedEventService,
 			services.NewDialRedisRepository,
 			services.NewEgressService,
+			services.NewChatInvitationService,
 			tasks.RedisV8,
 			tasks.NewVideoCallUsersCountNotifierService,
 			tasks.VideoCallUsersCountNotifierScheduler,
@@ -163,11 +164,11 @@ func configureApiEcho(
 	e.PUT("/video/:chatId/kick", uh.Kick)
 	e.PUT("/video/:chatId/mute", uh.Mute)
 
-	e.PUT("/video/:id/dial/invite", ih.ProcessCallInvitation)     // used by owner to add or remove from dial list
-	e.PUT("/video/:id/dial/enter", ih.ProcessEnterToDial)         // user enters to call somehow, either by clicking green tube or opening .../video link
-	e.PUT("/video/:id/dial/accept", ih.ProcessRemoveFromCallList) // accepting by invitee
-	e.PUT("/video/:id/dial/cancel", ih.ProcessRemoveFromCallList) // cancelling by invitee
-	e.PUT("/video/:id/dial/exit", ih.ProcessAsOwnerLeave)         // used by owner
+	e.PUT("/video/:id/dial/invite", ih.ProcessCallInvitation) // used by owner to add or remove from dial list
+	e.PUT("/video/:id/dial/enter", ih.ProcessEnterToDial)     // user enters to call somehow, either by clicking green tube or opening .../video link
+	e.PUT("/video/:id/dial/accept", ih.ProcessAcceptCall)     // accepting by invitee
+	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelCall)     // cancelling by invitee
+	e.PUT("/video/:id/dial/exit", ih.ProcessLeave)            // used by any user on exit
 	e.PUT("/video/:id/dial/request-for-is-calling", ih.SendDialStatusChangedToCallOwner)
 
 	e.PUT("/video/:id/record/start", rh.StartRecording)
