@@ -367,7 +367,7 @@ func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Co
 }
 
 // send current dial statuses to WebSocket
-func (vh *InviteHandler) AskDials(c echo.Context) error {
+func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		Logger.Errorf("Error during getting auth context")
