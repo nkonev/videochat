@@ -26,7 +26,7 @@ type VideoCallInvitation struct {
 
 type VideoDialChanged struct {
 	UserId int64 `json:"userId"`
-	Status bool  `json:"status"`
+	Status string  `json:"status"`
 }
 
 type VideoDialChanges struct {

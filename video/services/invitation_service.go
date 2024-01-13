@@ -22,7 +22,13 @@ func NewChatInvitationService(rabbitMqInvitePublisher *producer.RabbitInvitePubl
 	}
 }
 
-func (srv *ChatInvitationService) SendInvitations(ctx context.Context, chatId, ownerId int64, userIdsToDial []int64) {
+
+func (srv *ChatInvitationService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string) {
+	var userIdsToDial []int64 = make([]int64, 0)
+	for userId, _ := range statuses {
+		userIdsToDial = append(userIdsToDial, userId)
+	}
+
 	inviteNames, err := srv.chatClient.GetChatNameForInvite(chatId, ownerId, userIdsToDial, ctx)
 	if err != nil {
 		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")

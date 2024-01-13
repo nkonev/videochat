@@ -70,12 +70,14 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		return
 	}
 
+	var statuses = srv.GetStatuses(ctx, userIdsToDial)
+
 	GetLogEntry(ctx).Infof("Calling userIds %v from chat %v", userIdsToDial, chatId)
 
-	srv.chatInvitationService.SendInvitations(ctx, chatId, ownerId, userIdsToDial)
+	srv.chatInvitationService.SendInvitationsWithStatuses(ctx, chatId, ownerId, statuses)
 
 	// send state changes to owner (ownerId) of call
-	err = srv.dialStatusPublisher.Publish(chatId, userIdsToDial, true, ownerId)
+	err = srv.dialStatusPublisher.Publish(chatId, statuses, ownerId)
 	if err != nil {
 		GetLogEntry(ctx).Error(err, "Failed during marshal VideoIsInvitingDto")
 		return
@@ -104,6 +106,19 @@ func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, chat
 			}
 		}
 	}
+}
+
+func (srv *ChatDialerService) GetStatuses(ctx context.Context, userIds []int64) map[int64]string {
+	var ret = map[int64]string{}
+	for _, userId := range userIds {
+		status, err := srv.redisService.GetUserCallStatus(ctx, userId)
+		if err != nil {
+			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
+			continue
+		}
+		ret[userId] = status
+	}
+	return ret
 }
 
 type ChatDialerTask struct {

@@ -247,8 +247,8 @@ type VideoCallScreenShareChangedDto struct {
 }
 
 type VideoDialChanged struct {
-	UserID int64 `json:"userId"`
-	Status bool  `json:"status"`
+	UserID int64  `json:"userId"`
+	Status string `json:"status"`
 }
 
 type VideoDialChanges struct {

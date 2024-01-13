@@ -148,12 +148,11 @@ func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePubl
 
 func (rp *RabbitDialStatusPublisher) Publish(
 	chatId       int64,
-	userIds      []int64,
-	status       bool,
+	userStatuses map[int64]string,
 	ownerId int64,
 ) error {
 	var dials = []*dto.VideoDialChanged{}
-	for _, userId := range userIds {
+	for userId, status := range userStatuses {
 		dials = append(dials, &dto.VideoDialChanged{
 			UserId: userId,
 			Status: status,

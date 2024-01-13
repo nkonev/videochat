@@ -116,7 +116,7 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 	}
 
 	// for better user experience
-	vh.chatInvitationService.SendInvitations(c.Request().Context(), chatId, userPrincipalDto.UserId, []int64{callee})
+	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, userPrincipalDto.UserId, getMap([]int64{callee}, status))
 
 	err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId, services.CallStatusInviting)
 	if err != nil {
@@ -312,7 +312,7 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, use
 	}
 
 	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the ownerId (call's owner)
-	err = vh.dialStatusPublisher.Publish(chatId, usersOfDial, false, ownerId)
+	err = vh.dialStatusPublisher.Publish(chatId, getMap(usersOfDial, callStatus), ownerId)
 
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -320,9 +320,17 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, use
 	}
 
 	// send the new status immediately
-	vh.chatInvitationService.SendInvitations(c.Request().Context(), chatId, ownerId, usersOfDial)
+	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMap(usersOfDial, callStatus))
 
 	return http.StatusOK
+}
+
+func getMap(userIds []int64, status string) map[int64]string {
+	var ret = map[int64]string{}
+	for _, userId := range userIds {
+		ret[userId] = status
+	}
+	return ret
 }
 
 func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64, callStatus string) error {
@@ -443,7 +451,9 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusOK)
 	}
 
-	err = vh.dialStatusPublisher.Publish(chatId, userIdsToDial, true, userPrincipalDto.UserId)
+	var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), userIdsToDial)
+
+	err = vh.dialStatusPublisher.Publish(chatId, statuses, userPrincipalDto.UserId)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
 		return c.NoContent(http.StatusOK)

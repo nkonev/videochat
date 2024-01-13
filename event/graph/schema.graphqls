@@ -162,7 +162,7 @@ type VideoCallInvitationDto {
 
 type VideoDialChanged {
     userId: Int64!
-    status: Boolean!
+    status: String!
 }
 
 type VideoDialChanges {
