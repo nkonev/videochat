@@ -82,7 +82,6 @@ import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
-import debounce from "lodash/debounce";
 
 const chatDtoFactory = () => {
   return {
@@ -477,11 +476,13 @@ export default {
       }
     },
     onPanelResized(e) {
-      if (!this.prevMessageEditSize && !this.isMobile()) {
-        console.log(">>> onPanelResized", e)
-        const pane = e[e.length - 1];
-        this.messageEditCurrentSize = pane.size;
-      }
+      this.$nextTick(()=> {
+        if (!this.prevMessageEditSize && !this.isMobile()) {
+          //console.log(">>> onPanelResized", e)
+          const pane = e[e.length - 1];
+          this.messageEditCurrentSize = pane.size;
+        }
+      })
     },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
@@ -537,7 +538,7 @@ export default {
     },
   },
   created() {
-    this.onPanelResized = debounce(this.onPanelResized, 2000, {leading:false, trailing:true})
+
   },
   async mounted() {
     this.chatStore.title = `Chat #${this.chatId}`;
