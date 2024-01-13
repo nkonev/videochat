@@ -630,7 +630,7 @@ export default {
   position: relative
 }
 .message-pane-mobile {
-    align-items: unset;
+    align-items: unset; // needed for the correct displaying pinned message
 }
 
 .new-fab {
