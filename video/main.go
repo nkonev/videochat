@@ -164,7 +164,7 @@ func configureApiEcho(
 	e.PUT("/video/:chatId/mute", uh.Mute)
 
 	e.PUT("/video/:id/dial/invite", ih.ProcessCallInvitation)     // used by owner to add or remove from dial list
-	e.PUT("/video/:id/dial/enter", ih.ProcessDialStart)           // user enters to call somehow, either by clicking green tube or opening .../video link
+	e.PUT("/video/:id/dial/enter", ih.ProcessEnterToDial)         // user enters to call somehow, either by clicking green tube or opening .../video link
 	e.PUT("/video/:id/dial/accept", ih.ProcessRemoveFromCallList) // accepting by invitee
 	e.PUT("/video/:id/dial/cancel", ih.ProcessRemoveFromCallList) // cancelling by invitee
 	e.PUT("/video/:id/dial/exit", ih.ProcessAsOwnerLeave)         // used by owner

@@ -130,9 +130,8 @@ func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId 
 	return http.StatusOK
 }
 
-// TODO rewrite this method accoring ownership of call (behalfUserId) to make it more readable
 // user enters to call somehow, either by clicking green tube or opening .../video link
-func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
+func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		Logger.Errorf("Error during getting auth context")
@@ -159,21 +158,15 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		return err
 	}
 
-	// in this block we start calling in case tet-a-tet
 	usersOfChat := basicChatInfo.ParticipantIds
+
+	// in this block we start calling in case tet-a-tet
 	if basicChatInfo.TetATet && len(usersOfChat) > 0 {
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
-		var oppositeUser *int64
-		for _, userId := range usersOfChat {
-			if userId != userPrincipalDto.UserId {
-				var deUid = userId
-				oppositeUser = &deUid
-				break
-			}
-		}
+		var oppositeUser *int64 = getOppositeUserOfTetAtTet(usersOfChat, userPrincipalDto.UserId)
 
 		// uniq users by userId
 		usersOfVideo, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
@@ -182,16 +175,9 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		var oppositeUserOfVideo *int64
-		for _, ou := range usersOfVideo {
-			if ou != userPrincipalDto.UserId {
-				var deOu = ou
-				oppositeUserOfVideo = &deOu
-				break
-			}
-		}
+		var oppositeUserOfVideo *int64 = getOppositeUserOfTetAtTet(usersOfVideo, userPrincipalDto.UserId)
 
-		// oppositeUserOfVideo is need for case when your counterpart enters into call and this (oppositeUserOfVideo == nil) prevents us to start calling him back
+		// oppositeUserOfVideo is need for case when your counterpart enters into call (not entered until this moment) and this (oppositeUserOfVideo == nil) prevents us to start calling him back
 		// and we(behalf user) doesn't have incoming call
 		if oppositeUserOfVideo == nil && oppositeUser != nil {
 			// we should call the counterpart (opposite user)
@@ -199,11 +185,24 @@ func (vh *InviteHandler) ProcessDialStart(c echo.Context) error {
 		}
 	}
 
-	// we call it in case opposite user has incoming (this) call
-	// react on "take the phone" (pressing green tube) which cancels ringing logic for opposite user (or myself)
+	// remove myself from a call
+	// we call it in case opposite/owner user has incoming (this) call
+	// react on "take the phone" (pressing green tube) which cancels ringing logic for opposite/owner user (or myself)
 	vh.removeFromCallingList(c, chatId, userPrincipalDto.UserId)
 
 	return c.NoContent(http.StatusOK)
+}
+
+func getOppositeUserOfTetAtTet(users []int64, me int64) *int64 {
+	var oppositeUser *int64
+	for _, userId := range users {
+		if userId != me {
+			var deUid = userId
+			oppositeUser = &deUid
+			break
+		}
+	}
+	return oppositeUser
 }
 
 func (vh *InviteHandler) ProcessRemoveFromCallList(c echo.Context) error {
