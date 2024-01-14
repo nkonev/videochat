@@ -39,19 +39,14 @@ func (srv *CleanOrphanRedisEntriesService) doJob() {
 }
 
 func (srv *CleanOrphanRedisEntriesService) cleanOrphans(ctx context.Context) {
-	userCallStateKeys, err := srv.redisService.GetUserCallStateKeys(ctx)
+	userIds, err := srv.redisService.GetUserIds(ctx)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Unable to get userCallStateKeys")
 		return
 	}
 
 	// move orphaned users in "inCall" status to "cancelling"
-	for _, userCallStateKey := range userCallStateKeys {
-		userId, err := services.GetUserId(userCallStateKey)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable to get userId %v", err)
-			continue
-		}
+	for _, userId := range userIds {
 
 		userCallState, chatId, _, markedForChangeStatusAttempt, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {

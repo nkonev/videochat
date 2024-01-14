@@ -302,15 +302,28 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	return userCallStatus, chatId, userCallMarkedForRemoveAt, int(markedForChangeStatusAttempt), nil
 }
 
-func (s *DialRedisRepository) GetUserCallStateKeys(ctx context.Context) ([]string, error) {
-	return s.redisClient.Keys(ctx, allChatUserCallsKey()).Result()
+func (s *DialRedisRepository) GetUserIds(ctx context.Context) ([]int64, error) {
+	var ret = make([]int64, 0)
+	result, err := s.redisClient.Keys(ctx, allChatUserCallsKey()).Result()
+	if err != nil {
+		return ret, err
+	}
+	for _, userIdString := range result {
+		id, err := getUserId(userIdString)
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during converting userId %v", userIdString)
+			continue
+		}
+		ret = append(ret, id)
+	}
+	return ret, nil
 }
 
 func (s *DialRedisRepository) SetMarkedForChangeStatusAttempt(ctx context.Context, userId int64, markedForChangeStatusAttempt int) error {
 	return s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallMarkedForOrphanRemoveAttemptKey, markedForChangeStatusAttempt).Err()
 }
 
-func GetUserId(userCallStateKey string) (int64, error) {
+func getUserId(userCallStateKey string) (int64, error) {
 	split := strings.Split(userCallStateKey, ":")
 	if len(split) != 2 {
 		return -1, fmt.Errorf("Wrong split lenght of %v, expected 2", userCallStateKey)

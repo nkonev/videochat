@@ -6,7 +6,9 @@ import (
 	"github.com/livekit/protocol/webhook"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 )
@@ -17,15 +19,17 @@ type LivekitWebhookHandler struct {
 	userService         *services.UserService
 	egressService       *services.EgressService
 	restClient          *client.RestClient
+	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
 }
 
-func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService, restClient *client.RestClient) *LivekitWebhookHandler {
+func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService, restClient *client.RestClient, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
 		config:              config,
 		notificationService: notificationService,
 		userService:         userService,
 		egressService:       egressService,
 		restClient:          restClient,
+		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
 	}
 }
 
@@ -74,7 +78,13 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				if err != nil {
 					Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", event.Participant, chatId, err)
 				} else if metadata != nil {
-					err = h.notificationService.NotifyAboutUsersVideoStatusChanged([]int64{metadata.UserId}, []int64{metadata.UserId}, c.Request().Context())
+					var dtos []dto.VideoCallUserCallStatusChangedDto = []dto.VideoCallUserCallStatusChangedDto{
+						dto.VideoCallUserCallStatusChangedDto{
+							UserId:    metadata.UserId,
+							IsInVideo:     true,
+						},
+					}
+					err = h.rabbitUserIdsPublisher.Publish(&dto.VideoCallUsersCallStatusChangedDto{Users: dtos}, c.Request().Context())
 					if err != nil {
 						Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", metadata.UserId, chatId, err)
 					}
