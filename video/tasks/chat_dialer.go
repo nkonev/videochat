@@ -73,7 +73,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 
 	var statuses = srv.GetStatuses(ctx, chatId, userIdsToDial)
 
-	GetLogEntry(ctx).Infof("Calling userIds %v from chat %v", userIdsToDial, chatId)
+	GetLogEntry(ctx).Infof("Sending userCallStatus for userIds %v from chat %v", userIdsToDial, chatId)
 
 	// send invitations to callees
 	srv.chatInvitationService.SendInvitationsWithStatuses(ctx, chatId, ownerId, statuses)
@@ -137,7 +137,7 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 	for _, userId := range userIdsToDial {
 		userCallState, _, userCallMarkedForRemoveAt, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
+			GetLogEntry(ctx).Errorf("Unable to get user call state for user %v, chat %v: %v", userId, chatId, err)
 			continue
 		}
 		if userCallState == services.CallStatusNotFound { // shouldn't happen
@@ -151,10 +151,10 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 			if userCallMarkedForRemoveAt != services.UserCallMarkedForRemoveAtNotSet &&
 			  time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
 
-				GetLogEntry(ctx).Infof("Removing temporary UserCallStatus of user %v", userId)
+				GetLogEntry(ctx).Infof("Removing temporary userCallStatus of user %v, chat %v", userId, chatId)
 				err := srv.redisService.RemoveFromDialList(ctx, userId, chatId)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
+					GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, chat %v, error %v", userId, chatId, err)
 					continue
 				}
 			}

@@ -78,11 +78,14 @@ func (srv *CleanOrphanRedisEntriesService) cleanOrphans(ctx context.Context) {
 					continue
 				}
 			} else {
-				GetLogEntry(ctx).Infof("Resetting attempt on userCallState of user %v because they appeared among video room participants", userId)
-				err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, services.UserCallMarkedForOrphanRemoveAttemptNotSet)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt userId %v", userId)
-					continue
+				if markedForChangeStatusAttempt >= 1 {
+					GetLogEntry(ctx).Infof("Resetting attempt on userCallState of user %v because they appeared among video room participants", userId)
+
+					err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, services.UserCallMarkedForOrphanRemoveAttemptNotSet)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt userId %v", userId)
+						continue
+					}
 				}
 			}
 

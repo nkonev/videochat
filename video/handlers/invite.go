@@ -398,7 +398,12 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		}
 
 		// the owner removes all the dials by setting status
-		vh.removeFromCallingList(c, chatId, missedUsers, services.CallStatusRemoving)
+		toRemove := make([]int64, 0)
+		for _, u := range missedUsers {
+			toRemove = append(toRemove, u)
+		}
+		toRemove = append(toRemove, userPrincipalDto.UserId)
+		vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
 
 		// for all participants to dial - send EventMissedCall notification
 		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
