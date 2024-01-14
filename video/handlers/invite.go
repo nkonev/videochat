@@ -381,11 +381,24 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		missedUsers := make([]int64, 0)
+		for _, redisCallUser := range usersToDial {
+			if !utils.Contains(videoParticipants, redisCallUser) {
+				missedUsers = append(missedUsers, redisCallUser)
+			}
+		}
+
 		// the owner removes all the dials by setting status
-		vh.removeFromCallingList(c, chatId, usersToDial, services.CallStatusRemoving)
+		vh.removeFromCallingList(c, chatId, missedUsers, services.CallStatusRemoving)
 
 		// for all participants to dial - send EventMissedCall notification
-		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, usersToDial)
+		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
 	} else {
 		vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 	}
