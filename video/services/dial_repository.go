@@ -112,6 +112,22 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 	return nil
 }
 
+func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUsers []int64, leavingOwner int64, chatId int64) error {
+	if len(inVideoUsers) > 0 {
+
+		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
+
+		if oppositeUser != nil {
+			err := s.SetOwner(ctx, chatId, *oppositeUser)
+			if err != nil {
+				logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func dialChatMembersKey(chatId int64) string {
 	return fmt.Sprintf("dialchat:%v", chatId)
 }

@@ -217,3 +217,15 @@ func GetType(aDto interface{}) string {
 	strName := fmt.Sprintf("%T", aDto)
 	return strName
 }
+
+func GetOppositeUser(users []int64, me int64) *int64 {
+	var oppositeUser *int64
+	for _, userId := range users {
+		if userId != me {
+			var deUid = userId
+			oppositeUser = &deUid
+			break
+		}
+	}
+	return oppositeUser
+}

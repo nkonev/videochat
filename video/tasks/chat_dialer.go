@@ -152,10 +152,15 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 			  time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
 
 				GetLogEntry(ctx).Infof("Removing temporary userCallStatus of user %v, chat %v", userId, chatId)
-				err := srv.redisService.RemoveFromDialList(ctx, userId, chatId)
+				err = srv.redisService.RemoveFromDialList(ctx, userId, chatId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, chat %v, error %v", userId, chatId, err)
 					continue
+				}
+
+				// delegate ownership to another user
+				if ownerId == userId {
+					srv.redisService.TransferOwnership(ctx, userIdsToDial, userId, chatId)
 				}
 			}
 		}
