@@ -49,7 +49,9 @@
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
-                                        <a :href="item.url" download class="colored-link mr-3"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
+                                        <a :href="item.url" download class="colored-link mr-4"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
+
+                                        <v-btn size="medium" :disabled="item.hasNoMessage" :loading="item.loadingHasNoMessage" @click="fireSearchMessage(item)" :title="$vuetify.locale.t('$vuetify.search_related_message')"><v-icon size="large">mdi-note-search-outline</v-icon></v-btn>
 
                                         <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-image</v-icon></v-btn>
 
@@ -126,17 +128,19 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 import {
-    getHumanReadableDate,
-    formatSize,
-    hasLength,
-    findIndex,
-    replaceOrPrepend
+  getHumanReadableDate,
+  formatSize,
+  hasLength,
+  findIndex,
+  replaceOrPrepend, deepCopy
 } from "./utils";
 import debounce from "lodash/debounce";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
+import {goToPreserving} from "@/mixins/searchString";
+import {chat_name, messageIdHashPrefix} from "@/router/routes";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -199,7 +203,9 @@ export default {
                 },
             })
                 .then((response) => {
-                    this.dto = response.data;
+                    const dto = deepCopy(response.data);
+                    this.transformItems(dto);
+                    this.dto = dto;
                 })
                 .finally(() => {
                     this.loading = false;
@@ -219,6 +225,14 @@ export default {
         doSearch(){
             this.page = firstPage;
             this.updateFiles();
+        },
+        transformItems(data) {
+          if (data?.files) {
+            data.files.forEach(item => {
+              item.hasNoMessage = false;
+              item.loadingHasNoMessage = false;
+            });
+          }
         },
         openUploadModal() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.messageEditing});
@@ -275,6 +289,20 @@ export default {
         fireShowImage(dto) {
             bus.emit(PLAYER_MODAL, dto);
         },
+        fireSearchMessage(dto) {
+            dto.loadingHasNoMessage = true
+            axios.get("/api/chat/"+this.chatId+"/message/find-by-file-item-uuid/" + dto.fileItemUuid)
+              .then(response => {
+                if (response.status == 204) {
+                  dto.hasNoMessage = true
+                } else {
+                  const routerNewState = { hash: messageIdHashPrefix + response.data.messageId};
+                  goToPreserving(this.$route, this.$router, routerNewState);
+                }
+              }).finally(()=>{
+                dto.loadingHasNoMessage = false
+              })
+        },
         getDate(item) {
             return getHumanReadableDate(item.lastModified)
         },
@@ -308,7 +336,7 @@ export default {
             if (!this.show) {
                 return
             }
-            if (!hasLength(this.fileItemUuid) || dto.fileItemUuid == this.fileItemUuid) {
+            if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
                 if (!hasLength(this.fileItemUuid)) {
                     this.dto.count = dto.count;
                 }
@@ -321,7 +349,7 @@ export default {
             if (!this.show) {
                 return
             }
-            if (!hasLength(this.fileItemUuid) || dto.fileItemUuid == this.fileItemUuid) {
+            if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
                 if (!hasLength(this.fileItemUuid)) {
                   this.dto.count = dto.count;
                 }

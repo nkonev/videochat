@@ -311,7 +311,6 @@ export default {
                                         canPlayAsAudio
                                       }
                                       count
-                                      fileItemUuid
                                     }
                                   }
                                 }

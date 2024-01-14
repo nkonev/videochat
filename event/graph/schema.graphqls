@@ -119,12 +119,12 @@ type FileInfoDto {
     canPlayAsVideo:           Boolean!
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
+    fileItemUuid: UUID!
 }
 
 type WrappedFileInfoDto {
     fileInfoDto: FileInfoDto
     count: Int64!
-    fileItemUuid: UUID!
 }
 
 type ChatEvent {

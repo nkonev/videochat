@@ -21,7 +21,6 @@ type PinnedMessageEvent struct {
 type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 	Count       int64        `json:"count"`
-	FileItemUuid uuid.UUID   `json:"fileItemUuid"`
 }
 
 type ChatEvent struct {
@@ -109,6 +108,7 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
+	FileItemUuid   uuid.UUID `json:"fileItemUuid"`
 }
 
 type GeneralEvent struct {

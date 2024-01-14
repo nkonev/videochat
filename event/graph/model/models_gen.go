@@ -115,6 +115,7 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool         `json:"canPlayAsVideo"`
 	CanShowAsImage bool         `json:"canShowAsImage"`
 	CanPlayAsAudio bool         `json:"canPlayAsAudio"`
+	FileItemUUID   *uuid.UUID   `json:"fileItemUuid"`
 }
 
 type GlobalEvent struct {
@@ -267,7 +268,6 @@ type VideoUserCountChangedDto struct {
 }
 
 type WrappedFileInfoDto struct {
-	FileInfoDto  *FileInfoDto `json:"fileInfoDto"`
-	Count        int64        `json:"count"`
-	FileItemUUID *uuid.UUID   `json:"fileItemUuid"`
+	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
+	Count       int64        `json:"count"`
 }

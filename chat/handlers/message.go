@@ -62,6 +62,41 @@ func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSource
 	}
 }
 
+func (mc *MessageHandler) FindMessageByFileItemUuid(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatIdString := c.Param("id")
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		return err
+	}
+
+
+	isParticipant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	if !isParticipant {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	fileItemUuid := c.Param("fileItemUuid")
+	messageId, err := mc.db.FindMessageByFileItemUuid(chatId, fileItemUuid)
+	if err != nil {
+		return err
+	}
+
+	if messageId != db.MessageNotFoundId {
+		return c.JSON(http.StatusOK, &utils.H{"messageId": messageId})
+	} else {
+		return c.NoContent(http.StatusNoContent)
+	}
+
+}
+
 func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {

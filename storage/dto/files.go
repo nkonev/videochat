@@ -21,12 +21,12 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
+	FileItemUuid   uuid.UUID `json:"fileItemUuid"`
 }
 
 type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 	Count       int64        `json:"count"`
-	FileItemUuid uuid.UUID   `json:"fileItemUuid"`
 }
 
 type MinioEvent struct {

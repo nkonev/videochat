@@ -21,8 +21,6 @@ export const isSet = (str) => {
     return str != null
 }
 
-export const offerToJoinToPublicChatStatus = 428
-
 export const setTitle = (newTitle) => {
   document.title = newTitle;
 }

@@ -80,7 +80,7 @@ func (h *FilesService) GetListFilesInFileItem(
 				return nil, 0, err
 			}
 
-			info, err := h.GetFileInfo(behalfUserId, objInfo, chatId, tagging, true)
+			info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
 			if err != nil {
 				GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
 				continue
@@ -262,7 +262,7 @@ func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, erro
 	return &str, nil
 }
 
-func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
+func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
 	previewUrl := h.GetPreviewUrlSmart(objInfo.Key)
 
 	metadata := objInfo.UserMetadata
@@ -293,6 +293,10 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		return nil, err
 	}
 
+	itemUuid, err := utils.ParseFileItemUuid(objInfo.Key)
+	if err != nil {
+		GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", objInfo.Key, err)
+	}
 	info := &dto.FileInfoDto{
 		Id:             objInfo.Key,
 		Filename:       filename,
@@ -308,6 +312,7 @@ func (h *FilesService) GetFileInfo(behalfUserId int64, objInfo minio.ObjectInfo,
 		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
 		CanShowAsImage: utils.IsImage(objInfo.Key),
 		CanPlayAsAudio: utils.IsAudio(objInfo.Key),
+		FileItemUuid:   itemUuid,
 	}
 	return info, nil
 }

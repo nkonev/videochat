@@ -35,11 +35,7 @@ type EventService struct {
 func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string, chatId int64, eventType utils.EventType, ctx context.Context) {
 	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
-	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting fileItemUuid %v", err)
-		return
-	}
+	var err error
 
 	var objectInfo minio.ObjectInfo
 	var tagging *tags.Tags
@@ -82,7 +78,7 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 	for _, participantId := range participantIds {
 		var fileInfo *dto.FileInfoDto
 		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-			fileInfo, err = s.filesService.GetFileInfo(participantId, objectInfo, chatId, tagging, false)
+			fileInfo, err = s.filesService.GetFileInfo(ctx, participantId, objectInfo, chatId, tagging, false)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Error get file info: %v, skipping", err)
 				continue
@@ -97,7 +93,6 @@ func (s *EventService) HandleEvent(participantIds []int64, normalizedKey string,
 		s.publisher.PublishFileEvent(participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,
 			Count:       int64(count),
-			FileItemUuid: fileItemUuid,
 		}, eventType, ctx)
 	}
 }

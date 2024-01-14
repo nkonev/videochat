@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const MessageNotFoundId = 0
+
 type Message struct {
 	Id             int64
 	Text           string
@@ -725,5 +727,30 @@ func (db *DB) GetParticipantsReadCount(chatId, messageId int64) (int, error) {
 		return 0, tracerr.Wrap(err)
 	} else {
 		return count, nil
+	}
+}
+
+
+func (db *DB) FindMessageByFileItemUuid(chatId int64, fileItemUuid string) (int64, error) {
+	row := db.QueryRow(fmt.Sprintf(`
+			select id from message_chat_%v where file_item_uuid is not null and file_item_uuid = $1 limit 1
+			`, chatId,
+	),
+		fileItemUuid)
+	if row.Err() != nil {
+		Logger.Errorf("Error during get MessageByFileItemUuid %v", row.Err())
+		return 0, tracerr.Wrap(row.Err())
+	}
+
+	var messageId int64
+	err := row.Scan(&messageId)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return MessageNotFoundId, nil
+	}
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	} else {
+		return messageId, nil
 	}
 }

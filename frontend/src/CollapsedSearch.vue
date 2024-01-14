@@ -59,12 +59,12 @@ export default {
         },
     },
     mounted() {
-        if ('visualViewport' in window) {
+        if ('visualViewport' in window && this.isMobile()) {
             window.visualViewport.addEventListener('resize', this.reactOnKeyboardChange);
         }
     },
     beforeUnmount() {
-        if ('visualViewport' in window) {
+        if ('visualViewport' in window && this.isMobile()) {
             window.visualViewport.removeEventListener('resize', this.reactOnKeyboardChange);
         }
     },

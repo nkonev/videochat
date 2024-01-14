@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 		CanPlayAsVideo func(childComplexity int) int
 		CanShare       func(childComplexity int) int
 		CanShowAsImage func(childComplexity int) int
+		FileItemUUID   func(childComplexity int) int
 		Filename       func(childComplexity int) int
 		ID             func(childComplexity int) int
 		LastModified   func(childComplexity int) int
@@ -309,9 +310,8 @@ type ComplexityRoot struct {
 	}
 
 	WrappedFileInfoDto struct {
-		Count        func(childComplexity int) int
-		FileInfoDto  func(childComplexity int) int
-		FileItemUUID func(childComplexity int) int
+		Count       func(childComplexity int) int
+		FileInfoDto func(childComplexity int) int
 	}
 }
 
@@ -822,6 +822,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FileInfoDto.CanShowAsImage(childComplexity), true
+
+	case "FileInfoDto.fileItemUuid":
+		if e.complexity.FileInfoDto.FileItemUUID == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.FileItemUUID(childComplexity), true
 
 	case "FileInfoDto.filename":
 		if e.complexity.FileInfoDto.Filename == nil {
@@ -1545,13 +1552,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WrappedFileInfoDto.FileInfoDto(childComplexity), true
 
-	case "WrappedFileInfoDto.fileItemUuid":
-		if e.complexity.WrappedFileInfoDto.FileItemUUID == nil {
-			break
-		}
-
-		return e.complexity.WrappedFileInfoDto.FileItemUUID(childComplexity), true
-
 	}
 	return 0, false
 }
@@ -1742,12 +1742,12 @@ type FileInfoDto {
     canPlayAsVideo:           Boolean!
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
+    fileItemUuid: UUID!
 }
 
 type WrappedFileInfoDto {
     fileInfoDto: FileInfoDto
     count: Int64!
-    fileItemUuid: UUID!
 }
 
 type ChatEvent {
@@ -3541,8 +3541,6 @@ func (ec *executionContext) fieldContext_ChatEvent_fileEvent(ctx context.Context
 				return ec.fieldContext_WrappedFileInfoDto_fileInfoDto(ctx, field)
 			case "count":
 				return ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
-			case "fileItemUuid":
-				return ec.fieldContext_WrappedFileInfoDto_fileItemUuid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WrappedFileInfoDto", field.Name)
 		},
@@ -5494,6 +5492,50 @@ func (ec *executionContext) fieldContext_FileInfoDto_canPlayAsAudio(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_fileItemUuid(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_fileItemUuid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileItemUUID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_fileItemUuid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9888,6 +9930,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(ctx cont
 				return ec.fieldContext_FileInfoDto_canShowAsImage(ctx, field)
 			case "canPlayAsAudio":
 				return ec.fieldContext_FileInfoDto_canPlayAsAudio(ctx, field)
+			case "fileItemUuid":
+				return ec.fieldContext_FileInfoDto_fileItemUuid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FileInfoDto", field.Name)
 		},
@@ -9934,50 +9978,6 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_count(ctx context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _WrappedFileInfoDto_fileItemUuid(ctx context.Context, field graphql.CollectedField, obj *model.WrappedFileInfoDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WrappedFileInfoDto_fileItemUuid(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.FileItemUUID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*uuid.UUID)
-	fc.Result = res
-	return ec.marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileItemUuid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "WrappedFileInfoDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12433,6 +12433,13 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "fileItemUuid":
+
+			out.Values[i] = ec._FileInfoDto_fileItemUuid(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13456,13 +13463,6 @@ func (ec *executionContext) _WrappedFileInfoDto(ctx context.Context, sel ast.Sel
 		case "count":
 
 			out.Values[i] = ec._WrappedFileInfoDto_count(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "fileItemUuid":
-
-			out.Values[i] = ec._WrappedFileInfoDto_fileItemUuid(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
