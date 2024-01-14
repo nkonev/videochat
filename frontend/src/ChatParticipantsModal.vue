@@ -376,6 +376,7 @@
                     for (const videoDialChanged of dto.dials) {
                         if (participant.id == videoDialChanged.userId) {
                             participant.callingTo = isCalling(videoDialChanged.status);
+                            this.$forceUpdate();
                             break innerLoop
                         }
                     }

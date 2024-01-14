@@ -117,6 +117,9 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 		return http.StatusConflict
 	}
 
+	// we remove callee's previous inviting - only after CanOverrideCallStatus() check
+	vh.removePrevious(c, callee)
+
 	// for better user experience
 	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, userPrincipalDto.UserId, getMap([]int64{callee}, status))
 
@@ -166,14 +169,8 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	// first of all we remove us from the previous chat
-	previousUserCallState, previousChatId, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
-	}
-	if previousUserCallState != services.CallStatusNotFound {
-		vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, previousChatId)
-	}
+	// first of all we remove our previous inviting
+	vh.removePrevious(c, userPrincipalDto.UserId)
 
 	maybeOwnerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {
@@ -235,6 +232,16 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (vh *InviteHandler) removePrevious(c echo.Context, userId int64) {
+	previousUserCallState, previousChatId, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
+	}
+	if previousUserCallState != services.CallStatusNotFound {
+		vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userId, previousChatId)
+	}
 }
 
 func getOppositeUserOfTetAtTet(users []int64, me int64) *int64 {
