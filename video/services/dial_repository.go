@@ -174,8 +174,8 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 	return nil
 }
 
-func (s *DialRedisRepository) SetUserStatus(ctx context.Context, userId int64, callStatus string) error {
-	err := s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallStatusKey, callStatus).Err()
+func (s *DialRedisRepository) SetUserStatus(ctx context.Context, userId, chatId int64, callStatus string) error {
+	err := s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallStatusKey, callStatus, UserCallChatIdKey, chatId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 		return err

@@ -331,7 +331,7 @@ func getMap(userIds []int64, status string) map[int64]string {
 }
 
 func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64, callStatus string) error {
-	err := vh.dialRedisRepository.SetUserStatus(ctx, callee, callStatus)
+	err := vh.dialRedisRepository.SetUserStatus(ctx, callee, chatId, callStatus)
 	if err != nil {
 		return err
 	}
