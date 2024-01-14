@@ -166,6 +166,14 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	// first of all we remove us from the previous chat
+	previousUserCallState, previousChatId, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
+	}
+	if previousUserCallState != services.CallStatusNotFound {
+		vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userPrincipalDto.UserId, previousChatId)
+	}
 
 	maybeOwnerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
 	if err != nil {

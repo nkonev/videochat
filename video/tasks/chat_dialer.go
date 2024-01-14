@@ -131,7 +131,8 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
 			continue
 		}
-		if userCallState == services.CallStatusNotFound { // it can be un case when we override an user's temporary status
+		if userCallState == services.CallStatusNotFound { // shouldn't happen
+			GetLogEntry(ctx).Warnf("Going to remove excess data for user %v, chat %v", userId, chatId)
 			err := srv.redisService.RemoveFromDialList(ctx, userId, chatId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
