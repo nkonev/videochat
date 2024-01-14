@@ -120,7 +120,9 @@ func (srv *ChatDialerService) GetStatuses(ctx context.Context, userIds []int64) 
 			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
 			continue
 		}
-		ret[userId] = status
+		if status != services.CallStatusNotFound {
+			ret[userId] = status
+		}
 	}
 	return ret
 }
@@ -132,7 +134,13 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
 			continue
 		}
-		if services.IsTemporary(userCallState) {
+		if userCallState == services.CallStatusNotFound { // it can be un case when we override an user's temporary status
+			err := srv.redisService.RemoveFromDialList(ctx, userId, chatId)
+			if err != nil {
+				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
+				continue
+			}
+		} else if services.IsTemporary(userCallState) {
 			if userCallMarkedForRemoveAt != services.UserCallMarkedForRemoveAtNotSet &&
 			  time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
 

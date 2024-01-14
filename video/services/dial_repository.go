@@ -270,7 +270,7 @@ func (s *DialRedisRepository) ResetExpiration(ctx context.Context, userId int64)
 
 func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64) (string, int64, int64, int, error) {
 	status, err := s.redisClient.HGetAll(ctx, dialChatUserCallsKey(userId)).Result()
-	if err == redisV8.Nil {
+	if err == redisV8.Nil || len(status) == 0 {
 		return CallStatusNotFound, -1, -1, -1, nil
 	}
 

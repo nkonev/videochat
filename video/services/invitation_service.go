@@ -24,6 +24,10 @@ func NewChatInvitationService(rabbitMqInvitePublisher *producer.RabbitInvitePubl
 
 
 func (srv *ChatInvitationService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string) {
+	if len(statuses) == 0 {
+		return
+	}
+
 	var userIdsToDial []int64 = make([]int64, 0)
 	for userId, _ := range statuses {
 		userIdsToDial = append(userIdsToDial, userId)
