@@ -57,7 +57,7 @@ func CanOverrideCallStatus(userCallStatus string) bool {
 	return userCallStatus == CallStatusCancelling || userCallStatus == CallStatusRemoving || userCallStatus == CallStatusNotFound
 }
 
-func (s *DialRedisRepository) SetOwner(ctx context.Context, chatId int64, ownerId int64) error {
+func (s *DialRedisRepository) setOwner(ctx context.Context, chatId int64, ownerId int64) error {
 	expiration := viper.GetDuration("dialExpire")
 
 	err := s.redisClient.HSet(ctx, dialMetaKey(chatId), ownerIdConstant, ownerId).Err()
@@ -87,7 +87,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		return err
 	}
 
-	err = s.SetOwner(ctx, chatId, ownerId)
+	err = s.setOwner(ctx, chatId, ownerId)
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during setting owner %v", err)
 		return err
@@ -118,7 +118,7 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
 
 		if oppositeUser != nil {
-			err := s.SetOwner(ctx, chatId, *oppositeUser)
+			err := s.setOwner(ctx, chatId, *oppositeUser)
 			if err != nil {
 				logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
 				return err
