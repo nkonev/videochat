@@ -41,7 +41,7 @@ func (srv *ChatInvitationService) SendInvitationsWithStatuses(ctx context.Contex
 
 	// this is sending call invitations to all the ivitees
 	for _, chatInviteName := range inviteNames {
-		status, err := srv.redisService.GetUserCallStatus(ctx, chatInviteName.UserId)
+		status, innerChatId, _, _, err := srv.redisService.GetUserCallState(ctx, chatInviteName.UserId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during getting callStatus of %v: %v", chatInviteName.UserId, err)
 			continue
@@ -49,6 +49,11 @@ func (srv *ChatInvitationService) SendInvitationsWithStatuses(ctx context.Contex
 
 		if status == CallStatusNotFound {
 			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", chatInviteName.UserId)
+			continue
+		}
+
+		if innerChatId != chatId {
+			GetLogEntry(ctx).Warnf("Call status for user %v contain another chatId %v, the correct chatId should be %v", chatInviteName.UserId, innerChatId, chatId)
 			continue
 		}
 
