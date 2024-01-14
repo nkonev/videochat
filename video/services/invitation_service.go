@@ -47,6 +47,7 @@ func (srv *ChatInvitationService) SendInvitationsWithStatuses(ctx context.Contex
 			continue
 		}
 
+		// the same check in ChatDialerService.GetStatuses()
 		if status == CallStatusNotFound {
 			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", chatInviteName.UserId)
 			continue

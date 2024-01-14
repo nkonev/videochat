@@ -443,7 +443,7 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusOK)
 	}
 
-	var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), userIdsToDial)
+	var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), chatId, userIdsToDial)
 
 	err = vh.dialStatusPublisher.Publish(chatId, statuses, userPrincipalDto.UserId)
 	if err != nil {

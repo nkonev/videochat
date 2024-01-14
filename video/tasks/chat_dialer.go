@@ -71,7 +71,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		return
 	}
 
-	var statuses = srv.GetStatuses(ctx, userIdsToDial)
+	var statuses = srv.GetStatuses(ctx, chatId, userIdsToDial)
 
 	GetLogEntry(ctx).Infof("Calling userIds %v from chat %v", userIdsToDial, chatId)
 
@@ -109,17 +109,27 @@ func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, chat
 	}
 }
 
-func (srv *ChatDialerService) GetStatuses(ctx context.Context, userIds []int64) map[int64]string {
+func (srv *ChatDialerService) GetStatuses(ctx context.Context, chatId int64, userIds []int64) map[int64]string {
 	var ret = map[int64]string{}
 	for _, userId := range userIds {
-		status, err := srv.redisService.GetUserCallStatus(ctx, userId)
+		status, innerChatId, _, _,  err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
 			continue
 		}
-		if status != services.CallStatusNotFound {
-			ret[userId] = status
+
+		// the same check in ChatInvitationService.SendInvitationsWithStatuses()
+		if status == services.CallStatusNotFound {
+			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", userId)
+			continue
 		}
+
+		if innerChatId != chatId {
+			GetLogEntry(ctx).Warnf("Call status for user %v contain another chatId %v, the correct chatId should be %v", userIds, innerChatId, chatId)
+			continue
+		}
+
+		ret[userId] = status
 	}
 	return ret
 }
