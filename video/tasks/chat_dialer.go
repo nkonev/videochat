@@ -79,10 +79,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 	srv.chatInvitationService.SendInvitationsWithStatuses(ctx, chatId, ownerId, statuses)
 
 	// send state changes to owner (ownerId) of call
-	err = srv.dialStatusPublisher.Publish(chatId, statuses, ownerId)
-	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during marshal VideoIsInvitingDto")
-	}
+	srv.dialStatusPublisher.Publish(chatId, statuses, ownerId)
 
 	// cleanNotNeededAnymoreDialRedisData
 	srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userIdsToDial)

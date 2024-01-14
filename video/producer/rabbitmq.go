@@ -151,6 +151,9 @@ func (rp *RabbitDialStatusPublisher) Publish(
 	userStatuses map[int64]string,
 	ownerId int64,
 ) error {
+	if len(userStatuses) == 0 {
+		return nil
+	}
 	var dials = []*dto.VideoDialChanged{}
 	for userId, status := range userStatuses {
 		dials = append(dials, &dto.VideoDialChanged{

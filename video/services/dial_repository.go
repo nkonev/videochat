@@ -216,6 +216,9 @@ func (s *DialRedisRepository) GetDialChats(ctx context.Context) ([]int64, error)
 	return ret0, nil
 }
 
+// for now, due to ability to override user_call_state to another chatId, it can return extraneous userIds which does not belong to video call anymore
+// it can happen when user refuces to enter to the videocall by invitation and enters to another chat
+// the set of the former chat is going to contain old data
 func (s *DialRedisRepository) GetUsersToDial(ctx context.Context, chatId int64) ([]int64, error) {
 	members, err := s.redisClient.SMembers(ctx, dialChatMembersKey(chatId)).Result()
 	if err == redisV8.Nil {
