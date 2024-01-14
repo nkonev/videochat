@@ -281,6 +281,13 @@
                             break
                         }
                     }
+                }).catch((e) => {
+                  console.warn("e.response.status", e.response.status)
+                  if (e.response.status == 409) {
+                    this.setWarning(this.$vuetify.locale.t('$vuetify.user_is_already_in_other_call', this.getUserNameWrapper(dto)))
+                  } else {
+                    throw e
+                  }
                 })
             },
             kickFromVideoCall(item) {

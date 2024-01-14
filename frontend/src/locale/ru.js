@@ -229,5 +229,6 @@ export default {
     chats_not_found: "Чаты не найдены",
     users_not_found: "Пользователи не найдены",
     messages_not_found: "Сообщения не найдены",
-    chat_not_found: "Чат не найден или вы в нём не состоите"
+    chat_not_found: "Чат не найден или вы в нём не состоите",
+    user_is_already_in_other_call: "Пользователь {0} уже находится в другом звонке"
 }
