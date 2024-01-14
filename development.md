@@ -716,26 +716,3 @@ https://stackoverflow.com/questions/25185607/whats-the-difference-between-parent
 ]
 ```
 
-TODO part of mechanism of video's housekeeping
-```go
-	cardinality, err := s.redisClient.SCard(ctx, dialChatMembersKey(chatId)).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during performing SCARD %v", err)
-		return err
-	}
-	if cardinality == 0 {
-		// remove "dialchat" on zero members
-		err = s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
-		if err != nil {
-			logger.GetLogEntry(ctx).Errorf("Error during deleting ChatMembers %v", err)
-			return err
-		}
-
-		// remove "dialmeta" on zero members
-		err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
-		if err != nil {
-			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
-			return err
-		}
-	}
-```
