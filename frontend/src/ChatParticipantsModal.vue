@@ -275,12 +275,6 @@
                         const routerNewState = { name: videochat_name};
                         this.$router.push(routerNewState);
                     }
-                    for (const participant of this.participantsDto.participants) {
-                        if (participant.id == dto.id) {
-                            participant.callingTo = call;
-                            break
-                        }
-                    }
                 }).catch((e) => {
                   console.warn("e.response.status", e.response.status)
                   if (e.response.status == 409) {
@@ -375,8 +369,9 @@
                     innerLoop:
                     for (const videoDialChanged of dto.dials) {
                         if (participant.id == videoDialChanged.userId) {
-                            participant.callingTo = isCalling(videoDialChanged.status);
-                            this.$forceUpdate();
+                            this.$nextTick(()=>{
+                              participant.callingTo = isCalling(videoDialChanged.status);
+                            })
                             break innerLoop
                         }
                     }
