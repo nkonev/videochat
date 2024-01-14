@@ -202,7 +202,15 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	// remove myself from a call
 	// we call it in case opposite/owner user has incoming (this) call
 	// react on "take the phone" (pressing green tube) which cancels ringing logic for opposite/owner user (or myself)
-	vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall)
+	code := vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall)
+
+	// if video call still not exists then it means that I'm the owner and I need to create it
+	if code == http.StatusNoContent {
+		// and put myself with a status "inCall"
+		vh.dialRedisRepository.AddToDialList(c.Request().Context(), userPrincipalDto.UserId, chatId, userPrincipalDto.UserId, services.CallStatusInCall)
+
+		// if call existed then user statuses will be changed above removeFromCallingList()
+	}
 
 	return c.NoContent(http.StatusOK)
 }
@@ -274,7 +282,7 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, use
 		return http.StatusInternalServerError
 	}
 	if ownerId == services.NoUser {
-		return http.StatusOK
+		return http.StatusNoContent
 	}
 
 	// we remove callee by setting status
