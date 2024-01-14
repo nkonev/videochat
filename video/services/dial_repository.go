@@ -118,6 +118,7 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
 
 		if oppositeUser != nil {
+			logger.GetLogEntry(ctx).Infof("Transfering ownership over chat %v from user %v to user %v", chatId, leavingOwner, *oppositeUser)
 			err := s.setOwner(ctx, chatId, *oppositeUser)
 			if err != nil {
 				logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
