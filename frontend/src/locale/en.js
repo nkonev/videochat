@@ -230,5 +230,6 @@ export default {
     users_not_found: "Users not found",
     messages_not_found: "Messages not found",
     chat_not_found: "The chat doesn't exist or you aren't a participant of the chat",
-    user_is_already_in_other_call: "User {0} is already in another call"
+    user_is_already_in_other_call: "User {0} is already in another call",
+    another_user_owes_this_chat: "Another user owes this video call"
 }

@@ -57,6 +57,22 @@ func CanOverrideCallStatus(userCallStatus string) bool {
 	return userCallStatus == CallStatusCancelling || userCallStatus == CallStatusRemoving || userCallStatus == CallStatusNotFound
 }
 
+func (s *DialRedisRepository) SetOwner(ctx context.Context, chatId int64, ownerId int64) error {
+	expiration := viper.GetDuration("dialExpire")
+
+	err := s.redisClient.HSet(ctx, dialMetaKey(chatId), ownerIdConstant, ownerId).Err()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
+		return err
+	}
+	_, err = s.redisClient.Expire(ctx, dialMetaKey(chatId), expiration).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata expiration %v", err)
+		return err
+	}
+	return nil
+}
+
 func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, ownerId int64, callStatus string) error {
 	expiration := viper.GetDuration("dialExpire")
 
@@ -71,14 +87,9 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		return err
 	}
 
-	err = s.redisClient.HSet(ctx, dialMetaKey(chatId), ownerIdConstant, ownerId).Err()
+	err = s.SetOwner(ctx, chatId, ownerId)
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
-		return err
-	}
-	_, err = s.redisClient.Expire(ctx, dialMetaKey(chatId), expiration).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata expiration %v", err)
+		logger.GetLogEntry(ctx).Errorf("Error during setting owner %v", err)
 		return err
 	}
 

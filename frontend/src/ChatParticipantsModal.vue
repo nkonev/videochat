@@ -270,15 +270,16 @@
             startCalling(dto) {
                 const call = !dto.callingTo;
                 axios.put(`/api/video/${this.dto.id}/dial/invite?userId=${dto.id}&call=${call}`).then(value => {
-                    console.log("Inviting to video chat", call);
+                    // console.log("Inviting to video chat", call);
                     if (this.$route.name != videochat_name && call) {
                         const routerNewState = { name: videochat_name};
                         this.$router.push(routerNewState);
                     }
                 }).catch((e) => {
-                  console.warn("e.response.status", e.response.status)
                   if (e.response.status == 409) {
                     this.setWarning(this.$vuetify.locale.t('$vuetify.user_is_already_in_other_call', this.getUserNameWrapper(dto)))
+                  } if (e.response.status == 403) {
+                    this.setWarning(this.$vuetify.locale.t('$vuetify.another_user_owes_this_chat'))
                   } else {
                     throw e
                   }

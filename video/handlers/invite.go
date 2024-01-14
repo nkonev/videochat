@@ -96,7 +96,7 @@ func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, 
 		// ok
 	} else if userPrincipalDto.UserId != ownerId {
 		logger.GetLogEntry(ctx).Infof("Call already started in this chat %v by %v", chatId, ownerId)
-		return false, http.StatusAccepted
+		return false, http.StatusForbidden
 	}
 	return true, http.StatusOK
 }
@@ -204,7 +204,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			var oppositeUser *int64 = getOppositeUserOfTetAtTet(usersOfChat, userPrincipalDto.UserId)
+			var oppositeUser *int64 = getOppositeUser(usersOfChat, userPrincipalDto.UserId)
 
 			// uniq users by userId
 			usersOfVideo, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
@@ -213,7 +213,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
-			var oppositeUserOfVideo *int64 = getOppositeUserOfTetAtTet(usersOfVideo, userPrincipalDto.UserId)
+			var oppositeUserOfVideo *int64 = getOppositeUser(usersOfVideo, userPrincipalDto.UserId)
 
 			// oppositeUserOfVideo is need for case when your counterpart enters into call (not entered until this moment) and this (oppositeUserOfVideo == nil) prevents us to start calling him back
 			// and we(behalf user) doesn't have incoming call
@@ -244,7 +244,7 @@ func (vh *InviteHandler) removePrevious(c echo.Context, userId int64) {
 	}
 }
 
-func getOppositeUserOfTetAtTet(users []int64, me int64) *int64 {
+func getOppositeUser(users []int64, me int64) *int64 {
 	var oppositeUser *int64
 	for _, userId := range users {
 		if userId != me {
@@ -388,9 +388,12 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		}
 
 		missedUsers := make([]int64, 0)
+		inVideoUsers := make([]int64, 0)
 		for _, redisCallUser := range usersToDial {
 			if !utils.Contains(videoParticipants, redisCallUser) {
 				missedUsers = append(missedUsers, redisCallUser)
+			} else {
+				inVideoUsers = append(inVideoUsers, redisCallUser)
 			}
 		}
 
@@ -399,6 +402,20 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 
 		// for all participants to dial - send EventMissedCall notification
 		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
+
+		if len(inVideoUsers) > 0 {
+			// delegate ownership to another user
+
+			oppositeUser := getOppositeUser(inVideoUsers, userPrincipalDto.UserId)
+
+			if oppositeUser != nil {
+				err = vh.dialRedisRepository.SetOwner(c.Request().Context(), chatId, *oppositeUser)
+				if err != nil {
+					logger.GetLogEntry(c.Request().Context()).Errorf("Error during changing owner %v", err)
+					return err
+				}
+			}
+		}
 	} else {
 		vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 	}
