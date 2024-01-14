@@ -343,6 +343,7 @@ export default {
             this.graphQlUnsubscribe();
         },
         resetVariables() {
+            this.resetVideoInvitation()
             this.chatStore.unsetNotifications();
         },
         canSwitchSearchType() {
@@ -569,11 +570,9 @@ export default {
           }
         },
         onClickInvitation() {
-          axios.put(`/api/video/${this.invitedVideoChatId}/dial/accept`).then(()=>{
-            const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
-            goToPreserving(this.$route, this.$router, routerNewState);
-            this.resetVideoInvitation();
-          });
+          const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
+          goToPreserving(this.$route, this.$router, routerNewState)
+          this.resetVideoInvitation();
         },
         onClickCancelInvitation() {
           axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{

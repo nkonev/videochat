@@ -181,7 +181,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	// if chat does not exist
+	// if videochat does not exist
 	// then it means that I'm the owner and I need to create it
 	if maybeOwnerId == services.NoUser {
 		// and put myself with a status "inCall"
@@ -190,6 +190,41 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during adding as owner %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
+
+		// during entering into dial. Returns status: true which means that frontend should (initially) draw the calling.
+		// Now it used only in tet-a-tet.
+		// If we are in the tet-a-tet
+		basicChatInfo, err := vh.chatClient.GetBasicChatInfo(chatId, userPrincipalDto.UserId, c.Request().Context()) // tet-a-tet
+		if err != nil {
+			return err
+		}
+
+		usersOfChat := basicChatInfo.ParticipantIds
+
+		// in this block we start calling in case valid tet-a-tet
+		if basicChatInfo.TetATet && len(usersOfChat) == 2 {
+			if err != nil {
+				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			var oppositeUser *int64 = getOppositeUserOfTetAtTet(usersOfChat, userPrincipalDto.UserId)
+
+			// uniq users by userId
+			usersOfVideo, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+			if err != nil {
+				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			var oppositeUserOfVideo *int64 = getOppositeUserOfTetAtTet(usersOfVideo, userPrincipalDto.UserId)
+
+			// oppositeUserOfVideo is need for case when your counterpart enters into call (not entered until this moment) and this (oppositeUserOfVideo == nil) prevents us to start calling him back
+			// and we(behalf user) doesn't have incoming call
+			if oppositeUserOfVideo == nil && oppositeUser != nil {
+				// we should call the counterpart (opposite user)
+				vh.addToCalling(c, *oppositeUser, chatId, userPrincipalDto)
+			}
+		}
 	} else { // we enter to somebody's chat
 		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), userPrincipalDto.UserId, chatId, maybeOwnerId, services.CallStatusInCall)
 		if err != nil {
@@ -197,41 +232,6 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			return err
 		}
 		vh.sendEvents(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall, maybeOwnerId)
-	}
-
-	// during entering into dial. Returns status: true which means that frontend should (initially) draw the calling.
-	// Now it used only in tet-a-tet.
-	// If we are in the tet-a-tet
-	basicChatInfo, err := vh.chatClient.GetBasicChatInfo(chatId, userPrincipalDto.UserId, c.Request().Context()) // tet-a-tet
-	if err != nil {
-		return err
-	}
-
-	usersOfChat := basicChatInfo.ParticipantIds
-
-	// in this block we start calling in case valid tet-a-tet
-	if basicChatInfo.TetATet && len(usersOfChat) == 2 {
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-		var oppositeUser *int64 = getOppositeUserOfTetAtTet(usersOfChat, userPrincipalDto.UserId)
-
-		// uniq users by userId
-		usersOfVideo, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		var oppositeUserOfVideo *int64 = getOppositeUserOfTetAtTet(usersOfVideo, userPrincipalDto.UserId)
-
-		// oppositeUserOfVideo is need for case when your counterpart enters into call (not entered until this moment) and this (oppositeUserOfVideo == nil) prevents us to start calling him back
-		// and we(behalf user) doesn't have incoming call
-		if oppositeUserOfVideo == nil && oppositeUser != nil {
-			// we should call the counterpart (opposite user)
-			vh.addToCalling(c, *oppositeUser, chatId, userPrincipalDto)
-		}
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -247,28 +247,6 @@ func getOppositeUserOfTetAtTet(users []int64, me int64) *int64 {
 		}
 	}
 	return oppositeUser
-}
-
-func (vh *InviteHandler) ProcessAcceptCall(c echo.Context) error {
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		Logger.Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
-
-	chatId, err := GetPathParamAsInt64(c, "id")
-	if err != nil {
-		return err
-	}
-
-	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
-		return c.NoContent(http.StatusInternalServerError)
-	} else if !ok {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	return c.NoContent(vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall))
 }
 
 func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
