@@ -59,9 +59,9 @@ func (srv *CleanOrphanRedisEntriesService) cleanOrphans(ctx context.Context) {
 			continue
 		}
 		if services.ShouldProlong(userCallState) {
-			if markedForChangeStatusAttempt > viper.GetInt("schedulers.cleanOrphanRedisEntriesTask.orphanUserIteration") {
-				GetLogEntry(ctx).Infof("Moving userCallState of user %v to %v because attempts were exhausted", userId, services.CallStatusRemoving)
-				err := srv.redisService.SetUserStatus(ctx, userId, services.CallStatusRemoving)
+			if markedForChangeStatusAttempt >= viper.GetInt("schedulers.cleanOrphanRedisEntriesTask.orphanUserIteration") {
+				GetLogEntry(ctx).Infof("Removing userCallState of user %v to %v because attempts were exhausted", userId, services.CallStatusRemoving)
+				err := srv.redisService.RemoveFromDialList(ctx, userId, chatId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable user status chatId %v, userId %v", chatId, userId)
 					continue
@@ -84,7 +84,7 @@ func (srv *CleanOrphanRedisEntriesService) cleanOrphans(ctx context.Context) {
 				}
 			} else {
 				GetLogEntry(ctx).Infof("Resetting attempt on userCallState of user %v because they appeared among video room participants", userId)
-				err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, services.UserCallMarkedForChangeStatusAttemptNotSet)
+				err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, services.UserCallMarkedForOrphanRemoveAttemptNotSet)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt userId %v", userId)
 					continue

@@ -38,11 +38,11 @@ const UserCallStatusKey = "status"
 const UserCallChatIdKey = "chatId"
 const UserCallMarkedForRemoveAtKey = "markedForRemoveAt"
 
-const UserCallMarkedForChangeStatusAttemptKey = "markedForChangeStatusAttempt"
+const UserCallMarkedForOrphanRemoveAttemptKey = "markedForOrphanRemoveAttempt"
 
 const UserCallMarkedForRemoveAtNotSet = 0
 
-const UserCallMarkedForChangeStatusAttemptNotSet = 0
+const UserCallMarkedForOrphanRemoveAttemptNotSet = 0
 
 // aka Should Remove Automatically After Timeout
 func IsTemporary(userCallStatus string) bool {
@@ -86,7 +86,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		UserCallStatusKey, callStatus,
 		UserCallChatIdKey, chatId,
 		UserCallMarkedForRemoveAtKey, UserCallMarkedForRemoveAtNotSet,
-		UserCallMarkedForChangeStatusAttemptKey, UserCallMarkedForChangeStatusAttemptNotSet,
+		UserCallMarkedForOrphanRemoveAttemptKey, UserCallMarkedForOrphanRemoveAttemptNotSet,
 	).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
@@ -290,8 +290,8 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 		}
 	}
 
-	var markedForChangeStatusAttempt int64 = UserCallMarkedForChangeStatusAttemptNotSet
-	maybeMarkedForChangeStatusAttempt, ok := status[UserCallMarkedForChangeStatusAttemptKey]
+	var markedForChangeStatusAttempt int64 = UserCallMarkedForOrphanRemoveAttemptNotSet
+	maybeMarkedForChangeStatusAttempt, ok := status[UserCallMarkedForOrphanRemoveAttemptKey]
 	if ok {
 		markedForChangeStatusAttempt, err = utils.ParseInt64(maybeMarkedForChangeStatusAttempt)
 		if err != nil {
@@ -307,7 +307,7 @@ func (s *DialRedisRepository) GetUserCallStateKeys(ctx context.Context) ([]strin
 }
 
 func (s *DialRedisRepository) SetMarkedForChangeStatusAttempt(ctx context.Context, userId int64, markedForChangeStatusAttempt int) error {
-	return s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallMarkedForChangeStatusAttemptKey, markedForChangeStatusAttempt).Err()
+	return s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallMarkedForOrphanRemoveAttemptKey, markedForChangeStatusAttempt).Err()
 }
 
 func GetUserId(userCallStateKey string) (int64, error) {
