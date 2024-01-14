@@ -24,11 +24,12 @@ type InviteHandler struct {
 	userService           *services.UserService
 	chatDialerService     *tasks.ChatDialerService
 	chatInvitationService *services.ChatInvitationService
+	notificationService   *services.NotificationService
 }
 
 const EventMissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService, chatInvitationService *services.ChatInvitationService) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService, chatInvitationService *services.ChatInvitationService, notificationService *services.NotificationService) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,
@@ -37,6 +38,7 @@ func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *cli
 		userService:           userService,
 		chatDialerService:     chatDialerService,
 		chatInvitationService: chatInvitationService,
+		notificationService:   notificationService,
 	}
 }
 
@@ -454,6 +456,23 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 	if err != nil {
 		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
 		return c.NoContent(http.StatusOK)
+	}
+
+	participantIds, err := vh.chatClient.GetChatParticipantIds(chatId, c.Request().Context())
+	if err != nil {
+		Logger.Error(err, "Failed during getting chat participantIds")
+		return c.NoContent(http.StatusOK)
+	}
+
+	videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+	if err != nil {
+		Logger.Errorf("got error during counting users in scheduler, %v", err)
+		return c.NoContent(http.StatusOK)
+	}
+
+	err = vh.notificationService.NotifyAboutUsersVideoStatusChanged(participantIds, videoParticipants, c.Request().Context())
+	if err != nil {
+		Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
 	}
 
 	return c.NoContent(http.StatusOK)
