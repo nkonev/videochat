@@ -140,7 +140,7 @@ import {useChatStore} from "@/store/chatStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
 import {goToPreserving} from "@/mixins/searchString";
-import {chat_name, messageIdHashPrefix} from "@/router/routes";
+import {messageIdHashPrefix} from "@/router/routes";
 
 const firstPage = 1;
 const pageSize = 20;
