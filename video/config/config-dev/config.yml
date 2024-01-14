@@ -78,7 +78,7 @@ schedulers:
     notificationPeriod: 2s
   chatDialerTask:
     enabled: true
-    dialPeriod: 2s
+    dialPeriod: 5s
     removeTemporaryUserCallStatusAfter: 20s
   videoRecordingNotifierTask:
     enabled: true

@@ -121,7 +121,7 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 	vh.removePrevious(c, callee)
 
 	// for better user experience
-	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, userPrincipalDto.UserId, getMap([]int64{callee}, status))
+	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, userPrincipalDto.UserId, getMap([]int64{callee}, services.CallStatusInviting))
 
 	err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId, services.CallStatusInviting)
 	if err != nil {
