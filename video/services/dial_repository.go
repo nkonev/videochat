@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"nkonev.name/video/logger"
 	"nkonev.name/video/utils"
+	"strings"
 	"time"
 )
 
@@ -37,8 +38,14 @@ const UserCallStatusKey = "status"
 const UserCallChatIdKey = "chatId"
 const UserCallMarkedForRemoveAtKey = "markedForRemoveAt"
 
+const UserCallMarkedForChangeStatusAttemptKey = "markedForChangeStatusAttempt"
 
-func ShouldRemoveAutomaticallyAfterTimeout(userCallStatus string) bool {
+const UserCallMarkedForRemoveAtNotSet = 0
+
+const UserCallMarkedForChangeStatusAttemptNotSet = 0
+
+// aka Should Remove Automatically After Timeout
+func IsTemporary(userCallStatus string) bool {
 	return userCallStatus == CallStatusCancelling || userCallStatus == CallStatusRemoving
 }
 
@@ -75,7 +82,12 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		return err
 	}
 
-	err = s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallStatusKey, callStatus, UserCallChatIdKey, chatId).Err()
+	err = s.redisClient.HSet(ctx, dialChatUserCallsKey(userId),
+		UserCallStatusKey, callStatus,
+		UserCallChatIdKey, chatId,
+		UserCallMarkedForRemoveAtKey, UserCallMarkedForRemoveAtNotSet,
+		UserCallMarkedForChangeStatusAttemptKey, UserCallMarkedForChangeStatusAttemptNotSet,
+	).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 		return err
@@ -101,6 +113,10 @@ func getAllDialChats() string {
 	return "dialchat:*"
 }
 
+func allChatUserCallsKey() string {
+	return fmt.Sprintf("user_call_state:*")
+}
+
 func dialMetaKey(chatId int64) string {
 	return fmt.Sprintf("dialmeta:%v", chatId)
 }
@@ -119,6 +135,7 @@ func chatIdFromKey(key string) (int64, error) {
 }
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId int64) error {
+	// remove from "dialchat" members
 	_, err := s.redisClient.SRem(ctx, dialChatMembersKey(chatId), userId).Result()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
@@ -130,6 +147,28 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
 		return err
+	}
+
+	cardinality, err := s.redisClient.SCard(ctx, dialChatMembersKey(chatId)).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during performing SCARD %v", err)
+		return err
+	}
+	// clean
+	if cardinality == 0 {
+		// remove "dialchat" on zero members
+		err = s.redisClient.Del(ctx, dialChatMembersKey(chatId)).Err()
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting ChatMembers %v", err)
+			return err
+		}
+
+		// remove "dialmeta" on zero members
+		err = s.redisClient.Del(ctx, dialMetaKey(chatId)).Err()
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
+			return err
+		}
 	}
 
 	return nil
@@ -144,7 +183,7 @@ func (s *DialRedisRepository) SetUserStatus(ctx context.Context, userId int64, c
 	return nil
 }
 
-func (s *DialRedisRepository) SetCurrentTimeForCancellation(ctx context.Context, userId int64) error {
+func (s *DialRedisRepository) SetCurrentTimeForRemoving(ctx context.Context, userId int64) error {
 	err := s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallMarkedForRemoveAtKey, time.Now().UnixMilli()).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
@@ -227,4 +266,54 @@ func (s *DialRedisRepository) GetUserCallStatus(ctx context.Context, userId int6
 
 func (s *DialRedisRepository) ResetExpiration(ctx context.Context, userId int64) error {
 	return s.redisClient.Persist(ctx, dialChatUserCallsKey(userId)).Err()
+}
+
+func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64) (string, int64, int64, int, error) {
+	status, err := s.redisClient.HGetAll(ctx, dialChatUserCallsKey(userId)).Result()
+	if err == redisV8.Nil {
+		return CallStatusNotFound, -1, -1, -1, nil
+	}
+
+	userCallStatus := status[UserCallStatusKey]
+
+	chatId, err := utils.ParseInt64(status[UserCallChatIdKey])
+	if err != nil {
+		return CallStatusNotFound, -1, -1, -1, err
+	}
+
+	maybeUserCallMarkedForRemoveAt, ok := status[UserCallMarkedForRemoveAtKey]
+	var userCallMarkedForRemoveAt int64 = UserCallMarkedForRemoveAtNotSet
+	if ok {
+		userCallMarkedForRemoveAt, err = utils.ParseInt64(maybeUserCallMarkedForRemoveAt)
+		if err != nil {
+			return CallStatusNotFound, -1, -1, -1, err
+		}
+	}
+
+	var markedForChangeStatusAttempt int64 = UserCallMarkedForChangeStatusAttemptNotSet
+	maybeMarkedForChangeStatusAttempt, ok := status[UserCallMarkedForChangeStatusAttemptKey]
+	if ok {
+		markedForChangeStatusAttempt, err = utils.ParseInt64(maybeMarkedForChangeStatusAttempt)
+		if err != nil {
+			return CallStatusNotFound, -1, -1, -1, err
+		}
+	}
+
+	return userCallStatus, chatId, userCallMarkedForRemoveAt, int(markedForChangeStatusAttempt), nil
+}
+
+func (s *DialRedisRepository) GetUserCallStateKeys(ctx context.Context) ([]string, error) {
+	return s.redisClient.Keys(ctx, allChatUserCallsKey()).Result()
+}
+
+func (s *DialRedisRepository) SetMarkedForChangeStatusAttempt(ctx context.Context, userId int64, markedForChangeStatusAttempt int) error {
+	return s.redisClient.HSet(ctx, dialChatUserCallsKey(userId), UserCallMarkedForChangeStatusAttemptKey, markedForChangeStatusAttempt).Err()
+}
+
+func GetUserId(userCallStateKey string) (int64, error) {
+	split := strings.Split(userCallStateKey, ":")
+	if len(split) != 2 {
+		return -1, fmt.Errorf("Wrong split lenght of %v, expected 2", userCallStateKey)
+	}
+	return utils.ParseInt64(split[1])
 }

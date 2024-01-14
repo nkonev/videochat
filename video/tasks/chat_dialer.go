@@ -12,6 +12,7 @@ import (
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
+	"time"
 )
 
 type ChatDialerService struct {
@@ -74,14 +75,17 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 
 	GetLogEntry(ctx).Infof("Calling userIds %v from chat %v", userIdsToDial, chatId)
 
+	// send invitations to callees
 	srv.chatInvitationService.SendInvitationsWithStatuses(ctx, chatId, ownerId, statuses)
 
 	// send state changes to owner (ownerId) of call
 	err = srv.dialStatusPublisher.Publish(chatId, statuses, ownerId)
 	if err != nil {
 		GetLogEntry(ctx).Error(err, "Failed during marshal VideoIsInvitingDto")
-		return
 	}
+
+	// cleanNotNeededAnymoreDialRedisData
+	srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userIdsToDial)
 }
 
 // removes users from dial who were removed from chat
@@ -120,6 +124,29 @@ func (srv *ChatDialerService) GetStatuses(ctx context.Context, userIds []int64) 
 	}
 	return ret
 }
+
+func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Context, chatId int64, ownerId int64, userIdsToDial []int64) {
+	for _, userId := range userIdsToDial {
+		userCallState, _, userCallMarkedForRemoveAt, _, err := srv.redisService.GetUserCallState(ctx, userId)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
+			continue
+		}
+		if services.IsTemporary(userCallState) {
+			if userCallMarkedForRemoveAt != services.UserCallMarkedForRemoveAtNotSet &&
+			  time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
+
+				GetLogEntry(ctx).Infof("Removing temporary UserCallStatus of user %v", userId)
+				err := srv.redisService.RemoveFromDialList(ctx, userId, chatId)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
+					continue
+				}
+			}
+		}
+	}
+}
+
 
 type ChatDialerTask struct {
 	*gointerlock.GoInterval

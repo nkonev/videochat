@@ -73,6 +73,8 @@ func main() {
 			tasks.ChatDialerScheduler,
 			tasks.NewRecordingNotifierService,
 			tasks.RecordingNotifierScheduler,
+			tasks.NewCleanOrphanRedisEntriesService,
+			tasks.CleanOrphanRedisEntriesScheduler,
 		),
 		fx.Invoke(
 			runApiEcho,
@@ -236,7 +238,13 @@ func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 	Logger.Info("Api server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(chatNotifierTask *tasks.VideoCallUsersCountNotifierTask, chatDialerTask *tasks.ChatDialerTask, videoRecordingTask *tasks.RecordingNotifierTask, usersVideoStatusNotifierTask *tasks.UsersVideoStatusNotifierTask) {
+func runScheduler(
+	chatNotifierTask *tasks.VideoCallUsersCountNotifierTask,
+	chatDialerTask *tasks.ChatDialerTask,
+	videoRecordingTask *tasks.RecordingNotifierTask,
+	usersVideoStatusNotifierTask *tasks.UsersVideoStatusNotifierTask,
+	cleanOrphanRedisEntriesTask *tasks.CleanOrphanRedisEntriesTask,
+) {
 	if viper.GetBool("schedulers.videoCallUsersCountNotifierTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler videoCallUsersCountNotifierTask")
@@ -270,6 +278,15 @@ func runScheduler(chatNotifierTask *tasks.VideoCallUsersCountNotifierTask, chatD
 			err := usersVideoStatusNotifierTask.Run(context.Background())
 			if err != nil {
 				Logger.Errorf("Error during working usersVideoStatusNotifierTask: %s", err)
+			}
+		}()
+	}
+	if viper.GetBool("schedulers.cleanOrphanRedisEntriesTask.enabled") {
+		go func() {
+			Logger.Infof("Starting scheduler cleanOrphanRedisEntriesTask")
+			err := cleanOrphanRedisEntriesTask.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working cleanOrphanRedisEntriesTask: %s", err)
 			}
 		}()
 	}

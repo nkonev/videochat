@@ -79,9 +79,14 @@ schedulers:
   chatDialerTask:
     enabled: true
     dialPeriod: 2s
+    removeTemporaryUserCallStatusAfter: 20s
   videoRecordingNotifierTask:
     enabled: true
     notificationPeriod: 20s
   usersVideoStatusNotifierTask:
     enabled: true
     notificationPeriod: 7s # more or less close to aaa's user online and less than closing empty room timeout in livekit
+  cleanOrphanRedisEntriesTask:
+    enabled: true
+    period: 60s
+    orphanUserIteration: 5 # how many iteration must it take on orphaned "inCall" user to assign "cancellig status" state

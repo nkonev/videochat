@@ -182,6 +182,11 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 }
 
 func (h *RestClient) DoesParticipantBelongToChat(chatId int64, userIds []int64, c context.Context) ([]*dto.ParticipantBelongsToChat, error) {
+
+	if len(userIds) == 0 {
+		return make([]*dto.ParticipantBelongsToChat, 0), nil
+	}
+
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.chatBaseUrl + h.doesParticipantBelongToChatPath
 

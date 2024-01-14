@@ -339,13 +339,13 @@ func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64,
 		return err
 	}
 	if services.ShouldProlong(callStatus) {
-		err = vh.dialRedisRepository.ResetExpiration(ctx, callee) // TODO provide mechanism for removing orphans - we run over all the rooms, and if user does not belong to any - we remove him
+		err = vh.dialRedisRepository.ResetExpiration(ctx, callee)
 		if err != nil {
 			return err
 		}
 	}
-	if services.ShouldRemoveAutomaticallyAfterTimeout(callStatus) {
-		err = vh.dialRedisRepository.SetCurrentTimeForCancellation(ctx, callee)
+	if services.IsTemporary(callStatus) {
+		err = vh.dialRedisRepository.SetCurrentTimeForRemoving(ctx, callee)
 		if err != nil {
 			return err
 		}

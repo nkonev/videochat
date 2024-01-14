@@ -16,6 +16,7 @@ type VideoCallUsersCallStatusChangedDto struct {
 	Users      []VideoCallUserCallStatusChangedDto `json:"users"`
 }
 
+// used for drawing red dot - it means user in the call
 type VideoCallUserCallStatusChangedDto struct {
 	UserId      int64 `json:"userId"`
 	IsInVideo   bool  `json:"isInVideo"`
