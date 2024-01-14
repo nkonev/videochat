@@ -365,6 +365,7 @@
                 if (!this.show || dto.chatId != this.chatId || !this.participantsDto.participants) {
                     return;
                 }
+
                 for (const participant of this.participantsDto.participants) {
                     innerLoop:
                     for (const videoDialChanged of dto.dials) {

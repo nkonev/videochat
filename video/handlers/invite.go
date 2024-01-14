@@ -120,14 +120,14 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 	// we remove callee's previous inviting - only after CanOverrideCallStatus() check
 	vh.removePrevious(c, callee)
 
-	// for better user experience
-	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, userPrincipalDto.UserId, getMap([]int64{callee}, services.CallStatusInviting))
-
 	err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId, services.CallStatusInviting)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
+
+	// for better user experience
+	vh.sendEvents(c, chatId, []int64{callee}, services.CallStatusInviting, userPrincipalDto.UserId)
 
 	return http.StatusOK
 }
