@@ -230,7 +230,7 @@ export default {
     users_not_found: "Пользователи не найдены",
     messages_not_found: "Сообщения не найдены",
     chat_not_found: "Чат не найден или вы в нём не состоите",
-    user_is_already_in_other_call: "Пользователь {0} уже находится в другом звонке",
+    user_is_already_in_other_call: "Пользователь {0} уже находится в звонке",
     another_user_owes_this_chat: "Другой пользователь уже владелец этого звонка",
     search_related_message: "Найти связанное сообщение"
 }
