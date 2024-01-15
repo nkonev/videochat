@@ -16,7 +16,6 @@ import UserVideo from "./UserVideo";
 import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
-import { retry } from '@lifeomic/attempt';
 import {
   defaultAudioMute,
   getWebsocketUrlPrefix, isMobileBrowser,
@@ -348,20 +347,13 @@ export default {
         return;
       }
 
-      const retryOptions = {
-        delay: 200,
-        maxAttempts: 5,
-      };
       try {
         this.inRestarting = true;
-        await retry(async (context) => {
-          const res = await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
-            // subscribe to other participants automatically
-            autoSubscribe: true,
-          });
-          console.log('connected to room', this.room.name);
-          return res
-        }, retryOptions);
+        await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
+          // subscribe to other participants automatically
+          autoSubscribe: true,
+        });
+        console.log('connected to room', this.room.name);
         this.inRestarting = false;
       } catch (e) {
         // If the max number of attempts was exceeded then `err`
