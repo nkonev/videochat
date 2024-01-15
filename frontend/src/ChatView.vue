@@ -1,6 +1,6 @@
 <template>
     <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
-      <pane size="25" v-if="!isMobile() && !isVideoRoute()">
+      <pane size="25" v-if="shouldShowChatList()">
         <ChatList :embedded="true"/>
       </pane>
       <pane>
@@ -485,6 +485,17 @@ export default {
     },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
+    },
+    shouldShowChatList() {
+        if (this.isMobile()) {
+          return false;
+        }
+        if (this.isVideoRoute()) {
+          if (this.videoIsAtSide()) {
+            return false
+          }
+        }
+        return true;
     },
     onPanelAdd(e) {
       if (!this.isMobile()) {
