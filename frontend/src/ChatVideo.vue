@@ -1,5 +1,5 @@
 <template>
-  <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTop ? 'video-container-position-top' : 'video-container-position-side'">
+  <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'">
   </v-col>
 </template>
 
@@ -39,14 +39,19 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import {goToPreserving} from "@/mixins/searchString";
 import pinia from "@/store/index";
+import videoPositionMixin from "@/mixins/videoPositionMixin";
 
 const first = 'first';
 const second = 'second';
 const last = 'last';
 
 export default {
-  mixins: [videoServerSettingsMixin(), refreshLocalMutedInAppBarMixin()],
-  props: ['chatDto', 'videoIsOnTop'],
+  mixins: [
+    videoServerSettingsMixin(),
+    refreshLocalMutedInAppBarMixin(),
+    videoPositionMixin(),
+  ],
+  props: ['chatDto', 'videoIsOnTopProperty'],
   data() {
     return {
       room: null,
@@ -66,7 +71,7 @@ export default {
       const app = createApp(UserVideo, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
-        videoIsOnTop: this.videoIsOnTop,
+        videoIsOnTop: this.videoIsOnTopProperty,
         initialShowControls: localVideoProperties != null && this.isMobile()
       });
       app.config.globalProperties.isMobile = () => {
@@ -75,7 +80,7 @@ export default {
       app.use(vuetify);
       app.use(pinia);
       const containerEl = document.createElement("div");
-      if (this.videoIsOnTop) {
+      if (this.videoIsOnTopProperty) {
         containerEl.className = 'video-component-wrapper-position-top';
       } else {
         containerEl.className = 'video-component-wrapper-position-side';
@@ -525,7 +530,7 @@ export default {
     this.participantIds = this.chatDto.participantIds;
 
     this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
-    this.chatStore.showDrawer = false;
+    this.chatStore.showDrawer = this.shouldShowChatList();
 
     await axios.put(`/api/video/${this.chatId}/dial/enter`);
 

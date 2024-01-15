@@ -8,7 +8,7 @@
           <pane>
             <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
               <pane v-if="shouldShowVideoOnTop()" min-size="15" :size="onTopVideoSize">
-                <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()" />
+                <ChatVideo :chatDto="chatDto" :videoIsOnTopProperty="videoIsOnTop()" />
               </pane>
 
               <pane style="width: 100%; background: white" :class="messageListPaneClass()" :size="messageListSize">
@@ -361,9 +361,6 @@ export default {
         bus.emit(FILE_UPDATED, d);
       }
     },
-    isVideoRoute() {
-      return this.$route.name == videochat_name
-    },
     getPinnedRouteObject(item) {
       const routeName = this.isVideoRoute() ? videochat_name : chat_name;
       return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
@@ -485,17 +482,6 @@ export default {
     },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
-    },
-    shouldShowChatList() {
-        if (this.isMobile()) {
-          return false;
-        }
-        if (this.isVideoRoute()) {
-          if (this.videoIsAtSide()) {
-            return false
-          }
-        }
-        return true;
     },
     onPanelAdd(e) {
       if (!this.isMobile()) {
