@@ -732,11 +732,15 @@ func (db *DB) GetParticipantsReadCount(chatId, messageId int64) (int, error) {
 
 
 func (db *DB) FindMessageByFileItemUuid(chatId int64, fileItemUuid string) (int64, error) {
-	row := db.QueryRow(fmt.Sprintf(`
-			select id from message_chat_%v where file_item_uuid is not null and file_item_uuid = $1 limit 1
+	if len(fileItemUuid) == 0 {
+		return MessageNotFoundId, nil
+	}
+	fileItemUuidWithPercents := "%" + fileItemUuid + "%"
+	sqlFormatted := fmt.Sprintf(`
+			select id from message_chat_%v where file_item_uuid = $1 or text ilike $2 order by id limit 1
 			`, chatId,
-	),
-		fileItemUuid)
+	)
+	row := db.QueryRow(sqlFormatted, fileItemUuid, fileItemUuidWithPercents)
 	if row.Err() != nil {
 		Logger.Errorf("Error during get MessageByFileItemUuid %v", row.Err())
 		return 0, tracerr.Wrap(row.Err())
