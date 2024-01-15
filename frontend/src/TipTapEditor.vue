@@ -157,6 +157,9 @@ export default {
 
         this.setIframe(link);
     },
+    addText(text) {
+      this.editor.commands.insertContent(text)
+    },
     setFileItemUuid(fileItemUuid) {
         this.preallocatedCandidateFileItemId = fileItemUuid;
     },
