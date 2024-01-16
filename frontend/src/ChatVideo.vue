@@ -197,7 +197,6 @@ export default {
       track.detach();
       this.removeComponent(participant.identity, track);
 
-      this.chatStore.setCallStateReady();
       this.refreshLocalMicrophoneAppBarButtons();
     },
     removeComponent(userIdentity, track) {
@@ -320,7 +319,6 @@ export default {
             this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
 
             this.refreshLocalMicrophoneAppBarButtons();
-            this.chatStore.setCallStateInCall();
           } catch (e) {
             this.setError(e, "Error during reacting on local track published");
           }
@@ -524,6 +522,8 @@ export default {
     ...mapStores(useChatStore),
   },
   async mounted() {
+    this.chatStore.setCallStateInCall();
+
     this.chatStore.initializingVideoCall = true;
 
     this.chatId = this.chatDto.id;
@@ -564,6 +564,8 @@ export default {
     this.chatStore.showRecordStartButton = false;
     this.chatStore.initializingStaringVideoRecord = false;
     this.chatStore.initializingStoppingVideoRecord = false;
+
+    this.chatStore.setCallStateReady();
 
     bus.off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
     bus.off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
