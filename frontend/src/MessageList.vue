@@ -524,22 +524,34 @@
           // 6. Without this single handler, both handlers would invoke what leads us to resetting yellow highlight
           '$route': {
             handler: async function (newValue, oldValue) {
-              // chatId
               if (newValue.params.id != oldValue.params.id) {
                 // save the top message id always, including exiting case, e.g. to the Welcome page
                 console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
                 this.saveLastVisibleElement(oldValue.params.id);
+
+                // reaction on switching chat at left
                 if (isChatRoute(newValue) && hasLength(newValue.params.id)) { // filtering out the case when we go to profile - it also has route id
                   await this.onProfileSet();
                   return
                 }
               }
+
+              // reaction on setting hash
               if (isChatRoute(newValue)) {
                 // hash
                 if (hasLength(newValue.hash)) {
                   console.log("Changed route hash, going to scroll", newValue.hash)
                   await this.scrollToOrLoad(newValue.hash);
+                  return
                 }
+              }
+
+              // reaction on changing query
+              const newQuery = newValue.query[SEARCH_MODE_MESSAGES];
+              const oldQuery = oldValue.query[SEARCH_MODE_MESSAGES];
+              if (newQuery != oldQuery) {
+                this.onSearchStringChangedDebounced();
+                return
               }
             }
           }
@@ -557,7 +569,6 @@
 
         addEventListener("beforeunload", this.beforeUnload);
 
-        bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChangedDebounced);
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
@@ -579,7 +590,6 @@
         bus.off(MESSAGE_ADD, this.onNewMessage);
         bus.off(MESSAGE_DELETED, this.onDeleteMessage);
         bus.off(MESSAGE_EDITED, this.onEditMessage);
-        bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, this.onSearchStringChangedDebounced);
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);

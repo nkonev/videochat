@@ -45,13 +45,6 @@ export const searchStringFacade = () => {
                 }
                 ,
             },
-            ['$route.query.'+SEARCH_MODE_MESSAGES]: {
-                handler: function (newValue, oldValue) {
-                    console.debug("Route changed from q", SEARCH_MODE_MESSAGES, oldValue, "->", newValue);
-                    bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_MESSAGES, {oldValue: oldValue, newValue: newValue});
-                }
-                ,
-            },
             ['$route.query.'+SEARCH_MODE_USERS]: {
               handler: function (newValue, oldValue) {
                 console.debug("Route changed from q", SEARCH_MODE_USERS, oldValue, "->", newValue);
