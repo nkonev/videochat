@@ -266,7 +266,7 @@ func (s *DialRedisRepository) GetUsersOfDial(ctx context.Context, chatId int64) 
 }
 
 // returns call's owner
-func (s *DialRedisRepository) GetDialMetadata(ctx context.Context, chatId int64) (int64, error) {
+func (s *DialRedisRepository) GetOwner(ctx context.Context, chatId int64) (int64, error) {
 	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)

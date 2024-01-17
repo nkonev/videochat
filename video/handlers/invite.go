@@ -87,7 +87,7 @@ func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, 
 		return false, http.StatusUnauthorized
 	}
 
-	ownerId, err := vh.dialRedisRepository.GetDialMetadata(ctx, chatId)
+	ownerId, err := vh.dialRedisRepository.GetOwner(ctx, chatId)
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error %v", err)
 		return false, http.StatusInternalServerError
@@ -172,7 +172,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	// first of all we remove our previous inviting
 	vh.removePrevious(c, userPrincipalDto.UserId)
 
-	maybeOwnerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	maybeOwnerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting OwnerId %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -272,7 +272,7 @@ func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 
 
 func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, usersOfDial []int64, callStatus string) int {
-	ownerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	ownerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
@@ -354,7 +354,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	ownerId, err := vh.dialRedisRepository.GetDialMetadata(c.Request().Context(), chatId)
+	ownerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return c.NoContent(http.StatusInternalServerError)
