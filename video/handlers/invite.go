@@ -364,7 +364,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 	}
 
 	if ownerId == userPrincipalDto.UserId { // owner leaving
-		usersToDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
+		redisUsersOfDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -376,16 +376,27 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
+		videoParticipantsNormalized := make([]int64, 0)
+		for _, vuid := range videoParticipants {
+			if vuid != ownerId {
+				videoParticipantsNormalized = append(videoParticipantsNormalized, vuid)
+			}
+		}
+		redisUsersNormalized := make([]int64, 0)
+		for _, ruid := range redisUsersOfDial {
+			if ruid != ownerId {
+				redisUsersNormalized = append(redisUsersNormalized, ruid)
+			}
+		}
+
 		missedUsers := make([]int64, 0)
 		inVideoUsers := make([]int64, 0)
-		for _, redisCallUser := range usersToDial {
-			// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
-			if redisCallUser != ownerId {
-				if !utils.Contains(videoParticipants, redisCallUser) {
-					missedUsers = append(missedUsers, redisCallUser)
-				} else {
-					inVideoUsers = append(inVideoUsers, redisCallUser)
-				}
+		for _, redisCallUser := range redisUsersNormalized {
+			if !utils.Contains(videoParticipantsNormalized, redisCallUser) {
+				missedUsers = append(missedUsers, redisCallUser)
+			} else {
+				inVideoUsers = append(inVideoUsers, redisCallUser)
 			}
 		}
 
@@ -453,13 +464,13 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	userIdsToDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
+	userIdsOfDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return c.NoContent(http.StatusOK)
 	}
 
-	var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), chatId, userIdsToDial)
+	var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), chatId, userIdsOfDial)
 
 	err = vh.dialStatusPublisher.Publish(chatId, statuses, userPrincipalDto.UserId)
 	if err != nil {
