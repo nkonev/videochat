@@ -113,8 +113,8 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 }
 
 func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUsers []int64, leavingOwner int64, chatId int64) error {
+	wasTransferred := false
 	if len(inVideoUsers) > 0 {
-
 		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
 
 		if oppositeUser != nil {
@@ -124,7 +124,11 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 				logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
 				return err
 			}
+			wasTransferred = true
 		}
+	}
+	if !wasTransferred {
+		logger.GetLogEntry(ctx).Infof("Unable to transfer ownership over chat %v from user %v because there is no candidates. All the metadata is going to be removed automatically after a while", chatId, leavingOwner)
 	}
 	return nil
 }
