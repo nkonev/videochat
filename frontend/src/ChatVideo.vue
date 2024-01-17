@@ -529,8 +529,10 @@ export default {
     this.chatId = this.chatDto.id;
     this.participantIds = this.chatDto.participantIds;
 
-    this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
-    this.chatStore.showDrawer = this.shouldShowChatList();
+    if (!this.isMobile() && this.videoIsAtSide()) {
+      this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
+      this.chatStore.showDrawer = this.shouldShowChatList();
+    }
 
     await axios.put(`/api/video/${this.chatId}/dial/enter`);
 
@@ -558,7 +560,9 @@ export default {
 
     this.chatStore.canShowMicrophoneButton = false;
 
-    this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
+    if (!this.isMobile() && this.videoIsAtSide()) {
+      this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
+    }
 
     this.chatStore.videoChatUsersCount = 0;
     this.chatStore.showRecordStartButton = false;
