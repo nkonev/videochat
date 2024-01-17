@@ -379,10 +379,13 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		missedUsers := make([]int64, 0)
 		inVideoUsers := make([]int64, 0)
 		for _, redisCallUser := range usersToDial {
-			if !utils.Contains(videoParticipants, redisCallUser) {
-				missedUsers = append(missedUsers, redisCallUser)
-			} else {
-				inVideoUsers = append(inVideoUsers, redisCallUser)
+			// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
+			if redisCallUser != ownerId {
+				if !utils.Contains(videoParticipants, redisCallUser) {
+					missedUsers = append(missedUsers, redisCallUser)
+				} else {
+					inVideoUsers = append(inVideoUsers, redisCallUser)
+				}
 			}
 		}
 
