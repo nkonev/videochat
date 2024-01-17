@@ -364,7 +364,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 	}
 
 	if ownerId == userPrincipalDto.UserId { // owner leaving
-		usersToDial, err := vh.dialRedisRepository.GetUsersToDial(c.Request().Context(), chatId)
+		usersToDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -453,7 +453,7 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	userIdsToDial, err := vh.dialRedisRepository.GetUsersToDial(c.Request().Context(), chatId)
+	userIdsToDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return c.NoContent(http.StatusOK)

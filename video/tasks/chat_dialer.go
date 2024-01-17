@@ -65,7 +65,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 		GetLogEntry(ctx).Warnf("Error %v", err)
 		return
 	}
-	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
+	userIdsToDial, err := srv.redisService.GetUsersOfDial(ctx, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Warnf("Error %v", err)
 		return
@@ -87,7 +87,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, chatId int64) {
 
 // removes users from dial who were removed from chat
 func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, chatId int64) {
-	userIdsToDial, err := srv.redisService.GetUsersToDial(ctx, chatId)
+	userIdsToDial, err := srv.redisService.GetUsersOfDial(ctx, chatId)
 	if err != nil {
 		Logger.Warnf("Error %v", err)
 		return

@@ -244,7 +244,7 @@ func (s *DialRedisRepository) GetDialChats(ctx context.Context) ([]int64, error)
 	return ret0, nil
 }
 
-func (s *DialRedisRepository) GetUsersToDial(ctx context.Context, chatId int64) ([]int64, error) {
+func (s *DialRedisRepository) GetUsersOfDial(ctx context.Context, chatId int64) ([]int64, error) {
 	members, err := s.redisClient.SMembers(ctx, dialChatMembersKey(chatId)).Result()
 	if err == redisV8.Nil {
 		return []int64{}, nil
