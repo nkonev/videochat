@@ -139,7 +139,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
-import {goToPreserving} from "@/mixins/searchString";
+import {goToPreservingQuery} from "@/mixins/searchString";
 import {messageIdHashPrefix} from "@/router/routes";
 
 const firstPage = 1;
@@ -297,7 +297,7 @@ export default {
                   dto.hasNoMessage = true
                 } else {
                   const routerNewState = { hash: messageIdHashPrefix + response.data.messageId};
-                  goToPreserving(this.$route, this.$router, routerNewState);
+                  goToPreservingQuery(this.$route, this.$router, routerNewState);
                 }
               }).finally(()=>{
                 dto.loadingHasNoMessage = false

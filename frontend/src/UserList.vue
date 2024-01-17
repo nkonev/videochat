@@ -133,7 +133,7 @@ import bus, {
     PROFILE_SET,
     SEARCH_STRING_CHANGED
 } from "@/bus/bus";
-import {searchString, goToPreserving, SEARCH_MODE_USERS} from "@/mixins/searchString";
+import {searchString, goToPreservingQuery, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
   hasLength, isSetEqual, replaceInArray,
@@ -338,7 +338,7 @@ export default {
       return !!this.chatStore.currentUser
     },
     openUser(item){
-          goToPreserving(this.$route, this.$router, { name: profile_name, params: { id: item.id}})
+          goToPreservingQuery(this.$route, this.$router, { name: profile_name, params: { id: item.id}})
     },
     getLink(item) {
           return profile + "/" + item.id

@@ -222,7 +222,7 @@ import {
   SEARCH_MODE_CHATS,
   SEARCH_MODE_MESSAGES,
   SEARCH_MODE_USERS,
-  goToPreserving
+  goToPreservingQuery
 } from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
@@ -325,13 +325,13 @@ export default {
         createCall() {
             console.debug("createCall");
             const routerNewState = { name: videochat_name};
-            goToPreserving(this.$route, this.$router, routerNewState);
+            goToPreservingQuery(this.$route, this.$router, routerNewState);
         },
         stopCall() {
             console.debug("stopping Call");
             this.chatStore.leavingVideoAcceptableParam = true;
             const routerNewState = { name: chat_name };
-            goToPreserving(this.$route, this.$router, routerNewState);
+            goToPreservingQuery(this.$route, this.$router, routerNewState);
         },
 
         onProfileSet(){
@@ -571,7 +571,7 @@ export default {
         },
         onClickInvitation() {
           const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
-          goToPreserving(this.$route, this.$router, routerNewState)
+          goToPreservingQuery(this.$route, this.$router, routerNewState)
           this.resetVideoInvitation();
         },
         onClickCancelInvitation() {

@@ -69,7 +69,7 @@ import {profile, profile_name} from "@/router/routes";
 import infiniteScrollMixin, {directionBottom, directionTop} from "@/mixins/infiniteScrollMixin";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
-import {goToPreserving, SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
+import {goToPreservingQuery, SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
 import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 import heightMixin from "@/mixins/heightMixin";
 
@@ -263,7 +263,7 @@ export default {
         this.blogStore.title = this.$vuetify.locale.t('$vuetify.blogs');
     },
     goToBlog(item) {
-        goToPreserving(this.$route, this.$router, { name: blog_post_name, params: { id: item.id} })
+        goToPreservingQuery(this.$route, this.$router, { name: blog_post_name, params: { id: item.id} })
     },
     getLink(item) {
         return blog_post + "/" + item.id

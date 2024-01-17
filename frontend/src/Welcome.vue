@@ -57,7 +57,7 @@
   import heightMixin from "@/mixins/heightMixin";
   import {blog, chat_list_name, profile_list_name} from "@/router/routes";
   import bus, {OPEN_CHAT_EDIT} from "@/bus/bus";
-  import {goToPreserving, SEARCH_MODE_CHATS} from "@/mixins/searchString";
+  import {goToPreservingQuery, SEARCH_MODE_CHATS} from "@/mixins/searchString";
 
   export default {
     mixins: [
@@ -71,7 +71,7 @@
         bus.emit(OPEN_CHAT_EDIT, null);
       },
       findUser() {
-        goToPreserving(this.$route, this.$router, { name: profile_list_name});
+        goToPreservingQuery(this.$route, this.$router, { name: profile_list_name});
       },
       availableForSearchChats() {
         this.$router.push({ name: chat_list_name, hash: null, query: {[SEARCH_MODE_CHATS] : publicallyAvailableForSearchChatsQuery} })

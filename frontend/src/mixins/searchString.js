@@ -6,7 +6,7 @@ export const SEARCH_MODE_MESSAGES = "qm"
 export const SEARCH_MODE_USERS = "qu"
 export const SEARCH_MODE_POSTS = "qp"
 
-export const goToPreserving = (route, router, to) => {
+export const goToPreservingQuery = (route, router, to) => {
     const prev = deepCopy(route.query);
     return router.push({ ...to, query: prev })
 }

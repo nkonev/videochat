@@ -37,7 +37,7 @@ import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
 import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
-import {goToPreserving} from "@/mixins/searchString";
+import {goToPreservingQuery} from "@/mixins/searchString";
 import pinia from "@/store/index";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 
@@ -244,7 +244,7 @@ export default {
 
         this.chatStore.leavingVideoAcceptableParam = true;
         const routerNewState = { name: chat_name };
-        goToPreserving(this.$route, this.$router, routerNewState);
+        goToPreservingQuery(this.$route, this.$router, routerNewState);
       }
     },
 

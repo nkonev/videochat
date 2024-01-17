@@ -66,7 +66,7 @@ import bus, {
     OPEN_SETTINGS,
     OPEN_VIEW_FILES_DIALOG
 } from "@/bus/bus";
-import {goToPreserving} from "@/mixins/searchString";
+import {goToPreservingQuery} from "@/mixins/searchString";
 import {copyCallLink, hasLength, isChatRoute} from "@/utils";
 
 export default {
@@ -131,13 +131,13 @@ export default {
       return profiles;
     },
     goChats() {
-      goToPreserving(this.$route, this.$router, { name: chat_list_name});
+      goToPreservingQuery(this.$route, this.$router, { name: chat_list_name});
     },
     goBlogs() {
       window.location.href = blog
     },
     openUsers() {
-      goToPreserving(this.$route, this.$router, { name: profile_list_name});
+      goToPreservingQuery(this.$route, this.$router, { name: profile_list_name});
     },
     canShowFiles() {
       return this.chatStore.currentUser && hasLength(this.chatId);
