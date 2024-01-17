@@ -174,13 +174,22 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 
 	maybeOwnerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting OwnerId %v", err)
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	// if videochat does not exist
+	var maybeStatus = services.CallStatusNotFound
+	if maybeOwnerId != services.NoUser {
+		maybeStatus, err = vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), maybeOwnerId)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error during owner status: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
+	// if videochat does not exist OR user call status can be overridden
 	// then it means that I'm the owner and I need to create it
-	if maybeOwnerId == services.NoUser {
+	if maybeOwnerId == services.NoUser || services.CanOverrideCallStatus(maybeStatus) {
 		// and put myself with a status "inCall"
 		err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), userPrincipalDto.UserId, chatId, userPrincipalDto.UserId, services.CallStatusInCall)
 		if err != nil {
