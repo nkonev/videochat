@@ -15,7 +15,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/vue-fontawesome": "^3.0.5",
     "@lifeomic/attempt": "^3.0.3",
-    "@mdi/font": "7.3.67",
+    "@mdi/font": "7.4.47",
     "@tiptap/extension-color": "2.1.16",
     "@tiptap/extension-highlight": "2.1.16",
     "@tiptap/extension-image": "2.1.16",
@@ -28,10 +28,10 @@
     "@tiptap/starter-kit": "2.1.16",
     "@tiptap/suggestion": "2.1.16",
     "@tiptap/vue-3": "2.1.16",
-    "axios": "^1.6.2",
-    "core-js": "^3.34.0",
-    "date-fns": "^3.0.1",
-    "graphql-ws": "5.14.2",
+    "axios": "^1.6.5",
+    "core-js": "^3.35.0",
+    "date-fns": "^3.2.0",
+    "graphql-ws": "5.14.3",
     "livekit-client": "1.15.8",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
@@ -39,17 +39,17 @@
     "pinia": "2.1.7",
     "splitpanes": "^3.1.5",
     "uuid": "^9.0.1",
-    "vue": "3.3.13",
+    "vue": "3.4.14",
     "vue-router": "4.2.5",
-    "vuetify": "3.4.8"
+    "vuetify": "3.4.10"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "4.5.2",
+    "@vitejs/plugin-vue": "^5.0.3",
     "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.19.2",
-    "sass": "^1.69.5",
+    "eslint-plugin-vue": "^9.20.1",
+    "sass": "^1.69.7",
     "stylus": "^0.62.0",
-    "vite": "4.5.0",
-    "vite-plugin-vuetify": "^1.0.2"
+    "vite": "^5.0.11",
+    "vite-plugin-vuetify": "^2.0.1"
   }
 }
