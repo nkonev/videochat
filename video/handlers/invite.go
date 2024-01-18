@@ -72,7 +72,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
+	ok, code := vh.checkAccessOfAnotherUser(c.Request().Context(), callee, chatId, userPrincipalDto)
 	if !ok {
 		return c.NoContent(code)
 	}
@@ -84,7 +84,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 	}
 }
 
-func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) (bool, int) {
+func (vh *InviteHandler) checkAccessOfAnotherUser(ctx context.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) (bool, int) {
 	// check participant's access to chat
 	if ok, err := vh.chatClient.CheckAccess(callee, chatId, ctx); err != nil {
 		return false, http.StatusInternalServerError
@@ -92,17 +92,6 @@ func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, 
 		return false, http.StatusUnauthorized
 	}
 
-	ownerId, err := vh.dialRedisRepository.GetOwner(ctx, chatId)
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error %v", err)
-		return false, http.StatusInternalServerError
-	}
-	if ownerId == services.NoUser {
-		// ok
-	} else if userPrincipalDto.UserId != ownerId {
-		logger.GetLogEntry(ctx).Infof("Call already started in this chat %v by %v", chatId, ownerId)
-		return false, http.StatusForbidden
-	}
 	return true, http.StatusOK
 }
 
@@ -167,19 +156,10 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	// first of all we remove our previous inviting
 	vh.removePrevious(c, userPrincipalDto.UserId)
 
-	maybeOwnerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
+	maybeStatus, _, _, _, maybeOwnerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	var maybeStatus = services.CallStatusNotFound
-	if maybeOwnerId != services.NoUser {
-		maybeStatus, err = vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), maybeOwnerId)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error during owner status: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
 	}
 
 	// if videochat does not exist OR user call status can be overridden
@@ -241,7 +221,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 }
 
 func (vh *InviteHandler) removePrevious(c echo.Context, userId int64) {
-	previousUserCallState, previousChatId, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
+	previousUserCallState, previousChatId, _, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
 	}
@@ -278,28 +258,32 @@ func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 
 
 func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, usersOfDial []int64, callStatus string) int {
-	ownerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return http.StatusInternalServerError
-	}
-	if ownerId == services.NoUser {
-		return http.StatusOK
-	}
-
+	// TODO here we need an index (probably)
+	var err error
 	// we remove callee by setting status
 	for _, userId := range usersOfDial {
+		_, _, _, _, maybeOwnerId, err1 := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
+		if err1 != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err1)
+			err = err1
+			continue
+		}
+
+		if maybeOwnerId == services.NoUser {
+			continue
+		}
+
 		err = vh.setUserStatus(c.Request().Context(), userId, chatId, callStatus)
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		}
+
+		vh.sendEvents(c, chatId, []int64{userId}, callStatus, maybeOwnerId)
 	}
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
-
-	vh.sendEvents(c, chatId, usersOfDial, callStatus, ownerId)
 
 	return http.StatusOK
 }
@@ -360,10 +344,10 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	ownerId, err := vh.dialRedisRepository.GetOwner(c.Request().Context(), chatId)
+	// TODO here we need an index (seems)
+	_, _, _, _, ownerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 	}
 	if ownerId == services.NoUser {
 		return c.NoContent(http.StatusOK)

@@ -112,7 +112,7 @@ func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, chat
 func (srv *ChatDialerService) GetStatuses(ctx context.Context, chatId int64, userIds []int64) map[int64]string {
 	var ret = map[int64]string{}
 	for _, userId := range userIds {
-		status, innerChatId, _, _,  err := srv.redisService.GetUserCallState(ctx, userId)
+		status, innerChatId, _, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
 			continue
@@ -135,7 +135,7 @@ func (srv *ChatDialerService) GetStatuses(ctx context.Context, chatId int64, use
 
 func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Context, chatId int64, ownerId int64, userIdsToDial []int64) {
 	for _, userId := range userIdsToDial {
-		userCallState, _, userCallMarkedForRemoveAt, _, err := srv.redisService.GetUserCallState(ctx, userId)
+		userCallState, _, userCallMarkedForRemoveAt, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to get user call state for user %v, chat %v: %v", userId, chatId, err)
 			continue

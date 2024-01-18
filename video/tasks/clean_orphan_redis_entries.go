@@ -48,7 +48,7 @@ func (srv *CleanOrphanRedisEntriesService) cleanOrphans(ctx context.Context) {
 	// move orphaned users in "inCall" status to "cancelling"
 	for _, userId := range userIds {
 
-		userCallState, chatId, _, markedForChangeStatusAttempt, err := srv.redisService.GetUserCallState(ctx, userId)
+		userCallState, chatId, _, markedForChangeStatusAttempt, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
 			continue

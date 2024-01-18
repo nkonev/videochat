@@ -40,9 +40,12 @@ const UserCallMarkedForRemoveAtKey = "markedForRemoveAt"
 
 const UserCallMarkedForOrphanRemoveAttemptKey = "markedForOrphanRemoveAttempt"
 
+const UserCallCallOwnerKey = "userCallCallOwner"
+
 const UserCallMarkedForRemoveAtNotSet = 0
 
 const UserCallMarkedForOrphanRemoveAttemptNotSet = 0
+
 
 // aka Should Remove Automatically After Timeout
 func IsTemporary(userCallStatus string) bool {
@@ -98,6 +101,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		UserCallChatIdKey, chatId,
 		UserCallMarkedForRemoveAtKey, UserCallMarkedForRemoveAtNotSet,
 		UserCallMarkedForOrphanRemoveAttemptKey, UserCallMarkedForOrphanRemoveAttemptNotSet,
+		UserCallCallOwnerKey, NoUser,
 	).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
@@ -270,23 +274,23 @@ func (s *DialRedisRepository) GetUsersOfDial(ctx context.Context, chatId int64) 
 }
 
 // returns call's owner
-func (s *DialRedisRepository) GetOwner(ctx context.Context, chatId int64) (int64, error) {
-	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
-		return 0, err
-	}
-	if len(val) == 0 {
-		return NoUser, nil
-	}
-
-	parsedOwnerId, err := utils.ParseInt64(val[ownerIdConstant])
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during parsing userId %v", err)
-		return 0, err
-	}
-	return parsedOwnerId, nil
-}
+//func (s *DialRedisRepository) GetOwner(ctx context.Context, chatId int64) (int64, error) {
+//	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
+//	if err != nil {
+//		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
+//		return 0, err
+//	}
+//	if len(val) == 0 {
+//		return NoUser, nil
+//	}
+//
+//	parsedOwnerId, err := utils.ParseInt64(val[ownerIdConstant])
+//	if err != nil {
+//		logger.GetLogEntry(ctx).Errorf("Error during parsing userId %v", err)
+//		return 0, err
+//	}
+//	return parsedOwnerId, nil
+//}
 
 func (s *DialRedisRepository) GetUserCallStatus(ctx context.Context, userId int64) (string, error) {
 	 status, err := s.redisClient.HGet(ctx, dialChatUserCallsKey(userId), UserCallStatusKey).Result()
@@ -300,17 +304,17 @@ func (s *DialRedisRepository) ResetExpiration(ctx context.Context, userId int64)
 	return s.redisClient.Persist(ctx, dialChatUserCallsKey(userId)).Err()
 }
 
-func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64) (string, int64, int64, int, error) {
+func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64) (string, int64, int64, int, int64, error) {
 	status, err := s.redisClient.HGetAll(ctx, dialChatUserCallsKey(userId)).Result()
 	if err == redisV8.Nil || len(status) == 0 {
-		return CallStatusNotFound, -1, -1, -1, nil
+		return CallStatusNotFound, -1, -1, -1, -1, nil
 	}
 
 	userCallStatus := status[UserCallStatusKey]
 
 	chatId, err := utils.ParseInt64(status[UserCallChatIdKey])
 	if err != nil {
-		return CallStatusNotFound, -1, -1, -1, err
+		return CallStatusNotFound, -1, -1, -1, -1, err
 	}
 
 	maybeUserCallMarkedForRemoveAt, ok := status[UserCallMarkedForRemoveAtKey]
@@ -318,7 +322,7 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	if ok {
 		userCallMarkedForRemoveAt, err = utils.ParseInt64(maybeUserCallMarkedForRemoveAt)
 		if err != nil {
-			return CallStatusNotFound, -1, -1, -1, err
+			return CallStatusNotFound, -1, -1, -1, -1, err
 		}
 	}
 
@@ -327,11 +331,20 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	if ok {
 		markedForChangeStatusAttempt, err = utils.ParseInt64(maybeMarkedForChangeStatusAttempt)
 		if err != nil {
-			return CallStatusNotFound, -1, -1, -1, err
+			return CallStatusNotFound, -1, -1, -1, -1, err
 		}
 	}
 
-	return userCallStatus, chatId, userCallMarkedForRemoveAt, int(markedForChangeStatusAttempt), nil
+	var userCallCallOwner int64 = NoUser
+	maybeUserCallCallOwner, ok := status[UserCallCallOwnerKey]
+	if ok {
+		userCallCallOwner, err = utils.ParseInt64(maybeUserCallCallOwner)
+		if err != nil {
+			return CallStatusNotFound, -1, -1, -1, -1, err
+		}
+	}
+
+	return userCallStatus, chatId, userCallMarkedForRemoveAt, int(markedForChangeStatusAttempt), userCallCallOwner, nil
 }
 
 func (s *DialRedisRepository) GetUserIds(ctx context.Context) ([]int64, error) {
