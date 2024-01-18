@@ -536,14 +536,14 @@ export default {
     leftPaneSize() {
       return this.getStored().leftPane;
     },
+    rightPaneSize() {
+      return this.getStored().rightPane;
+    },
     topPaneSize() {
       return this.getStored().topPane;
     },
     bottomPaneSize() {
       return this.getStored().bottomPane;
-    },
-    rightPaneSize() {
-      return this.getStored().rightPane;
     },
 
     // returns json with sizes from localstore
@@ -576,40 +576,46 @@ export default {
       if (this.showBottomPane()) {
         ret.bottomPane = innerPaneSizes[innerPaneSizes.length - 1]
       }
-      console.warn("Preparing for store", ret)
+      // console.debug("Preparing for store", ret)
       return ret
     },
     // sets concrete panel sizes
     restorePanelsSize(ret) {
-      console.log("Restoring from", ret);
+      // console.debug("Restoring from", ret);
       if (this.showLeftPane()) {
         this.$refs.splOuter.panes[0].size = ret.leftPane;
       }
       if (this.showRightPane()) {
         this.$refs.splOuter.panes[this.$refs.splOuter.panes.length - 1].size = ret.rightPane;
       }
+      let middleSize = 100; // percents
+      let middlePaneIndex = 0;
       if (this.showTopPane()) {
         this.$refs.splInner.panes[0].size = ret.topPane;
+        middleSize -= ret.topPane;
+        middlePaneIndex = 1;
       }
       if (this.showBottomPane()) {
         this.$refs.splInner.panes[this.$refs.splInner.panes.length - 1].size = ret.bottomPane;
+        middleSize -= ret.bottomPane;
       }
+      this.$refs.splInner.panes[middlePaneIndex].size = middleSize;
     },
 
     onPanelAdd() {
-      console.log("On panel add", this.$refs.splOuter.panes);
+      // console.debug("On panel add", this.$refs.splOuter.panes);
       this.$nextTick(() => {
         const stored = this.getStored();
-        console.warn("Restoring on add", stored)
+        // console.debug("Restoring on add", stored)
         this.restorePanelsSize(stored);
       })
 
     },
     onPanelRemove() {
-      console.log("On panel removed", this.$refs.splOuter.panes);
+      // console.debug("On panel removed", this.$refs.splOuter.panes);
       this.$nextTick(() => {
         const stored = this.getStored();
-        console.warn("Restoring on remove", stored)
+        // console.debug("Restoring on remove", stored)
         this.restorePanelsSize(stored);
       })
     },
