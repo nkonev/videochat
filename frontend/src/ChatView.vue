@@ -455,6 +455,8 @@ export default {
     onEditingBigTextStart() {
       if (!this.isMobile()) {
         this.isEditingBigText = true;
+        const stored = this.getStored();
+        this.setMiddlePane(stored);
       }
     },
     onEditingEnd() {
