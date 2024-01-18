@@ -60,7 +60,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return err
 	}
 
-	addToCallCall, err := utils.ParseBoolean(c.QueryParam("call"))
+	addToCall, err := utils.ParseBoolean(c.QueryParam("call"))
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	if (addToCallCall) {
+	if (addToCall) {
 		return c.NoContent(vh.addToCalling(c, callee, chatId, userPrincipalDto))
 	} else {
 		return c.NoContent(vh.removeFromCalling(c, callee, chatId, userPrincipalDto))
