@@ -115,7 +115,7 @@ axios.interceptors.response.use((response) => {
         chatStore.unsetUser();
         bus.emit(LOGGED_OUT, null);
         return Promise.reject(error)
-    } else if (!error.config.url.includes('/message/read/')) {
+    } else {
         const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
         console.error(consoleErrorMessage);
         const maybeBusinessMessage = error.response?.data?.message;
