@@ -72,6 +72,11 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
+	if !ok {
+		return c.NoContent(code)
+	}
+
 	if addToCall {
 		return c.NoContent(vh.addToCalling(c, callee, chatId, userPrincipalDto))
 	} else {
@@ -102,11 +107,6 @@ func (vh *InviteHandler) checkAccessOverCall(ctx context.Context, callee int64, 
 }
 
 func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
-	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
-	if !ok {
-		return code
-	}
-
 	status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), callee)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -133,12 +133,7 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 }
 
 func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
-	ok, code := vh.checkAccessOverCall(c.Request().Context(), callee, chatId, userPrincipalDto)
-	if !ok {
-		return code
-	}
-
-	code = vh.removeFromCallingList(c, chatId, []int64{callee}, services.CallStatusRemoving)
+	code := vh.removeFromCallingList(c, chatId, []int64{callee}, services.CallStatusRemoving)
 	if code != http.StatusOK {
 		return code
 	}
