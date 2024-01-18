@@ -1,52 +1,49 @@
 <template>
-    <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar">
+    <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
       <pane size="25" v-if="shouldShowChatList()">
         <ChatList :embedded="true"/>
       </pane>
+
       <pane>
-        <splitpanes class="default-theme" :dbl-click-splitter="false">
-          <pane>
-            <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
-              <pane v-if="shouldShowVideoOnTop()" min-size="15" :size="onTopVideoSize">
-                <ChatVideo :chatDto="chatDto" :videoIsOnTopProperty="videoIsOnTop()" />
-              </pane>
-
-              <pane style="width: 100%; background: white" :class="messageListPaneClass()" :size="messageListSize">
-                  <v-tooltip
-                    v-if="broadcastMessage"
-                    :model-value="showTooltip"
-                    activator=".message-edit-pane"
-                    location="bottom start"
-                  >
-                    <span v-html="broadcastMessage"></span>
-                  </v-tooltip>
-
-                  <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
-                    <v-alert
-                      closable
-                      color="red-lighten-4"
-                      elevation="2"
-                    >
-                      <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
-                      </router-link>
-                    </v-alert>
-                  </div>
-
-                  <MessageList v-if="isAllowedMessageList()" :chatDto="chatDto"/>
-
-                  <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
-              </pane>
-              <pane class="message-edit-pane" v-if="!isMobile()" :size="messageEditCurrentSize">
-                <MessageEdit :chatId="this.chatId"/>
-              </pane>
-            </splitpanes>
-          </pane>
-          <pane v-if="videoIsAtSide() && isAllowedVideo()" min-size="15" size="40">
-            <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()"/>
+        <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+          <pane v-if="shouldShowVideoOnTop()" min-size="15" :size="onTopVideoSize">
+            <ChatVideo :chatDto="chatDto" :videoIsOnTopProperty="videoIsOnTop()" />
           </pane>
 
+          <pane style="width: 100%; background: white" :class="messageListPaneClass()" :size="messageListSize">
+              <v-tooltip
+                v-if="broadcastMessage"
+                :model-value="showTooltip"
+                activator=".message-edit-pane"
+                location="bottom start"
+              >
+                <span v-html="broadcastMessage"></span>
+              </v-tooltip>
+
+              <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
+                <v-alert
+                  closable
+                  color="red-lighten-4"
+                  elevation="2"
+                >
+                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
+                  </router-link>
+                </v-alert>
+              </div>
+
+              <MessageList v-if="isAllowedMessageList()" :chatDto="chatDto"/>
+
+              <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
+          </pane>
+          <pane class="message-edit-pane" v-if="!isMobile()" :size="messageEditCurrentSize">
+            <MessageEdit :chatId="this.chatId"/>
+          </pane>
         </splitpanes>
       </pane>
+      <pane v-if="videoIsAtSide() && isAllowedVideo()" min-size="15" size="40">
+        <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()"/>
+      </pane>
+
     </splitpanes>
 </template>
 
@@ -471,42 +468,42 @@ export default {
         })
       }
     },
-    onPanelResized(e) {
-      this.$nextTick(()=> {
-        if (!this.prevMessageEditSize && !this.isMobile()) {
-          //console.log(">>> onPanelResized", e)
-          const pane = e[e.length - 1];
-          this.messageEditCurrentSize = pane.size;
-        }
-      })
-    },
+    // onPanelResized(e) {
+    //   this.$nextTick(()=> {
+    //     if (!this.prevMessageEditSize && !this.isMobile()) {
+    //       //console.log(">>> onPanelResized", e)
+    //       const pane = e[e.length - 1];
+    //       this.messageEditCurrentSize = pane.size;
+    //     }
+    //   })
+    // },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
     },
-    onPanelAdd(e) {
-      if (!this.isMobile()) {
-        const tmp = this.messageEditCurrentSize;
-        this.messageEditCurrentSize = null;
-        this.$nextTick(() => {
-          this.messageEditCurrentSize = tmp;
-          //console.log(">>> onPanelAdd", e, this.messageEditCurrentSize);
-        }).then(() => {
-          this.messageListSize = 100 - tmp - this.onTopVideoSize;
-        })
-      }
-    },
-    onPanelRemove(e) {
-      if (!this.isMobile()) {
-        const tmp = this.messageEditCurrentSize;
-        this.messageEditCurrentSize = null;
-        this.$nextTick(() => {
-          this.messageEditCurrentSize = tmp;
-          //console.log(">>> onPanelRemove", e, this.messageEditCurrentSize);
-        }).then(() => {
-          this.messageListSize = 100 - tmp;
-        })
-      }
-    },
+    // onPanelAdd(e) {
+    //   if (!this.isMobile()) {
+    //     const tmp = this.messageEditCurrentSize;
+    //     this.messageEditCurrentSize = null;
+    //     this.$nextTick(() => {
+    //       this.messageEditCurrentSize = tmp;
+    //       //console.log(">>> onPanelAdd", e, this.messageEditCurrentSize);
+    //     }).then(() => {
+    //       this.messageListSize = 100 - tmp - this.onTopVideoSize;
+    //     })
+    //   }
+    // },
+    // onPanelRemove(e) {
+    //   if (!this.isMobile()) {
+    //     const tmp = this.messageEditCurrentSize;
+    //     this.messageEditCurrentSize = null;
+    //     this.$nextTick(() => {
+    //       this.messageEditCurrentSize = tmp;
+    //       //console.log(">>> onPanelRemove", e, this.messageEditCurrentSize);
+    //     }).then(() => {
+    //       this.messageListSize = 100 - tmp;
+    //     })
+    //   }
+    // },
     messageListPaneClass() {
       const classes = [];
       classes.push('message-pane');
@@ -515,6 +512,28 @@ export default {
       }
       return classes;
     },
+    restorePanelsSize(stored) {
+
+    },
+    onPanelAdd() {
+      console.log("On panel add", this.$refs.splOuter.panes);
+      this.$nextTick(() => {
+        const stored = this.getStored();
+        this.restorePanelsSize(stored);
+      })
+
+    },
+    onPanelRemove() {
+      console.log("On panel removed", this.$refs.splOuter.panes);
+      this.$nextTick(() => {
+        const stored = this.getStored();
+        this.restorePanelsSize(stored);
+      })
+    },
+    onPanelResized() {
+      this.saveToStored(this.prepareForStore());
+    },
+
   },
   watch: {
     '$route': {
