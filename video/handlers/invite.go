@@ -344,7 +344,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	// TODO here we need an index (seems)
+	// TODO here we need an index (seems) - we want to find calls started by me
 	_, _, _, _, ownerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
