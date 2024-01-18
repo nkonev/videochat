@@ -72,7 +72,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	if (addToCall) {
+	if addToCall {
 		return c.NoContent(vh.addToCalling(c, callee, chatId, userPrincipalDto))
 	} else {
 		return c.NoContent(vh.removeFromCalling(c, callee, chatId, userPrincipalDto))
