@@ -231,8 +231,10 @@ export default {
           //  and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
           //  and prosemirror-view/src/clipboard.ts parseFromClipboard()
           transformPastedHTML(html) {
-              const withP = html.replace(/<br[^>]*>/g, "</p><p>");
-              const rmDuplicatedP = withP.replace(/<p><\/p>/gi, '');
+              const str = html.replace(/(\r\n|\r|\n)/g, "</p><p>");
+              const withP = str.replace(/<br[^>]*>/g, "</p><p>");
+              const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
+              // console.log("h=", html, ", str=", str, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
               return rmDuplicatedP;
           },
       },
