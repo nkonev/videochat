@@ -235,6 +235,8 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		vh.sendEvents(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall, maybeOwnerId)
 	}
 
+	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
+
 	return c.NoContent(http.StatusOK)
 }
 
