@@ -1,16 +1,16 @@
 <template>
-    <splitpanes class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
-      <pane size="25" v-if="shouldShowChatList()">
+    <splitpanes ref="splOuter" class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+      <pane :size="leftPaneSize()" v-if="shouldShowChatList()">
         <ChatList :embedded="true"/>
       </pane>
 
       <pane>
-        <splitpanes class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
-          <pane v-if="shouldShowVideoOnTop()" min-size="15" :size="onTopVideoSize">
+        <splitpanes ref="splInner" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+          <pane v-if="shouldShowVideoOnTop()" min-size="15" :size="topPaneSize()">
             <ChatVideo :chatDto="chatDto" :videoIsOnTopProperty="videoIsOnTop()" />
           </pane>
 
-          <pane style="width: 100%; background: white" :class="messageListPaneClass()" :size="messageListSize">
+          <pane style="width: 100%; background: white" :class="messageListPaneClass()">
               <v-tooltip
                 v-if="broadcastMessage"
                 :model-value="showTooltip"
@@ -35,12 +35,12 @@
 
               <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
           </pane>
-          <pane class="message-edit-pane" v-if="!isMobile()" :size="messageEditCurrentSize">
+          <pane class="message-edit-pane" v-if="!isMobile()" :size="bottomPaneSize()">
             <MessageEdit :chatId="this.chatId"/>
           </pane>
         </splitpanes>
       </pane>
-      <pane v-if="videoIsAtSide() && isAllowedVideo()" min-size="15" size="40">
+      <pane v-if="videoIsAtSide() && isAllowedVideo()" min-size="15" :size="rightPaneSize()">
         <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()"/>
       </pane>
 
@@ -80,13 +80,6 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 
-const chatDtoFactory = () => {
-  return {
-    participantIds:[],
-    participants:[],
-  }
-}
-
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
 };
@@ -96,6 +89,17 @@ let writingUsersTimerId;
 const MESSAGE_EDIT_PANE_SIZE_INITIAL = 20; // percents
 const MESSAGE_EDIT_PANE_SIZE_EXPANDED = 60; // percents
 const ONTOP_VIDEO_PANE_SIZE = 30;
+
+const panelSizesKey = "panelSizes";
+
+const emptyStoredPanes = () => {
+  return {
+    leftPane: 25, // ChatList
+    rightPane: 40, // ChatVideo in case videoIsAtSide()
+    topPane: 30, // ChatVideo in case videoIsOnTop()
+    bottomPane: 20, // MessageEdit in case desktop (!isMobile())
+  }
+}
 
 export default {
   mixins: [
@@ -512,9 +516,123 @@ export default {
       }
       return classes;
     },
-    restorePanelsSize(stored) {
 
+
+    // TODO remove messageListSize(), onTopVideoSize, messageEditCurrentSize
+
+
+    leftPaneSize() {
+      return this.readFromStore().leftPane;
     },
+    topPaneSize() {
+      return this.readFromStore().topPane;
+    },
+    bottomPaneSize() {
+      return this.readFromStore().bottomPane;
+    },
+    rightPaneSize() {
+      return this.readFromStore().rightPane;
+    },
+
+    messagesSize() {
+      const stored = this.readFromStore();
+      return stored.messages;
+    },
+    editSize() {
+      // not need here because it's not used in mobile
+      const stored = this.getStored();
+      return stored.edit;
+    },
+    editAndMessagesSize() {
+      const stored = this.getStored();
+      return stored.editAndMessages;
+    },
+
+    readFromStore() {
+      let stored = this.getStored();
+      if (!stored) {
+        this.saveToStored(emptyStoredPanes())
+        stored = this.getStored();
+      }
+      return stored
+    },
+
+    // returns json with sizes from localstore
+    getStored() {
+      const mbItem = localStorage.getItem(panelSizesKey);
+      if (!mbItem) {
+        return emptyStoredPanes();
+      } else {
+        return JSON.parse(mbItem);
+      }
+    },
+    // saves to localstore
+    saveToStored(obj) {
+      localStorage.setItem(panelSizesKey, JSON.stringify(obj));
+    },
+    // prepares json to store by extracting concrete panel sizes
+    prepareForStore() {
+      const outerPaneSizes = this.$refs.splOuter.panes.map(i => i.size);
+      const innerPaneSizes = this.$refs.splInner.panes.map(i => i.size);
+      if (this.videoIsOnTop()) {
+        if (innerPaneSizes.length == 3) {
+          return {
+            video: innerPaneSizes[0],
+            messages: innerPaneSizes[1],
+            edit: innerPaneSizes[2]
+          };
+        } else {
+          return {
+            messages: innerPaneSizes[0],
+            edit: innerPaneSizes[1]
+          };
+        }
+      } else { // side
+        const ret = {
+          editAndMessages: outerPaneSizes[0],
+          messages: innerPaneSizes[0],
+          edit: innerPaneSizes[1]
+        };
+        if (outerPaneSizes[1]) {
+          ret.video = outerPaneSizes[1];
+        }
+        return ret
+      }
+    },
+    // sets concrete panel sizes
+    restorePanelsSize(stored) {
+      console.log("Restoring from", stored);
+      if (this.videoIsOnTop()) {
+        if (this.$refs.splInner.panes.length == 3) {
+          this.$refs.splInner.panes[0].size = stored.video;
+          if (this.$refs.splInner.panes[1]) {
+            this.$refs.splInner.panes[1].size = stored.messages;
+          }
+          if (this.$refs.splInner.panes[2]) {
+            this.$refs.splInner.panes[2].size = stored.edit;
+          }
+        } else {
+          this.$refs.splInner.panes[0].size = stored.messages;
+          if (this.$refs.splInner.panes[1]) {
+            this.$refs.splInner.panes[1].size = stored.edit;
+          }
+        }
+      } else { // side
+        if (this.$refs.splOuter) {
+          this.$refs.splOuter.panes[0].size = stored.editAndMessages;
+          if (this.$refs.splOuter.panes[1]) {
+            this.$refs.splOuter.panes[1].size = stored.video;
+          }
+        }
+        if (this.$refs.splInner) {
+          this.$refs.splInner.panes[0].size = stored.messages;
+          if (this.$refs.splInner.panes[1]) {
+            this.$refs.splInner.panes[1].size = stored.edit;
+          }
+        }
+      }
+    },
+
     onPanelAdd() {
       console.log("On panel add", this.$refs.splOuter.panes);
       this.$nextTick(() => {
