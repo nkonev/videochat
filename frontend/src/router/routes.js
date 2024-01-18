@@ -3,7 +3,7 @@ export const prefix = ""
 export const root = "/";
 export const chat = `${prefix}/chat`;
 export const chats = `${prefix}/chats`;
-export const blog = `${prefix}/blog`;
+export const blog = `${prefix}/blog/`;
 
 export const blog_post = `${prefix}/blog/post`;
 
