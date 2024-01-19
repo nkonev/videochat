@@ -454,16 +454,20 @@ export default {
     },
     onEditingBigTextStart() {
       if (!this.isMobile()) {
-        this.isEditingBigText = true;
-        const stored = this.getStored();
-        this.setMiddlePane(stored);
+        this.$nextTick(() => {
+          this.isEditingBigText = true;
+          const stored = this.getStored();
+          this.setMiddlePane(stored);
+        })
       }
     },
     onEditingEnd() {
       if (!this.isMobile()) {
-        this.isEditingBigText = false;
-        const stored = this.getStored();
-        this.setMiddlePane(stored);
+        this.$nextTick(() => {
+          this.isEditingBigText = false;
+          const stored = this.getStored();
+          this.setMiddlePane(stored);
+        });
       }
     },
     shouldShowVideoOnTop() {
