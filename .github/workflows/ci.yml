@@ -63,7 +63,7 @@ jobs:
           key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
       - name: Build with npm run
         run: |
-          (cd frontend; make check-env clean-cache clean download package)
+          (cd frontend; make check-env clean download package)
       - name: Build docker image and deploy
         if: github.ref == 'refs/heads/master'
         run: |
