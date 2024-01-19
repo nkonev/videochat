@@ -32,22 +32,22 @@
     "core-js": "^3.35.0",
     "date-fns": "^3.2.0",
     "graphql-ws": "5.14.3",
-    "livekit-client": "1.15.8",
+    "livekit-client": "1.15.9",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
     "pinia": "2.1.7",
     "splitpanes": "^3.1.5",
     "uuid": "^9.0.1",
-    "vue": "3.4.14",
+    "vue": "3.4.15",
     "vue-router": "4.2.5",
-    "vuetify": "3.4.10"
+    "vuetify": "3.4.11"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.20.1",
-    "sass": "^1.69.7",
+    "sass": "^1.70.0",
     "stylus": "^0.62.0",
     "vite": "^5.0.11",
     "vite-plugin-vuetify": "^2.0.1"
