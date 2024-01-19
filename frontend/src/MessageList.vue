@@ -484,6 +484,7 @@
         },
         onShowContextMenu(e, menuableItem){
           const tag = e?.target?.tagName?.toLowerCase();
+          console.log("onShowContextMenu", e, tag);
           if (tag != "img" && tag != "video" && tag != "a") {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           }
