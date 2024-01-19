@@ -607,7 +607,9 @@ export default {
       })
     },
     onPanelResized() {
-      this.saveToStored(this.prepareForStore());
+      this.$nextTick(() => {
+        this.saveToStored(this.prepareForStore());
+      })
     },
 
   },
