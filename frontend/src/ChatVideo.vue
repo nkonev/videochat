@@ -353,12 +353,16 @@ export default {
       try {
         this.inRestarting = true;
         await retry(async (context) => {
-          const res = await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
-            // subscribe to other participants automatically
-            autoSubscribe: true,
-          });
-          console.log('connected to room', this.room.name);
-          return res
+          if (this.room) {
+            await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
+              // subscribe to other participants automatically
+              autoSubscribe: true,
+            });
+            console.log('Connected to room', this.room.name);
+          } else {
+            console.warn("Didn't connect to room because it's null. It is ok when user leaves very fast.");
+          }
+          return
         }, retryOptions);
         this.inRestarting = false;
       } catch (e) {
