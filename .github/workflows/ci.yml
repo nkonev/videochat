@@ -11,6 +11,7 @@ jobs:
       - name: Decide should we build it
         run: |
           git --version
+          echo "ref->>>>>> $GITHUB_HEAD_REF"
           echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF aaa)" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
