@@ -10,8 +10,12 @@ jobs:
       - uses: actions/checkout@v3
       - name: Decide should we build it
         run: |
-          git --version
-          echo "SHOULD_RUN=$(./should-run.sh HEAD aaa)" >> "$GITHUB_ENV"
+          ./should-run.sh HEAD aaa
+          if [[ "$?" == "0" ]]; then
+            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
+          else
+            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+          fi
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -61,7 +65,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Decide should we build it
-        run: echo "SHOULD_RUN=$(./should-run.sh HEAD frontend)" >> "$GITHUB_ENV"
+        run: |
+          ./should-run.sh HEAD aaa
+          if [[ "$?" == "0" ]]; then
+            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
+          else
+            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+          fi
       - name: Set up Node.js
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v3
