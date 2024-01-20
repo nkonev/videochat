@@ -79,6 +79,7 @@ func main() {
 	Logger.Infof("Exit program")
 }
 
+
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) (err error) {

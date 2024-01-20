@@ -7,16 +7,23 @@ jobs:
   aaa:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
+        if: env.SHOULD_RUN == 'true'
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Set up JDK 17
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-java@v3
         with:
           distribution: liberica
           java-version: 17.0.4
       - name: Cache local Maven repository
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: | 
@@ -26,6 +33,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Start & wait docker-compose environment
+        if: env.SHOULD_RUN == 'true'
         run: |
           docker-compose up -d postgresql redis rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
@@ -35,10 +43,11 @@ jobs:
           docker-compose -f docker-compose.keycloak.yml up -d keycloak
           sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build and test with Maven
+        if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make check-env clean download package test)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -50,22 +59,29 @@ jobs:
   frontend:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Node.js
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: 18.16.0
       - name: Cache Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
             **/node_modules
           key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
       - name: Build with npm run
+        if: env.SHOULD_RUN == 'true'
         run: |
           (cd frontend; make check-env clean download package)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -76,12 +92,18 @@ jobs:
   chat:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - uses: actions/cache@v3
+        if: env.SHOULD_RUN == 'true'
         with:
           path: |
             ~/go/pkg/mod
@@ -90,18 +112,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Install software
+        if: env.SHOULD_RUN == 'true'
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
+        if: env.SHOULD_RUN == 'true'
         run: |
           docker-compose up -d postgresql redis rabbitmq
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
       - name: Build and test with make
+        if: env.SHOULD_RUN == 'true'
         run: (cd chat; sleep 5 && make check-env clean download generate test package)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -112,12 +137,18 @@ jobs:
   event:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - uses: actions/cache@v3
+        if: env.SHOULD_RUN == 'true'
         with:
           path: |
             ~/go/pkg/mod
@@ -126,9 +157,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
+        if: env.SHOULD_RUN == 'true'
         run: (cd event; make check-env clean download generate test package)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -139,12 +171,18 @@ jobs:
   notification:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - uses: actions/cache@v3
+        if: env.SHOULD_RUN == 'true'
         with:
           path: |
             ~/go/pkg/mod
@@ -153,9 +191,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
+        if: env.SHOULD_RUN == 'true'
         run: (cd notification; make check-env clean download generate test package)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -166,12 +205,18 @@ jobs:
   storage:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - uses: actions/cache@v3
+        if: env.SHOULD_RUN == 'true'
         with:
           path: |
             ~/go/pkg/mod
@@ -180,9 +225,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
+        if: env.SHOULD_RUN == 'true'
         run: (cd storage; make check-env clean download generate test package)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -193,12 +239,18 @@ jobs:
   video:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - uses: actions/cache@v3
+        if: env.SHOULD_RUN == 'true'
         with:
           path: |
             ~/go/pkg/mod
@@ -207,9 +259,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Build and test with make
+        if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
@@ -220,18 +273,24 @@ jobs:
   e2e-test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD 'frontend|aaa|chat|event' && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
+        if: env.SHOULD_RUN == 'true'
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
 
       - name: Set up JDK 17
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-java@v3
         with:
           distribution: liberica
           java-version: 17.0.4
       - name: Cache local Maven repository
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -242,9 +301,11 @@ jobs:
             ${{ runner.os }}-maven-
 
       - uses: actions/setup-node@v3
+        if: env.SHOULD_RUN == 'true'
         with:
-          node-version: 16.13.0
+          node-version: 18.16.0
       - name: Cache Playwright browsers and Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -253,10 +314,13 @@ jobs:
           key: ${{ runner.os }}-playwright-browsers-v0-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Playwright Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; npm ci)
       - name: Install Playwright browsers
+        if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; npx playwright install)
       - name: Cache frontend Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -264,10 +328,12 @@ jobs:
           key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
 
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - name: Cache go modules
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -278,6 +344,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Start and wait docker-compose
+        if: env.SHOULD_RUN == 'true'
         run: |
           docker-compose up -d postgresql redis rabbitmq jaeger minio traefik
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
@@ -287,12 +354,14 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
+        if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make check-env clean download package-java)
           (cd frontend; make check-env clean download package)
           (cd chat; make check-env clean download generate package-go)
           (cd event; make check-env clean download generate package-go)
       - name: Run microservices
+        if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; ./run-with-oauth2.sh &)
           (cd chat; ./chat &)
@@ -300,6 +369,7 @@ jobs:
           # Using port 3000 we mimic to Vite's npm run dev
           (docker run --rm -p 3000:8082 nkonev/chat-frontend:latest &)
       - name: Wait for microservices
+        if: env.SHOULD_RUN == 'true'
         run: |
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
@@ -309,9 +379,10 @@ jobs:
           (cd aaa; ./run-oauth2-emu.sh &)
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
       - name: Run your Playwright tests
+        if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; npx playwright test)
       - name: Upload test results
-        if: always()
+        if: env.SHOULD_RUN == 'true' && always()
         uses: actions/upload-artifact@v3
         with:
           name: playwright-results

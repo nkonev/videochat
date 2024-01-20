@@ -293,9 +293,28 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 
 
 # For Github CI
+```bash
+# get parents
+git rev-parse 965b2800^@
+
+# show changed dirs
+git diff --dirstat=files,0 HEAD~1 HEAD | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
+
+# check is commit contain "[force] string"
+git show -s --format=%s dda6c910 | grep -F [force]
+
+
+# merge commit
+./should-run.sh 965b2800 frontend
+
+# with force commit
+./should-run.sh dda6c910 frontend
+./should-run.sh dda6c910 aaa
+
+# or condition for e2e-test
+./should-run.sh 965b2800 'frontend|aaa' && echo "ok" || echo "ko"
 ```
-git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
-```
+
 
 # Generate ports
 ```python
