@@ -23,15 +23,20 @@ type InviteHandler struct {
 	notificationPublisher *producer.RabbitNotificationsPublisher
 	userService           *services.UserService
 	chatDialerService     *tasks.ChatDialerService
-	//chatInvitationService *services.ChatInvitationService
 	stateChangedEventService *services.StateChangedEventService
 }
 
 const EventMissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService,
-	//chatInvitationService *services.ChatInvitationService,
-	stateChangedEventService *services.StateChangedEventService) *InviteHandler {
+func NewInviteHandler(
+	dialService *services.DialRedisRepository,
+	chatClient *client.RestClient,
+	dialStatusPublisher *producer.RabbitDialStatusPublisher,
+	notificationPublisher *producer.RabbitNotificationsPublisher,
+	userService *services.UserService,
+	chatDialerService *tasks.ChatDialerService,
+	stateChangedEventService *services.StateChangedEventService,
+) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,
@@ -39,7 +44,6 @@ func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *cli
 		notificationPublisher: notificationPublisher,
 		userService:           userService,
 		chatDialerService:     chatDialerService,
-		//chatInvitationService: chatInvitationService,
 		stateChangedEventService: stateChangedEventService,
 	}
 }

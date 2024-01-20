@@ -22,12 +22,15 @@ type ChatDialerService struct {
 	dialStatusPublisher     *producer.RabbitDialStatusPublisher
 	chatClient              *client.RestClient
 	tracer             trace.Tracer
-	//chatInvitationService *services.ChatInvitationService
 	stateChangedEventService *services.StateChangedEventService
 }
 
-func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *config.ExtendedConfig, rabbitMqInvitePublisher *producer.RabbitInvitePublisher, dialStatusPublisher *producer.RabbitDialStatusPublisher, chatClient *client.RestClient,
-	//chatInvitationService *services.ChatInvitationService,
+func NewChatDialerService(
+	scheduleService *services.DialRedisRepository,
+	conf *config.ExtendedConfig,
+	rabbitMqInvitePublisher *producer.RabbitInvitePublisher,
+	dialStatusPublisher *producer.RabbitDialStatusPublisher,
+	chatClient *client.RestClient,
 	stateChangedEventService *services.StateChangedEventService,
 ) *ChatDialerService {
 	trcr := otel.Tracer("scheduler/chat-dialer")
@@ -38,7 +41,6 @@ func NewChatDialerService(scheduleService *services.DialRedisRepository, conf *c
 		dialStatusPublisher:     dialStatusPublisher,
 		chatClient:              chatClient,
 		tracer:             trcr,
-		//chatInvitationService: chatInvitationService,
 		stateChangedEventService: stateChangedEventService,
 	}
 }
@@ -58,7 +60,6 @@ func (srv *ChatDialerService) doJob() {
 
 	for _, ownerId := range usersOwners {
 		srv.makeDial(ctx, ownerId)
-		//srv.checkAndRemoveRedundants(ctx, ownerId)
 	}
 
 	Logger.Debugf("End of ChatNotifier")
@@ -71,7 +72,6 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 		return
 	}
 
-	//var statuses = map[int64]string{}
 	for _, userId := range userIdsToDial {
 		status, chatId, _, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
@@ -82,7 +82,6 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", userId)
 			continue
 		}
-		//statuses[userId] = status
 
 		GetLogEntry(ctx).Infof("Sending userCallStatus for userIds %v from ownerId %v", userIdsToDial, ownerId)
 		// send invitations to callees
@@ -94,49 +93,6 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 	}
 
 }
-
-// removes users from dial who were removed from chat
-//func (srv *ChatDialerService) checkAndRemoveRedundants(ctx context.Context, ownerId int64) {
-//	userIdsToDial, err := srv.redisService.GetUsersOfDial(ctx, chatId)
-//	if err != nil {
-//		Logger.Warnf("Error %v", err)
-//		return
-//	}
-//	participantBelongToChat, err := srv.chatClient.DoesParticipantBelongToChat(chatId, userIdsToDial, ctx)
-//	if err != nil {
-//		Logger.Warnf("Error %v", err)
-//		return
-//	}
-//
-//	for _, userBelongsInfo := range participantBelongToChat {
-//		if !userBelongsInfo.Belongs {
-//			// remove call users who were removed as participants from the chat
-//			err := srv.redisService.RemoveFromDialList(ctx, userBelongsInfo.UserId, chatId)
-//			if err != nil {
-//				Logger.Warnf("Error %v", err)
-//			}
-//		}
-//	}
-//}
-
-//func (srv *ChatDialerService) GetStatuses(ctx context.Context, userIds []int64) map[int64]string {
-//	var statuses = map[int64]string{}
-//	for _, userId := range userIds {
-//		status, _, _, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
-//		if err != nil {
-//			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
-//			continue
-//		}
-//
-//		if status == services.CallStatusNotFound {
-//			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", userId)
-//			continue
-//		}
-//
-//		statuses[userId] = status
-//	}
-//	return statuses
-//}
 
 func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Context, chatId int64, ownerId int64, userId int64) {
 	userCallState, _, userCallMarkedForRemoveAt, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
@@ -161,11 +117,6 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, chat %v, error %v", userId, chatId, err)
 				return
 			}
-			//
-			//// delegate ownership to another user
-			//if ownerId == userId {
-			//	srv.redisService.TransferOwnership(ctx, userIdsToDial, userId, chatId)
-			//}
 		}
 	}
 }

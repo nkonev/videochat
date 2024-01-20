@@ -38,7 +38,7 @@ const UserCallMarkedForRemoveAtKey = "markedForRemoveAt"
 
 const UserCallMarkedForOrphanRemoveAttemptKey = "markedForOrphanRemoveAttempt"
 
-const UserCallCallOwnerKey = "userCallCallOwner"
+const UserCallCallOwnerKey = "userCallOwner"
 
 const UserCallMarkedForRemoveAtNotSet = 0
 
@@ -58,22 +58,6 @@ func CanOverrideCallStatus(userCallStatus string) bool {
 	return userCallStatus == CallStatusCancelling || userCallStatus == CallStatusRemoving || userCallStatus == CallStatusNotFound
 }
 
-//func (s *DialRedisRepository) setOwner(ctx context.Context, chatId int64, ownerId int64) error {
-//	expiration := viper.GetDuration("dialExpire")
-//
-//	err := s.redisClient.HSet(ctx, dialMetaKey(chatId), ownerIdConstant, ownerId).Err()
-//	if err != nil {
-//		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata %v", err)
-//		return err
-//	}
-//	_, err = s.redisClient.Expire(ctx, dialMetaKey(chatId), expiration).Result()
-//	if err != nil {
-//		logger.GetLogEntry(ctx).Errorf("Error during setting dial metadata expiration %v", err)
-//		return err
-//	}
-//	return nil
-//}
-
 func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, ownerId int64, callStatus string) error {
 	expiration := viper.GetDuration("dialExpire")
 
@@ -87,12 +71,6 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
 		return err
 	}
-	//
-	//err = s.setOwner(ctx, chatId, ownerId)
-	//if err != nil {
-	//	logger.GetLogEntry(ctx).Errorf("Error during setting owner %v", err)
-	//	return err
-	//}
 
 	err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId),
 		UserCallStatusKey, callStatus,
@@ -135,27 +113,6 @@ func (s *DialRedisRepository) GetUserCalls(ctx context.Context, ownerId int64) (
 	return ret, nil
 }
 
-//func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUsers []int64, leavingOwner int64, chatId int64) error {
-//	wasTransferred := false
-//	if len(inVideoUsers) > 0 {
-//		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
-//
-//		if oppositeUser != nil {
-//			logger.GetLogEntry(ctx).Infof("Transfering ownership over chat %v from user %v to user %v", chatId, leavingOwner, *oppositeUser)
-//			err := s.setOwner(ctx, chatId, *oppositeUser)
-//			if err != nil {
-//				logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
-//				return err
-//			}
-//			wasTransferred = true
-//		}
-//	}
-//	if !wasTransferred {
-//		logger.GetLogEntry(ctx).Infof("Unable to transfer ownership over chat %v from user %v because there is no candidates. All the metadata is going to be removed automatically after a while", chatId, leavingOwner)
-//	}
-//	return nil
-//}
-
 func userOwnedCallsKey(userId int64) string {
 	return fmt.Sprintf("dials_of_user:%v", userId)
 }
@@ -164,9 +121,6 @@ func dialUserCallStateKey(userId int64) string {
 	return fmt.Sprintf("user_call_state:%v", userId)
 }
 
-//func getUserOwnedCalls() string {
-//	return "dialsofuser:*"
-//}
 
 func allChatUserCallsKey() string {
 	return "user_call_state:*"
@@ -175,23 +129,6 @@ func allChatUserCallsKey() string {
 func getUserOwesCalls() string {
 	return "dials_of_user:*"
 }
-
-//func dialMetaKey(chatId int64) string {
-//	return fmt.Sprintf("dialmeta:%v", chatId)
-//}
-
-//func chatIdFromKey(key string) (int64, error) {
-//	var str string
-//	_, err := fmt.Sscanf(key, "dialchat:%s", &str)
-//	if err != nil {
-//		return 0, err
-//	}
-//	parseInt64, err := utils.ParseInt64(str)
-//	if err != nil {
-//		return 0, err
-//	}
-//	return parseInt64, nil
-//}
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int64, removeUserState bool, ownerId int64) error {
 	// remove from "dialchat" members
@@ -290,25 +227,6 @@ func (s *DialRedisRepository) GetUsersOfOwnersDial(ctx context.Context, ownerId 
 	}
 	return ret, nil
 }
-
-// returns call's owner
-//func (s *DialRedisRepository) GetOwner(ctx context.Context, chatId int64) (int64, error) {
-//	val, err := s.redisClient.HGetAll(ctx, dialMetaKey(chatId)).Result()
-//	if err != nil {
-//		logger.GetLogEntry(ctx).Errorf("Error during getting dial metadata %v", err)
-//		return 0, err
-//	}
-//	if len(val) == 0 {
-//		return NoUser, nil
-//	}
-//
-//	parsedOwnerId, err := utils.ParseInt64(val[ownerIdConstant])
-//	if err != nil {
-//		logger.GetLogEntry(ctx).Errorf("Error during parsing userId %v", err)
-//		return 0, err
-//	}
-//	return parsedOwnerId, nil
-//}
 
 func (s *DialRedisRepository) GetUserCallStatus(ctx context.Context, userId int64) (string, error) {
 	 status, err := s.redisClient.HGet(ctx, dialUserCallStateKey(userId), UserCallStatusKey).Result()
