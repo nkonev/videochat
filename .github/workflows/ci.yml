@@ -59,7 +59,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Decide should we build it
-        run: echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF frontend)" >> "$GITHUB_ENV"
+        run: |
+          pwd
+          ls -1
+          tree
+          echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF frontend)" >> "$GITHUB_ENV"
       - uses: actions/checkout@v3
         if: env.SHOULD_RUN == 'true'
       - name: Set up Node.js
