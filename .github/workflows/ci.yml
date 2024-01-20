@@ -13,7 +13,7 @@ jobs:
       - name: Decide should we build it
         run: |
           set +e
-          ./should-run.sh HEAD env.GITHUB_JOB
+          ./should-run.sh HEAD ${{ env.GITHUB_JOB }}
           if [[ "$?" == "0" ]]; then
             echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
           else
