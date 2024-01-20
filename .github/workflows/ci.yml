@@ -11,8 +11,7 @@ jobs:
       - name: Decide should we build it
         run: |
           git --version
-          echo "ref->>>>>> $GITHUB_HEAD_REF"
-          echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF aaa)" >> "$GITHUB_ENV"
+          echo "SHOULD_RUN=$(./should-run.sh HEAD aaa)" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -62,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Decide should we build it
-        run: echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF frontend)" >> "$GITHUB_ENV"
+        run: echo "SHOULD_RUN=$(./should-run.sh HEAD frontend)" >> "$GITHUB_ENV"
       - name: Set up Node.js
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v3
