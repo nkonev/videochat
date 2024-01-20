@@ -1,0 +1,38 @@
+#!/bin/bash
+
+trigger_commit=$1
+service_name=$2
+
+force_run=$(git show $trigger_commit --format=%s | grep -q -F "[force]" && echo true || echo false)
+
+services_list=()
+
+if [[ "$force_run" == true ]]; then
+  services_list=( $(ls -1) )
+else
+  parent_commits=()
+  parent_commits=( $(git rev-parse $trigger_commit^@) )
+
+  changed_dirs=()
+  for parent_commit in "${parent_commits[@]}"; do
+      local_changed_dirs=( $(git diff --dirstat=files,0 ${parent_commit} ${trigger_commit} | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq) )
+      #echo "in parent commit ${parent_commit} there are following changed dirs"
+      for changed_dir in "${local_changed_dirs[@]}"; do
+          #echo "-> ${changed_dir}"
+          changed_dirs+=(${changed_dir})
+      done
+  done
+
+  services_list=($(printf "%s\n" "${changed_dirs[@]}" | sort -u))
+
+  #echo "\n total changed dirs:"
+  #for changed_dir in "${services_list[@]}"; do
+  #    echo "-> ${changed_dir}"
+  #done
+  #
+fi
+
+#echo "List of changed services: ${services_list[@]}"
+#echo "${services_list[@]}"
+
+echo "${services_list[@]}" | grep -E -q ${service_name} && echo true || echo false

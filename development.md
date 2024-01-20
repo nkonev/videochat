@@ -300,37 +300,16 @@ git rev-parse 965b2800^@
 # show changed dirs
 git diff --dirstat=files,0 HEAD~1 HEAD | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
 
-# check is commit contain "[focre] string"
+# check is commit contain "[force] string"
 git show dda6c910 --format=%s | grep -F [force]
 
 
-trigger_commit=965b2800
-force_run=$(git show $trigger_commit --format=%s | grep -F [force] > /dev/null && echo true || echo false)
+# merge commit
+./should-run.sh 965b2800 frontend
 
-parent_commits=()
-parent_commits=( $(git rev-parse $trigger_commit^@) )
-
-changed_dirs=()
-for parent_commit in "${parent_commits[@]}"; do
-    echo "examining parent commit ${parent_commit}"
-    local_changed_dirs=( $(git diff --dirstat=files,0 ${parent_commit} ${trigger_commit} | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq) )
-    echo "in parent commit ${parent_commit} therea are following changed dirs"
-    for changed_dir in "${local_changed_dirs[@]}"; do
-        echo "-> ${changed_dir}"
-        changed_dirs+=(${changed_dir})
-    done
-done
-
-sorted_unique_changed_dirs=($(printf "%s\n" "${changed_dirs[@]}" | sort -u))
-
-echo "\n total changed dirs:"
-for changed_dir in "${sorted_unique_changed_dirs[@]}"; do
-    echo "-> ${changed_dir}"
-done
-
-echo "${sorted_unique_changed_dirs[@]}"
-
-
+# with force commit
+./should-run.sh dda6c910 frontend
+./should-run.sh dda6c910 aaa
 ```
 
 # Generate ports
