@@ -150,9 +150,9 @@ func (rp *RabbitDialStatusPublisher) Publish(
 	chatId       int64,
 	userStatuses map[int64]string,
 	ownerId int64,
-) error {
+) {
 	if len(userStatuses) == 0 {
-		return nil
+		return
 	}
 	var dials = []*dto.VideoDialChanged{}
 	for userId, status := range userStatuses {
@@ -174,7 +174,7 @@ func (rp *RabbitDialStatusPublisher) Publish(
 	bytea, err := json.Marshal(event)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal videoChatInvitationDto")
-		return err
+		return
 	}
 
 	msg := amqp.Publishing{
@@ -188,8 +188,6 @@ func (rp *RabbitDialStatusPublisher) Publish(
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing")
 	}
-	return err
-
 }
 
 type RabbitDialStatusPublisher struct {

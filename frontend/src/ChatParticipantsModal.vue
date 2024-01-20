@@ -278,8 +278,6 @@
                 }).catch((e) => {
                   if (e.response.status == 409) {
                     this.setWarning(this.$vuetify.locale.t('$vuetify.user_is_already_in_other_call', this.getUserNameWrapper(dto)))
-                  } if (e.response.status == 403) {
-                    this.setWarning(this.$vuetify.locale.t('$vuetify.another_user_owes_this_chat'))
                   } else {
                     throw e
                   }

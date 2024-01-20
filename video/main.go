@@ -63,7 +63,7 @@ func main() {
 			services.NewStateChangedEventService,
 			services.NewDialRedisRepository,
 			services.NewEgressService,
-			services.NewChatInvitationService,
+			//services.NewChatInvitationService,
 			tasks.RedisV8,
 			tasks.NewVideoCallUsersCountNotifierService,
 			tasks.VideoCallUsersCountNotifierScheduler,

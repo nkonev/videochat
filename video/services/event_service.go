@@ -21,10 +21,11 @@ type StateChangedEventService struct {
 	restClient          *client.RestClient
 	redisService        *DialRedisRepository
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
+	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
 }
 
-func NewStateChangedEventService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService, egressService *EgressService, restClient *client.RestClient, redisService *DialRedisRepository, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher) *StateChangedEventService {
-	return &StateChangedEventService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService, restClient: restClient, redisService: redisService, rabbitUserIdsPublisher: rabbitUserIdsPublisher}
+func NewStateChangedEventService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService, egressService *EgressService, restClient *client.RestClient, redisService *DialRedisRepository, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher, rabbitMqInvitePublisher *producer.RabbitInvitePublisher) *StateChangedEventService {
+	return &StateChangedEventService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService, restClient: restClient, redisService: redisService, rabbitUserIdsPublisher: rabbitUserIdsPublisher, rabbitMqInvitePublisher: rabbitMqInvitePublisher}
 }
 
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx context.Context) {
@@ -123,5 +124,39 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 			Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 		}
 
+	}
+}
+
+
+func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string) {
+	if len(statuses) == 0 {
+		return
+	}
+
+	var userIdsToDial []int64 = make([]int64, 0)
+	for userId, _ := range statuses {
+		userIdsToDial = append(userIdsToDial, userId)
+	}
+
+	inviteNames, err := h.restClient.GetChatNameForInvite(chatId, ownerId, userIdsToDial, ctx)
+	if err != nil {
+		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
+		return
+	}
+
+	// this is sending call invitations to all the ivitees
+	for _, chatInviteName := range inviteNames {
+		status := statuses[chatInviteName.UserId]
+
+		invitation := dto.VideoCallInvitation{
+			ChatId:   chatId,
+			ChatName: chatInviteName.Name,
+			Status:   status,
+		}
+
+		err = h.rabbitMqInvitePublisher.Publish(&invitation, chatInviteName.UserId)
+		if err != nil {
+			GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
+		}
 	}
 }

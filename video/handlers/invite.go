@@ -23,13 +23,15 @@ type InviteHandler struct {
 	notificationPublisher *producer.RabbitNotificationsPublisher
 	userService           *services.UserService
 	chatDialerService     *tasks.ChatDialerService
-	chatInvitationService *services.ChatInvitationService
+	//chatInvitationService *services.ChatInvitationService
 	stateChangedEventService *services.StateChangedEventService
 }
 
 const EventMissedCall = "missed_call"
 
-func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService, chatInvitationService *services.ChatInvitationService, stateChangedEventService *services.StateChangedEventService) *InviteHandler {
+func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *client.RestClient, dialStatusPublisher *producer.RabbitDialStatusPublisher, notificationPublisher *producer.RabbitNotificationsPublisher, userService *services.UserService, chatDialerService *tasks.ChatDialerService,
+	//chatInvitationService *services.ChatInvitationService,
+	stateChangedEventService *services.StateChangedEventService) *InviteHandler {
 	return &InviteHandler{
 		dialRedisRepository:   dialService,
 		chatClient:            chatClient,
@@ -37,7 +39,7 @@ func NewInviteHandler(dialService *services.DialRedisRepository, chatClient *cli
 		notificationPublisher: notificationPublisher,
 		userService:           userService,
 		chatDialerService:     chatDialerService,
-		chatInvitationService: chatInvitationService,
+		//chatInvitationService: chatInvitationService,
 		stateChangedEventService: stateChangedEventService,
 	}
 }
@@ -221,12 +223,12 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 }
 
 func (vh *InviteHandler) removePrevious(c echo.Context, userId int64) {
-	previousUserCallState, previousChatId, _, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
+	previousUserCallState, previousChatId, _, _, userCallOwnerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
 	}
 	if previousUserCallState != services.CallStatusNotFound {
-		vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userId, previousChatId)
+		vh.dialRedisRepository.RemoveFromDialList(c.Request().Context(), userId, previousChatId, userCallOwnerId)
 	}
 }
 
@@ -258,7 +260,6 @@ func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 
 
 func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, usersOfDial []int64, callStatus string) int {
-	// TODO here we need an index (probably)
 	var err error
 	// we remove callee by setting status
 	for _, userId := range usersOfDial {
@@ -293,7 +294,7 @@ func (vh *InviteHandler) sendEvents(c echo.Context, chatId int64, usersOfDial []
 	vh.dialStatusPublisher.Publish(chatId, getMap(usersOfDial, callStatus), ownerId)
 
 	// send the new status immediately to user
-	vh.chatInvitationService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMap(usersOfDial, callStatus))
+	vh.stateChangedEventService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMap(usersOfDial, callStatus))
 }
 
 func getMap(userIds []int64, status string) map[int64]string {
@@ -311,6 +312,10 @@ func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64,
 	}
 	if services.ShouldProlong(callStatus) {
 		err = vh.dialRedisRepository.ResetExpiration(ctx, callee)
+		if err != nil {
+			return err
+		}
+		err = vh.dialRedisRepository.ResetOwner(ctx, callee)
 		if err != nil {
 			return err
 		}
@@ -344,68 +349,56 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	// TODO here we need an index (seems) - we want to find calls started by me
-	_, _, _, _, ownerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
+	// callees of me
+	redisUsersOfDial, err := vh.dialRedisRepository.GetUserCalls(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
-	}
-	if ownerId == services.NoUser {
-		return c.NoContent(http.StatusOK)
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if ownerId == userPrincipalDto.UserId { // owner leaving
-		redisUsersOfDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
-		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
-		videoParticipantsNormalized := make([]int64, 0)
-		for _, vuid := range videoParticipants {
-			if vuid != ownerId {
-				videoParticipantsNormalized = append(videoParticipantsNormalized, vuid)
-			}
-		}
-		redisUsersNormalized := make([]int64, 0)
-		for _, ruid := range redisUsersOfDial {
-			if ruid != ownerId {
-				redisUsersNormalized = append(redisUsersNormalized, ruid)
-			}
-		}
-
-		missedUsers := make([]int64, 0)
-		inVideoUsers := make([]int64, 0)
-		for _, redisCallUser := range redisUsersNormalized {
-			if !utils.Contains(videoParticipantsNormalized, redisCallUser) {
-				missedUsers = append(missedUsers, redisCallUser)
-			} else {
-				inVideoUsers = append(inVideoUsers, redisCallUser)
-			}
-		}
-
-		// the owner removes all the dials by setting status
-		toRemove := make([]int64, 0)
-		for _, u := range missedUsers {
-			toRemove = append(toRemove, u)
-		}
-		toRemove = append(toRemove, userPrincipalDto.UserId)
-		vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
-
-		// for all participants to dial - send EventMissedCall notification
-		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
-
-		// delegate ownership to another user
-		vh.dialRedisRepository.TransferOwnership(c.Request().Context(), inVideoUsers, userPrincipalDto.UserId, chatId)
-	} else {
-		vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
+	videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
+
+	// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
+	videoParticipantsNormalized := make([]int64, 0)
+	for _, vuid := range videoParticipants {
+		if vuid != userPrincipalDto.UserId {
+			videoParticipantsNormalized = append(videoParticipantsNormalized, vuid)
+		}
+	}
+	redisUsersNormalized := make([]int64, 0)
+	for _, ruid := range redisUsersOfDial {
+		if ruid != userPrincipalDto.UserId {
+			redisUsersNormalized = append(redisUsersNormalized, ruid)
+		}
+	}
+
+	missedUsers := make([]int64, 0)
+	inVideoUsers := make([]int64, 0)
+	for _, redisCallUser := range redisUsersNormalized {
+		if !utils.Contains(videoParticipantsNormalized, redisCallUser) {
+			missedUsers = append(missedUsers, redisCallUser)
+		} else {
+			inVideoUsers = append(inVideoUsers, redisCallUser)
+		}
+	}
+
+	// the owner removes all the dials by setting status
+	toRemove := make([]int64, 0)
+	for _, u := range missedUsers {
+		toRemove = append(toRemove, u)
+	}
+	toRemove = append(toRemove, userPrincipalDto.UserId)
+	vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
+
+	// for all participants to dial - send EventMissedCall notification
+	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
+
+	// set myself to temporarily status
+	vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -454,21 +447,22 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	userIdsOfDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
-	if err != nil {
-		Logger.Warnf("Error %v", err)
-		return c.NoContent(http.StatusOK)
-	}
-
-	var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), chatId, userIdsOfDial)
-
-	err = vh.dialStatusPublisher.Publish(chatId, statuses, userPrincipalDto.UserId)
-	if err != nil {
-		Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
-		return c.NoContent(http.StatusOK)
-	}
-
-	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
+	// TODO invoke the same as dial_task
+	//userIdsOfDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
+	//if err != nil {
+	//	Logger.Warnf("Error %v", err)
+	//	return c.NoContent(http.StatusOK)
+	//}
+	//
+	//var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), chatId, userIdsOfDial)
+	//
+	//err = vh.dialStatusPublisher.Publish(chatId, statuses, userPrincipalDto.UserId)
+	//if err != nil {
+	//	Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
+	//	return c.NoContent(http.StatusOK)
+	//}
+	//
+	//vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
 
 	return c.NoContent(http.StatusOK)
 }
