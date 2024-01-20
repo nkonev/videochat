@@ -305,6 +305,8 @@ git show dda6c910 --format=%s | grep -F [force]
 
 
 trigger_commit=965b2800
+force_run=$(git show $trigger_commit --format=%s | grep -F [force] > /dev/null && echo true || echo false)
+
 parent_commits=()
 parent_commits=( $(git rev-parse $trigger_commit^@) )
 
