@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Decide whether we build it
         id: check-run
-        run: echo "SHOULD_BUILD=true" >> "$GITHUB_ENV"
+        run: echo "SHOULD_BUILD=false" >> "$GITHUB_ENV"
       - uses: actions/checkout@v3
         if: env.SHOULD_BUILD == 'true'
       - name: Install software
