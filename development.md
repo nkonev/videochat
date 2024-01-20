@@ -301,7 +301,7 @@ git rev-parse 965b2800^@
 git diff --dirstat=files,0 HEAD~1 HEAD | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
 
 # check is commit contain "[force] string"
-git show dda6c910 --format=%s | grep -F [force]
+git show -s --format=%s dda6c910 | grep -F [force]
 
 
 # merge commit
@@ -310,6 +310,9 @@ git show dda6c910 --format=%s | grep -F [force]
 # with force commit
 ./should-run.sh dda6c910 frontend
 ./should-run.sh dda6c910 aaa
+
+# or condition for e2e-test
+./should-run.sh 965b2800 'frontend|aaa' && echo "ok" || echo "ko"
 ```
 
 

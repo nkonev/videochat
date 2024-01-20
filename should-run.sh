@@ -1,9 +1,9 @@
 #!/bin/bash
 
 trigger_commit=$1
-service_name=$2
+service_pattern=$2
 
-echo "Interest service: $service_name, commit: $trigger_commit"
+echo "Service pattern: $service_pattern, commit: $trigger_commit"
 
 force_run=$(git show -s --format=%s $trigger_commit | grep -q -F "[force]" && echo true || echo false)
 
@@ -35,4 +35,4 @@ fi
 echo "List of changed services: ${services_list[@]}"
 #echo "${services_list[@]}"
 
-echo "${services_list[@]}" | grep -E -q ${service_name}
+echo "${services_list[@]}" | grep -E -q "${service_pattern}"

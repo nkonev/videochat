@@ -11,15 +11,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -71,15 +63,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Node.js
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v3
@@ -112,15 +96,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -165,15 +141,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -207,15 +175,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -249,15 +209,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -291,15 +243,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: |
-          set +e
-          ./should-run.sh HEAD ${GITHUB_JOB}
-          if [[ "$?" == "0" ]]; then
-            echo "SHOULD_RUN=true" >> "$GITHUB_ENV"
-          else
-            echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-          fi
-          set -e
+        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -329,18 +273,24 @@ jobs:
   e2e-test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - name: Decide should we build it
+        run: ./should-run.sh HEAD 'frontend|aaa|chat|event' && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
+        if: env.SHOULD_RUN == 'true'
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
 
       - name: Set up JDK 17
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-java@v3
         with:
           distribution: liberica
           java-version: 17.0.4
       - name: Cache local Maven repository
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -351,9 +301,11 @@ jobs:
             ${{ runner.os }}-maven-
 
       - uses: actions/setup-node@v3
+        if: env.SHOULD_RUN == 'true'
         with:
-          node-version: 16.13.0
+          node-version: 18.16.0
       - name: Cache Playwright browsers and Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -362,10 +314,13 @@ jobs:
           key: ${{ runner.os }}-playwright-browsers-v0-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Playwright Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; npm ci)
       - name: Install Playwright browsers
+        if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; npx playwright install)
       - name: Cache frontend Node.js dependencies
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -373,10 +328,12 @@ jobs:
           key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
 
       - name: Set up Go
+        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - name: Cache go modules
+        if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v3
         with:
           path: |
@@ -387,6 +344,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Start and wait docker-compose
+        if: env.SHOULD_RUN == 'true'
         run: |
           docker-compose up -d postgresql redis rabbitmq jaeger minio traefik
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
@@ -396,12 +354,14 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
+        if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make check-env clean download package-java)
           (cd frontend; make check-env clean download package)
           (cd chat; make check-env clean download generate package-go)
           (cd event; make check-env clean download generate package-go)
       - name: Run microservices
+        if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; ./run-with-oauth2.sh &)
           (cd chat; ./chat &)
@@ -409,6 +369,7 @@ jobs:
           # Using port 3000 we mimic to Vite's npm run dev
           (docker run --rm -p 3000:8082 nkonev/chat-frontend:latest &)
       - name: Wait for microservices
+        if: env.SHOULD_RUN == 'true'
         run: |
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
@@ -418,9 +379,10 @@ jobs:
           (cd aaa; ./run-oauth2-emu.sh &)
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
       - name: Run your Playwright tests
+        if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; npx playwright test)
       - name: Upload test results
-        if: always()
+        if: env.SHOULD_RUN == 'true' && always()
         uses: actions/upload-artifact@v3
         with:
           name: playwright-results
