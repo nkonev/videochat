@@ -99,7 +99,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		UserCallChatIdKey, chatId,
 		UserCallMarkedForRemoveAtKey, UserCallMarkedForRemoveAtNotSet,
 		UserCallMarkedForOrphanRemoveAttemptKey, UserCallMarkedForOrphanRemoveAttemptNotSet,
-		UserCallCallOwnerKey, NoUser,
+		UserCallCallOwnerKey, ownerId,
 	).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
