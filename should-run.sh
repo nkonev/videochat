@@ -11,12 +11,14 @@ if [[ "$force_run" == "true" ]]; then
   echo "Detected [force] message"
   services_list=( $(ls -1) )
 else
-  echo "Going te determine changed dirs"
+  echo "Going to determine changed dirs"
   parent_commits=()
   parent_commits=( $(git rev-parse $trigger_commit^@) )
 
+  echo "Going to examine parent commits"
   changed_dirs=()
   for parent_commit in "${parent_commits[@]}"; do
+      echo "Examining parent commit ${parent_commit}"
       local_changed_dirs=( $(git diff --dirstat=files,0 ${parent_commit} ${trigger_commit} | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq) )
       echo "in parent commit ${parent_commit} there are following changed dirs"
       for changed_dir in "${local_changed_dirs[@]}"; do
