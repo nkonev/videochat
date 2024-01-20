@@ -3,6 +3,8 @@
 trigger_commit=$1
 service_name=$2
 
+echo "Interest service: $service_name, commit: $trigger_commit"
+
 force_run=$(git show -s --format=%s $trigger_commit | grep -q -F "[force]" && echo true || echo false)
 
 services_list=()
