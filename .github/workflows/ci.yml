@@ -9,7 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Decide should we build it
-        run: echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF aaa)" >> "$GITHUB_ENV"
+        run: |
+          git --version
+          echo "SHOULD_RUN=$(./should-run.sh $GITHUB_HEAD_REF aaa)" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
