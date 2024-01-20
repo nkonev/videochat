@@ -300,6 +300,9 @@ git rev-parse 965b2800^@
 # show changed dirs
 git diff --dirstat=files,0 HEAD~1 HEAD | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq
 
+# check is commit contain "[focre] string"
+git show dda6c910 --format=%s | grep -F [force]
+
 
 trigger_commit=965b2800
 parent_commits=()
@@ -324,6 +327,8 @@ for changed_dir in "${sorted_unique_changed_dirs[@]}"; do
 done
 
 echo "${sorted_unique_changed_dirs[@]}"
+
+
 ```
 
 # Generate ports
