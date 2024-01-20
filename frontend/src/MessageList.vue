@@ -484,7 +484,9 @@
         },
         onShowContextMenu(e, menuableItem){
           const tag = e?.target?.tagName?.toLowerCase();
-          if (tag != "img" && tag != "video" && tag != "a") {
+          const tagParent = e?.target?.parentElement.tagName?.toLowerCase();
+          //console.log("onShowContextMenu", e, tag, tagParent);
+          if (tag != "img" && tag != "video" && tag != "a" && tagParent != "img" && tagParent != "video" && tagParent != "a") {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           }
         },
