@@ -146,7 +146,7 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 	}
 	if userCallState == services.CallStatusNotFound { // shouldn't happen
 		GetLogEntry(ctx).Warnf("Going to remove excess data for user %v, chat %v", userId, chatId)
-		err := srv.redisService.RemoveFromDialList(ctx, userId, chatId, ownerId)
+		err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
 			return
@@ -156,7 +156,7 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 			time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
 
 			GetLogEntry(ctx).Infof("Removing temporary userCallStatus of user %v, chat %v", userId, chatId)
-			err = srv.redisService.RemoveFromDialList(ctx, userId, chatId, ownerId)
+			err = srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, chat %v, error %v", userId, chatId, err)
 				return

@@ -193,7 +193,7 @@ func getUserOwesCalls() string {
 //	return parseInt64, nil
 //}
 
-func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, chatId, ownerId int64) error {
+func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int64, removeUserState bool, ownerId int64) error {
 	// remove from "dialchat" members
 	_, err := s.redisClient.SRem(ctx, userOwnedCallsKey(ownerId), userId).Result()
 	if err != nil {
@@ -201,11 +201,13 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId, ch
 		return err
 	}
 
-	// remove "user_call_state"
-	err = s.redisClient.Del(ctx, dialUserCallStateKey(userId)).Err()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
-		return err
+	if removeUserState {
+		// remove "user_call_state"
+		err = s.redisClient.Del(ctx, dialUserCallStateKey(userId)).Err()
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("Error during deleting dialMeta %v", err)
+			return err
+		}
 	}
 
 	cardinality, err := s.redisClient.SCard(ctx, userOwnedCallsKey(ownerId)).Result()

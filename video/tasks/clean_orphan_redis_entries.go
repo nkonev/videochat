@@ -56,7 +56,7 @@ func (srv *CleanOrphanRedisEntriesService) cleanOrphans(ctx context.Context) {
 		if services.ShouldProlong(userCallState) {
 			if markedForChangeStatusAttempt >= viper.GetInt("schedulers.cleanOrphanRedisEntriesTask.orphanUserIteration") {
 				GetLogEntry(ctx).Infof("Removing userCallState of user %v to %v because attempts were exhausted", userId, services.CallStatusRemoving)
-				err := srv.redisService.RemoveFromDialList(ctx, userId, chatId, ownerId)
+				err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable user status chatId %v, userId %v", chatId, userId)
 					continue
