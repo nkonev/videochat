@@ -7,16 +7,23 @@ jobs:
   aaa:
     runs-on: ubuntu-22.04
     steps:
+      - name: Decide whether we build it
+        id: check-run
+        run: echo "SHOULD_BUILD=true" >> "$GITHUB_ENV"
       - uses: actions/checkout@v3
+        if: env.SHOULD_BUILD == 'true'
       - name: Install software
+        if: env.SHOULD_BUILD == 'true'
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Set up JDK 17
+        if: env.SHOULD_BUILD == 'true'
         uses: actions/setup-java@v3
         with:
           distribution: liberica
           java-version: 17.0.4
       - name: Cache local Maven repository
+        if: env.SHOULD_BUILD == 'true'
         uses: actions/cache@v3
         with:
           path: | 
@@ -26,6 +33,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Start & wait docker-compose environment
+        if: env.SHOULD_BUILD == 'true'
         run: |
           docker-compose up -d postgresql redis rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
@@ -35,10 +43,11 @@ jobs:
           docker-compose -f docker-compose.keycloak.yml up -d keycloak
           sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build and test with Maven
+        if: env.SHOULD_BUILD == 'true'
         run: |
           (cd aaa; make check-env clean download package test)
       - name: Build docker image and deploy
-        if: github.ref == 'refs/heads/master'
+        if: env.SHOULD_BUILD == 'true' && github.ref == 'refs/heads/master'
         run: |
           mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
           chmod 600 ~/.ssh/id_rsa
