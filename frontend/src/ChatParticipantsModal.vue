@@ -253,8 +253,10 @@
                             this.participantsDto = tmp;
                         }).finally(() => {
                             this.loading = false;
-                            axios.put('/api/video/' + this.chatId + '/dial/request-for-is-calling');
                             this.performMarking();
+                            this.$nextTick(()=>{
+                              axios.put('/api/video/' + this.chatId + '/dial/request-for-is-calling');
+                            })
                     })
             },
             changeChatAdmin(item) {

@@ -12,7 +12,6 @@ import (
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
-	"nkonev.name/video/tasks"
 	"nkonev.name/video/utils"
 )
 
@@ -22,7 +21,6 @@ type InviteHandler struct {
 	dialStatusPublisher   *producer.RabbitDialStatusPublisher
 	notificationPublisher *producer.RabbitNotificationsPublisher
 	userService           *services.UserService
-	chatDialerService     *tasks.ChatDialerService
 	stateChangedEventService *services.StateChangedEventService
 }
 
@@ -34,7 +32,6 @@ func NewInviteHandler(
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
 	notificationPublisher *producer.RabbitNotificationsPublisher,
 	userService *services.UserService,
-	chatDialerService *tasks.ChatDialerService,
 	stateChangedEventService *services.StateChangedEventService,
 ) *InviteHandler {
 	return &InviteHandler{
@@ -43,7 +40,6 @@ func NewInviteHandler(
 		dialStatusPublisher:   dialStatusPublisher,
 		notificationPublisher: notificationPublisher,
 		userService:           userService,
-		chatDialerService:     chatDialerService,
 		stateChangedEventService: stateChangedEventService,
 	}
 }
@@ -451,22 +447,7 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	// TODO invoke the same as dial_task
-	//userIdsOfDial, err := vh.dialRedisRepository.GetUsersOfDial(c.Request().Context(), chatId)
-	//if err != nil {
-	//	Logger.Warnf("Error %v", err)
-	//	return c.NoContent(http.StatusOK)
-	//}
-	//
-	//var statuses = vh.chatDialerService.GetStatuses(c.Request().Context(), chatId, userIdsOfDial)
-	//
-	//err = vh.dialStatusPublisher.Publish(chatId, statuses, userPrincipalDto.UserId)
-	//if err != nil {
-	//	Logger.Error(err, "Failed during marshal VideoIsInvitingDto")
-	//	return c.NoContent(http.StatusOK)
-	//}
-	//
-	//vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
+	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
 
 	return c.NoContent(http.StatusOK)
 }

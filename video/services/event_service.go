@@ -70,6 +70,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 }
 
 
+// sends info about "red dot"
 func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx context.Context) {
 	userIds, err := h.redisService.GetUserIds(ctx)
 	if err != nil {
@@ -95,7 +96,6 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 		}
 	}
 	err = h.rabbitUserIdsPublisher.Publish(&dto.VideoCallUsersCallStatusChangedDto{Users: dtos}, ctx)
-
 }
 
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
@@ -127,7 +127,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 	}
 }
 
-
+// sends invitations "smb called you to chat x"
 func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string) {
 	if len(statuses) == 0 {
 		return
