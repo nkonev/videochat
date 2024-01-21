@@ -78,6 +78,9 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
 			continue
 		}
+		// cleanNotNeededAnymoreDialRedisData - should be before status == services.CallStatusNotFound exit
+		srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userId, userIdsToDial)
+
 		if status == services.CallStatusNotFound {
 			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", userId)
 			continue
@@ -88,12 +91,11 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status})
 		// send state changes to owner (ownerId) of call
 		srv.dialStatusPublisher.Publish(chatId, map[int64]string{userId: status}, ownerId)
-		// cleanNotNeededAnymoreDialRedisData
-		srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userId, userIdsToDial)
 	}
 
 }
 
+// chatId can be NoChat
 func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Context, chatId int64, ownerId int64, userId int64, userIdsOfDial []int64) {
 	userCallState, _, userCallMarkedForRemoveAt, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 	if err != nil {
@@ -116,7 +118,7 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 			// then user 1 exits
 			// if we don't do this - we will have dangling dials_of_user:1
 			// delegate ownership to another user
-			if ownerId == userId {
+			if ownerId == userId && chatId != services.NoChat {
 				err = srv.redisService.TransferOwnership(ctx, userIdsOfDial, ownerId, chatId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable invoke TransferOwnership, user %v, chat %v, error %v", userId, chatId, err)
