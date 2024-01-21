@@ -277,7 +277,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD 'frontend|aaa|chat|event' && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD 'frontend|aaa|chat|event|e2e-test' && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
