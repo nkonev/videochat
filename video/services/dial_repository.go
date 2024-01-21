@@ -320,42 +320,44 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 	if len(inVideoUsers) > 0 {
 		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
 
-		oppositeUserStatus, err := s.GetUserCallStatus(ctx, *oppositeUser)
-		if err != nil {
-			logger.GetLogEntry(ctx).Errorf("Error getting opposite user status %v", err)
-			return err
-		}
-
-		if oppositeUser != nil && !IsTemporary(oppositeUserStatus) {
-			newOwner := *oppositeUser
-
-			logger.GetLogEntry(ctx).Infof("Transfering ownership over chat %v from user %v to user %v", chatId, leavingOwner, newOwner)
-
-			for _, userId := range inVideoUsers {
-				if userId != leavingOwner {
-
-					err := s.addToSet(ctx, userId, newOwner)
-					if err != nil {
-						logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
-						wasErrored = true
-					}
-
-					err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallCallOwnerKey, newOwner).Err()
-					if err != nil {
-						logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
-						wasErrored = true
-					}
-
-					err = s.removeFromSet(ctx, userId, leavingOwner)
-					if err != nil {
-						logger.GetLogEntry(ctx).Errorf("Error during removing user from previous dial list %v", err)
-						wasErrored = true
-					}
-
-				}
+		if oppositeUser != nil {
+			oppositeUserStatus, err := s.GetUserCallStatus(ctx, *oppositeUser)
+			if err != nil {
+				logger.GetLogEntry(ctx).Errorf("Error getting opposite user status %v", err)
+				return err
 			}
 
-			wasTransferred = true
+			if !IsTemporary(oppositeUserStatus) {
+				newOwner := *oppositeUser
+
+				logger.GetLogEntry(ctx).Infof("Transfering ownership over chat %v from user %v to user %v", chatId, leavingOwner, newOwner)
+
+				for _, userId := range inVideoUsers {
+					if userId != leavingOwner {
+
+						err := s.addToSet(ctx, userId, newOwner)
+						if err != nil {
+							logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
+							wasErrored = true
+						}
+
+						err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallCallOwnerKey, newOwner).Err()
+						if err != nil {
+							logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
+							wasErrored = true
+						}
+
+						err = s.removeFromSet(ctx, userId, leavingOwner)
+						if err != nil {
+							logger.GetLogEntry(ctx).Errorf("Error during removing user from previous dial list %v", err)
+							wasErrored = true
+						}
+
+						wasTransferred = true
+					}
+				}
+
+			}
 		}
 	}
 	if !wasTransferred {
