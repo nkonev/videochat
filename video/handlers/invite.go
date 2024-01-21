@@ -349,57 +349,68 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	// callees of me
-	redisUsersOfDial, err := vh.dialRedisRepository.GetUserCalls(c.Request().Context(), userPrincipalDto.UserId)
+	_, _, _, _, ownerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
-	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	if ownerId == userPrincipalDto.UserId { // owner leaving
 
-	// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
-	videoParticipantsNormalized := make([]int64, 0)
-	for _, vuid := range videoParticipants {
-		if vuid != userPrincipalDto.UserId {
-			videoParticipantsNormalized = append(videoParticipantsNormalized, vuid)
+		// callees of me
+		redisUsersOfDial, err := vh.dialRedisRepository.GetUserCalls(c.Request().Context(), userPrincipalDto.UserId)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
-	}
-	redisUsersNormalized := make([]int64, 0)
-	for _, ruid := range redisUsersOfDial {
-		if ruid != userPrincipalDto.UserId {
-			redisUsersNormalized = append(redisUsersNormalized, ruid)
+
+		videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
-	}
 
-	missedUsers := make([]int64, 0)
-	inVideoUsers := make([]int64, 0)
-	for _, redisCallUser := range redisUsersNormalized {
-		if !utils.Contains(videoParticipantsNormalized, redisCallUser) {
-			missedUsers = append(missedUsers, redisCallUser)
-		} else {
-			inVideoUsers = append(inVideoUsers, redisCallUser)
+		// sometimes in race-condition manner due to livekit the call owner can be here, so we remove them by not to adding
+		videoParticipantsNormalized := make([]int64, 0)
+		for _, vuid := range videoParticipants {
+			if vuid != userPrincipalDto.UserId {
+				videoParticipantsNormalized = append(videoParticipantsNormalized, vuid)
+			}
 		}
+		redisUsersNormalized := make([]int64, 0)
+		for _, ruid := range redisUsersOfDial {
+			if ruid != userPrincipalDto.UserId {
+				redisUsersNormalized = append(redisUsersNormalized, ruid)
+			}
+		}
+
+		missedUsers := make([]int64, 0)
+		inVideoUsers := make([]int64, 0)
+		for _, redisCallUser := range redisUsersNormalized {
+			if !utils.Contains(videoParticipantsNormalized, redisCallUser) {
+				missedUsers = append(missedUsers, redisCallUser)
+			} else {
+				inVideoUsers = append(inVideoUsers, redisCallUser)
+			}
+		}
+
+		// the owner removes all the dials by setting status
+		toRemove := make([]int64, 0) // missed users + myself
+		for _, u := range missedUsers {
+			toRemove = append(toRemove, u)
+		}
+		toRemove = append(toRemove, userPrincipalDto.UserId)
+		vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
+
+		// for all participants to dial - send EventMissedCall notification
+		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
+
+		// delegate ownership to another user
+		vh.dialRedisRepository.TransferOwnership(c.Request().Context(), inVideoUsers, userPrincipalDto.UserId, chatId)
+	} else {
+		// set myself to temporarily status
+		vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 	}
-
-	// the owner removes all the dials by setting status
-	toRemove := make([]int64, 0)
-	for _, u := range missedUsers {
-		toRemove = append(toRemove, u)
-	}
-	toRemove = append(toRemove, userPrincipalDto.UserId)
-	vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
-
-	// for all participants to dial - send EventMissedCall notification
-	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
-
-	// set myself to temporarily status
-	vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
-
 	return c.NoContent(http.StatusOK)
 }
 
