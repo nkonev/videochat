@@ -62,7 +62,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 		if services.ShouldProlong(userCallState) { // consider only users, hanged in "inCall" state in redis and not presented in livekit
 			// removing
 			if markedForChangeStatusAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
-				GetLogEntry(ctx).Infof("Removing userCallState of user %v to %v because attempts were exhausted", userId, services.CallStatusRemoving)
+				GetLogEntry(ctx).Warnf("Removing userCallState of user %v to %v because attempts were exhausted", userId, services.CallStatusRemoving)
 				err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable user status chatId %v, userId %v", chatId, userId)
@@ -133,7 +133,7 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 			// if there is no status in redis, but we have it in livekit - then create
 			if userCallState == services.CallStatusNotFound {
 				if !utils.Contains(userIds, videoUserId) {
-					GetLogEntry(ctx).Infof("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
+					GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
 					err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall)
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)

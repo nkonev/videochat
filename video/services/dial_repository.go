@@ -40,7 +40,7 @@ const UserCallMarkedForRemoveAtKey = "markedForRemoveAt"
 
 const UserCallMarkedForOrphanRemoveAttemptKey = "markedForOrphanRemoveAttempt"
 
-const UserCallCallOwnerKey = "userCallOwner"
+const UserCallOwnerKey = "userCallOwner"
 
 const UserCallMarkedForRemoveAtNotSet = 0
 
@@ -72,7 +72,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		UserCallChatIdKey, chatId,
 		UserCallMarkedForRemoveAtKey, UserCallMarkedForRemoveAtNotSet,
 		UserCallMarkedForOrphanRemoveAttemptKey, UserCallMarkedForOrphanRemoveAttemptNotSet,
-		UserCallCallOwnerKey, ownerId,
+		UserCallOwnerKey, ownerId,
 	).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
@@ -248,7 +248,7 @@ func (s *DialRedisRepository) ResetExpiration(ctx context.Context, userId int64)
 }
 
 func (s *DialRedisRepository) ResetOwner(ctx context.Context, userId int64) error {
-	return s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallCallOwnerKey, NoUser).Err()
+	return s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallOwnerKey, NoUser).Err()
 }
 
 func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64) (string, int64, int64, int, int64, error) {
@@ -283,7 +283,7 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	}
 
 	var userCallCallOwner int64 = NoUser
-	maybeUserCallCallOwner, ok := status[UserCallCallOwnerKey]
+	maybeUserCallCallOwner, ok := status[UserCallOwnerKey]
 	if ok {
 		userCallCallOwner, err = utils.ParseInt64(maybeUserCallCallOwner)
 		if err != nil {
@@ -316,6 +316,7 @@ func (s *DialRedisRepository) SetMarkedForChangeStatusAttempt(ctx context.Contex
 }
 
 // side effect: it removes inVideoUsers (except leavingOwner) from leavingOwner's dials_of_user:1
+// chatId only for logging purposes
 func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUsers []int64, leavingOwner int64, chatId int64) error {
 	wasTransferred := false
 	wasErrored := false
@@ -343,7 +344,7 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 							wasErrored = true
 						}
 
-						err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallCallOwnerKey, newOwner).Err()
+						err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallOwnerKey, newOwner).Err()
 						if err != nil {
 							logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 							wasErrored = true
