@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	redisV8 "github.com/go-redis/redis/v8"
-	"github.com/spf13/viper"
 	"nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 	"strings"
@@ -14,14 +13,11 @@ import (
 
 type DialRedisRepository struct {
 	redisClient *redisV8.Client
-	dialExpiration time.Duration
 }
 
 func NewDialRedisRepository(redisClient *redisV8.Client) *DialRedisRepository {
-	expiration := viper.GetDuration("dialExpire")
 	return &DialRedisRepository{
 		redisClient: redisClient,
-		dialExpiration: expiration,
 	}
 }
 
@@ -80,11 +76,6 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 		return err
 	}
-	_, err = s.redisClient.Expire(ctx, dialUserCallStateKey(userId), s.dialExpiration).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
-		return err
-	}
 
 	return nil
 }
@@ -93,11 +84,6 @@ func (s *DialRedisRepository) addToSet(ctx context.Context, userId int64, ownerI
 	err := s.redisClient.SAdd(ctx, userOwnedCallsKey(ownerId), userId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
-		return err
-	}
-	_, err = s.redisClient.Expire(ctx, userOwnedCallsKey(ownerId), s.dialExpiration).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
 		return err
 	}
 	return err
