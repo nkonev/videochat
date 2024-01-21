@@ -26,7 +26,7 @@ else
   for service in "${all_services[@]}"; do
     echo "Examining service ${service}"
     if [[ "$service" == "frontend" ]]; then
-      prev_deployed_commit=$(curl -Ss "$website_prefix/${service}/git.json" | jq -r '.commit')
+      prev_deployed_commit=$(curl -Ss "$website_prefix/git.json" | jq -r '.commit')
     elif [[ "$service" == "e2e-test" ]]; then
       prev_deployed_commit=HEAD~1
     else
