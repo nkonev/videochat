@@ -38,4 +38,3 @@ push-docker:
 
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
-
