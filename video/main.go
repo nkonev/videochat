@@ -73,8 +73,8 @@ func main() {
 			tasks.ChatDialerScheduler,
 			tasks.NewRecordingNotifierService,
 			tasks.RecordingNotifierScheduler,
-			tasks.NewCleanOrphanRedisEntriesService,
-			tasks.CleanOrphanRedisEntriesScheduler,
+			tasks.NewSynchronizeWithLivekitService,
+			tasks.SynchronizeWithLivekitSheduler,
 		),
 		fx.Invoke(
 			runApiEcho,
@@ -242,7 +242,7 @@ func runScheduler(
 	chatDialerTask *tasks.ChatDialerTask,
 	videoRecordingTask *tasks.RecordingNotifierTask,
 	usersVideoStatusNotifierTask *tasks.UsersVideoStatusNotifierTask,
-	cleanOrphanRedisEntriesTask *tasks.CleanOrphanRedisEntriesTask,
+	synchronizeWithLivekitTask *tasks.SynchronizeWithLivekitTask,
 ) {
 	if viper.GetBool("schedulers.videoCallUsersCountNotifierTask.enabled") {
 		go func() {
@@ -280,12 +280,12 @@ func runScheduler(
 			}
 		}()
 	}
-	if viper.GetBool("schedulers.cleanOrphanRedisEntriesTask.enabled") {
+	if viper.GetBool("schedulers.synchronizeWithLivekitTask.enabled") {
 		go func() {
-			Logger.Infof("Starting scheduler cleanOrphanRedisEntriesTask")
-			err := cleanOrphanRedisEntriesTask.Run(context.Background())
+			Logger.Infof("Starting scheduler synchronizeWithLivekitTask")
+			err := synchronizeWithLivekitTask.Run(context.Background())
 			if err != nil {
-				Logger.Errorf("Error during working cleanOrphanRedisEntriesTask: %s", err)
+				Logger.Errorf("Error during working synchronizeWithLivekitTask: %s", err)
 			}
 		}()
 	}

@@ -85,7 +85,7 @@ schedulers:
   usersVideoStatusNotifierTask:
     enabled: true
     notificationPeriod: 7s # more or less close to aaa's user online and less than closing empty room timeout in livekit
-  cleanOrphanRedisEntriesTask:
+  synchronizeWithLivekitTask:
     enabled: true
     period: 10s
     orphanUserIteration: 3 # how many iteration must it take on orphaned "inCall" user to assign "cancellig status" state
