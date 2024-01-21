@@ -27,6 +27,8 @@ else
     echo "Examining service ${service}"
     if [[ "$service" == "frontend" ]]; then
       prev_deployed_commit=$(curl -Ss "$website_prefix/${service}/git.json" | jq -r '.commit')
+    elif [[ "$service" == "e2e-test" ]]; then
+      prev_deployed_commit=HEAD~1
     else
       prev_deployed_commit=$(curl -Ss "$website_prefix/${service}/git.json" | jq -r '.commit')
     fi
@@ -40,6 +42,8 @@ else
           changed_dirs+=(${changed_dir})
         fi
     done
+
+    echo
   done
 
   services_list=($(printf "%s\n" "${changed_dirs[@]}" | sort -u))
