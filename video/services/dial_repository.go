@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
@@ -13,11 +14,14 @@ import (
 
 type DialRedisRepository struct {
 	redisClient *redisV8.Client
+	dialExpiration time.Duration
 }
 
 func NewDialRedisRepository(redisClient *redisV8.Client) *DialRedisRepository {
+	expiration := viper.GetDuration("dialExpire")
 	return &DialRedisRepository{
 		redisClient: redisClient,
+		dialExpiration: expiration,
 	}
 }
 
@@ -59,16 +63,9 @@ func CanOverrideCallStatus(userCallStatus string) bool {
 }
 
 func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, ownerId int64, callStatus string) error {
-	expiration := viper.GetDuration("dialExpire")
 
-	err := s.redisClient.SAdd(ctx, userOwnedCallsKey(ownerId), userId).Err()
+	err := s.addToSet(ctx, userId, ownerId)
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
-		return err
-	}
-	_, err = s.redisClient.Expire(ctx, userOwnedCallsKey(ownerId), expiration).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
 		return err
 	}
 
@@ -83,13 +80,27 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
 		return err
 	}
-	_, err = s.redisClient.Expire(ctx, dialUserCallStateKey(userId), expiration).Result()
+	_, err = s.redisClient.Expire(ctx, dialUserCallStateKey(userId), s.dialExpiration).Result()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
 		return err
 	}
 
 	return nil
+}
+
+func (s *DialRedisRepository) addToSet(ctx context.Context, userId int64, ownerId int64) (error) {
+	err := s.redisClient.SAdd(ctx, userOwnedCallsKey(ownerId), userId).Err()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
+		return err
+	}
+	_, err = s.redisClient.Expire(ctx, userOwnedCallsKey(ownerId), s.dialExpiration).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial expiration %v", err)
+		return err
+	}
+	return err
 }
 
 func (s *DialRedisRepository) GetUserCalls(ctx context.Context, ownerId int64) ([]int64, error) {
@@ -132,9 +143,8 @@ func getUserOwesCalls() string {
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int64, removeUserState bool, ownerId int64) error {
 	// remove from "dialchat" members
-	_, err := s.redisClient.SRem(ctx, userOwnedCallsKey(ownerId), userId).Result()
+	err := s.removeFromSet(ctx, userId, ownerId)
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
 		return err
 	}
 
@@ -162,6 +172,15 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int
 		}
 	}
 
+	return nil
+}
+
+func (s *DialRedisRepository) removeFromSet(ctx context.Context, userId int64, ownerId int64) (error) {
+	_, err := s.redisClient.SRem(ctx, userOwnedCallsKey(ownerId), userId).Result()
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
+		return err
+	}
 	return nil
 }
 
@@ -307,6 +326,55 @@ func (s *DialRedisRepository) GetUserIds(ctx context.Context) ([]int64, error) {
 func (s *DialRedisRepository) SetMarkedForChangeStatusAttempt(ctx context.Context, userId int64, markedForChangeStatusAttempt int) error {
 	return s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallMarkedForOrphanRemoveAttemptKey, markedForChangeStatusAttempt).Err()
 }
+
+// side effect: it removes inVideoUsers (except leavingOwner) from leavingOwner's dials_of_user:1
+func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUsers []int64, leavingOwner int64, chatId int64) error {
+	wasTransferred := false
+	wasErrored := false
+	if len(inVideoUsers) > 0 {
+		oppositeUser := utils.GetOppositeUser(inVideoUsers, leavingOwner)
+
+		if oppositeUser != nil {
+			newOwner := *oppositeUser
+
+			logger.GetLogEntry(ctx).Infof("Transfering ownership over chat %v from user %v to user %v", chatId, leavingOwner, newOwner)
+
+			for _, userId := range inVideoUsers {
+				if userId != leavingOwner {
+
+					err := s.addToSet(ctx, userId, newOwner)
+					if err != nil {
+						logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
+						wasErrored = true
+					}
+
+					err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallCallOwnerKey, newOwner).Err()
+					if err != nil {
+						logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
+						wasErrored = true
+					}
+
+					err = s.removeFromSet(ctx, userId, leavingOwner)
+					if err != nil {
+						logger.GetLogEntry(ctx).Errorf("Error during removing user from previous dial list %v", err)
+						wasErrored = true
+					}
+
+				}
+			}
+
+			wasTransferred = true
+		}
+	}
+	if !wasTransferred {
+		logger.GetLogEntry(ctx).Infof("Unable to transfer ownership over chat %v from user %v because there is no candidates. All the metadata is going to be removed automatically after a while", chatId, leavingOwner)
+	}
+	if wasErrored {
+		return errors.New("Some error occurred during TransferOwnership")
+	}
+	return nil
+}
+
 
 func getUserId(userCallStateKey string) (int64, error) {
 	split := strings.Split(userCallStateKey, ":")

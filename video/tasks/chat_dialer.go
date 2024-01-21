@@ -89,12 +89,12 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 		// send state changes to owner (ownerId) of call
 		srv.dialStatusPublisher.Publish(chatId, map[int64]string{userId: status}, ownerId)
 		// cleanNotNeededAnymoreDialRedisData
-		srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userId)
+		srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userId, userIdsToDial)
 	}
 
 }
 
-func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Context, chatId int64, ownerId int64, userId int64) {
+func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Context, chatId int64, ownerId int64, userId int64, userIdsOfDial []int64) {
 	userCallState, _, userCallMarkedForRemoveAt, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Unable to get user call state for user %v, chat %v: %v", userId, chatId, err)
@@ -110,6 +110,19 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(ctx context.Con
 	} else if services.IsTemporary(userCallState) {
 		if userCallMarkedForRemoveAt != services.UserCallMarkedForRemoveAtNotSet &&
 			time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
+
+			// case: tet-a-tet
+			// user 1 starts video and invites user 2
+			// then user 1 exits
+			// if we don't do this - we will have dangling dials_of_user:1
+			// delegate ownership to another user
+			if ownerId == userId {
+				err = srv.redisService.TransferOwnership(ctx, userIdsOfDial, ownerId, chatId)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable invoke TransferOwnership, user %v, chat %v, error %v", userId, chatId, err)
+					return
+				}
+			}
 
 			GetLogEntry(ctx).Infof("Removing temporary userCallStatus of user %v, chat %v", userId, chatId)
 			err = srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
