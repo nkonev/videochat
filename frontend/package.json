@@ -29,10 +29,10 @@
     "@tiptap/suggestion": "2.1.16",
     "@tiptap/vue-3": "2.1.16",
     "axios": "^1.6.5",
-    "core-js": "^3.35.0",
-    "date-fns": "^3.2.0",
+    "core-js": "^3.35.1",
+    "date-fns": "^3.3.0",
     "graphql-ws": "5.14.3",
-    "livekit-client": "1.15.9",
+    "livekit-client": "1.15.10",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
@@ -41,7 +41,7 @@
     "uuid": "^9.0.1",
     "vue": "3.4.15",
     "vue-router": "4.2.5",
-    "vuetify": "3.5.0"
+    "vuetify": "3.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",
