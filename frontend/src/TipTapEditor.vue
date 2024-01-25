@@ -28,7 +28,7 @@ import Mention from '@tiptap/extension-mention';
 import Code from '@tiptap/extension-code';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {hasLength, media_audio, media_image, media_video} from "@/utils";
+import {getFireFoxVersion, hasLength, isFireFox, media_audio, media_image, media_video} from "@/utils";
 import bus, {
   FILE_UPLOAD_MODAL_START_UPLOADING,
   PREVIEW_CREATED,
@@ -231,11 +231,27 @@ export default {
           //  and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
           //  and prosemirror-view/src/clipboard.ts parseFromClipboard()
           transformPastedHTML(html) {
+            if (isFireFox()) {
+              if (getFireFoxVersion() >= 121) {
+                const str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "</p><p>");
+                const str2 = str.replace(/(\r\n|\r|\n)/g, " ");
+                const withP = str2.replace(/<br[^>]*>/g, "</p><p>");
+                const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
+                console.debug("modern firefox html=", html, ", str=", str, ", str2=", str2, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
+                return rmDuplicatedP;
+              } else {
+                const withP = html.replace(/<br[^>]*>/g, "</p><p>");
+                const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
+                console.debug("old firefox html=", html, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
+                return rmDuplicatedP;
+              }
+            } else {
               const str = html.replace(/(\r\n|\r|\n)/g, "</p><p>");
               const withP = str.replace(/<br[^>]*>/g, "</p><p>");
               const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-              // console.log("h=", html, ", str=", str, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
+              console.debug("chrome html=", html, ", str=", str, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
               return rmDuplicatedP;
+            }
           },
       },
       content: empty,

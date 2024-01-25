@@ -9,6 +9,18 @@ export const isMobileFireFox = () => {
   return navigator.userAgent.indexOf('Firefox') !== -1 && isMobileBrowser()
 }
 
+export const isFireFox = () => {
+  return navigator.userAgent.indexOf('Firefox') !== -1
+}
+
+export const getFireFoxVersion = () => {
+  let uMatch = navigator.userAgent.match(/Firefox\/(.*)$/), ffVersion;
+  if (uMatch && uMatch.length > 1) {
+    ffVersion = uMatch[1];
+  }
+  return ffVersion.split(".")[0]
+}
+
 export const hasLength = (str) => {
     if (!str) {
         return false
