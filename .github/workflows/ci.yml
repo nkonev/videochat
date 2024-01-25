@@ -11,7 +11,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -63,7 +63,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Node.js
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v3
@@ -96,7 +96,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -141,7 +141,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -175,7 +175,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -209,7 +209,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -243,7 +243,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD ${GITHUB_JOB} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v3
@@ -277,7 +277,7 @@ jobs:
         with:
           fetch-depth: 100
       - name: Decide should we build it
-        run: ./should-run.sh HEAD 'frontend|aaa|chat|event|e2e-test' && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
+        run: ./should-run.sh HEAD 'frontend|aaa|chat|event|e2e-test' ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |

@@ -2,12 +2,11 @@
 
 trigger_commit=$1
 service_pattern=$2
+website_prefix=$3
 
 all_services=( aaa chat e2e-test event frontend notification storage video )
 
 echo "Service pattern: $service_pattern, commit: $trigger_commit"
-
-website_prefix=https://chat.nkonev.name
 
 force_run=$(git show -s --format=%s $trigger_commit | grep -q -F "[force]" && echo true || echo false)
 
