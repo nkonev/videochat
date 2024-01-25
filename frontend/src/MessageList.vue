@@ -335,6 +335,7 @@
         },
         onLoggedOut() {
           this.reset();
+          this.beforeUnload();
         },
         canDrawMessages() {
           return !!this.chatStore.currentUser && hasLength(this.chatId)
