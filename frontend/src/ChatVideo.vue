@@ -19,7 +19,7 @@ import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {
   defaultAudioMute,
-  getWebsocketUrlPrefix, isMobileBrowser,
+  getWebsocketUrlPrefix, isFireFox, isMobileBrowser,
   isMobileFireFox
 } from "@/utils";
 import {
@@ -462,12 +462,12 @@ export default {
       }
 
       try {
-        const isMobileFirefox = isMobileFireFox();
-        console.debug("isMobileFirefox = ", isMobileFirefox, " in case Mobile Firefox simulcast for video tracks will be disabled");
+        const isFirefox = isFireFox();
+        console.debug("isFirefox = ", isFirefox, " in case Firefox simulcast for video tracks will be disabled");
         for (const track of tracks) {
           const normalizedIsScreen = !!isScreen;
           const trackName = "track_" + track.kind + "__screen_" + normalizedIsScreen + "_" + this.getNewId();
-          const simulcast = !isMobileFirefox && (normalizedIsScreen ? this.screenSimulcast : this.videoSimulcast);
+          const simulcast = !isFirefox && (normalizedIsScreen ? this.screenSimulcast : this.videoSimulcast);
           const normalizedCodec = this.codec === NULL_CODEC ? undefined : this.codec;
           console.log(`Publishing local ${track.kind} screen=${normalizedIsScreen} track with name ${trackName}, simulcast ${simulcast}, codec ${normalizedCodec}`);
           const publication = await this.room.localParticipant.publishTrack(track, {
