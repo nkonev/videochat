@@ -10,9 +10,6 @@ import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -26,7 +23,6 @@ import java.util.*;
 
 @Component
 @Transactional
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     @Autowired

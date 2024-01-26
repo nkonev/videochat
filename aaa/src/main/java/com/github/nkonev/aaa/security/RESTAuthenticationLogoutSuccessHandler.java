@@ -1,7 +1,6 @@
 package com.github.nkonev.aaa.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;

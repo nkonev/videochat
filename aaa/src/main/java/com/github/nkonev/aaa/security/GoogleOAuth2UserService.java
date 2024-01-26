@@ -9,9 +9,6 @@ import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -28,7 +25,6 @@ import java.util.Set;
 
 
 @Transactional
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Component
 public class GoogleOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
 

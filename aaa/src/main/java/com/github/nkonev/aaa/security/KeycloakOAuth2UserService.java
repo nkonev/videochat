@@ -8,13 +8,9 @@ import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.JWTParser;
-import com.nimbusds.jwt.SignedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -30,7 +26,6 @@ import java.util.stream.Collectors;
 
 
 @Transactional
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Component
 public class KeycloakOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
