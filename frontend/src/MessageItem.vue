@@ -7,9 +7,11 @@
         </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <a :href="getOwnerLink(item)" class="colored-link" @click.prevent.stop="onProfileClick(item)">{{getOwner(item.owner)}}</a><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                <a :href="getOwnerLink(item)" class="colored-link" @click.prevent.stop="onProfileClick(item)">{{getOwner(item.owner)}}</a>
+                <span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
+                <span class="mr-1">{{getDate(item)}}</span>
                 <template v-if="!isMobile() && !isInBlog">
-                    <v-icon class="mx-1 ml-2" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
+                    <v-icon class="mx-1" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                     <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
