@@ -23,6 +23,11 @@ type WrappedFileInfoDto struct {
 	Count       int64        `json:"count"`
 }
 
+type ReactionChangedEvent struct {
+	MessageId             int64                 `json:"messageId"`
+	Reaction              Reaction              `json:"reaction"`
+}
+
 type ChatEvent struct {
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
@@ -35,6 +40,7 @@ type ChatEvent struct {
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
 	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
 	FileEvent                    *WrappedFileInfoDto           `json:"fileEvent"`
+	ReactionChangedEvent         *ReactionChangedEvent         `json:"reactionChangedEvent"`
 }
 
 func (ChatEvent) Name() eventbus.EventName {

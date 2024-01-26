@@ -61,6 +61,7 @@ type CommonOperations interface {
 	GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
 	GetChatsWithMe(userId int64) ([]int64, error)
 	CountChatsPerUser(userId int64) (int64, error)
+	FlipReaction(userId int64, chatId int64, messageId int64, reaction string) (bool, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

@@ -30,6 +30,7 @@ type Events interface {
 	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
 	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64)
+	SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, count int64)
 }
 
 type eventsImpl struct {
@@ -455,4 +456,43 @@ func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId in
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
+}
+
+
+func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, count int64) {
+	var eventType string
+	if wasChanged {
+		eventType = "reaction_changed"
+	} else {
+		eventType = "reaction_removed"
+	}
+
+	participantIds, err := not.db.GetAllParticipantIds(chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		return
+	}
+
+	aReaction := dto.Reaction{
+		Count:    count,
+		Reaction: reaction,
+	}
+
+	reactionChangedEvent := dto.ReactionChangedEvent{
+		MessageId: messageId,
+		Reaction:  aReaction,
+	}
+
+	for _, participantId := range participantIds {
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			EventType:                  eventType,
+			ReactionChangedEvent: 		&reactionChangedEvent,
+			UserId:                     participantId,
+			ChatId:                     chatId,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+
 }

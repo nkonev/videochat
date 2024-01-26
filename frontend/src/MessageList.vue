@@ -17,6 +17,7 @@
             @pinMessage="pinMessage"
             @removedFromPinned="removedFromPinned"
             @shareMessage="shareMessage"
+            @onreactionclick="onExistingReactionClick"
           ></MessageItem>
           <template v-if="items.length == 0 && !showProgress">
             <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.messages_not_found')}}</v-sheet>
@@ -37,6 +38,7 @@
             @shareMessage="this.shareMessage"
             @makeBlogPost="makeBlogPost"
             @goToBlog="goToBlog"
+            @addReaction="addReaction"
           />
         </div>
 
@@ -60,7 +62,7 @@
       PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
       SCROLL_DOWN,
       SEARCH_STRING_CHANGED,
-      SET_EDIT_MESSAGE, PARTICIPANT_CHANGED
+      SET_EDIT_MESSAGE, PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
     } from "@/bus/bus";
     import {
       deepCopy, embed_message_reply,
@@ -483,13 +485,47 @@
         shareMessage(dto) {
           bus.emit(OPEN_RESEND_TO_MODAL, dto)
         },
+        onExistingReactionClick(dto) {
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/reaction`, {
+            reaction: dto.reaction,
+          })
+        },
+        addReaction(dto) {
+          bus.emit(OPEN_MESSAGE_EDIT_SMILEY,
+            {
+              addSmileyCallback: (smiley) => {
+                axios.put(`/api/chat/${this.chatId}/message/${dto.id}/reaction`, {
+                  reaction: smiley,
+                })
+              },
+              title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message')
+            }
+          );
+        },
         onShowContextMenu(e, menuableItem){
           const tag = e?.target?.tagName?.toLowerCase();
           const tagParent = e?.target?.parentElement.tagName?.toLowerCase();
-          //console.log("onShowContextMenu", e, tag, tagParent);
-          if (tag != "img" && tag != "video" && tag != "a" && tagParent != "img" && tagParent != "video" && tagParent != "a") {
+          // console.log("onShowContextMenu", e, tag, tagParent);
+          if (
+            !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img") &&
+            !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "video") &&
+            !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
+            !this.checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions"))
+          ) {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           }
+        },
+        checkUpByTree(el, maxLevels, condition) {
+          let level = 0;
+          let underCheck = el;
+          do {
+            if (condition(underCheck)) {
+              return true
+            }
+            underCheck = underCheck.parentElement;
+            level++;
+          } while (level <= maxLevels);
+          return false;
         },
         onUserProfileChanged(user) {
           this.items.forEach(item => {
@@ -510,7 +546,23 @@
         onWsRestoredRefresh() {
           this.onSearchStringChanged();
         },
-
+        onReactionChanged(dto) {
+          const foundMessage = this.items.find(item => item.id == dto.messageId);
+          if (foundMessage) {
+            const foundReaction = foundMessage.reactions.find(reaction => reaction.reaction == dto.reaction.reaction);
+            if (foundReaction) {
+              foundReaction.count = dto.reaction.count;
+            } else {
+              foundMessage.reactions.push(dto.reaction)
+            }
+          }
+        },
+        onReactionRemoved(dto) {
+          const foundMessage = this.items.find(item => item.id == dto.messageId);
+          if (foundMessage) {
+            foundMessage.reactions = foundMessage.reactions.filter(reaction => reaction.reaction != dto.reaction.reaction);
+          }
+        },
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true})
@@ -578,6 +630,8 @@
         bus.on(MESSAGE_ADD, this.onNewMessage);
         bus.on(MESSAGE_DELETED, this.onDeleteMessage);
         bus.on(MESSAGE_EDITED, this.onEditMessage);
+        bus.on(REACTION_CHANGED, this.onReactionChanged);
+        bus.on(REACTION_REMOVED, this.onReactionRemoved);
         bus.on(PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
@@ -593,6 +647,8 @@
         bus.off(MESSAGE_ADD, this.onNewMessage);
         bus.off(MESSAGE_DELETED, this.onDeleteMessage);
         bus.off(MESSAGE_EDITED, this.onEditMessage);
+        bus.off(REACTION_CHANGED, this.onReactionChanged);
+        bus.off(REACTION_REMOVED, this.onReactionRemoved);
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);

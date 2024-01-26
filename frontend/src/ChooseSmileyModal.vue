@@ -1,7 +1,7 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" width="fit-content">
-            <v-card :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
+            <v-card :title="aTitle">
                 <v-card-text class="py-0 pt-2 px-4 smiley-buttons">
                     <v-row :key="sli" v-for="(smileyLine, sli) in smileys" no-gutters>
                         <span :key="si" @click="onSmileyClick(smiley)" v-for="(smiley, si) in smileyLine" class="smiley">{{smiley}}</span>
@@ -31,6 +31,7 @@
                     ['👍',  '👎', '🤟', '🙏',  '💪', '👏', '🔥', '❄️'],
                 ],
                 addSmileyCallback: null,
+                aTitle: null,
             }
         },
         watch: {
@@ -41,13 +42,15 @@
             }
         },
         methods: {
-            showModal(addSmileyCallback) {
+            showModal({addSmileyCallback, title}) {
                 this.$data.show = true;
                 this.addSmileyCallback = addSmileyCallback;
+                this.aTitle = title;
             },
             closeModal() {
                 this.show = false;
                 this.addSmileyCallback = null;
+                this.aTitle = null;
             },
             onSmileyClick(smiley) {
                 if (this.addSmileyCallback) {

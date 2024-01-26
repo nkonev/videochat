@@ -80,6 +80,10 @@ export const FILE_CREATED = "fileCreated";
 export const FILE_REMOVED = "fileRemoved";
 export const FILE_UPDATED = "fileUpdated";
 
+export const REACTION_CHANGED = "reactionChanged";
+
+export const REACTION_REMOVED = "reactionRemoved";
+
 export const ATTACH_FILES_TO_MESSAGE_MODAL = "attachFilesToMessage";
 export const OPEN_CHAT_EDIT = "openChatEdit";
 

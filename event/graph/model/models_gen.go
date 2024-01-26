@@ -56,6 +56,7 @@ type ChatEvent struct {
 	ParticipantsEvent     []*ParticipantWithAdmin       `json:"participantsEvent"`
 	PromoteMessageEvent   *PinnedMessageEvent           `json:"promoteMessageEvent"`
 	FileEvent             *WrappedFileInfoDto           `json:"fileEvent"`
+	ReactionChangedEvent  *ReactionChangedEvent         `json:"reactionChangedEvent"`
 }
 
 type ChatUnreadMessageChanged struct {
@@ -87,6 +88,7 @@ type DisplayMessageDto struct {
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
+	Reactions      []*Reaction           `json:"reactions"`
 }
 
 type EmbedMessageResponse struct {
@@ -189,6 +191,16 @@ type PreviewCreatedEvent struct {
 	PreviewURL    *string `json:"previewUrl"`
 	AType         *string `json:"aType"`
 	CorrelationID *string `json:"correlationId"`
+}
+
+type Reaction struct {
+	Count    int64  `json:"count"`
+	Reaction string `json:"reaction"`
+}
+
+type ReactionChangedEvent struct {
+	MessageID int64     `json:"messageId"`
+	Reaction  *Reaction `json:"reaction"`
 }
 
 type UserAccountDto struct {

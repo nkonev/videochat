@@ -16,6 +16,11 @@ type EmbedMessageResponse struct {
 	IsParticipant bool    `json:"isParticipant"`
 }
 
+type Reaction struct {
+	Count    int64  `json:"count"`
+	Reaction string `json:"reaction"`
+}
+
 type DisplayMessageDto struct {
 	Id             int64                 `json:"id"`
 	Text           string                `json:"text"`
@@ -31,6 +36,7 @@ type DisplayMessageDto struct {
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
+	Reactions []Reaction				 `json:"reactions"`
 }
 
 type MessageDeletedDto struct {

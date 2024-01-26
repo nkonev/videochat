@@ -465,6 +465,17 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		}
 	}
 
+	reactionChangedEvent := e.ReactionChangedEvent
+	if reactionChangedEvent != nil {
+		result.ReactionChangedEvent = &model.ReactionChangedEvent{
+			MessageID: reactionChangedEvent.MessageId,
+			Reaction:  &model.Reaction{
+				Count:    reactionChangedEvent.Reaction.Count,
+				Reaction: reactionChangedEvent.Reaction.Reaction,
+			},
+		}
+	}
+
 	return result
 }
 func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayMessageDto {
@@ -495,7 +506,25 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 			IsParticipant: embedMessageDto.IsParticipant,
 		}
 	}
+	reactions := messageDto.Reactions
+	if reactions != nil {
+		result.Reactions = convertReactions(reactions)
+	}
 	return result
+}
+func convertReactions(reactions []dto.Reaction) []*model.Reaction {
+	ret := make([]*model.Reaction, 0)
+	for _, r := range reactions {
+		rr := r
+		ret = append(ret, convertReaction(&rr))
+	}
+	return ret
+}
+func convertReaction(r *dto.Reaction) *model.Reaction {
+	return &model.Reaction{
+		Count:    r.Count,
+		Reaction: r.Reaction,
+	}
 }
 func convertPinnedMessageEvent(e *dto.PinnedMessageEvent) *model.PinnedMessageEvent {
 	return &model.PinnedMessageEvent{

@@ -231,5 +231,6 @@ export default {
     messages_not_found: "Messages not found",
     chat_not_found: "The chat doesn't exist or you aren't a participant of the chat",
     user_is_already_in_other_call: "User {0} is already in a call",
-    search_related_message: "Find related message"
+    search_related_message: "Find related message",
+    add_reaction_on_message: "Add a reaction"
 }

@@ -71,7 +71,7 @@ import bus, {
   PINNED_MESSAGE_PROMOTED,
   PINNED_MESSAGE_UNPROMOTED,
   PREVIEW_CREATED,
-  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
+  PROFILE_SET, REACTION_CHANGED, REACTION_REMOVED, REFRESH_ON_WEBSOCKET_RESTORED,
   USER_TYPING,
   VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED
 } from "@/bus/bus";
@@ -245,6 +245,10 @@ export default {
                                   pinned
                                   blogPost
                                   pinnedPromoted
+                                  reactions {
+                                    count
+                                    reaction
+                                  }
                                 }
 
                                 subscription{
@@ -311,6 +315,13 @@ export default {
                                       }
                                       count
                                     }
+                                    reactionChangedEvent {
+                                      messageId
+                                      reaction {
+                                        count
+                                        reaction
+                                      }
+                                    }
                                   }
                                 }
                 `
@@ -358,6 +369,12 @@ export default {
       } else if (getChatEventsData(e).eventType === "file_updated") {
         const d = getChatEventsData(e).fileEvent;
         bus.emit(FILE_UPDATED, d);
+      } else if (getChatEventsData(e).eventType === "reaction_changed") {
+        const d = getChatEventsData(e).reactionChangedEvent;
+        bus.emit(REACTION_CHANGED, d);
+      } else if (getChatEventsData(e).eventType === "reaction_removed") {
+        const d = getChatEventsData(e).reactionChangedEvent;
+        bus.emit(REACTION_REMOVED, d);
       }
     },
     getPinnedRouteObject(item) {

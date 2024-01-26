@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 		ParticipantsEvent     func(childComplexity int) int
 		PreviewCreatedEvent   func(childComplexity int) int
 		PromoteMessageEvent   func(childComplexity int) int
+		ReactionChangedEvent  func(childComplexity int) int
 		UserTypingEvent       func(childComplexity int) int
 	}
 
@@ -121,6 +122,7 @@ type ComplexityRoot struct {
 		OwnerID        func(childComplexity int) int
 		Pinned         func(childComplexity int) int
 		PinnedPromoted func(childComplexity int) int
+		Reactions      func(childComplexity int) int
 		Text           func(childComplexity int) int
 	}
 
@@ -228,6 +230,16 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Ping func(childComplexity int) int
+	}
+
+	Reaction struct {
+		Count    func(childComplexity int) int
+		Reaction func(childComplexity int) int
+	}
+
+	ReactionChangedEvent struct {
+		MessageID func(childComplexity int) int
+		Reaction  func(childComplexity int) int
 	}
 
 	Subscription struct {
@@ -571,6 +583,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatEvent.PromoteMessageEvent(childComplexity), true
 
+	case "ChatEvent.reactionChangedEvent":
+		if e.complexity.ChatEvent.ReactionChangedEvent == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.ReactionChangedEvent(childComplexity), true
+
 	case "ChatEvent.userTypingEvent":
 		if e.complexity.ChatEvent.UserTypingEvent == nil {
 			break
@@ -724,6 +743,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.PinnedPromoted(childComplexity), true
+
+	case "DisplayMessageDto.reactions":
+		if e.complexity.DisplayMessageDto.Reactions == nil {
+			break
+		}
+
+		return e.complexity.DisplayMessageDto.Reactions(childComplexity), true
 
 	case "DisplayMessageDto.text":
 		if e.complexity.DisplayMessageDto.Text == nil {
@@ -1222,6 +1248,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Ping(childComplexity), true
 
+	case "Reaction.count":
+		if e.complexity.Reaction.Count == nil {
+			break
+		}
+
+		return e.complexity.Reaction.Count(childComplexity), true
+
+	case "Reaction.reaction":
+		if e.complexity.Reaction.Reaction == nil {
+			break
+		}
+
+		return e.complexity.Reaction.Reaction(childComplexity), true
+
+	case "ReactionChangedEvent.messageId":
+		if e.complexity.ReactionChangedEvent.MessageID == nil {
+			break
+		}
+
+		return e.complexity.ReactionChangedEvent.MessageID(childComplexity), true
+
+	case "ReactionChangedEvent.reaction":
+		if e.complexity.ReactionChangedEvent.Reaction == nil {
+			break
+		}
+
+		return e.complexity.ReactionChangedEvent.Reaction(childComplexity), true
+
 	case "Subscription.chatEvents":
 		if e.complexity.Subscription.ChatEvents == nil {
 			break
@@ -1642,6 +1696,11 @@ type EmbedMessageResponse {
     isParticipant: Boolean!
 }
 
+type Reaction {
+    count:    Int64!
+    reaction: String!
+}
+
 type DisplayMessageDto {
     id:             Int64!
     text:           String!
@@ -1657,6 +1716,7 @@ type DisplayMessageDto {
     pinned:         Boolean!
     blogPost:       Boolean!
     pinnedPromoted: Boolean
+    reactions:      [Reaction!]!
 }
 
 type MessageDeletedDto {
@@ -1750,6 +1810,11 @@ type WrappedFileInfoDto {
     count: Int64!
 }
 
+type ReactionChangedEvent {
+    messageId: Int64!
+    reaction: Reaction!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
@@ -1760,6 +1825,7 @@ type ChatEvent {
     participantsEvent: [ParticipantWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
     fileEvent: WrappedFileInfoDto
+    reactionChangedEvent: ReactionChangedEvent
 }
 
 type VideoUserCountChangedDto {
@@ -3198,6 +3264,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(ctx context.Cont
 				return ec.fieldContext_DisplayMessageDto_blogPost(ctx, field)
 			case "pinnedPromoted":
 				return ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
+			case "reactions":
+				return ec.fieldContext_DisplayMessageDto_reactions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
@@ -3543,6 +3611,53 @@ func (ec *executionContext) fieldContext_ChatEvent_fileEvent(ctx context.Context
 				return ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WrappedFileInfoDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatEvent_reactionChangedEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_reactionChangedEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReactionChangedEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ReactionChangedEvent)
+	fc.Result = res
+	return ec.marshalOReactionChangedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReactionChangedEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_reactionChangedEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "messageId":
+				return ec.fieldContext_ReactionChangedEvent_messageId(ctx, field)
+			case "reaction":
+				return ec.fieldContext_ReactionChangedEvent_reaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ReactionChangedEvent", field.Name)
 		},
 	}
 	return fc, nil
@@ -4522,6 +4637,56 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_pinnedPromoted(ctx co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayMessageDto_reactions(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DisplayMessageDto_reactions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reactions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Reaction)
+	fc.Result = res
+	return ec.marshalNReaction2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReactionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DisplayMessageDto_reactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "count":
+				return ec.fieldContext_Reaction_count(ctx, field)
+			case "reaction":
+				return ec.fieldContext_Reaction_reaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reaction", field.Name)
 		},
 	}
 	return fc, nil
@@ -7390,6 +7555,8 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_message(ctx context.
 				return ec.fieldContext_DisplayMessageDto_blogPost(ctx, field)
 			case "pinnedPromoted":
 				return ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
+			case "reactions":
+				return ec.fieldContext_DisplayMessageDto_reactions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
@@ -7822,6 +7989,188 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Reaction_count(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reaction_count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reaction_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_reaction(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reaction_reaction(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reaction, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reaction_reaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionChangedEvent_messageId(ctx context.Context, field graphql.CollectedField, obj *model.ReactionChangedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ReactionChangedEvent_messageId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessageID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ReactionChangedEvent_messageId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionChangedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionChangedEvent_reaction(ctx context.Context, field graphql.CollectedField, obj *model.ReactionChangedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ReactionChangedEvent_reaction(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reaction, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Reaction)
+	fc.Result = res
+	return ec.marshalNReaction2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReaction(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ReactionChangedEvent_reaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionChangedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "count":
+				return ec.fieldContext_Reaction_count(ctx, field)
+			case "reaction":
+				return ec.fieldContext_Reaction_reaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Subscription_chatEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
 	fc, err := ec.fieldContext_Subscription_chatEvents(ctx, field)
 	if err != nil {
@@ -7893,6 +8242,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_promoteMessageEvent(ctx, field)
 			case "fileEvent":
 				return ec.fieldContext_ChatEvent_fileEvent(ctx, field)
+			case "reactionChangedEvent":
+				return ec.fieldContext_ChatEvent_reactionChangedEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatEvent", field.Name)
 		},
@@ -12053,6 +12404,10 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._ChatEvent_fileEvent(ctx, field, obj)
 
+		case "reactionChangedEvent":
+
+			out.Values[i] = ec._ChatEvent_reactionChangedEvent(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12255,6 +12610,13 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._DisplayMessageDto_pinnedPromoted(ctx, field, obj)
 
+		case "reactions":
+
+			out.Values[i] = ec._DisplayMessageDto_reactions(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12944,6 +13306,76 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				return ec._Query___schema(ctx, field)
 			})
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var reactionImplementors = []string{"Reaction"}
+
+func (ec *executionContext) _Reaction(ctx context.Context, sel ast.SelectionSet, obj *model.Reaction) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Reaction")
+		case "count":
+
+			out.Values[i] = ec._Reaction_count(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "reaction":
+
+			out.Values[i] = ec._Reaction_reaction(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var reactionChangedEventImplementors = []string{"ReactionChangedEvent"}
+
+func (ec *executionContext) _ReactionChangedEvent(ctx context.Context, sel ast.SelectionSet, obj *model.ReactionChangedEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionChangedEventImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ReactionChangedEvent")
+		case "messageId":
+
+			out.Values[i] = ec._ReactionChangedEvent_messageId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "reaction":
+
+			out.Values[i] = ec._ReactionChangedEvent_reaction(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13975,6 +14407,60 @@ func (ec *executionContext) marshalNParticipantWithAdmin2ᚖnkonevᚗnameᚋeven
 	return ec._ParticipantWithAdmin(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNReaction2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Reaction) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNReaction2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReaction(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNReaction2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReaction(ctx context.Context, sel ast.SelectionSet, v *model.Reaction) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Reaction(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14618,6 +15104,13 @@ func (ec *executionContext) marshalOPreviewCreatedEvent2ᚖnkonevᚗnameᚋevent
 		return graphql.Null
 	}
 	return ec._PreviewCreatedEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOReactionChangedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReactionChangedEvent(ctx context.Context, sel ast.SelectionSet, v *model.ReactionChangedEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ReactionChangedEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

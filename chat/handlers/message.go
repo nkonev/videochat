@@ -158,8 +158,8 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			}
 			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 			messageDtos := make([]*dto.DisplayMessageDto, 0)
-			for _, c := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId))
+			for _, mm := range messages {
+				messageDtos = append(messageDtos, convertToMessageDto(mm, owners, chatsSet, userPrincipalDto.UserId))
 			}
 
 			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -201,6 +201,66 @@ func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map
 		var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
 		chatsPreSet[embeddedMessageResendChatId] = true
 	}
+}
+
+type ReactionPut struct {
+	Reaction string `json:"reaction"`
+}
+
+func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	chatIdString := c.Param("id")
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		return err
+	}
+
+	messageIdString := c.Param("messageId")
+	messageId, err := utils.ParseInt64(messageIdString)
+	if err != nil {
+		return err
+	}
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !isParticipant {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		var bindTo = new(ReactionPut)
+		if err := c.Bind(bindTo); err != nil {
+			GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+			return err
+		}
+
+		_, err = tx.FlipReaction(userPrincipalDto.UserId, chatId, messageId, bindTo.Reaction)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Warnf("Error during flipping reaction %v", err)
+			return err
+		}
+
+		count, err := tx.GetReactionsCount(chatId, messageId, bindTo.Reaction)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Warnf("Error during counting reaction %v", err)
+			return err
+		}
+
+		var wasChanged bool
+		if count > 0 {
+			wasChanged = true
+		}
+		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, count)
+
+		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
+		return c.NoContent(http.StatusOK)
+	})
 }
 
 func (mc *MessageHandler) GetMessage(c echo.Context) error {
@@ -279,6 +339,25 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 	}
 
 	ret.SetPersonalizedFields(behalfUserId)
+
+	ret.Reactions = make([]dto.Reaction, 0)
+
+	for _, dbReaction := range dbMessage.Reactions {
+
+		wasSummed := false
+		for j, existingReaction := range ret.Reactions {
+			if dbReaction.Reaction == existingReaction.Reaction {
+				ret.Reactions[j].Count = existingReaction.Count + 1
+				wasSummed = true
+			}
+		}
+		if !wasSummed {
+			ret.Reactions = append(ret.Reactions, dto.Reaction{
+				Count:    1,
+				Reaction: dbReaction.Reaction,
+			})
+		}
+	}
 
 	return ret
 }

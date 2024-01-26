@@ -19,6 +19,11 @@ type EmbedMessageResponse {
     isParticipant: Boolean!
 }
 
+type Reaction {
+    count:    Int64!
+    reaction: String!
+}
+
 type DisplayMessageDto {
     id:             Int64!
     text:           String!
@@ -34,6 +39,7 @@ type DisplayMessageDto {
     pinned:         Boolean!
     blogPost:       Boolean!
     pinnedPromoted: Boolean
+    reactions:      [Reaction!]!
 }
 
 type MessageDeletedDto {
@@ -127,6 +133,11 @@ type WrappedFileInfoDto {
     count: Int64!
 }
 
+type ReactionChangedEvent {
+    messageId: Int64!
+    reaction: Reaction!
+}
+
 type ChatEvent {
     eventType:                String!
     messageEvent: DisplayMessageDto
@@ -137,6 +148,7 @@ type ChatEvent {
     participantsEvent: [ParticipantWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
     fileEvent: WrappedFileInfoDto
+    reactionChangedEvent: ReactionChangedEvent
 }
 
 type VideoUserCountChangedDto {

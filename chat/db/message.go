@@ -14,6 +14,12 @@ import (
 
 const MessageNotFoundId = 0
 
+type Reaction struct {
+	MessageId int64
+	UserId int64
+	Reaction string
+}
+
 type Message struct {
 	Id             int64
 	Text           string
@@ -41,6 +47,8 @@ type Message struct {
 	Pinned      bool
 	PinPromoted bool
 	BlogPost    bool
+
+	Reactions []Reaction
 }
 
 func selectMessageClause(chatId int64) string {
@@ -63,8 +71,8 @@ func selectMessageClause(chatId int64) string {
 			m.blog_post
 		FROM message_chat_%v m 
 		LEFT JOIN message_chat_%v me 
-			ON (m.embed_message_id = me.id AND m.embed_message_type = 'reply')
-	`, chatId, chatId)
+			ON (m.embed_message_id = me.id AND m.embed_message_type = '%v')
+		`, chatId, chatId, dto.EmbedMessageTypeReply)
 }
 
 func provideScanToMessage(message *Message) []any {
@@ -89,6 +97,7 @@ func provideScanToMessage(message *Message) []any {
 }
 
 func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
+	list := make([]*Message, 0)
 	if hasHash {
 		// has hash means that frontend's page has message hash
 		// it means we need to calculate page/2 to the top and to the bottom
@@ -163,16 +172,14 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			}
 			defer rows.Close()
 		}
-		list := make([]*Message, 0)
 		for rows.Next() {
-			message := Message{ChatId: chatId}
+			message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
 			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
 				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &message)
 			}
 		}
-		return list, nil
 	} else {
 		order := "asc"
 		nonEquality := "m.id > $2"
@@ -208,17 +215,41 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			defer rows.Close()
 		}
 
-		list := make([]*Message, 0)
 		for rows.Next() {
-			message := Message{ChatId: chatId}
+			message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
 			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
 				return nil, tracerr.Wrap(err)
 			} else {
 				list = append(list, &message)
 			}
 		}
-		return list, nil
 	}
+
+	messageIds := make([]int64, 0)
+	for _, message := range list {
+		messageIds = append(messageIds, message.Id)
+	}
+
+	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = ANY ($1)", chatId), messageIds)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() { // iterate by reactions
+		reaction := Reaction{}
+		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
+			return nil, tracerr.Wrap(err)
+		}
+
+		for _, message := range list { // iterate by messages
+			if message.Id == reaction.MessageId {
+				message.Reactions = append(message.Reactions, reaction)
+			}
+		}
+	}
+
+	return list, nil
 }
 
 func (db *DB) GetMessages(chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
@@ -341,7 +372,7 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 	    m.id = $1 
 		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, selectMessageClause(chatId)),
 		messageId, userId, chatId)
-	message := Message{ChatId: chatId}
+	message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
 	err := row.Scan(provideScanToMessage(&message)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
@@ -349,9 +380,24 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 	}
 	if err != nil {
 		return nil, tracerr.Wrap(err)
-	} else {
-		return &message, nil
 	}
+
+	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = $1", chatId), message.Id)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		reaction := Reaction{}
+		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
+			return nil, tracerr.Wrap(err)
+		}
+
+		message.Reactions = append(message.Reactions, reaction)
+	}
+
+	return &message, nil
 }
 
 func (db *DB) GetMessage(chatId int64, userId int64, messageId int64) (*Message, error) {
@@ -757,4 +803,60 @@ func (db *DB) FindMessageByFileItemUuid(chatId int64, fileItemUuid string) (int6
 	} else {
 		return messageId, nil
 	}
+}
+
+func flipReactionCommon(co CommonOperations, userId int64, chatId int64, messageId int64, reaction string) (bool, error) {
+	var wasAdded bool
+
+	var exists bool
+	row := co.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_reaction_chat_%v WHERE user_id = $1 AND message_id = $2 AND reaction = $3)", chatId), userId, messageId, reaction)
+	err := tracerr.Wrap(row.Scan(&exists))
+	if err != nil {
+		return false, err
+	}
+
+	if exists {
+		// if reaction exists - remove it
+		_, err2 := co.Exec(fmt.Sprintf("DELETE FROM message_reaction_chat_%v WHERE user_id = $1 AND message_id = $2 AND reaction = $3", chatId), userId, messageId, reaction)
+		err = tracerr.Wrap(err2)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		// else insert reaction
+		_, err2 := co.Exec(fmt.Sprintf("INSERT INTO message_reaction_chat_%v(user_id, message_id, reaction) VALUES ($1, $2, $3)", chatId), userId, messageId, reaction)
+		err = tracerr.Wrap(err2)
+		if err != nil {
+			return false, err
+		}
+		wasAdded = true
+	}
+	return wasAdded, nil
+}
+
+func (db *DB) FlipReaction(userId int64, chatId int64, messageId int64, reaction string) (bool, error) {
+	return flipReactionCommon(db, userId, chatId, messageId, reaction)
+}
+
+func (tx *Tx) FlipReaction(userId int64, chatId int64, messageId int64, reaction string) (bool, error) {
+	return flipReactionCommon(tx, userId, chatId, messageId, reaction)
+}
+
+
+func getReactionsCountCommon(co CommonOperations, chatId int64, messageId int64, reaction string) (int64, error) {
+	var count int64
+	row := co.QueryRow(fmt.Sprintf("SELECT count(*) FROM message_reaction_chat_%v WHERE message_id = $1 AND reaction = $2", chatId), messageId, reaction)
+	err := tracerr.Wrap(row.Scan(&count))
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (db *DB) GetReactionsCount(chatId int64, messageId int64, reaction string) (int64, error) {
+	return getReactionsCountCommon(db, chatId, messageId, reaction)
+}
+
+func (tx *Tx) GetReactionsCount(chatId int64, messageId int64, reaction string) (int64, error) {
+	return getReactionsCountCommon(tx, chatId, messageId, reaction)
 }

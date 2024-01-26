@@ -103,7 +103,7 @@
       <MessageEditLinkModal/>
       <MessageEditColorModal/>
       <MessageEditMediaModal/>
-      <MessageEditSmileyModal/>
+      <ChooseSmileyModal/>
     </v-container>
 </template>
 
@@ -146,7 +146,7 @@
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditColorModal from "@/MessageEditColorModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
-    import MessageEditSmileyModal from "@/MessageEditSmileyModal.vue";
+    import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
@@ -430,7 +430,12 @@
                 bus.emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
             },
             smileyClick() {
-                bus.emit(OPEN_MESSAGE_EDIT_SMILEY, (text) => this.$refs.tipTapRef.addText(text));
+                bus.emit(OPEN_MESSAGE_EDIT_SMILEY,
+                  {
+                    addSmileyCallback: (text) => this.$refs.tipTapRef.addText(text),
+                    title: this.$vuetify.locale.t('$vuetify.message_edit_smiley')
+                  }
+                );
             },
             onColorSet({color, colorMode}) {
                 console.debug("Setting color", color, colorMode);
@@ -557,7 +562,7 @@
             MessageEditLinkModal,
             MessageEditColorModal,
             MessageEditMediaModal,
-            MessageEditSmileyModal,
+            ChooseSmileyModal,
         }
     }
 </script>

@@ -519,6 +519,10 @@ func (tx *Tx) CountChatsPerUser(userId int64) (int64, error) {
 }
 
 func (tx *Tx) DeleteChat(id int64) error {
+	if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_reaction_chat_%v;`, id)); err != nil {
+		return tracerr.Wrap(err)
+	}
+
 	if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_chat_%v;`, id)); err != nil {
 		return tracerr.Wrap(err)
 	}

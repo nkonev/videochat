@@ -35,6 +35,9 @@
                     <div :class="embedClass()" v-html="item.embedMessage.text"></div>
                 </div>
                 <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" :class="messageClass(item)"></v-container>
+                <div class="mt-0 mr-2 reactions" v-if="shouldShowReactions(item)">
+                  <v-btn v-for="reaction in item.reactions" variant="flat" size="small" height="32px" rounded class="ml-2 mb-2" @click="onExistingReactionClick(reaction.reaction)"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
+                </div>
             </div>
         </div>
     </div>
@@ -167,6 +170,9 @@
                     return this.getOwner(item.embedMessage.owner)
                 }
             },
+            shouldShowReactions(item) {
+              return item?.reactions?.length
+            },
             shouldShowMainContainer(item) {
                 return item.embedMessage == null || item.embedMessage.embedType == embed_message_reply
             },
@@ -184,7 +190,13 @@
               if (item.embedMessage) {
                 classes.push('after-embed');
               }
+              if (this.shouldShowReactions(item)) {
+                classes.push('pb-2');
+              }
               return classes
+            },
+            onExistingReactionClick(reaction) {
+              this.$emit('onreactionclick', {id: this.item.id, reaction: reaction})
             },
         },
         created() {
@@ -220,12 +232,6 @@
   .user-link {
     height 100%
   }
-
-
-  .with-space {
-      white-space: pre;
-  }
-
   .hash {
       align-items: center;
       display: inline-flex;

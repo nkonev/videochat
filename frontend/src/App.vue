@@ -780,6 +780,12 @@ html {
     text-decoration none
 }
 
+
+.with-space {
+  white-space: pre;
+}
+
+
 .list-item-prepend-spacer-16 {
     .v-list-item__prepend {
         .v-list-item__spacer {
