@@ -154,11 +154,12 @@ export default {
             dto: dtoFactory(),
             fileItemUuid: null,
             loading: false,
-            messageEditing: false,
+            isMessageEditing: false,
             page: firstPage,
             searchString: null,
             showSearchButton: true,
             markInstance: null,
+            dataLoaded: false,
         }
     },
     computed: {
@@ -179,11 +180,21 @@ export default {
     methods: {
         showModal({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
             console.log("Opening files modal, fileItemUuid=", fileItemUuid);
-            this.fileItemUuid = fileItemUuid;
+            if (this.fileItemUuid != fileItemUuid) {
+                this.reset();
+            }
+
             this.show = true;
+
             this.messageIdToDetachFiles = messageIdToDetachFiles;
-            this.messageEditing = messageEditing;
-            this.updateFiles();
+            this.isMessageEditing = messageEditing;
+
+            if (!this.dataLoaded) {
+                this.fileItemUuid = fileItemUuid;
+                this.updateFiles();
+            } else {
+                this.performMarking();
+            }
         },
         translatePage() {
             return this.page - 1;
@@ -208,17 +219,14 @@ export default {
                 })
                 .finally(() => {
                     this.loading = false;
+                    this.dataLoaded = true;
                     this.performMarking();
                 })
         },
         closeModal() {
             this.show = false;
             this.messageIdToDetachFiles = null;
-            this.fileItemUuid = null;
-            this.messageEditing = false;
-            this.page = firstPage;
-            this.searchString = null;
-            this.dto = dtoFactory();
+            this.isMessageEditing = false;
             this.showSearchButton = true;
         },
         doSearch(){
@@ -234,7 +242,7 @@ export default {
           }
         },
         openUploadModal() {
-            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.messageEditing});
+            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.isMessageEditing});
         },
         onDetachFilesFromMessage () {
           axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
@@ -262,7 +270,7 @@ export default {
                         }
                     })
                     .then((response) => {
-                        if (this.$data.messageEditing) {
+                        if (this.$data.isMessageEditing) {
                             bus.emit(LOAD_FILES_COUNT, {chatId: this.chatId});
                         }
 
@@ -314,19 +322,6 @@ export default {
         hasSearchString() {
             return hasLength(this.searchString)
         },
-        onPreviewCreated(dto) {
-            if (!this.show) {
-                return
-            }
-
-            console.log("Replacing preview", dto);
-            for (const fileItem of this.dto.files) {
-                if (fileItem.id == dto.id) {
-                    fileItem.previewUrl = dto.previewUrl;
-                    break
-                }
-            }
-        },
         removeItem(dto) {
             console.log("Removing item", dto);
             const idxToRemove = findIndex(this.dto.files, dto);
@@ -336,40 +331,83 @@ export default {
             console.log("Replacing item", dto);
             replaceOrPrepend(this.dto.files, [dto]);
         },
-        onFileCreated(dto) {
-            console.log("onFileCreated", dto);
-            if (!this.show) {
-                return
+
+        onPreviewCreated(dto) {
+          if (!this.dataLoaded) {
+            return
+          }
+          console.log("Replacing preview", dto);
+          for (const fileItem of this.dto.files) {
+            if (fileItem.id == dto.id) {
+              fileItem.previewUrl = dto.previewUrl;
+              break
             }
+          }
+        },
+        onFileCreated(dto) {
+            if (!this.dataLoaded) {
+              return
+            }
+            console.log("onFileCreated", dto);
             if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
                 if (!hasLength(this.fileItemUuid)) {
                     this.dto.count = dto.count;
                 }
                 this.replaceItem(dto.fileInfoDto);
+                if (this.shouldReduceToFitPageSize()) {
+                  if (this.show) {
+                    this.updateFiles();
+                  } else {
+                    this.reset()
+                  }
+                }
+                this.performMarking();
             }
-            this.performMarking();
         },
         onFileUpdated(dto) {
-            console.log("onFileUpdated", dto);
-            if (!this.show) {
-                return
+            if (!this.dataLoaded) {
+              return
             }
+            console.log("onFileUpdated", dto);
             if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
                 if (!hasLength(this.fileItemUuid)) {
                   this.dto.count = dto.count;
                 }
                 this.replaceItem(dto.fileInfoDto);
+                if (this.shouldReduceToFitPageSize()) {
+                    if (this.show) {
+                      this.updateFiles();
+                    } else {
+                      this.reset()
+                    }
+                }
+                this.performMarking();
             }
-            this.performMarking();
         },
         onFileRemoved(dto) {
-            if (!this.show) {
-                return
+            if (!this.dataLoaded) {
+              return
             }
             if (!hasLength(this.fileItemUuid)) {
                 this.dto.count = dto.count;
             }
             this.removeItem(dto.fileInfoDto);
+            if (this.shouldAddUpToFitPageSize(dto.count)) {
+                if (this.show) {
+                  this.updateFiles();
+                } else {
+                  this.reset()
+                }
+            }
+        },
+        shouldReduceToFitPageSize() {
+            return this.dto.files.length > pageSize
+        },
+        shouldAddUpToFitPageSize(dtoCount) {
+            if (dtoCount < pageSize) {
+              return false
+            }
+            return this.dto.files.length < pageSize
         },
         formattedSize(size) {
             return formatSize(size)
@@ -406,6 +444,13 @@ export default {
                 return 1
             }
         },
+        reset() {
+            this.fileItemUuid = null;
+            this.page = firstPage;
+            this.dto = dtoFactory();
+            this.searchString = null;
+            this.dataLoaded = false;
+        },
     },
     watch: {
         page(newValue) {
@@ -423,6 +468,11 @@ export default {
         searchString(searchString) {
             this.doSearch();
         },
+        '$route.params.id': function (newValue, oldValue) {
+          if (newValue != oldValue) {
+            this.reset();
+          }
+        }
     },
     components: {
         CollapsedSearch
