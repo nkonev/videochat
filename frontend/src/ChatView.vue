@@ -308,6 +308,7 @@ export default {
                                         canPlayAsVideo
                                         canShowAsImage
                                         canPlayAsAudio
+                                        fileItemUuid
                                       }
                                       count
                                     }
