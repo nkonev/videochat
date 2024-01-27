@@ -1,7 +1,7 @@
 <template>
   <div class="richText">
     <input id="file-input" type="file" style="display: none;" accept="image/*,video/*,audio/*" multiple="multiple" />
-    <div class="richText__content">
+    <div :class="editorContainer()">
       <editor-content :editor="editor" class="editorContent" />
     </div>
   </div>
@@ -163,6 +163,13 @@ export default {
     setFileItemUuid(fileItemUuid) {
         this.preallocatedCandidateFileItemId = fileItemUuid;
     },
+    editorContainer() {
+      const ret = ["richText__content"];
+      if (this.isMobile()) {
+        ret.push("richText__content__mobile")
+      }
+      return ret;
+    },
   },
   mounted() {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);
@@ -308,10 +315,8 @@ export default {
   -webkit-overflow-scrolling: touch;
 }
 
-@media screen and (max-width: $mobileWidth) {
-  .richText__content {
-    margin: 12px 12px 18px 12px;
-  }
+.richText__content__mobile {
+  margin: 12px 12px 18px 12px;
 }
 
 .richText__content p {
