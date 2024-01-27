@@ -571,11 +571,6 @@
     height 100%
 }
 
-.richText {
-    border-color: $borderColor
-    line-height: $lineHeight;
-}
-
 .dashed-borders {
     border-top-width: 0
     border-bottom-style dashed

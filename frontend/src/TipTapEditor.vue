@@ -278,7 +278,10 @@ export default {
   },
 };
 </script>
-<style>
+
+<style lang="stylus">
+@import "constants.styl"
+
 .editorContent {
     height: 100%;
 }
@@ -293,14 +296,8 @@ export default {
   border: 1px dashed #0D0D0D;
   height: 100%;
   overflow-y: auto;
-}
-.richText__header {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
-  padding: 0.25rem;
-  border-bottom: 3px solid #0D0D0D;
+  border-color: $borderColor;
+  line-height: $lineHeight;
 }
 
 .richText__content {
@@ -311,22 +308,14 @@ export default {
   -webkit-overflow-scrolling: touch;
 }
 
-.richText__content p {
-    margin-bottom: unset
+@media screen and (max-width: $mobileWidth) {
+  .richText__content {
+    margin: 12px 12px 18px 12px;
+  }
 }
 
-.richText__footer {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  border-top: 3px solid #0D0D0D;
-  font-size: 12px;
-  font-weight: 600;
-  color: #0d0d0d;
-  white-space: nowrap;
-  padding: 0.25rem 0.75rem;
+.richText__content p {
+    margin-bottom: unset
 }
 
 .richText__content :focus-visible {
