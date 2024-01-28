@@ -155,6 +155,10 @@ export default {
 
             while (this.fileInputQueueHasElements) {
                 const file = this.inputFiles.shift();
+                if (file.isProcessing) {
+                    continue
+                }
+                file.isProcessing = true;
 
                 // This 3-step algorithm is made to bypass 2GB file issue in Firefox
                 // (it seems there is a timeout inside, because on local machine it works fine)
@@ -196,6 +200,11 @@ export default {
 
             const fileUploadingQueueCopy = [...this.chatStore.fileUploadingQueue];
             for (const fileToUpload of fileUploadingQueueCopy) {
+                if (fileToUpload.isProcessing) {
+                    continue
+                }
+                fileToUpload.isProcessing = true;
+
                 try {
                     // renaming a file
                     const renamedFile = renameFilePart(fileToUpload.file, fileToUpload.newFileName);
