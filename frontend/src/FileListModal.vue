@@ -29,7 +29,8 @@
                                 <v-card>
                                     <v-img
                                         :src="item.previewUrl"
-                                        class="white--text align-end"
+                                        class="align-end"
+                                        cover
                                         gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
                                         height="200px"
                                     >
