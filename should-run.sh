@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail
+
 trigger_commit=$1
 service_pattern=$2
 website_prefix=$3
@@ -39,14 +41,20 @@ else
 
       echo "Getting change between ${prev_deployed_commit} and ${trigger_commit}"
       local_changed_dirs=( $(git diff --dirstat=files,0 ${prev_deployed_commit} ${trigger_commit} | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq) )
-      echo "Since prev deployed commit ${prev_deployed_commit} there are following changed dirs"
-      for changed_dir in "${local_changed_dirs[@]}"; do
-          if [[ "$changed_dir" == "$service" ]]; then
-            echo "-> ${changed_dir}"
-            changed_dirs+=(${changed_dir})
-          fi
-      done
-      echo
+      if [[ $? != 0 ]]; then
+        echo "Some error during getting changes - considering $service as changed"
+        changed_dirs+=(${service})
+        echo
+      else
+        echo "Since prev deployed commit ${prev_deployed_commit} there are following changed dirs"
+        for changed_dir in "${local_changed_dirs[@]}"; do
+            if [[ "$changed_dir" == "$service" ]]; then
+              echo "-> ${changed_dir}"
+              changed_dirs+=(${changed_dir})
+            fi
+        done
+        echo
+      fi
     fi
   done
 
