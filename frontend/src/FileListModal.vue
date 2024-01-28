@@ -34,8 +34,8 @@
                                         height="200px"
                                     >
                                         <v-container class="file-info-title ma-0 pa-0">
-                                        <v-card-title class="pb-1">
-                                            <a :href="item.url" download class="breaks download-link text-white">{{item.filename}}</a>
+                                        <v-card-title class="pb-1 card-title-wrapper">
+                                          <a :href="item.url" download class="file-title download-link text-white">{{item.filename}}</a>
                                         </v-card-title>
                                         <v-card-subtitle class="text-white pb-2 no-opacity text-wrap">
                                             {{ formattedSize(item.size) }}
@@ -505,8 +505,12 @@ export default {
 .no-opacity {
   opacity 1
 }
-.breaks {
-  white-space: break-spaces;
+.card-title-wrapper {
+  line-height 1.25em
+
+  .file-title {
+    white-space break-spaces
+  }
 }
 .download-link {
     text-decoration none
