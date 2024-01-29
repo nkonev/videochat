@@ -86,7 +86,7 @@ export default {
       }
     },
     messageTextIsNotEmpty(text) {
-        return text && text !== "" && text !== '<p><br></p>' && text !== '<p></p>'
+        return text && domParser.parseFromString(text, 'text/html').documentElement.textContent.trim() !== ""
     },
     onUpdateContent() {
       const value = this.getContent();
