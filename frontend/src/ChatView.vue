@@ -64,7 +64,7 @@ import bus, {
   MESSAGE_ADD,
   MESSAGE_BROADCAST,
   MESSAGE_DELETED,
-  MESSAGE_EDITED, MESSAGE_EDITING_BIG_TEXT_START, MESSAGE_EDITING_END, OPEN_EDIT_MESSAGE,
+  MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
   PARTICIPANT_ADDED,
   PARTICIPANT_DELETED,
   PARTICIPANT_EDITED,
@@ -117,7 +117,6 @@ export default {
       showTooltip: true,
       broadcastMessage: null,
       isSwitching: false,
-      isEditingBigText: false,
     }
   },
   components: {
@@ -453,24 +452,6 @@ export default {
     openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
       bus.emit(OPEN_EDIT_MESSAGE, null);
     },
-    onEditingBigTextStart() {
-      if (!this.isMobile()) {
-        this.$nextTick(() => {
-          this.isEditingBigText = true;
-          const stored = this.getStored();
-          this.setMiddlePane(stored);
-        })
-      }
-    },
-    onEditingEnd() {
-      if (!this.isMobile()) {
-        this.$nextTick(() => {
-          this.isEditingBigText = false;
-          const stored = this.getStored();
-          this.setMiddlePane(stored);
-        });
-      }
-    },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
     },
@@ -507,7 +488,7 @@ export default {
       return this.getStored().topPane;
     },
     bottomPaneSize() {
-      if (!this.isEditingBigText) {
+      if (!this.chatStore.isEditingBigText) {
         return this.getStored().bottomPane;
       } else {
         return this.getStored().bottomPaneBig;
@@ -543,7 +524,7 @@ export default {
       }
       if (this.showBottomPane()) {
         const bottomPaneSize = innerPaneSizes[innerPaneSizes.length - 1];
-        if (!this.isEditingBigText) {
+        if (!this.chatStore.isEditingBigText) {
           ret.bottomPane = bottomPaneSize;
         } else {
           ret.bottomPaneBig = bottomPaneSize;
@@ -566,7 +547,7 @@ export default {
       }
       if (this.showBottomPane()) {
         let bottomPaneSize;
-        if (!this.isEditingBigText) {
+        if (!this.chatStore.isEditingBigText) {
           bottomPaneSize = ret.bottomPane;
         } else {
           bottomPaneSize = ret.bottomPaneBig;
@@ -584,7 +565,7 @@ export default {
       }
       if (this.showBottomPane()) {
         let bottomPaneSize;
-        if (!this.isEditingBigText) {
+        if (!this.chatStore.isEditingBigText) {
           bottomPaneSize = ret.bottomPane;
         } else {
           bottomPaneSize = ret.bottomPaneBig;
@@ -634,6 +615,12 @@ export default {
         }
       }
     },
+    'chatStore.isEditingBigText': {
+      handler: function (newValue, oldValue) {
+        const stored = this.getStored();
+        this.setMiddlePane(stored);
+      }
+    }
   },
   created() {
 
@@ -661,8 +648,6 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-    bus.on(MESSAGE_EDITING_BIG_TEXT_START, this.onEditingBigTextStart);
-    bus.on(MESSAGE_EDITING_END, this.onEditingEnd);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -688,8 +673,6 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-    bus.off(MESSAGE_EDITING_BIG_TEXT_START, this.onEditingBigTextStart);
-    bus.off(MESSAGE_EDITING_END, this.onEditingEnd);
 
     this.chatDto = null;
 
@@ -706,7 +689,7 @@ export default {
     clearInterval(writingUsersTimerId);
 
     this.isSwitching = false;
-    this.isEditingBigText = false;
+    this.chatStore.isEditingBigText = false;
   }
 }
 </script>

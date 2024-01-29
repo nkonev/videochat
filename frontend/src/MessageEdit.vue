@@ -112,7 +112,7 @@
     import bus, {
       CLOSE_EDIT_MESSAGE, LOAD_FILES_COUNT,
       MESSAGE_EDIT_COLOR_SET,
-      MESSAGE_EDIT_LINK_SET, MESSAGE_EDITING_BIG_TEXT_START, MESSAGE_EDITING_END,
+      MESSAGE_EDIT_LINK_SET,
       OPEN_FILE_UPLOAD_MODAL,
       OPEN_MESSAGE_EDIT_COLOR,
       OPEN_MESSAGE_EDIT_LINK,
@@ -190,7 +190,7 @@
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
 
-              bus.emit(MESSAGE_EDITING_END);
+              this.chatStore.isEditingBigText = false;
               this.$refs.tipTapRef.regenerateNewFileItemUuid();
             },
             messageTextIsPresent(text) {
@@ -469,7 +469,7 @@
               this.loadEmbedPreviewIfNeed(this.editMessageDto);
               this.loadFilesCount();
               if (!this.$refs.tipTapRef.messageTextIsNotEmpty(this.editMessageDto.text)) {
-                bus.emit(MESSAGE_EDITING_END);
+                this.chatStore.isEditingBigText = false;
               }
               this.$nextTick(()=>{
                 this.$refs.tipTapRef.setContent(this.editMessageDto.text);
@@ -482,7 +482,7 @@
               if (hasLength(this.editMessageDto?.text)) {
                 const numRows = this.editMessageDto.text.split("<p>").length - 1;
                 if (numRows > 1) {
-                  bus.emit(MESSAGE_EDITING_BIG_TEXT_START);
+                  this.chatStore.isEditingBigText = true;
                 }
               }
             },
