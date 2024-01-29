@@ -143,6 +143,8 @@ import {messageIdHashPrefix} from "@/router/routes";
 
 const firstPage = 1;
 const pageSize = 20;
+const dialogReloadUpperThreshold = pageSize + 10;
+const dialogReloadBottomThreshold = pageSize - 10;
 
 const dtoFactory = () => {return {files: [], count: 0} };
 
@@ -401,13 +403,13 @@ export default {
             }
         },
         shouldReduceToFitPageSize() {
-            return this.dto.files.length > pageSize
+            return this.dto.files.length > dialogReloadUpperThreshold
         },
         shouldAddUpToFitPageSize(dtoCount) {
             if (dtoCount < pageSize) {
               return false
             }
-            return this.dto.files.length < pageSize
+            return this.dto.files.length < dialogReloadBottomThreshold
         },
         formattedSize(size) {
             return formatSize(size)
