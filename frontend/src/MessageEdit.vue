@@ -468,11 +468,14 @@
             setContentToEditorAndLoad() {
               this.loadEmbedPreviewIfNeed(this.editMessageDto);
               this.loadFilesCount();
+              if (!this.$refs.tipTapRef.messageTextIsNotEmpty(this.editMessageDto.text)) {
+                bus.emit(MESSAGE_EDITING_END);
+              }
               this.$nextTick(()=>{
                 this.$refs.tipTapRef.setContent(this.editMessageDto.text);
               }).then(()=>{
-                this.$refs.tipTapRef.setCursorToEnd()
-              })
+                this.$refs.tipTapRef.setCursorToEnd();
+              });
               this.emitExpandEventIfNeed();
             },
             emitExpandEventIfNeed() {
@@ -492,9 +495,6 @@
         },
         computed: {
           ...mapStores(useChatStore),
-            userIsSet() {
-                return !!this.chatStore.currentUser
-            }
         },
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
