@@ -16,6 +16,7 @@
             <v-img
               class="text-white align-end"
               gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+              cover
               :height="isMobile() ? 200 : 300"
               :src="item.imageUrl"
             >
