@@ -336,6 +336,10 @@ export default {
           if (!this.dataLoaded) {
             return
           }
+          if (!this.show) {
+            this.reset();
+            return;
+          }
           console.log("Replacing preview", dto);
           for (const fileItem of this.dto.files) {
             if (fileItem.id == dto.id) {
@@ -348,19 +352,16 @@ export default {
             if (!this.dataLoaded) {
               return
             }
+            if (!this.show) {
+              this.reset();
+              return;
+            }
             console.log("onFileCreated", dto);
             if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
                 if (!hasLength(this.fileItemUuid)) {
                     this.dto.count = dto.count;
                 }
                 this.replaceItem(dto.fileInfoDto);
-                if (this.shouldReduceToFitPageSize()) {
-                  if (this.show) {
-                    this.updateFiles();
-                  } else {
-                    this.reset()
-                  }
-                }
                 this.performMarking();
             }
         },
@@ -368,19 +369,16 @@ export default {
             if (!this.dataLoaded) {
               return
             }
+            if (!this.show) {
+              this.reset();
+              return;
+            }
             console.log("onFileUpdated", dto);
             if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
                 if (!hasLength(this.fileItemUuid)) {
                   this.dto.count = dto.count;
                 }
                 this.replaceItem(dto.fileInfoDto);
-                if (this.shouldReduceToFitPageSize()) {
-                    if (this.show) {
-                      this.updateFiles();
-                    } else {
-                      this.reset()
-                    }
-                }
                 this.performMarking();
             }
         },
@@ -388,26 +386,14 @@ export default {
             if (!this.dataLoaded) {
               return
             }
+            if (!this.show) {
+              this.reset();
+              return;
+            }
             if (!hasLength(this.fileItemUuid)) {
                 this.dto.count = dto.count;
             }
             this.removeItem(dto.fileInfoDto);
-            if (this.shouldAddUpToFitPageSize(dto.count)) {
-                if (this.show) {
-                  this.updateFiles();
-                } else {
-                  this.reset()
-                }
-            }
-        },
-        shouldReduceToFitPageSize() {
-            return this.dto.files.length > pageSize
-        },
-        shouldAddUpToFitPageSize(dtoCount) {
-            if (dtoCount < pageSize) {
-              return false
-            }
-            return this.dto.files.length < pageSize
         },
         formattedSize(size) {
             return formatSize(size)
