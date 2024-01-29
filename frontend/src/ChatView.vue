@@ -689,7 +689,7 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.off(MESSAGE_EDITING_BIG_TEXT_START, this.onEditingBigTextStart);
-    bus.on(MESSAGE_EDITING_END, this.onEditingEnd);
+    bus.off(MESSAGE_EDITING_END, this.onEditingEnd);
 
     this.chatDto = null;
 
