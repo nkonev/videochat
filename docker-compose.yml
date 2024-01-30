@@ -62,9 +62,7 @@ services:
         max-file: "1"
 
   minio:
-    # it's the last working version
-    # 2023.1.25-debian-11-r1 still is not working in getting file list
-    image: bitnami/minio:2023.1.12-debian-11-r1
+    image: bitnami/minio:2024.1.18-debian-11-r1
     hostname: minio
     restart: unless-stopped
     ports:
@@ -85,7 +83,7 @@ services:
       - MINIO_NOTIFY_AMQP_AUTO_DELETED_primary=off
       - MINIO_NOTIFY_AMQP_DELIVERY_MODE_primary=2
     volumes:
-      - minio_data:/data:z
+      - minio_data:/bitnami/minio/data:z
     logging:
       driver: "json-file"
       options:

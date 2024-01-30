@@ -52,7 +52,7 @@ services:
         tag: chat-redis
 
   minio:
-    image: bitnami/minio:2023.1.12-debian-11-r1
+    image: bitnami/minio:2024.1.18-debian-11-r1
     hostname: minio
     deploy:
       labels:
@@ -79,7 +79,7 @@ services:
       - BITNAMI_DEBUG=true
 
     volumes:
-      - /mnt/chat-minio/data:/data
+      - /mnt/chat-minio/data:/bitnami/minio/data
     networks:
       backend:
     logging:
