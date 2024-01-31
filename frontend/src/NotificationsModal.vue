@@ -113,8 +113,7 @@ export default {
           }).then(({data}) => {
             this.dto = data;
             this.loading = false;
-            this.chatStore.notificationsCount = data.totalCount;
-            setIcon(data != null && data.totalCount > 0);
+            this.chatStore.setNotificationCount(data.totalCount);
           })
         },
         translatePage() {
@@ -123,21 +122,27 @@ export default {
 
         notificationAdd(payload) {
           if (this.show) {
+            const count = payload.totalCount;
+            this.dto.totalCount = count;
+            this.chatStore.setNotificationCount(count);
+
+            delete payload["totalCount"];
             const newArr = [payload, ...this.dto.data];
             this.dto.data = newArr;
-            this.dto.totalCount++;
           }
-          this.chatStore.incrementNotificationCount();
         },
         notificationDelete(payload) {
           if (this.show) {
+            const count = payload.totalCount;
+            this.dto.totalCount = count;
+            this.chatStore.setNotificationCount(count);
+
+            delete payload["totalCount"];
             const arr = this.dto.data;
             const idxToRemove = findIndex(arr, payload);
             arr.splice(idxToRemove, 1);
             this.dto.data = arr;
-            this.dto.totalCount--;
           }
-          this.chatStore.decrementNotificationCount();
         },
 
         closeModal() {

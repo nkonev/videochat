@@ -57,6 +57,7 @@ type NotificationDto struct {
 	ByUserId         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
 	ChatTitle        string    `json:"chatTitle"`
+	TotalCount       int64     `json:"totalCount"`
 }
 
 type GlobalUserEvent struct {

@@ -156,6 +156,7 @@ type NotificationDto struct {
 	ByUserID         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
 	ChatTitle        string    `json:"chatTitle"`
+	TotalCount       int64     `json:"totalCount"`
 }
 
 type OAuth2Identifiers struct {

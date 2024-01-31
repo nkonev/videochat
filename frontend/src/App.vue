@@ -456,6 +456,7 @@ export default {
                         byUserId
                         byLogin
                         chatTitle
+                        totalCount
                       }
                     }
                   }

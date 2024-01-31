@@ -93,7 +93,13 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 		return err
 	}
 
-	err = mc.rabbitEventsPublisher.Publish(userPrincipalDto.UserId, dto.NewNotificationDeleteDto(notificationId), services.NotificationDelete, c.Request().Context())
+	count, err := mc.db.GetNotificationCount(userPrincipalDto.UserId)
+	if err != nil {
+		Logger.Errorf("Unable to count notification %v", err)
+		return err
+	}
+
+	err = mc.rabbitEventsPublisher.Publish(userPrincipalDto.UserId, dto.NewNotificationDeleteDto(notificationId, count), services.NotificationDelete, c.Request().Context())
 	if err != nil {
 		Logger.Errorf("Unable to send notification delete %v", err)
 	}

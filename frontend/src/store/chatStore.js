@@ -65,12 +65,6 @@ export const useChatStore = defineStore('chat', {
               this.availableOAuth2Providers = data;
           });
     },
-    incrementNotificationCount() {
-      this.setNotificationCount(this.notificationsCount + 1);
-    },
-    decrementNotificationCount() {
-      this.setNotificationCount(this.notificationsCount - 1);
-    },
     setNotificationCount(count){
       this.notificationsCount = count;
       setIcon(count > 0);

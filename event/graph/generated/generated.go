@@ -191,6 +191,7 @@ type ComplexityRoot struct {
 		ID               func(childComplexity int) int
 		MessageID        func(childComplexity int) int
 		NotificationType func(childComplexity int) int
+		TotalCount       func(childComplexity int) int
 	}
 
 	OAuth2Identifiers struct {
@@ -1101,6 +1102,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotificationDto.NotificationType(childComplexity), true
 
+	case "NotificationDto.totalCount":
+		if e.complexity.NotificationDto.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.NotificationDto.TotalCount(childComplexity), true
+
 	case "OAuth2Identifiers.facebookId":
 		if e.complexity.OAuth2Identifiers.FacebookID == nil {
 			break
@@ -1879,6 +1887,7 @@ type NotificationDto {
     byUserId: Int64!
     byLogin:  String!
     chatTitle: String!
+    totalCount: Int64!
 }
 
 type GlobalEvent {
@@ -6273,6 +6282,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_notificationEvent(ctx conte
 				return ec.fieldContext_NotificationDto_byLogin(ctx, field)
 			case "chatTitle":
 				return ec.fieldContext_NotificationDto_chatTitle(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_NotificationDto_totalCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NotificationDto", field.Name)
 		},
@@ -6935,6 +6946,50 @@ func (ec *executionContext) fieldContext_NotificationDto_chatTitle(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NotificationDto_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.NotificationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NotificationDto_totalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NotificationDto_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NotificationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13028,6 +13083,13 @@ func (ec *executionContext) _NotificationDto(ctx context.Context, sel ast.Select
 		case "chatTitle":
 
 			out.Values[i] = ec._NotificationDto_chatTitle(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalCount":
+
+			out.Values[i] = ec._NotificationDto_totalCount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

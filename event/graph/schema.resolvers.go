@@ -469,7 +469,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	if reactionChangedEvent != nil {
 		result.ReactionChangedEvent = &model.ReactionChangedEvent{
 			MessageID: reactionChangedEvent.MessageId,
-			Reaction:  &model.Reaction{
+			Reaction: &model.Reaction{
 				Count:    reactionChangedEvent.Reaction.Count,
 				Reaction: reactionChangedEvent.Reaction.Reaction,
 			},
@@ -652,6 +652,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			ByUserID:         userNotification.ByUserId,
 			ByLogin:          userNotification.ByLogin,
 			ChatTitle:        userNotification.ChatTitle,
+			TotalCount:       userNotification.TotalCount,
 		}
 	}
 
