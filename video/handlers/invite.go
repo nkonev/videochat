@@ -502,19 +502,7 @@ func (vh *InviteHandler) GetInvitationStatus(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	chatId, err := GetPathParamAsInt64(c, "id")
-	if err != nil {
-		return err
-	}
-
-	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
-		return c.NoContent(http.StatusInternalServerError)
-	} else if !ok {
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	userCallState, _, _, _, userCallOwnerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
+	userCallState, chatId, _, _, userCallOwnerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
 	}

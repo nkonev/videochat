@@ -529,7 +529,7 @@ export default {
             bus.emit(FOCUS);
         },
         refreshInvitationCall() {
-          axios.get(`/api/video/${this.chatId}/dial/status`).then(({data}) => {
+          axios.get(`/api/video/user/dial/status`).then(({data}) => {
             this.onVideoCallInvited(data);
           })
         },
