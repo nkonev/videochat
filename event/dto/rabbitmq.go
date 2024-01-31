@@ -57,7 +57,11 @@ type NotificationDto struct {
 	ByUserId         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
 	ChatTitle        string    `json:"chatTitle"`
-	TotalCount       int64     `json:"totalCount"`
+}
+
+type WrapperNotificationDto struct {
+	NotificationDto NotificationDto   `json:"notificationDto"`
+	TotalCount      int64             `json:"totalCount"`
 }
 
 type GlobalUserEvent struct {
@@ -72,7 +76,7 @@ type GlobalUserEvent struct {
 	UnreadMessagesNotification    *ChatUnreadMessageChanged     `json:"unreadMessagesNotification"`
 	AllUnreadMessagesNotification *AllUnreadMessages            `json:"allUnreadMessagesNotification"`
 	VideoCallRecordingEvent       *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
-	UserNotificationEvent         *NotificationDto              `json:"userNotificationEvent"`
+	UserNotificationEvent         *WrapperNotificationDto       `json:"userNotificationEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 }
 

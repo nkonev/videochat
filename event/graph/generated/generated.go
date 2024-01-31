@@ -191,7 +191,6 @@ type ComplexityRoot struct {
 		ID               func(childComplexity int) int
 		MessageID        func(childComplexity int) int
 		NotificationType func(childComplexity int) int
-		TotalCount       func(childComplexity int) int
 	}
 
 	OAuth2Identifiers struct {
@@ -325,6 +324,11 @@ type ComplexityRoot struct {
 	WrappedFileInfoDto struct {
 		Count       func(childComplexity int) int
 		FileInfoDto func(childComplexity int) int
+	}
+
+	WrapperNotificationDto struct {
+		NotificationDto func(childComplexity int) int
+		TotalCount      func(childComplexity int) int
 	}
 }
 
@@ -1102,13 +1106,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotificationDto.NotificationType(childComplexity), true
 
-	case "NotificationDto.totalCount":
-		if e.complexity.NotificationDto.TotalCount == nil {
-			break
-		}
-
-		return e.complexity.NotificationDto.TotalCount(childComplexity), true
-
 	case "OAuth2Identifiers.facebookId":
 		if e.complexity.OAuth2Identifiers.FacebookID == nil {
 			break
@@ -1614,6 +1611,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WrappedFileInfoDto.FileInfoDto(childComplexity), true
 
+	case "WrapperNotificationDto.notificationDto":
+		if e.complexity.WrapperNotificationDto.NotificationDto == nil {
+			break
+		}
+
+		return e.complexity.WrapperNotificationDto.NotificationDto(childComplexity), true
+
+	case "WrapperNotificationDto.totalCount":
+		if e.complexity.WrapperNotificationDto.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.WrapperNotificationDto.TotalCount(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -1877,6 +1888,11 @@ type AllUnreadMessages {
     allUnreadMessages: Int64!
 }
 
+type WrapperNotificationDto {
+    totalCount: Int64!
+    notificationDto: NotificationDto!
+}
+
 type NotificationDto {
     id: Int64!
     chatId: Int64!
@@ -1887,7 +1903,6 @@ type NotificationDto {
     byUserId: Int64!
     byLogin:  String!
     chatTitle: String!
-    totalCount: Int64!
 }
 
 type GlobalEvent {
@@ -1901,7 +1916,7 @@ type GlobalEvent {
     videoParticipantDialEvent: VideoDialChanges
     unreadMessagesNotification: ChatUnreadMessageChanged
     allUnreadMessagesNotification: AllUnreadMessages
-    notificationEvent: NotificationDto
+    notificationEvent: WrapperNotificationDto
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 
@@ -6251,9 +6266,9 @@ func (ec *executionContext) _GlobalEvent_notificationEvent(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.NotificationDto)
+	res := resTmp.(*model.WrapperNotificationDto)
 	fc.Result = res
-	return ec.marshalONotificationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐNotificationDto(ctx, field.Selections, res)
+	return ec.marshalOWrapperNotificationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐWrapperNotificationDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_GlobalEvent_notificationEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6264,28 +6279,12 @@ func (ec *executionContext) fieldContext_GlobalEvent_notificationEvent(ctx conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_NotificationDto_id(ctx, field)
-			case "chatId":
-				return ec.fieldContext_NotificationDto_chatId(ctx, field)
-			case "messageId":
-				return ec.fieldContext_NotificationDto_messageId(ctx, field)
-			case "notificationType":
-				return ec.fieldContext_NotificationDto_notificationType(ctx, field)
-			case "description":
-				return ec.fieldContext_NotificationDto_description(ctx, field)
-			case "createDateTime":
-				return ec.fieldContext_NotificationDto_createDateTime(ctx, field)
-			case "byUserId":
-				return ec.fieldContext_NotificationDto_byUserId(ctx, field)
-			case "byLogin":
-				return ec.fieldContext_NotificationDto_byLogin(ctx, field)
-			case "chatTitle":
-				return ec.fieldContext_NotificationDto_chatTitle(ctx, field)
 			case "totalCount":
-				return ec.fieldContext_NotificationDto_totalCount(ctx, field)
+				return ec.fieldContext_WrapperNotificationDto_totalCount(ctx, field)
+			case "notificationDto":
+				return ec.fieldContext_WrapperNotificationDto_notificationDto(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type NotificationDto", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type WrapperNotificationDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -6946,50 +6945,6 @@ func (ec *executionContext) fieldContext_NotificationDto_chatTitle(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NotificationDto_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.NotificationDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NotificationDto_totalCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NotificationDto_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NotificationDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10389,6 +10344,114 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_count(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _WrapperNotificationDto_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WrapperNotificationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WrapperNotificationDto_totalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WrapperNotificationDto_totalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WrapperNotificationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WrapperNotificationDto_notificationDto(ctx context.Context, field graphql.CollectedField, obj *model.WrapperNotificationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WrapperNotificationDto_notificationDto(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NotificationDto, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.NotificationDto)
+	fc.Result = res
+	return ec.marshalNNotificationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐNotificationDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WrapperNotificationDto_notificationDto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WrapperNotificationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_NotificationDto_id(ctx, field)
+			case "chatId":
+				return ec.fieldContext_NotificationDto_chatId(ctx, field)
+			case "messageId":
+				return ec.fieldContext_NotificationDto_messageId(ctx, field)
+			case "notificationType":
+				return ec.fieldContext_NotificationDto_notificationType(ctx, field)
+			case "description":
+				return ec.fieldContext_NotificationDto_description(ctx, field)
+			case "createDateTime":
+				return ec.fieldContext_NotificationDto_createDateTime(ctx, field)
+			case "byUserId":
+				return ec.fieldContext_NotificationDto_byUserId(ctx, field)
+			case "byLogin":
+				return ec.fieldContext_NotificationDto_byLogin(ctx, field)
+			case "chatTitle":
+				return ec.fieldContext_NotificationDto_chatTitle(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NotificationDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Directive_name(ctx, field)
 	if err != nil {
@@ -13087,13 +13150,6 @@ func (ec *executionContext) _NotificationDto(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "totalCount":
-
-			out.Values[i] = ec._NotificationDto_totalCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13972,6 +14028,41 @@ func (ec *executionContext) _WrappedFileInfoDto(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var wrapperNotificationDtoImplementors = []string{"WrapperNotificationDto"}
+
+func (ec *executionContext) _WrapperNotificationDto(ctx context.Context, sel ast.SelectionSet, obj *model.WrapperNotificationDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, wrapperNotificationDtoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WrapperNotificationDto")
+		case "totalCount":
+
+			out.Values[i] = ec._WrapperNotificationDto_totalCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "notificationDto":
+
+			out.Values[i] = ec._WrapperNotificationDto_notificationDto(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var __DirectiveImplementors = []string{"__Directive"}
 
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
@@ -14413,6 +14504,16 @@ func (ec *executionContext) marshalNInt642ᚕint64ᚄ(ctx context.Context, sel a
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNNotificationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐNotificationDto(ctx context.Context, sel ast.SelectionSet, v *model.NotificationDto) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NotificationDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNParticipantWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ParticipantWithAdmin) graphql.Marshaler {
@@ -15086,13 +15187,6 @@ func (ec *executionContext) marshalOMessageDeletedDto2ᚖnkonevᚗnameᚋevent�
 	return ec._MessageDeletedDto(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalONotificationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐNotificationDto(ctx context.Context, sel ast.SelectionSet, v *model.NotificationDto) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._NotificationDto(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalOOAuth2Identifiers2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐOAuth2Identifiers(ctx context.Context, sel ast.SelectionSet, v *model.OAuth2Identifiers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -15277,6 +15371,13 @@ func (ec *executionContext) marshalOWrappedFileInfoDto2ᚖnkonevᚗnameᚋevent�
 		return graphql.Null
 	}
 	return ec._WrappedFileInfoDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOWrapperNotificationDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐWrapperNotificationDto(ctx context.Context, sel ast.SelectionSet, v *model.WrapperNotificationDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._WrapperNotificationDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

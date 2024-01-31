@@ -121,25 +121,26 @@ export default {
         },
 
         notificationAdd(payload) {
-          if (this.show) {
-            const count = payload.totalCount;
-            this.dto.totalCount = count;
-            this.chatStore.setNotificationCount(count);
+          const count = payload.totalCount;
+          this.chatStore.setNotificationCount(count);
 
-            delete payload["totalCount"];
-            const newArr = [payload, ...this.dto.data];
+          if (this.show) {
+            this.dto.totalCount = count;
+            const data = payload.notificationDto;
+            const newArr = [data, ...this.dto.data];
             this.dto.data = newArr;
           }
         },
         notificationDelete(payload) {
-          if (this.show) {
-            const count = payload.totalCount;
-            this.dto.totalCount = count;
-            this.chatStore.setNotificationCount(count);
+          const count = payload.totalCount;
+          this.chatStore.setNotificationCount(count);
 
-            delete payload["totalCount"];
+          if (this.show) {
+            this.dto.totalCount = count;
+
+            const data = payload.notificationDto;
             const arr = this.dto.data;
-            const idxToRemove = findIndex(arr, payload);
+            const idxToRemove = findIndex(arr, data);
             arr.splice(idxToRemove, 1);
             this.dto.data = arr;
           }

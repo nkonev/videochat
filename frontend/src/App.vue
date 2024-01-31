@@ -447,15 +447,17 @@ export default {
                         allUnreadMessages
                       }
                       notificationEvent {
-                        id
-                        chatId
-                        messageId
-                        notificationType
-                        description
-                        createDateTime
-                        byUserId
-                        byLogin
-                        chatTitle
+                        notificationDto {
+                          id
+                          chatId
+                          messageId
+                          notificationType
+                          description
+                          createDateTime
+                          byUserId
+                          byLogin
+                          chatTitle
+                        }
                         totalCount
                       }
                     }

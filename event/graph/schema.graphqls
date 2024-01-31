@@ -192,6 +192,11 @@ type AllUnreadMessages {
     allUnreadMessages: Int64!
 }
 
+type WrapperNotificationDto {
+    totalCount: Int64!
+    notificationDto: NotificationDto!
+}
+
 type NotificationDto {
     id: Int64!
     chatId: Int64!
@@ -202,7 +207,6 @@ type NotificationDto {
     byUserId: Int64!
     byLogin:  String!
     chatTitle: String!
-    totalCount: Int64!
 }
 
 type GlobalEvent {
@@ -216,7 +220,7 @@ type GlobalEvent {
     videoParticipantDialEvent: VideoDialChanges
     unreadMessagesNotification: ChatUnreadMessageChanged
     allUnreadMessagesNotification: AllUnreadMessages
-    notificationEvent: NotificationDto
+    notificationEvent: WrapperNotificationDto
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
 }
 

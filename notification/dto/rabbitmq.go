@@ -21,6 +21,7 @@ type ReactionEvent struct {
 	MessageId int64 `json:"messageId"`
 }
 
+// for input data from another microservies
 type NotificationEvent struct {
 	EventType              string                  `json:"eventType"`
 	ChatId                 int64                   `json:"chatId"`
@@ -37,5 +38,5 @@ type NotificationEvent struct {
 type GlobalUserEvent struct {
 	EventType             string           `json:"eventType"`
 	UserId                int64            `json:"userId"`
-	UserNotificationEvent *NotificationDto `json:"userNotificationEvent"`
+	UserNotificationEvent *WrapperNotificationDto `json:"userNotificationEvent"`
 }

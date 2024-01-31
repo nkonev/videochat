@@ -131,7 +131,7 @@ type GlobalEvent struct {
 	VideoParticipantDialEvent      *VideoDialChanges               `json:"videoParticipantDialEvent"`
 	UnreadMessagesNotification     *ChatUnreadMessageChanged       `json:"unreadMessagesNotification"`
 	AllUnreadMessagesNotification  *AllUnreadMessages              `json:"allUnreadMessagesNotification"`
-	NotificationEvent              *NotificationDto                `json:"notificationEvent"`
+	NotificationEvent              *WrapperNotificationDto         `json:"notificationEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 }
 
@@ -156,7 +156,6 @@ type NotificationDto struct {
 	ByUserID         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
 	ChatTitle        string    `json:"chatTitle"`
-	TotalCount       int64     `json:"totalCount"`
 }
 
 type OAuth2Identifiers struct {
@@ -283,4 +282,9 @@ type VideoUserCountChangedDto struct {
 type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 	Count       int64        `json:"count"`
+}
+
+type WrapperNotificationDto struct {
+	TotalCount      int64            `json:"totalCount"`
+	NotificationDto *NotificationDto `json:"notificationDto"`
 }

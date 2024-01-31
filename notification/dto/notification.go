@@ -14,7 +14,11 @@ type NotificationDto struct {
 	ByUserId         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
 	ChatTitle        string    `json:"chatTitle"`
-	TotalCount       int64     `json:"totalCount"`
+}
+
+type WrapperNotificationDto struct {
+	NotificationDto NotificationDto   `json:"notificationDto"`
+	TotalCount      int64             `json:"totalCount"`
 }
 
 type NotificationSettings struct {
@@ -24,10 +28,17 @@ type NotificationSettings struct {
 	ReactionsEnabled   bool `json:"reactionsEnabled"`
 }
 
-func NewNotificationDeleteDto(id, count int64) *NotificationDto {
+func NewNotificationDeleteDto(id int64) *NotificationDto {
 	return &NotificationDto{
 		Id:             id,
 		CreateDateTime: time.Now(), // it needs for GraphLQ because this field is not nullable
-		TotalCount: count,
+	}
+}
+
+func NewWrapperNotificationDeleteDto(id int64, totalCount int64) *WrapperNotificationDto {
+	tmp := NewNotificationDeleteDto(id)
+	return &WrapperNotificationDto{
+		NotificationDto: *tmp,
+		TotalCount: totalCount,
 	}
 }

@@ -642,17 +642,19 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 
 	userNotification := e.UserNotificationEvent
 	if userNotification != nil {
-		ret.NotificationEvent = &model.NotificationDto{
-			ID:               userNotification.Id,
-			ChatID:           userNotification.ChatId,
-			MessageID:        userNotification.MessageId,
-			NotificationType: userNotification.NotificationType,
-			Description:      userNotification.Description,
-			CreateDateTime:   userNotification.CreateDateTime,
-			ByUserID:         userNotification.ByUserId,
-			ByLogin:          userNotification.ByLogin,
-			ChatTitle:        userNotification.ChatTitle,
-			TotalCount:       userNotification.TotalCount,
+		ret.NotificationEvent = &model.WrapperNotificationDto{
+			TotalCount: userNotification.TotalCount,
+			NotificationDto: &model.NotificationDto{
+				ID:               userNotification.NotificationDto.Id,
+				ChatID:           userNotification.NotificationDto.ChatId,
+				MessageID:        userNotification.NotificationDto.MessageId,
+				NotificationType: userNotification.NotificationDto.NotificationType,
+				Description:      userNotification.NotificationDto.Description,
+				CreateDateTime:   userNotification.NotificationDto.CreateDateTime,
+				ByUserID:         userNotification.NotificationDto.ByUserId,
+				ByLogin:          userNotification.NotificationDto.ByLogin,
+				ChatTitle:        userNotification.NotificationDto.ChatTitle,
+			},
 		}
 	}
 
