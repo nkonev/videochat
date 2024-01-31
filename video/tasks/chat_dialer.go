@@ -75,7 +75,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 	for _, userId := range userIdsToDial {
 		status, chatId, userCallMarkedForRemoveAt, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
-			GetLogEntry(ctx).Error("An error occured during getting the status for user %", userId)
+			GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", userId, err)
 			continue
 		}
 		// cleanNotNeededAnymoreDialRedisData - should be before status == services.CallStatusNotFound exit

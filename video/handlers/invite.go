@@ -124,13 +124,21 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 }
 
 func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
+
+	status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), callee)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		return http.StatusInternalServerError
+	}
+	missedUsersMapWithPreviousStatus := getMapWithSameStatus([]int64{callee}, status)
+
 	code := vh.removeFromCallingList(c, chatId, []int64{callee}, services.CallStatusRemoving)
 	if code != http.StatusOK {
 		return code
 	}
 
 	// if we remove user from call - send them EventMissedCall notification
-	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, []int64{callee})
+	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsersMapWithPreviousStatus)
 
 	return http.StatusOK
 }
@@ -291,13 +299,13 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, use
 
 func (vh *InviteHandler) sendEvents(c echo.Context, chatId int64, usersOfDial []int64, callStatus string, ownerId int64) {
 	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" to the call's owner
-	vh.dialStatusPublisher.Publish(chatId, getMap(usersOfDial, callStatus), ownerId)
+	vh.dialStatusPublisher.Publish(chatId, getMapWithSameStatus(usersOfDial, callStatus), ownerId)
 
 	// send the new status immediately to user
-	vh.stateChangedEventService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMap(usersOfDial, callStatus))
+	vh.stateChangedEventService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMapWithSameStatus(usersOfDial, callStatus))
 }
 
-func getMap(userIds []int64, status string) map[int64]string {
+func getMapWithSameStatus(userIds []int64, status string) map[int64]string {
 	var ret = map[int64]string{}
 	for _, userId := range userIds {
 		ret[userId] = status
@@ -400,10 +408,13 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 			toRemove = append(toRemove, u)
 		}
 		toRemove = append(toRemove, userPrincipalDto.UserId)
+
+		missedUsersMapWithPreviousStatus := vh.getUsersWithStatuses(c, missedUsers)
+
 		vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
 
 		// for all participants to dial - send EventMissedCall notification
-		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsers)
+		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsersMapWithPreviousStatus)
 
 		// delegate ownership to another user
 		vh.dialRedisRepository.TransferOwnership(c.Request().Context(), inVideoUsers, userPrincipalDto.UserId, chatId)
@@ -414,24 +425,45 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Context, userPrincipalDto *auth.AuthResult, usersToDial []int64) {
-	if len(usersToDial) > 0 {
-		if chatNames, err := vh.chatClient.GetChatNameForInvite(chatId, userPrincipalDto.UserId, usersToDial, ctx); err != nil {
+func (vh *InviteHandler) getUsersWithStatuses(c echo.Context, missedUsers []int64) map[int64]string {
+	missedUsersMap := make(map[int64]string)
+	for _, mu := range missedUsers {
+		status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), mu)
+		if err != nil {
+			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			continue
+		}
+		missedUsersMap[mu] = status
+	}
+	return missedUsersMap
+}
+
+func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Context, userPrincipalDto *auth.AuthResult, missedUsers map[int64]string) {
+	missedUsersList := make([]int64, 0)
+	for mu, _ := range missedUsers {
+		missedUsersList = append(missedUsersList, mu)
+	}
+
+	if len(missedUsers) > 0 {
+		if chatNames, err := vh.chatClient.GetChatNameForInvite(chatId, userPrincipalDto.UserId, missedUsersList, ctx); err != nil {
 			logger.GetLogEntry(ctx).Errorf("Error %v", err)
 		} else {
 			for _, chatName := range chatNames {
-				// here send missed call notification
-				var missedCall = dto.NotificationEvent{
-					EventType:              EventMissedCall,
-					ChatId:                 chatId,
-					UserId:                 chatName.UserId,
-					MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
-					ByUserId:               userPrincipalDto.UserId,
-					ByLogin:                userPrincipalDto.UserLogin,
-				}
-				err = vh.notificationPublisher.Publish(missedCall)
-				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error %v", err)
+
+				if !services.IsTemporary(missedUsers[chatName.UserId]) {
+					// here send missed call notification
+					var missedCall = dto.NotificationEvent{
+						EventType:              EventMissedCall,
+						ChatId:                 chatId,
+						UserId:                 chatName.UserId,
+						MissedCallNotification: &dto.MissedCallNotification{chatName.Name},
+						ByUserId:               userPrincipalDto.UserId,
+						ByLogin:                userPrincipalDto.UserLogin,
+					}
+					err = vh.notificationPublisher.Publish(missedCall)
+					if err != nil {
+						logger.GetLogEntry(ctx).Errorf("Error %v", err)
+					}
 				}
 			}
 		}
