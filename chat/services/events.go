@@ -240,6 +240,10 @@ func (not *eventsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, us
 	}
 
 	for _, participantId := range participantIds {
+		if participantId == user.Id {
+			continue
+		}
+
 		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:              "user_typing",
 			UserTypingNotification: &ut,
