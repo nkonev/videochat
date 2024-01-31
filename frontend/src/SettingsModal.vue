@@ -98,7 +98,10 @@ export default {
       UserSelfProfileModalContent,
   },
   methods: {
-    showSettingsModal() {
+    showSettingsModal(tab) {
+      if (hasLength(tab)) {
+        this.tab = tab;
+      }
       this.$data.show = true;
     },
     hideLoginModal() {
@@ -128,18 +131,6 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
-    ava() {
-      const maybeUser = this.chatStore.currentUser;
-      if (maybeUser) {
-        if (maybeUser.avatarBig) {
-          return maybeUser.avatarBig
-        } else if (maybeUser.avatar) {
-          return maybeUser.avatar
-        } else {
-          return null
-        }
-      }
-    },
     hasAva() {
       const maybeUser = this.chatStore.currentUser;
       return hasLength(maybeUser?.avatarBig) || hasLength(maybeUser?.avatar)

@@ -51,6 +51,7 @@
                       ></v-pagination>
                     </v-col>
                     <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
+                      <v-btn variant="outlined" @click="openNotificationSettings()" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>
                       <v-btn
                         variant="elevated"
                         color="red"
@@ -71,7 +72,7 @@
 
 import bus, {
   NOTIFICATION_ADD, NOTIFICATION_DELETE,
-  OPEN_NOTIFICATIONS_DIALOG,
+  OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
 import {findIndex, getHumanReadableDate, hasLength, setIcon} from "./utils";
 import axios from "axios";
@@ -212,7 +213,9 @@ export default {
                 return 1
             }
         },
-
+        openNotificationSettings() {
+            bus.emit(OPEN_SETTINGS, 'the_notifications')
+        },
     },
     computed: {
         ...mapStores(useChatStore),
