@@ -133,6 +133,10 @@ html {
   overflow-y: unset !important;
 }
 
+.with-space {
+  white-space: pre;
+}
+
 .colored-link {
     color: $linkColor;
     text-decoration none
