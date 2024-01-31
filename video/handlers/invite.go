@@ -494,3 +494,52 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 
 	return c.NoContent(http.StatusOK)
 }
+
+func (vh *InviteHandler) GetInvitationStatus(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		Logger.Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	// check my access to chat
+	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	userCallState, _, _, _, userCallOwnerId, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Unable to get user call state %v", err)
+	}
+
+	var inviteName string
+	if userCallState != services.CallStatusNotFound {
+		inviteNames, err := vh.chatClient.GetChatNameForInvite(chatId, userCallOwnerId, []int64{userPrincipalDto.UserId}, c.Request().Context())
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Error(err, "Failed during getting chat invite names")
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		if len(inviteNames) != 1 {
+			return c.NoContent(http.StatusNoContent)
+		}
+		chatInviteName := inviteNames[0]
+		inviteName = chatInviteName.Name
+	}
+
+
+	invitation := dto.VideoCallInvitation{
+		ChatId:   chatId,
+		ChatName: inviteName,
+		Status:   userCallState,
+	}
+
+	return c.JSON(http.StatusOK, invitation)
+}

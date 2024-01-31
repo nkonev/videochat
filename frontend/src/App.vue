@@ -521,8 +521,14 @@ export default {
             // console.log("Focus", e);
             if (this.chatStore.currentUser) {
                 this.chatStore.fetchNotificationsCount();
+                this.refreshInvitationCall();
             }
             bus.emit(FOCUS);
+        },
+        refreshInvitationCall() {
+          axios.get(`/api/video/${this.chatId}/dial/status`).then(({data}) => {
+            this.onVideoCallInvited(data);
+          })
         },
         getSubtitle() {
             if (!!this.chatStore.moreImportantSubtitleInfo) {
