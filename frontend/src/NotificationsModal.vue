@@ -153,7 +153,9 @@ export default {
                 case "mention":
                     return "mdi-at"
                 case "reply":
-                    return "mdi-reply-outline"
+                  return "mdi-reply-outline"
+                case "reaction":
+                  return "mdi-emoticon-outline"
             }
         },
         getNotificationSubtitle(item) {
@@ -172,6 +174,12 @@ export default {
                         builder2 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
                     }
                     return builder2
+                case "reaction":
+                    let builder3 = this.$vuetify.locale.t('$vuetify.notification_reaction', item.byLogin)
+                    if (hasLength(item.chatTitle)) {
+                      builder3 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                    }
+                    return builder3
             }
         },
         getNotificationTitle(item) {

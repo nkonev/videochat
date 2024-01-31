@@ -15,6 +15,12 @@ type ReplyDto struct {
 	ReplyableMessage string `json:"replyableMessage"`
 }
 
+type ReactionEvent struct {
+	UserId int64 `json:"userId"` // who gave this reaction
+	Reaction string `json:"reaction"`
+	MessageId int64 `json:"messageId"`
+}
+
 type NotificationEvent struct {
 	EventType              string                  `json:"eventType"`
 	ChatId                 int64                   `json:"chatId"`
@@ -25,6 +31,7 @@ type NotificationEvent struct {
 	ByUserId               int64                   `json:"byUserId"`
 	ByLogin                string                  `json:"byLogin"`
 	ChatTitle              string                  `json:"chatTitle"`
+	ReactionEvent          *ReactionEvent		   `json:"reactionEvent"`
 }
 
 type GlobalUserEvent struct {

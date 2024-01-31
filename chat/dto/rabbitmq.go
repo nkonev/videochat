@@ -38,6 +38,12 @@ type MentionNotification struct {
 	Text string `json:"text"`
 }
 
+type ReactionEvent struct {
+	UserId int64 `json:"userId"` // who gave this reaction
+	Reaction string `json:"reaction"`
+	MessageId int64 `json:"messageId"`
+}
+
 type NotificationEvent struct {
 	EventType           string               `json:"eventType"`
 	ChatId              int64                `json:"chatId"`
@@ -47,4 +53,5 @@ type NotificationEvent struct {
 	ChatTitle           string               `json:"chatTitle"`
 	MentionNotification *MentionNotification `json:"mentionNotification"`
 	ReplyNotification   *ReplyDto            `json:"replyNotification"`
+	ReactionEvent       *ReactionEvent		 `json:"reactionEvent"`
 }

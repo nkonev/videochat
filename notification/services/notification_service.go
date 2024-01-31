@@ -166,6 +166,52 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			Logger.Errorf("Unexpected event type %v", event.EventType)
 		}
 
+	} else if event.ReactionEvent != nil && userNotificationsSettings.ReactionsEnabled {
+		err := srv.removeExcessNotificationsIfNeed(event.UserId)
+		if err != nil {
+			Logger.Errorf("Unable to delete excess notifications %v", err)
+			return
+		}
+		notification := event.ReactionEvent
+		notificationType := "reaction"
+
+		switch event.EventType {
+		case "reaction_notification_added":
+			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.Reaction, event.ByUserId, event.ByLogin, event.ChatTitle)
+			if err != nil {
+				Logger.Errorf("Unable to put notification %v", err)
+				return
+			}
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, &dto.NotificationDto{
+				Id:               id,
+				ChatId:           event.ChatId,
+				MessageId:        &notification.MessageId,
+				NotificationType: notificationType,
+				Description:      notification.Reaction,
+				CreateDateTime:   createDateTime,
+				ByUserId:         event.ByUserId,
+				ByLogin:          event.ByLogin,
+				ChatTitle:        event.ChatTitle,
+			}, NotificationAdd, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
+			}
+
+		case "reaction_notification_removed":
+			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
+					Logger.Debugf("Missed notification %v", err)
+				} else {
+					Logger.Errorf("Unable to delete notification %v", err)
+				}
+				return
+			}
+			err = srv.rabbitEventsPublisher.Publish(event.UserId, dto.NewNotificationDeleteDto(id), NotificationDelete, context.Background())
+			if err != nil {
+				Logger.Errorf("Unable to send notification delete %v", err)
+			}
+		}
 	}
 
 }

@@ -40,6 +40,16 @@
           @update:modelValue="putNotificationsSettings()"
           :disabled="loading"
       ></v-switch>
+    <v-switch
+          :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
+          density="comfortable"
+          color="primary"
+          hide-details
+          class="ma-0 ml-2 mr-4 py-1"
+          v-model="chatStore.notificationsSettings.reactionsEnabled"
+          @update:modelValue="putNotificationsSettings()"
+          :disabled="loading"
+    ></v-switch>
 
   </v-card-text>
 

@@ -20,6 +20,7 @@ type NotificationSettings struct {
 	MentionsEnabled    bool `json:"mentionsEnabled"`
 	MissedCallsEnabled bool `json:"missedCallsEnabled"`
 	AnswersEnabled     bool `json:"answersEnabled"`
+	ReactionsEnabled   bool `json:"reactionsEnabled"`
 }
 
 func NewNotificationDeleteDto(id int64) *NotificationDto {

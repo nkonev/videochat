@@ -240,7 +240,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return err
 		}
 
-		_, err = tx.FlipReaction(userPrincipalDto.UserId, chatId, messageId, bindTo.Reaction)
+		wasAdded, err := tx.FlipReaction(userPrincipalDto.UserId, chatId, messageId, bindTo.Reaction)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Warnf("Error during flipping reaction %v", err)
 			return err
@@ -257,6 +257,13 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			wasChanged = true
 		}
 		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, count)
+
+		chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
+		if err != nil {
+			return err
+		}
+
+		mc.notificator.SendReactionOnYourMessage(c, wasAdded, userPrincipalDto.UserId, chatId, messageId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
 		return c.NoContent(http.StatusOK)
