@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/livekit/protocol/livekit"
@@ -13,7 +14,10 @@ import (
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
+	"strconv"
 )
+
+var numErr = &strconv.NumError{}
 
 type SynchronizeWithLivekitService struct {
 	redisService            *services.DialRedisRepository
@@ -57,6 +61,16 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 		userCallState, chatId, _, markedForChangeStatusAttempt, ownerId, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
+
+			if isNonRestorableError(err) {
+				GetLogEntry(ctx).Warnf("Going to remove invalid call state %v", err)
+				err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
+					continue
+				}
+			}
+
 			continue
 		}
 		if services.ShouldProlong(userCallState) { // consider only users, hanged in "inCall" state in redis and not presented in livekit
@@ -99,6 +113,10 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 
 		} // else branch not needed, because they removed from chat_dialer task's cleanNotNeededAnymoreDialRedisData()
 	}
+}
+
+func isNonRestorableError(err error) bool {
+	return errors.As(err, &numErr)
 }
 
 func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context, userIds []int64) {

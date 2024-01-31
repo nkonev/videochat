@@ -735,3 +735,9 @@ https://stackoverflow.com/questions/25185607/whats-the-difference-between-parent
 ]
 ```
 
+# Testcase for remove incorrect data in video
+```
+docker exec -it videochat_redis_1 redis-cli -n 4
+SADD dials_of_user:1 2
+HSET user_call_state:2 userCallOwner 1
+```
