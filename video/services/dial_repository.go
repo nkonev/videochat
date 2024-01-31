@@ -344,10 +344,19 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 							wasErrored = true
 						}
 
-						err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallOwnerKey, newOwner).Err()
+						exists, err := s.redisClient.Exists(ctx, dialUserCallStateKey(userId)).Result()
 						if err != nil {
-							logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
+							logger.GetLogEntry(ctx).Errorf("Error during echecking existence %v", err)
 							wasErrored = true
+						}
+						if exists > 0 {
+							err = s.redisClient.HSet(ctx, dialUserCallStateKey(userId), UserCallOwnerKey, newOwner).Err()
+							if err != nil {
+								logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
+								wasErrored = true
+							} else {
+								logger.GetLogEntry(ctx).Infof("Transferred ownership over chat %v from user %v to user %v", chatId, leavingOwner, newOwner)
+							}
 						}
 
 						err = s.removeFromSet(ctx, userId, leavingOwner)
