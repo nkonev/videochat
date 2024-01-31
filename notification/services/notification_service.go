@@ -51,7 +51,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			id, createDateTime, err := srv.dbs.PutNotification(&mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text, event.ByUserId, event.ByLogin, event.ChatTitle)
+			id, createDateTime, err := srv.dbs.PutNotification(&mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 				return
@@ -87,7 +87,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 		case "mention_deleted":
-			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, notificationType, event.UserId)
+			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, notificationType, event.UserId, nil)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					Logger.Debugf("Missed notification %v", err)
@@ -119,7 +119,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 
 		notification := event.MissedCallNotification
 		notificationType := "missed_call"
-		id, createDateTime, err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description, event.ByUserId, event.ByLogin, event.ChatTitle)
+		id, createDateTime, err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 		if err != nil {
 			Logger.Errorf("Unable to put notification %v", err)
 			return
@@ -164,7 +164,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		notificationType := "reply"
 		switch event.EventType {
 		case "reply_added":
-			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage, event.ByUserId, event.ByLogin, event.ChatTitle)
+			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 				return
@@ -199,7 +199,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 		case "reply_deleted":
-			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId)
+			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId, nil)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					Logger.Debugf("Missed notification %v", err)
@@ -233,7 +233,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 
 		switch event.EventType {
 		case "reaction_notification_added":
-			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.Reaction, event.ByUserId, event.ByLogin, event.ChatTitle)
+			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.Reaction, event.ByUserId, event.ByLogin, event.ChatTitle, &notification.Reaction)
 			if err != nil {
 				Logger.Errorf("Unable to put notification %v", err)
 				return
@@ -268,7 +268,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 		case "reaction_notification_removed":
-			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId)
+			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId, &notification.Reaction)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					Logger.Debugf("Missed notification %v", err)

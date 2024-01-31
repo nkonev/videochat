@@ -23,8 +23,8 @@ func (db *DB) DeleteNotification(id int64, userId int64) error {
 	return nil
 }
 
-func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType string, userId int64) (int64, error) {
-	res := db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 returning id`, messageId, userId, notificationType)
+func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType string, userId int64, messageSubId *string) (int64, error) {
+	res := db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 and message_sub_id = $4 returning id`, messageId, userId, notificationType, messageSubId)
 	if res.Err() != nil {
 		return 0, tracerr.Wrap(res.Err())
 	}
@@ -37,15 +37,15 @@ func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType st
 	return id, nil
 }
 
-func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description string, byUserId int64, byLogin string, chatTitle string) (int64, time.Time, error) {
+func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, notificationType string, description string, byUserId int64, byLogin string, chatTitle string, messageSubId *string) (int64, time.Time, error) {
 
 	res := db.QueryRow(
-		`insert into notification(notification_type, description, message_id, user_id, chat_id, by_user_id, by_login, chat_title) 
-			values ($1, $2, $3, $4, $5, $6, $7, $8) 
-			on conflict(notification_type, message_id, user_id, chat_id) 
+		`insert into notification(notification_type, description, message_id, user_id, chat_id, by_user_id, by_login, chat_title, message_sub_id) 
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+			on conflict(user_id, chat_id, message_id, notification_type, message_sub_id) 
 			do update set description = excluded.description
-			RETURNING id, create_date_time`,
-		notificationType, description, messageId, userId, chatId, byUserId, byLogin, chatTitle)
+			returning id, create_date_time`,
+		notificationType, description, messageId, userId, chatId, byUserId, byLogin, chatTitle, messageSubId)
 	if res.Err() != nil {
 		return 0, time.Now(), tracerr.Wrap(res.Err())
 	}
