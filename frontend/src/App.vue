@@ -169,6 +169,7 @@
         <PermissionsWarningModal/>
         <VideoAddNewSourceModal/>
         <MessageEditModal/>
+        <ChooseSmileyModal/>
     </v-main>
 
     <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
@@ -247,6 +248,7 @@ import VideoAddNewSourceModal from "@/VideoAddNewSourceModal.vue";
 import MessageEdit from "@/MessageEdit.vue";
 import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
+import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -658,6 +660,7 @@ export default {
         VideoAddNewSourceModal,
         MessageEditModal,
         CollapsedSearch,
+        ChooseSmileyModal,
     },
     created() {
         createGraphQlClient();

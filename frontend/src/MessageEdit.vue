@@ -103,7 +103,6 @@
       <MessageEditLinkModal/>
       <MessageEditColorModal/>
       <MessageEditMediaModal/>
-      <ChooseSmileyModal/>
     </v-container>
 </template>
 
@@ -146,7 +145,6 @@
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditColorModal from "@/MessageEditColorModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
-    import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
@@ -562,7 +560,6 @@
             MessageEditLinkModal,
             MessageEditColorModal,
             MessageEditMediaModal,
-            ChooseSmileyModal,
         }
     }
 </script>
