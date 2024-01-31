@@ -291,6 +291,32 @@ func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limi
 			list = append(list, &message)
 		}
 	}
+
+
+	messageIds := make([]int64, 0)
+	for _, message := range list {
+		messageIds = append(messageIds, message.Id)
+	}
+
+	rows, err = co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = ANY ($1)", chatId), messageIds)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() { // iterate by reactions
+		reaction := Reaction{}
+		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
+			return nil, tracerr.Wrap(err)
+		}
+
+		for _, message := range list { // iterate by messages
+			if message.Id == reaction.MessageId {
+				message.Reactions = append(message.Reactions, reaction)
+			}
+		}
+	}
+
 	return list, nil
 }
 
