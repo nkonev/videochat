@@ -503,8 +503,6 @@
           );
         },
         onShowContextMenu(e, menuableItem){
-          const tag = e?.target?.tagName?.toLowerCase();
-          const tagParent = e?.target?.parentElement.tagName?.toLowerCase();
           // console.log("onShowContextMenu", e, tag, tagParent);
           if (
             !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img") &&
