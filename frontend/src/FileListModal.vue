@@ -124,7 +124,7 @@ import bus, {
   FILE_CREATED,
   FILE_REMOVED,
   PLAYER_MODAL,
-  FILE_UPDATED, LOAD_FILES_COUNT
+  FILE_UPDATED, LOAD_FILES_COUNT, LOGGED_OUT
 } from "./bus/bus";
 import axios from "axios";
 import {
@@ -402,6 +402,10 @@ export default {
                 }
             }
         },
+        onLogout() {
+            this.reset();
+            this.closeModal();
+        },
         shouldReduceToFitPageSize() {
             return this.dto.files.length > dialogReloadUpperThreshold
         },
@@ -488,6 +492,7 @@ export default {
       bus.on(FILE_CREATED, this.onFileCreated);
       bus.on(FILE_UPDATED, this.onFileUpdated);
       bus.on(FILE_REMOVED, this.onFileRemoved);
+      bus.on(LOGGED_OUT, this.onLogout);
       this.markInstance = new Mark(".files-list");
     },
     beforeUnmount() {
@@ -496,6 +501,7 @@ export default {
         bus.off(FILE_CREATED, this.onFileCreated);
         bus.off(FILE_UPDATED, this.onFileUpdated);
         bus.off(FILE_REMOVED, this.onFileRemoved);
+        bus.off(LOGGED_OUT, this.onLogout);
         this.markInstance.unmark();
         this.markInstance = null;
     },
