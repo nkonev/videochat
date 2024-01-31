@@ -32,7 +32,7 @@
     "core-js": "^3.35.1",
     "date-fns": "^3.3.0",
     "graphql-ws": "5.14.3",
-    "livekit-client": "1.15.10",
+    "livekit-client": "1.15.11",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
