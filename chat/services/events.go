@@ -519,6 +519,9 @@ func (not *eventsImpl) SendReactionOnYourMessage(c echo.Context, wasAdded bool, 
 	}
 
 	for _, participantId := range participantIds {
+		if participantId == userId {
+			continue
+		}
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType:                  eventType,
 			ReactionEvent: 				&event,
