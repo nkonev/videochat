@@ -55,7 +55,7 @@ type CreateChatDto struct {
 	AvatarBig         null.String `json:"avatarBig"`
 	CanResend         bool        `json:"canResend"`
 	AvailableToSearch bool        `json:"availableToSearch"`
-	Blog              bool        `json:"blog"`
+	Blog              *bool        `json:"blog"`
 }
 
 type ChatHandler struct {
@@ -354,8 +354,8 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	}
 
 	if !ch.checkCanCreateBlog(userPrincipalDto.Roles, bindTo.Blog) {
-		GetLogEntry(c.Request().Context()).Errorf("Blog is disabled for regular users")
-		return c.NoContent(http.StatusUnauthorized)
+		GetLogEntry(c.Request().Context()).Infof("Blog is disabled for regular users")
+		bindTo.Blog = nil
 	}
 
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
@@ -400,11 +400,12 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 }
 
 func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) *db.Chat {
+	isBlog := utils.NullableToBoolean(d.Blog)
 	return &db.Chat{
 		Title:             TrimAmdSanitize(policy, d.Name),
 		CanResend:         d.CanResend,
 		AvailableToSearch: d.AvailableToSearch,
-		Blog:              d.Blog,
+		Blog:              isBlog,
 	}
 }
 
@@ -461,8 +462,8 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 	}
 
 	if !ch.checkCanCreateBlog(userPrincipalDto.Roles, bindTo.Blog) {
-		GetLogEntry(c.Request().Context()).Errorf("Blog is disabled for regular users")
-		return c.NoContent(http.StatusUnauthorized)
+		GetLogEntry(c.Request().Context()).Infof("Blog is disabled for regular users")
+		bindTo.Blog = nil
 	}
 
 	var userIdsToNotifyAboutChatChanged []int64
@@ -472,7 +473,16 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
-		_, err := tx.EditChat(bindTo.Id, TrimAmdSanitize(ch.policy, bindTo.Name), bindTo.Avatar, bindTo.AvatarBig, bindTo.CanResend, bindTo.AvailableToSearch, bindTo.Blog)
+
+		_, err := tx.EditChat(
+			bindTo.Id,
+			TrimAmdSanitize(ch.policy, bindTo.Name),
+			bindTo.Avatar,
+			bindTo.AvatarBig,
+			bindTo.CanResend,
+			bindTo.AvailableToSearch,
+			bindTo.Blog,
+		)
 		if err != nil {
 			return err
 		}
@@ -1371,11 +1381,11 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 	return c.JSON(http.StatusOK, &ParticipantsBelongToChat{Users: users})
 }
 
-func (ch *ChatHandler) checkCanCreateBlog(roles []string, blog bool) bool {
+func (ch *ChatHandler) checkCanCreateBlog(roles []string, blog *bool) bool {
 	if !ch.canCreateBlog {
 		return true
 	}
-	if blog {
+	if blog != nil && *blog {
 		adminFound := false
 		for _, role := range roles {
 			if "ROLE_ADMIN" == role {
@@ -1396,5 +1406,6 @@ func (ch *ChatHandler) CanCreateBlog(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto.Roles, true)} )
+	isBlog := true
+	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto.Roles, &isBlog)} )
 }

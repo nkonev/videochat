@@ -218,3 +218,11 @@ func SetExtension(fileName string, newExtension string) string {
 		return fileName
 	}
 }
+
+func NullableToBoolean(pt *bool) bool {
+	if pt != nil && *pt {
+		return true
+	} else {
+		return false
+	}
+}
