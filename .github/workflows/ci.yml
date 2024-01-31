@@ -79,7 +79,7 @@ jobs:
       - name: Build with npm run
         if: env.SHOULD_RUN == 'true'
         run: |
-          (cd frontend; make check-env clean download package)
+          (cd frontend; make check-env clean clean-cache download package)
       - name: Build docker image and deploy
         if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
