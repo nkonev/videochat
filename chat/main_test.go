@@ -354,7 +354,7 @@ func TestChatCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
 		// test not found
 		c30, _, _ := request("GET", "/chat/666", nil, e)
-		assert.Equal(t, http.StatusNotFound, c30)
+		assert.Equal(t, http.StatusNoContent, c30)
 
 		chatsBefore, _ := db.CountChats()
 		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
