@@ -133,7 +133,7 @@
       link_dialog_type_add_link_to_text,
       link_dialog_type_add_media_embed, media_audio,
       media_image,
-      media_video, reply_message, setEmbed
+      media_video, new_message, reply_message, setEmbed
     } from "@/utils";
     import {
       getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull,
@@ -232,22 +232,29 @@
                     })
                 }
             },
-            onSetMessageFromModal({dto, isNew, actionType}) {
+            onSetMessageFromModal({dto, actionType}) {
+              // in case actionType == new_message we any way should check for existing and for reply
               const mbExisting = getStoredChatEditMessageDtoOrNull(this.chatId);
               this.removeOwnerFromSavedMessageIfNeed(mbExisting);
-              if (isNew) {
-                if (mbExisting && !mbExisting.id) {
-                  this.onSetMessage({dto: mbExisting, actionType})
-                } else if (dto?.embedMessage) {
-                    this.onSetMessage({dto: dto, actionType})
+
+              if (actionType == new_message) { // in case actionType == new_message we any way should check for existing and for reply
+                if (mbExisting) {
+                  this.editMessageDto = mbExisting;
+                  this.afterSetMessage();
                 } else {
-                  this.onSetMessage({dto: chatEditMessageDtoFactory(), actionType})
+                  this.editMessageDto = chatEditMessageDtoFactory();
+                  this.afterSetMessage();
                 }
               } else {
                 if (mbExisting && mbExisting.id == dto.id) {
-                  this.onSetMessage({dto: mbExisting, actionType})
+                  if (actionType == reply_message) {
+                    setEmbed(mbExisting, getEmbed(dto))
+                  }
+                  this.editMessageDto = mbExisting;
+                  this.afterSetMessage();
                 } else {
-                  this.onSetMessage({dto: dto, actionType})
+                  this.editMessageDto = dto;
+                  this.afterSetMessage();
                 }
               }
             },
@@ -257,8 +264,11 @@
               } else {
                 this.editMessageDto = dto;
               }
+              this.afterSetMessage();
+            },
+            afterSetMessage() {
               if (hasLength(this.editMessageDto.fileItemUuid)) {
-                  this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid)
+                this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid)
               }
               this.saveToStore();
               this.setContentToEditorAndLoad();

@@ -53,7 +53,7 @@
                 this.show = true;
                 this.messageId = dto?.id;
                 this.$nextTick(()=>{
-                    bus.emit(SET_EDIT_MESSAGE_MODAL, {dto, isNew: this.isNew, actionType});
+                    bus.emit(SET_EDIT_MESSAGE_MODAL, {dto, actionType});
                 });
             },
             closeModal() {
