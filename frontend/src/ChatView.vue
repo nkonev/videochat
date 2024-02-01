@@ -1,7 +1,7 @@
 <template>
     <splitpanes ref="splOuter" class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
       <pane :size="leftPaneSize()" v-if="showLeftPane()">
-        <ChatList :embedded="true"/>
+        <ChatList :embedded="true" v-if="isAllowedChatList()"/>
       </pane>
 
       <pane>
@@ -438,7 +438,10 @@ export default {
       return this.chatStore.currentUser && this.$route.name == videochat_name && !this.isSwitching && this.chatDto?.participantIds?.length
     },
     isAllowedMessageList() {
-      return this.chatStore.currentUser && this.chatDto?.id
+      return this.chatStore.currentUser && !!this.chatDto?.id
+    },
+    isAllowedChatList() {
+      return this.chatStore.currentUser && !!this.chatDto?.id
     },
     onVideoCallChanged(dto) {
       if (dto.chatId == this.chatId) {
