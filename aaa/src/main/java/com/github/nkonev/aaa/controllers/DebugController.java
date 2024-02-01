@@ -3,13 +3,19 @@ package com.github.nkonev.aaa.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.dto.OAuth2IdentifiersDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.OAuth2ProvidersService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import com.github.nkonev.aaa.dto.UserAccountDTO;
 import java.util.Map;
@@ -23,6 +29,9 @@ public class DebugController {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AsyncEmailService asyncEmailService;
 
     @GetMapping({"/index.html", "/"})
     public ModelAndView ModelAndView(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) throws JsonProcessingException {
@@ -58,6 +67,12 @@ public class DebugController {
         ModelAndView modelAndView = new ModelAndView("login");
         setCommonHeaderData(userAccount, modelAndView);
         return modelAndView;
+    }
+
+    @ResponseBody
+    @PutMapping(value = Constants.Urls.INTERNAL_API + "/email", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public void checkEmail(@RequestBody AsyncEmailService.ArbitraryEmailDto emailDto) {
+        asyncEmailService.sendArbitraryEmail(emailDto);
     }
 
 }

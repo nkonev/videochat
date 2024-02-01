@@ -19,6 +19,7 @@ public class RabbitMqConfig {
     public static final String QUEUE_USER_CONFIRMATION_EMAILS_NAME = "aaa-internal-user-confirmation-emails";
     public static final String QUEUE_PASSWORD_RESET_EMAILS_NAME = "aaa-internal-password-reset-email";
 
+    public static final String QUEUE_ARBITRARY_EMAILS_NAME = "aaa-internal-arbitrary-email";
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -43,6 +44,11 @@ public class RabbitMqConfig {
     @Bean
     public Queue passwordResetTokenRequests() {
         return new Queue(QUEUE_PASSWORD_RESET_EMAILS_NAME, true);
+    }
+
+    @Bean
+    public Queue arbitraryEmails() {
+        return new Queue(QUEUE_ARBITRARY_EMAILS_NAME, true);
     }
 
 }

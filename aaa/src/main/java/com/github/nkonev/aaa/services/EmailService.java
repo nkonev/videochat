@@ -49,35 +49,35 @@ public class EmailService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
 
-    public void sendUserConfirmationToken(String email, UserConfirmationToken userConfirmationToken, String login) {
+    public void sendUserConfirmationToken(String recipient, UserConfirmationToken userConfirmationToken, String login) {
         // https://yandex.ru/support/mail-new/mail-clients.html
         // https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
         // http://docs.spring.io/spring/docs/4.3.10.RELEASE/spring-framework-reference/htmlsingle/#mail-usage-simple
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom(from);
         msg.setSubject(registrationSubject);
-        msg.setTo(email);
+        msg.setTo(recipient);
 
         final var regLink = customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM + "?"+ Constants.Urls.UUID +"=" + userConfirmationToken.uuid();
         final var text = renderTemplate("confirm-registration.ftlh",
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
-        LOGGER.trace("For registration confirmation '{}' generated email text '{}'", email, text);
+        LOGGER.trace("For registration confirmation '{}' generated email text '{}'", recipient, text);
         msg.setText(text);
         mailSender.send(msg);
     }
 
-    public void sendPasswordResetToken(String email, PasswordResetToken passwordResetToken, String login) {
+    public void sendPasswordResetToken(String recipient, PasswordResetToken passwordResetToken, String login) {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom(from);
         msg.setSubject(passwordResetSubject);
-        msg.setTo(email);
+        msg.setTo(recipient);
 
         final var passwordResetLink = customConfig.getPasswordRestoreEnterNew() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
         final var text = renderTemplate("password-reset.ftlh",
                 Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
 
-        LOGGER.trace("For password reset '{}' generated email text '{}'", email, text);
+        LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
 
         msg.setText(text);
 
@@ -93,5 +93,15 @@ public class EmailService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void sendArbitraryEmail(String recipient, String subject, String body) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setSubject(subject);
+        msg.setTo(recipient);
+        msg.setText(body);
+
+        mailSender.send(msg);
     }
 }

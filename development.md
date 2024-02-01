@@ -40,6 +40,10 @@ docker exec -t videochat_postgres_1 pg_dump -U aaa -b --create --column-inserts 
 http://localhost:8081/api/user/list?userId=1&userId=-1
 ```
 
+## Check email sending
+```
+curl -i -X PUT -H "Content-Type: application/json" -d '{"recipient": "nikita@example.com", "subject": "Test email", "body": "Test body"}' --url 'http://localhost:8060/internal/email'
+```
 
 # Go
 
