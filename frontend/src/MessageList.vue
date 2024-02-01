@@ -65,12 +65,12 @@
       SET_EDIT_MESSAGE, PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
     } from "@/bus/bus";
     import {
-      deepCopy, embed_message_reply,
+      deepCopy, edit_message, embed_message_reply,
       findIndex, getBlogLink,
       hasLength, haveEmbed, isChatRoute,
       replaceInArray,
       replaceOrAppend,
-      replaceOrPrepend,
+      replaceOrPrepend, reply_message,
       setAnswerPreviewFields
     } from "@/utils";
     import debounce from "lodash/debounce";
@@ -436,9 +436,9 @@
             setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
           }
           if (!this.isMobile()) {
-            bus.emit(SET_EDIT_MESSAGE, editMessageDto);
+            bus.emit(SET_EDIT_MESSAGE, {dto: editMessageDto, actionType: edit_message});
           } else {
-            bus.emit(OPEN_EDIT_MESSAGE, editMessageDto);
+            bus.emit(OPEN_EDIT_MESSAGE, {dto: editMessageDto, actionType: edit_message});
           }
         },
         replyOnMessage(dto) {
@@ -450,9 +450,9 @@
           };
           setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
           if (!this.isMobile()) {
-              bus.emit(SET_EDIT_MESSAGE, replyMessage);
+              bus.emit(SET_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
           } else {
-              bus.emit(OPEN_EDIT_MESSAGE, replyMessage);
+              bus.emit(OPEN_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
           }
         },
         onFilesClicked(item) {

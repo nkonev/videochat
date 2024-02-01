@@ -155,6 +155,11 @@ export const haveEmbed = (dto) => {
   return !!dto.embedMessage;
 }
 
+export const edit_message = 'editMessage'
+export const reply_message = 'replyMessage'
+
+export const new_message = 'newMessage'
+
 export const formatSize = (size) => {
     const operableSize = Math.abs(size);
     if (operableSize > 1024 * 1024 * 1024 * 1024) {

@@ -232,26 +232,26 @@
                     })
                 }
             },
-            onSetMessageFromModal({dto, isNew}) {
+            onSetMessageFromModal({dto, isNew, actionType}) {
               const mbExisting = getStoredChatEditMessageDtoOrNull(this.chatId);
               this.removeOwnerFromSavedMessageIfNeed(mbExisting);
               if (isNew) {
                 if (mbExisting && !mbExisting.id) {
-                  this.onSetMessage(mbExisting)
+                  this.onSetMessage({dto: mbExisting, actionType})
                 } else if (dto?.embedMessage) {
-                    this.onSetMessage(dto)
+                    this.onSetMessage({dto: dto, actionType})
                 } else {
-                  this.onSetMessage(chatEditMessageDtoFactory())
+                  this.onSetMessage({dto: chatEditMessageDtoFactory(), actionType})
                 }
               } else {
                 if (mbExisting && mbExisting.id == dto.id) {
-                  this.onSetMessage(mbExisting)
+                  this.onSetMessage({dto: mbExisting, actionType})
                 } else {
-                  this.onSetMessage(dto)
+                  this.onSetMessage({dto: dto, actionType})
                 }
               }
             },
-            onSetMessage(dto) {
+            onSetMessage({dto, actionType}) {
               this.editMessageDto = dto;
               if (hasLength(this.editMessageDto.fileItemUuid)) {
                   this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid)

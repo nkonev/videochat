@@ -56,7 +56,7 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {hasLength, isCalling, isChatRoute, setTitle} from "@/utils";
+import {hasLength, isCalling, isChatRoute, new_message, setTitle} from "@/utils";
 import bus, {
   CHAT_DELETED,
   CHAT_EDITED,
@@ -470,7 +470,7 @@ export default {
       }
     },
     openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
-      bus.emit(OPEN_EDIT_MESSAGE, null);
+      bus.emit(OPEN_EDIT_MESSAGE, {dto: null, actionType: new_message});
     },
     shouldShowVideoOnTop() {
         return this.videoIsOnTop() && this.isAllowedVideo()
