@@ -224,6 +224,8 @@
                 this.saveToStore();
             },
             loadEmbedPreviewIfNeed(dto) {
+                this.showAnswer = false;
+                this.answerOnPreview = null;
                 if (haveEmbed(dto)) {
                     const {embedPreviewText, embedPreviewOwner} = getAnswerPreviewFields(dto);
                     axios.put('/api/chat/public/preview-without-html', {text: embedPreviewText, login: embedPreviewOwner}).then(({data}) => {
