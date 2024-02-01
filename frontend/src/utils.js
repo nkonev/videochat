@@ -88,9 +88,6 @@ export const chatEditMessageDtoFactory = () => {
 export const colorText = 'colorText';
 export const colorBackground = 'colorBackground';
 
-export const getAnswerPreviewFields = (dto) => {
-  return dto;
-}
 
 export const getUrlPrefix = () => {
   return window.location.protocol + "//" + window.location.host
@@ -146,8 +143,12 @@ export const moveToFirstPosition = (array, element) => {
 
 export const setAnswerPreviewFields = (dto, messageText, ownerLogin) => {
   // used only to show on front, ignored in message create machinery
-  dto.embedPreviewText = messageText;
-  dto.embedPreviewOwner = ownerLogin;
+  dto.embedMessage.embedPreviewText = messageText;
+  dto.embedMessage.embedPreviewOwner = ownerLogin;
+}
+
+export const getAnswerPreviewFields = (dto) => {
+  return dto.embedMessage;
 }
 
 export const formatSize = (size) => {

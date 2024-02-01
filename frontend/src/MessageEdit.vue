@@ -125,16 +125,15 @@
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
     import {
-        chatEditMessageDtoFactory,
-        colorBackground,
-        colorText,
-        embed,
-        getAnswerPreviewFields,
-        hasLength, isChatRoute,
-        link_dialog_type_add_link_to_text,
-        link_dialog_type_add_media_embed, media_audio,
-        media_image,
-        media_video
+      chatEditMessageDtoFactory,
+      colorBackground,
+      colorText,
+      embed, getAnswerPreviewFields,
+      hasLength, isChatRoute,
+      link_dialog_type_add_link_to_text,
+      link_dialog_type_add_media_embed, media_audio,
+      media_image,
+      media_video
     } from "@/utils";
     import {
       getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull,
@@ -225,7 +224,7 @@
                 this.saveToStore();
             },
             loadEmbedPreviewIfNeed(dto) {
-                if (dto.embedMessage?.id) {
+                if (dto.embedMessage) {
                     const {embedPreviewText, embedPreviewOwner} = getAnswerPreviewFields(dto);
                     axios.put('/api/chat/public/preview-without-html', {text: embedPreviewText, login: embedPreviewOwner}).then(({data}) => {
                         this.showAnswer = true;
