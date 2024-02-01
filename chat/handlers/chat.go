@@ -271,7 +271,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	} else {
 		if chat == nil {
-			return c.NoContent(http.StatusNotFound)
+			return c.NoContent(http.StatusNoContent)
 		} else {
 			copiedChat, err := getChatWithAdminedUsers(c, chat, ch.db)
 			if err != nil {

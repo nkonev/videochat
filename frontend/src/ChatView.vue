@@ -144,11 +144,19 @@ export default {
       this.graphQlUnsubscribe();
     },
     fetchAndSetChat() {
-      return axios.get(`/api/chat/${this.chatId}`).then(({data}) => {
-        console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
-        this.commonChatEdit(data);
-        this.chatStore.tetATet = data.tetATet;
-        this.chatDto = data;
+      return axios.get(`/api/chat/${this.chatId}`).then((response) => {
+        if (response.status == 204) {
+          this.goToChatList();
+          this.setWarning(this.$vuetify.locale.t('$vuetify.chat_not_found'));
+          return Promise.reject();
+        } else {
+          const data = response.data;
+          console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
+          this.commonChatEdit(data);
+          this.chatStore.tetATet = data.tetATet;
+          this.chatDto = data;
+          return Promise.resolve();
+        }
       })
     },
     commonChatEdit(data) {
@@ -175,15 +183,7 @@ export default {
       });
     },
     getInfo() {
-      return this.fetchAndSetChat().catch(reason => {
-        if (reason.response.status == 404) {
-          this.goToChatList();
-          this.setWarning(this.$vuetify.locale.t('$vuetify.chat_not_found'));
-          return Promise.reject();
-        } else {
-          return Promise.resolve();
-        }
-      }).then(() => {
+      return this.fetchAndSetChat().then(() => {
         // async call
         this.fetchPromotedMessage();
         axios.get(`/api/video/${this.chatId}/users`)
