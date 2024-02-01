@@ -46,6 +46,7 @@ Click on image to open a screenshot gallery.
 * [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
 * Notifications about `@mention`, `@all`, `@here` and missed video calls.
 * Pinned messages.
+* Reactions.
 * Horizontal scaling, including video server itself thanks to Livekit.
 * No sticky sessions required.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
