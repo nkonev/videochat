@@ -17,12 +17,12 @@
                     </v-btn>
                 </span>
                 <span class="d-flex flex-grow-1">
-                  <v-toolbar-title>{{ isNew ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
+                  <v-toolbar-title>{{ !isEditing ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
                 </span>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
-                <MessageEdit :chatId="chatId"/>
+                <MessageEdit :chatId="chatId" @setEditingTitle="onSetEditingTitle"/>
             </div>
         </v-card>
     </v-dialog>
@@ -41,8 +41,7 @@
         data() {
             return {
                 show: false,
-                messageId: null,
-                showPaste: false,
+                isEditing: false,
             }
         },
         mixins:[
@@ -51,15 +50,16 @@
         methods: {
             showModal({dto, actionType}) {
                 this.show = true;
-                this.messageId = dto?.id;
                 this.$nextTick(()=>{
                     bus.emit(SET_EDIT_MESSAGE_MODAL, {dto, actionType});
                 });
             },
             closeModal() {
                 this.show = false;
-                this.messageId = null;
-                this.showPaste = false;
+                this.isEditing = false;
+            },
+            onSetEditingTitle() {
+                this.isEditing = true;
             },
         },
         watch: {
@@ -75,9 +75,6 @@
         computed: {
             chatId() {
                 return this.$route.params.id
-            },
-            isNew() {
-                return !this.messageId;
             },
         },
         mounted() {

@@ -257,6 +257,9 @@
                   this.afterSetMessage();
                 }
               }
+              if (this.editMessageDto.id) {
+                this.$emit("setEditingTitle");
+              }
             },
             onSetMessage({dto, actionType}) {
               if (actionType == reply_message) {
