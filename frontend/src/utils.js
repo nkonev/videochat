@@ -155,6 +155,14 @@ export const haveEmbed = (dto) => {
   return !!dto.embedMessage;
 }
 
+export const getEmbed = (dto) => {
+  return dto.embedMessage;
+}
+
+export const setEmbed = (dto, e) => {
+  dto.embedMessage = e;
+}
+
 export const edit_message = 'editMessage'
 export const reply_message = 'replyMessage'
 

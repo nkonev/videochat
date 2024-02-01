@@ -128,12 +128,12 @@
       chatEditMessageDtoFactory,
       colorBackground,
       colorText,
-      embed, getAnswerPreviewFields,
+      embed, getAnswerPreviewFields, getEmbed,
       hasLength, haveEmbed, isChatRoute,
       link_dialog_type_add_link_to_text,
       link_dialog_type_add_media_embed, media_audio,
       media_image,
-      media_video
+      media_video, reply_message, setEmbed
     } from "@/utils";
     import {
       getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull,
@@ -252,7 +252,11 @@
               }
             },
             onSetMessage({dto, actionType}) {
-              this.editMessageDto = dto;
+              if (actionType == reply_message) {
+                setEmbed(this.editMessageDto, getEmbed(dto));
+              } else {
+                this.editMessageDto = dto;
+              }
               if (hasLength(this.editMessageDto.fileItemUuid)) {
                   this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid)
               }
