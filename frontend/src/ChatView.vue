@@ -438,7 +438,7 @@ export default {
       return this.chatStore.currentUser && this.$route.name == videochat_name && !this.isSwitching && this.chatDto?.participantIds?.length
     },
     isAllowedMessageList() {
-      return this.chatStore.currentUser && !!this.chatDto
+      return this.chatStore.currentUser && this.chatDto?.id
     },
     onVideoCallChanged(dto) {
       if (dto.chatId == this.chatId) {

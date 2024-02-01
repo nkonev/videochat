@@ -340,7 +340,7 @@
           this.beforeUnload();
         },
         canDrawMessages() {
-          return !!this.chatStore.currentUser && hasLength(this.chatId)
+          return !!this.chatStore.currentUser && !!this.chatDto?.id
         },
         async scrollTo(newValue) {
           return await this.$nextTick(()=>{
