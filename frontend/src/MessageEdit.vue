@@ -129,7 +129,7 @@
       colorBackground,
       colorText,
       embed, getAnswerPreviewFields,
-      hasLength, isChatRoute,
+      hasLength, haveEmbed, isChatRoute,
       link_dialog_type_add_link_to_text,
       link_dialog_type_add_media_embed, media_audio,
       media_image,
@@ -224,7 +224,7 @@
                 this.saveToStore();
             },
             loadEmbedPreviewIfNeed(dto) {
-                if (dto.embedMessage) {
+                if (haveEmbed(dto)) {
                     const {embedPreviewText, embedPreviewOwner} = getAnswerPreviewFields(dto);
                     axios.put('/api/chat/public/preview-without-html', {text: embedPreviewText, login: embedPreviewOwner}).then(({data}) => {
                         this.showAnswer = true;

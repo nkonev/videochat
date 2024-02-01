@@ -151,6 +151,10 @@ export const getAnswerPreviewFields = (dto) => {
   return dto.embedMessage;
 }
 
+export const haveEmbed = (dto) => {
+  return !!dto.embedMessage;
+}
+
 export const formatSize = (size) => {
     const operableSize = Math.abs(size);
     if (operableSize > 1024 * 1024 * 1024 * 1024) {

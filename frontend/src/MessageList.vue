@@ -67,7 +67,7 @@
     import {
       deepCopy, embed_message_reply,
       findIndex, getBlogLink,
-      hasLength, isChatRoute,
+      hasLength, haveEmbed, isChatRoute,
       replaceInArray,
       replaceOrAppend,
       replaceOrPrepend,
@@ -432,7 +432,7 @@
         },
         editMessage(dto){
           const editMessageDto = deepCopy(dto);
-          if (dto.embedMessage?.id) {
+          if (haveEmbed(dto)) {
             setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
           }
           if (!this.isMobile()) {
