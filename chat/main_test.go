@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
@@ -46,6 +47,9 @@ func shutdown() {
 
 const aaaEmuPort = "8061"
 
+var userTester = base64.StdEncoding.EncodeToString([]byte("tester"))
+var userTester2 = base64.StdEncoding.EncodeToString([]byte("tester2"))
+
 func setup() {
 	config.InitViper()
 
@@ -64,7 +68,7 @@ func TestExtractAuth(t *testing.T) {
 	req := test.NewRequest("GET", "/should-be-secured", nil)
 	headers := map[string][]string{
 		"X-Auth-Expiresin": {"1590022342295000"},
-		"X-Auth-Username":  {"dGVzdGVy"},
+		"X-Auth-Username":  {userTester},
 		"X-Auth-Userid":    {"1"},
 	}
 	req.Header = headers
@@ -139,7 +143,7 @@ func waitForChatServer() {
 			"Accept":           {contentType},
 			"Content-Type":     {contentType},
 			"X-Auth-Expiresin": {expirationTime},
-			"X-Auth-Username":  {"dGVzdGVy"},
+			"X-Auth-Username":  {userTester},
 			"X-Auth-Userid":    {"1"},
 		}
 		getChatRequest := &http.Request{
@@ -186,7 +190,7 @@ func request(method, path string, body io.Reader, e *echo.Echo) (int, string, ht
 	Header := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
-		"X-Auth-Username":      {"dGVzdGVy"},
+		"X-Auth-Username":      {userTester},
 		"X-Auth-Userid":        {"1"},
 	}
 	return requestWithHeader(method, path, Header, body, e)
@@ -411,7 +415,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		"Accept":           {contentType},
 		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"dGVzdGVy"},
+		"X-Auth-Username":  {userTester},
 		"X-Auth-Userid":    {"1"},
 	}
 
@@ -473,7 +477,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 		"Accept":           {contentType},
 		"Content-Type":     {contentType},
 		"X-Auth-Expiresin": {expirationTime},
-		"X-Auth-Username":  {"dGVzdGVy"},
+		"X-Auth-Username":  {userTester},
 		"X-Auth-Userid":    {"1"},
 	}
 
@@ -583,13 +587,13 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 	h1 := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
-		"X-Auth-Username":      {"dGVzdGVy"}, // tester
+		"X-Auth-Username":      {userTester}, // tester
 		"X-Auth-Userid":        {"1"},
 	}
 	h2 := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
 		"X-Auth-Expiresin":     {"1590022342295000"},
-		"X-Auth-Username":      {"dGVzdGVyMg=="}, // tester2
+		"X-Auth-Username":      {userTester2}, // tester2
 		"X-Auth-Userid":        {"2"},
 	}
 
