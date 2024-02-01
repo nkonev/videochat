@@ -1,11 +1,11 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" width="fit-content">
+        <v-dialog v-model="show" max-width="600px">
             <v-card :title="aTitle">
                 <v-card-text class="py-0 pt-2 px-4 smiley-buttons">
-                    <v-row :key="sli" v-for="(smileyLine, sli) in smileys" no-gutters>
-                        <span :key="si" @click="onSmileyClick(smiley)" v-for="(smiley, si) in smileyLine" class="smiley">{{smiley}}</span>
-                    </v-row>
+
+                    <span @click="onSmileyClick(smiley)" v-for="smiley in smileys" class="smiley">{{smiley}}</span>
+
                 </v-card-text>
 
                 <v-card-actions>
@@ -25,10 +25,10 @@
             return {
                 show: false,
                 smileys: [
-                    ['😀', '😂', '🤔', '🥰', '💋', '❤️', '❤️‍🔥', '😍'],
-                    ['😐', '🤒', '🤮', '🥴',  '😎', '😨', '👀', '🌚'],
-                    ['😡', '👿', '💩', '😇',  '🤐', '🤪', '💣', '💧'],
-                    ['👍',  '👎', '🤟', '🙏',  '💪', '👏', '🔥', '❄️'],
+                    '😀', '😂', '🤔', '🥰', '💋', '❤️', '❤️‍🔥', '😍',
+                    '😐', '🤒', '🤮', '🥴',  '😎', '😨', '👀', '🌚',
+                    '😡', '👿', '💩', '😇',  '🤐', '🤪', '💣', '💧',
+                    '👍',  '👎', '🤟', '🙏',  '💪', '👏', '🔥', '❄️',
                 ],
                 addSmileyCallback: null,
                 aTitle: null,
