@@ -8,6 +8,8 @@ import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path';
 
+import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill';
+
 // https://vitejs.dev/config/
 const base = "/";
 
@@ -34,10 +36,27 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+      plugins: [
+        GlobalsPolyfills({
+          process: true,
+          buffer: true,
+        }),
+      ],
+    },
+  },
   define: { 'process.env': {} },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      stream: 'stream-browserify',
+      // https: 'agent-base',
+      // comment above line and uncomment below line if it doesnot work
+      http:'agent-base',
     },
     extensions: [
       '.js',

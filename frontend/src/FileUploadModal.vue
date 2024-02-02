@@ -71,6 +71,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
 const CancelToken = axios.CancelToken;
+import { Agent } from "http";
 
 export default {
     data () {
@@ -210,7 +211,9 @@ export default {
                     const renamedFile = renameFilePart(fileToUpload.file, fileToUpload.newFileName);
 
                     const config = {
-                        cancelToken: fileToUpload.cancelSource.token
+                        cancelToken: fileToUpload.cancelSource.token,
+                        httpAgent: new Agent({ keepAlive: false }),
+                        // httpsAgent: new agentkeepalive.HttpsAgent({ keepAlive: false }),
                     }
 
                     const chunkSize = fileToUpload.chunkSize;

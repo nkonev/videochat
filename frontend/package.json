@@ -9,7 +9,7 @@
     "lint": "eslint . --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "typeface-roboto": "1.1.13",
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
@@ -28,6 +28,7 @@
     "@tiptap/starter-kit": "2.2.0",
     "@tiptap/suggestion": "2.2.0",
     "@tiptap/vue-3": "2.2.0",
+    "agent-base": "^7.1.0",
     "axios": "^1.6.5",
     "core-js": "^3.35.1",
     "date-fns": "^3.3.0",
@@ -38,6 +39,8 @@
     "mitt": "^3.0.1",
     "pinia": "2.1.7",
     "splitpanes": "^3.1.5",
+    "stream-browserify": "^3.0.0",
+    "typeface-roboto": "1.1.13",
     "uuid": "^9.0.1",
     "vue": "3.4.15",
     "vue-router": "4.2.5",

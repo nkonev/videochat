@@ -745,3 +745,9 @@ docker exec -it videochat_redis_1 redis-cli -n 4
 SADD dials_of_user:1 2
 HSET user_call_state:2 userCallOwner 1
 ```
+
+# Disabling keepalive
+* https://stackoverflow.com/questions/69889711/does-axios-support-keepalive-functionality-same-as-the-native-fetch
+* https://github.com/axios/axios/issues/4748
+* https://stackoverflow.com/questions/73036803/uncaught-typeerror-https-agent-is-not-a-constructor
+* https://github.com/axios/axios/issues/5851
