@@ -52,8 +52,8 @@ minio:
   location: "europe-east"
   multipart:
     # https://www.altostra.com/blog/multipart-uploads-with-s3-presigned-url
-    # 1MB
-    chunkSize: 1000000
+    # 100MB
+    chunkSize: 100000000
     expire: 24h
   bucket:
     userAvatar: "user-avatar"
