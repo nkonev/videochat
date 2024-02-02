@@ -228,6 +228,7 @@ export default {
                         onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
                       };
 
+                      await axios.options(presignedUrlObj.url);
                       const res = await axios.put(presignedUrlObj.url, blob, childConfig);
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
