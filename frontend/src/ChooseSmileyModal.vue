@@ -4,7 +4,7 @@
             <v-card :title="aTitle">
                 <v-card-text class="py-0 pt-2 px-4 smiley-buttons">
 
-                    <span @click="onSmileyClick(smiley)" v-for="smiley in smileys" class="smiley">{{smiley}}</span>
+                    <v-btn @click="onSmileyClick(smiley)" v-for="smiley in smileys" variant="flat" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
 
                 </v-card-text>
 
@@ -28,7 +28,15 @@
                     '😀', '😂', '🤔', '🥰', '💋', '❤️', '❤️‍🔥', '😍',
                     '😐', '🤒', '🤮', '🥴',  '😎', '😨', '👀', '🌚',
                     '😡', '👿', '💩', '😇',  '🤐', '🤪', '💣', '💧',
-                    '👍',  '👎', '🤟', '🙏',  '💪', '👏', '🔥', '❄️',
+                    '👍',  '👎', '🤟', '🙏', '💪', '👏', '🔥', '❄️',
+                    '🍎',  '🍅', '🍊', '🍒', '🤑', '🤗', '🤠', '💔',
+                    '💯',  '💥', '💤', '👋', '🖖', '🫴', '🫸', '🫷',
+                    '👌', '🤌',  '🤞', '🫵', '🪲', '🐞', '🌹', '🌎',
+                    '🎯', '♟️', '♠️', '♥️', '♦️', '♣️', '💊', '🧲',
+                    '🩹', '🗿', '⚠️',  '⛔', '☢️', '☣️', '♻️', '✅',
+                    '❌', '⚡', '🚀', '#️⃣', '*️⃣', '0️⃣', '1️⃣',
+                    '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣',
+                    '8️⃣', '9️⃣', '🔟', '©', '™', '®'
                 ],
                 addSmileyCallback: null,
                 aTitle: null,
@@ -74,18 +82,7 @@
         }
     }
     .smiley {
-      margin-left 4px
-      margin-right 4px
-
-      margin-top 4px
-      margin-bottom 2px
-
-      cursor: pointer
-
       font-size: 2.125rem !important;
-      font-weight: 400;
-      line-height: 2.5rem;
-      letter-spacing: 0.0073529412em !important;
     }
 
     .smiley:hover {
