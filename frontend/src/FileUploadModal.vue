@@ -228,7 +228,15 @@ export default {
                         onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
                       };
 
-                      const res = await axios.put(presignedUrlObj.url, blob, childConfig);
+                      const res = await axios(
+                        {
+                          method: "PUT",
+                          url: presignedUrlObj.url,
+                          data: blob,
+                          processData: false,
+                          cache: false,
+                          config: childConfig
+                        });
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
