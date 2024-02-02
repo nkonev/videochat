@@ -70,6 +70,7 @@ import {formatSize, renameFilePart} from "./utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
+import {retry} from "@lifeomic/attempt";
 const CancelToken = axios.CancelToken;
 
 export default {
@@ -221,14 +222,21 @@ export default {
                       const start = (partNumber - 1) * chunkSize;
                       const end = partNumber * chunkSize;
                       console.log("Will send part", presignedUrlObj, start, end, chunkSize);
-                      const blob = renamedFile.slice(start, end);
 
                       const childConfig = {
                         ...config,
                         onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
                       };
 
-                      const res = await axios.put(presignedUrlObj.url, blob, childConfig);
+                      const retryOptions = {
+                        delay: 2000,
+                        maxAttempts: 3,
+                      };
+
+                      const res = await retry(async (context) => {
+                        const blob = renamedFile.slice(start, end);
+                        return await axios.put(presignedUrlObj.url, blob, childConfig);
+                      }, retryOptions);
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
