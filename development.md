@@ -751,3 +751,6 @@ HSET user_call_state:2 userCallOwner 1
 * https://github.com/axios/axios/issues/4748
 * https://stackoverflow.com/questions/73036803/uncaught-typeerror-https-agent-is-not-a-constructor
 * https://github.com/axios/axios/issues/5851
+Explanation:
+* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection
+* https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_header_name
