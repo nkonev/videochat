@@ -230,9 +230,6 @@ export default {
 
                       const res = await axios.put(presignedUrlObj.url, blob, childConfig);
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
-
-                      const ping = await axios.get('/storage/git.json');
-                      console.log("Got ping", ping);
                     }
 
                     // [3/3] concatenate parts
