@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   notification:
-    image: nkonev/notification:latest
+    image: nkonev/chat-notification:changing
     networks:
       backend:
     deploy:
