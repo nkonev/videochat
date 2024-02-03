@@ -392,6 +392,34 @@ func (db *DB) CountMessages() (int64, error) {
 	}
 }
 
+func getReactionsOnMessageCommon(co CommonOperations, chatId, messageId int64) ([]Reaction, error) {
+	var reactions []Reaction = make([]Reaction, 0)
+
+	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = $1", chatId), messageId)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		reaction := Reaction{}
+		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
+			return nil, tracerr.Wrap(err)
+		}
+
+		reactions = append(reactions, reaction)
+	}
+	return reactions, nil
+}
+
+func (db *DB) GetReactionsOnMessage(chatId, messageId int64) ([]Reaction, error) {
+	return getReactionsOnMessageCommon(db, chatId, messageId)
+}
+
+func (tx *Tx) GetReactionsOnMessage(chatId, messageId int64) ([]Reaction, error) {
+	return getReactionsOnMessageCommon(tx, chatId, messageId)
+}
+
 func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
 	row := co.QueryRow(fmt.Sprintf(`%v
 	WHERE 
@@ -408,20 +436,11 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		return nil, tracerr.Wrap(err)
 	}
 
-	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = $1", chatId), message.Id)
+	reactions, err := getReactionsOnMessageCommon(co, chatId, messageId)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, err
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		reaction := Reaction{}
-		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
-			return nil, tracerr.Wrap(err)
-		}
-
-		message.Reactions = append(message.Reactions, reaction)
-	}
+	message.Reactions = reactions
 
 	return &message, nil
 }

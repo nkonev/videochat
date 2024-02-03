@@ -30,6 +30,9 @@
 
         <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content">
           <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
+          <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(blogDto)">
+            <v-btn v-for="(reaction, i) in blogDto.reactions" variant="flat" size="small" height="32px" rounded :class="reactionClass(i)" :disabled="true"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
+          </div>
         </div>
       </div>
     </div>
@@ -218,6 +221,17 @@ export default {
     },
     canDrawMessages() {
       return true
+    },
+    shouldShowReactions(item) {
+      return item?.reactions?.length
+    },
+    reactionClass(i) {
+      const classes = [];
+      classes.push("mb-2")
+      if (i > 0) {
+        classes.push("ml-2")
+      }
+      return classes
     },
 
   },

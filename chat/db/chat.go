@@ -810,6 +810,19 @@ func (tx *Tx) RenameChat(chatId int64, title string) error {
 	return nil
 }
 
+func (db *DB) BlogPostMessageId(chatId int64) (int64, error) {
+	res := db.QueryRow(fmt.Sprintf("(select id from message_chat_%v where blog_post is true order by id limit 1)", chatId))
+	var messageId int64
+	if err := res.Scan(&messageId); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// there were no rows, but otherwise no error occurred
+			return 0, nil
+		}
+		return 0, tracerr.Wrap(err)
+	}
+	return messageId, nil
+}
+
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin

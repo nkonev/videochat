@@ -276,6 +276,7 @@ type BlogPostResponse struct {
 	MessageId      *int64    `json:"messageId"`
 	Text           *string   `json:"text"`
 	CreateDateTime time.Time `json:"createDateTime"`
+	Reactions 	   []dto.Reaction `json:"reactions"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -302,10 +303,17 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		CreateDateTime: chatBasic.CreateDateTime,
 	}
 
-	post, err := h.getBlogPost(blogId)
+	var post *db.BlogPost
+	posts, err := h.db.BlogPosts([]int64{blogId})
 	if err != nil {
 		return err
 	}
+	if len(posts) == 1 {
+		post = posts[0]
+	} else {
+		GetLogEntry(c.Request().Context()).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
+	}
+
 	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
@@ -320,21 +328,16 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 			user := users[post.OwnerId]
 			response.Owner = user
 		}
+
+		reactions, err := h.db.GetReactionsOnMessage(chatBasic.Id, post.MessageId)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Infof("For blog id %v unable to get reactions: %v", blogId, err)
+			return err
+		}
+		response.Reactions = convertReactions(reactions)
 	}
 
 	return c.JSON(http.StatusOK, response)
-}
-
-func (h *BlogHandler) getBlogPost(blogId int64) (*db.BlogPost, error) {
-	posts, err := h.db.BlogPosts([]int64{blogId})
-	if err != nil {
-		return nil, err
-	}
-	if len(posts) == 1 {
-		post := posts[0]
-		return post, nil
-	}
-	return nil, nil
 }
 
 func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
@@ -362,15 +365,11 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 
-	post, err := h.getBlogPost(blogId)
+	postMessageId, err := h.db.BlogPostMessageId(blogId)
 	if err != nil {
 		return err
 	}
-	if post == nil {
-		GetLogEntry(c.Request().Context()).Infof("Messages of this chat %v does no have blog posts", blogId)
-		return c.NoContent(http.StatusNoContent)
-	}
-	messages, err := h.db.GetComments(blogId, post.MessageId, size, startingFromItemId, reverse)
+	messages, err := h.db.GetComments(blogId, postMessageId, size, startingFromItemId, reverse)
 	if err != nil {
 		return err
 	}

@@ -347,26 +347,32 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 
 	ret.SetPersonalizedFields(behalfUserId)
 
-	ret.Reactions = make([]dto.Reaction, 0)
+	ret.Reactions = convertReactions(dbMessage.Reactions)
 
-	for _, dbReaction := range dbMessage.Reactions {
+	return ret
+}
+
+func convertReactions(dbReactions []db.Reaction) []dto.Reaction {
+	var retReactions = make([]dto.Reaction, 0)
+
+	for _, dbReaction := range dbReactions {
 
 		wasSummed := false
-		for j, existingReaction := range ret.Reactions {
+		for j, existingReaction := range retReactions {
 			if dbReaction.Reaction == existingReaction.Reaction {
-				ret.Reactions[j].Count = existingReaction.Count + 1
+				retReactions[j].Count = existingReaction.Count + 1
 				wasSummed = true
 			}
 		}
 		if !wasSummed {
-			ret.Reactions = append(ret.Reactions, dto.Reaction{
+			retReactions = append(retReactions, dto.Reaction{
 				Count:    1,
 				Reaction: dbReaction.Reaction,
 			})
 		}
 	}
 
-	return ret
+	return retReactions
 }
 
 func (a *CreateMessageDto) Validate() error {
