@@ -156,10 +156,14 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 		return err
 	}
 
-	for _, egress := range egresses {
-		_, err := rh.egressClient.StopEgress(c.Request().Context(), &livekit.StopEgressRequest{EgressId: egress})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during stoppping recording %v", err)
+	for egressId, ownerId := range egresses {
+		if ownerId == userPrincipalDto.UserId {
+			_, err := rh.egressClient.StopEgress(c.Request().Context(), &livekit.StopEgressRequest{EgressId: egressId})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during stoppping recording %v", err)
+			}
+		} else {
+			GetLogEntry(c.Request().Context()).Warnf("Attempt to stop not own egress %v", egressId)
 		}
 	}
 
@@ -195,9 +199,17 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 		})
 	}
 
-	recordInProgress, err := rh.egressService.HasActiveEgresses(chatId, c.Request().Context())
+	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
 	if err != nil {
-		return err
+		GetLogEntry(c.Request().Context()).Errorf("Error during get active egresses: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	recordInProgress := false
+	for _, ownerId := range egresses {
+		if ownerId == userPrincipalDto.UserId {
+			recordInProgress = true
+		}
 	}
 
 	return c.JSON(http.StatusOK, StatusResponse{

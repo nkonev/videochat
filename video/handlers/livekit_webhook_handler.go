@@ -98,7 +98,11 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				return nil
 			}
 
-			err = h.notificationService.NotifyRecordingChanged(chatId, true, c.Request().Context())
+			ownerId, err := h.egressService.GetOwnerId(c.Request().Context(), event.EgressInfo)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
+			}
+			err = h.notificationService.NotifyRecordingChanged(chatId, map[int64]bool{ownerId: true}, c.Request().Context())
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}
@@ -109,8 +113,11 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
 				return nil
 			}
-
-			err = h.notificationService.NotifyRecordingChanged(chatId, false, c.Request().Context())
+			ownerId, err := h.egressService.GetOwnerId(c.Request().Context(), event.EgressInfo)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
+			}
+			err = h.notificationService.NotifyRecordingChanged(chatId, map[int64]bool{ownerId: false}, c.Request().Context())
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}

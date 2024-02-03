@@ -52,19 +52,8 @@ func (h *NotificationService) NotifyVideoScreenShareChanged(participantIds []int
 }
 
 
-func (h *NotificationService) NotifyRecordingChanged(chatId int64, recordInProgress bool, ctx context.Context) error {
+func (h *NotificationService) NotifyRecordingChanged(chatId int64, recordInProgressByOwner map[int64]bool, ctx context.Context) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
-	var chatNotifyDto = dto.VideoCallRecordingChangedDto{
-		RecordInProgress: recordInProgress,
-		ChatId:           chatId,
-	}
-
-	participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
-	if err != nil {
-		Logger.Error(err, "Failed during getting chat participantIds")
-		return err
-	}
-
-	return h.rabbitMqRecordPublisher.Publish(participantIds, &chatNotifyDto, ctx)
+	return h.rabbitMqRecordPublisher.Publish(recordInProgressByOwner, chatId, ctx)
 }

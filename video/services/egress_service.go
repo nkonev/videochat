@@ -3,11 +3,14 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go/v2"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
+
+const ownerIdMetadataKey = "ownerid"
 
 type EgressService struct {
 	egressClient *lksdk.EgressClient
@@ -17,7 +20,7 @@ func NewEgressService(egressClient *lksdk.EgressClient) *EgressService {
 	return &EgressService{egressClient: egressClient}
 }
 
-func (rh *EgressService) GetActiveEgresses(chatId int64, ctx context.Context) ([]string, error) {
+func (rh *EgressService) GetActiveEgresses(chatId int64, ctx context.Context) (map[string]int64, error) {
 	aRoomId := utils.GetRoomNameFromId(chatId)
 
 	listRequest := livekit.ListEgressRequest{
@@ -29,23 +32,47 @@ func (rh *EgressService) GetActiveEgresses(chatId int64, ctx context.Context) ([
 		return nil, errors.New("Unable to get egresses")
 	}
 
-	ret := []string{}
+	ret := map[string]int64{}
 	for _, egress := range egresses.Items {
 		if egress.Status == livekit.EgressStatus_EGRESS_ACTIVE && egress.EndedAt == 0 {
-			ret = append(ret, egress.EgressId)
+			ownerId, err := rh.GetOwnerId(ctx, egress)
+			if err != nil {
+				GetLogEntry(ctx).Errorf("Unable to get ownerId of %v: %v", egress.EgressId, err)
+			} else {
+				ret[egress.EgressId] = ownerId
+			}
 		}
 	}
 
 	return ret, nil
 }
 
-func (rh *EgressService) HasActiveEgresses(chatId int64, ctx context.Context) (bool, error) {
-	egresses, err := rh.GetActiveEgresses(chatId, ctx)
-	if err != nil {
-		return false, err
+func (rh *EgressService) GetOwnerId(ctx context.Context, egress *livekit.EgressInfo) (int64, error) {
+	var ownerId int64
+	wasSet := false
+	inf := egress.Request
+	ic, ok := inf.(*livekit.EgressInfo_RoomComposite)
+	if ok {
+		fileOutputs := ic.RoomComposite.FileOutputs
+		if len(fileOutputs) > 0 {
+			fileOutput := fileOutputs[0]
+			aS3 := fileOutput.GetS3()
+			if aS3 != nil {
+				ownerIdString, ok := aS3.Metadata[ownerIdMetadataKey]
+				if ok {
+					anOwnerId, err := utils.ParseInt64(ownerIdString)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to parse owner id: %v", err)
+					} else {
+						ownerId = anOwnerId
+						wasSet = true
+					}
+				}
+			}
+		}
 	}
-
-	recordInProgress := len(egresses) > 0
-
-	return recordInProgress, nil
+	if !wasSet {
+		return 0, fmt.Errorf("Unable to get owner id for egress %v", egress.EgressId)
+	}
+	return ownerId, nil
 }

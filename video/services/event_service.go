@@ -112,14 +112,18 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 			continue
 		}
 
-		recordInProgress, err := h.egressService.HasActiveEgresses(chatId, ctx)
+		activeEgresses, err := h.egressService.GetActiveEgresses(chatId, ctx)
 		if err != nil {
 			Logger.Errorf("got error during counting active egresses in scheduler, %v", err)
 			continue
 		}
 
-		Logger.Debugf("Sending recording changed chatId=%v, recordInProgress=%v", chatId, recordInProgress)
-		err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgress, ctx)
+		var recordInProgressByOwner = make(map[int64]bool)
+		for _, ownerId := range activeEgresses {
+			recordInProgressByOwner[ownerId] = true
+		}
+
+		err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgressByOwner, ctx)
 		if err != nil {
 			Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 		}

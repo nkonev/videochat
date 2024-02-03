@@ -200,13 +200,18 @@ func NewRabbitDialStatusPublisher(connection *rabbitmq.Connection) *RabbitDialSt
 	}
 }
 
-func (rp *RabbitRecordingPublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallRecordingChangedDto, ctx context.Context) error {
+func (rp *RabbitRecordingPublisher) Publish(recordInProgressByOwner map[int64]bool, chatId int64, ctx context.Context) error {
 
-	for _, participantId := range participantIds {
+	for participantId, recordInProgress := range recordInProgressByOwner {
+		var chatNotifyDto = dto.VideoCallRecordingChangedDto{
+			RecordInProgress: recordInProgress,
+			ChatId:           chatId,
+		}
+
 		event := dto.GlobalUserEvent{
 			EventType:               "video_recording_changed",
 			UserId:                  participantId,
-			VideoCallRecordingEvent: chatNotifyDto,
+			VideoCallRecordingEvent: &chatNotifyDto,
 		}
 
 		bytea, err := json.Marshal(event)
