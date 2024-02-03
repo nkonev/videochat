@@ -6,7 +6,7 @@ IMAGE_TO_PUBLISH := nkonev/chat-aaa:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := aaa
 CI_TO_COPY_DIR := /tmp/to-copy
-SERVER_TO_COPY_DIR := /tmp/to-deploy/$(aaa)
+SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := ./videochat
 STACK_NAME := VIDEOCHATSTACK
