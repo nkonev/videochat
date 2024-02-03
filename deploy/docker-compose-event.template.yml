@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   event:
-    image: nkonev/event:latest
+    image: nkonev/chat-event:changing
     networks:
       backend:
     deploy:
