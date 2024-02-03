@@ -759,3 +759,11 @@ scp /tmp/frontend.tar root@nkonev.name:/tmp
 ssh ...
 docker load -i /tmp/frontend.tar
 ```
+
+# Attempt to fix (not working)
+```
+Feb 03 10:24:12 Chesnaught chat-storage[1036]: ERRO[2024-02-03T07:24:12Z]nkonev.name/storage/main.go:110 main.createCustomHTTPErrorHandler.func1() Unhandled error: XMinioStorageFull: Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.
+Feb 03 10:24:12 Chesnaught chat-storage[1036]:         status code: 507, request id: 17B0497B5CFA7E62, host id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8  traceId=5c05ddd8d5b1ae02474b165bd3767d94
+
+mc rm --recursive --force --dangerous --incomplete local/files
+```
