@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -51,6 +52,17 @@ func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestC
 	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService, conf: conf, recordPreset: recordPreset}, nil
 }
 
+func (rh *RecordHandler) canRecord(ctx context.Context, chatId int64, userPrincipalDto *auth.AuthResult) (bool, error) {
+	if rh.conf.OnlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
+		return false, nil
+	}
+	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, ctx); err != nil {
+		return false, fmt.Errorf("Error during cheching is chat admin for userId %v, chatId %v", userPrincipalDto.UserId, chatId)
+	} else {
+		return ok, nil
+	}
+}
+
 func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -61,14 +73,12 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	canRecord, err := rh.canRecord(c.Request().Context(), chatId, userPrincipalDto)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking can record: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
-	} else {
-		if !ok {
-			return c.NoContent(http.StatusUnauthorized)
-		}
 	}
-	if rh.conf.OnlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
+	if !canRecord {
 		GetLogEntry(c.Request().Context()).Errorf("Only admin car record with this configuration")
 		return c.NoContent(http.StatusUnauthorized)
 	}
@@ -131,12 +141,14 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	canRecord, err := rh.canRecord(c.Request().Context(), chatId, userPrincipalDto)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking can record: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
-	} else {
-		if !ok {
-			return c.NoContent(http.StatusUnauthorized)
-		}
+	}
+	if !canRecord {
+		GetLogEntry(c.Request().Context()).Errorf("Only admin car record with this configuration")
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
@@ -169,15 +181,18 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+
+	canRecord, err := rh.canRecord(c.Request().Context(), chatId, userPrincipalDto)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking can record: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
-	} else {
-		if !ok {
-			return c.JSON(http.StatusOK, StatusResponse{
-				RecordInProcess: false,
-				CanMakeRecord:   false,
-			})
-		}
+	}
+
+	if !canRecord {
+		return c.JSON(http.StatusOK, StatusResponse{
+			RecordInProcess: false,
+			CanMakeRecord:   false,
+		})
 	}
 
 	recordInProgress, err := rh.egressService.HasActiveEgresses(chatId, c.Request().Context())
@@ -185,13 +200,8 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 		return err
 	}
 
-	var normalCanRecord bool = true
-	if rh.conf.OnlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
-		normalCanRecord = false
-	}
-
 	return c.JSON(http.StatusOK, StatusResponse{
 		RecordInProcess: recordInProgress,
-		CanMakeRecord:   normalCanRecord,
+		CanMakeRecord:   canRecord,
 	})
 }
