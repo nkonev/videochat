@@ -3,7 +3,6 @@
 BUILDDIR := ./build
 DIST := ./dist
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-STATIC_JSON := $(DIST)/git.json
 IMAGE := nkonev/chat-frontend:changing
 IMAGE_TO_PUBLISH := nkonev/chat-frontend:latest
 # should match to compose file from deploy dir
@@ -13,6 +12,8 @@ SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := ./videochat
 STACK_NAME := VIDEOCHATSTACK
+JSON_DIR := $(DIST)/$(SERVICE_NAME)
+STATIC_JSON := $(JSON_DIR)/git.json
 
 download:
 	npm install
@@ -21,6 +22,7 @@ check-env:
 	docker version && echo -n 'npm: ' && npm --version && echo -n 'node: ' && node --version
 
 generate-git:
+	mkdir -p $(JSON_DIR) && \
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 package-node:
