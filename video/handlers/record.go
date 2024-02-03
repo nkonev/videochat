@@ -106,8 +106,8 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	streamRequest := &livekit.RoomCompositeEgressRequest{
 		RoomName: roomName,
 		Layout:   "speaker-dark",
-		Output: &livekit.RoomCompositeEgressRequest_File{
-			File: &livekit.EncodedFileOutput{
+		FileOutputs: []*livekit.EncodedFileOutput{
+			&livekit.EncodedFileOutput{
 				FileType:        livekit.EncodedFileType_MP4,
 				Filepath:        s3.Filepath,
 				Output:          &s3u,
