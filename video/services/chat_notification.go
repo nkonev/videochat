@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"nkonev.name/video/client"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
@@ -13,16 +12,19 @@ type NotificationService struct {
 	rabbitMqRecordPublisher    *producer.RabbitRecordingPublisher
 	rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
-	restClient                 *client.RestClient
 }
 
-func NewNotificationService(producer *producer.RabbitUserCountPublisher, restClient *client.RestClient, rabbitMqRecordPublisher *producer.RabbitRecordingPublisher, rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher) *NotificationService {
+func NewNotificationService(
+	producer *producer.RabbitUserCountPublisher,
+	rabbitMqRecordPublisher *producer.RabbitRecordingPublisher,
+	rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher,
+	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
+) *NotificationService {
 	return &NotificationService{
 		rabbitMqUserCountPublisher: producer,
 		rabbitMqScreenSharePublisher: rabbitMqScreenSharePublisher,
 		rabbitMqRecordPublisher:    rabbitMqRecordPublisher,
 		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
-		restClient:                 restClient,
 	}
 }
 
