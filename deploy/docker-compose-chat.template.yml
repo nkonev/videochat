@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   chat:
-    image: nkonev/chat:latest
+    image: nkonev/chat:changing
     networks:
       backend:
     deploy:

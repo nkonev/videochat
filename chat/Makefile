@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker test push-docker clean
+.PHONY: check-env download package-docker test push-docker clean push-docker-image-to-server deploy-docker-image
 
 download:
 	echo "Nothing to download"
@@ -22,19 +22,40 @@ package-go:
 
 BUILDDIR := ./build
 EXECUTABLE := chat
-IMAGE := nkonev/chat:latest
+IMAGE := nkonev/chat:changing
+IMAGE_TO_PUBLISH := nkonev/chat:latest
+
+CI_TO_COPY_DIR := /tmp/to-copy
+SERVER_TO_COPY_DIR := /tmp/to-deploy/chat
+# should match to compose file from deploy dir
+SERVICE_NAME := chat
+SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
+SERVER_COMPOSE_DIR := ./videochat
+STACK_NAME := VIDEOCHATSTACK
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \
 	cp $(EXECUTABLE) $(BUILDDIR) && cp ./Dockerfile $(BUILDDIR) && \
-	echo "Will build docker chat image" && \
+	echo "Will build docker $(SERVICE_NAME) image" && \
  	docker build -t $(IMAGE) $(BUILDDIR)
 
 package: package-go package-docker
 
 push-docker:
-	echo "Will push docker chat image" && \
-	docker push $(IMAGE)
+	echo "Will push docker $(SERVICE_NAME) image" && \
+	docker tag $(IMAGE) $(IMAGE_TO_PUBLISH) && \
+	docker push $(IMAGE_TO_PUBLISH)
+
+push-docker-image-to-server:
+	echo "Will push docker $(SERVICE_NAME) image directly on the server"
+	mkdir -p $(CI_TO_COPY_DIR)
+	docker save $(IMAGE) -o $(CI_TO_COPY_DIR)/$(SERVICE_NAME).tar
+	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker service rm $(STACK_NAME)_$(SERVICE_NAME) ; docker rmi $(IMAGE) ; rm -rf $(SERVER_TO_COPY_DIR) ; mkdir -p $(SERVER_TO_COPY_DIR) && echo "dir created"'
+	scp $(CI_TO_COPY_DIR)/$(SERVICE_NAME).tar ${CONNECT_LINE}:$(SERVER_TO_COPY_DIR)
+	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker load -i $(SERVER_TO_COPY_DIR)/$(SERVICE_NAME).tar'
+
+deploy-docker-image:
+	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker stack deploy --compose-file $(SERVER_COMPOSE_DIR)/docker-compose-$(SERVICE_NAME).template.yml $(STACK_NAME)'
 
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
