@@ -751,3 +751,11 @@ docker exec -it videochat_redis_1 redis-cli -n 4
 SADD dials_of_user:1 2
 HSET user_call_state:2 userCallOwner 1
 ```
+
+# Saving and loading docker images
+```
+docker save nkonev/chat-frontend:latest -o /tmp/frontend.tar
+scp /tmp/frontend.tar root@nkonev.name:/tmp
+ssh ...
+docker load -i /tmp/frontend.tar
+```
