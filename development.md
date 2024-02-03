@@ -767,3 +767,8 @@ Feb 03 10:24:12 Chesnaught chat-storage[1036]:         status code: 507, request
 
 mc rm --recursive --force --dangerous --incomplete local/files
 ```
+
+```
+export CONNECT_LINE=user@api.site.local
+make clean package-java package-docker push-docker-image-to-server deploy-docker-image
+```
