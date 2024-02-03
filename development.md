@@ -477,6 +477,12 @@ mc mirror myminio/oldbucket myminio/newbucket
 mc rm -r --force myminio/oldbucket
 ```
 
+# Show logs
+```
+docker exec -it minio sh
+mc admin trace -v local
+```
+
 # Open pgCenter
 ```bash
 docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcenter top -h videochat_postgresql_1 -U chat -d chat
