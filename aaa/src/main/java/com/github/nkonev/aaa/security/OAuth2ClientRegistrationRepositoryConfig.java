@@ -12,6 +12,9 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * To have a possibility to run aaa without any OAuth 2.0 configured
+ */
 @EnableConfigurationProperties(OAuth2ClientProperties.class)
 @Configuration
 public class OAuth2ClientRegistrationRepositoryConfig {
