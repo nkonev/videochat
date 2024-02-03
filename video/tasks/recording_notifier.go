@@ -43,7 +43,7 @@ type RecordingNotifierTask struct {
 
 func RecordingNotifierScheduler(
 	redisConnector *redisV8.Client,
-	service *VideoCallUsersCountNotifierService,
+	service *RecordingNotifierService,
 	conf *config.ExtendedConfig,
 ) *RecordingNotifierTask {
 	var interv = viper.GetDuration("schedulers.videoRecordingNotifierTask.notificationPeriod")
