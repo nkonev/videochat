@@ -309,14 +309,22 @@ jobs:
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)
-      - name: Build docker image and deploy
+      - name: Deploy docker image to server
         if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |
-          mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
-          chmod 600 ~/.ssh/id_rsa
+          (
+            mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
+            chmod 600 ~/.ssh/id_rsa
+            cd video; 
+            export CONNECT_LINE=${{secrets.ConnectLine}}
+            make push-docker-image-to-server deploy-docker-image
+          )
+      - name: Push docker image to registry
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
+        run: |
           echo "Will login to docker" &&
-          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}"
-          (cd video; make push-docker && echo "Will deploy video" && ssh -o "BatchMode yes" -o StrictHostKeyChecking=no -q ${{ secrets.ConnectLine }} ${{ secrets.VideoUpdateCommand }} )
+          docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
+          (cd video; make push-docker)
 
   e2e-test:
     runs-on: ubuntu-22.04

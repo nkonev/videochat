@@ -769,6 +769,7 @@ mc rm --recursive --force --dangerous --incomplete local/files
 ```
 
 ```
+cd aaa
 export CONNECT_LINE=user@api.site.local
-make clean package-java package-docker push-docker-image-to-server deploy-docker-image
+make clean package push-docker-image-to-server deploy-docker-image
 ```
