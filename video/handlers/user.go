@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go"
+	lksdk "github.com/livekit/server-sdk-go/v2"
 	"github.com/pkg/errors"
 	"net/http"
 	"nkonev.name/video/auth"

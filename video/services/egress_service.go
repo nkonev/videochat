@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go"
+	lksdk "github.com/livekit/server-sdk-go/v2"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )

@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go"
+	lksdk "github.com/livekit/server-sdk-go/v2"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"

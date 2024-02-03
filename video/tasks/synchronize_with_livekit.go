@@ -6,7 +6,7 @@ import (
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go"
+	lksdk "github.com/livekit/server-sdk-go/v2"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"

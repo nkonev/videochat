@@ -1,7 +1,7 @@
 package client
 
 import (
-	lksdk "github.com/livekit/server-sdk-go"
+	lksdk "github.com/livekit/server-sdk-go/v2"
 	"nkonev.name/video/config"
 )
 
