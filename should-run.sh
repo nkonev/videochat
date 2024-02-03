@@ -39,21 +39,27 @@ else
         prev_deployed_commit=$(curl -Ss "$website_prefix/${service}/git.json" | jq -r '.commit')
       fi
 
-      echo "Getting change between ${prev_deployed_commit} and ${trigger_commit}"
-      local_changed_dirs=( $(git diff --dirstat=files,0 ${prev_deployed_commit} ${trigger_commit} | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq) )
       if [[ $? != 0 ]]; then
-        echo "Some error during getting changes - considering $service as changed"
-        changed_dirs+=(${service})
-        echo
+          echo "Some error during getting deployed commit - considering $service as changed"
+          changed_dirs+=(${service})
+          echo
       else
-        echo "Since prev deployed commit ${prev_deployed_commit} there are following changed dirs"
-        for changed_dir in "${local_changed_dirs[@]}"; do
-            if [[ "$changed_dir" == "$service" ]]; then
-              echo "-> ${changed_dir}"
-              changed_dirs+=(${changed_dir})
-            fi
-        done
-        echo
+        echo "Getting change between ${prev_deployed_commit} and ${trigger_commit}"
+        local_changed_dirs=( $(git diff --dirstat=files,0 ${prev_deployed_commit} ${trigger_commit} | sed 's/^[ 0-9.]\+% //g' | cut -d'/' -f1 | uniq) )
+        if [[ $? != 0 ]]; then
+          echo "Some error during getting git changes - considering $service as changed"
+          changed_dirs+=(${service})
+          echo
+        else
+          echo "Since prev deployed commit ${prev_deployed_commit} there are following changed dirs"
+          for changed_dir in "${local_changed_dirs[@]}"; do
+              if [[ "$changed_dir" == "$service" ]]; then
+                echo "-> ${changed_dir}"
+                changed_dirs+=(${changed_dir})
+              fi
+          done
+          echo
+        fi
       fi
     fi
   done
