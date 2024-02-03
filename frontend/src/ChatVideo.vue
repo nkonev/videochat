@@ -223,7 +223,7 @@ export default {
 
       for (const speaker of speakers) {
         const userIdentity = speaker.identity;
-        const tracksSids = [...speaker.audioTracks.keys()];
+        const tracksSids = [...speaker.audioTrackPublications.keys()];
         const userComponents = this.getByUser(userIdentity).map(c => c.component);
         for (const component of userComponents) {
           const audioStreamId = component.getAudioStreamId();
@@ -267,7 +267,7 @@ export default {
 
     async tryRestartVideoDevice() {
       this.inRestarting = true;
-      for (const publication of this.room.localParticipant.tracks.values()) {
+      for (const publication of this.room.localParticipant.getTrackPublications().values()) {
         await this.room.localParticipant.unpublishTrack(publication.track, true);
       }
       await this.createLocalMediaTracks(null, null);
@@ -315,7 +315,7 @@ export default {
             const localVideoProperties = {
               localParticipant: this.room.localParticipant
             };
-            const participantTracks = this.room.localParticipant.getTracks();
+            const participantTracks = this.room.localParticipant.getTrackPublications();
             this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
 
             this.refreshLocalMicrophoneAppBarButtons();
