@@ -1,5 +1,17 @@
 .PHONY: check-env download package-docker test push-docker clean push-docker-image-to-server deploy-docker-image
 
+BUILDDIR := ./build
+EXECUTABLE := chat
+IMAGE := nkonev/chat:changing
+IMAGE_TO_PUBLISH := nkonev/chat:latest
+# should match to compose file from deploy dir
+SERVICE_NAME := chat
+CI_TO_COPY_DIR := /tmp/to-copy
+SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
+SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
+SERVER_COMPOSE_DIR := ./videochat
+STACK_NAME := VIDEOCHATSTACK
+
 download:
 	echo "Nothing to download"
 
@@ -12,26 +24,13 @@ GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./handlers/static/git.json
 
 generate-git:
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"chat\"}" > $(STATIC_JSON)
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1
 
 package-go:
 	CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"'
-
-BUILDDIR := ./build
-EXECUTABLE := chat
-IMAGE := nkonev/chat:changing
-IMAGE_TO_PUBLISH := nkonev/chat:latest
-
-CI_TO_COPY_DIR := /tmp/to-copy
-SERVER_TO_COPY_DIR := /tmp/to-deploy/chat
-# should match to compose file from deploy dir
-SERVICE_NAME := chat
-SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
-SERVER_COMPOSE_DIR := ./videochat
-STACK_NAME := VIDEOCHATSTACK
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \

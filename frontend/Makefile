@@ -1,28 +1,27 @@
 .PHONY: check-env download package-docker push-docker clean clean-builddir clean-cache push-docker-image-to-server deploy-docker-image
 
-download:
-	npm install
-
-check-env:
-	docker version && echo -n 'npm: ' && npm --version && echo -n 'node: ' && node --version
-
 BUILDDIR := ./build
 DIST := ./dist
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := $(DIST)/git.json
 IMAGE := nkonev/chat-frontend:changing
 IMAGE_TO_PUBLISH := nkonev/chat-frontend:latest
-
-CI_TO_COPY_DIR := /tmp/to-copy
-SERVER_TO_COPY_DIR := /tmp/to-deploy/frontend
 # should match to compose file from deploy dir
 SERVICE_NAME := frontend
+CI_TO_COPY_DIR := /tmp/to-copy
+SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := ./videochat
 STACK_NAME := VIDEOCHATSTACK
 
+download:
+	npm install
+
+check-env:
+	docker version && echo -n 'npm: ' && npm --version && echo -n 'node: ' && node --version
+
 generate-git:
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"frontend\"}" > $(STATIC_JSON)
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 package-node:
 	npm run build

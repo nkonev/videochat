@@ -1,5 +1,16 @@
 .PHONY: check-env download package-docker test push-docker clean push-docker-image-to-server deploy-docker-image
 
+BUILDDIR := ./build
+IMAGE := nkonev/chat-aaa:changing
+IMAGE_TO_PUBLISH := nkonev/chat-aaa:latest
+# should match to compose file from deploy dir
+SERVICE_NAME := aaa
+CI_TO_COPY_DIR := /tmp/to-copy
+SERVER_TO_COPY_DIR := /tmp/to-deploy/$(aaa)
+SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
+SERVER_COMPOSE_DIR := ./videochat
+STACK_NAME := VIDEOCHATSTACK
+
 download:
 	./mvnw dependency:resolve
 
@@ -17,18 +28,6 @@ test:
 
 package-java:
 	./mvnw package -DskipTests
-
-BUILDDIR := ./build
-IMAGE := nkonev/chat-aaa:changing
-IMAGE_TO_PUBLISH := nkonev/chat-aaa:latest
-
-CI_TO_COPY_DIR := /tmp/to-copy
-SERVER_TO_COPY_DIR := /tmp/to-deploy/aaa
-# should match to compose file from deploy dir
-SERVICE_NAME := aaa
-SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
-SERVER_COMPOSE_DIR := ./videochat
-STACK_NAME := VIDEOCHATSTACK
 
 package-docker:
 	mkdir -p $(BUILDDIR) && \
