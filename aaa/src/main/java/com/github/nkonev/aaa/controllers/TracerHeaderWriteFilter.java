@@ -1,17 +1,17 @@
 package com.github.nkonev.aaa.controllers;
 
-import org.springframework.cloud.sleuth.Tracer;
+import io.micrometer.tracing.Tracer;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Order(-2147483648)
+@Order(1)
 @Component
 public class TracerHeaderWriteFilter extends HttpFilter {
     private final Tracer tracer;

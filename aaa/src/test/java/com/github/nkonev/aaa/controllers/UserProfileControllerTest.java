@@ -15,6 +15,7 @@ import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.services.EventReceiver;
+import jakarta.servlet.http.Cookie;
 import org.awaitility.Awaitility;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.*;
@@ -29,11 +30,9 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
 
-import javax.servlet.http.Cookie;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 

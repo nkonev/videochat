@@ -6,10 +6,10 @@ import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.LockDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 /**

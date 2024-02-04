@@ -67,8 +67,8 @@ public class SessionTest extends OAuth2EmulatorTests {
         Assertions.assertEquals(401, myPostsResponse3.getStatusCodeValue());
 
 
-        ResponseEntity<SuccessfulLoginDTO> newAliceLogin = rawLogin(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
-        Assertions.assertEquals(401, newAliceLogin.getStatusCodeValue());
+        var newAliceLogin = rawLogin(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
+        Assertions.assertEquals(401, newAliceLogin.dto().getStatusCodeValue());
     }
 
 }

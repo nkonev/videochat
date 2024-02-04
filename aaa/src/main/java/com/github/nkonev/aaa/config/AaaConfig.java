@@ -7,14 +7,14 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.nkonev.aaa.utils.ResourceUtils;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 
 @Configuration
@@ -50,6 +50,6 @@ public class AaaConfig {
 
     @PreDestroy
     public void preDestroy() {
-        LOGGER.info("Destroying aaa");
+        LOGGER.info("Shutting down aaa");
     }
 }

@@ -1,7 +1,7 @@
 package com.github.nkonev.aaa.dto;
 
 
-import javax.validation.constraints.Email;
+import jakarta.validation.constraints.Email;
 
 public record EditUserDTO (
     String login,

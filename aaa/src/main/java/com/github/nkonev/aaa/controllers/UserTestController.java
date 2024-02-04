@@ -2,16 +2,15 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.services.UserTestService;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 @RestController

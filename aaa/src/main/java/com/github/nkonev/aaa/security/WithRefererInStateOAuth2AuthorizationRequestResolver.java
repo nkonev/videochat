@@ -1,11 +1,11 @@
 package com.github.nkonev.aaa.security;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
 
 import static com.github.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 

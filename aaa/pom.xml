@@ -6,31 +6,24 @@
 
     <artifactId>aaa</artifactId>
     <groupId>name.nkonev.aaa</groupId>
-    <version>${revision}</version>
+    <version>0.0.0</version>
 
     <properties>
-        <!-- use with conjunction flatten-maven-plugin and overrides with -Drevision= in .travis.yml - see https://maven.apache.org/maven-ci-friendly.html-->
-        <revision>0.0.0</revision>
-
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
-        <flatten-maven-plugin.version>1.2.2</flatten-maven-plugin.version>
         <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
-        <!-- https://github.com/spring-cloud/spring-cloud-sleuth/issues/2267 -->
-        <spring-cloud.version>2021.0.7</spring-cloud.version>
-        <spring-cloud-sleuth-otel.version>1.1.3</spring-cloud-sleuth-otel.version>
-        <spring.boot.version>2.7.17</spring.boot.version>
-        <greenmail.version>1.6.5</greenmail.version>
-        <mockserver.version>5.11.2</mockserver.version>
-        <jedis.version>3.9.0</jedis.version>
+        <spring.boot.version>3.2.2</spring.boot.version>
+        <greenmail.version>2.1.0-alpha-4</greenmail.version>
+        <mockserver.version>5.15.0</mockserver.version>
         <skipTests>false</skipTests>
         <git-json>git.json</git-json>
-        <shedlock.version>4.44.0</shedlock.version>
+        <shedlock.version>5.1.0</shedlock.version>
+        <micrometer-tracing.version>1.2.3</micrometer-tracing.version>
     </properties>
 
     <repositories>
@@ -81,6 +74,7 @@
                         <!-- for dummy IntelliJ -->
                         <source>${java.version}</source>
                         <target>${java.version}</target>
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
 
@@ -161,32 +155,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            <!-- for make second ./mvnw call working - evaluates ${revision} -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <version>${flatten-maven-plugin.version}</version>
-                <configuration>
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>flatten</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -227,24 +195,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-test</artifactId>
-                <version>${spring.boot.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-sleuth-otel-dependencies</artifactId>
-                <!-- Provide the version of the Spring Cloud Sleuth OpenTelemetry project
-                 https://spring-projects-experimental.github.io/spring-cloud-sleuth-otel/docs/current/reference/html/
-                 -->
-                <version>${spring-cloud-sleuth-otel.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-tracing-bom</artifactId>
+                <version>${micrometer-tracing.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -278,7 +231,6 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>${jedis.version}</version>
         </dependency>
 
         <dependency>
@@ -331,21 +283,9 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
-        <!-- The client -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-client</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun.mail</groupId>
-                    <artifactId>javax.mail</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -367,27 +307,29 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-sleuth</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.cloud</groupId>
-                    <artifactId>spring-cloud-sleuth-brave</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <!-- tracing, see https://spring.io/blog/2022/10/12/observability-with-spring-boot-3 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-sleuth-otel-autoconfigure</artifactId>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
         </dependency>
+
         <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-zipkin</artifactId>
+        </dependency>
+        <dependency> <!-- to consume uber-formatted headers from traefik -->
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-extension-trace-propagators</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-jaeger</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>p6spy</groupId>
             <artifactId>p6spy</artifactId>
@@ -397,14 +339,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-taglibs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jsp-api</artifactId>
         </dependency>
 
         <dependency>
@@ -440,14 +374,8 @@
 
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-netty</artifactId>
+            <artifactId>mockserver-netty-no-dependencies</artifactId>
             <version>${mockserver.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -457,24 +385,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-launcher</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>

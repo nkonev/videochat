@@ -38,9 +38,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.nkonev.aaa.TestConstants.*;
@@ -125,29 +123,33 @@ public abstract class AbstractTestRunner {
         final List<String> sessionCookies;
         public String newXsrf;
 
-        public SessionHolder(long userId, List<String> sessionCookies, String newXsrf) {
+        SessionHolder(long userId, List<String> sessionCookies, String newXsrf) {
             this.userId = userId;
             this.sessionCookies = sessionCookies;
             this.newXsrf = newXsrf;
-        }
-
-        public SessionHolder(long userId, ResponseEntity responseEntity) {
-            this.userId = userId;
-            this.sessionCookies = getSessionCookies(responseEntity);
-            this.newXsrf = getXsrfValue(getXsrfCookieHeaderValue(responseEntity));
         }
 
         public String[] getCookiesArray(){
             return sessionCookies.toArray(new String[sessionCookies.size()]);
         }
 
-        public void updateXsrf(ResponseEntity responseEntity){
-            this.newXsrf = getXsrfValue(getXsrfCookieHeaderValue(responseEntity));
-        }
     }
 
-    public static List<String> getSessionCookies(ResponseEntity<String> loginResponseEntity) {
-        return getSetCookieHeaders(loginResponseEntity).stream().dropWhile(s -> s.contains(COOKIE_XSRF+"=;")).collect(Collectors.toList());
+    private static String normalizeCookie(String stringCookie) {
+        var parsed = HttpCookie.parse(stringCookie);
+        if (parsed.size() != 1) {
+            return null;
+        }
+        var aCookie = parsed.get(0);
+        return aCookie.getName() + "=" + aCookie.getValue();
+    }
+
+    public static List<String> getSessionCookies(ResponseEntity<?> loginResponseEntity) {
+        return getSetCookieHeaders(loginResponseEntity).stream().dropWhile(s -> s.contains(COOKIE_XSRF+"=;")).map(AbstractTestRunner::normalizeCookie).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public static List<String> getSessionIdCookie(List<String> cookies) {
+        return cookies.stream().filter(s -> s.matches(SESSION_COOKIE_NAME+"=\\w+.*")).toList();
     }
 
     public static String getXsrfValue(String xsrfCookieHeaderValue) {
@@ -156,10 +158,13 @@ public abstract class AbstractTestRunner {
 
     public static String getXsrfCookieHeaderValue(ResponseEntity<String> getXsrfTokenResponse) {
         return getSetCookieHeaders(getXsrfTokenResponse)
-                .stream().filter(s -> s.matches(COOKIE_XSRF+"=\\w+.*")).findFirst().orElseThrow(()-> new RuntimeException("cookie " + COOKIE_XSRF + " not found"));
+                .stream().filter(s -> s.matches(COOKIE_XSRF+"=\\w+.*"))
+                .map(AbstractTestRunner::normalizeCookie)
+                .filter(Objects::nonNull)
+                .findFirst().orElseThrow(()-> new RuntimeException("cookie " + COOKIE_XSRF + " not found"));
     }
 
-    public static List<String> getSetCookieHeaders(ResponseEntity<String> getXsrfTokenResponse) {
+    public static List<String> getSetCookieHeaders(ResponseEntity<?> getXsrfTokenResponse) {
         return Optional.ofNullable(getXsrfTokenResponse.getHeaders().get(HEADER_SET_COOKIE)).orElseThrow(()->new RuntimeException("missed header "+ HEADER_SET_COOKIE));
     }
 
@@ -168,52 +173,72 @@ public abstract class AbstractTestRunner {
         final List<String> sessionCookies;
         final public String newXsrf;
 
+        final String xsrfCookieHeaderValue;
 
-        public XsrfCookiesHolder(List<String> sessionCookies, String newXsrf) {
+        public XsrfCookiesHolder(List<String> sessionCookies, String newXsrf, String xsrfCookieHeaderValue) {
             this.sessionCookies = sessionCookies;
             this.newXsrf = newXsrf;
+            this.xsrfCookieHeaderValue = xsrfCookieHeaderValue;
         }
 
-        public String[] getCookiesArray(){
-            return sessionCookies.toArray(new String[sessionCookies.size()]);
-        }
     }
 
-    public XsrfCookiesHolder getXsrf() {
-        ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.getForEntity(urlWithContextPath(), String.class);
+    public XsrfCookiesHolder getXsrf(boolean first, List<String> sessionCookies0) {
+        var url = urlWithContextPath();
+        if (first) {
+            url += "/login.html";
+        }
+        var bldr = RequestEntity.get(url);
+        if (sessionCookies0 != null) {
+            bldr = bldr.header(HEADER_COOKIE, sessionCookies0.toArray(String[]::new));
+        }
+        var reqEntity = bldr.build();
+
+        ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.exchange(reqEntity, String.class);
         String xsrfCookieHeaderValue = getXsrfCookieHeaderValue(getXsrfTokenResponse);
         String xsrf = getXsrfValue(xsrfCookieHeaderValue);
         List<String> sessionCookies = getSessionCookies(getXsrfTokenResponse);
-        return new XsrfCookiesHolder(sessionCookies, xsrf);
+        return new XsrfCookiesHolder(sessionCookies, xsrf, xsrfCookieHeaderValue);
     }
 
     protected SessionHolder login(String login, String password) throws URISyntaxException {
-        ResponseEntity<SuccessfulLoginDTO> loginResponseEntity = rawLogin(login, password);
+        var rawLoginResponse = rawLogin(login, password);
 
-        Assertions.assertEquals(200, loginResponseEntity.getStatusCodeValue());
+        Assertions.assertEquals(200, rawLoginResponse.dto.getStatusCodeValue());
 
-        return new SessionHolder(loginResponseEntity.getBody().id(), loginResponseEntity);
+        var sessionIdCookies = getSessionIdCookie(getSessionCookies(rawLoginResponse.dto));
+
+        var respondableSessionCookies = new ArrayList<String>();
+        respondableSessionCookies.addAll(sessionIdCookies);
+        respondableSessionCookies.add(COOKIE_XSRF + "=" + rawLoginResponse.xsrfHolder.newXsrf);
+
+        return new SessionHolder(rawLoginResponse.dto.getBody().id(), respondableSessionCookies, rawLoginResponse.xsrfHolder.newXsrf);
     }
 
-    protected ResponseEntity<SuccessfulLoginDTO> rawLogin(String login, String password) throws URISyntaxException {
-        ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.getForEntity(urlWithContextPath(), String.class);
-        String xsrfCookieHeaderValue = getXsrfCookieHeaderValue(getXsrfTokenResponse);
-        String xsrf = getXsrfValue(xsrfCookieHeaderValue);
+    public record RawLoginResponse(
+        ResponseEntity<SuccessfulLoginDTO> dto,
+        XsrfCookiesHolder xsrfHolder
+    ) {}
 
+    protected RawLoginResponse rawLogin(String login, String password) throws URISyntaxException {
+        var xsrfHolder = getXsrf(true, null);
+        String xsrfCookieHeaderValue = xsrfHolder.xsrfCookieHeaderValue;
+        String xsrf = xsrfHolder.newXsrf;
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(USERNAME_PARAMETER, login);
         params.add(PASSWORD_PARAMETER, password);
 
         RequestEntity loginRequest = RequestEntity
-                .post(new URI(urlWithContextPath()+API_LOGIN_URL))
-                .header(HEADER_XSRF_TOKEN, xsrf)
-                .header(COOKIE, xsrfCookieHeaderValue)
-                .header(ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(params);
+            .post(new URI(urlWithContextPath()+API_LOGIN_URL))
+            .header(HEADER_XSRF_TOKEN, xsrf)
+            .header(COOKIE, xsrfCookieHeaderValue)
+            .header(ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE)
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .body(params);
 
-        return testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
+        ResponseEntity<SuccessfulLoginDTO> loginResponseEntity = testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
+        return new RawLoginResponse(loginResponseEntity, xsrfHolder);
     }
 
 

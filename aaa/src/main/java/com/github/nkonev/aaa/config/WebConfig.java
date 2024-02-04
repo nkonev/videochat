@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.config;
 
+import jakarta.annotation.PostConstruct;
 import org.apache.catalina.Context;
 import org.apache.catalina.Valve;
 import org.apache.tomcat.util.http.Rfc6265CookieProcessor;
@@ -14,12 +15,12 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 
 @Configuration
@@ -54,6 +55,7 @@ public class WebConfig implements WebMvcConfigurer {
         return new RestTemplateBuilder()
                 .setConnectTimeout(customConfig.getRestClientConnectTimeout())
                 .setReadTimeout(customConfig.getRestClientReadTimeout())
+                .requestFactory(JdkClientHttpRequestFactory.class)
                 .build();
     }
 

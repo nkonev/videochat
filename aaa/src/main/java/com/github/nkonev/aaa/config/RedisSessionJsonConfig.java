@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.BeanClassLoaderAware;
@@ -18,7 +19,7 @@ public class RedisSessionJsonConfig implements BeanClassLoaderAware {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModules(SecurityJackson2Modules.getModules(this.loader));
         mapper.registerModule(new JavaTimeModule());
-
+        mapper.addMixIn(Long.class, LongMixin.class);
         return mapper;
     }
 
@@ -32,4 +33,12 @@ public class RedisSessionJsonConfig implements BeanClassLoaderAware {
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.loader = classLoader;
     }
+}
+
+// from https://github.com/spring-projects/spring-session/issues/2227#issuecomment-1418932679
+// wait for https://github.com/spring-projects/spring-session/issues/2305
+abstract class LongMixin {
+    @SuppressWarnings("unused")
+    @JsonProperty("long")
+    Long value;
 }

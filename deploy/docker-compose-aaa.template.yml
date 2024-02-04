@@ -25,7 +25,6 @@ services:
     environment:
       - _JAVA_OPTIONS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx512m -XX:MetaspaceSize=128M -XX:MaxMetaspaceSize=256M -XX:OnOutOfMemoryError="kill -9 %p" -Dnetworkaddress.cache.ttl=0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/aaa
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/aaa?connectTimeout=10&socketTimeout=40&ApplicationName=aaa-app
-      - SPRING_REDIS_URL=redis://redis:6379/0
       - SPRING_RABBITMQ_ADDRESSES=rabbitmq:5672
       - SPRING_RABBITMQ_USERNAME=videoChat
       - SPRING_RABBITMQ_PASSWORD=videoChatPazZw0rd
@@ -43,7 +42,7 @@ services:
       - spring.security.oauth2.client.registration.vkontakte.client-secret=your-app-client-secret
       - spring.security.oauth2.client.registration.vkontakte.redirect-uri="{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
       - spring.security.oauth2.client.registration.vkontakte.authorization-grant-type=authorization_code
-      - spring.security.oauth2.client.registration.vkontakte.client-authentication-method=post
+      - spring.security.oauth2.client.registration.vkontakte.client-authentication-method=client_secret_post
       - spring.security.oauth2.client.registration.facebook.client-id=1684113965162824
       - spring.security.oauth2.client.registration.facebook.client-secret=your-app-client-secret
       - spring.security.oauth2.client.registration.facebook.redirect-uri="{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
@@ -58,7 +57,8 @@ services:
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
       - CSRF_COOKIE_SECURE=true
       - COOKIE_SAME-SITE=Strict
-      - spring.sleuth.otel.exporter.jaeger.endpoint=http://jaeger:14250
+      - management.zipkin.tracing.endpoint=http://jaeger:9411/api/v2/spans
+      - spring.data.redis.url=redis://redis:6379/0
 
     logging:
       driver: "journald"

@@ -2,16 +2,15 @@ package com.github.nkonev.aaa.security;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,6 +28,7 @@ import org.springframework.security.oauth2.core.http.converter.OAuth2AccessToken
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -112,26 +112,23 @@ public class SecurityConfig {
     // https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .antMatchers("/favicon.ico", "/static/**", Constants.Urls.PUBLIC_API +"/**").permitAll();
-        http.authorizeRequests()
-                .antMatchers(Constants.Urls.PUBLIC_API + Constants.Urls.ADMIN+"/**").hasAuthority(UserRole.ROLE_ADMIN.name());
-        http.authorizeRequests().requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
-
-        http.csrf()
-                .csrfTokenRepository(csrfTokenRepository())
-                .ignoringAntMatchers(Constants.Urls.INTERNAL_API+ "/**");
-        http.exceptionHandling()
-                .authenticationEntryPoint(authenticationEntryPoint);
-
-        http.formLogin()
-                .loginPage(API_LOGIN_URL).usernameParameter(USERNAME_PARAMETER).passwordParameter(PASSWORD_PARAMETER).permitAll()
+        return http.authorizeHttpRequests(c -> {
+            c.requestMatchers("/**").permitAll();
+        }).csrf(c -> {
+                var requestHandler = new CsrfTokenRequestAttributeHandler(); // disabling deferred needed in order not to fail the first request, it's seen from e2e-test
+                requestHandler.setCsrfRequestAttributeName(null); // https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#deferred-csrf-token
+                c.csrfTokenRepository(csrfTokenRepository())
+                .csrfTokenRequestHandler(requestHandler)
+                .ignoringRequestMatchers(Constants.Urls.INTERNAL_API+ "/**");
+        }).exceptionHandling(c -> {
+            c.authenticationEntryPoint(authenticationEntryPoint);
+        }).formLogin(c -> {
+            c.loginPage(API_LOGIN_URL).usernameParameter(USERNAME_PARAMETER).passwordParameter(PASSWORD_PARAMETER).permitAll()
                 .successHandler(authenticationSuccessHandler)
-                .failureHandler(authenticationFailureHandler)
-
-        .and().logout().logoutUrl(API_LOGOUT_URL).logoutSuccessHandler(authenticationLogoutSuccessHandler).permitAll();
-
-        http.oauth2Login(oauth2Login ->
+                .failureHandler(authenticationFailureHandler);
+        }).logout(c -> {
+            c.logoutUrl(API_LOGOUT_URL).logoutSuccessHandler(authenticationLogoutSuccessHandler).permitAll();
+        }).oauth2Login(oauth2Login ->
                 oauth2Login
                         .userInfoEndpoint(userInfoEndpoint ->
                                 userInfoEndpoint.userService(aaaOAuth2LoginUserService)
@@ -148,15 +145,18 @@ public class SecurityConfig {
                         .tokenEndpoint(tokenEndpointConfig -> {
                             tokenEndpointConfig.accessTokenResponseClient(this.accessTokenResponseClient());
                         })
-        );
-
-        http.authenticationProvider(ldapAuthenticationProvider);
-        http.authenticationProvider(dbAuthenticationProvider());
-
-        http.headers().frameOptions().deny();
-        http.headers().cacheControl().disable(); // see also AbstractImageUploadController#shouldReturnLikeCache
-
-        return http.build();
+        )
+        .authenticationProvider(ldapAuthenticationProvider)
+        .authenticationProvider(dbAuthenticationProvider())
+        .headers(c -> {
+            c.frameOptions(fc -> {
+                fc.deny();
+            });
+            c.cacheControl(cc -> {
+                cc.disable(); // see also AbstractImageUploadController#shouldReturnLikeCache
+            });
+        })
+        .build();
     }
 
     OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
@@ -166,6 +166,7 @@ public class SecurityConfig {
         RestTemplate restTemplate = new RestTemplateBuilder()
                 .setConnectTimeout(customConfig.getRestClientConnectTimeout())
                 .setReadTimeout(customConfig.getRestClientReadTimeout())
+                .requestFactory(JdkClientHttpRequestFactory.class)
                 .messageConverters(Arrays.asList(
                         new FormHttpMessageConverter(),
                         oAuth2AccessTokenResponseHttpMessageConverter

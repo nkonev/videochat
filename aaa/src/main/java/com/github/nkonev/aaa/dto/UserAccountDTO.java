@@ -1,8 +1,10 @@
 package com.github.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.nkonev.aaa.Constants;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
+
 import java.time.LocalDateTime;
 
 /**
@@ -37,4 +39,13 @@ public record UserAccountDTO (
         this.oauth2Identifiers = oauth2Identifiers;
     }
 
+    @JsonIgnore // to use in Freemarker template header.ftlh
+    public String getUsername() {
+        return login;
+    }
+
+    @JsonIgnore // to use in Freemarker template header.ftlh
+    public Long getIdentificator() {
+        return id;
+    }
 }

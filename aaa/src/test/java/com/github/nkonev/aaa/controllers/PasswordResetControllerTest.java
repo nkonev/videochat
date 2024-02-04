@@ -7,14 +7,14 @@ import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
-import com.sun.mail.imap.IMAPMessage;
+import jakarta.mail.Message;
+import org.eclipse.angus.mail.imap.IMAPMessage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.mail.Message;
 import java.net.URI;
 import java.util.UUID;
 

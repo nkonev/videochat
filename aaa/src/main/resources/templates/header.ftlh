@@ -1,16 +1,16 @@
-<#assign sec=JspTaglibs["http://www.springframework.org/security/tags"]/>
-<#assign form=JspTaglibs["http://www.springframework.org/tags/form"]/>
+<#if myPrincipal??>
+    Logged as <b> ${myPrincipal.username} </b>
 
-<@sec.authorize access="isAuthenticated()">
-    Logged as <b> <@sec.authentication property="principal.username"/> </b>
-
-    <div id="principalId">id: <@sec.authentication property="principal.id"/></div>
+    <div id="principalId">id: ${myPrincipal.identificator}</div>
 
     <#list myOauth2Identifiers as propName, propValue>
         ${propName}: ${(propValue)!"no id"} <br/>
     </#list>
 
-    <@form.form action="/api/aaa/logout" method="post">
+    <form action="/api/aaa/logout" method="post">
         <input id="btn-logout" type="submit" value="Logout"/>
-    </@form.form>
-</@sec.authorize>
+        <#if _csrf??>
+            <input name="${_csrf.parameterName}" type="hidden" value="${_csrf.token}"/>
+        </#if>
+    </form>
+</#if>

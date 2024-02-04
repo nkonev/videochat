@@ -10,6 +10,12 @@ import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.LoginListener;
 import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.AsyncEmailService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -92,7 +92,7 @@ public class PasswordResetController {
     ) {}
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
-    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpServletResponse httpResponse) {
+    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpSession httpSession, HttpServletResponse httpResponse) {
 
         // webpage parses token uuid from URL
         // .. and js sends this request
@@ -113,7 +113,7 @@ public class PasswordResetController {
         userAccount = userAccountRepository.save(userAccount);
 
         var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
-        SecurityUtils.setToContext(auth);
+        SecurityUtils.setToContext(httpSession, auth);
         loginListener.onApplicationEvent(auth);
     }
 

@@ -6,6 +6,8 @@ import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import org.slf4j.Logger;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +62,18 @@ public abstract class AbstractOAuth2UserService {
 
             logger().info("{}Id successfully merged to exists user '{}', id={}", getOauthName(), principal.getUsername(), principal.getId());
 
-            SecurityUtils.setToContext(principal);
+            boolean setToSession = false;
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                var session = attributes.getRequest().getSession(false);
+                if (session != null) {
+                    SecurityUtils.setToContext(session, principal);
+                    setToSession = true;
+                }
+            }
+            if (!setToSession) {
+                logger().warn("Unable to set changed principal to session");
+            }
 
             return principal;
         } else {

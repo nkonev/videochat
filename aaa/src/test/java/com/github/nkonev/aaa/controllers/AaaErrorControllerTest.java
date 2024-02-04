@@ -73,7 +73,7 @@ public class AaaErrorControllerTest extends AbstractUtTestRunner {
         Map<String, Object> resp = objectMapper.readValue(str, new TypeReference<Map<String, Object>>(){});
 
         Assertions.assertTrue(responseEntity.getHeaders().getContentType().toString().contains(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        Assertions.assertEquals("Not Found", resp.get("error"));
+        Assertions.assertEquals("data not found", resp.get("error"));
         Assertions.assertEquals(404, resp.get("status"));
     }
 

@@ -774,3 +774,14 @@ export CONNECT_LINE=user@api.site.local
 make clean package push-docker-image-to-server deploy-docker-image
 ```
 
+# Switching aaa onto JWT
+* https://www.bezkoder.com/spring-boot-jwt-authentication/ (with changes 2->3)
+* https://www.toptal.com/spring/spring-security-tutorial
+* https://medium.com/code-with-farhan/spring-security-jwt-authentication-authorization-a2c6860be3cf
+
+# Freemarker
+still [does not support](https://stackoverflow.com/questions/76639412/freemarker-jsptaglib-issue-while-upgrading-to-spring-boot-3-and-java-17) `jakarta.*` namespace
+
+It exists a resolved issue for that [FREEMARKER-218](https://issues.apache.org/jira/browse/FREEMARKER-218). It is solved but it is unknown then version 2.3.33 is released
+
+having this, [spring security taglibs](https://docs.spring.io/spring-security/reference/servlet/integrations/jsp-taglibs.html) were removed

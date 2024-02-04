@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.actuate.metrics.AutoConfigureMetrics;
+import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import java.net.URI;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@AutoConfigureMetrics
+@AutoConfigureObservability
 public class PrometheusTest extends AbstractUtTestRunner {
 
     @Value("${local.management.port}")

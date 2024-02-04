@@ -12,6 +12,8 @@ import com.github.nkonev.aaa.security.LoginListener;
 import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.UserService;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -93,7 +94,7 @@ public class RegistrationController {
      * @return
      */
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER_CONFIRM)
-    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid) {
+    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
         String stringUuid = uuid.toString();
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(stringUuid);
         if (!userConfirmationTokenOptional.isPresent()) {
@@ -116,7 +117,7 @@ public class RegistrationController {
         userConfirmationTokenRepository.deleteById(stringUuid);
 
         var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
-        SecurityUtils.setToContext(auth);
+        SecurityUtils.setToContext(httpSession, auth);
         loginListener.onApplicationEvent(auth);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();

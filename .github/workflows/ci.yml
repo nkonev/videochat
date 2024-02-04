@@ -16,15 +16,15 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: liberica
-          java-version: 17.0.4
+          java-version: 21.0.2
       - name: Cache local Maven repository
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: | 
             ~/.m2/repository
@@ -73,12 +73,12 @@ jobs:
         run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Node.js
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.16.0
       - name: Cache Node.js dependencies
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             **/node_modules
@@ -117,7 +117,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: env.SHOULD_RUN == 'true'
         with:
           path: |
@@ -171,7 +171,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: env.SHOULD_RUN == 'true'
         with:
           path: |
@@ -213,7 +213,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: env.SHOULD_RUN == 'true'
         with:
           path: |
@@ -255,7 +255,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: env.SHOULD_RUN == 'true'
         with:
           path: |
@@ -297,7 +297,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: env.SHOULD_RUN == 'true'
         with:
           path: |
@@ -339,15 +339,15 @@ jobs:
         run: |
           mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: liberica
-          java-version: 17.0.4
+          java-version: 21.0.2
       - name: Cache local Maven repository
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.m2/repository
@@ -356,13 +356,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         if: env.SHOULD_RUN == 'true'
         with:
           node-version: 18.16.0
       - name: Cache Playwright browsers and Node.js dependencies
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             **/node_modules
@@ -377,7 +377,7 @@ jobs:
         run: (cd e2e-test; npx playwright install)
       - name: Cache frontend Node.js dependencies
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             **/node_modules
@@ -390,7 +390,7 @@ jobs:
           go-version: 1.22.0
       - name: Cache go modules
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/go/pkg/mod
@@ -439,7 +439,7 @@ jobs:
         run: (cd e2e-test; npx playwright test)
       - name: Upload test results
         if: env.SHOULD_RUN == 'true' && always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-results
           path: e2e-test/test-results

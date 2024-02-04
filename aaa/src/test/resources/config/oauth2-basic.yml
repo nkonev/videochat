@@ -7,7 +7,7 @@ spring.security:
           client-secret: your-app-client-secret
           authorization-grant-type: authorization_code
           redirect-uri: "{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
-          client-authentication-method: post
+          client-authentication-method: client_secret_post
         facebook:
           client-id: 1684113965162824
           client-secret: your-app-client-secret
@@ -25,9 +25,9 @@ spring.security:
           user-info-authentication-method: form
           user-name-attribute: response
         facebook:
-          authorization-uri: http://127.0.0.1:10080/mock/facebook/dialog/oauth
-          token-uri: http://127.0.0.1:10080/mock/facebook/oauth/access_token
-          user-info-uri: http://127.0.0.1:10080/mock/facebook/me?fields=id,name,picture
+          authorization-uri: http://127.0.0.1:10083/mock/facebook/dialog/oauth
+          token-uri: http://127.0.0.1:10083/mock/facebook/oauth/access_token
+          user-info-uri: http://127.0.0.1:10083/mock/facebook/me?fields=id,name,picture
         google:
           jwk-set-uri: http://127.0.0.1:10082/mock/google/jwks
           authorization-uri: http://127.0.0.1:10082/mock/google/o/oauth2/v2/auth

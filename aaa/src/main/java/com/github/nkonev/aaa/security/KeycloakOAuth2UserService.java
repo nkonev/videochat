@@ -6,7 +6,6 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
-import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.JWTParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,7 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
 
         Set<String> roles = new HashSet<>();
         try {
-            roles = ((JSONArray) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().map(Object::toString).collect(Collectors.toSet());
+            roles = ((ArrayList<String>) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().collect(Collectors.toSet());
         } catch (ParseException e) {
             LOGGER.error("Unable to parse roles", e);
         }

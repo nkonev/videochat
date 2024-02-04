@@ -13,6 +13,8 @@ import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.OAuth2ProvidersService;
 import com.github.nkonev.aaa.services.UserService;
 import com.github.nkonev.aaa.utils.PageUtils;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +28,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.session.Session;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -254,7 +253,8 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     public com.github.nkonev.aaa.dto.EditUserDTO editProfile(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO
+            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
+            HttpSession httpSession
     ) {
         if (userAccount == null) {
             throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
@@ -273,7 +273,7 @@ public class UserProfileController {
         exists = UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
-        SecurityUtils.convertAndSetToContext(exists);
+        SecurityUtils.convertAndSetToContext(httpSession, exists);
         notifier.notifyProfileUpdated(exists);
 
         return UserAccountConverter.convertToEditUserDto(exists);
@@ -287,7 +287,8 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO
+            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
+            HttpSession httpSession
     ) {
         if (userAccount == null) {
             throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
@@ -305,7 +306,7 @@ public class UserProfileController {
         exists = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = userAccountRepository.save(exists);
 
-        SecurityUtils.convertAndSetToContext(exists);
+        SecurityUtils.convertAndSetToContext(httpSession, exists);
 
         notifier.notifyProfileUpdated(exists);
 
@@ -379,7 +380,11 @@ public class UserProfileController {
 
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+"/{provider}")
-    public void selfDeleteBindingOauth2Provider(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @PathVariable("provider") String provider){
+    public void selfDeleteBindingOauth2Provider(
+        @AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO,
+        @PathVariable("provider") String provider,
+        HttpSession httpSession
+    ){
         long userId = userAccountDetailsDTO.getId();
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         UserAccount.OAuth2Identifiers oAuth2Identifiers = switch (provider) {
@@ -391,7 +396,7 @@ public class UserProfileController {
         };
         userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
-        SecurityUtils.convertAndSetToContext(userAccount);
+        SecurityUtils.convertAndSetToContext(httpSession, userAccount);
     }
 
     @GetMapping(Constants.Urls.PUBLIC_API + "/oauth2/providers")

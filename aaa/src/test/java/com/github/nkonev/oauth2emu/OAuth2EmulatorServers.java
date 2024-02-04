@@ -11,11 +11,11 @@ import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import shaded_package.io.netty.handler.codec.http.HttpHeaderNames;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -32,7 +32,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 public class OAuth2EmulatorServers {
-    private static final int MOCK_SERVER_FACEBOOK_PORT = 10080;
+    private static final int MOCK_SERVER_FACEBOOK_PORT = 10083;
     private static final int MOCK_SERVER_VKONTAKTE_PORT = 10081;
     private static final int MOCK_SERVER_GOOGLE_PORT = 10082;
 

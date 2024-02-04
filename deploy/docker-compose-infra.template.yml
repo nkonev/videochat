@@ -164,8 +164,10 @@ services:
         tag: chat-egress
 
   jaeger:
-    image: jaegertracing/all-in-one:1.34.0
+    image: jaegertracing/all-in-one:1.54.0
     hostname: jaeger
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
     networks:
       backend:
     deploy:

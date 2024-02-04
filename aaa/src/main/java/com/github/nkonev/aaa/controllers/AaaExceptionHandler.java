@@ -3,18 +3,19 @@ package com.github.nkonev.aaa.controllers;
 import com.github.nkonev.aaa.dto.AaaError;
 import com.github.nkonev.aaa.dto.ValidationError;
 import com.github.nkonev.aaa.exception.*;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.rcp.RemoteAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,7 +24,7 @@ import java.util.Date;
 @RestControllerAdvice
 public class AaaExceptionHandler {
 
-    private Logger LOGGER = LoggerFactory.getLogger(AaaExceptionHandler.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(AaaExceptionHandler.class);
 
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -72,8 +73,8 @@ public class AaaExceptionHandler {
 
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @org.springframework.web.bind.annotation.ExceptionHandler(DataNotFoundException.class)
-    public AaaError dataNotFound(DataNotFoundException e) {
+    @org.springframework.web.bind.annotation.ExceptionHandler({DataNotFoundException.class, NoResourceFoundException.class})
+    public AaaError dataNotFound(Exception e) {
         return new AaaError(HttpStatus.NOT_FOUND.value(), "data not found", e.getMessage(), new Date().toString());
     }
 
@@ -106,8 +107,7 @@ public class AaaExceptionHandler {
     public void throwable(Throwable e, HttpServletResponse response) throws Throwable {
         if (
                 e instanceof AccessDeniedException ||
-                e instanceof AuthenticationException ||
-                e instanceof RemoteAuthenticationException
+                e instanceof AuthenticationException
         ) {throw e;} // Spring Security has own exception handling
 
         if (e.getCause() instanceof IOException){

@@ -1,11 +1,10 @@
 package com.github.nkonev.aaa.entity.jdbc;
 
 import com.github.nkonev.aaa.dto.UserRole;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.relational.core.mapping.Embedded;
 import org.springframework.data.relational.core.mapping.Table;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Table("user_account")

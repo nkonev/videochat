@@ -46,9 +46,16 @@ public class DebugController {
             .map(UserAccountDetailsDTO::userAccountDTO)
             .map(UserAccountDTO::oauth2Identifiers)
             .orElse(new OAuth2IdentifiersDTO());
-        var map = objectMapper.readValue(objectMapper.writeValueAsString(myOa), new TypeReference<Map<String, String>>() {}) ;
-        map.remove("@class");
-        modelAndView.getModelMap().addAttribute("myOauth2Identifiers", map);
+        var myOauth2IdentifiersMap = objectMapper.readValue(objectMapper.writeValueAsString(myOa), new TypeReference<Map<String, String>>() {}) ;
+        myOauth2IdentifiersMap.remove("@class");
+
+        var myPr = Optional
+            .ofNullable(userAccount)
+            .map(UserAccountDetailsDTO::userAccountDTO)
+            .orElse(null);
+
+        modelAndView.getModelMap().addAttribute("myOauth2Identifiers", myOauth2IdentifiersMap);
+        modelAndView.getModelMap().addAttribute("myPrincipal", myPr);
     }
 
     @GetMapping({"/oauth2.html"})

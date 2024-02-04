@@ -13,7 +13,6 @@ public class Constants {
         public static final String PUBLIC_API = "/api/aaa";
         public static final String INTERNAL_API = "/internal";
         public static final String IMAGE = "/image";
-        public static final String ADMIN = "/admin";
         public static final String PROFILE = "/profile";
         public static final String SETTINGS = "/settings";
         public static final String SMILEYS = "/smileys";
