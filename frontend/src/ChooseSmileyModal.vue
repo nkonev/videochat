@@ -1,15 +1,30 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="600px">
-            <v-card :title="aTitle">
-                <v-card-text class="py-0 pt-2 px-4 smiley-buttons">
+        <v-dialog v-model="show" max-width="600px" scrollable>
+            <v-card :title="getTitle()">
+                <v-expansion-panels v-model="chosenPanel" v-if="showSettings" class="pt-2" @update:modelValue="generateGroupSmileys">
+                  <v-expansion-panel
+                    v-for="i in groups"
+                    :key="i.id"
+                    :title="i.title"
+                    :value="i.id"
+                  >
+                    <template v-slot:text>
+                      <div class="smiley-buttons">
+                        <v-btn @click="onSmileySettingClick(smiley)" v-for="smiley in groupSmileys" :variant="getVariant(smiley)" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
+                      </div>
+                    </template>
+                  </v-expansion-panel>
+                </v-expansion-panels>
 
-                    <v-btn @click="onSmileyClick(smiley)" v-for="smiley in smileys" variant="flat" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
-
+                <v-card-text class="py-0 pt-2 px-4 smiley-buttons" v-else>
+                    <v-btn @click="onSmileyClick(smiley)" v-for="smiley in userSmileys" variant="flat" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
                 </v-card-text>
 
                 <v-card-actions>
                     <v-spacer/>
+                    <v-btn v-if="showSettings" color="primary" variant="flat" @click="closeSettings()" :title="$vuetify.locale.t('$vuetify.ok')">{{$vuetify.locale.t('$vuetify.ok')}}</v-btn>
+                    <v-btn v-if="!showSettings" variant="outlined" @click="openSettings()" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>
                     <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
@@ -19,27 +34,27 @@
 
 <script>
     import bus, {OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
+    import axios from "axios";
+
+    const GROUP_SMILEYS = "smileys";
+    const GROUP_EMOJIS = "emojis";
+    const GROUP_ADDITIONAL = "additional";
 
     export default {
         data () {
             return {
                 show: false,
-                smileys: [
-                    '😀', '😂', '🤔', '🥰', '💋', '❤️', '❤️‍🔥', '😍',
-                    '😐', '🤒', '🤮', '🥴',  '😎', '😨', '👀', '🌚',
-                    '😡', '👿', '💩', '😇',  '🤐', '🤪', '💣', '💧',
-                    '👍',  '👎', '🤟', '🙏', '💪', '👏', '🔥', '❄️',
-                    '🍎',  '🍅', '🍊', '🍒', '🤑', '🤗', '🤠', '💔',
-                    '💯',  '💥', '💤', '👋', '🖖', '🫴', '🫸', '🫷',
-                    '👌', '🤌',  '🤞', '🫵', '🪲', '🐞', '🌹', '🌎',
-                    '🎯', '♟️', '♠️', '♥️', '♦️', '♣️', '💊', '🧲',
-                    '🩹', '🗿', '⚠️',  '⛔', '☢️', '☣️', '♻️', '✅',
-                    '❌', '⚡', '🚀', '#️⃣', '*️⃣', '0️⃣', '1️⃣',
-                    '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣',
-                    '8️⃣', '9️⃣', '🔟', '©', '™', '®'
-                ],
+                userSmileys: new Set([]),
                 addSmileyCallback: null,
                 aTitle: null,
+                groups: [
+                  { id: GROUP_SMILEYS, title: "Smileys" },
+                  { id: GROUP_EMOJIS, title: "Emojis" },
+                  { id: GROUP_ADDITIONAL, title: "Additional" },
+                ],
+                chosenPanel: null,
+                showSettings: false,
+                groupSmileys: [],
             }
         },
         watch: {
@@ -47,24 +62,92 @@
                 if (!newValue) {
                     this.closeModal();
                 }
-            }
+            },
         },
         methods: {
             showModal({addSmileyCallback, title}) {
                 this.$data.show = true;
                 this.addSmileyCallback = addSmileyCallback;
                 this.aTitle = title;
+
+                axios.get('/api/aaa/settings/smileys').then((response)=>{
+                  this.userSmileys = new Set(response.data);
+                })
             },
             closeModal() {
                 this.show = false;
                 this.addSmileyCallback = null;
                 this.aTitle = null;
+                this.showSettings = false;
+                this.groupSmileys = [];
+                this.chosenPanel = null;
             },
             onSmileyClick(smiley) {
                 if (this.addSmileyCallback) {
                     this.addSmileyCallback(smiley);
                 }
             },
+            openSettings() {
+              this.showSettings = true;
+            },
+            closeSettings() {
+              this.showSettings = false;
+            },
+            onSmileySettingClick(smiley) {
+              if (this.userSmileys.has(smiley)) {
+                this.userSmileys.delete((smiley));
+              } else {
+                this.userSmileys.add(smiley)
+              }
+              axios.put('/api/aaa/settings/smileys', Array.from(this.userSmileys)).then((response)=>{
+                this.userSmileys = new Set(response.data);
+              })
+            },
+            getVariant(smiley) {
+              if (this.userSmileys.has(smiley)) {
+                return 'tonal'
+              } else {
+                return 'flat'
+              }
+            },
+            getTitle() {
+                if (!this.showSettings) {
+                  return this.aTitle
+                } else {
+                  return this.$vuetify.locale.t('$vuetify.configuring_smileys')
+                }
+            },
+            // https://stackoverflow.com/a/73993544
+            // https://stackoverflow.com/questions/30470079/emoji-value-range
+            generateEmoji(ch) {
+              let hex = ch.toString(16)
+              let emo = String.fromCodePoint("0x"+hex);
+              return emo
+            },
+            generateEmojis(from, to) {
+              const emojis = [];
+              for (var i = from; i <= to; i++) {
+                let emo = this.generateEmoji(i);
+                emojis.push(emo);
+              }
+              return emojis
+            },
+            generateGroupSmileys(group) {
+              switch (group) {
+                case GROUP_SMILEYS: {
+                  this.groupSmileys = this.generateEmojis(0x1F600, 0x1F64F);
+                  break
+                }
+                case GROUP_EMOJIS: {
+                  this.groupSmileys = this.generateEmojis(0x1F980, 0x1F9E0);
+                  break
+                }
+                case GROUP_ADDITIONAL: {
+                  this.groupSmileys = this.generateEmojis(0x1F910, 0x1F96B);
+                  break
+                }
+              }
+            }
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
