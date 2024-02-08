@@ -18,7 +18,17 @@
                 </v-expansion-panels>
 
                 <v-card-text class="py-0 pt-2 px-4 smiley-buttons" v-else>
-                    <v-btn @click="onSmileyClick(smiley)" v-for="smiley in userSmileys" variant="flat" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
+                    <template v-if="!loading">
+                      <v-btn @click="onSmileyClick(smiley)" v-for="smiley in userSmileys" variant="flat" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
+                    </template>
+
+                    <v-progress-circular
+                      class="ma-4"
+                      v-else
+                      indeterminate
+                      color="primary"
+                    ></v-progress-circular>
+
                 </v-card-text>
 
                 <v-card-actions>
@@ -55,6 +65,7 @@
                 chosenPanel: null,
                 showSettings: false,
                 groupSmileys: [],
+                loading: false,
             }
         },
         watch: {
@@ -70,9 +81,14 @@
                 this.addSmileyCallback = addSmileyCallback;
                 this.aTitle = title;
 
-                axios.get('/api/aaa/settings/smileys').then((response)=>{
-                  this.userSmileys = new Set(response.data);
-                })
+                if (this.userSmileys.size == 0) {
+                  this.loading = true;
+                  axios.get('/api/aaa/settings/smileys').then((response) => {
+                    this.userSmileys = new Set(response.data);
+                  }).finally(()=>{
+                    this.loading = false;
+                  })
+                }
             },
             closeModal() {
                 this.show = false;
@@ -81,6 +97,7 @@
                 this.showSettings = false;
                 this.groupSmileys = [];
                 this.chosenPanel = null;
+                this.loading = false;
             },
             onSmileyClick(smiley) {
                 if (this.addSmileyCallback) {
