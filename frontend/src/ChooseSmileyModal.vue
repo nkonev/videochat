@@ -43,7 +43,7 @@
 </template>
 
 <script>
-    import bus, {OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
+import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
     import axios from "axios";
 
     const GROUP_SMILEYS = "smileys";
@@ -98,6 +98,10 @@
                 this.groupSmileys = [];
                 this.chosenPanel = null;
                 this.loading = false;
+            },
+            onLogout() {
+                this.closeModal();
+                this.userSmileys = new Set([]);
             },
             onSmileyClick(smiley) {
                 if (this.addSmileyCallback) {
@@ -168,9 +172,11 @@
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
+            bus.on(LOGGED_OUT, this.onLogout);
         },
         beforeUnmount() {
             bus.off(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
+            bus.off(LOGGED_OUT, this.onLogout);
         },
     }
 </script>
