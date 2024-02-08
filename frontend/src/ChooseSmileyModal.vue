@@ -35,7 +35,7 @@
                     <v-spacer/>
                     <v-btn v-if="showSettings" color="primary" variant="flat" @click="closeSettings()" :title="$vuetify.locale.t('$vuetify.ok')">{{$vuetify.locale.t('$vuetify.ok')}}</v-btn>
                     <v-btn v-if="!showSettings" variant="outlined" @click="openSettings()" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>
-                    <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn v-if="!showSettings" color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
