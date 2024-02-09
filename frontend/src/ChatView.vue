@@ -629,7 +629,7 @@ export default {
             if (hasLength(newValue.params.id)) {
               // used for
               // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
-              // 2. to prevent rendering MessageView and get 401
+              // 2. to prevent rendering MessageList and get 401
               this.partialReset();
               this.onProfileSet();
             }
