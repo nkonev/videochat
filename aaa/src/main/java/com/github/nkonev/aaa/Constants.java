@@ -63,6 +63,8 @@ public class Constants {
     public static final int MAX_PASSWORD_LENGTH = 30;
     public static final int MAX_USERS_RESPONSE_LENGTH = 100;
 
+    public static final int MAX_SMILEYS_LENGTH = 2048;
+
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
 }

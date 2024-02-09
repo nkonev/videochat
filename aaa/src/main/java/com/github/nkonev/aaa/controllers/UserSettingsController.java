@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.Optional;
+
+import static com.github.nkonev.aaa.Constants.MAX_SMILEYS_LENGTH;
 
 @RestController
 @Transactional
@@ -33,6 +36,9 @@ public class UserSettingsController {
     @PreAuthorize("isAuthenticated()")
     @PutMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public String[] setSmileys(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestBody String[] smileys) {
+        if (smileys.length > MAX_SMILEYS_LENGTH) {
+            smileys = Arrays.copyOf(smileys, MAX_SMILEYS_LENGTH);
+        }
         userSettingsRepository.save(new UserSettings(userAccount.getId(), smileys));
         return userSettingsRepository.findById(userAccount.getId()).get().smileys();
     }
