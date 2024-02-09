@@ -135,6 +135,7 @@ export default {
   methods: {
     onProfileSet() {
       return this.getInfo().then(()=>{
+        this.chatStore.showCallManagement = true;
         this.graphQlSubscribe();
       })
     },
@@ -467,6 +468,8 @@ export default {
       this.chatStore.showGoToBlogButton = null;
 
       this.chatStore.chatUsersCount = 0;
+
+      this.chatStore.showCallManagement = false;
     },
     onChatDialStatusChange(dto) {
       if (this.chatDto?.tetATet && dto.chatId == this.chatId) {
@@ -667,7 +670,6 @@ export default {
     if (this.chatStore.currentUser) {
       await this.onProfileSet();
     }
-    this.chatStore.showCallManagement = true;
 
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLogout);
@@ -707,7 +709,6 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
 
-    this.chatStore.showCallManagement = false;
 
     this.chatStore.isShowSearch = false;
 
