@@ -213,7 +213,9 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
                 }
                 case GROUP_ADDITIONAL_11: {
                   this.groupSmileys = [
-                    '💡','☎️',
+                    '💡','☎️', '🧲',
+                    '#️⃣', '*️⃣',
+                    '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟',
                     this.generateEmoji(0x231A), // watches
                     this.generateEmoji(0x231B), // sand watches
 
