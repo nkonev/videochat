@@ -48,7 +48,15 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
 
     const GROUP_SMILEYS = "smileys";
     const GROUP_EMOJIS = "emojis";
-    const GROUP_ADDITIONAL = "additional";
+    const GROUP_ADDITIONAL_3 = "additional_3";
+    const GROUP_ADDITIONAL_4 = "additional_4";
+    const GROUP_ADDITIONAL_5 = "additional_5";
+    const GROUP_ADDITIONAL_6 = "additional_6";
+    const GROUP_ADDITIONAL_7 = "additional_7";
+    const GROUP_ADDITIONAL_8 = "additional_8";
+    const GROUP_ADDITIONAL_9 = "additional_9";
+    const GROUP_ADDITIONAL_10 = "additional_10";
+    const GROUP_ADDITIONAL_11 = "additional_11";
 
     export default {
         data () {
@@ -60,7 +68,15 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
                 groups: [
                   { id: GROUP_SMILEYS, title: "Smileys" },
                   { id: GROUP_EMOJIS, title: "Emojis" },
-                  { id: GROUP_ADDITIONAL, title: "Additional" },
+                  { id: GROUP_ADDITIONAL_3, title: "Additional 3" },
+                  { id: GROUP_ADDITIONAL_4, title: "Additional 4" },
+                  { id: GROUP_ADDITIONAL_5, title: "Additional 5" },
+                  { id: GROUP_ADDITIONAL_6, title: "Additional 6" },
+                  { id: GROUP_ADDITIONAL_7, title: "Additional 7" },
+                  { id: GROUP_ADDITIONAL_8, title: "Additional 8" },
+                  { id: GROUP_ADDITIONAL_9, title: "Additional 9" },
+                  { id: GROUP_ADDITIONAL_10, title: "Additional 10" },
+                  { id: GROUP_ADDITIONAL_11, title: "Additional 11" },
                 ],
                 chosenPanel: null,
                 showSettings: false,
@@ -163,8 +179,48 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
                   this.groupSmileys = this.generateEmojis(0x1F980, 0x1F9E0);
                   break
                 }
-                case GROUP_ADDITIONAL: {
+                case GROUP_ADDITIONAL_3: {
                   this.groupSmileys = this.generateEmojis(0x1F910, 0x1F96B);
+                  break
+                }
+                case GROUP_ADDITIONAL_4: {
+                  this.groupSmileys = this.generateEmojis(0x23E9, 0x23F3);
+                  break
+                }
+                case GROUP_ADDITIONAL_5: {
+                  this.groupSmileys = this.generateEmojis(0x23F8, 0x23FA);
+                  break
+                }
+                case GROUP_ADDITIONAL_6: {
+                  this.groupSmileys = this.generateEmojis(0x25FB, 0x25FE);
+                  break
+                }
+                case GROUP_ADDITIONAL_7: {
+                  this.groupSmileys = this.generateEmojis(0x1F100, 0x1F64F);
+                  break
+                }
+                case GROUP_ADDITIONAL_8: {
+                  this.groupSmileys = this.generateEmojis(0x1F680, 0x1F6FF);
+                  break
+                }
+                case GROUP_ADDITIONAL_9: {
+                  this.groupSmileys = this.generateEmojis(0x2600, 0x27EF);
+                  break
+                }
+                case GROUP_ADDITIONAL_10: {
+                  this.groupSmileys = this.generateEmojis(0x2B00, 0x2BFF);
+                  break
+                }
+                case GROUP_ADDITIONAL_11: {
+                  this.groupSmileys = [
+                    '💡','☎️',
+                    this.generateEmoji(0x231A), // watches
+                    this.generateEmoji(0x231B), // sand watches
+
+                    this.generateEmoji(0x00A9), // (c)
+                    this.generateEmoji(0x00AE), // (r)
+                    this.generateEmoji(0x2122), // (tm)
+                  ];
                   break
                 }
               }
