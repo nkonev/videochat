@@ -440,7 +440,7 @@ export default {
       return this.chatStore.currentUser && !!this.chatDto?.id
     },
     isAllowedChatList() {
-      return this.chatStore.currentUser && !!this.chatDto?.id
+      return this.chatStore.currentUser
     },
     onVideoCallChanged(dto) {
       if (dto.chatId == this.chatId) {
