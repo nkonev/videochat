@@ -627,11 +627,15 @@ export default {
           if (newValue.params.id != oldValue.params.id) {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {
+              this.chatStore.incrementProgressCount();
+
               // used for
               // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
               // 2. to prevent rendering MessageList and get 401
               this.partialReset();
-              this.onProfileSet();
+              this.onProfileSet().then(()=>{
+                this.chatStore.decrementProgressCount();
+              })
             }
           }
         }
