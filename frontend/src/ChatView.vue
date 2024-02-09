@@ -629,6 +629,7 @@ export default {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {
               this.isSwitching = true; // used to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
+              this.partialReset();
               this.onProfileSet().finally(()=>{
                 this.isSwitching = false;
               });
