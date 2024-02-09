@@ -31,7 +31,7 @@ type Events interface {
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
 	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64)
 	SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, count int64)
-	SendReactionOnYourMessage(c echo.Context, wasAdded bool, userId, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string)
+	SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string)
 }
 
 type eventsImpl struct {
@@ -502,7 +502,7 @@ func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId
 
 }
 
-func (not *eventsImpl) SendReactionOnYourMessage(c echo.Context, wasAdded bool, userId, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *eventsImpl) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
 	var eventType string
 	if wasAdded {
 		eventType = "reaction_notification_added"
@@ -510,33 +510,32 @@ func (not *eventsImpl) SendReactionOnYourMessage(c echo.Context, wasAdded bool, 
 		eventType = "reaction_notification_removed"
 	}
 
-	participantIds, err := not.db.GetAllParticipantIds(chatId)
+	_, messageOwnerId, err := not.db.GetMessageBasic(chatId, messageId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
 		return
 	}
 
 	event := dto.ReactionEvent{
-		UserId:   userId,
+		UserId:   behalfUserId,
 		Reaction: reaction,
 		MessageId: messageId,
 	}
 
-	for _, participantId := range participantIds {
-		if participantId == userId {
-			continue
-		}
-		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
-			EventType:                  eventType,
-			ReactionEvent: 				&event,
-			UserId:                     participantId,
-			ChatId:                     chatId,
-			ByUserId:          behalfUserId,
-			ByLogin:           behalfLogin,
-			ChatTitle:         chatTitle,
-		})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
-		}
+	if *messageOwnerId == behalfUserId {
+		return
 	}
+	err = not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+		EventType:                  eventType,
+		ReactionEvent: 				&event,
+		UserId:                     *messageOwnerId,
+		ChatId:                     chatId,
+		ByUserId:          behalfUserId,
+		ByLogin:           behalfLogin,
+		ChatTitle:         chatTitle,
+	})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+	}
+
 }
