@@ -465,6 +465,8 @@ export default {
       setTitle(null);
       this.chatStore.avatar = null;
       this.chatStore.showGoToBlogButton = null;
+
+      this.chatStore.chatUsersCount = 0;
     },
     onChatDialStatusChange(dto) {
       if (this.chatDto?.tetATet && dto.chatId == this.chatId) {
@@ -708,7 +710,6 @@ export default {
     this.chatStore.showCallManagement = false;
 
     this.chatStore.isShowSearch = false;
-    this.chatStore.chatUsersCount = 0;
 
     this.partialReset();
     clearInterval(writingUsersTimerId);
