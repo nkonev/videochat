@@ -225,28 +225,9 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		}
 	}
 
-	messageIds := make([]int64, 0)
-	for _, message := range list {
-		messageIds = append(messageIds, message.Id)
-	}
-
-	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = ANY ($1)", chatId), messageIds)
+	err := enrichMessagesWithReactions(co, chatId, list)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() { // iterate by reactions
-		reaction := Reaction{}
-		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
-			return nil, tracerr.Wrap(err)
-		}
-
-		for _, message := range list { // iterate by messages
-			if message.Id == reaction.MessageId {
-				message.Reactions = append(message.Reactions, reaction)
-			}
-		}
+		return nil, fmt.Errorf("Got error during enriching messages with reactions: %v", err)
 	}
 
 	return list, nil
@@ -292,29 +273,9 @@ func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limi
 		}
 	}
 
-
-	messageIds := make([]int64, 0)
-	for _, message := range list {
-		messageIds = append(messageIds, message.Id)
-	}
-
-	rows, err = co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = ANY ($1)", chatId), messageIds)
+	err = enrichMessagesWithReactions(co, chatId, list)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() { // iterate by reactions
-		reaction := Reaction{}
-		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
-			return nil, tracerr.Wrap(err)
-		}
-
-		for _, message := range list { // iterate by messages
-			if message.Id == reaction.MessageId {
-				message.Reactions = append(message.Reactions, reaction)
-			}
-		}
+		return nil, fmt.Errorf("Got error during enriching messages with reactions: %v", err)
 	}
 
 	return list, nil
@@ -391,35 +352,6 @@ func (db *DB) CountMessages() (int64, error) {
 		return count, nil
 	}
 }
-
-func getReactionsOnMessageCommon(co CommonOperations, chatId, messageId int64) ([]Reaction, error) {
-	var reactions []Reaction = make([]Reaction, 0)
-
-	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = $1", chatId), messageId)
-	if err != nil {
-		return nil, tracerr.Wrap(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		reaction := Reaction{}
-		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
-			return nil, tracerr.Wrap(err)
-		}
-
-		reactions = append(reactions, reaction)
-	}
-	return reactions, nil
-}
-
-func (db *DB) GetReactionsOnMessage(chatId, messageId int64) ([]Reaction, error) {
-	return getReactionsOnMessageCommon(db, chatId, messageId)
-}
-
-func (tx *Tx) GetReactionsOnMessage(chatId, messageId int64) ([]Reaction, error) {
-	return getReactionsOnMessageCommon(tx, chatId, messageId)
-}
-
 func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
 	row := co.QueryRow(fmt.Sprintf(`%v
 	WHERE 
@@ -436,7 +368,7 @@ func getMessageCommon(co CommonOperations, chatId int64, userId int64, messageId
 		return nil, tracerr.Wrap(err)
 	}
 
-	reactions, err := getReactionsOnMessageCommon(co, chatId, messageId)
+	reactions, err := getMessageReactionsCommon(co, chatId, messageId)
 	if err != nil {
 		return nil, err
 	}
@@ -904,4 +836,59 @@ func (db *DB) GetReactionsCount(chatId int64, messageId int64, reaction string) 
 
 func (tx *Tx) GetReactionsCount(chatId int64, messageId int64, reaction string) (int64, error) {
 	return getReactionsCountCommon(tx, chatId, messageId, reaction)
+}
+
+func getMessageReactionsCommon(co CommonOperations, chatId, messageId int64) ([]Reaction, error) {
+	var reactions []Reaction = make([]Reaction, 0)
+
+	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = $1", chatId), messageId)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		reaction := Reaction{}
+		if err := rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
+			return nil, tracerr.Wrap(err)
+		}
+
+		reactions = append(reactions, reaction)
+	}
+	return reactions, nil
+}
+
+func (db *DB) GetReactionsOnMessage(chatId, messageId int64) ([]Reaction, error) {
+	return getMessageReactionsCommon(db, chatId, messageId)
+}
+
+func (tx *Tx) GetReactionsOnMessage(chatId, messageId int64) ([]Reaction, error) {
+	return getMessageReactionsCommon(tx, chatId, messageId)
+}
+
+func enrichMessagesWithReactions(co CommonOperations, chatId int64, list []*Message) error {
+	messageIds := make([]int64, 0)
+	for _, message := range list {
+		messageIds = append(messageIds, message.Id)
+	}
+
+	rows, err := co.Query(fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = ANY ($1)", chatId), messageIds)
+	if err != nil {
+		return tracerr.Wrap(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() { // iterate by reactions
+		reaction := Reaction{}
+		if err = rows.Scan(&reaction.UserId, &reaction.MessageId, &reaction.Reaction); err != nil {
+			return tracerr.Wrap(err)
+		}
+
+		for _, message := range list { // iterate by messages
+			if message.Id == reaction.MessageId {
+				message.Reactions = append(message.Reactions, reaction)
+			}
+		}
+	}
+	return nil
 }
