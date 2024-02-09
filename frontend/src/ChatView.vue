@@ -116,7 +116,6 @@ export default {
       writingUsers: [],
       showTooltip: true,
       broadcastMessage: null,
-      isSwitching: false,
     }
   },
   components: {
@@ -435,7 +434,7 @@ export default {
       }
     },
     isAllowedVideo() {
-      return this.chatStore.currentUser && this.$route.name == videochat_name && !this.isSwitching && this.chatDto?.participantIds?.length
+      return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatDto?.participantIds?.length
     },
     isAllowedMessageList() {
       return this.chatStore.currentUser && !!this.chatDto?.id
@@ -628,11 +627,11 @@ export default {
           if (newValue.params.id != oldValue.params.id) {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {
-              this.isSwitching = true; // used to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
+              // used for
+              // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
+              // 2. to prevent rendering MessageView and get 401
               this.partialReset();
-              this.onProfileSet().finally(()=>{
-                this.isSwitching = false;
-              });
+              this.onProfileSet();
             }
           }
         }
@@ -709,7 +708,6 @@ export default {
     this.partialReset();
     clearInterval(writingUsersTimerId);
 
-    this.isSwitching = false;
     this.chatStore.isEditingBigText = false;
   }
 }
