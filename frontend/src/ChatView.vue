@@ -460,6 +460,11 @@ export default {
       this.chatStore.showRecordStartButton = false;
       this.chatStore.showRecordStopButton = false;
       this.chatStore.showChatEditButton = false;
+
+      this.chatStore.title = null;
+      setTitle(null);
+      this.chatStore.avatar = null;
+      this.chatStore.showGoToBlogButton = null;
     },
     onChatDialStatusChange(dto) {
       if (this.chatDto?.tetATet && dto.chatId == this.chatId) {
@@ -700,10 +705,6 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
 
-    this.chatStore.title = null;
-    setTitle(null);
-    this.chatStore.avatar = null;
-    this.chatStore.showGoToBlogButton = null;
     this.chatStore.showCallManagement = false;
 
     this.chatStore.isShowSearch = false;
