@@ -452,6 +452,8 @@ export default {
       this.getInfo()
     },
     partialReset() {
+      this.chatDto = null;
+
       this.chatStore.videoChatUsersCount=0;
       this.chatStore.canMakeRecord=false;
       this.pinnedPromoted=null;
@@ -461,7 +463,7 @@ export default {
       this.chatStore.showChatEditButton = false;
     },
     onChatDialStatusChange(dto) {
-      if (this.chatDto.tetATet && dto.chatId == this.chatId) {
+      if (this.chatDto?.tetATet && dto.chatId == this.chatId) {
         for (const videoDialChanged of dto.dials) {
           if (this.chatStore.currentUser.id != videoDialChanged.userId) {
             this.chatStore.shouldPhoneBlink = isCalling(videoDialChanged.status);
@@ -693,8 +695,6 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-
-    this.chatDto = null;
 
     this.chatStore.title = null;
     setTitle(null);
