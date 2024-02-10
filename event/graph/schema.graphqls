@@ -21,6 +21,7 @@ type EmbedMessageResponse {
 
 type Reaction {
     count:    Int64!
+    users:    [Participant!]!
     reaction: String!
 }
 

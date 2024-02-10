@@ -194,8 +194,9 @@ type PreviewCreatedEvent struct {
 }
 
 type Reaction struct {
-	Count    int64  `json:"count"`
-	Reaction string `json:"reaction"`
+	Count    int64          `json:"count"`
+	Users    []*Participant `json:"users"`
+	Reaction string         `json:"reaction"`
 }
 
 type ReactionChangedEvent struct {

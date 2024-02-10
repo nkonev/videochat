@@ -247,6 +247,12 @@ export default {
                                   pinnedPromoted
                                   reactions {
                                     count
+                                    users {
+                                      id
+                                      login
+                                      avatar
+                                      shortInfo
+                                    }
                                     reaction
                                   }
                                 }
@@ -319,6 +325,12 @@ export default {
                                       messageId
                                       reaction {
                                         count
+                                        users {
+                                          id
+                                          login
+                                          avatar
+                                          shortInfo
+                                        }
                                         reaction
                                       }
                                     }

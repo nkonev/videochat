@@ -18,6 +18,7 @@ type EmbedMessageResponse struct {
 
 type Reaction struct {
 	Count    int64  `json:"count"`
+	Users    []*User `json:"users"`
 	Reaction string `json:"reaction"`
 }
 

@@ -35,6 +35,8 @@ const AllUsers = -2
 const HereUsers = -3
 const badMediaUrl = "BAD_MEDIA_URL"
 
+const maxDisplayableUsers = 10
+
 type EditMessageDto struct {
 	Id int64 `json:"id"`
 	CreateMessageDto
@@ -208,7 +210,6 @@ func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map
 }
 
 func takeOnAccountReactions(ownersSet map[int64]bool, messageReactions []db.Reaction) {
-	const maxDisplayableUsers = 10
 	var currDisplayableUsers = 0
 	for _, r := range messageReactions {
 
@@ -222,6 +223,23 @@ func takeOnAccountReactions(ownersSet map[int64]bool, messageReactions []db.Reac
 		}
 	}
 }
+
+func getOnlyMaxDisplayableUsers(users []int64) []int64 {
+	var usersToReturn []int64 = make([]int64, 0)
+	var currDisplayableUsers = 0
+
+	for _, u := range users {
+		usersToReturn = append(usersToReturn, u)
+		currDisplayableUsers++
+
+		if currDisplayableUsers >= maxDisplayableUsers {
+			break
+		}
+	}
+
+	return usersToReturn
+}
+
 
 type ReactionPut struct {
 	Reaction string `json:"reaction"`
@@ -266,23 +284,34 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return err
 		}
 
-		countAfter, err := tx.GetReactionsCount(chatId, messageId, bindTo.Reaction)
+		reactionUserIds, err := tx.GetReactionUsers(chatId, messageId, bindTo.Reaction)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Warnf("Error during counting reaction %v", err)
 			return err
 		}
 
 		var wasChanged bool
-		if countAfter > 0 {
-			wasChanged = true
+		var count = len(reactionUserIds)
+		if count > 0 {
+			wasChanged = true // false means removed
 		}
-		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, countAfter)
+		maxDisplayableReactionUsers := getOnlyMaxDisplayableUsers(reactionUserIds)
+		reactionUserMap := getUsersRemotelyOrEmptyFromSlice(maxDisplayableReactionUsers, mc.restClient, c)
+
+		reactionUsers := make([]*dto.User, 0)
+		for _, user := range reactionUserMap {
+			reactionUsers = append(reactionUsers, user)
+		}
+
+		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, reactionUsers, count)
+
 
 		chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
 		if err != nil {
 			return err
 		}
 
+		// sends notification to the notification microservice
 		mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)

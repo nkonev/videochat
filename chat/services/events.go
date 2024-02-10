@@ -30,7 +30,7 @@ type Events interface {
 	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string)
 	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
 	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64)
-	SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, count int64)
+	SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int)
 	SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string)
 }
 
@@ -464,7 +464,7 @@ func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId in
 }
 
 
-func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, count int64) {
+func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int) {
 	var eventType string
 	if wasChanged {
 		eventType = "reaction_changed"
@@ -478,9 +478,11 @@ func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId
 		return
 	}
 
+
 	aReaction := dto.Reaction{
-		Count:    count,
+		Count:    int64(count),
 		Reaction: reaction,
+		Users: reactionUsers,
 	}
 
 	reactionChangedEvent := dto.ReactionChangedEvent{
@@ -489,7 +491,7 @@ func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId
 	}
 
 	for _, participantId := range participantIds {
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+		err = not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:                  eventType,
 			ReactionChangedEvent: 		&reactionChangedEvent,
 			UserId:                     participantId,

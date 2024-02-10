@@ -469,10 +469,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	if reactionChangedEvent != nil {
 		result.ReactionChangedEvent = &model.ReactionChangedEvent{
 			MessageID: reactionChangedEvent.MessageId,
-			Reaction: &model.Reaction{
-				Count:    reactionChangedEvent.Reaction.Count,
-				Reaction: reactionChangedEvent.Reaction.Reaction,
-			},
+			Reaction: convertReaction(&reactionChangedEvent.Reaction),
 		}
 	}
 
@@ -524,6 +521,7 @@ func convertReaction(r *dto.Reaction) *model.Reaction {
 	return &model.Reaction{
 		Count:    r.Count,
 		Reaction: r.Reaction,
+		Users:    convertParticipants(r.Users),
 	}
 }
 func convertPinnedMessageEvent(e *dto.PinnedMessageEvent) *model.PinnedMessageEvent {

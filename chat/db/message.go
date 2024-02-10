@@ -820,22 +820,31 @@ func (tx *Tx) FlipReaction(userId int64, chatId int64, messageId int64, reaction
 }
 
 
-func getReactionsCountCommon(co CommonOperations, chatId int64, messageId int64, reaction string) (int64, error) {
-	var count int64
-	row := co.QueryRow(fmt.Sprintf("SELECT count(*) FROM message_reaction_chat_%v WHERE message_id = $1 AND reaction = $2", chatId), messageId, reaction)
-	err := tracerr.Wrap(row.Scan(&count))
+func getReactionUsersCommon(co CommonOperations, chatId int64, messageId int64, reaction string) ([]int64, error) {
+	rows, err := co.Query(fmt.Sprintf("SELECT user_id FROM message_reaction_chat_%v WHERE message_id = $1 AND reaction = $2", chatId), messageId, reaction)
 	if err != nil {
-		return 0, err
+		return nil, tracerr.Wrap(err)
 	}
-	return count, nil
+
+	defer rows.Close()
+	list := make([]int64, 0)
+	for rows.Next() {
+		var anUserId int64
+		if err := rows.Scan(&anUserId); err != nil {
+			return nil, tracerr.Wrap(err)
+		} else {
+			list = append(list, anUserId)
+		}
+	}
+	return list, nil
 }
 
-func (db *DB) GetReactionsCount(chatId int64, messageId int64, reaction string) (int64, error) {
-	return getReactionsCountCommon(db, chatId, messageId, reaction)
+func (db *DB) GetReactionUsers(chatId int64, messageId int64, reaction string) ([]int64, error) {
+	return getReactionUsersCommon(db, chatId, messageId, reaction)
 }
 
-func (tx *Tx) GetReactionsCount(chatId int64, messageId int64, reaction string) (int64, error) {
-	return getReactionsCountCommon(tx, chatId, messageId, reaction)
+func (tx *Tx) GetReactionUsers(chatId int64, messageId int64, reaction string) ([]int64, error) {
+	return getReactionUsersCommon(tx, chatId, messageId, reaction)
 }
 
 func getMessageReactionsCommon(co CommonOperations, chatId, messageId int64) ([]Reaction, error) {

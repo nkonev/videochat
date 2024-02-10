@@ -235,6 +235,7 @@ type ComplexityRoot struct {
 	Reaction struct {
 		Count    func(childComplexity int) int
 		Reaction func(childComplexity int) int
+		Users    func(childComplexity int) int
 	}
 
 	ReactionChangedEvent struct {
@@ -1267,6 +1268,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Reaction.Reaction(childComplexity), true
 
+	case "Reaction.users":
+		if e.complexity.Reaction.Users == nil {
+			break
+		}
+
+		return e.complexity.Reaction.Users(childComplexity), true
+
 	case "ReactionChangedEvent.messageId":
 		if e.complexity.ReactionChangedEvent.MessageID == nil {
 			break
@@ -1717,6 +1725,7 @@ type EmbedMessageResponse {
 
 type Reaction {
     count:    Int64!
+    users:    [Participant!]!
     reaction: String!
 }
 
@@ -4707,6 +4716,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_reactions(ctx context
 			switch field.Name {
 			case "count":
 				return ec.fieldContext_Reaction_count(ctx, field)
+			case "users":
+				return ec.fieldContext_Reaction_users(ctx, field)
 			case "reaction":
 				return ec.fieldContext_Reaction_reaction(ctx, field)
 			}
@@ -8043,6 +8054,60 @@ func (ec *executionContext) fieldContext_Reaction_count(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Reaction_users(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Reaction_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Users, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Participant)
+	fc.Result = res
+	return ec.marshalNParticipant2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Reaction_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Participant_id(ctx, field)
+			case "login":
+				return ec.fieldContext_Participant_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_Participant_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Reaction_reaction(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Reaction_reaction(ctx, field)
 	if err != nil {
@@ -8172,6 +8237,8 @@ func (ec *executionContext) fieldContext_ReactionChangedEvent_reaction(ctx conte
 			switch field.Name {
 			case "count":
 				return ec.fieldContext_Reaction_count(ctx, field)
+			case "users":
+				return ec.fieldContext_Reaction_users(ctx, field)
 			case "reaction":
 				return ec.fieldContext_Reaction_reaction(ctx, field)
 			}
@@ -13452,6 +13519,13 @@ func (ec *executionContext) _Reaction(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "users":
+
+			out.Values[i] = ec._Reaction_users(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "reaction":
 
 			out.Values[i] = ec._Reaction_reaction(ctx, field, obj)
@@ -14514,6 +14588,60 @@ func (ec *executionContext) marshalNNotificationDto2ᚖnkonevᚗnameᚋeventᚋg
 		return graphql.Null
 	}
 	return ec._NotificationDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNParticipant2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Participant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx context.Context, sel ast.SelectionSet, v *model.Participant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Participant(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNParticipantWithAdmin2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipantWithAdminᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ParticipantWithAdmin) graphql.Marshaler {
