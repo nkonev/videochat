@@ -322,19 +322,21 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 
 		var participantIdSet = map[int64]bool{}
 		participantIdSet[post.OwnerId] = true
-		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
-
-		if len(users) == 1 {
-			user := users[post.OwnerId]
-			response.Owner = user
-		}
 
 		reactions, err := h.db.GetReactionsOnMessage(chatBasic.Id, post.MessageId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Infof("For blog id %v unable to get reactions: %v", blogId, err)
 			return err
 		}
-		response.Reactions = convertReactions(reactions)
+
+		takeOnAccountReactions(participantIdSet, reactions) // adds reaction' users to participantIdSet
+
+		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+
+		user := users[post.OwnerId]
+		response.Owner = user
+
+		response.Reactions = convertReactions(reactions, users)
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -377,16 +379,16 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	var ownersSet = map[int64]bool{}
 	var chatsPreSet = map[int64]bool{}
 	for _, message := range messages {
-		populateSets(message, ownersSet, chatsPreSet)
+		populateSets(message, ownersSet, chatsPreSet, true)
 	}
 	chatsSet, err := h.db.GetChatsBasic(chatsPreSet, NonExistentUser)
 	if err != nil {
 		return err
 	}
-	var owners = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
+	var users = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
 	messageDtos := make([]*dto.DisplayMessageDto, 0)
 	for _, cc := range messages {
-		msg := convertToMessageDto(cc, owners, chatsSet, NonExistentUser)
+		msg := convertToMessageDto(cc, users, chatsSet, NonExistentUser)
 		msg.Text = h.patchStorageUrlToPublic(msg.Text)
 		messageDtos = append(messageDtos, msg)
 	}

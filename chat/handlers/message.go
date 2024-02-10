@@ -150,16 +150,16 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			var ownersSet = map[int64]bool{}
 			var chatsPreSet = map[int64]bool{}
 			for _, message := range messages {
-				populateSets(message, ownersSet, chatsPreSet)
+				populateSets(message, ownersSet, chatsPreSet, true)
 			}
 			chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
 			if err != nil {
 				return err
 			}
-			var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+			var users = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 			messageDtos := make([]*dto.DisplayMessageDto, 0)
 			for _, mm := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(mm, owners, chatsSet, userPrincipalDto.UserId))
+				messageDtos = append(messageDtos, convertToMessageDto(mm, users, chatsSet, userPrincipalDto.UserId))
 			}
 
 			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -178,19 +178,19 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		}
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
-		populateSets(message, ownersSet, chatsPreSet)
+		populateSets(message, ownersSet, chatsPreSet, true)
 
 		chatsSet, err := co.GetChatsBasic(chatsPreSet, behalfUserId)
 		if err != nil {
 			return nil, err
 		}
 
-		var owners = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
-		return convertToMessageDto(message, owners, chatsSet, behalfUserId), nil
+		var users = getUsersRemotelyOrEmpty(ownersSet, restClient, c)
+		return convertToMessageDto(message, users, chatsSet, behalfUserId), nil
 	}
 }
 
-func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map[int64]bool) {
+func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map[int64]bool, countReactions bool) {
 	ownersSet[message.OwnerId] = true
 	if message.ResponseEmbeddedMessageReplyOwnerId != nil {
 		var embeddedMessageReplyOwnerId = *message.ResponseEmbeddedMessageReplyOwnerId
@@ -200,6 +200,26 @@ func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map
 		ownersSet[embeddedMessageResendOwnerId] = true
 		var embeddedMessageResendChatId = *message.ResponseEmbeddedMessageResendChatId
 		chatsPreSet[embeddedMessageResendChatId] = true
+	}
+
+	if countReactions {
+		takeOnAccountReactions(ownersSet, message.Reactions)
+	}
+}
+
+func takeOnAccountReactions(ownersSet map[int64]bool, messageReactions []db.Reaction) {
+	const maxDisplayableUsers = 10
+	var currDisplayableUsers = 0
+	for _, r := range messageReactions {
+
+		if !ownersSet[r.UserId] {
+			ownersSet[r.UserId] = true
+			currDisplayableUsers++
+		}
+
+		if currDisplayableUsers >= maxDisplayableUsers {
+			break
+		}
 	}
 }
 
@@ -298,8 +318,8 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
-func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64) *dto.DisplayMessageDto {
-	user := owners[dbMessage.OwnerId]
+func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64) *dto.DisplayMessageDto {
+	user := users[dbMessage.OwnerId]
 	if user == nil {
 		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
 	}
@@ -318,7 +338,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 	ret.Text = patchStorageUrlToPreventCachingVideo(ret.Text)
 
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
-		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
+		embeddedUser := users[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
 		ret.EmbedMessage = &dto.EmbedMessageResponse{
 			Id:        *dbMessage.ResponseEmbeddedMessageReplyId,
 			Text:      *dbMessage.ResponseEmbeddedMessageReplyText,
@@ -326,7 +346,7 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 			Owner:     embeddedUser,
 		}
 	} else if dbMessage.ResponseEmbeddedMessageResendOwnerId != nil {
-		embeddedUser := owners[*dbMessage.ResponseEmbeddedMessageResendOwnerId]
+		embeddedUser := users[*dbMessage.ResponseEmbeddedMessageResendOwnerId]
 		basicChat := chats[*dbMessage.ResponseEmbeddedMessageResendChatId]
 		var embedChatName *string = nil
 		if !basicChat.IsTetATet {
@@ -347,32 +367,48 @@ func convertToMessageDto(dbMessage *db.Message, owners map[int64]*dto.User, chat
 
 	ret.SetPersonalizedFields(behalfUserId)
 
-	ret.Reactions = convertReactions(dbMessage.Reactions)
+	ret.Reactions = convertReactions(dbMessage.Reactions, users)
 
 	return ret
 }
 
-func convertReactions(dbReactions []db.Reaction) []dto.Reaction {
-	var retReactions = make([]dto.Reaction, 0)
+func convertReactions(dbReactionsOfMessage []db.Reaction, users map[int64]*dto.User) []dto.Reaction {
+	var convertedReactionsOfMessageToReturn = make([]dto.Reaction, 0)
 
-	for _, dbReaction := range dbReactions {
+	for _, dbReaction := range dbReactionsOfMessage {
 
 		wasSummed := false
-		for j, existingReaction := range retReactions {
+		for j, existingReaction := range convertedReactionsOfMessageToReturn {
 			if dbReaction.Reaction == existingReaction.Reaction {
-				retReactions[j].Count = existingReaction.Count + 1
+				convertedReactionsOfMessageToReturn[j].Count = existingReaction.Count + 1
+
+				usersOfThisReaction := convertedReactionsOfMessageToReturn[j].Users
+				user := users[dbReaction.UserId]
+				if user != nil {
+					usersOfThisReaction = append(usersOfThisReaction, user)
+				}
+
+				convertedReactionsOfMessageToReturn[j].Users = usersOfThisReaction
+
 				wasSummed = true
 			}
 		}
 		if !wasSummed {
-			retReactions = append(retReactions, dto.Reaction{
+			usersOfThisReaction := []*dto.User{}
+			user := users[dbReaction.UserId]
+			if user != nil {
+				usersOfThisReaction = append(usersOfThisReaction, user)
+			}
+
+			convertedReactionsOfMessageToReturn = append(convertedReactionsOfMessageToReturn, dto.Reaction{
 				Count:    1,
 				Reaction: dbReaction.Reaction,
+				Users: usersOfThisReaction,
 			})
 		}
 	}
 
-	return retReactions
+	return convertedReactionsOfMessageToReturn
 }
 
 func (a *CreateMessageDto) Validate() error {
@@ -1278,7 +1314,7 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
 		for _, message := range messages {
-			populateSets(message, ownersSet, chatsPreSet)
+			populateSets(message, ownersSet, chatsPreSet, false)
 		}
 		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
 		if err != nil {
@@ -1338,7 +1374,7 @@ func (mc *MessageHandler) GetPinnedPromotedMessage(c echo.Context) error {
 		}
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
-		populateSets(message, ownersSet, chatsPreSet)
+		populateSets(message, ownersSet, chatsPreSet, false)
 
 		chatsSet, err := tx.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
 		if err != nil {
