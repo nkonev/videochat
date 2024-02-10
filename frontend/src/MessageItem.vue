@@ -204,9 +204,6 @@
               if (i > 0) {
                 classes.push("ml-2")
               }
-              if (this.isInBlog) {
-                classes.push("disable-events");
-              }
               return classes
             },
             getReactedUsers(reactionObj) {
@@ -261,7 +258,4 @@
       0% { background: yellow }
   }
 
-  .disable-events {
-    pointer-events: none
-  }
 </style>
