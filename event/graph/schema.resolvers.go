@@ -469,7 +469,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	if reactionChangedEvent != nil {
 		result.ReactionChangedEvent = &model.ReactionChangedEvent{
 			MessageID: reactionChangedEvent.MessageId,
-			Reaction: convertReaction(&reactionChangedEvent.Reaction),
+			Reaction:  convertReaction(&reactionChangedEvent.Reaction),
 		}
 	}
 
