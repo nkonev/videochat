@@ -550,6 +550,7 @@
             const foundReaction = foundMessage.reactions.find(reaction => reaction.reaction == dto.reaction.reaction);
             if (foundReaction) {
               foundReaction.count = dto.reaction.count;
+              foundReaction.users = dto.reaction.users;
             } else {
               foundMessage.reactions.push(dto.reaction)
             }
