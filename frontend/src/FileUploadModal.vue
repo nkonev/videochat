@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="480" :persistent="isLoadingPresignedLinks || fileInputQueueHasElements" scrollable>
+        <v-dialog v-model="show" max-width="480" :persistent="isLoadingPresignedLinks || fileInputQueueHasElements || fileUploadingQueueHasElements" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.upload_files')">
 
                 <v-card-text>
