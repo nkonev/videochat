@@ -231,14 +231,13 @@ export default {
                       const retryOptions = {
                         delay: 2000,
                         maxAttempts: 10,
-                        initialDelay: 500,
                       };
 
                       const res = await retry((context) => {
                         const blob = renamedFile.slice(start, end);
                         return axios.put(presignedUrlObj.url, blob, childConfig)
                           .catch((e) => {
-                            this.setWarning("An error during uploading '" + renamedFile.name + "', returning");
+                            this.setWarning("An error during uploading '" + renamedFile.name + "', restoring");
                             console.warn("Error", e);
                             throw e
                         })
