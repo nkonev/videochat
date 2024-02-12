@@ -66,7 +66,7 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
-import {formatSize, renameFilePart} from "./utils";
+import {formatSize, renameFilePart, setTimeoutAsync} from "./utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
@@ -228,7 +228,10 @@ export default {
                         onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
                       };
 
-                      const res = await axios.put(presignedUrlObj.url, blob, childConfig);
+                      // switch thread
+                      const res = await setTimeoutAsync(()=> {
+                        return axios.put(presignedUrlObj.url, blob, childConfig)
+                      }, 1);
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
