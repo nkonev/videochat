@@ -246,7 +246,7 @@ export default {
                             if (axios.isCancel(e)) {
                               throw e
                             }
-                            this.setWarning("An error during uploading '" + renamedFile.name + "', restoring");
+                            this.setWarning("An error during uploading '" + renamedFile.name + "', retrying, attempt " + (context.attemptNum + 1) + " / " + retryOptions.maxAttempts);
                             console.warn("Error", e);
                             throw e
                         })
