@@ -231,12 +231,21 @@ export default {
                       const retryOptions = {
                         delay: 2000,
                         maxAttempts: 10,
+                        handleError (err, context) {
+                          if (axios.isCancel(err)) {
+                            // We should abort because error indicates that request is not retryable
+                            context.abort();
+                          }
+                        }
                       };
 
                       const res = await retry((context) => {
                         const blob = renamedFile.slice(start, end);
                         return axios.put(presignedUrlObj.url, blob, childConfig)
                           .catch((e) => {
+                            if (axios.isCancel(e)) {
+                              throw e
+                            }
                             this.setWarning("An error during uploading '" + renamedFile.name + "', restoring");
                             console.warn("Error", e);
                             throw e
