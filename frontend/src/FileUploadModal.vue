@@ -70,6 +70,7 @@ import {formatSize, renameFilePart} from "./utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
+import {retry} from "@lifeomic/attempt";
 const CancelToken = axios.CancelToken;
 
 export default {
@@ -227,8 +228,22 @@ export default {
                         onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
                       };
 
-                      const blob = renamedFile.slice(start, end);
-                      const res = await axios.put(presignedUrlObj.url, blob, childConfig);
+                      const retryOptions = {
+                        delay: 2000,
+                        maxAttempts: 10,
+                        initialDelay: 500,
+                      };
+
+                      const res = await retry((context) => {
+                        const blob = renamedFile.slice(start, end);
+                        return axios.put(presignedUrlObj.url, blob, childConfig)
+                          .catch((e) => {
+                            this.setWarning("An error during uploading '" + renamedFile.name + "', returning");
+                            console.warn("Error", e);
+                            throw e
+                        })
+                      }, retryOptions);
+
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
