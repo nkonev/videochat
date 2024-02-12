@@ -234,9 +234,9 @@ export default {
                         initialDelay: 500,
                       };
 
-                      const res = await retry(async (context) => {
+                      const res = await retry( (context) => {
                         const blob = renamedFile.slice(start, end);
-                        return await axios.put(presignedUrlObj.url, blob, childConfig);
+                        return axios.put(presignedUrlObj.url, blob, childConfig);
                       }, retryOptions);
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
