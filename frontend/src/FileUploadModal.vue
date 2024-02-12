@@ -231,6 +231,7 @@ export default {
                       const retryOptions = {
                         delay: 2000,
                         maxAttempts: 3,
+                        initialDelay: 500,
                       };
 
                       const res = await retry(async (context) => {
