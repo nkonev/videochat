@@ -261,10 +261,3 @@ export const renameFilePart = (file, newFileName) => {
 export const isCalling = (status) => {
   return status == "inviting"
 }
-
-export const setTimeoutAsync = (cb, delay) =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(cb());
-    }, delay);
-  });
