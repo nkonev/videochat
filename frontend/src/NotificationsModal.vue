@@ -76,7 +76,7 @@ import bus, {
 } from "./bus/bus";
 import {findIndex, getHumanReadableDate, hasLength, setIcon} from "./utils";
 import axios from "axios";
-import {chat, chat_name, messageIdHashPrefix} from "@/router/routes";
+import {chat, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 
@@ -202,21 +202,19 @@ export default {
             return url;
         },
         onNotificationClick(item) {
-            if (this.chatId != item.chatId) {
-                const routeDto = {name: chat_name, params: {id: item.chatId}};
-                if (item.messageId) {
-                    routeDto.hash = messageIdHashPrefix + item.messageId;
-                }
-                this.$router.push(routeDto)
-                    .catch(() => { })
-                    .then(() => {
-                        this.closeModal();
-                        axios.put('/api/notification/read/' + item.id);
-                    })
-            } else {
-                this.closeModal();
-                axios.put('/api/notification/read/' + item.id);
+            const routeDto = {name: chat_name, params: {id: item.chatId}};
+            if (this.chatId == item.chatId && this.$route.name == videochat_name) {
+                routeDto.name = videochat_name; // Improves clicking on 'Missed call' behaviour during the existing call
             }
+            if (item.messageId) {
+                routeDto.hash = messageIdHashPrefix + item.messageId;
+            }
+            this.$router.push(routeDto)
+                .catch(() => { })
+                .then(() => {
+                    this.closeModal();
+                    axios.put('/api/notification/read/' + item.id);
+                })
         },
         getTotalVisible() {
             if (!this.isMobile()) {
