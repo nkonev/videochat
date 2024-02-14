@@ -225,10 +225,10 @@
             // 3. press "arrow down" (Scroll down)
             // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
             startingFromItemId = this.highlightMessageId;
-            hasHash = this.hasInitialHash;
+            hasHash = true;
           } else if (this.loadedHash) {
             startingFromItemId = this.loadedHash;
-            hasHash = !!this.loadedHash;
+            hasHash = true;
           } else {
             startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
             hasHash = false;
@@ -324,12 +324,12 @@
             await this.reloadItems();
           }
         },
-        setHash() {
+        setHashes() {
           this.hasInitialHash = hasLength(this.highlightMessageId);
           this.loadedHash = getTopMessagePosition(this.chatId);
         },
         async setHashAndReloadItems() {
-          this.setHash();
+          this.setHashes();
           await this.reloadItems();
         },
         async onProfileSet() {
