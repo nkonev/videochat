@@ -326,7 +326,7 @@
                 this.showSearchButton = true;
             },
             addParticipants() {
-                bus.emit(OPEN_CHAT_EDIT, this.chatId);
+                bus.emit(OPEN_CHAT_EDIT, this.dto);
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {

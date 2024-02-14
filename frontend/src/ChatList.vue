@@ -382,9 +382,8 @@ export default {
           });
     },
     editChat(chat) {
-          const chatId = chat.id;
           // console.log("Will add participants to chat", chatId);
-          bus.emit(OPEN_CHAT_EDIT, chatId);
+          bus.emit(OPEN_CHAT_EDIT, chat);
     },
     deleteChat(chat) {
           bus.emit(OPEN_SIMPLE_MODAL, {

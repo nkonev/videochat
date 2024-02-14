@@ -6,6 +6,7 @@
             <v-card :title="getTitle()">
                 <v-card-text class="pb-0">
                     <v-form
+                        v-if="!loading"
                         ref="form"
                         v-model="valid"
                         lazy-validation
@@ -90,10 +91,17 @@
                             </v-container>
                         </template>
                     </v-form>
+
+                    <v-progress-circular
+                      class="ma-4"
+                      v-else
+                      indeterminate
+                      color="primary"
+                    ></v-progress-circular>
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
-                    <template v-if="!isNew">
+                    <template v-if="!isNew && !loading">
                       <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()">
                         <template v-slot:prepend>
                           <v-icon>mdi-image-remove</v-icon>
@@ -113,7 +121,7 @@
                     </template>
                     <v-spacer></v-spacer>
                     <div :class="isMobile() ? 'mt-2' : ''">
-                      <v-btn color="primary" variant="flat" @click="saveChat" id="test-chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
+                      <v-btn v-if="!loading" color="primary" variant="flat" @click="saveChat" id="test-chat-save-btn">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                       <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                     </div>
                 </v-card-actions>
@@ -129,6 +137,7 @@
     import {chat_name} from "@/router/routes";
     import {hasLength} from "@/utils";
     import {v4 as uuidv4} from "uuid";
+    import {isNumber, isObject, isString} from "lodash";
 
     const dtoFactory = ()=>{
         return {
@@ -145,7 +154,6 @@
             // const requiredMessage = this.$vuetify.locale.t('$vuetify.chat_name_required');
             return {
                 show: false,
-                editChatId: null,
                 search: null,
                 editDto: dtoFactory(),
                 isLoading: false,
@@ -153,6 +161,7 @@
                 valid: true,
                 fileInput: null,
                 canCreateBlog: false,
+                loading: false,
             }
         },
         computed: {
@@ -162,7 +171,7 @@
                 ]
             },
             isNew() {
-                return !this.editChatId;
+                return !this.editDto.id;
             },
             ava() {
                 if (hasLength(this.editDto.avatarBig)) {
@@ -178,36 +187,47 @@
             },
         },
         methods: {
-            showModal(chatId) {
+            showModal(input) {
                 this.$data.show = true;
-                this.editChatId = chatId;
-                this.loadCanCreateBlog();
-                if (this.editChatId) {
-                    this.loadData();
+
+                if (isNumber(input) || isString(input)) {
+                  this.loadData(input).then((data) => {
+                    this.editDto = this.extractNecessaryFields(data);
+                  })
+                } else if (isObject(input)) {
+                  this.editDto = this.extractNecessaryFields(input);
                 } else {
-                    this.editDto = dtoFactory();
+                  this.editDto = dtoFactory()
                 }
 
+                this.loadCanCreateBlog();
             },
+            extractNecessaryFields(chatDto) {
+              return {
+                id: chatDto.id,
+                name: chatDto.name,
+                avatar: chatDto.avatar,
+                avatarBig: chatDto.avatarBig,
+                canResend: chatDto.canResend,
+                availableToSearch: chatDto.availableToSearch,
+                blog: chatDto.blog,
+              }
+            },
+            loadData(editChatId) {
+              console.log("Getting info about chat id", editChatId);
+              this.loading = true;
+              return axios.get('/api/chat/'+editChatId)
+                .then((response) => {
+                  return response.data
+                }).finally(()=>{
+                  this.loading = false;
+                })
+            },
+
             loadCanCreateBlog() {
                 axios.get("/api/chat/can-create-blog")
                     .then((response) => {
                         this.canCreateBlog = response.data.canCreateBlog;
-                    })
-            },
-            loadData() {
-                console.log("Getting info about chat id", this.editChatId);
-                axios.get('/api/chat/'+this.editChatId)
-                    .then((response) => {
-                        this.editDto = {
-                            id: response.data.id,
-                            name: response.data.name,
-                            avatar: response.data.avatar,
-                            avatarBig: response.data.avatarBig,
-                            canResend: response.data.canResend,
-                            availableToSearch: response.data.availableToSearch,
-                            blog: response.data.blog,
-                        };
                     })
             },
             removeSelected(item) {
@@ -239,7 +259,7 @@
                             this.isLoading = false;
                         })
                 } else {
-                    axios.get(`/api/chat/${this.editChatId}/user-candidate?searchString=${searchString}`)
+                    axios.get(`/api/chat/${this.editDto.id}/user-candidate?searchString=${searchString}`)
                         .then((response) => {
                             console.log("Fetched users", response.data);
                             this.people = response.data;
@@ -272,7 +292,7 @@
                         axios.put(`/api/chat`, dtoToPost).then(()=>{
                             if (this.editDto.participantIds && this.editDto.participantIds.length) {
                                 // we firstly add users...
-                                return axios.put(`/api/chat/${this.editChatId}/user`, {
+                                return axios.put(`/api/chat/${this.editDto.id}/user`, {
                                     addParticipantIds: this.editDto.participantIds
                                 })
                             } else {
@@ -288,20 +308,20 @@
             closeModal() {
                 console.debug("Closing ChatEditModal");
                 this.show = false;
-                // this.editChatId = null;
                 this.search = null;
                 this.editDto = dtoFactory();
                 this.isLoading = false;
                 this.people = [  ];
                 this.valid = true;
                 this.canCreateBlog = false;
+                this.loading = false;
             },
             openAvatarDialog() {
                 this.fileInput.click();
             },
             getTitle() {
                 if (!this.isNew) {
-                    return this.$vuetify.locale.t('$vuetify.edit_chat') + " #" + this.editChatId;
+                    return this.$vuetify.locale.t('$vuetify.edit_chat') + " #" + this.editDto.id;
                 } else {
                     return this.$vuetify.locale.t('$vuetify.create_chat')
                 }
