@@ -35,6 +35,3 @@ webhook:
   api_key: 'APIznJxWShGW3Kt'
   urls:
     - 'http://video:1237/internal/livekit-webhook'
-
-signal_relay:
-  enabled: true

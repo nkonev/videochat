@@ -23,5 +23,3 @@ webhook:
   urls:
     - 'http://localhost:1237/internal/livekit-webhook'
 
-signal_relay:
-  enabled: true
