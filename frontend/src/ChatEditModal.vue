@@ -21,7 +21,7 @@
                         ></v-text-field>
                         <v-autocomplete
                                 v-model="editDto.participantIds"
-                                :loading="isLoading"
+                                :loading="searchLoading"
                                 :items="people"
                                 chips
                                 closable-chips
@@ -156,7 +156,7 @@
                 show: false,
                 search: null,
                 editDto: dtoFactory(),
-                isLoading: false,
+                searchLoading: false,
                 people: [  ], // available person to chat with
                 valid: true,
                 fileInput: null,
@@ -239,13 +239,13 @@
                 this.doSearch(value);
             },
             doSearch(searchString) {
-                if (this.isLoading) return;
+                if (this.searchLoading) return;
 
                 if (!searchString) {
                     return;
                 }
 
-                this.isLoading = true;
+                this.searchLoading = true;
 
                 if (this.isNew) {
                     axios.post(`/api/aaa/user/search`, {
@@ -256,7 +256,7 @@
                             this.people = response.data.users;
                         })
                         .finally(() => {
-                            this.isLoading = false;
+                            this.searchLoading = false;
                         })
                 } else {
                     axios.get(`/api/chat/${this.editDto.id}/user-candidate?searchString=${searchString}`)
@@ -265,7 +265,7 @@
                             this.people = response.data;
                         })
                         .finally(() => {
-                            this.isLoading = false;
+                            this.searchLoading = false;
                         })
                 }
             },
@@ -283,11 +283,14 @@
                         blog: this.editDto.blog,
                     };
 
+                    this.loading = true;
                     if (this.isNew) {
                         axios.post(`/api/chat`, dtoToPost).then(({data}) => {
                             const routeDto = { name: chat_name, params: { id: data.id }};
                             this.$router.push(routeDto);
-                        }).then(()=>this.closeModal());
+                        }).then(()=>this.closeModal()).finally(()=>{
+                          this.loading = false;
+                        });
                     } else {
                         axios.put(`/api/chat`, dtoToPost).then(()=>{
                             if (this.editDto.participantIds && this.editDto.participantIds.length) {
@@ -298,7 +301,9 @@
                             } else {
                                 return Promise.resolve()
                             }
-                        }).then(()=>this.closeModal());
+                        }).then(()=>this.closeModal()).finally(()=>{
+                          this.loading = false;
+                        });
                     }
                 }
             },
@@ -310,7 +315,7 @@
                 this.show = false;
                 this.search = null;
                 this.editDto = dtoFactory();
-                this.isLoading = false;
+                this.searchLoading = false;
                 this.people = [  ];
                 this.valid = true;
                 this.canCreateBlog = false;
@@ -330,6 +335,7 @@
               const config = {
                 headers: { 'content-type': 'multipart/form-data' }
               }
+              this.loading = true;
               const formData = new FormData();
               formData.append('data', file);
               return axios.post(`/api/storage/chat/${this.editDto.id}/avatar`, formData, config)
@@ -337,12 +343,18 @@
                   this.editDto.avatar = res.data.relativeUrl;
                   this.editDto.avatarBig = res.data.relativeBigUrl;
                   return axios.put(`/api/chat`, this.editDto);
+                }).finally(()=>{
+                  this.loading = false;
                 })
             },
             removeAvatarFromChat() {
                 this.editDto.avatar = null;
                 this.editDto.avatarBig = null;
-                return axios.put(`/api/chat`, this.editDto);
+
+                this.loading = true;
+                return axios.put(`/api/chat`, this.editDto).finally(()=>{
+                  this.loading = false;
+                });
             },
         },
         created() {
