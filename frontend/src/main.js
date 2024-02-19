@@ -11,7 +11,7 @@ import App from './App.vue'
 import { createApp } from 'vue'
 
 // Plugins
-import {hasLength, isMobileBrowser} from "@/utils";
+import {getUrlPrefix, hasLength, isMobileBrowser} from "@/utils";
 import vuetify from "@/plugins/vuetify";
 import router from "@/router";
 import axios from "axios";
@@ -38,6 +38,39 @@ if (isMobileBrowser()) {
 } else {
   webSplitpanesCss()
 }
+
+const check = () => {
+  if (!('serviceWorker' in navigator)) {
+    throw new Error('No Service Worker support!')
+  }
+}
+
+const registerServiceWorker = async () => {
+  const swRegistration = await navigator.serviceWorker.register(getUrlPrefix() + '/service.js'); //notice the file name
+  return swRegistration;
+}
+const requestNotificationPermission = async () => {
+  const permission = await window.Notification.requestPermission();
+  // value of permission can be 'granted', 'default', 'denied'
+  // granted: user has accepted the request
+  // default: user has dismissed the notification permission popup by clicking on x
+  // denied: user has denied the request.
+  if(permission !== 'granted'){
+    throw new Error('Permission not granted for Notification');
+  }
+}
+const showLocalNotification = (title, body, swRegistration) => {
+  const options = {
+    body,
+    // here you can add more properties like icon, image, vibrate, etc.
+  };
+  swRegistration.showNotification(title, options);
+}
+
+check();
+const swRegistration = await registerServiceWorker();
+const permission =  await requestNotificationPermission();
+showLocalNotification('This is title', 'this is the message', swRegistration);
 
 const chatStore = useChatStore();
 
