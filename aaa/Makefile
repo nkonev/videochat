@@ -20,11 +20,11 @@ check-env:
 generate: generate-git
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-STATIC_DIR_JSON := ./target/classes/static
-STATIC_JSON := $(STATIC_DIR_JSON)/git.json
+JSON_DIR := ./target/classes/static
+STATIC_JSON := $(JSON_DIR)/git.json
 
 generate-git:
-	mkdir -p $(STATIC_DIR_JSON)
+	mkdir -p $(JSON_DIR)
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 test:
