@@ -17,13 +17,12 @@
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
-        <spring.boot.version>3.2.2</spring.boot.version>
+        <spring.boot.version>3.2.3</spring.boot.version>
         <greenmail.version>2.1.0-alpha-4</greenmail.version>
         <mockserver.version>5.15.0</mockserver.version>
         <skipTests>false</skipTests>
         <git-json>git.json</git-json>
         <shedlock.version>5.1.0</shedlock.version>
-        <micrometer-tracing.version>1.2.3</micrometer-tracing.version>
     </properties>
 
     <repositories>
@@ -193,13 +192,6 @@
                         <artifactId>junit</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-tracing-bom</artifactId>
-                <version>${micrometer-tracing.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
             <!-- https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#using-boot-maven-without-a-parent -->
             <dependency>
