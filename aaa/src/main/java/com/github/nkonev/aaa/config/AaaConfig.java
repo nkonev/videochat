@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import java.io.IOException;
 
 @Configuration
 public class AaaConfig {
@@ -29,7 +28,7 @@ public class AaaConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaConfig.class);
 
     @PostConstruct
-    public void pc() throws Exception {
+    public void pc() {
         SimpleModule rejectUserAccountDetailsDTOModule = new SimpleModule("Reject serialize UserAccountDetailsDTO");
         rejectUserAccountDetailsDTOModule.addSerializer(UserAccountDetailsDTO.class, new JsonSerializer<UserAccountDetailsDTO>() {
             @Override
@@ -41,10 +40,12 @@ public class AaaConfig {
     }
 
     @PostConstruct
-    public void printVersion() throws IOException {
+    public void printVersion() {
         if(resource.exists()){
             String text = ResourceUtils.stringFromResource(resource);
             LOGGER.info("Version {}", text);
+        } else {
+            LOGGER.info("Version not exists");
         }
     }
 

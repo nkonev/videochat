@@ -11,17 +11,15 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-        <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+        <maven.compiler.plugin.version>3.12.1</maven.compiler.plugin.version>
+        <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
         <java.version>21</java.version>
-        <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
-        <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
         <spring.boot.version>3.2.3</spring.boot.version>
         <greenmail.version>2.1.0-alpha-4</greenmail.version>
         <mockserver.version>5.15.0</mockserver.version>
         <skipTests>false</skipTests>
-        <git-json>git.json</git-json>
         <shedlock.version>5.1.0</shedlock.version>
     </properties>
 
@@ -119,35 +117,10 @@
                 </executions>
             </plugin>
 
-            <!-- put surefire here in case troubles - doc generation must be after surefire -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.plugin.version}</version>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>version-stuff</id>
-                        <phase>compile</phase>
-                        <configuration>
-                            <tasks>
-                                <mkdir dir="${project.build.outputDirectory}/static"/>
-                                <!-- this is just static file which'll be served by tomcat -->
-                                <!-- https://ant.apache.org/manual/Tasks/exec.html -->
-                                <exec dir="${project.basedir}" executable="bash" failonerror="true" searchpath="true">
-                                    <arg value="git-info.sh"/>
-                                    <arg value="${project.build.outputDirectory}/static/${git-json}"/>
-                                </exec>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
@@ -402,7 +375,6 @@
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
-            <version>4.2.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

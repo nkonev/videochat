@@ -45,7 +45,7 @@ jobs:
       - name: Build and test with Maven
         if: env.SHOULD_RUN == 'true'
         run: |
-          (cd aaa; make check-env clean download package test)
+          (cd aaa; make check-env clean download generate package test)
       - name: Deploy docker image to server
         if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
         run: |

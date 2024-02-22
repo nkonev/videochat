@@ -19,9 +19,13 @@ check-env:
 
 generate: generate-git
 
+GIT_COMMIT := $(shell git rev-list -1 HEAD)
+STATIC_DIR_JSON := ./target/classes/static
+STATIC_JSON := $(STATIC_DIR_JSON)/git.json
 
 generate-git:
-	echo "Version is generated in pom.xml"
+	mkdir -p $(STATIC_DIR_JSON)
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 test:
 	./mvnw test
