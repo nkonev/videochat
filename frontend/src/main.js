@@ -59,18 +59,9 @@ const requestNotificationPermission = async () => {
     throw new Error('Permission not granted for Notification');
   }
 }
-const showLocalNotification = (title, body, swRegistration) => {
-  const options = {
-    body,
-    // here you can add more properties like icon, image, vibrate, etc.
-  };
-  swRegistration.showNotification(title, options);
-}
-
 check();
 const swRegistration = await registerServiceWorker();
 const permission =  await requestNotificationPermission();
-showLocalNotification('This is title', 'this is the message', swRegistration);
 
 const chatStore = useChatStore();
 
