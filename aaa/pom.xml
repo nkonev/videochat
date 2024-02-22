@@ -419,9 +419,9 @@
                         <configuration>
                             <mainClass>com.github.nkonev.oauth2emu.EmulatorServersController</mainClass>
                             <useTestClasspath>true</useTestClasspath>
-                            <directories>
+                            <additionalClasspathElements>
                                 <directory>${project.build.testOutputDirectory}</directory>
-                            </directories>
+                            </additionalClasspathElements>
                         </configuration>
                     </plugin>
                 </plugins>
