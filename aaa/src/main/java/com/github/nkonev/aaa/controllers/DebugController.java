@@ -40,24 +40,6 @@ public class DebugController {
         return modelAndView;
     }
 
-    private void setCommonHeaderData(UserAccountDetailsDTO userAccount, ModelAndView modelAndView) throws JsonProcessingException {
-        var myOa = Optional
-            .ofNullable(userAccount)
-            .map(UserAccountDetailsDTO::userAccountDTO)
-            .map(UserAccountDTO::oauth2Identifiers)
-            .orElse(new OAuth2IdentifiersDTO());
-        var myOauth2IdentifiersMap = objectMapper.readValue(objectMapper.writeValueAsString(myOa), new TypeReference<Map<String, String>>() {}) ;
-        myOauth2IdentifiersMap.remove("@class");
-
-        var myPr = Optional
-            .ofNullable(userAccount)
-            .map(UserAccountDetailsDTO::userAccountDTO)
-            .orElse(null);
-
-        modelAndView.getModelMap().addAttribute("myOauth2Identifiers", myOauth2IdentifiersMap);
-        modelAndView.getModelMap().addAttribute("myPrincipal", myPr);
-    }
-
     @GetMapping({"/oauth2.html"})
     public ModelAndView oauth2(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) throws JsonProcessingException {
         ModelAndView modelAndView = new ModelAndView("oauth2");
@@ -82,4 +64,21 @@ public class DebugController {
         asyncEmailService.sendArbitraryEmail(emailDto);
     }
 
+    private void setCommonHeaderData(UserAccountDetailsDTO userAccount, ModelAndView modelAndView) throws JsonProcessingException {
+        var myOa = Optional
+            .ofNullable(userAccount)
+            .map(UserAccountDetailsDTO::userAccountDTO)
+            .map(UserAccountDTO::oauth2Identifiers)
+            .orElse(new OAuth2IdentifiersDTO());
+        var myOauth2IdentifiersMap = objectMapper.readValue(objectMapper.writeValueAsString(myOa), new TypeReference<Map<String, String>>() {}) ;
+        myOauth2IdentifiersMap.remove("@class");
+
+        var myPr = Optional
+            .ofNullable(userAccount)
+            .map(UserAccountDetailsDTO::userAccountDTO)
+            .orElse(null);
+
+        modelAndView.getModelMap().addAttribute("myOauth2Identifiers", myOauth2IdentifiersMap);
+        modelAndView.getModelMap().addAttribute("myPrincipal", myPr);
+    }
 }
