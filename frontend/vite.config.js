@@ -20,6 +20,7 @@ export default defineConfig({
         appBlog: resolve(__dirname, 'blog', 'index.html'),
       },
     },
+    target: 'esnext' // Fix for Top-level await is not available in the configured target environment ("chrome87", "edge88", "es2020", "firefox78", "safari14" + 2 overrides)
   },
   plugins: [
     anotherEntrypointIndexHtmlPlugin(null, "/blog"),
