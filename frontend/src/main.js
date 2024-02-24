@@ -39,16 +39,7 @@ if (isMobileBrowser()) {
   webSplitpanesCss()
 }
 
-const check = () => {
-  if (!('serviceWorker' in navigator)) {
-    throw new Error('No Service Worker support!')
-  }
-}
 
-const registerServiceWorker = async () => {
-  const swRegistration = await navigator.serviceWorker.register(getUrlPrefix() + '/service.js'); //notice the file name
-  return swRegistration;
-}
 const requestNotificationPermission = async () => {
   const permission = await window.Notification.requestPermission();
   // value of permission can be 'granted', 'default', 'denied'
@@ -59,9 +50,14 @@ const requestNotificationPermission = async () => {
     throw new Error('Permission not granted for Notification');
   }
 }
-check();
-const swRegistration = await registerServiceWorker();
-const permission =  await requestNotificationPermission();
+await requestNotificationPermission();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register(
+    import.meta.env.MODE === 'production' ? '/service-worker.js' : '/dev-sw.js?dev-sw'
+  )
+}
+
 
 const chatStore = useChatStore();
 

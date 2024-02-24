@@ -8,6 +8,8 @@ import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path';
 
+import { VitePWA } from 'vite-plugin-pwa';
+
 // https://vitejs.dev/config/
 const base = "/";
 
@@ -20,6 +22,7 @@ export default defineConfig({
         appBlog: resolve(__dirname, 'blog', 'index.html'),
       },
     },
+    target: 'esnext' // Fix for Top-level await is not available in the configured target environment ("chrome87", "edge88", "es2020", "firefox78", "safari14" + 2 overrides)
   },
   plugins: [
     anotherEntrypointIndexHtmlPlugin(null, "/blog"),
@@ -33,6 +36,19 @@ export default defineConfig({
         configFile: 'src/styles/settings.scss',
       },
     }),
+    VitePWA({
+      srcDir: "src",
+      filename: "service-worker.js",
+      strategies: "injectManifest",
+      injectRegister: false,
+      manifest: false,
+      injectManifest: {
+        injectionPoint: null,
+      },
+      devOptions: {
+        enabled: true
+      }
+    })
   ],
   define: { 'process.env': {} },
   resolve: {
