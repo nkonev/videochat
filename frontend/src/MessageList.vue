@@ -8,15 +8,11 @@
             :chatId="chatId"
             :my="meIsOwnerOfMessage(item)"
             :highlight="item.id == highlightMessageId"
-            :canResend="chatDto.canResend"
             @customcontextmenu.stop="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
             @replyOnMessage="replyOnMessage"
             @onFilesClicked="onFilesClicked"
-            @pinMessage="pinMessage"
-            @removedFromPinned="removedFromPinned"
-            @shareMessage="shareMessage"
             @onreactionclick="onExistingReactionClick"
           ></MessageItem>
           <template v-if="items.length == 0 && !showProgress">

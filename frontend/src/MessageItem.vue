@@ -15,9 +15,6 @@
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                     <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
-                    <v-icon v-if="canResend" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.share')" @click="shareMessage(item)">mdi-share</v-icon>
-                    <v-icon v-if="!item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.pin_message')" @click="pinMessage(item)">mdi-pin</v-icon>
-                    <v-icon v-if="item.pinned" class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')" @click="removedFromPinned(item)">mdi-pin-off-outline</v-icon>
                     <a v-if="item.blogPost" class="mx-1 colored-link" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon size="small">mdi-postage-stamp</v-icon></a>
                     <router-link class="mx-1 hash colored-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')">#</router-link>
                 </template>
@@ -58,7 +55,7 @@
     import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
 
     export default {
-        props: ['id', 'item', 'chatId', 'my', 'highlight', 'canResend', 'isInBlog'],
+        props: ['id', 'item', 'chatId', 'my', 'highlight', 'isInBlog'],
         methods: {
             hasLength,
             getOwnerRoute(item) {
@@ -98,17 +95,8 @@
             replyOnMessage(dto) {
                 this.$emit('replyOnMessage', dto)
             },
-            shareMessage(dto) {
-                this.$emit('shareMessage', dto)
-            },
             onFilesClicked(dto) {
                 this.$emit('onFilesClicked', dto)
-            },
-            pinMessage(dto) {
-                this.$emit('pinMessage', dto)
-            },
-            removedFromPinned(dto) {
-                this.$emit('removedFromPinned', dto)
             },
             getBlogLink() {
                 return getBlogLink(this.chatId)
