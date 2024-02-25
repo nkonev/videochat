@@ -519,26 +519,10 @@ func (tx *Tx) CountChatsPerUser(userId int64) (int64, error) {
 }
 
 func (tx *Tx) DeleteChat(id int64) error {
-	if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_reaction_chat_%v;`, id)); err != nil {
+	if _, err := tx.Exec(`CALL DELETE_CHAT($1)`, id); err != nil {
 		return tracerr.Wrap(err)
 	}
-
-	if _, err := tx.Exec(fmt.Sprintf(`DROP TABLE message_chat_%v;`, id)); err != nil {
-		return tracerr.Wrap(err)
-	}
-
-	if res, err := tx.Exec("DELETE FROM chat WHERE id = $1", id); err != nil {
-		return tracerr.Wrap(err)
-	} else {
-		affected, err := res.RowsAffected()
-		if err != nil {
-			return tracerr.Wrap(err)
-		}
-		if affected == 0 {
-			return tracerr.Wrap(errors.New("No rows affected"))
-		}
-		return nil
-	}
+	return nil
 }
 
 func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog* bool) (*time.Time, error) {
