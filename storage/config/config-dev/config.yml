@@ -30,6 +30,7 @@ types:
   audio:
     - ".mp3"
     - ".m4a"
+    - ".ogg"
   plainText:
     - ".txt"
 
