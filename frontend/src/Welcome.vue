@@ -4,7 +4,7 @@
       <v-card>
         <v-card-title class="d-flex justify-space-around">{{$vuetify.locale.t('$vuetify.welcome_participant', chatStore.currentUser?.login)}}</v-card-title>
         <v-card-actions class="d-flex justify-space-around flex-wrap flex-row pb-0">
-          <v-btn :size="getBtnSize()" @click="findUser()" text :class="isMobile() ? 'my-2' : ''">
+          <v-btn :size="getBtnSize()" @click="findUser()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-account-group</v-icon>
             </template>
@@ -12,7 +12,7 @@
               {{ $vuetify.locale.t('$vuetify.users') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" color="primary" @click="createChat()" text :class="isMobile() ? 'my-2' : ''">
+          <v-btn :size="getBtnSize()" color="primary" @click="createChat()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-plus</v-icon>
             </template>
@@ -20,7 +20,7 @@
               {{ $vuetify.locale.t('$vuetify.new_chat') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click="chats()" text :class="isMobile() ? 'my-2' : ''">
+          <v-btn :size="getBtnSize()" @click="chats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-forum</v-icon>
             </template>
@@ -28,7 +28,7 @@
               {{ $vuetify.locale.t('$vuetify.chats') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click="availableForSearchChats()" text :class="isMobile() ? 'my-2' : ''">
+          <v-btn :size="getBtnSize()" @click="availableForSearchChats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-forum</v-icon>
             </template>
@@ -36,7 +36,7 @@
               {{ $vuetify.locale.t('$vuetify.public_chats') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click="goBlog()" text :class="isMobile() ? 'my-2' : ''">
+          <v-btn :size="getBtnSize()" @click="goBlog()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-postage-stamp</v-icon>
             </template>
