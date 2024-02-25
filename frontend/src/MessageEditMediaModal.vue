@@ -27,8 +27,9 @@
                                                 height="200px"
                                                 cover
                                             >
-                                                <v-card-title v-text="mediaFile.filename" class="text-white breaks"></v-card-title>
-
+                                                <v-card-title class="card-title-wrapper">
+                                                    <span v-text="mediaFile.filename" class="file-title text-white"></span>
+                                                </v-card-title>
                                             </v-img>
 
                                             <!-- Even transition="false" doesn't actually disable the transition, it fixes breakage of the markup of hover -->
@@ -232,4 +233,13 @@
   .cursor-pointer {
     cursor pointer
   }
+
+  .card-title-wrapper {
+    line-height 1.25em
+
+    .file-title {
+      white-space break-spaces
+    }
+  }
+
 </style>
