@@ -75,7 +75,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 18.16.0
+          node-version: 21.6.2
       - name: Cache Node.js dependencies
         if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v4
@@ -359,7 +359,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: env.SHOULD_RUN == 'true'
         with:
-          node-version: 18.16.0
+          node-version: 21.6.2
       - name: Cache Playwright browsers and Node.js dependencies
         if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v4

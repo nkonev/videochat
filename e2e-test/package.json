@@ -1,19 +1,12 @@
 {
   "name": "e2e-test",
-  "version": "1.0.0",
+  "version": "0.0.0",
+  "private": true,
   "description": "Some text",
   "main": "index.js",
   "scripts": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nkonev/videochat.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "homepage": "https://github.com/nkonev/videochat#readme",
   "devDependencies":    {
-    "axios": "^0.21.1",
-    "@playwright/test": "^1.37.1"
+    "axios": "^1.6.7",
+    "@playwright/test": "^1.41.2"
   }
 }

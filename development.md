@@ -74,6 +74,8 @@ nvm install v15.11.0
 ```
 nvm install v16.13.0
 nvm use v16.13.0
+nvm alias default 16
+nvm use default 16
 ```
 Then restart (sic!) PC.
 
