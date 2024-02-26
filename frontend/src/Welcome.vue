@@ -4,7 +4,7 @@
       <v-card>
         <v-card-title class="d-flex justify-space-around">{{$vuetify.locale.t('$vuetify.welcome_participant', chatStore.currentUser?.login)}}</v-card-title>
         <v-card-actions class="d-flex justify-space-around flex-wrap flex-row pb-0">
-          <v-btn :size="getBtnSize()" @click="findUser()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
+          <v-btn :size="getBtnSize()" @click.prevent="findUser()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getUser()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-account-group</v-icon>
             </template>
@@ -12,7 +12,7 @@
               {{ $vuetify.locale.t('$vuetify.users') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" color="primary" @click="createChat()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
+          <v-btn :size="getBtnSize()" color="primary" @click.prevent="createChat()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-plus</v-icon>
             </template>
@@ -20,7 +20,7 @@
               {{ $vuetify.locale.t('$vuetify.new_chat') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click="chats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
+          <v-btn :size="getBtnSize()" @click.prevent="chats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getChats()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-forum</v-icon>
             </template>
@@ -28,7 +28,7 @@
               {{ $vuetify.locale.t('$vuetify.chats') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click="availableForSearchChats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
+          <v-btn :size="getBtnSize()" @click.prevent="availableForSearchChats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getAvailableForSearchChats()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-forum</v-icon>
             </template>
@@ -36,7 +36,7 @@
               {{ $vuetify.locale.t('$vuetify.public_chats') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click="goBlog()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
+          <v-btn :size="getBtnSize()" @click.prevent="goBlog()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getBlog()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-postage-stamp</v-icon>
             </template>
@@ -55,9 +55,9 @@
   import {mapStores} from "pinia";
   import {useChatStore} from "@/store/chatStore";
   import heightMixin from "@/mixins/heightMixin";
-  import {blog, chat_list_name, profile_list_name} from "@/router/routes";
+  import {blog, chat_list_name, chats, profile_list_name, profiles} from "@/router/routes";
   import bus, {OPEN_CHAT_EDIT} from "@/bus/bus";
-  import {goToPreservingQuery, SEARCH_MODE_CHATS} from "@/mixins/searchString";
+  import {SEARCH_MODE_CHATS} from "@/mixins/searchString";
 
   export default {
     mixins: [
@@ -71,16 +71,28 @@
         bus.emit(OPEN_CHAT_EDIT, null);
       },
       findUser() {
-        goToPreservingQuery(this.$route, this.$router, { name: profile_list_name});
+        this.$router.push({name: profile_list_name});
+      },
+      getUser() {
+        return profiles
       },
       availableForSearchChats() {
         this.$router.push({ name: chat_list_name, hash: null, query: {[SEARCH_MODE_CHATS] : publicallyAvailableForSearchChatsQuery} })
       },
+      getAvailableForSearchChats() {
+        return chats + "?" + SEARCH_MODE_CHATS + "=" + publicallyAvailableForSearchChatsQuery
+      },
       chats() {
         this.$router.push({ name: chat_list_name })
       },
+      getChats() {
+        return chats
+      },
       goBlog() {
         window.location.href = blog
+      },
+      getBlog() {
+        return blog
       },
 
       getBtnSize() {
