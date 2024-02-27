@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import static com.github.nkonev.aaa.Constants.Headers.*;
 import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
 import static com.github.nkonev.aaa.converter.UserAccountConverter.convertRolesToStringList;
+import static com.github.nkonev.aaa.converter.UserAccountConverter.convertToUserAccountDTO;
 
 /**
  * Created by nik on 08.06.17.
@@ -129,6 +130,12 @@ public class UserProfileController {
     record SearchUsersRequestDto(
         int page,
         int size,
+        String searchString
+    ) {}
+
+    record SearchUsersRequestInternalDto(
+        int page,
+        int size,
         List<Long> userIds,
         String searchString,
         boolean including
@@ -139,16 +146,35 @@ public class UserProfileController {
             long count
     ) {}
 
+    record SearchUsersResponseInternalDto(
+        List<com.github.nkonev.aaa.dto.UserAccountDTO> users,
+        long count
+    ) {}
+
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
-    @PostMapping(value = {
-            Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH,
-            Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH
-    })
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
     public SearchUsersResponseDto searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDto request
     ) {
-        LOGGER.info("Searching users");
+        LOGGER.info("Searching users external");
+        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
+        var searchString = request.searchString != null ? request.searchString.trim() : "";
+
+        final String forDbSearch = "%" + searchString + "%";
+        List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
+        long count = userAccountRepository.findByUsernameContainsIgnoreCaseCount(forDbSearch);
+
+        return new SearchUsersResponseDto(
+            resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).toList(),
+            count
+        );
+    }
+
+    @CrossOrigin(origins="*", methods = RequestMethod.POST)
+    @PostMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
+    public SearchUsersResponseInternalDto searchUsersInternal(@RequestBody SearchUsersRequestInternalDto request) {
+        LOGGER.info("Searching users internal");
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
         var searchString = request.searchString != null ? request.searchString.trim() : "";
 
@@ -168,9 +194,9 @@ public class UserProfileController {
             }
         }
 
-        return new SearchUsersResponseDto(
-                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList()),
-                count
+        return new SearchUsersResponseInternalDto(
+            resultPage.stream().map(UserAccountConverter::convertToUserAccountDTO).toList(),
+            count
         );
     }
 
@@ -221,7 +247,7 @@ public class UserProfileController {
             if (userAccountPrincipal != null && userAccountEntity.id().equals(userAccountPrincipal.getId())) {
                 result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
             } else {
-                result.add(UserAccountConverter.convertToUserAccountDTO(userAccountEntity));
+                result.add(convertToUserAccountDTO(userAccountEntity));
             }
         }
         return result;
@@ -236,7 +262,7 @@ public class UserProfileController {
         if (userAccountPrincipal != null && userAccountEntity.id().equals(userAccountPrincipal.getId())) {
             return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
         } else {
-            return UserAccountConverter.convertToUserAccountDTO(userAccountEntity);
+            return convertToUserAccountDTO(userAccountEntity);
         }
     }
 
