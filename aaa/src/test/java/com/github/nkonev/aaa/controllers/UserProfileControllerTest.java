@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -299,34 +300,33 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id())
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
+                    .content(objectMapper.writeValueAsString(new UserProfileController.SearchUsersRequestDto(0, 0, bob.username())))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(csrf())
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].email").doesNotExist())
-                .andExpect(jsonPath("$[0].login").value(USER_BOB))
+                .andExpect(jsonPath("$.users[0].email").doesNotExist())
+                .andExpect(jsonPath("$.users[0].login").value(USER_BOB))
                 .andExpect(content().string(CoreMatchers.not(CoreMatchers.containsString(bobEmail))))
                 .andReturn();
 
     }
 
-    @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
-    public void testGetManyUsers() throws Exception {
+    public void testGetManyUsersInternal() throws Exception {
         UserAccount bob = getUserFromBd(USER_BOB);
         UserAccount alice = getUserFromBd(TestConstants.USER_ALICE);
 
-        String bobEmail = bob.email();
-
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id()+"&userId="+alice.id())
-        )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].login").value(TestConstants.USER_ALICE))
-                .andExpect(jsonPath("$[1].login").value(USER_BOB))
-                .andReturn();
+                get(Constants.Urls.INTERNAL_API + Constants.Urls.USER+Constants.Urls.LIST+"?userId="+bob.id()+"&userId="+alice.id())
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].login").value(TestConstants.USER_ALICE))
+            .andExpect(jsonPath("$[1].login").value(USER_BOB))
+            .andReturn();
 
     }
-
 
     @org.junit.jupiter.api.Test
     public void userCanSeeOnlyOwnProfileEmail() throws Exception {

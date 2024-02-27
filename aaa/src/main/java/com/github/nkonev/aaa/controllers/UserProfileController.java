@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -231,28 +232,6 @@ public class UserProfileController {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(currentUser, userRoleService), userAccount);
     }
 
-    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.LIST)
-    public List<Record> getUsers(
-            @RequestParam(value = "userId") List<Long> userIds,
-            @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
-        ) {
-        if (userIds == null) {
-            throw new BadRequestException("Cannot be null");
-        }
-        if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
-            throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
-        }
-        List<Record> result = new ArrayList<>();
-        for (UserAccount userAccountEntity: userAccountRepository.findByIdInOrderById(userIds)) {
-            if (userAccountPrincipal != null && userAccountEntity.id().equals(userAccountPrincipal.getId())) {
-                result.add(UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null));
-            } else {
-                result.add(convertToUserAccountDTO(userAccountEntity));
-            }
-        }
-        return result;
-    }
-
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.USER_ID)
     public Record getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
@@ -267,12 +246,18 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<Record> getUserInternal(
-            @RequestParam(value = "userId") List<Long> userIds,
-            @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
+    public List<UserAccountDTO> getUserInternal(
+        @RequestParam(value = "userId") List<Long> userIds
     ) {
         LOGGER.info("Requesting internal users {}", userIds);
-        return getUsers(userIds, userAccountPrincipal);
+        if (userIds == null) {
+            throw new BadRequestException("Cannot be null");
+        }
+        if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
+            throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
+        }
+        var result = userAccountRepository.findByIdInOrderById(userIds).stream().map(UserAccountConverter::convertToUserAccountDTO).toList();
+        return result;
     }
 
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
