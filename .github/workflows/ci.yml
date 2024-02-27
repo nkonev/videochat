@@ -419,7 +419,7 @@ jobs:
       - name: Run microservices
         if: env.SHOULD_RUN == 'true'
         run: |
-          (cd aaa; ./run-with-oauth2.sh &)
+          (cd aaa; make run-with-oauth2 &)
           (cd chat; ./chat &)
           (cd event; ./event &)
           # Using port 3000 we mimic to Vite's npm run dev
@@ -432,7 +432,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:3000 -- echo 'front is up'
           # Once we started aaa (compiling) we start the emulator
-          (cd aaa; ./run-oauth2-emu.sh &)
+          (cd aaa; make run-oauth2-emu &)
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
       - name: Run your Playwright tests
         if: env.SHOULD_RUN == 'true'
