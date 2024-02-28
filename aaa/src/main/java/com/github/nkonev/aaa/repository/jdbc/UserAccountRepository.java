@@ -56,7 +56,7 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
         SELECT al.nrow FROM (
                   SELECT
                       u.id as uid,
-                      ROW_NUMBER () OVER() AS nrow
+                      ROW_NUMBER () OVER(ORDER BY id) AS nrow
                   FROM
                       user_account u
                       WHERE u.username ILIKE :userName
