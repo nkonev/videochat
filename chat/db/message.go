@@ -181,6 +181,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			}
 		}
 	} else {
+		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
 		order := "asc"
 		nonEquality := "m.id > $2"
 		if reverse {
