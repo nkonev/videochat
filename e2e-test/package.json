@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "description": "Some text",
-  "main": "index.js",
   "scripts": {},
   "devDependencies":    {
     "axios": "^1.6.7",
