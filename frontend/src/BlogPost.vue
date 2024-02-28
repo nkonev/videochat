@@ -31,7 +31,7 @@
         <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content">
           <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
           <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(blogDto)">
-            <v-btn v-for="(reaction, i) in blogDto.reactions" variant="tonal" size="small" height="32px" rounded :class="reactionClass(i)" :title="getReactedUsers(reaction)"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
+            <v-btn v-for="(reaction, i) in blogDto.reactions" variant="tonal" size="small" height="32px" rounded :class="reactionClass(i)" @click="onExistingReactionClick(reaction.reaction)" :title="getReactedUsers(reaction)"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
           </div>
         </div>
       </div>
@@ -46,6 +46,7 @@
             :item="item"
             :chatId="item.chatId"
             :isInBlog="true"
+            @onreactionclick="onReactionClick"
           ></MessageItem>
         </v-container>
         <div class="message-last-element" style="min-height: 1px; background: white"></div>
@@ -236,7 +237,13 @@ export default {
     getReactedUsers(reactionObj) {
       return reactionObj.users?.map(u => u.login).join(", ")
     },
-
+    onExistingReactionClick(reaction) {
+        this.onReactionClick({id: this.blogDto.messageId, reaction: reaction})
+    },
+    onReactionClick(obj) {
+        const aRoute = chat + '/' + this.blogDto.chatId + messageIdHashPrefix + obj.id;
+        window.location.href = aRoute;
+    },
   },
   components: {
     MessageItem,
