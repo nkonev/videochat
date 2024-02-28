@@ -26,7 +26,10 @@ public record UserAccount(
     @NotNull UserRole role, // synonym to "authority"
     String email,
     LocalDateTime lastLoginDateTime,
-    @Embedded(onEmpty = Embedded.OnEmpty.USE_EMPTY) OAuth2Identifiers oauth2Identifiers
+    String facebookId,
+    String vkontakteId,
+    String googleId,
+    String keycloakId
 ) {
 
     public UserAccount withPassword(String newPassword) {
@@ -45,7 +48,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -65,7 +71,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -85,7 +94,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -105,7 +117,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -125,7 +140,10 @@ public record UserAccount(
                 role,
                 newEmail,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -145,7 +163,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -165,7 +186,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -185,7 +209,10 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -205,7 +232,10 @@ public record UserAccount(
             role,
             email,
             lastLoginDateTime,
-            oauth2Identifiers
+            facebookId,
+            vkontakteId,
+            googleId,
+            keycloakId
         );
     }
 
@@ -225,7 +255,10 @@ public record UserAccount(
                 newRole,
                 email,
                 lastLoginDateTime,
-                oauth2Identifiers
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId
         );
     }
 
@@ -245,13 +278,15 @@ public record UserAccount(
                 role,
                 email,
                 lastLoginDateTime,
-                newOauthIdentifiers
+                newOauthIdentifiers.facebookId,
+                newOauthIdentifiers.vkontakteId,
+                newOauthIdentifiers.googleId,
+                newOauthIdentifiers.keycloakId
         );
     }
 
-    @Override
     public OAuth2Identifiers oauth2Identifiers() {
-        return oauth2Identifiers != null ? oauth2Identifiers : new OAuth2Identifiers(null, null, null, null);
+        return new OAuth2Identifiers(facebookId, vkontakteId, googleId, keycloakId);
     }
 
     public record OAuth2Identifiers (

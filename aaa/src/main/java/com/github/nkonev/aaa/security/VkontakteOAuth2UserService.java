@@ -100,7 +100,7 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
 
     @Override
     protected Optional<UserAccount> findByOauthId(String oauthId) {
-        return userAccountRepository.findByOauth2IdentifiersVkontakteId(oauthId);
+        return userAccountRepository.findByVkontakteId(oauthId);
     }
 
     @Override

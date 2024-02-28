@@ -173,6 +173,9 @@ public class UserAccountConverter {
                 newUserRole,
                 userAccountDTO.email(),
                 null,
+                null,
+                null,
+                null,
                 null
         );
     }
@@ -228,7 +231,10 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(facebookId, null, null, null)
+                facebookId,
+                null,
+                null,
+                null
         );
     }
 
@@ -255,7 +261,10 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(null, vkontakteId, null, null)
+                null,
+                vkontakteId,
+                null,
+                null
         );
     }
 
@@ -282,7 +291,10 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(null, null, googleId, null)
+                null,
+                null,
+                googleId,
+                null
         );
     }
 
@@ -309,7 +321,10 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(null, null, null, keycloakId)
+                null,
+                null,
+                null,
+                keycloakId
         );
     }
 
@@ -336,7 +351,10 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                new UserAccount.OAuth2Identifiers(null, null, null, null)
+                null,
+                null,
+                null,
+                null
         );
     }
 

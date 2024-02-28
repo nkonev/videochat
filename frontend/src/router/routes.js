@@ -44,7 +44,10 @@ export const forgot_password_name = "forgot_password";
 export const confirmation_pending_name = "registration_confirmation_pending";
 
 export const messageIdPrefix = "message-"
-export const messageIdHashPrefix = '#' + messageIdPrefix;
+export const messageIdHashPrefix = '#' + messageIdPrefix; // element id
+
+export const userIdPrefix = "user-"
+export const userIdHashPrefix = '#' + userIdPrefix; // element id
 
 export const wrong_confirmation_token_name = `wrong_confirmation_token`;
 

@@ -38,13 +38,13 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     @Query("select count(id) from user_account u where u.username ilike :userName and id in (:includingUserIds)")
     long findByUsernameContainsIgnoreCaseAndIdInCount(@Param("userName") String searchString, @Param("includingUserIds") List<Long> userIds);
 
-    Optional<UserAccount> findByOauth2IdentifiersFacebookId(String facebookId);
+    Optional<UserAccount> findByFacebookId(String facebookId);
 
-    Optional<UserAccount> findByOauth2IdentifiersVkontakteId(String vkontakteId);
+    Optional<UserAccount> findByVkontakteId(String vkontakteId);
 
-    Optional<UserAccount> findByOauth2IdentifiersGoogleId(String googleId);
+    Optional<UserAccount> findByGoogleId(String googleId);
 
-    Optional<UserAccount> findByOauth2IdentifiersKeycloakId(String keycloakId);
+    Optional<UserAccount> findByKeycloakId(String keycloakId);
 
     @Modifying
     @Query("update user_account set last_login_date_time = :newLastLoginDateTime where username = :userName")
@@ -52,15 +52,4 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
 
-    @Query("""
-        SELECT al.nrow FROM (
-                  SELECT
-                      u.id as uid,
-                      ROW_NUMBER () OVER(ORDER BY id) AS nrow
-                  FROM
-                      user_account u
-                      WHERE u.username ILIKE :userName
-        ) al WHERE al.uid = :id
-          """)
-    int getUserRowNumber(@Param("id") long id, @Param("userName") String searchString);
 }

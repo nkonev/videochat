@@ -7,7 +7,7 @@
             :item="item"
             :chatId="chatId"
             :my="meIsOwnerOfMessage(item)"
-            :highlight="item.id == highlightMessageId"
+            :highlight="item.id == highlightItemId"
             @customcontextmenu.stop="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
@@ -57,7 +57,6 @@
       OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
       SCROLL_DOWN,
-      SEARCH_STRING_CHANGED,
       SET_EDIT_MESSAGE, PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
     } from "@/bus/bus";
     import {
@@ -77,6 +76,7 @@
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
     import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
     import Mark from "mark.js";
+    import hashMixin from "@/mixins/hashMixin";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -86,18 +86,12 @@
     export default {
       mixins: [
         infiniteScrollMixin(scrollerName),
+        hashMixin(),
         searchString(SEARCH_MODE_MESSAGES),
       ],
       props: ['canResend', 'blog'],
       data() {
         return {
-          startingFromItemIdTop: null,
-          startingFromItemIdBottom: null,
-
-          // those two doesn't play in reset() in order to survive after reload()
-          hasInitialHash: false, // do we have hash in address line (message id)
-          loadedHash: null, // keeps loaded message id from localstore the most top visible message - preserves scroll between page reload or switching between chats
-
           markInstance: null,
         }
       },
@@ -106,9 +100,6 @@
         ...mapStores(useChatStore),
         chatId() {
           return this.$route.params.id
-        },
-        highlightMessageId() {
-            return this.getMessageId(this.$route.hash);
         },
         showProgress() {
           return this.chatStore.progressCount > 0
@@ -172,12 +163,6 @@
         getReduceToLength() {
             return 100
         },
-        getMaximumItemId() {
-          return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
-        },
-        getMinimumItemId() {
-          return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
-        },
         reduceBottom() {
           this.items = this.items.slice(-this.getReduceToLength());
           this.startingFromItemIdBottom = this.getMaximumItemId();
@@ -186,51 +171,31 @@
           this.items = this.items.slice(0, this.getReduceToLength());
           this.startingFromItemIdTop = this.getMinimumItemId();
         },
-        saveScroll(top) {
-            this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
-            console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
-        },
         initialDirection() {
           return directionTop
         },
         async onFirstLoad(loadedResult) {
-            if (this.highlightMessageId) {
-              await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
-            } else if (this.loadedHash) {
-              await this.scrollTo(messageIdHashPrefix + this.loadedHash);
-            } else {
-              await this.scrollDown(); // we need it to prevent browser's scrolling
-              this.loadedBottom = true;
-            }
-            this.loadedHash = null;
-            this.hasInitialHash = false;
+            await this.doScrollOnFirstLoad(messageIdHashPrefix);
             if (loadedResult === true) {
                 removeTopMessagePosition(this.chatId);
             }
         },
+        getPositionFromStore() {
+              return getTopMessagePosition(this.chatId)
+        },
+        async doDefaultScroll() {
+              await this.scrollDown(); // we need it to prevent browser's scrolling
+              this.loadedBottom = true;
+        },
+
         async load() {
           if (!this.canDrawMessages()) {
               return Promise.resolve()
           }
 
           this.chatStore.incrementProgressCount();
-          let startingFromItemId;
-          let hasHash;
-          if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
-            // how to check:
-            // 1. click on hash
-            // 2. reload page
-            // 3. press "arrow down" (Scroll down)
-            // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
-            startingFromItemId = this.highlightMessageId;
-            hasHash = true;
-          } else if (this.loadedHash) {
-            startingFromItemId = this.loadedHash;
-            hasHash = true;
-          } else {
-            startingFromItemId = this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
-            hasHash = false;
-          }
+
+          const { startingFromItemId, hasHash } = this.prepareHashesForLoad();
 
           return axios.get(`/api/chat/${this.chatId}/message`, {
             params: {
@@ -280,10 +245,6 @@
               behavior: "instant",
             });
         },
-        updateTopAndBottomIds() {
-          this.startingFromItemIdTop = this.getMinimumItemId();
-          this.startingFromItemIdBottom = this.getMaximumItemId();
-        },
         bottomElementSelector() {
           return ".message-first-element"
         },
@@ -295,10 +256,6 @@
           return messageIdPrefix + id
         },
 
-        clearRouteHash() {
-          // console.log("Cleaning hash");
-          this.$router.push({ hash: null, query: this.$route.query })
-        },
         async scrollDown() {
           return await this.$nextTick(() => {
             this.scrollerDiv.scrollTop = 0;
@@ -319,21 +276,13 @@
           await this.onSearchStringChanged()
         },
         async onSearchStringChanged() {
-          if (!hasLength(this.highlightMessageId)) { // if is required for case
+          if (!hasLength(this.highlightItemId)) { // if is required for case
             // user searched for some text ("telegram", or "www")
             // then in one of found messages user clicks on the original of the answered (which jumps to th original)
             // without this fix because of two events (a. search string changed (see in the search mixin), b. route changed (see here in watch))
             // the message list is loaded 2 times and as a result the second load resets both scrolling and highlighting)
             await this.reloadItems();
           }
-        },
-        setHashes() {
-          this.hasInitialHash = hasLength(this.highlightMessageId);
-          this.loadedHash = getTopMessagePosition(this.chatId);
-        },
-        async setHashAndReloadItems() {
-          this.setHashes();
-          await this.reloadItems();
         },
         async onProfileSet() {
           await this.setHashAndReloadItems();
@@ -344,20 +293,6 @@
         },
         canDrawMessages() {
           return !!this.chatStore.currentUser
-        },
-        async scrollTo(newValue) {
-          return await this.$nextTick(()=>{
-            const el = document.querySelector(newValue);
-            el?.scrollIntoView({behavior: 'instant', block: "start"});
-            return el
-          })
-        },
-        async scrollToOrLoad(newValue) {
-          const res = await this.scrollTo(newValue);
-          if (!res) {
-            console.log("Didn't scrolled, resetting");
-            await this.setHashAndReloadItems();
-          }
         },
 
         async onScrollDownButton() {
@@ -396,7 +331,7 @@
             }
             const topVisible = visible[visible.length - 1].item
 
-            const mid = this.getMessageId(topVisible.id);
+            const mid = this.getIdFromRouteHash(topVisible.id);
             console.log("Found topVisible", topVisible, "in chat", chatId, "messageId", mid);
 
             setTopMessagePosition(chatId, mid)
@@ -564,6 +499,9 @@
           if (foundMessage) {
             foundMessage.reactions = foundMessage.reactions.filter(reaction => reaction.reaction != dto.reaction.reaction);
           }
+        },
+        getScrollerName() {
+          return scrollerName
         },
       },
       created() {

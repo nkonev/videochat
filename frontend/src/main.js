@@ -58,7 +58,7 @@ app.config.globalProperties.isMobile = () => {
     return isMobileBrowser()
 }
 
-app.config.globalProperties.getMessageId = (hash) => {
+app.config.globalProperties.getIdFromRouteHash = (hash) => {
     if (!hash) {
         return null;
     }

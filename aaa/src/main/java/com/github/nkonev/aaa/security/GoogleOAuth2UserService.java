@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -94,7 +93,7 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
 
     @Override
     protected Optional<UserAccount> findByOauthId(String oauthId) {
-        return userAccountRepository.findByOauth2IdentifiersGoogleId(oauthId);
+        return userAccountRepository.findByGoogleId(oauthId);
     }
 
     @Override

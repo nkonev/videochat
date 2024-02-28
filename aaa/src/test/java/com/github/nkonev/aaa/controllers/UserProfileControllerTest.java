@@ -301,13 +301,13 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
-                    .content(objectMapper.writeValueAsString(new UserProfileController.SearchUsersRequestDto(0, 0, bob.username())))
+                    .content(objectMapper.writeValueAsString(new UserProfileController.SearchUsersRequestDto(0, 0, false, false, bob.username())))
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf())
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.users[0].email").doesNotExist())
-                .andExpect(jsonPath("$.users[0].login").value(USER_BOB))
+                .andExpect(jsonPath("$[0].email").doesNotExist())
+                .andExpect(jsonPath("$[0].login").value(USER_BOB))
                 .andExpect(content().string(CoreMatchers.not(CoreMatchers.containsString(bobEmail))))
                 .andReturn();
 
@@ -469,8 +469,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                         .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.users.length()").value(1))
-                .andExpect(jsonPath("$.users.[0].login").value("John Smith"))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$.[0].login").value("John Smith"))
                 .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
@@ -490,8 +490,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.users.length()").value(1))
-                .andExpect(jsonPath("$.users.[0].login").value("John Smith"))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$.[0].login").value("John Smith"))
                 .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
@@ -503,7 +503,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 login, null, null, null, null,false, false, true, true,
-                UserRole.ROLE_USER, login+"@example.com", null, null);
+                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null);
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccount.id();

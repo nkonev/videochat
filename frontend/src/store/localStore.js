@@ -220,3 +220,17 @@ export const getTopMessagePosition = (chatId) => {
 export const removeTopMessagePosition = (chatId) => {
   localStorage.removeItem(KEY_TOP_MESSAGE + "_" + chatId);
 }
+
+const KEY_TOP_USER = "topUser"
+
+export const setTopUserPosition = (userId) => {
+    localStorage.setItem(KEY_TOP_USER, JSON.stringify(userId));
+}
+
+export const getTopUserPosition = () => {
+    return JSON.parse(localStorage.getItem(KEY_TOP_USER));
+}
+
+export const removeTopUserPosition = () => {
+    localStorage.removeItem(KEY_TOP_USER);
+}

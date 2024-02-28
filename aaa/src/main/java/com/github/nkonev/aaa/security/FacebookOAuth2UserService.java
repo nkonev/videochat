@@ -94,7 +94,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
 
     @Override
     protected Optional<UserAccount> findByOauthId(String oauthId) {
-        return userAccountRepository.findByOauth2IdentifiersFacebookId(oauthId);
+        return userAccountRepository.findByFacebookId(oauthId);
     }
 
     @Override

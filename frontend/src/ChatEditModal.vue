@@ -252,8 +252,8 @@
                         searchString: searchString
                     })
                         .then((response) => {
-                            console.log("Fetched users", response.data.users);
-                            this.people = response.data.users;
+                            console.log("Fetched users", response.data);
+                            this.people = response.data;
                         })
                         .finally(() => {
                             this.searchLoading = false;

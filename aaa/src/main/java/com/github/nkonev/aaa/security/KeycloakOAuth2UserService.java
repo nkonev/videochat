@@ -101,7 +101,7 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
 
     @Override
     protected Optional<UserAccount> findByOauthId(String oauthId) {
-        return userAccountRepository.findByOauth2IdentifiersKeycloakId(oauthId);
+        return userAccountRepository.findByKeycloakId(oauthId);
     }
 
     @Override

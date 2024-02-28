@@ -96,6 +96,7 @@ func provideScanToMessage(message *Message) []any {
 	}
 }
 
+// see also its copy in aaa::UserListViewRepository
 func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	list := make([]*Message, 0)
 	if hasHash {

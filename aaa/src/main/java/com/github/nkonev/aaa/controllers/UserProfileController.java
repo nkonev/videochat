@@ -9,6 +9,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
 import com.github.nkonev.aaa.security.*;
 import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.OAuth2ProvidersService;
@@ -69,6 +70,9 @@ public class UserProfileController {
     @Autowired
     private UserRoleService userRoleService;
 
+    @Autowired
+    private UserListViewRepository userListViewRepository;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
     private Long getExpiresAt(HttpSession session) {
@@ -128,11 +132,6 @@ public class UserProfileController {
         );
     }
 
-    record SearchUsersRequestDto(
-        int page,
-        int size,
-        String searchString
-    ) {}
 
     record SearchUsersRequestInternalDto(
         int page,
@@ -142,34 +141,34 @@ public class UserProfileController {
         boolean including
     ) {}
 
-    record SearchUsersResponseDto(
-            List<com.github.nkonev.aaa.dto.UserAccountDTOExtended> users,
-            long count
-    ) {}
 
     record SearchUsersResponseInternalDto(
         List<com.github.nkonev.aaa.dto.UserAccountDTO> users,
         long count
     ) {}
 
+    record SearchUsersRequestDto(
+        int size,
+        long startingFromItemId,
+        boolean reverse,
+        boolean hasHash,
+        String searchString
+    ) {}
+
+
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
-    public SearchUsersResponseDto searchUsers(
+    public List<com.github.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDto request
     ) {
         LOGGER.info("Searching users external");
-        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page), PageUtils.fixSize(request.size), Sort.Direction.ASC, "id");
         var searchString = request.searchString != null ? request.searchString.trim() : "";
+        var size = PageUtils.fixSize(request.size);
 
-        final String forDbSearch = "%" + searchString + "%";
-        List<UserAccount> resultPage = userAccountRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
-        long count = userAccountRepository.findByUsernameContainsIgnoreCaseCount(forDbSearch);
+        var result = userListViewRepository.getUsers(size, request.startingFromItemId, request.reverse, request.hasHash, searchString);
 
-        return new SearchUsersResponseDto(
-            resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).toList(),
-            count
-        );
+        return result.stream().map(getConvertToUserAccountDTO(userAccount)).toList();
     }
 
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
@@ -199,26 +198,6 @@ public class UserProfileController {
             resultPage.stream().map(UserAccountConverter::convertToUserAccountDTO).toList(),
             count
         );
-    }
-
-    record GetPageResponse(int page) {}
-
-    @GetMapping(Constants.Urls.PUBLIC_API + Constants.Urls.USER + "/get-page")
-    public GetPageResponse getPage(
-        @RequestParam("id") long id,
-        @RequestParam("size") int rawSize,
-        @RequestParam(value = "searchString", required = false) String rawSearchString
-    ) {
-        var searchString = rawSearchString != null ? rawSearchString.trim() : "";
-        var dbSearchString = "%" + searchString + "%";
-
-        // copy from ChatHandler.GetChatPage
-        var size = PageUtils.fixSize(rawSize);
-        int rowNumber = userAccountRepository.getUserRowNumber(id, dbSearchString);
-
-        var returnPage = (rowNumber + 1) / size;
-
-        return new GetPageResponse(returnPage);
     }
 
     @PutMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE)

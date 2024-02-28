@@ -7,7 +7,7 @@
                 v-for="(item, index) in items"
                 :key="item.id"
                 :id="getItemId(item.id)"
-                class="list-item-prepend-spacer-16 pb-2"
+                class="list-item-prepend-spacer-16 pb-2 user-item-root"
                 @click.prevent="openUser(item)"
                 :href="getLink(item)"
             >
@@ -122,9 +122,8 @@
 import axios from "axios";
 import infiniteScrollMixin, {
     directionBottom,
-    directionTop,
 } from "@/mixins/infiniteScrollMixin";
-import {profile, profile_name} from "@/router/routes";
+import {profile, profile_name, userIdHashPrefix, userIdPrefix} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -144,6 +143,12 @@ import {
 import Mark from "mark.js";
 import userStatusMixin from "@/mixins/userStatusMixin";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
+import hashMixin from "@/mixins/hashMixin";
+import {
+    getTopUserPosition,
+    removeTopUserPosition,
+    setTopUserPosition,
+} from "@/store/localStore";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -153,6 +158,7 @@ const scrollerName = 'UserList';
 export default {
   mixins: [
     infiniteScrollMixin(scrollerName),
+    hashMixin(),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
     graphqlSubscriptionMixin('userAccountEvents'),
@@ -160,8 +166,6 @@ export default {
   ],
   data() {
     return {
-        pageTop: 0,
-        pageBottom: 0,
         markInstance: null,
     }
   },
@@ -191,78 +195,60 @@ export default {
         return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
     },
     reduceBottom() {
-        console.log("reduceBottom");
-        this.items = this.items.slice(0, this.getReduceToLength());
-        this.onReduce(directionBottom);
+      this.items = this.items.slice(0, this.getReduceToLength());
+      this.startingFromItemIdBottom = this.getMaximumItemId();
     },
     reduceTop() {
-        console.log("reduceTop");
-        this.items = this.items.slice(-this.getReduceToLength());
-        this.onReduce(directionTop);
+      this.items = this.items.slice(-this.getReduceToLength());
+      this.startingFromItemIdTop = this.getMinimumItemId();
     },
-    findBottomElementId() {
-        return this.items[this.items.length-1]?.id
-    },
-    findTopElementId() {
-        return this.items[0]?.id
-    },
-    saveScroll(top) {
-        this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
-        console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
+    initialDirection() {
+      return directionBottom
     },
     async scrollTop() {
       return await this.$nextTick(() => {
           this.scrollerDiv.scrollTop = 0;
       });
     },
-    initialDirection() {
-      return directionBottom
+    async onFirstLoad(loadedResult) {
+      await this.doScrollOnFirstLoad(userIdHashPrefix);
+      if (loadedResult === true) {
+        removeTopUserPosition();
+      }
     },
-    async onFirstLoad() {
+    async doDefaultScroll() {
       this.loadedTop = true;
       await this.scrollTop();
     },
-    async onReduce(aDirection) {
-      if (aDirection == directionTop) { // became
-          const id = this.findTopElementId();
-          //console.log("Going to get top page", aDirection, id);
-          this.pageTop = await axios
-              .get(`/api/aaa/user/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
-              .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
-          if (this.pageTop == -1) {
-              this.pageTop = 0
-          }
-          console.log("Set page top", this.pageTop, "for id", id);
-      } else {
-          const id = this.findBottomElementId();
-          //console.log("Going to get bottom page", aDirection, id);
-          this.pageBottom = await axios
-              .get(`/api/aaa/user/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
-              .then(({data}) => data.page);
-          console.log("Set page bottom", this.pageBottom, "for id", id);
-      }
+    getPositionFromStore() {
+      return getTopUserPosition()
     },
+
     async load() {
       if (!this.canDrawUsers()) {
         return Promise.resolve()
       }
 
       this.chatStore.incrementProgressCount();
-      const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
+
+      const { startingFromItemId, hasHash } = this.prepareHashesForLoad();
+
       return axios.post(`/api/aaa/user/search`, {
-          page: page,
+          startingFromItemId: startingFromItemId,
           size: PAGE_SIZE,
+          reverse: this.isTopDirection(),
           searchString: this.searchString,
+          hasHash: hasHash,
         })
         .then((res) => {
-          const items = res.data.users;
-          console.log("Get items in ", scrollerName, items, "page", page);
+          const items = res.data;
+          console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom);
           items.forEach((item) => {
             this.transformItem(item);
           });
 
           if (this.isTopDirection()) {
-              replaceOrPrepend(this.items, items.reverse());
+              replaceOrPrepend(this.items, items);
           } else {
               replaceOrAppend(this.items, items);
           }
@@ -273,19 +259,16 @@ export default {
             } else {
               this.loadedBottom = true;
             }
-          } else {
-            if (this.isTopDirection()) {
-                this.pageTop -= 1;
-                if (this.pageTop == -1) {
-                    this.loadedTop = true;
-                    this.pageTop = 0;
-                }
-            } else {
-                this.pageBottom += 1;
-            }
           }
+          this.updateTopAndBottomIds();
+
+          if (!this.isFirstLoad) {
+            this.clearRouteHash()
+          }
+
           this.graphQlUserStatusSubscribe();
           this.performMarking();
+          return Promise.resolve(true)
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
         })
@@ -305,7 +288,7 @@ export default {
     },
 
     getItemId(id) {
-      return 'user-item-' + id
+      return userIdPrefix + id
     },
 
     scrollerSelector() {
@@ -314,8 +297,8 @@ export default {
     reset() {
       this.resetInfiniteScrollVars();
 
-      this.pageTop = 0;
-      this.pageBottom = 0;
+      this.startingFromItemIdTop = null;
+      this.startingFromItemIdBottom = null;
     },
 
     async onSearchStringChanged() {
@@ -325,12 +308,42 @@ export default {
       }
     },
     async onProfileSet() {
-      await this.reloadItems();
+      await this.setHashAndReloadItems();
     },
+
+    saveLastVisibleElement() {
+      console.log("saveLastVisibleElement", !this.isScrolledToTop())
+      if (!this.isScrolledToTop()) {
+          const elems = [...document.querySelectorAll(this.scrollerSelector() + " .user-item-root")].map((item) => {
+              const visible = item.getBoundingClientRect().top > 0
+              return {item, visible}
+          });
+
+          const visible = elems.filter((el) => el.visible);
+          // console.log("visible", visible, "elems", elems);
+          if (visible.length == 0) {
+              console.warn("Unable to get top visible")
+              return
+          }
+          const topVisible = visible[0].item
+
+          const uid = this.getIdFromRouteHash(topVisible.id);
+          console.log("Found bottomUser", topVisible, "userId", uid);
+
+          setTopUserPosition(uid)
+      } else {
+          console.log("Skipped saved topVisible because we are already scrolled to the bottom ")
+      }
+    },
+    beforeUnload() {
+      this.saveLastVisibleElement();
+    },
+
     onLoggedOut() {
       this.reset();
       this.graphQlUserStatusUnsubscribe();
       this.graphQlUnsubscribe();
+      this.beforeUnload();
     },
 
     canDrawUsers() {
@@ -370,6 +383,10 @@ export default {
               return false
           }
     },
+    getScrollerName() {
+      return scrollerName
+    },
+
     getUserIdsSubscribeTo() {
         return this.items.map(item => item.id);
     },
@@ -470,6 +487,17 @@ export default {
           }
         }
       },
+      '$route': {
+          handler: async function (newValue, oldValue) {
+
+              // reaction on setting hash
+              if (hasLength(newValue.hash)) {
+                  console.log("Changed route hash, going to scroll", newValue.hash)
+                  await this.scrollToOrLoad(newValue.hash);
+                  return
+              }
+          }
+      }
   },
   async mounted() {
     this.markInstance = new Mark("div#user-list-items .user-name");
@@ -481,6 +509,8 @@ export default {
       await this.onProfileSet();
     }
 
+    addEventListener("beforeunload", this.beforeUnload);
+
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
@@ -488,6 +518,14 @@ export default {
   },
 
   beforeUnmount() {
+    // an analogue of watch(effectively(chatId)) in MessageList.vue
+    // used when the user presses Start in the RightPanel
+    this.saveLastVisibleElement();
+
+    this.markInstance.unmark();
+    this.markInstance = null;
+    removeEventListener("beforeunload", this.beforeUnload);
+
     this.uninstallScroller();
     this.graphQlUserStatusUnsubscribe();
     this.graphQlUnsubscribe();
