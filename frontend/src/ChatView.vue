@@ -22,9 +22,9 @@
 
               <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
                 <v-alert
-                  closable
                   color="red-lighten-4"
                   elevation="2"
+                  density="compact"
                 >
                   <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text">
                   </router-link>
@@ -763,15 +763,6 @@ export default {
   .v-alert {
     padding-top 2px
     padding-bottom 2px
-
-    // apply only for Chrome
-    @supports (not (-moz-appearance:button)) and (contain:paint) and (-webkit-appearance:none) {
-      .v-alert__close {
-          .v-btn__content {
-              margin-top 3px
-          }
-      }
-    }
   }
 
 }
