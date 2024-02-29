@@ -204,7 +204,9 @@
             }
             this.loadedHash = null;
             this.hasInitialHash = false;
-            removeTopMessagePosition(this.chatId);
+            if (this.items.length) {
+                removeTopMessagePosition(this.chatId);
+            }
         },
         async load() {
           if (!this.canDrawMessages()) {
