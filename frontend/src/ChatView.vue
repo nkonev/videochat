@@ -31,7 +31,7 @@
                 </v-alert>
               </div>
 
-              <MessageList v-if="isAllowedMessageList()" :chatDto="chatDto"/>
+              <MessageList :canResend="chatDto.canResend" :blog="chatDto.blog"/>
 
               <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
           </pane>
@@ -80,6 +80,13 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 
+const chatDtoFactory = () => {
+    return {
+        participantIds:[],
+        participants:[],
+    }
+}
+
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
 };
@@ -110,7 +117,7 @@ export default {
   ],
   data() {
     return {
-      chatDto: null,
+      chatDto: chatDtoFactory(),
       pinnedPromoted: null,
       pinnedPromotedKey: +new Date(),
       writingUsers: [],
@@ -449,9 +456,6 @@ export default {
     isAllowedVideo() {
       return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatDto?.participantIds?.length
     },
-    isAllowedMessageList() {
-      return this.chatStore.currentUser && !!this.chatDto?.id
-    },
     isAllowedChatList() {
       return this.chatStore.currentUser
     },
@@ -464,7 +468,7 @@ export default {
       this.getInfo()
     },
     partialReset() {
-      this.chatDto = null;
+      this.chatDto = chatDtoFactory();
 
       this.chatStore.videoChatUsersCount=0;
       this.chatStore.canMakeRecord=false;

@@ -22,8 +22,8 @@
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
           <MessageItemContextMenu
             ref="contextMenuRef"
-            :canResend="chatDto.canResend"
-            :isBlog="chatDto.blog"
+            :canResend="canResend"
+            :isBlog="blog"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
             @replyOnMessage="this.replyOnMessage"
@@ -88,7 +88,7 @@
         infiniteScrollMixin(scrollerName),
         searchString(SEARCH_MODE_MESSAGES),
       ],
-      props: ['chatDto'],
+      props: ['canResend', 'blog'],
       data() {
         return {
           startingFromItemIdTop: null,
@@ -239,8 +239,13 @@
               hasHash: hasHash
             },
           })
-          .then((res) => {
-            const items = res.data;
+          .then((response) => {
+            if (response.status == 204) {
+              // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
+              return
+            }
+
+            const items = response.data;
             console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
@@ -336,7 +341,7 @@
           this.beforeUnload();
         },
         canDrawMessages() {
-          return !!this.chatStore.currentUser && !!this.chatDto?.id
+          return !!this.chatStore.currentUser
         },
         async scrollTo(newValue) {
           return await this.$nextTick(()=>{

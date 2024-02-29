@@ -135,7 +135,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			return err
 		}
 		if !isParticipant {
-			return c.NoContent(http.StatusUnauthorized)
+			return c.NoContent(http.StatusNoContent)
 		}
 
 		if messages, err := tx.GetMessages(chatId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
