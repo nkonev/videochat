@@ -103,8 +103,9 @@ export default (name) => {
         if (this.scrollerDiv == null) {
           this.scrollerDiv = document.querySelector(this.scrollerSelector());
         }
-        await this.load();
-        await this.onFirstLoad();
+        const loadedResult = await this.load();
+        await this.$nextTick();
+        await this.onFirstLoad(loadedResult);
         this.isFirstLoad = false;
       },
 
@@ -112,6 +113,7 @@ export default (name) => {
           console.log("going to load top in", name);
           this.saveScroll(true); // saves scroll between new portion load
           await this.load(); // restores scroll after new portion load
+          await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(true);
       },
@@ -120,6 +122,7 @@ export default (name) => {
           console.log("going to load bottom in", name);
           this.saveScroll(false);
           await this.load();
+          await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(false);
       },

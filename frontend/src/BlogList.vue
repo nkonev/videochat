@@ -197,7 +197,6 @@ export default {
                 this.performMarking();
             }).finally(()=>{
                 this.blogStore.decrementProgressCount();
-                return this.$nextTick();
             })
     },
     canDrawBlogs() {

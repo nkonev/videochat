@@ -193,7 +193,6 @@ export default {
 
         }).finally(()=>{
           this.blogStore.decrementProgressCount();
-          return this.$nextTick();
         })
     },
     updateTopAndBottomIds() {

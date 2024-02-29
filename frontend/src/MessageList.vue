@@ -193,7 +193,7 @@
         initialDirection() {
           return directionTop
         },
-        async onFirstLoad() {
+        async onFirstLoad(loadedResult) {
             if (this.highlightMessageId) {
               await this.scrollTo(messageIdHashPrefix + this.highlightMessageId);
             } else if (this.loadedHash) {
@@ -204,7 +204,7 @@
             }
             this.loadedHash = null;
             this.hasInitialHash = false;
-            if (this.items.length) {
+            if (loadedResult === true) {
                 removeTopMessagePosition(this.chatId);
             }
         },
@@ -244,7 +244,7 @@
           .then((response) => {
             if (response.status == 204) {
               // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
-              return
+              return Promise.resolve()
             }
 
             const items = response.data;
@@ -269,9 +269,9 @@
               this.clearRouteHash()
             }
             this.performMarking();
+            return Promise.resolve(true)
           }).finally(()=>{
               this.chatStore.decrementProgressCount();
-              return this.$nextTick();
           })
         },
         afterScrollRestored(el) {

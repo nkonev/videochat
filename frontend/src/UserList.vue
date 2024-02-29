@@ -288,7 +288,6 @@ export default {
           this.performMarking();
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
-          return this.$nextTick();
         })
     },
     afterScrollRestored(el) {
