@@ -137,7 +137,7 @@ export default {
       window.location.href = blog
     },
     openUsers() {
-      goToPreservingQuery(this.$route, this.$router, { name: profile_list_name});
+      this.$router.push({name: profile_list_name} )
     },
     canShowFiles() {
       return this.chatStore.currentUser && hasLength(this.chatId);
