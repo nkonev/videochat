@@ -22,7 +22,6 @@ custom.password-reset-enter-new-url: "http://localhost:8081/password-restore/ent
 # https://yandex.ru/support/mail-new/mail-clients.html
 # https://stackoverflow.com/questions/411331/using-javamail-with-tls
 spring.mail:
-  testConnection: false
   host: 127.0.0.1
   port: 30025
   username: testEmailUsername
