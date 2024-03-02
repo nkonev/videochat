@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -53,35 +54,46 @@ public class EmailService {
         // https://yandex.ru/support/mail-new/mail-clients.html
         // https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
         // http://docs.spring.io/spring/docs/4.3.10.RELEASE/spring-framework-reference/htmlsingle/#mail-usage-simple
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(from);
-        msg.setSubject(registrationSubject);
-        msg.setTo(recipient);
+        try {
+            var mimeMessage = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-        final var regLink = customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM + "?"+ Constants.Urls.UUID +"=" + userConfirmationToken.uuid();
-        final var text = renderTemplate("confirm-registration.ftlh",
+            helper.setFrom(from);
+            helper.setSubject(registrationSubject);
+            helper.setTo(recipient);
+
+            final var regLink = customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM + "?" + Constants.Urls.UUID + "=" + userConfirmationToken.uuid();
+            final var text = renderTemplate("confirm-registration.ftlh",
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
-        LOGGER.trace("For registration confirmation '{}' generated email text '{}'", recipient, text);
-        msg.setText(text);
-        mailSender.send(msg);
+            LOGGER.trace("For registration confirmation '{}' generated email text '{}'", recipient, text);
+            helper.setText(text, true);
+
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to send confirmation token", e);
+        }
     }
 
     public void sendPasswordResetToken(String recipient, PasswordResetToken passwordResetToken, String login) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(from);
-        msg.setSubject(passwordResetSubject);
-        msg.setTo(recipient);
+        try {
+            var mimeMessage = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-        final var passwordResetLink = customConfig.getPasswordRestoreEnterNew() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
-        final var text = renderTemplate("password-reset.ftlh",
-                Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
+            helper.setFrom(from);
+            helper.setSubject(passwordResetSubject);
+            helper.setTo(recipient);
 
-        LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
+            final var passwordResetLink = customConfig.getPasswordRestoreEnterNew() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
+            final var text = renderTemplate("password-reset.ftlh",
+                    Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
+            LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
+            helper.setText(text);
 
-        msg.setText(text);
-
-        mailSender.send(msg);
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to send confirmation token", e);
+        }
     }
 
     private String renderTemplate(String templateNameWithExtension, Object model) {

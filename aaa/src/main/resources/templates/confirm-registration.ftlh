@@ -1,1 +1,3 @@
-Please open ${REGISTRATION_LINK_PLACEHOLDER?no_esc} for complete registration ${LOGIN}.
+<p>
+    Please open <a href="${REGISTRATION_LINK_PLACEHOLDER?no_esc}">link</a> for complete registration as <b>${LOGIN}</b>.
+</p>
