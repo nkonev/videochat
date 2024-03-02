@@ -24,7 +24,6 @@ import (
 	"nkonev.name/event/client"
 	"nkonev.name/event/config"
 	"nkonev.name/event/graph"
-	"nkonev.name/event/graph/generated"
 	"nkonev.name/event/handlers"
 	"nkonev.name/event/listener"
 	. "nkonev.name/event/logger"
@@ -146,7 +145,7 @@ func configureEcho(
 }
 
 func configureGraphQlServer(bus *eventbus.Bus, httpClient *client.RestClient) *handler.Server {
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{bus, httpClient}}))
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient}}))
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,

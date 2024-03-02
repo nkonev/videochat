@@ -27,10 +27,10 @@ generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 install-graphql:
-	go install github.com/99designs/gqlgen@v0.17.20
+	go install github.com/99designs/gqlgen@v0.17.44
 
 generate-graphql:
-	gqlgen generate
+	go generate ./...
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1

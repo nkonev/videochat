@@ -193,6 +193,9 @@ type PreviewCreatedEvent struct {
 	CorrelationID *string `json:"correlationId"`
 }
 
+type Query struct {
+}
+
 type Reaction struct {
 	Count    int64          `json:"count"`
 	Users    []*Participant `json:"users"`
@@ -202,6 +205,9 @@ type Reaction struct {
 type ReactionChangedEvent struct {
 	MessageID int64     `json:"messageId"`
 	Reaction  *Reaction `json:"reaction"`
+}
+
+type Subscription struct {
 }
 
 type UserAccountDto struct {

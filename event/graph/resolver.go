@@ -1,5 +1,7 @@
 package graph
 
+//go:generate go run github.com/99designs/gqlgen generate
+
 import (
 	"github.com/montag451/go-eventbus"
 	"nkonev.name/event/client"

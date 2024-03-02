@@ -4,8 +4,8 @@ schema:
 
 # Where should the generated server code go?
 exec:
-  filename: graph/generated/generated.go
-  package: generated
+  filename: graph/generated.go
+  package: graph
 
 # Uncomment to enable federation
 # federation:
@@ -22,7 +22,7 @@ resolver:
   layout: follow-schema
   dir: graph
   package: graph
-
+  filename_template: "{name}.resolvers.go"
 # Optional: turn on use ` + "`" + `gqlgen:"fieldName"` + "`" + ` tags in your models
 # struct_tag: json
 
@@ -43,6 +43,8 @@ resolver:
 # if they match it will use them, otherwise it will generate them.
 autobind:
 #  - "nkonev.name/event/graph/model"
+
+enable_model_json_omitempty_tag: false
 
 # This section declares type mapping between the GraphQL and go type systems
 #
