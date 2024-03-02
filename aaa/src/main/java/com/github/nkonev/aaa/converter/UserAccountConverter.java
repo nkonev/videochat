@@ -130,7 +130,8 @@ public class UserAccountConverter {
                 convertOauth(userAccount.oauth2Identifiers()),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
-                aaaSecurityService.canChangeRole(currentUser, userAccount)
+                aaaSecurityService.canChangeRole(currentUser, userAccount),
+                aaaSecurityService.canConfirm(currentUser, userAccount)
         );
     }
 

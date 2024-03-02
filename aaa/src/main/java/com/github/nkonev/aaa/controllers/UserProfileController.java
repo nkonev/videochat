@@ -348,6 +348,21 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
+    @PreAuthorize("@aaaSecurityService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
+    public com.github.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.ConfirmDTO confirmDTO){
+        UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
+        if (!confirmDTO.confirm()){
+            aaaUserDetailsService.killSessions(confirmDTO.userId());
+        }
+        userAccount = userAccount.withConfirmed(confirmDTO.confirm());
+        userAccount = userAccountRepository.save(userAccount);
+
+        notifier.notifyProfileUpdated(userAccount);
+
+        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
+    }
+
     @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){

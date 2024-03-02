@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.security;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.ConfirmDTO;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.LockDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -51,6 +52,16 @@ public class AaaSecurityService {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), lockDTO.userId());
     }
 
+    public boolean canConfirm(UserAccountDetailsDTO userAccount, ConfirmDTO confirmDTO) {
+        if (userAccount==null){
+            return false;
+        }
+        if (confirmDTO==null){
+            return false;
+        }
+        return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), confirmDTO.userId());
+    }
+
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), userIdToDelete);
     }
@@ -64,6 +75,13 @@ public class AaaSecurityService {
     }
 
     public boolean canLock(PrincipalToCheck currentUser, UserAccount userAccount) {
+        if (userAccount == null) {
+            return false;
+        }
+        return lockAndDelete(currentUser, userAccount.id());
+    }
+
+    public boolean canConfirm(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) {
             return false;
         }

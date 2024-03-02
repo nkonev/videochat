@@ -237,5 +237,7 @@ export default {
     add_reaction_on_message: "Добавить реакцию",
     configuring_smileys: "Настройка смайликов",
     unlock_user: "Разблокировать пользователя",
-    lock_user: "Заблокировать пользователя"
+    lock_user: "Заблокировать пользователя",
+    unconfirm_user: "Снять подтверждение",
+    confirm_user: "Подтвердить"
 }

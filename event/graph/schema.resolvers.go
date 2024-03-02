@@ -355,6 +355,7 @@ func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExte
 			CanLock:       aDto.CanLock,
 			CanDelete:     aDto.CanDelete,
 			CanChangeRole: aDto.CanChangeRole,
+			CanConfirm:    aDto.CanConfirm,
 		}
 		return &ret
 	}

@@ -237,5 +237,7 @@ export default {
     add_reaction_on_message: "Add a reaction",
     configuring_smileys: "Configuring smileys",
     unlock_user: "Unlock user",
-    lock_user: "Lock user"
+    lock_user: "Lock user",
+    unconfirm_user: "Unconfirm user",
+    confirm_user: "Confirm user"
 }

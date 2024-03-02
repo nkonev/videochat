@@ -269,6 +269,7 @@ type UserAccountExtendedDto {
     canLock: Boolean!
     canDelete: Boolean!
     canChangeRole: Boolean!
+    canConfirm: Boolean!
 }
 
 union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto

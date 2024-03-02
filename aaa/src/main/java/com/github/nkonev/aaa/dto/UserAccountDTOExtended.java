@@ -18,7 +18,8 @@ public record UserAccountDTOExtended (
 
     boolean canDelete,
 
-    boolean canChangeRole
+    boolean canChangeRole,
+    boolean canConfirm
 ) {
 
     @JsonCreator
@@ -33,14 +34,16 @@ public record UserAccountDTOExtended (
         @JsonProperty("oauth2Identifiers") OAuth2IdentifiersDTO oauthIdentifiers,
         @JsonProperty("canLock") boolean canLock,
         @JsonProperty("canDelete") boolean canDelete,
-        @JsonProperty("canChangeRole") boolean canChangeRole
+        @JsonProperty("canChangeRole") boolean canChangeRole,
+        @JsonProperty("canConfirm") boolean canConfirm
     ) {
         this(
             new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers),
             managementData,
             canDelete,
             canLock,
-            canChangeRole
+            canChangeRole,
+            canConfirm
         );
     }
 

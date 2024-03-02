@@ -233,6 +233,7 @@ type UserAccountExtendedDto struct {
 	CanLock           bool               `json:"canLock"`
 	CanDelete         bool               `json:"canDelete"`
 	CanChangeRole     bool               `json:"canChangeRole"`
+	CanConfirm        bool               `json:"canConfirm"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

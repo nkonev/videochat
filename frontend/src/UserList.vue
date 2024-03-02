@@ -120,6 +120,8 @@
           @tetATet="this.tetATet"
           @unlockUser="this.unlockUser"
           @lockUser="this.lockUser"
+          @unconfirmUser="this.unconfirmUser"
+          @confirmUser="this.confirmUser"
       >
       </UserListContextMenu>
   </v-container>
@@ -448,6 +450,7 @@ export default {
                         canLock
                         canDelete
                         canChangeRole
+                        canConfirm
                       }
                       ... on UserAccountDto {
                         id
@@ -496,7 +499,13 @@ export default {
         axios.put(`/api/chat/tet-a-tet/${user.id}`).then(response => {
             this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
         })
-    }
+    },
+    unconfirmUser(user) {
+        axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: false});
+    },
+    confirmUser(user) {
+        axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: true});
+    },
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})

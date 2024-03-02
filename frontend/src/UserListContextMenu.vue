@@ -66,6 +66,13 @@ export default {
                         ret.push({title: this.$vuetify.locale.t('$vuetify.lock_user'), icon: 'mdi-lock', action: () => this.$emit('lockUser', this.menuableItem) });
                     }
                 }
+                if (this.menuableItem.canConfirm){
+                    if (this.menuableItem?.additionalData.confirmed) {
+                        ret.push({title: this.$vuetify.locale.t('$vuetify.unconfirm_user'), icon: 'mdi-close-thick', action: () => this.$emit('unconfirmUser', this.menuableItem) });
+                    } else {
+                        ret.push({title: this.$vuetify.locale.t('$vuetify.confirm_user'), icon: 'mdi-check-bold', action: () => this.$emit('confirmUser', this.menuableItem) });
+                    }
+                }
             }
             return ret;
         },

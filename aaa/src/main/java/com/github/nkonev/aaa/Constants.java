@@ -28,6 +28,8 @@ public class Constants {
         public static final String SEARCH = "/search";
 
         public static final String LOCK = "/lock";
+
+        public static final String CONFIRM = "/confirm";
         public static final String USER_ID = "/{"+PathVariables.USER_ID+"}";
         public static final String REQUEST_PASSWORD_RESET = "/request-password-reset";
         public static final String PASSWORD_RESET_SET_NEW = "/password-reset-set-new";
