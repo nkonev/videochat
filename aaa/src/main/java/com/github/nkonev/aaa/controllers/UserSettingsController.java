@@ -30,6 +30,10 @@ public class UserSettingsController {
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE)
     public String[] getSmileys(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
         Optional<UserSettings> maybeSettings = userSettingsRepository.findById(userAccount.getId());
+        if (maybeSettings.isEmpty()) {
+            userSettingsRepository.insertDefault(userAccount.getId());
+            maybeSettings = userSettingsRepository.findById(userAccount.getId());
+        }
         return maybeSettings.get().smileys();
     }
 
