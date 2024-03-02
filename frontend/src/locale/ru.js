@@ -235,5 +235,7 @@ export default {
     user_is_already_in_other_call: "Пользователь {0} уже находится в звонке",
     search_related_message: "Найти связанное сообщение",
     add_reaction_on_message: "Добавить реакцию",
-    configuring_smileys: "Настройка смайликов"
+    configuring_smileys: "Настройка смайликов",
+    unlock_user: "Разблокировать пользователя",
+    lock_user: "Заблокировать пользователя"
 }

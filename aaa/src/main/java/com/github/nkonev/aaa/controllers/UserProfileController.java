@@ -343,6 +343,8 @@ public class UserProfileController {
         userAccount = userAccount.withLocked(lockDTO.lock());
         userAccount = userAccountRepository.save(userAccount);
 
+        notifier.notifyProfileUpdated(userAccount);
+
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 

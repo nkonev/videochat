@@ -8,6 +8,7 @@
                 :key="item.id"
                 :id="getItemId(item.id)"
                 class="list-item-prepend-spacer-16 pb-2 user-item-root"
+                @contextmenu.stop="onShowContextMenu($event, item)"
                 @click.prevent="openUser(item)"
                 :href="getLink(item)"
             >
@@ -114,6 +115,13 @@
             </template>
             <div class="user-last-element" style="min-height: 1px; background: white"></div>
       </v-list>
+      <UserListContextMenu
+          ref="contextMenuRef"
+          @tetATet="this.tetATet"
+          @unlockUser="this.unlockUser"
+          @lockUser="this.lockUser"
+      >
+      </UserListContextMenu>
   </v-container>
 
 </template>
@@ -123,7 +131,7 @@ import axios from "axios";
 import infiniteScrollMixin, {
     directionBottom,
 } from "@/mixins/infiniteScrollMixin";
-import {profile, profile_name, userIdHashPrefix, userIdPrefix} from "@/router/routes";
+import {chat_name, profile, profile_name, userIdHashPrefix, userIdPrefix} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -135,10 +143,11 @@ import bus, {
 import {searchString, goToPreservingQuery, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-  hasLength, isSetEqual, replaceInArray,
-  replaceOrAppend,
-  replaceOrPrepend,
-  setTitle
+    deepCopy,
+    hasLength, isSetEqual, replaceInArray,
+    replaceOrAppend,
+    replaceOrPrepend,
+    setTitle
 } from "@/utils";
 import Mark from "mark.js";
 import userStatusMixin from "@/mixins/userStatusMixin";
@@ -149,6 +158,7 @@ import {
     removeTopUserPosition,
     setTopUserPosition,
 } from "@/store/localStore";
+import UserListContextMenu from "@/UserListContextMenu.vue";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -156,6 +166,9 @@ const SCROLLING_THRESHHOLD = 200; // px
 const scrollerName = 'UserList';
 
 export default {
+  components: {
+      UserListContextMenu
+  },
   mixins: [
     infiniteScrollMixin(scrollerName),
     hashMixin(),
@@ -181,7 +194,7 @@ export default {
 
   methods: {
     getUserNameOverride(item) {
-      if (item.additionalData && !item.additionalData.confirmed) {
+      if (item.additionalData && (!item.additionalData.confirmed || item.additionalData.locked)) {
         return "<s>" + this.getUserName(item) + "</s>"
       } else {
         return this.getUserName(item)
@@ -459,7 +472,9 @@ export default {
     onNextSubscriptionElement(e) {
       const d = e.data?.userAccountEvents;
       if (d.eventType === 'user_account_changed') {
-        this.changeItem(d.userAccountEvent);
+        const tmp = deepCopy(d.userAccountEvent);
+        this.transformItem(tmp);
+        this.changeItem(tmp);
         this.performMarking();
       }
     },
@@ -468,6 +483,20 @@ export default {
       replaceInArray(this.items, dto);
     },
 
+    onShowContextMenu(e, menuableItem) {
+      this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+    },
+    unlockUser(user) {
+        axios.post('/api/aaa/user/lock', {userId: user.id, lock: false});
+    },
+    lockUser(user) {
+        axios.post('/api/aaa/user/lock', {userId: user.id, lock: true});
+    },
+    tetATet(user) {
+        axios.put(`/api/chat/tet-a-tet/${user.id}`).then(response => {
+            this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
+        })
+    }
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
