@@ -115,24 +115,6 @@ public class UserProfileController {
     }
 
 
-    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER)
-    public com.github.nkonev.aaa.dto.Wrapper<com.github.nkonev.aaa.dto.UserAccountDTOExtended> getUsers(
-            @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestParam(value = "page", required=false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required=false, defaultValue = "0") int size
-    ) {
-        PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(page), PageUtils.fixSize(size), Sort.Direction.ASC, "id");
-
-        List<UserAccount> resultPage = userAccountRepository.findAll(springDataPage).toList();
-        long resultPageCount = userAccountRepository.count();
-
-        return new com.github.nkonev.aaa.dto.Wrapper<>(
-                resultPageCount,
-                resultPage.stream().map(getConvertToUserAccountDTO(userAccount)).collect(Collectors.toList())
-        );
-    }
-
-
     record SearchUsersRequestInternalDto(
         int page,
         int size,
@@ -225,7 +207,7 @@ public class UserProfileController {
     }
 
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<UserAccountDTO> getUserInternal(
+    public List<UserAccountDTO> getUsersInternal(
         @RequestParam(value = "userId") List<Long> userIds
     ) {
         LOGGER.info("Requesting internal users {}", userIds);

@@ -380,15 +380,18 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void userCannotManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.SEARCH)
+                    .content("{}")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .with(csrf())
         )
                 .andDo(result -> {
                     LOGGER.info(result.getResponse().getContentAsString());
                 })
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[2].canDelete").value(false))
-                .andExpect(jsonPath("$.data[2].canChangeRole").value(false))
-                .andExpect(jsonPath("$.data[2].canLock").value(false))
+                .andExpect(jsonPath("$[2].canDelete").value(false))
+                .andExpect(jsonPath("$[2].canChangeRole").value(false))
+                .andExpect(jsonPath("$[2].canLock").value(false))
 
                 .andReturn();
     }
@@ -398,15 +401,18 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     public void adminCanManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
-                get(Constants.Urls.PUBLIC_API + Constants.Urls.USER)
-        )
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.SEARCH)
+                    .content("{}")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .with(csrf())
+            )
                 .andDo(result -> {
                     LOGGER.info(result.getResponse().getContentAsString());
                 })
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[2].canDelete").value(true))
-                .andExpect(jsonPath("$.data[2].canChangeRole").value(true))
-                .andExpect(jsonPath("$.data[2].canLock").value(true))
+                .andExpect(jsonPath("$[2].canDelete").value(true))
+                .andExpect(jsonPath("$[2].canChangeRole").value(true))
+                .andExpect(jsonPath("$[2].canLock").value(true))
 
                 .andReturn();
     }
