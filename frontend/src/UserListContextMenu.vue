@@ -73,6 +73,9 @@ export default {
                         ret.push({title: this.$vuetify.locale.t('$vuetify.confirm_user'), icon: 'mdi-check-bold', action: () => this.$emit('confirmUser', this.menuableItem) });
                     }
                 }
+                if (this.menuableItem.canDelete){
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.delete_user'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteUser', this.menuableItem) });
+                }
             }
             return ret;
         },

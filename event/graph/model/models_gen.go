@@ -244,6 +244,12 @@ type UserAccountExtendedDto struct {
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}
 
+type UserDeletedDto struct {
+	ID int64 `json:"id"`
+}
+
+func (UserDeletedDto) IsUserAccountEventDto() {}
+
 type UserStatusEvent struct {
 	UserID    int64  `json:"userId"`
 	Online    *bool  `json:"online"`

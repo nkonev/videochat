@@ -284,6 +284,10 @@ type ComplexityRoot struct {
 		ShortInfo         func(childComplexity int) int
 	}
 
+	UserDeletedDto struct {
+		ID func(childComplexity int) int
+	}
+
 	UserStatusEvent struct {
 		EventType func(childComplexity int) int
 		IsInVideo func(childComplexity int) int
@@ -1487,6 +1491,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAccountExtendedDto.ShortInfo(childComplexity), true
+
+	case "UserDeletedDto.id":
+		if e.complexity.UserDeletedDto.ID == nil {
+			break
+		}
+
+		return e.complexity.UserDeletedDto.ID(childComplexity), true
 
 	case "UserStatusEvent.eventType":
 		if e.complexity.UserStatusEvent.EventType == nil {
@@ -9274,6 +9285,50 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_canConfirm(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _UserDeletedDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserDeletedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserDeletedDto_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserDeletedDto_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserDeletedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserStatusEvent_userId(ctx context.Context, field graphql.CollectedField, obj *model.UserStatusEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserStatusEvent_userId(ctx, field)
 	if err != nil {
@@ -12132,6 +12187,13 @@ func (ec *executionContext) _UserAccountEventDto(ctx context.Context, sel ast.Se
 			return graphql.Null
 		}
 		return ec._UserAccountExtendedDto(ctx, sel, obj)
+	case model.UserDeletedDto:
+		return ec._UserDeletedDto(ctx, sel, &obj)
+	case *model.UserDeletedDto:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserDeletedDto(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -13574,6 +13636,45 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			}
 		case "canConfirm":
 			out.Values[i] = ec._UserAccountExtendedDto_canConfirm(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userDeletedDtoImplementors = []string{"UserDeletedDto", "UserAccountEventDto"}
+
+func (ec *executionContext) _UserDeletedDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserDeletedDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userDeletedDtoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserDeletedDto")
+		case "id":
+			out.Values[i] = ec._UserDeletedDto_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

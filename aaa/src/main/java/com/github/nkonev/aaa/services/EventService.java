@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.UserAccountDeletedEventDTO;
 import com.github.nkonev.aaa.dto.UserAccountEventGroupDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.PrincipalToCheck;
@@ -37,6 +38,17 @@ public class EventService {
         );
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
             message.getMessageProperties().setType("dto.UserAccountEventGroup");
+            return message;
+        });
+    }
+
+    public void notifyProfileDeleted(long userId) {
+        var data = new UserAccountDeletedEventDTO(
+            userId,
+            "user_account_deleted"
+        );
+        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
+            message.getMessageProperties().setType("dto.UserAccountDeletedEvent");
             return message;
         });
     }

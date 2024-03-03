@@ -11,7 +11,8 @@ const GLOBAL_USER_EVENTS = "events.user"
 const USER_ONLINE = "user.online"
 
 const GENERAL = "events.general"
-const AAA = "events.aaa"
+const AAA_CHANGE = "events.aaa.change"
+const AAA_DELETE = "events.aaa.delete"
 
 type PinnedMessageEvent struct {
 	Message    DisplayMessageDto `json:"message"`

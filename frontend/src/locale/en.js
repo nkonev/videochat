@@ -239,5 +239,8 @@ export default {
     unlock_user: "Unlock user",
     lock_user: "Lock user",
     unconfirm_user: "Unconfirm user",
-    confirm_user: "Confirm user"
+    confirm_user: "Confirm user",
+    delete_user: "Delete user",
+    delete_user_title: "Delete user #{0}",
+    delete_user_text: "Are you sure to delete user '{0}' ?"
 }

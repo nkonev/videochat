@@ -366,6 +366,8 @@ public class UserProfileController {
     @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
+        aaaUserDetailsService.killSessions(userId);
+        notifier.notifyProfileDeleted(userId);
         return userService.deleteUser(userId);
     }
 
@@ -382,6 +384,8 @@ public class UserProfileController {
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
+        aaaUserDetailsService.killSessions(userId);
+        notifier.notifyProfileDeleted(userId);
         userService.deleteUser(userId);
     }
 

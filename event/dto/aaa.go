@@ -48,5 +48,15 @@ type UserAccountEventGroup struct {
 }
 
 func (UserAccountEventGroup) Name() eventbus.EventName {
-	return AAA
+	return AAA_CHANGE
+}
+
+
+type UserAccountDeletedEvent struct {
+	UserId int64 `json:"userId"`
+	EventType string `json:"eventType"`
+}
+
+func (UserAccountDeletedEvent) Name() eventbus.EventName {
+	return AAA_DELETE
 }

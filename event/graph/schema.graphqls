@@ -249,6 +249,10 @@ type UserAccountDto {
     oauth2Identifiers: OAuth2Identifiers
 }
 
+type UserDeletedDto {
+    id:         Int64!
+}
+
 type DataDTO {
     enabled: Boolean!
     expired: Boolean!
@@ -272,7 +276,7 @@ type UserAccountExtendedDto {
     canConfirm: Boolean!
 }
 
-union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto
+union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto | UserDeletedDto
 
 type UserAccountEvent {
     eventType:  String!

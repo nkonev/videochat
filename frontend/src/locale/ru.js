@@ -239,5 +239,8 @@ export default {
     unlock_user: "Разблокировать пользователя",
     lock_user: "Заблокировать пользователя",
     unconfirm_user: "Снять подтверждение",
-    confirm_user: "Подтвердить"
+    confirm_user: "Подтвердить",
+    delete_user: "Удалить пользователя",
+    delete_user_title: "Удаление пользователя #{0}",
+    delete_user_text: "Вы действительно хотите удалить пользователя '{0}' ?"
 }

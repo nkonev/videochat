@@ -122,6 +122,7 @@
           @lockUser="this.lockUser"
           @unconfirmUser="this.unconfirmUser"
           @confirmUser="this.confirmUser"
+          @deleteUser="this.deleteUser"
       >
       </UserListContextMenu>
   </v-container>
@@ -138,14 +139,15 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-    LOGGED_OUT,
+    CLOSE_SIMPLE_MODAL,
+    LOGGED_OUT, OPEN_SIMPLE_MODAL,
     PROFILE_SET,
     SEARCH_STRING_CHANGED
 } from "@/bus/bus";
 import {searchString, goToPreservingQuery, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-    deepCopy,
+    deepCopy, findIndex,
     hasLength, isSetEqual, replaceInArray,
     replaceOrAppend,
     replaceOrPrepend,
@@ -466,6 +468,9 @@ export default {
                           keycloakId
                         }
                       }
+                      ... on UserDeletedDto {
+                        id
+                      }
                     }
                     eventType
                   }
@@ -479,11 +484,29 @@ export default {
         this.transformItem(tmp);
         this.changeItem(tmp);
         this.performMarking();
+      } else if (d.eventType === 'user_account_deleted') {
+          this.removeItem(d.userAccountEvent);
       }
     },
+
+    // does should change items list (new item added to visible part or not for example)
+    hasItem(item) {
+      let idxOf = findIndex(this.items, item);
+      return idxOf !== -1;
+    },
+
     changeItem(dto) {
       console.log("Replacing item", dto);
       replaceInArray(this.items, dto);
+    },
+    removeItem(dto) {
+      if (this.hasItem(dto)) {
+          console.log("Removing item", dto);
+          const idxToRemove = findIndex(this.items, dto);
+          this.items.splice(idxToRemove, 1);
+      } else {
+          console.log("Item was not be removed", dto);
+      }
     },
 
     onShowContextMenu(e, menuableItem) {
@@ -505,6 +528,23 @@ export default {
     },
     confirmUser(user) {
         axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: true});
+    },
+    deleteUser(user) {
+        bus.emit(OPEN_SIMPLE_MODAL, {
+            buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
+            title: this.$vuetify.locale.t('$vuetify.delete_user_title', user.id),
+            text: this.$vuetify.locale.t('$vuetify.delete_user_text', user.login),
+            actionFunction: (that) => {
+                that.loading = true;
+                axios.delete('/api/aaa/user', { params: {
+                        userId: user.id
+                    }}).then(() => {
+                        bus.emit(CLOSE_SIMPLE_MODAL);
+                    }).finally(()=>{
+                    that.loading = false;
+                })
+            }
+        });
     },
   },
   created() {

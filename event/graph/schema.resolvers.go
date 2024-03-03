@@ -239,7 +239,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 
 	var cam = make(chan *model.UserAccountEvent)
 
-	subscribeHandler, err := r.Bus.Subscribe(dto.AAA, func(event eventbus.Event, t time.Time) {
+	subscribeHandlerAaaChange, err := r.Bus.Subscribe(dto.AAA_CHANGE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
@@ -281,14 +281,42 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		return nil, err
 	}
 
+	subscribeHandlerAaaDelete, err := r.Bus.Subscribe(dto.AAA_DELETE, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+			}
+		}()
+
+		switch typedEvent := event.(type) {
+		case dto.UserAccountDeletedEvent:
+			var anEvent = convertUserAccountDeletedEvent(typedEvent.EventType, typedEvent.UserId)
+			if anEvent != nil {
+				cam <- anEvent
+			}
+		default:
+			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+		}
+	})
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		return nil, err
+	}
+
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				logger.GetLogEntry(ctx).Infof("Closing UserAccount channel for user %v", authResult.UserId)
-				err := r.Bus.Unsubscribe(subscribeHandler)
+				logger.GetLogEntry(ctx).Infof("Closing UserAccount change channel for user %v", authResult.UserId)
+				err := r.Bus.Unsubscribe(subscribeHandlerAaaChange)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount change channel for user %v", authResult.UserId)
+				}
+
+				logger.GetLogEntry(ctx).Infof("Closing UserAccount delete channel for user %v", authResult.UserId)
+				err = r.Bus.Unsubscribe(subscribeHandlerAaaDelete)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount delete channel for user %v", authResult.UserId)
 				}
 
 				close(cam)
@@ -331,6 +359,12 @@ func convertUserAccountEvent(eventType string, aDto *dto.UserAccount) *model.Use
 		return &ret
 	}
 	return nil
+}
+func convertUserAccountDeletedEvent(eventType string, userId int64) *model.UserAccountEvent {
+	ret := model.UserAccountEvent{}
+	ret.UserAccountEvent = &model.UserDeletedDto{ID: userId}
+	ret.EventType = eventType
+	return &ret
 }
 func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountEvent {
 	if aDto != nil {

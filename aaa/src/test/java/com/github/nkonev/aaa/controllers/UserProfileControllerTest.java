@@ -6,12 +6,9 @@ import com.github.nkonev.aaa.AbstractUtTestRunner;
 import com.github.nkonev.aaa.TestConstants;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.EditUserDTO;
-import com.github.nkonev.aaa.dto.LockDTO;
-import com.github.nkonev.aaa.dto.UserAccountDTO;
+import com.github.nkonev.aaa.dto.*;
 import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
 import com.github.nkonev.aaa.services.EventReceiver;
@@ -33,7 +30,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,12 +60,14 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @BeforeEach
     public void be() {
-        receiver.clear();
+        receiver.clearChanged();
+        receiver.clearDeleted();
     }
 
     @AfterEach
     public void ae() {
-        receiver.clear();
+        receiver.clearChanged();
+        receiver.clearDeleted();
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileControllerTest.class);
@@ -126,9 +124,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andReturn();
 
-        await().ignoreExceptions().until(() -> receiver.size(), s -> s > 0);
-        Assertions.assertEquals(1, receiver.size());
-        final UserAccountDTO userAccountEvent = receiver.getLast();
+        await().ignoreExceptions().until(() -> receiver.sizeChanged(), s -> s > 0);
+        Assertions.assertEquals(1, receiver.sizeChanged());
+        final UserAccountDTO userAccountEvent = receiver.getLastChanged();
         Assertions.assertEquals(newLogin, userAccountEvent.login());
     }
 
@@ -525,6 +523,12 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 })
                 .andExpect(status().isOk())
                 .andReturn();
+
+        await().ignoreExceptions().until(() -> receiver.sizeDeleted(), s -> s > 0);
+        Assertions.assertEquals(1, receiver.sizeDeleted());
+
+        final UserAccountDeletedEventDTO userAccountEvent = receiver.getLastDeleted();
+        Assertions.assertEquals(id, userAccountEvent.userId());
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)
