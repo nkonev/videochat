@@ -54,11 +54,11 @@ type MessageHandler struct {
 	policy             *services.SanitizerPolicy
 	stripSourceContent *services.StripSourcePolicy
 	stripAllTags       *services.StripTagsPolicy
-	notificator        services.Events
+	notificator        *services.Events
 	restClient         *client.RestClient
 }
 
-func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator services.Events, restClient *client.RestClient) *MessageHandler {
+func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator *services.Events, restClient *client.RestClient) *MessageHandler {
 	return &MessageHandler{
 		db: dbR, policy: policy, stripSourceContent: stripSourceContent, stripAllTags: stripAllTags, notificator: notificator, restClient: restClient,
 	}

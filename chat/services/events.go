@@ -10,38 +10,14 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-type Events interface {
-	NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
-	NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx)
-	NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx)
-	NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64, tx *db.Tx)
-	NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
-	NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
-	NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto)
-	NotifyAboutProfileChanged(user *dto.User)
-	NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User)
-	NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string)
-	ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx)
-	NotifyAddMention(c echo.Context, created []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, chatTitle string)
-	NotifyRemoveMention(c echo.Context, deleted []int64, chatId int64, messageId int64)
-	NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin)
-	NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64)
-	NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin)
-	NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string)
-	NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64)
-	NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64)
-	SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int)
-	SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string)
-}
-
-type eventsImpl struct {
+type Events struct {
 	rabbitEventPublisher        *producer.RabbitEventsPublisher
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
 	db                          *db.DB
 }
 
-func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, db *db.DB) Events {
-	return &eventsImpl{
+func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, db *db.DB) *Events {
+	return &Events{
 		rabbitEventPublisher:        rabbitEventPublisher,
 		rabbitNotificationPublisher: rabbitNotificationPublisher,
 		db:                          db,
@@ -55,19 +31,19 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *eventsImpl) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
+func (not *Events) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", tx)
 }
 
-func (not *eventsImpl) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
+func (not *Events) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64, tx *db.Tx) {
 	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", tx)
 }
 
-func (not *eventsImpl) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64, tx *db.Tx) {
+func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64, tx *db.Tx) {
 	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", tx)
 }
 
-func (not *eventsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx) {
+func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx) {
 	chatDto := dto.ChatDtoWithAdmin{
 		BaseChatDto: dto.BaseChatDto{
 			Id: chatId,
@@ -76,7 +52,7 @@ func (not *eventsImpl) NotifyAboutDeleteChat(c echo.Context, chatId int64, userI
 	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", tx)
 }
 
-func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, tx *db.Tx) {
 	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	for _, participantId := range userIds {
@@ -142,7 +118,7 @@ func chatNotifyCommon(userIds []int64, not *eventsImpl, c echo.Context, newChatD
 	}
 }
 
-func (not *eventsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
+func (not *Events) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
 	lastUpdated, err := tx.GetChatLastDatetimeChat(chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
@@ -172,7 +148,7 @@ func (not *eventsImpl) ChatNotifyMessageCount(userIds []int64, c echo.Context, c
 	}
 }
 
-func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *eventsImpl, eventType string) {
+func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *Events, eventType string) {
 
 	for _, participantId := range userIds {
 		if eventType == "message_deleted" {
@@ -210,19 +186,19 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	}
 }
 
-func (not *eventsImpl) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *Events) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_created")
 }
 
-func (not *eventsImpl) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *Events) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted")
 }
 
-func (not *eventsImpl) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+func (not *Events) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited")
 }
 
-func (not *eventsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
+func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
 	if user == nil {
 		GetLogEntry(c.Request().Context()).Errorf("user cannot be null")
 		return
@@ -256,7 +232,7 @@ func (not *eventsImpl) NotifyAboutMessageTyping(c echo.Context, chatId int64, us
 	}
 }
 
-func (not *eventsImpl) NotifyAboutProfileChanged(user *dto.User) {
+func (not *Events) NotifyAboutProfileChanged(user *dto.User) {
 	if user == nil {
 		Logger.Errorf("user cannot be null")
 		return
@@ -279,7 +255,7 @@ func (not *eventsImpl) NotifyAboutProfileChanged(user *dto.User) {
 	}
 }
 
-func (not *eventsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string) {
+func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string) {
 	ut := dto.MessageBroadcastNotification{
 		Login:  login,
 		UserId: userId,
@@ -306,7 +282,7 @@ func (not *eventsImpl) NotifyAboutMessageBroadcast(c echo.Context, chatId, userI
 
 }
 
-func (not *eventsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, chatTitle string) {
 	for _, participantId := range userIds {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType: "mention_added",
@@ -327,7 +303,7 @@ func (not *eventsImpl) NotifyAddMention(c echo.Context, userIds []int64, chatId,
 
 }
 
-func (not *eventsImpl) NotifyRemoveMention(c echo.Context, userIds []int64, chatId int64, messageId int64) {
+func (not *Events) NotifyRemoveMention(c echo.Context, userIds []int64, chatId int64, messageId int64) {
 	for _, participantId := range userIds {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType: "mention_deleted",
@@ -343,7 +319,7 @@ func (not *eventsImpl) NotifyRemoveMention(c echo.Context, userIds []int64, chat
 	}
 }
 
-func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string) {
 	if userId != nil && *userId != behalfUserId {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType:         "reply_added",
@@ -360,7 +336,7 @@ func (not *eventsImpl) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userI
 	}
 }
 
-func (not *eventsImpl) NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64) {
+func (not *Events) NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64) {
 	if userId != nil {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType:         "reply_deleted",
@@ -374,7 +350,7 @@ func (not *eventsImpl) NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, us
 	}
 }
 
-func (not *eventsImpl) NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin) {
+func (not *Events) NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin) {
 	for _, participantId := range userIds {
 		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:    "participant_added",
@@ -388,7 +364,7 @@ func (not *eventsImpl) NotifyAboutNewParticipants(c echo.Context, userIds []int6
 	}
 }
 
-func (not *eventsImpl) NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64) {
+func (not *Events) NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64) {
 	for _, participantId := range userIds {
 
 		var pseudoUsers = []*dto.UserWithAdmin{}
@@ -409,7 +385,7 @@ func (not *eventsImpl) NotifyAboutDeleteParticipants(c echo.Context, userIds []i
 	}
 }
 
-func (not *eventsImpl) NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin) {
+func (not *Events) NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin) {
 	for _, participantId := range userIds {
 		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:    "participant_edited",
@@ -423,7 +399,7 @@ func (not *eventsImpl) NotifyAboutChangeParticipants(c echo.Context, userIds []i
 	}
 }
 
-func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
+func (not *Events) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
 
 	var eventType = ""
 	if promote {
@@ -464,7 +440,7 @@ func (not *eventsImpl) NotifyAboutPromotePinnedMessage(c echo.Context, chatId in
 }
 
 
-func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int) {
+func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int) {
 	var eventType string
 	if wasChanged {
 		eventType = "reaction_changed"
@@ -504,7 +480,7 @@ func (not *eventsImpl) SendReactionEvent(c echo.Context, wasChanged bool, chatId
 
 }
 
-func (not *eventsImpl) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
 	var eventType string
 	if wasAdded {
 		eventType = "reaction_notification_added"

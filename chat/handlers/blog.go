@@ -18,13 +18,13 @@ import (
 
 type BlogHandler struct {
 	db              *db.DB
-	notificator     services.Events
+	notificator     *services.Events
 	policy          *services.SanitizerPolicy
 	stripTagsPolicy *services.StripTagsPolicy
 	restClient      *client.RestClient
 }
 
-func NewBlogHandler(db *db.DB, notificator services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
+func NewBlogHandler(db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
 	return &BlogHandler{
 		db:              db,
 		notificator:     notificator,
