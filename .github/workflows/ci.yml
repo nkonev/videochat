@@ -137,7 +137,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger thrift is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd chat; sleep 5 && make check-env clean download generate test package)
@@ -408,7 +408,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9411 -- echo 'jaeger zipkin is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:6831 -- echo 'jaeger thrift is up'
+          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:9000 -- echo 'minio is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
