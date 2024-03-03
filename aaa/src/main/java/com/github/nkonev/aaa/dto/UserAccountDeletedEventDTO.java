@@ -1,6 +1,6 @@
 package com.github.nkonev.aaa.dto;
 
 public record UserAccountDeletedEventDTO(
-    Long userId,
+    long userId,
     String eventType
 ) { }

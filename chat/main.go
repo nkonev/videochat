@@ -25,6 +25,7 @@ import (
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
+	"nkonev.name/chat/type_registry"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -54,6 +55,7 @@ func main() {
 			producer.NewRabbitNotificationsPublisher,
 			listener.CreateAaaUserProfileUpdateListener,
 			rabbitmq.CreateRabbitMqConnection,
+			type_registry.NewTypeRegistryInstance,
 		),
 		fx.Invoke(
 			runMigrations,

@@ -91,7 +91,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	logger.GetLogEntry(ctx).Infof("Subscribing to globalEvents channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.GlobalEvent)
-	subscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_USER_EVENTS, func(event eventbus.Event, t time.Time) {
+	globalSubscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_USER_EVENTS, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.GetLogEntry(ctx).Errorf("In processing GlobalEvents panic recovered: %v", err)
@@ -112,16 +112,45 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
+	killSessionsSubscribeHandler, err := r.Bus.Subscribe(dto.AAA_KILL_SESSIONS, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing GlobalEvents panic recovered: %v", err)
+			}
+		}()
+
+		switch typedEvent := event.(type) {
+		case dto.UserSessionsKilledEvent:
+			if isReceiverOfEvent(typedEvent.UserId, authResult) {
+				cam <- convertToUserSessionsKilledEvent(&typedEvent)
+			}
+			break
+		default:
+			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+		}
+	})
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		return nil, err
+	}
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
+
 				logger.GetLogEntry(ctx).Infof("Closing globalEvents channel for user %v", authResult.UserId)
-				err := r.Bus.Unsubscribe(subscribeHandler)
+				err := r.Bus.Unsubscribe(globalSubscribeHandler)
 				if err != nil {
 					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in globalEvents channel for user %v", authResult.UserId)
 				}
+
+				logger.GetLogEntry(ctx).Infof("Closing killSessionsSubscribeHandler channel for user %v", authResult.UserId)
+				err = r.Bus.Unsubscribe(killSessionsSubscribeHandler)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserVideoStatus channel for user %v", authResult.UserId)
+				}
+
 				close(cam)
 				return
 			}
@@ -693,6 +722,16 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 
 	return ret
 }
+
+func convertToUserSessionsKilledEvent(aDto *dto.UserSessionsKilledEvent) *model.GlobalEvent {
+	var ret = &model.GlobalEvent{
+		EventType: aDto.EventType,
+		ForceLogout: &model.ForceLogoutEvent{ReasonType: aDto.ReasonType},
+	}
+
+	return ret
+}
+
 func convertParticipant(owner *dto.User) *model.Participant {
 	if owner == nil {
 		return nil

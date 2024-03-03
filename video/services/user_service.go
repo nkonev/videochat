@@ -75,3 +75,85 @@ func (vh *UserService) GetVideoParticipants(chatId int64, ctx context.Context) (
 
 	return ret, nil
 }
+
+func (vh *UserService) KickUserHavingChatId(ctx context.Context, chatId, userId int64) {
+	roomName := utils.GetRoomNameFromId(chatId)
+
+	lpr := &livekit.ListParticipantsRequest{Room: roomName}
+	participants, err := vh.livekitRoomClient.ListParticipants(ctx, lpr)
+	if err != nil {
+		Logger.Errorf("Unable to get participants %v", err)
+		return
+	}
+
+	for _, participant := range participants.Participants {
+		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
+		if err != nil {
+			Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
+			continue
+		}
+		if metadata == nil {
+			continue
+		}
+		if metadata.UserId == userId {
+			var removeReq = &livekit.RoomParticipantIdentity{
+				Room:     roomName,
+				Identity: participant.Identity,
+			}
+			Logger.Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
+			_, err := vh.livekitRoomClient.RemoveParticipant(ctx, removeReq)
+			if err != nil {
+				Logger.Errorf("got error during kicking userId=%v, %v", userId, err)
+				continue
+			}
+		}
+	}
+}
+
+func (vh *UserService) KickUser(ctx context.Context, userId int64) {
+
+	listRoomReq := &livekit.ListRoomsRequest{}
+	rooms, err := vh.livekitRoomClient.ListRooms(ctx, listRoomReq)
+	if err != nil {
+		Logger.Error(err, "error during reading rooms %v", err)
+		return
+	}
+
+	for _, room := range rooms.Rooms {
+		chatId, err := utils.GetRoomIdFromName(room.Name)
+		if err != nil {
+			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			continue
+		}
+
+		lpr := &livekit.ListParticipantsRequest{Room: room.Name}
+		participants, err := vh.livekitRoomClient.ListParticipants(ctx, lpr)
+		if err != nil {
+			Logger.Errorf("Unable to get participants %v", err)
+			continue
+		}
+
+		for _, participant := range participants.Participants {
+			metadata, err := utils.ParseParticipantMetadataOrNull(participant)
+			if err != nil {
+				Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
+				continue
+			}
+			if metadata == nil {
+				continue
+			}
+			if metadata.UserId == userId {
+				var removeReq = &livekit.RoomParticipantIdentity{
+					Room:     room.Name,
+					Identity: participant.Identity,
+				}
+				Logger.Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
+				_, err := vh.livekitRoomClient.RemoveParticipant(ctx, removeReq)
+				if err != nil {
+					Logger.Errorf("got error during kicking userId=%v, %v", userId, err)
+					continue
+				}
+			}
+		}
+	}
+}

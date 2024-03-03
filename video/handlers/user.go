@@ -75,37 +75,8 @@ func (h *UserHandler) Kick(c echo.Context) error {
 		return err
 	}
 
-	roomName := utils.GetRoomNameFromId(chatId)
+	h.userService.KickUserHavingChatId(c.Request().Context(), chatId, userId)
 
-	lpr := &livekit.ListParticipantsRequest{Room: roomName}
-	participants, err := h.livekitRoomClient.ListParticipants(c.Request().Context(), lpr)
-	if err != nil {
-		Logger.Errorf("Unable to get participants %v", err)
-		return err
-	}
-
-	for _, participant := range participants.Participants {
-		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
-		if err != nil {
-			Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
-			continue
-		}
-		if metadata == nil {
-			continue
-		}
-		if metadata.UserId == userId {
-			var removeReq = &livekit.RoomParticipantIdentity{
-				Room:     roomName,
-				Identity: participant.Identity,
-			}
-			Logger.Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
-			_, err := h.livekitRoomClient.RemoveParticipant(c.Request().Context(), removeReq)
-			if err != nil {
-				Logger.Errorf("got error during kicking userId=%v, %v", userId, err)
-				continue
-			}
-		}
-	}
 	return c.NoContent(http.StatusOK)
 }
 

@@ -2,10 +2,12 @@ package com.github.nkonev.aaa.security;
 
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import com.github.nkonev.aaa.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,6 +36,9 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     @Autowired
     private RedisIndexedSessionRepository redisOperationsSessionRepository;
+
+    @Autowired
+    private EventService eventService;
 
     @Value("${custom.online-estimation}")
     private Duration onlineEstimatedDuration;
@@ -92,15 +97,12 @@ public class AaaUserDetailsService implements UserDetailsService {
         return userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
     }
 
-    public void killSessions(long userId){
+    public void killSessions(long userId, ForceKillSessionsReasonType reasonType){
         String userName = getUserAccount(userId).username();
         Map<String, Session> sessionMap = getSessions(userName);
         sessionMap.keySet().forEach(session -> redisOperationsSessionRepository.deleteById(session));
-    }
 
-    public void killSessions(String userName){
-        Map<String, Session> sessionMap = getSessions(userName);
-        sessionMap.keySet().forEach(session -> redisOperationsSessionRepository.deleteById(session));
+        eventService.notifySessionsKilled(userId, reasonType);
     }
 
     public Map<String, Session> getSessions(long userId) {

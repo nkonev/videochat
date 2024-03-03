@@ -204,6 +204,7 @@ import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
                 const valid = this.validate();
                 console.log("Valid", valid);
                 if (valid) {
+                    this.hideAlert();
                     const dto = {
                         username: this.$data.username,
                         password: this.$data.password

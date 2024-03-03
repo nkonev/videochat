@@ -460,6 +460,9 @@ export default {
                         }
                         totalCount
                       }
+                      forceLogout {
+                        reasonType
+                      }
                     }
                   }
               `
@@ -504,6 +507,10 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
             const d = getGlobalEventsData(e).notificationEvent;
             bus.emit(NOTIFICATION_DELETE, d);
+          } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
+            const d = getGlobalEventsData(e).forceLogout;
+            console.log("Killed sessions, reason:", d.reasonType)
+            bus.emit(LOGGED_OUT);
           }
         },
         onChatAvatarClick() {

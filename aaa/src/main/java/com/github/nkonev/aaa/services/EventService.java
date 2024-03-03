@@ -2,8 +2,10 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import com.github.nkonev.aaa.dto.UserAccountDeletedEventDTO;
 import com.github.nkonev.aaa.dto.UserAccountEventGroupDTO;
+import com.github.nkonev.aaa.dto.UserSessionsKilledEventDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.PrincipalToCheck;
 import com.github.nkonev.aaa.security.UserRoleService;
@@ -49,6 +51,18 @@ public class EventService {
         );
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
             message.getMessageProperties().setType("dto.UserAccountDeletedEvent");
+            return message;
+        });
+    }
+
+    public void notifySessionsKilled(long userId, ForceKillSessionsReasonType reasonType) {
+        var data = new UserSessionsKilledEventDTO(
+            userId,
+            "user_sessions_killed",
+            reasonType
+        );
+        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
+            message.getMessageProperties().setType("dto.UserSessionsKilledEvent");
             return message;
         });
     }

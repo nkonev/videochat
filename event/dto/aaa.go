@@ -60,3 +60,13 @@ type UserAccountDeletedEvent struct {
 func (UserAccountDeletedEvent) Name() eventbus.EventName {
 	return AAA_DELETE
 }
+
+type UserSessionsKilledEvent struct {
+	UserId int64 `json:"userId"`
+	EventType string `json:"eventType"`
+	ReasonType string `json:"reasonType"`
+}
+
+func (UserSessionsKilledEvent) Name() eventbus.EventName {
+	return AAA_KILL_SESSIONS
+}

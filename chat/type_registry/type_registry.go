@@ -1,8 +1,8 @@
 package type_registry
 
 import (
-	"nkonev.name/event/dto"
-	"nkonev.name/event/utils"
+	"nkonev.name/chat/dto"
+	"nkonev.name/chat/utils"
 	"reflect"
 )
 
@@ -16,14 +16,7 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 		typeRegistry: typeRegistry,
 	}
 
-	res.AddToRegistryIfNeed(dto.ChatEvent{})
-	res.AddToRegistryIfNeed(dto.GlobalUserEvent{})
-	res.AddToRegistryIfNeed([]dto.UserOnline{})
-	res.AddToRegistryIfNeed(dto.GeneralEvent{})
 	res.AddToRegistryIfNeed(dto.UserAccountEventGroup{})
-	res.AddToRegistryIfNeed(dto.UserAccountDeletedEvent{})
-	res.AddToRegistryIfNeed(dto.UserSessionsKilledEvent{})
-
 	return res
 }
 

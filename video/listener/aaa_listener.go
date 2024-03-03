@@ -1,19 +1,20 @@
 package listener
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/streadway/amqp"
-	"nkonev.name/chat/dto"
-	. "nkonev.name/chat/logger"
-	"nkonev.name/chat/services"
-	"nkonev.name/chat/type_registry"
+	"nkonev.name/video/dto"
+	. "nkonev.name/video/logger"
+	"nkonev.name/video/services"
+	"nkonev.name/video/type_registry"
 )
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
+func CreateAaaUserProfileUpdateListener(userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
 	return func(msg *amqp.Delivery) error {
 		bytesData := msg.Body
 		strData := string(bytesData)
@@ -29,14 +30,14 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 		anInstance := typeRegistry.MakeInstance(aType)
 
 		switch bindTo := anInstance.(type) {
-		case dto.UserAccountEventGroup:
+		case dto.UserSessionsKilledEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
-			if bindTo.EventType == "user_account_changed" {
-				not.NotifyAboutProfileChanged(bindTo.ForRoleUser)
+			if bindTo.EventType == "user_sessions_killed" {
+				userService.KickUser(context.Background(), bindTo.UserId)
 			}
 
 		default:

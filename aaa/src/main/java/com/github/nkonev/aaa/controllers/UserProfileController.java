@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import com.github.nkonev.aaa.dto.UserAccountDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.dto.UserRole;
@@ -312,7 +313,7 @@ public class UserProfileController {
     @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
-        aaaUserDetailsService.killSessions(userId);
+        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.force_logged_out);
     }
 
     @PreAuthorize("@aaaPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
@@ -320,7 +321,7 @@ public class UserProfileController {
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
         UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
         if (lockDTO.lock()){
-            aaaUserDetailsService.killSessions(lockDTO.userId());
+            aaaUserDetailsService.killSessions(lockDTO.userId(), ForceKillSessionsReasonType.user_locked);
         }
         userAccount = userAccount.withLocked(lockDTO.lock());
         userAccount = userAccountRepository.save(userAccount);
@@ -335,7 +336,7 @@ public class UserProfileController {
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.ConfirmDTO confirmDTO){
         UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
         if (!confirmDTO.confirm()){
-            aaaUserDetailsService.killSessions(confirmDTO.userId());
+            aaaUserDetailsService.killSessions(confirmDTO.userId(), ForceKillSessionsReasonType.user_unconfirmed);
         }
         userAccount = userAccount.withConfirmed(confirmDTO.confirm());
         userAccount = userAccountRepository.save(userAccount);
@@ -348,7 +349,7 @@ public class UserProfileController {
     @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
-        aaaUserDetailsService.killSessions(userId);
+        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
         return userService.deleteUser(userId);
     }
@@ -366,7 +367,7 @@ public class UserProfileController {
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
-        aaaUserDetailsService.killSessions(userId);
+        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
         userService.deleteUser(userId);
     }

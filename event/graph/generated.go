@@ -159,11 +159,16 @@ type ComplexityRoot struct {
 		URL            func(childComplexity int) int
 	}
 
+	ForceLogoutEvent struct {
+		ReasonType func(childComplexity int) int
+	}
+
 	GlobalEvent struct {
 		AllUnreadMessagesNotification  func(childComplexity int) int
 		ChatDeletedEvent               func(childComplexity int) int
 		ChatEvent                      func(childComplexity int) int
 		EventType                      func(childComplexity int) int
+		ForceLogout                    func(childComplexity int) int
 		NotificationEvent              func(childComplexity int) int
 		ParticipantEvent               func(childComplexity int) int
 		UnreadMessagesNotification     func(childComplexity int) int
@@ -938,6 +943,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FileInfoDto.URL(childComplexity), true
 
+	case "ForceLogoutEvent.reasonType":
+		if e.complexity.ForceLogoutEvent.ReasonType == nil {
+			break
+		}
+
+		return e.complexity.ForceLogoutEvent.ReasonType(childComplexity), true
+
 	case "GlobalEvent.allUnreadMessagesNotification":
 		if e.complexity.GlobalEvent.AllUnreadMessagesNotification == nil {
 			break
@@ -965,6 +977,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalEvent.EventType(childComplexity), true
+
+	case "GlobalEvent.forceLogout":
+		if e.complexity.GlobalEvent.ForceLogout == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.ForceLogout(childComplexity), true
 
 	case "GlobalEvent.notificationEvent":
 		if e.complexity.GlobalEvent.NotificationEvent == nil {
@@ -5526,6 +5545,50 @@ func (ec *executionContext) fieldContext_FileInfoDto_fileItemUuid(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _ForceLogoutEvent_reasonType(ctx context.Context, field graphql.CollectedField, obj *model.ForceLogoutEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ForceLogoutEvent_reasonType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReasonType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ForceLogoutEvent_reasonType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForceLogoutEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _GlobalEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GlobalEvent_eventType(ctx, field)
 	if err != nil {
@@ -6128,6 +6191,51 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoCallScreenShareChanged
 				return ec.fieldContext_VideoCallScreenShareChangedDto_hasScreenShares(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VideoCallScreenShareChangedDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalEvent_forceLogout(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_forceLogout(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ForceLogout, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForceLogoutEvent)
+	fc.Result = res
+	return ec.marshalOForceLogoutEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐForceLogoutEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_forceLogout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "reasonType":
+				return ec.fieldContext_ForceLogoutEvent_reasonType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ForceLogoutEvent", field.Name)
 		},
 	}
 	return fc, nil
@@ -8201,6 +8309,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_notificationEvent(ctx, field)
 			case "videoCallScreenShareChangedDto":
 				return ec.fieldContext_GlobalEvent_videoCallScreenShareChangedDto(ctx, field)
+			case "forceLogout":
+				return ec.fieldContext_GlobalEvent_forceLogout(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -12833,6 +12943,45 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var forceLogoutEventImplementors = []string{"ForceLogoutEvent"}
+
+func (ec *executionContext) _ForceLogoutEvent(ctx context.Context, sel ast.SelectionSet, obj *model.ForceLogoutEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, forceLogoutEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ForceLogoutEvent")
+		case "reasonType":
+			out.Values[i] = ec._ForceLogoutEvent_reasonType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var globalEventImplementors = []string{"GlobalEvent"}
 
 func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionSet, obj *model.GlobalEvent) graphql.Marshaler {
@@ -12871,6 +13020,8 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._GlobalEvent_notificationEvent(ctx, field, obj)
 		case "videoCallScreenShareChangedDto":
 			out.Values[i] = ec._GlobalEvent_videoCallScreenShareChangedDto(ctx, field, obj)
+		case "forceLogout":
+			out.Values[i] = ec._GlobalEvent_forceLogout(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15301,6 +15452,13 @@ func (ec *executionContext) marshalOFileInfoDto2ᚖnkonevᚗnameᚋeventᚋgraph
 		return graphql.Null
 	}
 	return ec._FileInfoDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOForceLogoutEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐForceLogoutEvent(ctx context.Context, sel ast.SelectionSet, v *model.ForceLogoutEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ForceLogoutEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {

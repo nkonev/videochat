@@ -14,6 +14,8 @@ const GENERAL = "events.general"
 const AAA_CHANGE = "events.aaa.change"
 const AAA_DELETE = "events.aaa.delete"
 
+const AAA_KILL_SESSIONS = "events.aaa.kill.sessions"
+
 type PinnedMessageEvent struct {
 	Message    DisplayMessageDto `json:"message"`
 	TotalCount int64             `json:"totalCount"`

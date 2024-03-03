@@ -120,6 +120,10 @@ type FileInfoDto struct {
 	FileItemUUID   *uuid.UUID   `json:"fileItemUuid"`
 }
 
+type ForceLogoutEvent struct {
+	ReasonType string `json:"reasonType"`
+}
+
 type GlobalEvent struct {
 	EventType                      string                          `json:"eventType"`
 	ChatEvent                      *ChatDto                        `json:"chatEvent"`
@@ -133,6 +137,7 @@ type GlobalEvent struct {
 	AllUnreadMessagesNotification  *AllUnreadMessages              `json:"allUnreadMessagesNotification"`
 	NotificationEvent              *WrapperNotificationDto         `json:"notificationEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
+	ForceLogout                    *ForceLogoutEvent               `json:"forceLogout"`
 }
 
 type MessageBroadcastNotification struct {

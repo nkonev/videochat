@@ -20,11 +20,13 @@ import (
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/handlers"
+	"nkonev.name/video/listener"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/rabbitmq"
 	"nkonev.name/video/services"
 	"nkonev.name/video/tasks"
+	"nkonev.name/video/type_registry"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -75,10 +77,14 @@ func main() {
 			tasks.RecordingNotifierScheduler,
 			tasks.NewSynchronizeWithLivekitService,
 			tasks.SynchronizeWithLivekitSheduler,
+
+			listener.CreateAaaUserProfileUpdateListener,
+			type_registry.NewTypeRegistryInstance,
 		),
 		fx.Invoke(
 			runApiEcho,
 			runScheduler,
+			listener.CreateAaaChannel,
 		),
 	)
 	app.Run()

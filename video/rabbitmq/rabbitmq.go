@@ -44,3 +44,11 @@ func CreateRabbitMqChannel(
 	}
 	return channel
 }
+
+func CreateRabbitMqChannelWithCallback(connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+	consumeCh, err := connection.Channel(clbFunc)
+	if err != nil {
+		Logger.Panic(err)
+	}
+	return consumeCh
+}

@@ -210,6 +210,10 @@ type NotificationDto {
     chatTitle: String!
 }
 
+type ForceLogoutEvent {
+    reasonType: String!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
@@ -223,6 +227,7 @@ type GlobalEvent {
     allUnreadMessagesNotification: AllUnreadMessages
     notificationEvent: WrapperNotificationDto
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
+    forceLogout: ForceLogoutEvent
 }
 
 type UserStatusEvent {
