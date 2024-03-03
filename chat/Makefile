@@ -58,4 +58,3 @@ deploy-docker-image:
 
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
-
