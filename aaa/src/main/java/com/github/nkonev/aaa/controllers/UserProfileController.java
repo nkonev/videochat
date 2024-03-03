@@ -321,19 +321,19 @@ public class UserProfileController {
         return aaaUserDetailsService.getUsersOnline(userIds);
     }
 
-    @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
+    @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         return aaaUserDetailsService.getSessions(userId);
     }
 
-    @PreAuthorize("@aaaSecurityService.hasSessionManagementPermission(#userAccount)")
+    @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         aaaUserDetailsService.killSessions(userId);
     }
 
-    @PreAuthorize("@aaaSecurityService.canLock(#userAccountDetailsDTO, #lockDTO)")
+    @PreAuthorize("@aaaPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.LOCK)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
         UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
@@ -348,7 +348,7 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
-    @PreAuthorize("@aaaSecurityService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
+    @PreAuthorize("@aaaPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.ConfirmDTO confirmDTO){
         UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
@@ -363,13 +363,13 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
-    @PreAuthorize("@aaaSecurityService.canDelete(#userAccountDetailsDTO, #userId)")
+    @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
         return userService.deleteUser(userId);
     }
 
-    @PreAuthorize("@aaaSecurityService.canChangeRole(#userAccountDetailsDTO, #userId)")
+    @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #userId)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
@@ -378,7 +378,7 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
-    @PreAuthorize("@aaaSecurityService.canSelfDelete(#userAccountDetailsDTO)")
+    @PreAuthorize("@aaaPermissionService.canSelfDelete(#userAccountDetailsDTO)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();

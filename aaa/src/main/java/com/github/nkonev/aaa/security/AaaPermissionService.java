@@ -1,7 +1,6 @@
 package com.github.nkonev.aaa.security;
 
 import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.ConfirmDTO;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.LockDTO;
@@ -17,7 +16,8 @@ import java.util.Optional;
  * Central entrypoint for access decisions
  */
 @Service
-public class AaaSecurityService {
+public class AaaPermissionService {
+
     @Autowired
     private UserRoleService userRoleService;
 

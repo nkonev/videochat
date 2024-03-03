@@ -26,7 +26,7 @@ import static com.github.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
 public class UserAccountConverter {
 
     @Autowired
-    private AaaSecurityService aaaSecurityService;
+    private AaaPermissionService aaaSecurityService;
 
     @Autowired
     private UserRoleService userRoleService;
