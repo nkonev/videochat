@@ -7,7 +7,7 @@ import org.springframework.security.access.expression.method.DefaultMethodSecuri
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 // https://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#domain-acls
 // https://stackoverflow.com/questions/26292431/how-to-configure-spring-acl-without-xml-file
@@ -22,7 +22,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
  * ACL_ENTRY            acl_object_identity_id, acl_sid_id(recipient), auditing, permissions_bitmask_integer
  */
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityPermissionsConfig {
 
     @Bean
