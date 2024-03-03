@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.services;
 
+import com.github.nkonev.aaa.dto.Language;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -21,13 +22,15 @@ public class AsyncEmailService {
     record UserConfirmationEmailDTO(
         String email,
         UserConfirmationToken userConfirmationToken,
-        String login
+        String login,
+        Language language
     ) {}
 
     record PasswordResetEmailDTO(
         String email,
         PasswordResetToken passwordResetToken,
-        String login
+        String login,
+        Language language
     ) {}
 
     public record ArbitraryEmailDto(
@@ -36,12 +39,12 @@ public class AsyncEmailService {
         String body
     ){}
 
-    public void sendUserConfirmationToken(String email, UserConfirmationToken userConfirmationToken, String login) {
-        rabbitTemplate.convertAndSend(QUEUE_USER_CONFIRMATION_EMAILS_NAME, new UserConfirmationEmailDTO(email, userConfirmationToken, login));
+    public void sendUserConfirmationToken(String email, UserConfirmationToken userConfirmationToken, String login, Language language) {
+        rabbitTemplate.convertAndSend(QUEUE_USER_CONFIRMATION_EMAILS_NAME, new UserConfirmationEmailDTO(email, userConfirmationToken, login, language));
     }
 
-    public void sendPasswordResetToken(String email, PasswordResetToken passwordResetToken, String login) {
-        rabbitTemplate.convertAndSend(QUEUE_PASSWORD_RESET_EMAILS_NAME, new PasswordResetEmailDTO(email, passwordResetToken, login));
+    public void sendPasswordResetToken(String email, PasswordResetToken passwordResetToken, String login, Language language) {
+        rabbitTemplate.convertAndSend(QUEUE_PASSWORD_RESET_EMAILS_NAME, new PasswordResetEmailDTO(email, passwordResetToken, login, language));
     }
 
     public void sendArbitraryEmail(ArbitraryEmailDto dto) {
@@ -50,12 +53,12 @@ public class AsyncEmailService {
 
     @RabbitListener(queues = QUEUE_USER_CONFIRMATION_EMAILS_NAME)
     public void handleUserConfirmation(UserConfirmationEmailDTO dto) {
-        emailService.sendUserConfirmationToken(dto.email(), dto.userConfirmationToken(), dto.login());
+        emailService.sendUserConfirmationToken(dto.email(), dto.userConfirmationToken(), dto.login(), dto.language());
     }
 
     @RabbitListener(queues = QUEUE_PASSWORD_RESET_EMAILS_NAME)
     public void handlePasswordReset(PasswordResetEmailDTO dto) {
-        emailService.sendPasswordResetToken(dto.email(), dto.passwordResetToken(), dto.login());
+        emailService.sendPasswordResetToken(dto.email(), dto.passwordResetToken(), dto.login(), dto.language());
     }
 
     @RabbitListener(queues = QUEUE_ARBITRARY_EMAILS_NAME)

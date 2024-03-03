@@ -5,6 +5,7 @@ import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.TestConstants;
 import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.dto.EditUserDTO;
+import com.github.nkonev.aaa.dto.Language;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
@@ -67,6 +68,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         MvcResult createAccountRequest = mockMvc.perform(
                 MockMvcRequestBuilders.post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
+                        .queryParam("language", Language.en.name())
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
         )
@@ -135,6 +137,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         MvcResult createAccountRequest = mockMvc.perform(
                 MockMvcRequestBuilders.post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
                     .content(objectMapper.writeValueAsString(createUserDTO))
+                    .queryParam("language", Language.en.name())
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
             )
@@ -157,7 +160,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         {
             long tokenCountBeforeResend = userConfirmationTokenRepository.count();
             mockMvc.perform(
-                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email)
+                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email + "&language=en")
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
@@ -198,7 +201,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         {
             long tokenCountBeforeResend = userConfirmationTokenRepository.count();
             mockMvc.perform(
-                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email)
+                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL + "?email=" + email + "&language=en")
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
@@ -227,6 +230,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         MvcResult createAccountResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
+                        .queryParam("language", Language.en.name())
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
         )
@@ -250,6 +254,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         MvcResult createAccountResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
+                        .queryParam("language", Language.en.name())
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
         )
@@ -273,6 +278,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         MvcResult createAccountResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
+                        .queryParam("language", Language.en.name())
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
         )
@@ -298,6 +304,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         MvcResult createAccountResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
+                        .queryParam("language", Language.en.name())
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
         )
@@ -359,7 +366,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         // attacker
         long tokenCountBeforeResend = userConfirmationTokenRepository.count();
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL+"?email="+bobEmail)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL+"?email="+bobEmail + "&language=en")
                     .with(csrf())
         )
                 .andExpect(status().isOk());

@@ -48,16 +48,11 @@ spring:
 custom:
   email:
     from: testEmailUsername@test.example.com
-  registration:
-    email:
-      subject: "Registration confirmation"
   confirmation:
     registration:
       token:
         ttl: 5m
   password-reset:
-    email:
-      subject: "Password reset"
     token:
       ttl: 5m
   online-estimation: 10m

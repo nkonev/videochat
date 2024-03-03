@@ -39,7 +39,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
 
         // invoke resend, this sends url /password-reset?uuid=<uuid> and confirm code to email
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET+"?email="+email)
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET+"?email="+email+"&language=en")
                     .with(csrf())
             )
             .andExpect(status().isOk());

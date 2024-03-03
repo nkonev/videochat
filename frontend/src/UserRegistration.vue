@@ -77,7 +77,9 @@ export default {
         email: this.email,
         password: this.password,
       }
-      axios.post("/api/aaa/register", data)
+      axios.post("/api/aaa/register", data, { params: {
+              language: this.$vuetify.locale.current
+          }})
         .then(() => {
           this.$router.push({name: confirmation_pending_name} )
         })

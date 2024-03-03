@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.converter.UserAccountConverter;
+import com.github.nkonev.aaa.dto.Language;
 import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -60,7 +61,7 @@ public class PasswordResetController {
      * @param email
      */
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET)
-    public void requestPasswordReset(String email) {
+    public void requestPasswordReset(String email, Language language) {
         String uuid = UUID.randomUUID().toString();
 
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);
@@ -79,7 +80,7 @@ public class PasswordResetController {
 
         passwordResetToken = passwordResetTokenRepository.save(passwordResetToken);
 
-        asyncEmailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.username());
+        asyncEmailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.username(), language);
     }
 
     record PasswordResetDto(

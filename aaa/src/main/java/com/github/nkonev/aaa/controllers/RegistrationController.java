@@ -4,6 +4,7 @@ import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.EditUserDTO;
+import com.github.nkonev.aaa.dto.Language;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
@@ -57,19 +58,9 @@ public class RegistrationController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
-    private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
-        Assert.isTrue(!userAccount.confirmed(), "user account mustn't be confirmed");
-
-        long seconds = userConfirmationTokenTtl.getSeconds(); // Redis requires seconds
-
-        UUID tokenUuid = UUID.randomUUID();
-        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid.toString(), userAccount.id(), seconds);
-        return userConfirmationTokenRepository.save(userConfirmationToken);
-    }
-
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
     @ResponseBody
-    public void register(@RequestBody @Valid EditUserDTO userAccountDTO) {
+    public void register(@RequestBody @Valid EditUserDTO userAccountDTO, Language language) {
         userAccountDTO = UserAccountConverter.trimAndValidateNonAouth2Login(userAccountDTO);
 
         userService.checkLoginIsFree(userAccountDTO);
@@ -81,7 +72,7 @@ public class RegistrationController {
 
         userAccount = userAccountRepository.save(userAccount);
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
-        asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username());
+        asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username(), language);
     }
 
     /**
@@ -125,7 +116,7 @@ public class RegistrationController {
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
     @ResponseBody
-    public void resendConfirmationToken(@RequestParam(value = "email") String email) {
+    public void resendConfirmationToken(String email, Language language) {
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);
         if(!userAccountOptional.isPresent()){
             LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this email is not found", email);
@@ -139,7 +130,17 @@ public class RegistrationController {
         }
 
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
-        asyncEmailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username());
+        asyncEmailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username(), language);
+    }
+
+    private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
+        Assert.isTrue(!userAccount.confirmed(), "user account mustn't be confirmed");
+
+        long seconds = userConfirmationTokenTtl.getSeconds(); // Redis requires seconds
+
+        UUID tokenUuid = UUID.randomUUID();
+        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid.toString(), userAccount.id(), seconds);
+        return userConfirmationTokenRepository.save(userConfirmationToken);
     }
 
 }

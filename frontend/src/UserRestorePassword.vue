@@ -45,6 +45,7 @@ export default {
     onSubmit() {
       axios.post("/api/aaa/request-password-reset", null, { params: {
               email: this.email,
+              language: this.$vuetify.locale.current
           }})
         .then(() => {
           this.$router.push({name: check_email_name} )

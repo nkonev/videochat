@@ -2,6 +2,7 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.config.CustomConfig;
+import com.github.nkonev.aaa.dto.Language;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import freemarker.template.Configuration;
@@ -35,12 +36,6 @@ public class EmailService {
     @Value("${custom.email.from}")
     private String from;
 
-    @Value("${custom.registration.email.subject}")
-    private String registrationSubject;
-
-    @Value("${custom.password-reset.email.subject}")
-    private String passwordResetSubject;
-
     @Autowired
     private Configuration freemarkerConfiguration;
 
@@ -50,7 +45,7 @@ public class EmailService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
 
-    public void sendUserConfirmationToken(String recipient, UserConfirmationToken userConfirmationToken, String login) {
+    public void sendUserConfirmationToken(String recipient, UserConfirmationToken userConfirmationToken, String login, Language language) {
         // https://yandex.ru/support/mail-new/mail-clients.html
         // https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
         // http://docs.spring.io/spring/docs/4.3.10.RELEASE/spring-framework-reference/htmlsingle/#mail-usage-simple
@@ -59,11 +54,12 @@ public class EmailService {
             var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
             helper.setFrom(from);
-            helper.setSubject(registrationSubject);
+            final var subj = renderTemplate("confirm_registration_subject_%s.ftlh".formatted(language), Map.of());
+            helper.setSubject(subj);
             helper.setTo(recipient);
 
             final var regLink = customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM + "?" + Constants.Urls.UUID + "=" + userConfirmationToken.uuid();
-            final var text = renderTemplate("confirm-registration.ftlh",
+            final var text = renderTemplate("confirm_registration_body_%s.ftlh".formatted(language),
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
             LOGGER.trace("For registration confirmation '{}' generated email text '{}'", recipient, text);
@@ -75,20 +71,21 @@ public class EmailService {
         }
     }
 
-    public void sendPasswordResetToken(String recipient, PasswordResetToken passwordResetToken, String login) {
+    public void sendPasswordResetToken(String recipient, PasswordResetToken passwordResetToken, String login, Language language) {
         try {
             var mimeMessage = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
             helper.setFrom(from);
-            helper.setSubject(passwordResetSubject);
+            final var subj = renderTemplate("password_reset_subject_%s.ftlh".formatted(language), Map.of());
+            helper.setSubject(subj);
             helper.setTo(recipient);
 
             final var passwordResetLink = customConfig.getPasswordRestoreEnterNew() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
-            final var text = renderTemplate("password-reset.ftlh",
+            final var text = renderTemplate("password_reset_body_%s.ftlh".formatted(language),
                     Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
             LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
-            helper.setText(text);
+            helper.setText(text, true);
 
             mailSender.send(mimeMessage);
         } catch (Exception e) {
