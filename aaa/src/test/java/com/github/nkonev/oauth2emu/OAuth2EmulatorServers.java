@@ -11,11 +11,11 @@ import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import shaded_package.io.netty.handler.codec.http.HttpHeaderNames;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
