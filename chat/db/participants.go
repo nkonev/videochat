@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ztrue/tracerr"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 )
 
@@ -97,30 +98,39 @@ func (db *DB) GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*
 	return getParticipantIdsBatchCommon(db, chatIds, participantsSize)
 }
 
-func getAllParticipantIdsCommon(qq CommonOperations, chatId int64) ([]int64, error) {
-	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY user_id", chatId); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
-		list := make([]int64, 0)
-		for rows.Next() {
-			var participantId int64
-			if err := rows.Scan(&participantId); err != nil {
-				return nil, tracerr.Wrap(err)
-			} else {
-				list = append(list, participantId)
-			}
+func getAllParticipantIdsCommon(qq CommonOperations, chatId int64, consumer func(participantIds []int64) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := 0; shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		participantIds, err := getParticipantIdsCommon(qq, chatId, utils.DefaultSize, offset)
+		if len(participantIds) == 0 {
+			return nil
 		}
-		return list, nil
+		if len(participantIds) < utils.DefaultSize {
+			shouldContinue = false
+		}
+		if err != nil {
+			logger.Logger.Errorf("Got error during getting portion %v", err)
+			lastError = err
+			continue
+		}
+		err = consumer(participantIds)
+		if err != nil {
+			logger.Logger.Errorf("Got error during invoking consumer portion %v", err)
+			lastError = err
+			continue
+		}
 	}
+	return lastError
 }
 
-func (tx *Tx) GetAllParticipantIds(chatId int64) ([]int64, error) {
-	return getAllParticipantIdsCommon(tx, chatId)
+func (tx *Tx) IterateOverAllParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
+	return getAllParticipantIdsCommon(tx, chatId, consumer)
 }
 
-func (db *DB) GetAllParticipantIds(chatId int64) ([]int64, error) {
-	return getAllParticipantIdsCommon(db, chatId)
+func (db *DB) IterateOverAllParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
+	return getAllParticipantIdsCommon(db, chatId, consumer)
 }
 
 func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) {

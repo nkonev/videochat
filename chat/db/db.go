@@ -38,7 +38,7 @@ type CommonOperations interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error)
 	GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error)
-	GetAllParticipantIds(chatId int64) ([]int64, error)
+	IterateOverAllParticipantIds(chatId int64, consumer func(participantIds []int64) error) error
 	GetParticipantsCount(chatId int64) (int, error)
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error)

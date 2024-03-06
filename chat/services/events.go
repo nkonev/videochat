@@ -204,31 +204,32 @@ func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *
 		return
 	}
 
-	participantIds, err := not.db.GetAllParticipantIds(chatId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
-		return
-	}
-
 	ut := dto.UserTypingNotification{
 		Login:         user.Login,
 		ParticipantId: user.Id,
 	}
 
-	for _, participantId := range participantIds {
-		if participantId == user.Id {
-			continue
-		}
+	err := not.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		for _, participantId := range participantIds {
+			if participantId == user.Id {
+				continue
+			}
 
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:              "user_typing",
-			UserTypingNotification: &ut,
-			UserId:                 participantId,
-			ChatId:                 chatId,
-		})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+				EventType:              "user_typing",
+				UserTypingNotification: &ut,
+				UserId:                 participantId,
+				ChatId:                 chatId,
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		return
 	}
 }
 
@@ -262,23 +263,25 @@ func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId in
 		Text:   text,
 	}
 
-	participantIds, err := not.db.GetAllParticipantIds(chatId)
+	err := not.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		for _, participantId := range participantIds {
+			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+				EventType:                    "user_broadcast",
+				MessageBroadcastNotification: &ut,
+				UserId:                       participantId,
+				ChatId:                       chatId,
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
 		return
 	}
 
-	for _, participantId := range participantIds {
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:                    "user_broadcast",
-			MessageBroadcastNotification: &ut,
-			UserId:                       participantId,
-			ChatId:                       chatId,
-		})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
-		}
-	}
 
 }
 
@@ -448,13 +451,6 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 		eventType = "reaction_removed"
 	}
 
-	participantIds, err := not.db.GetAllParticipantIds(chatId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
-		return
-	}
-
-
 	aReaction := dto.Reaction{
 		Count:    int64(count),
 		Reaction: reaction,
@@ -466,18 +462,24 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 		Reaction:  aReaction,
 	}
 
-	for _, participantId := range participantIds {
-		err = not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:                  eventType,
-			ReactionChangedEvent: 		&reactionChangedEvent,
-			UserId:                     participantId,
-			ChatId:                     chatId,
-		})
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+	err := not.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		for _, participantId := range participantIds {
+			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+				EventType:                  eventType,
+				ReactionChangedEvent: 		&reactionChangedEvent,
+				UserId:                     participantId,
+				ChatId:                     chatId,
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		return
 	}
-
 }
 
 func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {

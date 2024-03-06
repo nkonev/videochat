@@ -45,24 +45,48 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			GetLogEntry(ctx).Errorf("Error during parsing chatId: %v", err)
 			return err
 		}
-		participantIds, err := client.GetChatParticipantIds(workingChatId, ctx)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during getting participant ids: %v", err)
-			return err
-		}
-
 		eventType, err := utils.GetEventType(eventName, isRecording)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
 			return err
 		}
 
-		if eventType == utils.FILE_CREATED || eventType == utils.FILE_DELETED || eventType == utils.FILE_UPDATED {
-			eventService.HandleEvent(participantIds, normalizedKey, workingChatId, eventType, ctx)
+		var eventServiceResponse *services.HandleEventResponse
+		var previewServiceResponse *services.PreviewResponse
+		var errEventService error
+		if isEventForEventService(eventType) {
+			eventServiceResponse, errEventService = eventService.HandleEvent(normalizedKey, workingChatId, eventType, ctx)
 		}
-		if eventType == utils.FILE_CREATED {
-			previewService.HandleMinioEvent(participantIds, minioEvent, ctx)
+		if isEventForPreviewService(eventType) {
+			previewServiceResponse = previewService.HandleMinioEvent(minioEvent, ctx)
 		}
+
+		err = client.GetChatParticipantIds(workingChatId, ctx, func(participantIds []int64) error {
+			if errEventService == nil && isEventForEventService(eventType) {
+				eventService.SendToParticipants(normalizedKey, chatId, eventType, participantIds, eventServiceResponse, ctx)
+			}
+			if isEventForPreviewService(eventType) {
+				previewService.SendToParticipants(minioEvent, participantIds, previewServiceResponse, ctx)
+			}
+			return nil
+		})
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during getting participant ids: %v", err)
+			return err
+		}
+
 		return nil
 	}
+}
+
+func isEventForEventService(eventType utils.EventType) bool {
+	if eventType == utils.FILE_CREATED || eventType == utils.FILE_DELETED || eventType == utils.FILE_UPDATED {
+		return true
+	} else {
+		return false
+	}
+}
+
+func isEventForPreviewService(eventType utils.EventType) bool {
+	return eventType == utils.FILE_CREATED
 }

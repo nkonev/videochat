@@ -245,7 +245,7 @@ func (h *RestClient) CheckIsChatExists(chatIds []int64, c context.Context) (*[]C
 	return resultMap, nil
 }
 
-func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context) ([]int64, error) {
+func (h *RestClient) GetChatParticipantIdsByPage(chatId int64, c context.Context, page, size int) ([]int64, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.baseUrl + h.chatParticipantIdsPath
 
@@ -255,7 +255,7 @@ func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context) ([]i
 		"Content-Type":    {contentType},
 	}
 
-	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId))
+	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId) + "&page="+utils.IntToString(page)+"&size="+utils.IntToString(size))
 	if err != nil {
 		GetLogEntry(c).Errorln("Failed during parse chat participant ids url:", err)
 		return nil, err
@@ -293,4 +293,27 @@ func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context) ([]i
 		return nil, err
 	}
 	return *userIds, nil
+}
+
+func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context, consumer func(participantIds []int64) error) (error) {
+	var lastError error
+	shouldContinue := true
+	for page := 0; shouldContinue; page++ {
+		portion, err := h.GetChatParticipantIdsByPage(chatId, c, page, utils.DefaultSize)
+		if len(portion) < utils.DefaultSize {
+			shouldContinue = false
+		}
+		if err != nil {
+			GetLogEntry(c).Warningf("got error %v", err)
+			lastError = err
+			continue
+		}
+		err = consumer(portion)
+		if err != nil {
+			GetLogEntry(c).Errorf("Got error during invoking consumer portion %v", err)
+			lastError = err
+			continue
+		}
+	}
+	return lastError
 }

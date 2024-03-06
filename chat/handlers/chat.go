@@ -572,15 +572,18 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 		}
-		ids, err := tx.GetAllParticipantIds(chatId)
+		err := tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			ch.notificator.NotifyAboutDeleteChat(c, chatId, participantIds, tx)
+			return nil
+		})
 		if err != nil {
 			return err
 		}
+
 		if err := tx.DeleteChat(chatId); err != nil {
 			return err
 		}
 
-		ch.notificator.NotifyAboutDeleteChat(c, chatId, ids, tx)
 		return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 	})
 	if errOuter != nil {
@@ -611,7 +614,6 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		bindTo.Blog = nil
 	}
 
-	var userIdsToNotifyAboutChatChanged []int64
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
 		if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
 			return err
@@ -632,25 +634,25 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return err
 		}
 
-		if ids, err := tx.GetAllParticipantIds(bindTo.Id); err != nil {
+
+		responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0);
+		if err != nil {
 			return err
-		} else {
-			for _, pid := range ids {
-				userIdsToNotifyAboutChatChanged = append(userIdsToNotifyAboutChatChanged, pid)
-			}
+		}
+		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		if err != nil {
+			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		if responseDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0); err != nil {
+		err = tx.IterateOverAllParticipantIds(bindTo.Id, func(participantIds []int64) error {
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			return nil
+		})
+		if err != nil {
 			return err
-		} else {
-			copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
-			if err != nil {
-				return c.NoContent(http.StatusInternalServerError)
-			}
-
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, userIdsToNotifyAboutChatChanged, tx)
-			return c.JSON(http.StatusAccepted, responseDto)
 		}
+		return c.JSON(http.StatusAccepted, responseDto)
+
 	})
 	if errOuter != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
@@ -675,12 +677,6 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			return err
 		}
 
-		participantIds, err := tx.GetAllParticipantIds(chatId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
 		firstUser, err := tx.GetFirstParticipant(chatId)
 		if err != nil {
 			return err
@@ -692,10 +688,16 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{userPrincipalDto.UserId})
 
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
-
+			err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+				ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{userPrincipalDto.UserId})
+				ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+				return nil
+			})
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
 			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
 
 			// send duplicated event to the former user to re-draw chat on their search results
@@ -748,22 +750,23 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			participantIds, err := tx.GetAllParticipantIds(chatId)
+			err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+				ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, []*dto.UserWithAdmin{
+					{
+						User: dto.User{
+							Id:    userPrincipalDto.UserId,
+							Login: userPrincipalDto.UserLogin,
+						},
+						Admin: isAdmin,
+					},
+				})
+				ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+				return nil
+			})
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, []*dto.UserWithAdmin{
-				{
-					User: dto.User{
-						Id:    userPrincipalDto.UserId,
-						Login: userPrincipalDto.UserLogin,
-					},
-					Admin: isAdmin,
-				},
-			})
-
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -817,11 +820,6 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 			return err
 		}
-		participantIds, err := tx.GetAllParticipantIds(chatId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
-			return err
-		}
 
 		newUsersWithAdmin, err := ch.getParticipantsWithAdmin(tx, []int64{interestingUserId}, chatId, c.Request().Context())
 		if err != nil {
@@ -829,7 +827,14 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return err
 		}
 
-		ch.notificator.NotifyAboutChangeParticipants(c, participantIds, chatId, newUsersWithAdmin)
+		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			ch.notificator.NotifyAboutChangeParticipants(c, participantIds, chatId, newUsersWithAdmin)
+			return nil
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
+			return err
+		}
 
 		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
@@ -921,14 +926,6 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 			return err
 		}
-		participantIds, err := tx.GetAllParticipantIds(chatId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
-			return err
-		}
-
-		ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{interestingUserId})
-
 		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
@@ -937,7 +934,15 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{interestingUserId})
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			return nil
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
+			return err
+		}
 
 		ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, tx)
 
@@ -1015,18 +1020,12 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 				return err
 			}
 		}
-		participantIds, err := tx.GetAllParticipantIds(chatId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
-			return err
-		}
 
 		newUsersWithAdmin, err := ch.getParticipantsWithAdmin(tx, bindTo.ParticipantIds, chatId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants aith admin %v", err)
 			return err
 		}
-		ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, newUsersWithAdmin)
 
 		tmpDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
@@ -1036,7 +1035,15 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, newUsersWithAdmin)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			return nil
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
+			return err
+		}
 
 		return c.NoContent(http.StatusAccepted)
 	})
@@ -1067,17 +1074,98 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	}
 
 	searchString := c.QueryParam("searchString")
-	excludingIds, err := ch.db.GetAllParticipantIds(chatId)
-	if err != nil {
-		return err
-	}
 
-	users, _, err := ch.restClient.SearchGetUsers(searchString, false, excludingIds, 0, 0, c.Request().Context())
+	users, _, err := ch.searchUsers(c, searchString, chatId, false, utils.DefaultSize)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, users)
+}
+
+func (ch *ChatHandler) searchUsers(c echo.Context, searchString string, chatId int64, containedInChat bool, pageSize int) ([]*dto.User, int, error) {
+	var users []*dto.User = make([]*dto.User, 0)
+	var allFoundUsers []*dto.User = make([]*dto.User, 0)
+	shouldContinueSearch := true
+	totalCount := 0
+	for page := 0; shouldContinueSearch; page++ {
+		usersPortion, aTotalCount, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, page, pageSize, c.Request().Context())
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
+		}
+		if len(usersPortion) < pageSize {
+			shouldContinueSearch = false
+		}
+		totalCount = aTotalCount
+		for _, up := range usersPortion {
+			allFoundUsers = append(allFoundUsers, up)
+		}
+	}
+
+	var allChatParticipantIds []int64 = make([]int64, 0)
+	shouldContinue := true
+	for page := 0; shouldContinue; page++ {
+		offset := utils.GetOffset(page, pageSize)
+		participantIds, err := ch.db.GetParticipantIds(chatId, pageSize, offset)
+		if len(participantIds) == 0 {
+			break
+		}
+		if len(participantIds) < pageSize {
+			shouldContinue = false
+		}
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Got error during getting portion %v", err)
+			break
+		}
+
+		for _, pid := range participantIds {
+			allChatParticipantIds = append(allChatParticipantIds, pid)
+		}
+	}
+
+	if containedInChat {
+		for _, participantId := range allChatParticipantIds {
+			if containUserId(allFoundUsers, participantId) {
+				found := getParticipantById(allFoundUsers, participantId)
+				if found != nil {
+					// then append to the response
+					users = append(users, found)
+				}
+			}
+			if len(users) == pageSize {
+				break
+			}
+		}
+	} else {
+		for _, u := range allFoundUsers {
+			if !utils.Contains(allChatParticipantIds, u.Id) {
+				users = append(users, u)
+			}
+			if len(users) == pageSize {
+				break
+			}
+		}
+	}
+
+	return users, totalCount, nil
+}
+
+func containUserId(accumulatingUsers []*dto.User, userId int64) bool {
+	for _, u := range accumulatingUsers {
+		if u.Id == userId {
+			return true
+		}
+	}
+	return false
+}
+
+func getParticipantById(accumulatingUsers []*dto.User, userId int64) *dto.User {
+	for _, u := range accumulatingUsers {
+		if u.Id == userId {
+			return u
+		}
+	}
+	return nil
 }
 
 func (ch *ChatHandler) GetParticipants(c echo.Context) error {
@@ -1104,15 +1192,8 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 	totalFoundUserCount := 0
 
 	if userSearchString != "" {
-		allParticipantIds, err := ch.db.GetAllParticipantIds(chatId)
-		if err != nil {
-			return err
-		}
 		var users []*dto.User
-		users, totalFoundUserCount, err = ch.restClient.SearchGetUsers(userSearchString, true, allParticipantIds, participantsPage, participantsSize, c.Request().Context())
-		if err != nil {
-			return err
-		}
+		users, totalFoundUserCount, err = ch.searchUsers(c, userSearchString, chatId, true, participantsSize)
 		usersWithAdmin, err = ch.enrichWithAdmin(ch.db, users, chatId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
@@ -1164,12 +1245,12 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	}
 
 	searchString := c.QueryParam("searchString")
-	includingIds, err := ch.db.GetAllParticipantIds(chatId)
 
-	users, _, err := ch.restClient.SearchGetUsers(searchString, true, includingIds, 0, 0, c.Request().Context())
+	users, _, err := ch.searchUsers(c, searchString, chatId, true, utils.DefaultSize)
 	if err != nil {
 		return err
 	}
+
 	users = append(users, &dto.User{
 		Id:    AllUsers, // -1 is reserved for 'deleted' in ./aaa/src/main/resources/db/migration/V1__init.sql
 		Login: allUsers,
@@ -1479,10 +1560,16 @@ func (ch *ChatHandler) GetChatParticipants(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ids, err := ch.db.GetAllParticipantIds(chatId)
+
+	participantsPage := utils.FixPageString(c.QueryParam("page"))
+	participantsSize := utils.FixSizeString(c.QueryParam("size"))
+	participantsOffset := utils.GetOffset(participantsPage, participantsSize)
+
+	ids, err := ch.db.GetParticipantIds(chatId, participantsSize, participantsOffset)
 	if err != nil {
 		return err
 	}
+
 	return c.JSON(http.StatusOK, ids)
 }
 
@@ -1506,10 +1593,6 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 		return err
 	}
 
-	participantIds, err := ch.db.GetAllParticipantIds(chatId)
-	if err != nil {
-		return err
-	}
 
 	var users = []*ParticipantBelongsToChat{}
 	for _, userId := range userIds {
@@ -1517,11 +1600,21 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 			UserId:  userId,
 			Belongs: false,
 		}
-		if utils.Contains(participantIds, userId) {
-			belongs.Belongs = true
-		}
 		users = append(users, belongs)
 	}
+
+	err = ch.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		for _, user := range users {
+			if utils.Contains(participantIds, user.UserId) {
+				user.Belongs = true
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 
 	return c.JSON(http.StatusOK, &ParticipantsBelongToChat{Users: users})
 }

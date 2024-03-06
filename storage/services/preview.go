@@ -35,11 +35,21 @@ func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioCo
 	}
 }
 
-func (s *PreviewService) HandleMinioEvent(participantIds []int64, data *dto.MinioEvent, ctx context.Context) {
+func (s *PreviewService) HandleMinioEvent(data *dto.MinioEvent, ctx context.Context) *PreviewResponse {
 	Logger.Debugf("Got %v", data)
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
 	s.CreatePreview(normalizedKey, ctx)
-	if pu, err := s.getFileUploadedEvent(normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
+	return &PreviewResponse {
+		normalizedKey: normalizedKey,
+	}
+}
+
+type PreviewResponse struct {
+	normalizedKey string
+}
+
+func (s *PreviewService) SendToParticipants(data *dto.MinioEvent, participantIds []int64, response *PreviewResponse, ctx context.Context) {
+	if pu, err := s.getFileUploadedEvent(response.normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
 		for _, participantId := range participantIds {
 			err = s.rabbitFileUploadedPublisher.Publish(participantId, data.ChatId, pu, ctx)
 			if err != nil {
@@ -48,8 +58,9 @@ func (s *PreviewService) HandleMinioEvent(participantIds []int64, data *dto.Mini
 			}
 		}
 	} else {
-		Logger.Errorf("Error during constructing uploaded event %v for %v", err, normalizedKey)
+		Logger.Errorf("Error during constructing uploaded event %v for %v", err, response.normalizedKey)
 	}
+
 }
 
 func (s *PreviewService) CreatePreview(normalizedKey string, ctx context.Context) {

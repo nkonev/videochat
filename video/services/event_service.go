@@ -49,23 +49,23 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 			continue
 		}
 
-		participantIds, err := h.restClient.GetChatParticipantIds(chatId, ctx)
+		err = h.restClient.GetChatParticipantIds(chatId, ctx, func(participantIds []int64) error {
+			Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
+			internalErr := h.notificationService.NotifyVideoUserCountChanged(participantIds, chatId, usersCount, ctx)
+			if internalErr != nil {
+				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", internalErr)
+			}
+
+			internalErr = h.notificationService.NotifyVideoScreenShareChanged(participantIds, chatId, hasScreenShares, ctx)
+			if internalErr != nil {
+				Logger.Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", internalErr)
+			}
+			return internalErr
+		})
 		if err != nil {
 			Logger.Error(err, "Failed during getting chat participantIds")
 			continue
 		}
-
-		Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
-		err = h.notificationService.NotifyVideoUserCountChanged(participantIds, chatId, usersCount, ctx)
-		if err != nil {
-			Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", err)
-		}
-
-		err = h.notificationService.NotifyVideoScreenShareChanged(participantIds, chatId, hasScreenShares, ctx)
-		if err != nil {
-			Logger.Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", err)
-		}
-
 	}
 }
 

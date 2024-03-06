@@ -56,36 +56,38 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 			}
 			hasChats = len(chatIds) > 0
 			for _, chatId := range chatIds {
-				//  batch by participants // ... order by participant_id
-				participantIds, err := tx.GetAllParticipantIds(chatId)
-				if err != nil {
-					logger.GetLogEntry(c).Errorf("Got error getting participantIds %v", err)
-					continue
-				}
 
-				existResponse, err := srv.chatClient.CheckAreUsersExists(participantIds, c)
-				if err != nil {
-					logger.GetLogEntry(c).Errorf("Got error getting existResponse %v", err)
-					continue
-				}
+				err := tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+					if err != nil {
+						logger.GetLogEntry(c).Errorf("Got error getting participantIds %v", err)
+						return nil
+					}
 
-				for _, exists := range *existResponse {
-					// if user not exists
-					if !exists.Exists {
-						// remove message_read
-						err = tx.DeleteMessageRead(exists.UserId, chatId)
-						if err != nil {
-							logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
-							continue
-						}
-						// remove from chat_participants
-						err = tx.DeleteParticipant(exists.UserId, chatId)
-						if err != nil {
-							logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
-							continue
+					existResponse, err := srv.chatClient.CheckAreUsersExists(participantIds, c)
+					if err != nil {
+						logger.GetLogEntry(c).Errorf("Got error getting existResponse %v", err)
+						return nil
+					}
+
+					for _, exists := range *existResponse {
+						// if user not exists
+						if !exists.Exists {
+							// remove message_read
+							err = tx.DeleteMessageRead(exists.UserId, chatId)
+							if err != nil {
+								logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
+								continue
+							}
+							// remove from chat_participants
+							err = tx.DeleteParticipant(exists.UserId, chatId)
+							if err != nil {
+								logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
+								continue
+							}
 						}
 					}
-				}
+					return nil
+				})
 
 				// if chat has 0 participants - then remove chat
 				hasParticipants, err := tx.HasParticipants(chatId)
