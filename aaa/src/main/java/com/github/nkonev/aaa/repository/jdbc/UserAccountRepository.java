@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserAccountRepository extends ListCrudRepository<UserAccount, Long>, PagingAndSortingRepository<UserAccount, Long> {
@@ -51,5 +52,9 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
+
+    // here we intentionally set that deleted user exists
+    @Query("select id from user_account u where id in (:userIds)")
+    Set<Long> findUserIds(List<Long> userIds);
 
 }

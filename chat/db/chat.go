@@ -807,6 +807,31 @@ func (db *DB) BlogPostMessageId(chatId int64) (int64, error) {
 	return messageId, nil
 }
 
+func getChatIdsCommon(qq CommonOperations, chatsSize, chatsOffset int) ([]int64, error) {
+	if rows, err := qq.Query("SELECT id FROM chat ORDER BY id LIMIT $1 OFFSET $2", chatsSize, chatsOffset); err != nil {
+		return nil, tracerr.Wrap(err)
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var chatId int64
+			if err := rows.Scan(&chatId); err != nil {
+				return nil, tracerr.Wrap(err)
+			} else {
+				list = append(list, chatId)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (tx *Tx) GetChatIds(chatsSize, chatsOffset int) ([]int64, error) {
+	return getChatIdsCommon(tx, chatsSize, chatsOffset)
+}
+
+func (db *DB) GetChatIds(chatsSize, chatsOffset int) ([]int64, error) {
+	return getChatIdsCommon(db, chatsSize, chatsOffset)
+}
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin

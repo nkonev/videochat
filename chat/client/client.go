@@ -6,6 +6,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -235,4 +237,67 @@ func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []i
 		return nil, 0, err
 	}
 	return respDto.Users, respDto.Count, nil
+}
+
+type UserExists struct {
+	Exists bool  `json:"exists"`
+	UserId int64 `json:"userId"`
+}
+
+
+func (rc RestClient) CheckAreUsersExists(userIds []int64, c context.Context) (*[]UserExists, error) {
+
+	var chatIdsString []string
+	for _, chatIdInt := range userIds {
+		chatIdsString = append(chatIdsString, utils.Int64ToString(chatIdInt))
+	}
+
+	join := strings.Join(chatIdsString, ",")
+
+	url0 := viper.GetString("aaa.url.base")
+	url1 := viper.GetString("aaa.url.checkUsersExistsPath")
+
+	fullUrl := fmt.Sprintf("%v?userId=%v", url0 + url1, join)
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		return nil, err
+	}
+
+	request := &http.Request{
+		Method: "GET",
+		URL:    parsedUrl,
+		Header: map[string][]string{
+			echo.HeaderContentType: {"application/json"},
+		},
+	}
+
+	ctx, span := rc.tracer.Start(c, "users.CheckExists")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	response, err := rc.Do(request)
+	if err != nil {
+		GetLogEntry(c).Error(err, "Transport error during checking user presence")
+		return nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		err = errors.New(fmt.Sprintf("Unexpected status checking user presence %v", response.StatusCode))
+		return nil, err
+	}
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode get user presence response:", err)
+		return nil, err
+	}
+
+	resultMap := new([]UserExists)
+	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse result:", err)
+		return nil, err
+	}
+	return resultMap, nil
 }

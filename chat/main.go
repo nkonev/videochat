@@ -25,6 +25,7 @@ import (
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
+	"nkonev.name/chat/tasks"
 	"nkonev.name/chat/type_registry"
 )
 
@@ -50,6 +51,9 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
 			db.ConfigureDb,
+			tasks.RedisV8,
+			tasks.CleanChatsOfDeletedUserScheduler,
+			tasks.NewCleanChatsOfDeletedUserService,
 			services.NewEvents,
 			producer.NewRabbitEventsPublisher,
 			producer.NewRabbitNotificationsPublisher,
@@ -59,6 +63,7 @@ func main() {
 		),
 		fx.Invoke(
 			runMigrations,
+			runScheduler,
 			runEcho,
 			listener.CreateAaaChannel,
 		),
@@ -258,4 +263,16 @@ func runEcho(e *echo.Echo) {
 		}
 	}()
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+}
+
+func runScheduler(dt *tasks.CleanChatsOfDeletedUserTask) {
+	if viper.GetBool("schedulers.cleanChatsOfDeletedUserTask.enabled") {
+		go func() {
+			Logger.Infof("Starting scheduler cleanChatsOfDeletedUserTask")
+			err := dt.Run(context.Background())
+			if err != nil {
+				Logger.Errorf("Error during working cleanChatsOfDeletedUserTask: %s", err)
+			}
+		}()
+	}
 }

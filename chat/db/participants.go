@@ -343,3 +343,13 @@ func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
 func (tx *Tx) GetChatsWithMe(userId int64) ([]int64, error) {
 	return getChatsWithMeCommon(tx, userId)
 }
+
+func (tx *Tx) HasParticipants(chatId int64) (bool, error) {
+	var exists bool = false
+	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE chat_id = $1 LIMIT 1)`, chatId)
+	if err := row.Scan(&exists); err != nil {
+		return false, tracerr.Wrap(err)
+	} else {
+		return exists, nil
+	}
+}

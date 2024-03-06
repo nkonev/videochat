@@ -348,10 +348,10 @@ public class UserProfileController {
 
     @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
-    public long deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
+    public void deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
-        return userService.deleteUser(userId);
+        userService.deleteUser(userId);
     }
 
     @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #userId)")
@@ -398,4 +398,30 @@ public class UserProfileController {
         return oAuth2ProvidersService.availableOauth2Providers();
     }
 
+    record UserExists (
+        long userId,
+        boolean exists
+    ) {}
+
+
+    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+"/exist")
+    public List<UserExists> getUsersExistInternal(
+        @RequestParam(value = "userId") List<Long> requestedUserIds
+    ) {
+        LOGGER.info("Requesting internal users exist {}", requestedUserIds);
+        if (requestedUserIds == null) {
+            throw new BadRequestException("Cannot be null");
+        }
+        if (requestedUserIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        var existingUserIds = userAccountRepository.findUserIds(requestedUserIds);
+        var result = new ArrayList<UserExists>();
+        for (var userId : requestedUserIds) {
+            var exists = existingUserIds.contains(userId);
+            var ue = new UserExists(userId, exists);
+            result.add(ue);
+        }
+        return result;
+    }
 }

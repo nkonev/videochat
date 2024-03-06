@@ -4,8 +4,10 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
+	github.com/ehsaniara/gointerlock v1.1.1
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
+	github.com/go-redis/redis/v8 v8.11.1
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/uuid v1.3.0
 	github.com/guregu/null v4.0.0+incompatible
@@ -31,9 +33,12 @@ require (
 require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/aws/aws-sdk-go v1.40.16 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/chris-ramon/douceur v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -50,6 +55,7 @@ require (
 	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.10.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect

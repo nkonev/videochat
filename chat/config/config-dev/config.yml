@@ -28,6 +28,7 @@ aaa:
     getUsers: "/internal/user/list"
     getOnlines: "/internal/user/online"
     searchUsers: "/internal/user/search"
+    checkUsersExistsPath: "/internal/user/exist"
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
@@ -53,3 +54,16 @@ message:
   allowedIframeUrls: ""
 
 onlyAdminCanCreateBlog: false
+
+redis:
+  address: :36379
+  password: ""
+  db: 5
+  maxRetries: 10000
+
+schedulers:
+  cleanChatsOfDeletedUserTask:
+    enabled: true
+    interval: 60s
+    batchChats: 20
+    batchParticipants: 20

@@ -35,6 +35,8 @@ services:
       - CHAT_SERVER.BODY.LIMIT=100G
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
+      - CHAT_REDIS.ADDRESS=redis:6379
+      - CHAT_REDIS.DB=5
       - CHAT_JAEGER.HOST=jaeger
       - CHAT_JAEGER.PORT=6831
       - CHAT_BASEURL=http://api.site.local:8080

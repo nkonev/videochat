@@ -478,6 +478,20 @@ func (tx *Tx) AddMessageRead(messageId, userId int64, chatId int64) (bool, error
 	return addMessageReadCommon(tx, messageId, userId, chatId)
 }
 
+func deleteMessageReadCommon(co CommonOperations, userId int64, chatId int64) error {
+	_, err := co.Exec(`DELETE FROM message_read WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
+	return tracerr.Wrap(err)
+}
+
+func (db *DB) DeleteMessageRead(userId int64, chatId int64) error {
+	return deleteMessageReadCommon(db, userId, chatId)
+}
+
+func (tx *Tx) DeleteMessageRead(userId int64, chatId int64) error {
+	return deleteMessageReadCommon(tx, userId, chatId)
+}
+
+
 func (tx *Tx) EditMessage(m *Message) error {
 	if m == nil {
 		return tracerr.Wrap(errors.New("message required"))
