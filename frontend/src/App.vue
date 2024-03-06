@@ -69,7 +69,7 @@
             <v-icon>mdi-postage-stamp</v-icon>
           </v-btn>
 
-          <v-btn v-if="chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
+          <v-btn v-if="isMobile() && chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
           </v-btn>
           <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">

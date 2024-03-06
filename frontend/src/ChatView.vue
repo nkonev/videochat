@@ -34,6 +34,8 @@
               <MessageList :canResend="chatDto.canResend" :blog="chatDto.blog"/>
 
               <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
+              <v-btn v-if="!isMobile() && chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" class="new-fab" @click="scrollDown()"></v-btn>
+
           </pane>
           <pane class="message-edit-pane" v-if="showBottomPane()" :size="bottomPaneSize()">
             <MessageEdit :chatId="this.chatId"/>
@@ -58,22 +60,22 @@ import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {hasLength, isCalling, isChatRoute, new_message, setTitle} from "@/utils";
 import bus, {
-  CHAT_DELETED,
-  CHAT_EDITED,
-  FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
-  MESSAGE_ADD,
-  MESSAGE_BROADCAST,
-  MESSAGE_DELETED,
-  MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
-  PARTICIPANT_ADDED,
-  PARTICIPANT_DELETED,
-  PARTICIPANT_EDITED,
-  PINNED_MESSAGE_PROMOTED,
-  PINNED_MESSAGE_UNPROMOTED,
-  PREVIEW_CREATED,
-  PROFILE_SET, REACTION_CHANGED, REACTION_REMOVED, REFRESH_ON_WEBSOCKET_RESTORED,
-  USER_TYPING,
-  VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED
+    CHAT_DELETED,
+    CHAT_EDITED,
+    FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
+    MESSAGE_ADD,
+    MESSAGE_BROADCAST,
+    MESSAGE_DELETED,
+    MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
+    PARTICIPANT_ADDED,
+    PARTICIPANT_DELETED,
+    PARTICIPANT_EDITED,
+    PINNED_MESSAGE_PROMOTED,
+    PINNED_MESSAGE_UNPROMOTED,
+    PREVIEW_CREATED,
+    PROFILE_SET, REACTION_CHANGED, REACTION_REMOVED, REFRESH_ON_WEBSOCKET_RESTORED, SCROLL_DOWN,
+    USER_TYPING,
+    VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -643,6 +645,9 @@ export default {
       this.$nextTick(() => {
         this.saveToStored(this.prepareForStore());
       })
+    },
+    scrollDown () {
+      bus.emit(SCROLL_DOWN)
     },
 
   },
