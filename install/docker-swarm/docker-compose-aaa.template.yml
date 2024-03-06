@@ -59,6 +59,7 @@ services:
       - COOKIE_SAME-SITE=Strict
       - management.zipkin.tracing.endpoint=http://jaeger:9411/api/v2/spans
       - spring.data.redis.url=redis://redis:6379/0
+      - spring.flyway.out-of-order=false
 
     logging:
       driver: "journald"
