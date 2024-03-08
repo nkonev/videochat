@@ -1,6 +1,6 @@
 import {hasLength} from "@/utils";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(), getScrollerName(). isTopDirection() - from infiniteScrollMixin.js
+// expects methods: doDefaultScroll(), getPositionFromStore(). isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {
         data() {
@@ -79,10 +79,6 @@ export default () => {
             },
             getMinimumItemId() {
                 return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
-            },
-            saveScroll(top) {
-                this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
-                console.log("Saved scroll", this.preservedScroll, "in ", this.getScrollerName());
             },
             clearRouteHash() {
                 // console.log("Cleaning hash");

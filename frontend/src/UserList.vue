@@ -219,6 +219,10 @@ export default {
       this.items = this.items.slice(-this.getReduceToLength());
       this.startingFromItemIdTop = this.getMinimumItemId();
     },
+    saveScroll(top) {
+      this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
+      console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
+    },
     initialDirection() {
       return directionBottom
     },
@@ -399,9 +403,6 @@ export default {
           } else {
               return false
           }
-    },
-    getScrollerName() {
-      return scrollerName
     },
 
     getUserIdsSubscribeTo() {

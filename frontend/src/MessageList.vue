@@ -171,6 +171,10 @@
           this.items = this.items.slice(0, this.getReduceToLength());
           this.startingFromItemIdTop = this.getMinimumItemId();
         },
+        saveScroll(top) {
+          this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
+          console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
+        },
         initialDirection() {
           return directionTop
         },
@@ -499,9 +503,6 @@
           if (foundMessage) {
             foundMessage.reactions = foundMessage.reactions.filter(reaction => reaction.reaction != dto.reaction.reaction);
           }
-        },
-        getScrollerName() {
-          return scrollerName
         },
       },
       created() {
