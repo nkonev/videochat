@@ -136,6 +136,10 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			if err != nil {
 				return err
 			}
+			if len(portion) < size {
+				shouldIterate = false
+			}
+
 			searched, err := h.performSearch(searchString, portion)
 			if err != nil {
 				return err
@@ -153,9 +157,6 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 				offsetCounter++
 			}
 
-			if len(portion) < size {
-				shouldIterate = false
-			}
 		}
 
 		response = intermediateResponse
