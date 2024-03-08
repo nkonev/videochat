@@ -126,6 +126,9 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		}
 	} else {
 		var intermediateResponse = make([]*BlogPostPreviewDto, 0)
+		var offsetCounter = 0
+		var respCounter = 0
+
 		shouldIterate := true
 		for portionPage := 0; shouldIterate; portionPage++ {
 			portionOffset := utils.GetOffset(portionPage, size)
@@ -139,7 +142,15 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			}
 
 			for _, sp := range searched {
-				intermediateResponse = append(intermediateResponse, sp)
+				if offsetCounter >= offset {
+					intermediateResponse = append(intermediateResponse, sp)
+					respCounter++
+					if respCounter >= size {
+						shouldIterate = false
+						break
+					}
+				}
+				offsetCounter++
 			}
 
 			if len(portion) < size {
@@ -147,7 +158,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			}
 		}
 
-		response = h.performPaging(intermediateResponse, size, offset)
+		response = intermediateResponse
 	}
 
 	var participantIdSet = map[int64]bool{}
@@ -164,26 +175,6 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
-}
-
-func (h *BlogHandler) performPaging(intermediateList []*BlogPostPreviewDto, size, offset int) []*BlogPostPreviewDto {
-
-	var list = make([]*BlogPostPreviewDto, 0)
-	var counter = 0
-	var respCounter = 0
-
-	for _, objInfo := range intermediateList {
-		if counter >= offset {
-			list = append(list, objInfo)
-			respCounter++
-			if respCounter >= size {
-				break
-			}
-		}
-		counter++
-	}
-
-	return list
 }
 
 func (h *BlogHandler) GetBlogPage(c echo.Context) error {

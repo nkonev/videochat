@@ -68,12 +68,12 @@ func (h *FilesService) GetListFilesInFileItem(
 	count := len(intermediateList)
 
 	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
-	var counter = 0
+	var offsetCounter = 0
 	var respCounter = 0
 
 	for _, objInfo := range intermediateList {
 
-		if counter >= offset {
+		if offsetCounter >= offset {
 			tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 			if err != nil {
 				GetLogEntry(c).Errorf("Error during getting tags %v", err)
@@ -92,7 +92,7 @@ func (h *FilesService) GetListFilesInFileItem(
 				break
 			}
 		}
-		counter++
+		offsetCounter++
 	}
 
 	if requestOwners {
