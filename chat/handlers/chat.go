@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/getlantern/deepcopy"
@@ -23,9 +25,21 @@ import (
 const minChatNameLen = 1
 const maxChatNameLen = 256
 
+const chatPageSize = 40
+
+const desc = "desc"
+const asc = "asc"
+
+const directionTop = "top"
+const directionBottom = "bottom"
+
+const defaultDirection = directionBottom
+
 type ChatWrapper struct {
 	Data  []*dto.ChatDto `json:"data"`
 	Count int64          `json:"totalCount"` // total chat number for this user
+	PaginationToken string `json:"paginationToken"`
+	PageSize        int    `json:"pageSize"`
 }
 
 type ParticipantsWithAdminWrapper struct {
@@ -98,13 +112,30 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	page := utils.FixPageString(c.QueryParam("page"))
-	size := utils.FixSizeString(c.QueryParam("size"))
-	offset := utils.GetOffset(page, size)
-
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
 	var additionalFoundUserIds = []int64{}
+
+	topElementId := utils.FixId(c.QueryParam("topElementId"))
+	bottomElementId := utils.FixId(c.QueryParam("bottomElementId"))
+
+	paginationToken := c.QueryParam("paginationToken")
+	if paginationToken == "" {
+		paginationToken = getPageToken(utils.DefaultPage, utils.DefaultPage)
+	}
+	pageBottom, pageTop, size := getFromPageToken(paginationToken)
+
+	var page int
+	directionString := getDirection(c.QueryParam("direction"))
+	var orderDirection string
+	if directionString == directionTop {
+		orderDirection = asc
+		page = pageTop
+	} else if directionString == directionBottom {
+		orderDirection = desc
+		page = pageBottom
+	}
+	offset := utils.GetOffset(page, size)
 
 	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
@@ -121,7 +152,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 	return db.Transact(ch.db, func(tx *db.Tx) error {
 
-		dbChats, err := tx.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
+		dbChats, err := tx.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get chats from db %v", err)
 			return err
@@ -174,36 +205,157 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		if err != nil {
 			return errors.New("Error during getting user chat count")
 		}
+
+		nextPaginationToken, err := getNextPageToken(
+			c.Request().Context(),
+			tx,
+			userPrincipalDto.UserId,
+			size,
+			pageBottom + 1,
+			pageTop + 1,
+			directionString,
+			searchString,
+			bottomElementId,
+			topElementId,
+		)
+		if err != nil {
+			return fmt.Errorf("error during getNextPageToken %v", err)
+		}
+
 		GetLogEntry(c.Request().Context()).Infof("Successfully returning %v chats", len(chatDtos))
-		return c.JSON(http.StatusOK, ChatWrapper{Data: chatDtos, Count: userChatCount})
+		return c.JSON(http.StatusOK, ChatWrapper{
+			Data:            chatDtos,
+			Count:           userChatCount,
+			PaginationToken: nextPaginationToken,
+			PageSize:        size,
+		})
 	})
 }
 
-func (ch *ChatHandler) GetChatPage(c echo.Context) error {
+func getDirection(directionString string) string {
+	if directionString == directionTop || directionString == directionBottom {
+		return directionString
+	} else {
+		return defaultDirection
+	}
+}
+
+type NextTokenWrapper struct {
+	PaginationToken string `json:"paginationToken"`
+}
+
+// invoked after reducing
+func (ch *ChatHandler) RecreatePageToken(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
-	itemId, err := utils.ParseInt64(c.QueryParam("id"))
-	if err != nil {
-		return err
-	}
-	size := utils.FixSizeString(c.QueryParam("size"))
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
 
+	topElementId := utils.FixId(c.QueryParam("topElementId"))
+	bottomElementId := utils.FixId(c.QueryParam("bottomElementId"))
+
+	paginationToken := c.QueryParam("paginationToken")
+	if paginationToken == "" {
+		paginationToken = getPageToken(utils.DefaultPage, utils.DefaultPage)
+	}
+	pageBottom, pageTop, size := getFromPageToken(paginationToken)
+
+	directionString := getDirection(c.QueryParam("direction"))
 	return db.Transact(ch.db, func(tx *db.Tx) error {
-		rowNumber, err := tx.GetChatRowNumber(itemId, userPrincipalDto.UserId, searchString)
+		nextPaginationToken, err := getNextPageToken(
+			c.Request().Context(),
+			tx,
+			userPrincipalDto.UserId,
+			size,
+			pageBottom,
+			pageTop,
+			directionString,
+			searchString,
+			bottomElementId,
+			topElementId,
+		)
 		if err != nil {
-			return err
+			return fmt.Errorf("error during getNextPageToken %v", err)
 		}
-
-		var returnPage = (rowNumber + 1) / size
-
-		return c.JSON(http.StatusOK, &utils.H{"page": returnPage})
+		return c.JSON(http.StatusOK, NextTokenWrapper{
+			PaginationToken: nextPaginationToken,
+		})
 	})
+}
+
+type pageToken struct {
+	PageBottom int `json:"pageBottom"` // used when we scroll bottom (by default)
+	PageTop    int `json:"pageTop"`
+	Size       int `json:"size"`
+}
+
+func getNextPageToken(ctx context.Context, tx *db.Tx, userId int64, size, nextPageBottom, nextPageTop int, directionString, searchString string, bottomElementId, topElementId *int64) (string, error) {
+	var nextPaginationToken string
+	if directionString == directionTop {
+		var returnPageBottom = utils.DefaultPage
+		if bottomElementId != nil { // in advance, we create pageBottom as well
+			rowNumber, err := tx.GetChatRowNumber(*bottomElementId, userId, desc, searchString) // desc because desc is used for direction Bottom
+			if err != nil {
+				GetLogEntry(ctx).Errorf("Error during GetChatRowNumber %v", err)
+				return "", err
+			}
+			returnPageBottom = rowNumber / size
+		}
+		nextPaginationToken = getPageToken(returnPageBottom, nextPageTop)
+	} else if directionString == directionBottom {
+		var returnPageTop = utils.DefaultPage
+		if topElementId != nil { // in advance, we create pageTop as well
+			rowNumber, err := tx.GetChatRowNumber(*topElementId, userId, asc, searchString) // asc because asc is used for direction Top
+			if err != nil {
+				GetLogEntry(ctx).Errorf("Error during GetChatRowNumber %v", err)
+				return "", err
+			}
+			returnPageTop = rowNumber / size
+		}
+		nextPaginationToken = getPageToken(nextPageBottom, returnPageTop)
+	} else {
+		return "", errors.New("Direction is missing")
+	}
+	return nextPaginationToken, nil
+}
+
+func getPageToken(pageBottom, pageTop int) string {
+	thePageToken := pageToken{
+		PageBottom: pageBottom,
+		PageTop:    pageTop,
+		Size:       chatPageSize,
+	}
+	data, err := json.Marshal(thePageToken)
+	if err != nil {
+		Logger.Errorf("Error during Marshal %v", err)
+		return ""
+	} else {
+		dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+		base64.StdEncoding.Encode(dst, data)
+		return string(dst)
+	}
+}
+
+func getFromPageToken(str string) (int, int, int) {
+	dst := make([]byte, base64.StdEncoding.DecodedLen(len(str)))
+	n, err := base64.StdEncoding.Decode(dst, []byte(str))
+	if err != nil {
+		Logger.Errorf("Error during decode %v", err)
+		return utils.DefaultPage, utils.DefaultPage, chatPageSize
+	}
+	dst = dst[:n]
+
+	thePageToken := new(pageToken)
+	err = json.Unmarshal(dst, thePageToken)
+	if err != nil {
+		Logger.Errorf("Error during Unmarshal %v", err)
+		return utils.DefaultPage, utils.DefaultPage, chatPageSize
+	}
+	return thePageToken.PageBottom, thePageToken.PageTop, thePageToken.Size
 }
 
 func getChat(

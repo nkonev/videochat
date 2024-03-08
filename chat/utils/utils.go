@@ -40,11 +40,11 @@ func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 
 const maxSize = 100
 const DefaultSize = 20
-const defaultPage = 0
+const DefaultPage = 0
 
 func FixPage(page int) int {
 	if page < 0 {
-		return defaultPage
+		return DefaultPage
 	} else {
 		return page
 	}
@@ -53,9 +53,18 @@ func FixPage(page int) int {
 func FixPageString(page string) int {
 	atoi, err := strconv.Atoi(page)
 	if err != nil {
-		return defaultPage
+		return DefaultPage
 	} else {
 		return FixPage(atoi)
+	}
+}
+
+func FixId(id string) *int64 {
+	atoi, err := ParseInt64(id)
+	if err != nil {
+		return nil
+	} else {
+		return &atoi
 	}
 }
 

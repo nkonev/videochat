@@ -310,26 +310,42 @@ func TestGetChatsPaginated(t *testing.T) {
 	emu := startAaaEmu()
 	defer emu.Close()
 	runTest(t, func(e *echo.Echo) {
-		c, b, _ := request("GET", "/chat?page=2&size=3", nil, e)
-		assert.Equal(t, http.StatusOK, c)
-		assert.NotEmpty(t, b)
+		// get initial page
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat", nil, e)
+		assert.Equal(t, http.StatusOK, httpFirstPage)
+		assert.NotEmpty(t, bodyFirstPage)
+		Logger.Infof("Body: %v", bodyFirstPage)
+		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
 
-		Logger.Infof("Body: %v", b)
+		assert.Equal(t, 40, len(typedResFirstPage))
 
-		typedTes := getJsonPathResult(t, b, "$.data.name").([]interface{})
-
-		assert.Equal(t, 3, len(typedTes))
-
-		assert.Equal(t, "generated_chat94", typedTes[0])
-		assert.Equal(t, "generated_chat93", typedTes[1])
-		assert.Equal(t, "generated_chat92", typedTes[2])
+		assert.Equal(t, "generated_chat1000", typedResFirstPage[0])
+		assert.Equal(t, "generated_chat999", typedResFirstPage[1])
+		assert.Equal(t, "generated_chat998", typedResFirstPage[2])
+		assert.Equal(t, "generated_chat961", typedResFirstPage[39])
 
 		// also check get additional info from aaa emu
-		firstChatParticipantLogins := getJsonPathResult(t, b, "$.data[0].participants.login").([]interface{})
+		firstChatParticipantLogins := getJsonPathResult(t, bodyFirstPage, "$.data[0].participants.login").([]interface{})
 		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
 
-		firstChatParticipantAvatars := getJsonPathResult(t, b, "$.data[0].participants.avatar").([]interface{})
+		firstChatParticipantAvatars := getJsonPathResult(t, bodyFirstPage, "$.data[0].participants.avatar").([]interface{})
 		assert.Equal(t, "http://image.jpg", firstChatParticipantAvatars[0])
+
+		paginationToken := getJsonPathResult(t, bodyFirstPage, "$.paginationToken").(string)
+
+		// get second page
+		httpSecondPage, bodySecondPage, _ := request("GET", "/chat?paginationToken="+paginationToken, nil, e)
+		assert.Equal(t, http.StatusOK, httpSecondPage)
+		assert.NotEmpty(t, bodySecondPage)
+		Logger.Infof("Body: %v", bodySecondPage)
+		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
+
+		assert.Equal(t, 40, len(typedResSecondPage))
+
+		assert.Equal(t, "generated_chat960", typedResSecondPage[0])
+		assert.Equal(t, "generated_chat959", typedResSecondPage[1])
+		assert.Equal(t, "generated_chat958", typedResSecondPage[2])
+		assert.Equal(t, "generated_chat921", typedResSecondPage[39])
 	})
 }
 
@@ -357,7 +373,7 @@ func TestChatValidation(t *testing.T) {
 func TestChatCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
 		// test not found
-		c30, _, _ := request("GET", "/chat/666", nil, e)
+		c30, _, _ := request("GET", "/chat/50666", nil, e)
 		assert.Equal(t, http.StatusNoContent, c30)
 
 		chatsBefore, _ := db.CountChats()

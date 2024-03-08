@@ -74,7 +74,6 @@
 import axios from "axios";
 import infiniteScrollMixin, {
     directionBottom,
-    directionTop,
 } from "@/mixins/infiniteScrollMixin";
 import {chat, chat_list_name, chat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
@@ -112,7 +111,6 @@ import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
 import userStatusMixin from "@/mixins/userStatusMixin";
 
-const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
 
 const scrollerName = 'ChatList';
@@ -127,8 +125,7 @@ export default {
   props:['embedded'],
   data() {
     return {
-        pageTop: 0,
-        pageBottom: 0,
+        paginationToken: "",
         markInstance: null,
         routeName: null,
     }
@@ -151,15 +148,28 @@ export default {
     getReduceToLength() {
         return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
     },
+    recreatePaginationToken() {
+      axios.get("/api/chat/recreate-pagination-token", {
+          params: {
+              paginationToken: this.paginationToken,
+              searchString: this.searchString,
+              direction: this.aDirection,
+              topElementId: this.findTopElementId(),
+              bottomElementId: this.findBottomElementId(),
+          },
+      }).then((res) => {
+          this.paginationToken = res.data.paginationToken;
+      })
+    },
     reduceBottom() {
         console.log("reduceBottom");
         this.items = this.items.slice(0, this.getReduceToLength());
-        this.onReduce(directionBottom);
+        this.recreatePaginationToken();
     },
     reduceTop() {
         console.log("reduceTop");
         this.items = this.items.slice(-this.getReduceToLength());
-        this.onReduce(directionTop);
+        this.recreatePaginationToken();
     },
     findBottomElementId() {
         return this.items[this.items.length-1]?.id
@@ -183,43 +193,25 @@ export default {
       this.loadedTop = true;
       await this.scrollTop();
     },
-    async onReduce(aDirection) {
-      if (aDirection == directionTop) { // became
-          const id = this.findTopElementId();
-          //console.log("Going to get top page", aDirection, id);
-          this.pageTop = await axios
-              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
-              .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
-          if (this.pageTop == -1) {
-              this.pageTop = 0
-          }
-          console.log("Set page top", this.pageTop, "for id", id);
-      } else {
-          const id = this.findBottomElementId();
-          //console.log("Going to get bottom page", aDirection, id);
-          this.pageBottom = await axios
-              .get(`/api/chat/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
-              .then(({data}) => data.page);
-          console.log("Set page bottom", this.pageBottom, "for id", id);
-      }
-    },
     async load() {
       if (!this.canDrawChats()) {
         return Promise.resolve()
       }
 
       this.chatStore.incrementProgressCount();
-      const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
       return axios.get(`/api/chat`, {
         params: {
-          page: page,
-          size: PAGE_SIZE,
+          paginationToken: this.paginationToken,
           searchString: this.searchString,
+          direction: this.aDirection,
+          topElementId: this.findTopElementId(),
+          bottomElementId: this.findBottomElementId(),
         },
       })
         .then((res) => {
+          this.paginationToken = res.data.paginationToken;
           const items = res.data.data;
-          console.log("Get items in ", scrollerName, items, "page", page);
+          console.log("Get items in ", scrollerName, items, "direction", this.aDirection);
           items.forEach((item) => {
                 this.transformItem(item);
           });
@@ -233,21 +225,11 @@ export default {
               replaceOrAppend(this.items, items);
           }
 
-          if (items.length < PAGE_SIZE) {
+          if (items.length < res.data.pageSize) {
             if (this.isTopDirection()) {
               this.loadedTop = true;
             } else {
               this.loadedBottom = true;
-            }
-          } else {
-            if (this.isTopDirection()) {
-                this.pageTop -= 1;
-                if (this.pageTop == -1) {
-                    this.loadedTop = true;
-                    this.pageTop = 0;
-                }
-            } else {
-                this.pageBottom += 1;
             }
           }
           this.performMarking();
@@ -279,8 +261,7 @@ export default {
     reset() {
       this.resetInfiniteScrollVars();
 
-      this.pageTop = 0;
-      this.pageBottom = 0;
+      this.paginationToken = "";
     },
 
     async onSearchStringChangedDebounced() {

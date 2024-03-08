@@ -117,21 +117,21 @@ func provideScanToChat(chat *Chat) []any {
 }
 
 // rowNumber is in [1, count]
-func (tx *Tx) GetChatRowNumber(itemId, userId int64, searchString string) (int, error) {
+func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderString, searchString string) (int, error) {
 
 	var dbSearchString = "%" + searchString + "%"
-	var theQuery = `
+	var theQuery = fmt.Sprintf(`
 		SELECT al.nrow FROM (
 			SELECT 
 				ch.id as cid,
-				ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC) as nrow
+				ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s) as nrow
 			FROM 
 				chat ch 
 				LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1)
 			WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )
 				AND ch.title ILIKE $3
 		) al WHERE al.cid = $2
-	`
+	`, orderString)
 	var position int
 	row := tx.QueryRow(theQuery, userId, itemId, dbSearchString)
 	err := row.Scan(&position)
@@ -166,10 +166,14 @@ func (tx *Tx) GetBlogRowNumber(itemId int64, searchString string) (int, error) {
 	}
 }
 
-func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int) ([]*Chat, error) {
+func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = co.Query(selectChatClause()+` WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC LIMIT $2 OFFSET $3`, participantId, limit, offset)
+	rows, err = co.Query(fmt.Sprintf(selectChatClause()+`
+		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) 
+		ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s 
+		LIMIT $2 OFFSET $3
+	`, orderDirection), participantId, limit, offset)
 	if err != nil {
 		return nil, tracerr.Wrap(err)
 	} else {
@@ -187,12 +191,12 @@ func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit
 	}
 }
 
-func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
-	return getChatsByLimitOffsetCommon(db, participantId, limit, offset)
+func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
+	return getChatsByLimitOffsetCommon(db, participantId, limit, offset, orderDirection)
 }
 
-func (tx *Tx) GetChatsByLimitOffset(participantId int64, limit int, offset int) ([]*Chat, error) {
-	return getChatsByLimitOffsetCommon(tx, participantId, limit, offset)
+func (tx *Tx) GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
+	return getChatsByLimitOffsetCommon(tx, participantId, limit, offset, orderDirection)
 }
 
 func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int) ([]*Blog, error) {
@@ -276,7 +280,7 @@ func (db *DB) BlogPosts(ids []int64) ([]*BlogPost, error) {
 	return blogPostsCommon(db, ids)
 }
 
-func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
 	searchStringWithPercents := "%" + searchString + "%"
@@ -295,12 +299,11 @@ func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId
 		additionalUserIdsClause = fmt.Sprintf(" OR ( ch.tet_a_tet IS true AND ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
 	}
 
-	rows, err = commonOps.Query(selectChatClause()+fmt.Sprintf(`
-		WHERE 
-		    ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $4 %s ) ) OR ( ch.available_to_search IS TRUE AND $5 = '%s' )  ) 
-			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) DESC 
+	rows, err = commonOps.Query(fmt.Sprintf(selectChatClause()+`
+			WHERE ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $4 %s ) ) OR ( ch.available_to_search IS TRUE AND $5 = '%s' )  ) 
+			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s 
 			LIMIT $2 OFFSET $3
-	`, additionalUserIdsClause, ReservedPublicallyAvailableForSearchChats), participantId, limit, offset, searchStringWithPercents, searchString)
+	`, additionalUserIdsClause, ReservedPublicallyAvailableForSearchChats, orderDirection), participantId, limit, offset, searchStringWithPercents, searchString)
 	if err != nil {
 		return nil, tracerr.Wrap(err)
 	} else {
@@ -318,12 +321,12 @@ func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId
 	}
 }
 
-func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
-	return getChatsByLimitOffsetSearchCommon(db, participantId, limit, offset, searchString, additionalFoundUserIds)
+func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+	return getChatsByLimitOffsetSearchCommon(db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
 }
 
-func (tx *Tx) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
-	return getChatsByLimitOffsetSearchCommon(tx, participantId, limit, offset, searchString, additionalFoundUserIds)
+func (tx *Tx) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+	return getChatsByLimitOffsetSearchCommon(tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
 }
 
 func convertToWithParticipants(db CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
@@ -398,14 +401,14 @@ func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*Participa
 	return ccc, nil
 }
 
-func getChatsWithParticipantsCommon(commonOps CommonOperations, participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func getChatsWithParticipantsCommon(commonOps CommonOperations, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
 	if searchString == "" {
-		chats, err = commonOps.GetChatsByLimitOffset(participantId, limit, offset)
+		chats, err = commonOps.GetChatsByLimitOffset(participantId, limit, offset, orderDirection)
 	} else {
-		chats, err = commonOps.GetChatsByLimitOffsetSearch(participantId, limit, offset, searchString, additionalFoundUserIds)
+		chats, err = commonOps.GetChatsByLimitOffsetSearch(participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
 	}
 
 	if err != nil {
@@ -444,12 +447,12 @@ func getChatsWithParticipantsCommon(commonOps CommonOperations, participantId in
 		return list, nil
 	}
 }
-func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(db, participantId, limit, offset, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
+func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatsWithParticipants(participantId int64, limit, offset int, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(tx, participantId, limit, offset, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
+func (tx *Tx) GetChatsWithParticipants(participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
 }
 
 func (tx *Tx) GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {

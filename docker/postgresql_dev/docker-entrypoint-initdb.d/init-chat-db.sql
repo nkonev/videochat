@@ -8,6 +8,7 @@ ALTER SYSTEM SET full_page_writes=FALSE;
 ALTER SYSTEM SET commit_delay=100000;
 ALTER SYSTEM SET commit_siblings=10;
 -- ALTER SYSTEM SET work_mem='50MB';
+ALTER SYSTEM SET max_locks_per_transaction = 256; -- only needed for test to remove all the tables from RecreateDb()
 ALTER SYSTEM SET log_line_prefix = '%a %u@%d ';
 
 create user aaa with password 'aaaPazZw0rd';
