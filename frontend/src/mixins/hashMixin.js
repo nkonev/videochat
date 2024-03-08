@@ -1,5 +1,4 @@
 import {hasLength} from "@/utils";
-import {getTopMessagePosition} from "@/store/localStore";
 
 // expects methods: doDefaultScroll(), getPositionFromStore(), getScrollerName(). isTopDirection() - from infiniteScrollMixin.js
 export default () => {
