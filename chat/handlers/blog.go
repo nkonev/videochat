@@ -46,40 +46,13 @@ type BlogPostPreviewDto struct {
 	ImageUrl       *string   `json:"imageUrl"`
 }
 
-func getSize(size int, isSearch bool) int {
-	if isSearch {
-		return viper.GetInt("blogSearchSize")
-	} else {
-		return size
-	}
-}
-
-func getOffset(offset int, isSearch bool) int {
-	if isSearch {
-		return 0
-	} else {
-		return offset
-	}
-}
-
-func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
-
-	page := utils.FixPageString(c.QueryParam("page"))
-	size := utils.FixSizeString(c.QueryParam("size"))
-	offset := utils.GetOffset(page, size)
-	searchString := c.QueryParam("searchString")
-	searchString = strings.TrimSpace(searchString)
-
-	isSearch := false
-
-	if len(searchString) != 0 {
-		isSearch = true
-	}
+func (h *BlogHandler) getPostsWoUsers(size, offset int) ([]*BlogPostPreviewDto, error) {
+	var response = make([]*BlogPostPreviewDto, 0)
 
 	// get chats where blog=true
-	blogs, err := h.db.GetBlogPostsByLimitOffset(getSize(size, isSearch), getOffset(offset, isSearch))
+	blogs, err := h.db.GetBlogPostsByLimitOffset(size, offset)
 	if err != nil {
-		return err
+		return response, err
 	}
 
 	var blogIds []int64 = make([]int64, 0)
@@ -90,9 +63,8 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	// get their message where blog_post=true for sake to make preview
 	posts, err := h.db.BlogPosts(blogIds)
 	if err != nil {
-		return err
+		return response, err
 	}
-	var response = make([]*BlogPostPreviewDto, 0)
 	for _, blog := range blogs {
 
 		blogPost := &BlogPostPreviewDto{
@@ -129,6 +101,54 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 		response = append(response, blogPost)
 	}
+	return response, nil
+}
+
+func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
+	page := utils.FixPageString(c.QueryParam("page"))
+	size := utils.FixSizeString(c.QueryParam("size"))
+	offset := utils.GetOffset(page, size)
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
+
+	var response = make([]*BlogPostPreviewDto, 0)
+	var err error
+
+	isSearch := false
+	if len(searchString) != 0 {
+		isSearch = true
+	}
+
+	if !isSearch {
+		response, err = h.getPostsWoUsers(size, offset)
+		if err != nil {
+			return err
+		}
+	} else {
+		var intermediateResponse = make([]*BlogPostPreviewDto, 0)
+		shouldIterate := true
+		for portionPage := 0; shouldIterate; portionPage++ {
+			portionOffset := utils.GetOffset(portionPage, size)
+			portion, err := h.getPostsWoUsers(size, portionOffset)
+			if err != nil {
+				return err
+			}
+			searched, err := h.performSearch(searchString, portion)
+			if err != nil {
+				return err
+			}
+
+			for _, sp := range searched {
+				intermediateResponse = append(intermediateResponse, sp)
+			}
+
+			if len(portion) < size {
+				shouldIterate = false
+			}
+		}
+
+		response = h.performPaging(intermediateResponse, size, offset)
+	}
 
 	var participantIdSet = map[int64]bool{}
 	for _, respDto := range response {
@@ -137,23 +157,33 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		}
 	}
 	var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
-
 	for _, respDto := range response {
 		if respDto.OwnerId != nil {
 			respDto.Owner = users[*respDto.OwnerId]
 		}
 	}
 
-	if isSearch {
-		search, err := h.performSearchAndPaging(searchString, response, size, offset)
-		if err != nil {
-			return err
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *BlogHandler) performPaging(intermediateList []*BlogPostPreviewDto, size, offset int) []*BlogPostPreviewDto {
+
+	var list = make([]*BlogPostPreviewDto, 0)
+	var counter = 0
+	var respCounter = 0
+
+	for _, objInfo := range intermediateList {
+		if counter >= offset {
+			list = append(list, objInfo)
+			respCounter++
+			if respCounter >= size {
+				break
+			}
 		}
-		return c.JSON(http.StatusOK, search)
-	} else {
-		return c.JSON(http.StatusOK, response)
+		counter++
 	}
 
+	return list
 }
 
 func (h *BlogHandler) GetBlogPage(c echo.Context) error {
@@ -199,7 +229,7 @@ func (h *BlogHandler) getPreviewUrl(aKey string) *string {
 	return previewUrl
 }
 
-func (h *BlogHandler) performSearchAndPaging(searchString string, searchable []*BlogPostPreviewDto, size, offset int) ([]*BlogPostPreviewDto, error) {
+func (h *BlogHandler) performSearch(searchString string, searchable []*BlogPostPreviewDto) ([]*BlogPostPreviewDto, error) {
 	searchString = strings.ToLower(searchString)
 
 	var intermediateList = make([]*BlogPostPreviewDto, 0)
@@ -211,22 +241,7 @@ func (h *BlogHandler) performSearchAndPaging(searchString string, searchable []*
 		}
 	}
 
-	var list = make([]*BlogPostPreviewDto, 0)
-	var counter = 0
-	var respCounter = 0
-
-	for _, objInfo := range intermediateList {
-		if counter >= offset {
-			list = append(list, objInfo)
-			respCounter++
-			if respCounter >= size {
-				break
-			}
-		}
-		counter++
-	}
-
-	return list, nil
+	return intermediateList, nil
 }
 
 func (h *BlogHandler) tryGetFirstImage(text string) *string {
