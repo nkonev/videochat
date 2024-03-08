@@ -234,3 +234,18 @@ export const getTopUserPosition = () => {
 export const removeTopUserPosition = () => {
     localStorage.removeItem(KEY_TOP_USER);
 }
+
+
+const KEY_TOP_BLOG = "topBlog"
+
+export const setTopBlogPosition = (userId) => {
+    localStorage.setItem(KEY_TOP_BLOG, JSON.stringify(userId));
+}
+
+export const getTopBlogPosition = () => {
+    return JSON.parse(localStorage.getItem(KEY_TOP_BLOG));
+}
+
+export const removeTopBlogPosition = () => {
+    localStorage.removeItem(KEY_TOP_BLOG);
+}

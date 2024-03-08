@@ -56,10 +56,6 @@ export default () => {
                 this.loadedHash = null;
                 this.hasInitialHash = false;
             },
-            updateTopAndBottomIds() {
-                this.startingFromItemIdTop = this.getMinimumItemId();
-                this.startingFromItemIdBottom = this.getMaximumItemId();
-            },
             async scrollTo(newValue) {
                 return await this.$nextTick(()=>{
                     const el = document.querySelector(newValue);

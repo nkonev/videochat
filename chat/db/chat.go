@@ -142,30 +142,6 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderString, searchString s
 	}
 }
 
-func (tx *Tx) GetBlogRowNumber(itemId int64, searchString string) (int, error) {
-	var dbSearchString = "%" + searchString + "%"
-
-	var theQuery = `
-		SELECT al.nrow FROM (
-			SELECT 
-				ch.id as cid,
-				ROW_NUMBER () OVER (ORDER BY (ch.create_date_time, ch.id) DESC) as nrow
-			FROM 
-				chat ch 
-			WHERE ch.blog IS true
-				AND ch.title ILIKE $2
-		) al WHERE al.cid = $1
-	`
-	var position int
-	row := tx.QueryRow(theQuery, itemId, dbSearchString)
-	err := row.Scan(&position)
-	if err != nil {
-		return 0, tracerr.Wrap(err)
-	} else {
-		return position, nil
-	}
-}
-
 func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
@@ -197,87 +173,6 @@ func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int, 
 
 func (tx *Tx) GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
 	return getChatsByLimitOffsetCommon(tx, participantId, limit, offset, orderDirection)
-}
-
-func getBlogPostsByLimitOffsetCommon(co CommonOperations, limit int, offset int) ([]*Blog, error) {
-	var rows *sql.Rows
-	var err error
-	rows, err = co.Query(`SELECT 
-				ch.id, 
-				ch.title,
-				ch.create_date_time,
-				ch.avatar
-			FROM chat ch WHERE ch.blog is TRUE ORDER BY (ch.create_date_time, ch.id) DESC LIMIT $1 OFFSET $2`, limit, offset)
-	if err != nil {
-		return nil, tracerr.Wrap(err)
-	} else {
-		defer rows.Close()
-		list := make([]*Blog, 0)
-		for rows.Next() {
-			chat := Blog{}
-			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
-				return nil, tracerr.Wrap(err)
-			} else {
-				list = append(list, &chat)
-			}
-		}
-		return list, nil
-	}
-}
-
-func (tx *Tx) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) {
-	return getBlogPostsByLimitOffsetCommon(tx, limit, offset)
-}
-
-func (db *DB) GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error) {
-	return getBlogPostsByLimitOffsetCommon(db, limit, offset)
-}
-
-type BlogPost struct {
-	ChatId    int64
-	MessageId int64
-	OwnerId   int64
-	Text      string
-}
-
-func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
-	var builder = ""
-	var first = true
-	for _, chatId := range ids {
-		if !first {
-			builder += " union "
-		}
-		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
-
-		first = false
-	}
-
-	var rows *sql.Rows
-	var err error
-	rows, err = co.Query(builder)
-	if err != nil {
-		return nil, tracerr.Wrap(err)
-	} else {
-		defer rows.Close()
-		list := make([]*BlogPost, 0)
-		for rows.Next() {
-			chat := BlogPost{}
-			if err := rows.Scan(&chat.ChatId, &chat.MessageId, &chat.OwnerId, &chat.Text); err != nil {
-				return nil, tracerr.Wrap(err)
-			} else {
-				list = append(list, &chat)
-			}
-		}
-		return list, nil
-	}
-}
-
-func (tx *Tx) BlogPosts(ids []int64) ([]*BlogPost, error) {
-	return blogPostsCommon(tx, ids)
-}
-
-func (db *DB) BlogPosts(ids []int64) ([]*BlogPost, error) {
-	return blogPostsCommon(db, ids)
 }
 
 func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
@@ -797,19 +692,6 @@ func (tx *Tx) RenameChat(chatId int64, title string) error {
 	return nil
 }
 
-func (db *DB) BlogPostMessageId(chatId int64) (int64, error) {
-	res := db.QueryRow(fmt.Sprintf("(select id from message_chat_%v where blog_post is true order by id limit 1)", chatId))
-	var messageId int64
-	if err := res.Scan(&messageId); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// there were no rows, but otherwise no error occurred
-			return 0, nil
-		}
-		return 0, tracerr.Wrap(err)
-	}
-	return messageId, nil
-}
-
 func getChatIdsCommon(qq CommonOperations, chatsSize, chatsOffset int) ([]int64, error) {
 	if rows, err := qq.Query("SELECT id FROM chat ORDER BY id LIMIT $1 OFFSET $2", chatsSize, chatsOffset); err != nil {
 		return nil, tracerr.Wrap(err)
@@ -835,6 +717,210 @@ func (tx *Tx) GetChatIds(chatsSize, chatsOffset int) ([]int64, error) {
 func (db *DB) GetChatIds(chatsSize, chatsOffset int) ([]int64, error) {
 	return getChatIdsCommon(db, chatsSize, chatsOffset)
 }
+
+
+
+func getBlogPostsByLimitOffsetCommon(co CommonOperations, reverse bool, limit int, offset int) ([]*Blog, error) {
+	var rows *sql.Rows
+	var err error
+	var sort string
+	if reverse {
+		sort = "asc"
+	} else {
+		sort = "desc"
+	}
+	rows, err = co.Query(fmt.Sprintf(`SELECT 
+			ch.id, 
+			ch.title,
+			ch.create_date_time,
+			ch.avatar
+		FROM chat ch 
+		WHERE ch.blog is TRUE 
+		ORDER BY (ch.create_date_time, ch.id) %s 
+		LIMIT $1 OFFSET $2`, sort),
+		limit, offset)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	} else {
+		defer rows.Close()
+		list := make([]*Blog, 0)
+		for rows.Next() {
+			chat := Blog{}
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
+				return nil, tracerr.Wrap(err)
+			} else {
+				list = append(list, &chat)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (tx *Tx) GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]*Blog, error) {
+	return getBlogPostsByLimitOffsetCommon(tx, reverse, limit, offset)
+}
+
+func (db *DB) GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]*Blog, error) {
+	return getBlogPostsByLimitOffsetCommon(db, reverse, limit, offset)
+}
+
+func (db *DB) GetBlogPostsStartingFromItemId(reverse bool, limit int, startingFromItemId int64) ([]*Blog, error) {
+	var rows *sql.Rows
+	var err error
+	var sort string
+	var nonEquality string
+	if reverse {
+		sort = "asc"
+		nonEquality = "ch.id > $2"
+	} else {
+		sort = "desc"
+		nonEquality = "ch.id < $2"
+	}
+	rows, err = db.Query(fmt.Sprintf(`SELECT 
+			ch.id, 
+			ch.title,
+			ch.create_date_time,
+			ch.avatar
+		FROM chat ch 
+		WHERE ch.blog is TRUE AND 
+		  %s
+		ORDER BY (ch.create_date_time, ch.id) %s 
+		LIMIT $1`, nonEquality, sort),
+		limit, startingFromItemId)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	} else {
+		defer rows.Close()
+		list := make([]*Blog, 0)
+		for rows.Next() {
+			chat := Blog{}
+			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
+				return nil, tracerr.Wrap(err)
+			} else {
+				list = append(list, &chat)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (db *DB) GetBlogPostLeftChatId(startingFromItemId int64, leftLimit int) (int64, error) {
+	var leftChatId int64
+	leftLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT ch.id FROM chat ch WHERE ch.blog IS TRUE AND id <= $1 ORDER BY id DESC LIMIT $2) inn`), startingFromItemId, leftLimit)
+	err := leftLimitRes.Scan(&leftChatId)
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	}
+	return leftChatId, nil
+}
+
+func (db *DB) GetBlogPostRightChatId(startingFromItemId int64, rightLimit int) (int64, error) {
+	var rightChatId int64
+	rightLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT ch.id FROM chat ch WHERE ch.blog IS TRUE AND id >= $1 ORDER BY id ASC LIMIT $2) inn`), startingFromItemId, rightLimit)
+	err := rightLimitRes.Scan(&rightChatId)
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	}
+	return rightChatId, nil
+}
+
+func (db *DB) GetBlogPostsBetweenItemIds(reverse bool, limit int, leftChatId, rightChatId int64) ([]*Blog, error) {
+	list := make([]*Blog, 0)
+
+	var order string
+	if reverse {
+		order = "asc"
+	} else {
+		order = "desc"
+	}
+	rows, err := db.Query(fmt.Sprintf(`SELECT 
+						ch.id, 
+						ch.title,
+						ch.create_date_time,
+						ch.avatar
+					FROM chat ch 
+					WHERE ch.blog is TRUE AND
+							ch.id >= $2 
+						AND ch.id <= $3 
+					ORDER BY ch.id %s 
+					LIMIT $1`, order),
+		limit, leftChatId, rightChatId)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		chat := Blog{}
+		if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
+			return nil, tracerr.Wrap(err)
+		} else {
+			list = append(list, &chat)
+		}
+	}
+	return list, err
+}
+
+type BlogPost struct {
+	ChatId    int64
+	MessageId int64
+	OwnerId   int64
+	Text      string
+}
+
+func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
+	var builder = ""
+	var first = true
+	for _, chatId := range ids {
+		if !first {
+			builder += " union "
+		}
+		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = co.Query(builder)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	} else {
+		defer rows.Close()
+		list := make([]*BlogPost, 0)
+		for rows.Next() {
+			chat := BlogPost{}
+			if err := rows.Scan(&chat.ChatId, &chat.MessageId, &chat.OwnerId, &chat.Text); err != nil {
+				return nil, tracerr.Wrap(err)
+			} else {
+				list = append(list, &chat)
+			}
+		}
+		return list, nil
+	}
+}
+
+func (tx *Tx) GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error) {
+	return blogPostsCommon(tx, ids)
+}
+
+func (db *DB) GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error) {
+	return blogPostsCommon(db, ids)
+}
+
+func (db *DB) GetBlogPostMessageId(chatId int64) (int64, error) {
+	res := db.QueryRow(fmt.Sprintf("(select id from message_chat_%v where blog_post is true order by id limit 1)", chatId))
+	var messageId int64
+	if err := res.Scan(&messageId); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// there were no rows, but otherwise no error occurred
+			return 0, nil
+		}
+		return 0, tracerr.Wrap(err)
+	}
+	return messageId, nil
+}
+
+
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin

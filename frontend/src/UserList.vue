@@ -404,6 +404,10 @@ export default {
               return false
           }
     },
+    updateTopAndBottomIds() {
+      this.startingFromItemIdTop = this.getMinimumItemId();
+      this.startingFromItemIdBottom = this.getMaximumItemId();
+    },
 
     getUserIdsSubscribeTo() {
         return this.items.map(item => item.id);
@@ -505,6 +509,7 @@ export default {
           console.log("Removing item", dto);
           const idxToRemove = findIndex(this.items, dto);
           this.items.splice(idxToRemove, 1);
+          this.updateTopAndBottomIds();
       } else {
           console.log("Item was not be removed", dto);
       }

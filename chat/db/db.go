@@ -53,8 +53,8 @@ type CommonOperations interface {
 	SetAdmin(userId int64, chatId int64, newAdmin bool) error
 	GetChatBasic(chatId int64) (*BasicChatDto, error)
 	GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error)
-	GetBlogPostsByLimitOffset(limit int, offset int) ([]*Blog, error)
-	BlogPosts(ids []int64) ([]*BlogPost, error)
+	GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]*Blog, error)
+	GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error)
 	GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error)
 	GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
 	GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error)

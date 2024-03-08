@@ -320,6 +320,10 @@
             return false
           }
         },
+        updateTopAndBottomIds() {
+          this.startingFromItemIdTop = this.getMinimumItemId();
+          this.startingFromItemIdBottom = this.getMaximumItemId();
+        },
         saveLastVisibleElement(chatId) {
           if (!this.isScrolledToBottom()) {
             const elems = [...document.querySelectorAll(this.scrollerSelector() + " .message-item-root")].map((item) => {

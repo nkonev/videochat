@@ -4,6 +4,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+	"math"
 	"net/http"
 	"net/url"
 	"nkonev.name/chat/client"
@@ -46,14 +47,8 @@ type BlogPostPreviewDto struct {
 	ImageUrl       *string   `json:"imageUrl"`
 }
 
-func (h *BlogHandler) getPostsWoUsers(size, offset int) ([]*BlogPostPreviewDto, error) {
+func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, error) {
 	var response = make([]*BlogPostPreviewDto, 0)
-
-	// get chats where blog=true
-	blogs, err := h.db.GetBlogPostsByLimitOffset(size, offset)
-	if err != nil {
-		return response, err
-	}
 
 	var blogIds []int64 = make([]int64, 0)
 	for _, blog := range blogs {
@@ -61,7 +56,7 @@ func (h *BlogHandler) getPostsWoUsers(size, offset int) ([]*BlogPostPreviewDto, 
 	}
 
 	// get their message where blog_post=true for sake to make preview
-	posts, err := h.db.BlogPosts(blogIds)
+	posts, err := h.db.GetBlogPostsByChatIds(blogIds)
 	if err != nil {
 		return response, err
 	}
@@ -105,61 +100,159 @@ func (h *BlogHandler) getPostsWoUsers(size, offset int) ([]*BlogPostPreviewDto, 
 }
 
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
-	page := utils.FixPageString(c.QueryParam("page"))
+	var err error
+
+	var startingFromItemId int64
+	startingFromItemIdString := c.QueryParam("startingFromItemId")
+	if startingFromItemIdString == "" {
+		startingFromItemId = math.MaxInt64
+	} else {
+		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
+		if err != nil {
+			return err
+		}
+		startingFromItemId = startingFromItemId2
+	}
 	size := utils.FixSizeString(c.QueryParam("size"))
-	offset := utils.GetOffset(page, size)
+	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 	searchString := c.QueryParam("searchString")
-	searchString = strings.TrimSpace(searchString)
+	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
 
 	var response = make([]*BlogPostPreviewDto, 0)
-	var err error
 
 	isSearch := false
 	if len(searchString) != 0 {
 		isSearch = true
 	}
 
-	if !isSearch {
-		response, err = h.getPostsWoUsers(size, offset)
-		if err != nil {
-			return err
+	if hasHash {
+		leftLimit := size / 2
+		rightLimit := size / 2
+
+		if leftLimit == 0 {
+			leftLimit = 1
 		}
-	} else {
-		var intermediateResponse = make([]*BlogPostPreviewDto, 0)
-		var offsetCounter = 0
-		var respCounter = 0
+		if rightLimit == 0 {
+			rightLimit = 1
+		}
 
-		shouldIterate := true
-		for portionPage := 0; shouldIterate; portionPage++ {
-			portionOffset := utils.GetOffset(portionPage, size)
-			portion, err := h.getPostsWoUsers(size, portionOffset)
+		var leftChatId, rightChatId int64
+
+		if !isSearch {
+			leftChatId, err = h.db.GetBlogPostLeftChatId(startingFromItemId, leftLimit)
 			if err != nil {
 				return err
 			}
-			if len(portion) < size {
-				shouldIterate = false
-			}
-
-			searched, err := h.performSearch(searchString, portion)
+			rightChatId, err = h.db.GetBlogPostRightChatId(startingFromItemId, rightLimit)
 			if err != nil {
 				return err
 			}
 
-			for _, sp := range searched {
-				if offsetCounter >= offset {
-					intermediateResponse = append(intermediateResponse, sp)
-					respCounter++
+			blogs, err := h.db.GetBlogPostsBetweenItemIds(reverse, size, leftChatId, rightChatId)
+			if err != nil {
+				return err
+			}
+
+			response, err = h.getPostsWoUsers(blogs)
+			if err != nil {
+				return err
+			}
+		} else { // search
+			var respCounter = 0
+			leftHalf := true
+
+			shouldIterate := true
+			for portionPage := 0; shouldIterate; portionPage++ {
+				portionOffset := utils.GetOffset(portionPage, size)
+				// get chats where blog=true
+				blogs, err := h.db.GetBlogPostsByLimitOffset(reverse, size, portionOffset)
+				if err != nil {
+					return err
+				}
+
+				portion, err := h.getPostsWoUsers(blogs)
+				if err != nil {
+					return err
+				}
+				if len(portion) < size {
+					shouldIterate = false
+				}
+
+				searched, err := h.performSearch(searchString, portion)
+				if err != nil {
+					return err
+				}
+
+				for _, sp := range searched {
+					// until we meet startingFromItemId
+					if sp.Id == startingFromItemId {
+						leftHalf = false
+					}
+
+					// iterate and hold in the list leftLimit items
+					if leftHalf {
+						response, respCounter = appendKeepingN(response, sp, leftLimit)
+					} else { // then iterate to count up to rightLimit
+						response = append(response, sp)
+						respCounter++
+					}
+
 					if respCounter >= size {
 						shouldIterate = false
 						break
 					}
 				}
-				offsetCounter++
+				GetLogEntry(c.Request().Context()).Debugf("Portion end")
+			}
+		}
+	} else { // no hash
+		if !isSearch {
+			blogs, err := h.db.GetBlogPostsStartingFromItemId(reverse, size, startingFromItemId)
+			if err != nil {
+				return err
 			}
 
-		}
+			response, err = h.getPostsWoUsers(blogs)
+			if err != nil {
+				return err
+			}
+		} else { // search
+			var respCounter = 0
 
-		response = intermediateResponse
+			shouldIterate := true
+			for portionPage := 0; shouldIterate; portionPage++ {
+				portionOffset := utils.GetOffset(portionPage, size)
+				// get chats where blog=true
+				blogs, err := h.db.GetBlogPostsByLimitOffset(reverse, size, portionOffset)
+				if err != nil {
+					return err
+				}
+
+				portion, err := h.getPostsWoUsers(blogs)
+				if err != nil {
+					return err
+				}
+				if len(portion) < size {
+					shouldIterate = false
+				}
+
+				searched, err := h.performSearch(searchString, portion)
+				if err != nil {
+					return err
+				}
+
+				for _, sp := range searched {
+					if (reverse && sp.Id > startingFromItemId) || (!reverse && sp.Id < startingFromItemId) {
+						response = append(response, sp)
+						respCounter++
+						if respCounter >= size {
+							shouldIterate = false
+							break
+						}
+					}
+				}
+			}
+		}
 	}
 
 	var participantIdSet = map[int64]bool{}
@@ -178,25 +271,22 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (h *BlogHandler) GetBlogPage(c echo.Context) error {
-	itemId, err := utils.ParseInt64(c.QueryParam("id"))
-	if err != nil {
-		return err
-	}
-	size := utils.FixSizeString(c.QueryParam("size"))
-	searchString := c.QueryParam("searchString")
-	searchString = strings.TrimSpace(searchString)
-
-	return db.Transact(h.db, func(tx *db.Tx) error {
-		rowNumber, err := tx.GetBlogRowNumber(itemId, searchString)
-		if err != nil {
-			return err
+func appendKeepingN(input []*BlogPostPreviewDto, post *BlogPostPreviewDto, sizeToKeep int) ([]*BlogPostPreviewDto, int) {
+	var response []*BlogPostPreviewDto = make([]*BlogPostPreviewDto, 0)
+	if len(input) < sizeToKeep {
+		for _, pp := range input {
+			response = append(response, pp)
 		}
-
-		var returnPage = (rowNumber + 1) / size
-
-		return c.JSON(http.StatusOK, &utils.H{"page": returnPage})
-	})
+	} else {
+		// copy last sizeToKeep - 1 items to response // + 1 gives us the space for post
+		leftIdx := len(input) + 1 - sizeToKeep
+		tmpResponse := input[leftIdx:]
+		for _, pp := range tmpResponse {
+			response = append(response, pp)
+		}
+	}
+	response = append(response, post)
+	return response, len(response)
 }
 
 func (h *BlogHandler) getPreviewUrl(aKey string) *string {
@@ -311,7 +401,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	}
 
 	var post *db.BlogPost
-	posts, err := h.db.BlogPosts([]int64{blogId})
+	posts, err := h.db.GetBlogPostsByChatIds([]int64{blogId})
 	if err != nil {
 		return err
 	}
@@ -355,6 +445,8 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return err
 	}
 
+	messageDtos := make([]*dto.DisplayMessageDto, 0)
+
 	chatBasic, err := h.db.GetChatBasic(blogId)
 	if err != nil {
 		return err
@@ -367,14 +459,23 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	startingFromItemId, err := utils.ParseInt64(c.QueryParam("startingFromItemId"))
-	if err != nil {
-		return err
+	var startingFromItemId int64
+	startingFromItemIdString := c.QueryParam("startingFromItemId")
+	if startingFromItemIdString == "" {
+		return c.JSON(http.StatusOK, messageDtos)
+	} else {
+		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
+		if err != nil {
+			return err
+		}
+		startingFromItemId = startingFromItemId2
 	}
+
+
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 
-	postMessageId, err := h.db.BlogPostMessageId(blogId)
+	postMessageId, err := h.db.GetBlogPostMessageId(blogId)
 	if err != nil {
 		return err
 	}
@@ -393,7 +494,6 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return err
 	}
 	var users = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
-	messageDtos := make([]*dto.DisplayMessageDto, 0)
 	for _, cc := range messages {
 		msg := convertToMessageDto(cc, users, chatsSet, NonExistentUser)
 		msg.Text = h.patchStorageUrlToPublic(msg.Text)

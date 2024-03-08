@@ -7,7 +7,7 @@
         v-for="(item, index) in items"
         :key="item.id"
         :id="getItemId(item.id)"
-        class="mb-2 mr-2 myclass"
+        class="mb-2 mr-2 blog-item-root"
         :min-width="isMobile() ? 200 : 400"
         max-width="600"
       >
@@ -65,16 +65,23 @@ import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setT
 import axios from "axios";
 import debounce from "lodash/debounce";
 import Mark from "mark.js";
-import {blog_post, blog_post_name} from "@/router/blogRoutes";
-import {profile, profile_name} from "@/router/routes";
+import {blog_post, blog_post_name, blogIdPrefix, blogIdHashPrefix} from "@/router/blogRoutes";
+import {profile} from "@/router/routes";
 import infiniteScrollMixin, {directionBottom, directionTop} from "@/mixins/infiniteScrollMixin";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
 import {goToPreservingQuery, SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
 import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";
 import heightMixin from "@/mixins/heightMixin";
+import hashMixin from "@/mixins/hashMixin";
+import {
+    getTopBlogPosition,
+    removeTopBlogPosition,
+    setTopBlogPosition,
+} from "@/store/localStore";
 
 const PAGE_SIZE = 40;
+const SCROLLING_THRESHHOLD = 200; // px
 
 const scrollerName = 'BlogList';
 
@@ -82,12 +89,12 @@ export default {
   mixins: [
       heightMixin(),
       infiniteScrollMixin(scrollerName),
+      hashMixin(),
       searchString(SEARCH_MODE_POSTS),
   ],
   data() {
     return {
       items: [],
-      page: 0,
       markInstance: null,
     }
   },
@@ -100,23 +107,18 @@ export default {
         return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
     },
     reduceBottom() {
-        console.log("reduceBottom");
-        this.items = this.items.slice(0, this.getReduceToLength());
-        this.onReduce(directionBottom);
+      this.items = this.items.slice(0, this.getReduceToLength());
+      this.startingFromItemIdBottom = this.getMaximumItemId();
     },
     reduceTop() {
-        console.log("reduceTop");
-        this.items = this.items.slice(-this.getReduceToLength());
-        this.onReduce(directionTop);
+      this.items = this.items.slice(-this.getReduceToLength());
+      this.startingFromItemIdTop = this.getMinimumItemId();
     },
-    findBottomElementId() {
-        return this.items[this.items.length-1]?.id
-    },
-    findTopElementId() {
-        return this.items[0]?.id
+    initialDirection() {
+          return directionBottom
     },
     saveScroll(top) {
-        this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
+        this.preservedScroll = top ? this.getMaximumItemId() : this.getMinimumItemId();
         console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
     },
     async scrollTop() {
@@ -124,55 +126,44 @@ export default {
             this.scrollerDiv.scrollTop = 0;
         });
     },
-    initialDirection() {
-        return directionBottom
+    async onFirstLoad(loadedResult) {
+      await this.doScrollOnFirstLoad(blogIdHashPrefix);
+      if (loadedResult === true) {
+          removeTopBlogPosition();
+      }
     },
-    async onFirstLoad() {
-        this.loadedTop = true;
-        await this.scrollTop();
+    async doDefaultScroll() {
+      this.loadedTop = true;
+      await this.scrollTop();
     },
-    async onReduce(aDirection) {
-        if (aDirection == directionTop) { // became
-            const id = this.findTopElementId();
-            //console.log("Going to get top page", aDirection, id);
-            this.pageTop = await axios
-                .get(`/api/blog/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
-                .then(({data}) => data.page) - 1; // as in load() -> axios.get().then()
-            if (this.pageTop == -1) {
-                this.pageTop = 0
-            }
-            console.log("Set page top", this.pageTop, "for id", id);
-        } else {
-            const id = this.findBottomElementId();
-            //console.log("Going to get bottom page", aDirection, id);
-            this.pageBottom = await axios
-                .get(`/api/blog/get-page`, {params: {id: id, size: PAGE_SIZE, searchString: this.searchString}})
-                .then(({data}) => data.page);
-            console.log("Set page bottom", this.pageBottom, "for id", id);
-        }
+    getPositionFromStore() {
+      return getTopBlogPosition()
     },
+
     async load() {
         if (!this.canDrawBlogs()) {
             return Promise.resolve()
         }
 
         this.blogStore.incrementProgressCount();
-        const page = this.isTopDirection() ? this.pageTop : this.pageBottom;
+        const { startingFromItemId, hasHash } = this.prepareHashesForLoad();
         return axios.get(`/api/blog`, {
             params: {
-                page: page,
+                startingFromItemId: startingFromItemId,
                 size: PAGE_SIZE,
+                reverse: this.isTopDirection(),
                 searchString: this.searchString,
+                hasHash: hasHash,
             },
         })
             .then((res) => {
                 const items = res.data;
-                console.log("Get items in ", scrollerName, items, "page", page);
+                console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom);
 
                 // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
                 // e.g. some chat has been popped up on sever due to somebody updated it
                 if (this.isTopDirection()) {
-                    replaceOrPrepend(this.items, items.reverse());
+                    replaceOrPrepend(this.items, items);
                 } else {
                     replaceOrAppend(this.items, items);
                 }
@@ -183,18 +174,15 @@ export default {
                     } else {
                         this.loadedBottom = true;
                     }
-                } else {
-                    if (this.isTopDirection()) {
-                        this.pageTop -= 1;
-                        if (this.pageTop == -1) {
-                            this.loadedTop = true;
-                            this.pageTop = 0;
-                        }
-                    } else {
-                        this.pageBottom += 1;
-                    }
                 }
+                this.updateTopAndBottomIds();
+
+                if (!this.isFirstLoad) {
+                    this.clearRouteHash()
+                }
+
                 this.performMarking();
+                return Promise.resolve(true)
             }).finally(()=>{
                 this.blogStore.decrementProgressCount();
             })
@@ -211,7 +199,7 @@ export default {
     },
 
     getItemId(id) {
-        return 'blog-item-' + id
+        return blogIdPrefix + id
     },
 
     scrollerSelector() {
@@ -220,8 +208,8 @@ export default {
     reset() {
       this.resetInfiniteScrollVars();
 
-      this.pageTop = 0;
-      this.pageBottom = 0;
+      this.startingFromItemIdTop = null;
+      this.startingFromItemIdBottom = null;
     },
 
     getDate(item) {
@@ -236,14 +224,18 @@ export default {
         }
       })
     },
-    getBlogPostLink(item) {
-      return {
-        name: blog_post_name,
-        params: {
-          id: item.id
-        }
+    isScrolledToTop() {
+      if (this.scrollerDiv) {
+        return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+      } else {
+        return false
       }
     },
+    updateTopAndBottomIds() {
+      this.startingFromItemIdTop = this.getMaximumItemId();
+      this.startingFromItemIdBottom = this.getMinimumItemId();
+    },
+
     getProfileLink(user) {
       let url = profile + "/" + user.id;
       return url;
@@ -269,8 +261,37 @@ export default {
         return blog_post + "/" + item.id
     },
     async start() {
-        await this.reloadItems();
+        await this.setHashAndReloadItems();
     },
+
+    saveLastVisibleElement() {
+      console.log("saveLastVisibleElement", !this.isScrolledToTop())
+      if (!this.isScrolledToTop()) {
+          const elems = [...document.querySelectorAll(this.scrollerSelector() + " .blog-item-root")].map((item) => {
+              const visible = item.getBoundingClientRect().top > 0
+              return {item, visible}
+          });
+
+          const visible = elems.filter((el) => el.visible);
+          // console.log("visible", visible, "elems", elems);
+          if (visible.length == 0) {
+              console.warn("Unable to get top visible")
+              return
+          }
+          const topVisible = visible[0].item
+
+          const bid = this.getIdFromRouteHash(topVisible.id);
+          console.log("Found bottomPost", topVisible, "blogId", bid);
+
+          setTopBlogPosition(bid)
+      } else {
+          console.log("Skipped saved topVisible because we are already scrolled to the bottom ")
+      }
+    },
+    beforeUnload() {
+      this.saveLastVisibleElement();
+    },
+
   },
   computed: {
       ...mapStores(useBlogStore),
@@ -279,21 +300,44 @@ export default {
       this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
   },
   async mounted() {
-        this.blogStore.isShowSearch = true;
-        this.markInstance = new Mark("div#blog-post-list");
-        this.setTopTitle();
-        this.blogStore.searchType = SEARCH_MODE_POSTS;
+    this.blogStore.isShowSearch = true;
+    this.markInstance = new Mark("div#blog-post-list");
+    this.setTopTitle();
+    this.blogStore.searchType = SEARCH_MODE_POSTS;
 
-        if (this.canDrawBlogs()) {
-            await this.start();
-        }
+    if (this.canDrawBlogs()) {
+        await this.start();
+    }
+    addEventListener("beforeunload", this.beforeUnload);
 
-        bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
+    bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   },
   beforeUnmount() {
-        this.blogStore.isShowSearch = false;
-        this.uninstallScroller();
-        bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
+    this.blogStore.isShowSearch = false;
+
+    // an analogue of watch(effectively(chatId)) in MessageList.vue
+    // used when the user presses Start in the RightPanel
+    this.saveLastVisibleElement();
+
+    this.markInstance.unmark();
+    this.markInstance = null;
+    removeEventListener("beforeunload", this.beforeUnload);
+
+    this.uninstallScroller();
+    bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
+  },
+  watch: {
+    '$route': {
+        handler: async function (newValue, oldValue) {
+
+            // reaction on setting hash
+            if (hasLength(newValue.hash)) {
+                console.log("Changed route hash, going to scroll", newValue.hash)
+                await this.scrollToOrLoad(newValue.hash);
+                return
+            }
+        }
+    }
   }
 }
 </script>
@@ -324,7 +368,7 @@ export default {
     color $blackColor
 }
 
-.myclass {
+.blog-item-root {
   flex: 1 1 300px;
 }
 .user-link {
