@@ -143,7 +143,6 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		users, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, 0, 0, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
-			return err
 		}
 		for _, u := range users {
 			additionalFoundUserIds = append(additionalFoundUserIds, u.Id)

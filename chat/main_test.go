@@ -313,7 +313,6 @@ func TestGetChatsPaginated(t *testing.T) {
 		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
-		Logger.Infof("Body: %v", bodyFirstPage)
 		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
 
 		assert.Equal(t, 40, len(typedResFirstPage))
@@ -336,7 +335,38 @@ func TestGetChatsPaginated(t *testing.T) {
 		httpSecondPage, bodySecondPage, _ := request("GET", "/chat?paginationToken="+paginationToken, nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
-		Logger.Infof("Body: %v", bodySecondPage)
+		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
+
+		assert.Equal(t, 40, len(typedResSecondPage))
+
+		assert.Equal(t, "generated_chat960", typedResSecondPage[0])
+		assert.Equal(t, "generated_chat959", typedResSecondPage[1])
+		assert.Equal(t, "generated_chat958", typedResSecondPage[2])
+		assert.Equal(t, "generated_chat921", typedResSecondPage[39])
+	})
+}
+
+func TestGetChatsPaginatedSearch(t *testing.T) {
+	runTest(t, func(e *echo.Echo) {
+		// get initial page
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat?searchString=gen", nil, e)
+		assert.Equal(t, http.StatusOK, httpFirstPage)
+		assert.NotEmpty(t, bodyFirstPage)
+		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
+
+		assert.Equal(t, 40, len(typedResFirstPage))
+
+		assert.Equal(t, "generated_chat1000", typedResFirstPage[0])
+		assert.Equal(t, "generated_chat999", typedResFirstPage[1])
+		assert.Equal(t, "generated_chat998", typedResFirstPage[2])
+		assert.Equal(t, "generated_chat961", typedResFirstPage[39])
+
+		paginationToken := getJsonPathResult(t, bodyFirstPage, "$.paginationToken").(string)
+
+		// get second page
+		httpSecondPage, bodySecondPage, _ := request("GET", "/chat?searchString=gen&paginationToken="+paginationToken, nil, e)
+		assert.Equal(t, http.StatusOK, httpSecondPage)
+		assert.NotEmpty(t, bodySecondPage)
 		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
 
 		assert.Equal(t, 40, len(typedResSecondPage))
