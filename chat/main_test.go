@@ -382,19 +382,19 @@ func TestChatValidation(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
 		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": ""}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
-		textString := interfaceToString(getJsonPathResult(t, b, "$.name").(interface{}))
+		textString := utils.InterfaceToString(getJsonPathResult(t, b, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString)
 
 		c2, b2, _ := request("POST", "/chat", strings.NewReader(``), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
-		textString2 := interfaceToString(getJsonPathResult(t, b2, "$.name").(interface{}))
+		textString2 := utils.InterfaceToString(getJsonPathResult(t, b2, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString2)
 
 		c3, b3, _ := request("PUT", "/chat", strings.NewReader(``), e)
 		assert.Equal(t, http.StatusBadRequest, c3)
-		textString30 := interfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
+		textString30 := utils.InterfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString30)
-		textString31 := interfaceToString(getJsonPathResult(t, b3, "$.id").(interface{}))
+		textString31 := utils.InterfaceToString(getJsonPathResult(t, b3, "$.id").(interface{}))
 		assert.Equal(t, "cannot be blank", textString31)
 	})
 }
@@ -413,13 +413,13 @@ func TestChatCrud(t *testing.T) {
 		assert.Equal(t, chatsBefore+1, chatsAfterCreate)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
-		idString := interfaceToString(idInterface)
+		idString := utils.InterfaceToString(idInterface)
 		id, _ := utils.ParseInt64(idString)
 		assert.True(t, id > 0)
 
 		c3, b3, _ := request("GET", "/chat/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
-		nameString := interfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
+		nameString := utils.InterfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
 		assert.Equal(t, "Ultra new chat", nameString)
 
 		c2, _, _ := request("PUT", "/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
@@ -539,10 +539,6 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 	assert.Equal(t, 400, createChatResponse.StatusCode)
 
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
-}
-
-func interfaceToString(inter interface{}) string {
-	return fmt.Sprintf("%v", inter)
 }
 
 func TestGetMessagesPaginated(t *testing.T) {
@@ -697,12 +693,12 @@ func TestMessageValidation(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
 		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": ""}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
-		textString := interfaceToString(getJsonPathResult(t, b, "$.text").(interface{}))
+		textString := utils.InterfaceToString(getJsonPathResult(t, b, "$.text").(interface{}))
 		assert.Equal(t, "cannot be blank", textString)
 
 		c2, b2, _ := request("POST", "/chat/1/message", strings.NewReader(``), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
-		textString2 := interfaceToString(getJsonPathResult(t, b2, "$.text").(interface{}))
+		textString2 := utils.InterfaceToString(getJsonPathResult(t, b2, "$.text").(interface{}))
 		assert.Equal(t, "cannot be blank", textString2)
 	})
 }
@@ -717,13 +713,13 @@ func TestMessageCrud(t *testing.T) {
 		assert.Equal(t, messagesBefore+1, messagesAfterCreate)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
-		idString := interfaceToString(idInterface)
+		idString := utils.InterfaceToString(idInterface)
 		id, _ := utils.ParseInt64(idString)
 		assert.True(t, id > 0)
 
 		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
-		textString := interfaceToString(getJsonPathResult(t, b3, "$.text").(interface{}))
+		textString := utils.InterfaceToString(getJsonPathResult(t, b3, "$.text").(interface{}))
 		assert.Equal(t, "Ultra new message", textString)
 
 		c4, _, _ := request("PUT", "/chat/1/message", strings.NewReader(`{"text": "Edited ultra new message", "id": `+idString+`}`), e)
@@ -731,10 +727,10 @@ func TestMessageCrud(t *testing.T) {
 
 		c5, b5, _ := request("GET", "/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c5)
-		textString5 := interfaceToString(getJsonPathResult(t, b5, "$.text").(interface{}))
+		textString5 := utils.InterfaceToString(getJsonPathResult(t, b5, "$.text").(interface{}))
 		assert.Equal(t, "Edited ultra new message", textString5)
 
-		dateTimeInterface5 := interfaceToString(getJsonPathResult(t, b5, "$.editDateTime").(interface{}))
+		dateTimeInterface5 := utils.InterfaceToString(getJsonPathResult(t, b5, "$.editDateTime").(interface{}))
 		assert.NotEmpty(t, dateTimeInterface5)
 
 		c1, _, _ := request("DELETE", "/chat/1/message/"+idString, nil, e)
@@ -750,12 +746,12 @@ func TestMessageIsSanitized(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, c)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
-		idString := interfaceToString(idInterface)
+		idString := utils.InterfaceToString(idInterface)
 
 		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
 		textInterface := getJsonPathResult(t, b3, "$.text").(interface{})
-		textString := interfaceToString(textInterface)
+		textString := utils.InterfaceToString(textInterface)
 		assert.Equal(t, `<a href="http://www.google.com" rel="nofollow">Google</a>`, textString)
 	})
 }
@@ -778,7 +774,7 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 		c, b, _ := requestWithHeader("POST", "/chat", h2, strings.NewReader(`{"name": "Chat of second user"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
-		idString := interfaceToString(idInterface)
+		idString := utils.InterfaceToString(idInterface)
 
 		// test not found
 		c3, _, _ := requestWithHeader("GET", "/chat/"+idString+"/message/666", h2, nil, e)
@@ -787,7 +783,7 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 		// first user tries to write to second user's chat
 		c2, b2, _ := requestWithHeader("POST", "/chat/"+idString+"/message", h1, strings.NewReader(`{"text": "Ultra new message to the foreign chat"}`), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
-		messageString := interfaceToString(getJsonPathResult(t, b2, "$.message").(interface{}))
+		messageString := utils.InterfaceToString(getJsonPathResult(t, b2, "$.message").(interface{}))
 		assert.Equal(t, "You are not allowed to write to this chat", messageString)
 	})
 }
