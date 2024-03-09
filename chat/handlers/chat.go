@@ -334,21 +334,16 @@ func getPageToken(pageBottom, pageTop int) string {
 		Logger.Errorf("Error during Marshal %v", err)
 		return ""
 	} else {
-		dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-		base64.StdEncoding.Encode(dst, data)
-		return string(dst)
+		return base64.StdEncoding.EncodeToString(data)
 	}
 }
 
 func getFromPageToken(str string) (int, int, int) {
-	dst := make([]byte, base64.StdEncoding.DecodedLen(len(str)))
-	n, err := base64.StdEncoding.Decode(dst, []byte(str))
+	dst, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
 		Logger.Errorf("Error during decode %v", err)
 		return utils.DefaultPage, utils.DefaultPage, chatPageSize
 	}
-	dst = dst[:n]
-
 	thePageToken := new(pageToken)
 	err = json.Unmarshal(dst, thePageToken)
 	if err != nil {

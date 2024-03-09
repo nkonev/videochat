@@ -59,9 +59,8 @@ func setup() {
 	defer d.Close()
 	if err != nil {
 		Logger.Panicf("Error during getting db connection for test: %v", err)
-	} else {
-		d.RecreateDb()
 	}
+	d.RecreateDb()
 }
 
 func TestExtractAuth(t *testing.T) {
