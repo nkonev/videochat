@@ -736,7 +736,7 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, reverse bool, limit in
 			ch.avatar
 		FROM chat ch 
 		WHERE ch.blog is TRUE 
-		ORDER BY (ch.create_date_time, ch.id) %s 
+		ORDER BY ch.id %s 
 		LIMIT $1 OFFSET $2`, sort),
 		limit, offset)
 	if err != nil {
@@ -784,7 +784,7 @@ func (db *DB) GetBlogPostsStartingFromItemId(reverse bool, limit int, startingFr
 		FROM chat ch 
 		WHERE ch.blog is TRUE AND 
 		  %s
-		ORDER BY (ch.create_date_time, ch.id) %s 
+		ORDER BY ch.id %s 
 		LIMIT $1`, nonEquality, sort),
 		limit, startingFromItemId)
 	if err != nil {
@@ -867,7 +867,7 @@ type BlogPost struct {
 	Text      string
 }
 
-func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
+func getBlogPostsByChatIdsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
 	var builder = ""
 	var first = true
 	for _, chatId := range ids {
@@ -900,11 +900,11 @@ func blogPostsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
 }
 
 func (tx *Tx) GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error) {
-	return blogPostsCommon(tx, ids)
+	return getBlogPostsByChatIdsCommon(tx, ids)
 }
 
 func (db *DB) GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error) {
-	return blogPostsCommon(db, ids)
+	return getBlogPostsByChatIdsCommon(db, ids)
 }
 
 func (db *DB) GetBlogPostMessageId(chatId int64) (int64, error) {
