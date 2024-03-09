@@ -333,9 +333,8 @@ func getPageToken(pageBottom, pageTop int) string {
 	if err != nil {
 		Logger.Errorf("Error during Marshal %v", err)
 		return ""
-	} else {
-		return base64.StdEncoding.EncodeToString(data)
 	}
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 func getFromPageToken(str string) (int, int, int) {
