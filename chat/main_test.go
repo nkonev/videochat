@@ -518,17 +518,75 @@ func interfaceToString(inter interface{}) string {
 
 func TestGetMessagesPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		c, b, _ := request("GET", "/chat/1/message?startingFromItemId=6&size=3", nil, e)
-		assert.Equal(t, http.StatusOK, c)
-		assert.NotEmpty(t, b)
+		// get first page
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat/1/message?startingFromItemId=6&size=3", nil, e)
+		assert.Equal(t, http.StatusOK, httpFirstPage)
+		assert.NotEmpty(t, bodyFirstPage)
 
-		typedTes := getJsonPathResult(t, b, "$.text").([]interface{})
+		firstPageResult := []dto.DisplayMessageDto{}
+		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
+		assert.NoError(t, err)
 
-		assert.Equal(t, 3, len(typedTes))
+		assert.Equal(t, 3, len(firstPageResult))
+		assert.True(t, strings.HasPrefix(firstPageResult[0].Text, "generated_message5"))
+		assert.True(t, strings.HasPrefix(firstPageResult[1].Text, "generated_message6"))
+		assert.True(t, strings.HasPrefix(firstPageResult[2].Text, "generated_message7"))
+		assert.Equal(t, int64(7), firstPageResult[0].Id)
+		assert.Equal(t, int64(8), firstPageResult[1].Id)
+		assert.Equal(t, int64(9), firstPageResult[2].Id)
 
-		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[0]), "generated_message5"))
-		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[1]), "generated_message6"))
-		assert.True(t, strings.HasPrefix(interfaceToString(typedTes[2]), "generated_message7"))
+
+		// get second page
+		httpSecondPage, bodySecondPage, _ := request("GET", "/chat/1/message?startingFromItemId=9&size=3", nil, e)
+		assert.Equal(t, http.StatusOK, httpSecondPage)
+		assert.NotEmpty(t, bodySecondPage)
+
+		secondPageResult := []dto.DisplayMessageDto{}
+		err = json.Unmarshal([]byte(bodySecondPage), &secondPageResult)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 3, len(secondPageResult))
+		assert.True(t, strings.HasPrefix(secondPageResult[0].Text, "generated_message8"))
+		assert.True(t, strings.HasPrefix(secondPageResult[1].Text, "generated_message9"))
+		assert.True(t, strings.HasPrefix(secondPageResult[2].Text, "generated_message10"))
+		assert.Equal(t, int64(10), secondPageResult[0].Id)
+		assert.Equal(t, int64(11), secondPageResult[1].Id)
+		assert.Equal(t, int64(12), secondPageResult[2].Id)
+	})
+}
+
+func TestGetMessagesHasHash(t *testing.T) {
+	runTest(t, func(e *echo.Echo) {
+		// get first page
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat/1/message?startingFromItemId=7&size=10&hasHash=true", nil, e)
+		assert.Equal(t, http.StatusOK, httpFirstPage)
+		assert.NotEmpty(t, bodyFirstPage)
+
+		firstPageResult := []dto.DisplayMessageDto{}
+		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 10, len(firstPageResult))
+		assert.True(t, strings.HasPrefix(firstPageResult[0].Text, "generated_message1"))
+		assert.True(t, strings.HasPrefix(firstPageResult[1].Text, "generated_message2"))
+		assert.True(t, strings.HasPrefix(firstPageResult[2].Text, "generated_message3"))
+		assert.True(t, strings.HasPrefix(firstPageResult[3].Text, "generated_message4"))
+		assert.True(t, strings.HasPrefix(firstPageResult[4].Text, "generated_message5"))
+		assert.True(t, strings.HasPrefix(firstPageResult[5].Text, "generated_message6"))
+		assert.True(t, strings.HasPrefix(firstPageResult[6].Text, "generated_message7"))
+		assert.True(t, strings.HasPrefix(firstPageResult[7].Text, "generated_message8"))
+		assert.True(t, strings.HasPrefix(firstPageResult[8].Text, "generated_message9"))
+		assert.True(t, strings.HasPrefix(firstPageResult[9].Text, "generated_message10"))
+		assert.Equal(t, int64(3), firstPageResult[0].Id)
+		assert.Equal(t, int64(4), firstPageResult[1].Id)
+		assert.Equal(t, int64(5), firstPageResult[2].Id)
+		assert.Equal(t, int64(6), firstPageResult[3].Id)
+		assert.Equal(t, int64(7), firstPageResult[4].Id)
+		assert.Equal(t, int64(8), firstPageResult[5].Id)
+		assert.Equal(t, int64(9), firstPageResult[6].Id)
+		assert.Equal(t, int64(10), firstPageResult[7].Id)
+		assert.Equal(t, int64(11), firstPageResult[8].Id)
+		assert.Equal(t, int64(12), firstPageResult[9].Id)
 	})
 }
 
