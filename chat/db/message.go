@@ -243,54 +243,6 @@ func (tx *Tx) GetMessages(chatId int64, limit int, startingFromItemId int64, rev
 	return getMessagesCommon(tx, chatId, limit, startingFromItemId, reverse, hasHash, searchString)
 }
 
-func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
-	order := "asc"
-	nonEquality := "m.id > $2"
-	if reverse {
-		order = "desc"
-		nonEquality = "m.id < $2"
-	}
-	var err error
-	var rows *sql.Rows
-	var preparedSql = fmt.Sprintf(`%v
-			WHERE
-				  %s 
-				  AND m.id > $3 
-			ORDER BY m.id %s 
-			LIMIT $1`, selectMessageClause(chatId), nonEquality, order)
-	rows, err = co.Query(preparedSql,
-		limit, startingFromItemId, blogPostId)
-	if err != nil {
-		return nil, tracerr.Wrap(err)
-	}
-
-	defer rows.Close()
-	list := make([]*Message, 0)
-	for rows.Next() {
-		message := Message{ChatId: chatId}
-		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-			return nil, tracerr.Wrap(err)
-		} else {
-			list = append(list, &message)
-		}
-	}
-
-	err = enrichMessagesWithReactions(co, chatId, list)
-	if err != nil {
-		return nil, fmt.Errorf("Got error during enriching messages with reactions: %v", err)
-	}
-
-	return list, nil
-}
-
-func (db *DB) GetComments(chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
-	return getCommentsCommon(db, chatId, blogPostId, limit, startingFromItemId, reverse)
-}
-
-func (tx *Tx) GetComments(chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
-	return getCommentsCommon(tx, chatId, blogPostId, limit, startingFromItemId, reverse)
-}
-
 type embedMessage struct {
 	embedMessageId      *int64
 	embedMessageChatId  *int64
@@ -916,4 +868,52 @@ func enrichMessagesWithReactions(co CommonOperations, chatId int64, list []*Mess
 		}
 	}
 	return nil
+}
+
+func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
+	order := "asc"
+	nonEquality := "m.id > $2"
+	if reverse {
+		order = "desc"
+		nonEquality = "m.id < $2"
+	}
+	var err error
+	var rows *sql.Rows
+	var preparedSql = fmt.Sprintf(`%v
+			WHERE
+				  %s 
+				  AND m.id > $3 
+			ORDER BY m.id %s 
+			LIMIT $1`, selectMessageClause(chatId), nonEquality, order)
+	rows, err = co.Query(preparedSql,
+		limit, startingFromItemId, blogPostId)
+	if err != nil {
+		return nil, tracerr.Wrap(err)
+	}
+
+	defer rows.Close()
+	list := make([]*Message, 0)
+	for rows.Next() {
+		message := Message{ChatId: chatId}
+		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+			return nil, tracerr.Wrap(err)
+		} else {
+			list = append(list, &message)
+		}
+	}
+
+	err = enrichMessagesWithReactions(co, chatId, list)
+	if err != nil {
+		return nil, fmt.Errorf("Got error during enriching messages with reactions: %v", err)
+	}
+
+	return list, nil
+}
+
+func (db *DB) GetComments(chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
+	return getCommentsCommon(db, chatId, blogPostId, limit, startingFromItemId, reverse)
+}
+
+func (tx *Tx) GetComments(chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
+	return getCommentsCommon(tx, chatId, blogPostId, limit, startingFromItemId, reverse)
 }
