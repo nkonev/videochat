@@ -137,6 +137,16 @@
           if (chatIdsAreEqual && isScrolledToBottom && emptySearchString) {
             this.addItem(dto);
             this.performMarking();
+          } else if (chatIdsAreEqual && isScrolledToBottom) { // not empty searchString
+              axios.put(`/api/chat/${this.chatId}/message/search`, {
+                  searchString: this.searchString,
+                  messageId: dto.id
+              }).then(({data}) => {
+                  if (data.found) {
+                      this.addItem(dto);
+                      this.performMarking();
+                  }
+              })
           } else {
             console.log("Skipping", dto, chatIdsAreEqual, isScrolledToBottom, emptySearchString)
           }

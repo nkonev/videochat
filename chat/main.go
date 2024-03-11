@@ -175,6 +175,7 @@ func configureEcho(
 	e.PUT("/chat/:id/message/:messageId/reaction", mc.ReactionMessage)
 	e.POST("/chat/:id/message", mc.PostMessage)
 	e.PUT("/chat/:id/message", mc.EditMessage)
+	e.PUT("/chat/:id/message/search", mc.Search)
 	e.PUT("/chat/:id/message/file-item-uuid", mc.SetFileItemUuid)
 	e.DELETE("/chat/:id/message/:messageId", mc.DeleteMessage)
 	e.PUT("/chat/:id/message/read/:messageId", mc.ReadMessage)

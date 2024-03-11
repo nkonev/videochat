@@ -746,6 +746,46 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	return errOuter
 }
 
+type SearchRequestDto struct {
+	SearchString string `json:"searchString"`
+	MessageId int64 `json:"messageId"`
+}
+
+func (mc *MessageHandler) Search(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var bindTo = new(SearchRequestDto)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !participant {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to search in this chat"})
+		}
+		found, err := tx.Search(chatId, bindTo.SearchString, bindTo.MessageId)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &utils.H{"found": found})
+	})
+}
+
 type SetFileItemUuid struct {
 	FileItemUuid *string `json:"fileItemUuid"`
 	MessageId int64 	`json:"messageId"`

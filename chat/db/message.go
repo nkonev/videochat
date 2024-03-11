@@ -870,6 +870,25 @@ func enrichMessagesWithReactions(co CommonOperations, chatId int64, list []*Mess
 	return nil
 }
 
+func (tx *Tx) Search(chatId int64, searchString string, messageId int64) (bool, error) {
+	searchStringWithPercents := "%" + searchString + "%"
+	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS (SELECT * FROM message_chat_%v m WHERE m.id = $1 AND strip_tags(m.text) ILIKE $2)", chatId), messageId, searchStringWithPercents)
+	if row.Err() != nil {
+		Logger.Errorf("Error during get Search %v", row.Err())
+		return false, tracerr.Wrap(row.Err())
+	}
+
+	var found bool
+	err := row.Scan(&found)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, tracerr.Wrap(err)
+	}
+	return found, nil
+}
+
 func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
 	order := "asc"
 	nonEquality := "m.id > $2"
