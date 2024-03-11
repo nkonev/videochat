@@ -18,7 +18,7 @@
 
                 </v-card-title>
 
-                <v-card-text class="ma-0 pa-0">
+                <v-card-text class="ma-0 pa-0 resend-to-wrapper">
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
@@ -27,7 +27,7 @@
                                         <template v-slot:prepend v-if="hasLength(item.avatar)">
                                             <v-avatar :image="item.avatar"></v-avatar>
                                         </template>
-                                        <v-list-item-title>{{ getNotificationTitle(item)}}</v-list-item-title>
+                                        <v-list-item-title class="chat-name">{{ getChatName(item)}}</v-list-item-title>
                                         <v-list-item-subtitle :class="!isHovering ? 'white-colored' : ''">{{ isHovering ? $vuetify.locale.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
                                     </v-list-item>
 
@@ -70,6 +70,7 @@ import {hasLength} from "./utils";
 import axios from "axios";
 import debounce from "lodash/debounce";
 import CollapsedSearch from "@/CollapsedSearch.vue";
+import Mark from "mark.js";
 
 export default {
     data () {
@@ -80,6 +81,7 @@ export default {
             loading: false,
             messageDto: null,
             showSearchButton: true,
+            markInstance: null,
         }
     },
 
@@ -110,16 +112,14 @@ export default {
             }).then(({data}) => {
                 this.chats = data.data;
                 this.loading = false;
+                this.performMarking();
             })
         },
-        getNotificationTitle(item) {
+        getChatName(item) {
             return item.name
         },
         hasSearchString() {
             return hasLength(this.searchString)
-        },
-        resetInput() {
-            this.searchString = null;
         },
         doSearch(){
             this.loadData();
@@ -152,6 +152,14 @@ export default {
         searchName() {
             return this.$vuetify.locale.t('$vuetify.search_by_chats')
         },
+        performMarking() {
+            this.$nextTick(()=>{
+                if (hasLength(this.searchString)) {
+                    this.markInstance.unmark();
+                    this.markInstance.mark(this.searchString);
+                }
+            })
+        },
     },
     computed: {
         chatId() {
@@ -175,9 +183,12 @@ export default {
         this.doSearch = debounce(this.doSearch, 700);
     },
     mounted() {
-      bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
+        this.markInstance = new Mark(".resend-to-wrapper .chat-name");
+        bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
     },
     beforeUnmount() {
+        this.markInstance.unmark();
+        this.markInstance = null;
         bus.off(OPEN_RESEND_TO_MODAL, this.showModal);
     },
 }
