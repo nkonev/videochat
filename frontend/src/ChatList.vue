@@ -220,7 +220,9 @@ export default {
           // e.g. some chat has been popped up on sever due to somebody updated it
           if (this.isTopDirection()) {
               replaceOrPrepend(this.items, items.reverse());
-              this.sort(this.items); // sorts possibly wrong order after loading items, appeared on server while user was scrolling
+              // sorts possibly wrong order after loading items, appeared on server while user was scrolling
+              // it makes sense only when user scrolls to top - in order to have more or less "fresh" view
+              this.sort(this.items);
           } else {
               replaceOrAppend(this.items, items);
           }
