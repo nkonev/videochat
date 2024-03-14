@@ -71,6 +71,7 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 
 					for _, exists := range *existResponse {
 						// if user not exists
+						// indeed it's kinda duplication of all the constraints on delete cascade in chat
 						if !exists.Exists {
 							// remove message_read
 							err = tx.DeleteMessageRead(exists.UserId, chatId)
@@ -82,6 +83,11 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 							err = tx.DeleteParticipant(exists.UserId, chatId)
 							if err != nil {
 								logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
+								continue
+							}
+							err = tx.DeleteChatsPinned(exists.UserId)
+							if err != nil {
+								logger.GetLogEntry(c).Errorf("Got error DeleteChatsPinned %v", err)
 								continue
 							}
 						}

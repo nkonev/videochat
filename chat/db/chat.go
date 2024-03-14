@@ -684,6 +684,14 @@ func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
 	return res, nil
 }
 
+func (tx *Tx) DeleteChatsPinned(userId int64) error {
+	if _, err := tx.Exec("DELETE FROM chat_pinned WHERE user_id = $1", userId); err != nil {
+		return tracerr.Wrap(err)
+	} else {
+		return nil
+	}
+}
+
 func (tx *Tx) RenameChat(chatId int64, title string) error {
 	_, err := tx.Exec("update chat set title = $1 where id = $2", title, chatId)
 	if err != nil {
