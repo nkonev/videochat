@@ -242,5 +242,6 @@ export default {
     confirm_user: "Confirm user",
     delete_user: "Delete user",
     delete_user_title: "Delete user #{0}",
-    delete_user_text: "Are you sure to delete user '{0}' ?"
+    delete_user_text: "Are you sure to delete user '{0}' ?",
+    change_role: "Change role"
 }

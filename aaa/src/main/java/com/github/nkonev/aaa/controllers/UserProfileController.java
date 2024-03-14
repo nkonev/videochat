@@ -355,12 +355,18 @@ public class UserProfileController {
     }
 
     @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #userId)")
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
+    @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         userAccount = userAccount.withRole(role);
         userAccount = userAccountRepository.save(userAccount);
+        notifier.notifyProfileUpdated(userAccount);
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
+    }
+
+    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
+    public List<UserRole> getAllRoles() {
+        return Arrays.stream(UserRole.values()).toList();
     }
 
     @PreAuthorize("@aaaPermissionService.canSelfDelete(#userAccountDetailsDTO)")

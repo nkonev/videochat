@@ -123,8 +123,10 @@
           @unconfirmUser="this.unconfirmUser"
           @confirmUser="this.confirmUser"
           @deleteUser="this.deleteUser"
+          @changeRole="this.changeRole"
       >
       </UserListContextMenu>
+      <UserRoleModal/>
   </v-container>
 
 </template>
@@ -139,6 +141,7 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
+    CHANGE_ROLE_DIALOG,
     CLOSE_SIMPLE_MODAL,
     LOGGED_OUT, OPEN_SIMPLE_MODAL,
     PROFILE_SET,
@@ -163,6 +166,7 @@ import {
     setTopUserPosition,
 } from "@/store/localStore";
 import UserListContextMenu from "@/UserListContextMenu.vue";
+import UserRoleModal from "@/UserRoleModal.vue";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -171,7 +175,8 @@ const scrollerName = 'UserList';
 
 export default {
   components: {
-      UserListContextMenu
+      UserListContextMenu,
+      UserRoleModal,
   },
   mixins: [
     infiniteScrollMixin(scrollerName),
@@ -551,6 +556,9 @@ export default {
                 })
             }
         });
+    },
+    changeRole(user) {
+        bus.emit(CHANGE_ROLE_DIALOG, user)
     },
   },
   created() {
