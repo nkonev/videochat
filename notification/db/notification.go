@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"github.com/ztrue/tracerr"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
@@ -24,7 +25,12 @@ func (db *DB) DeleteNotification(id int64, userId int64) error {
 }
 
 func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType string, userId int64, messageSubId *string) (int64, error) {
-	res := db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 and message_sub_id = $4 returning id`, messageId, userId, notificationType, messageSubId)
+	var res *sql.Row
+	if messageSubId != nil {
+		res = db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 and message_sub_id = $4 returning id`, messageId, userId, notificationType, messageSubId)
+	} else {
+		res = db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 returning id`, messageId, userId, notificationType)
+	}
 	if res.Err() != nil {
 		return 0, tracerr.Wrap(res.Err())
 	}
