@@ -112,8 +112,9 @@ export default {
             },
           }).then(({data}) => {
             this.dto = data;
-            this.loading = false;
             this.chatStore.setNotificationCount(data.totalCount);
+          }).finally(()=>{
+              this.loading = false;
           })
         },
         translatePage() {

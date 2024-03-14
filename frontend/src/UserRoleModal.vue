@@ -79,10 +79,10 @@ import bus, {
                     })
             }
         },
-        created() {
+        mounted() {
             bus.on(CHANGE_ROLE_DIALOG, this.showModal);
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(CHANGE_ROLE_DIALOG, this.showModal);
         },
     }

@@ -84,10 +84,10 @@
                 this.closeModal();
             }
         },
-        created() {
+        mounted() {
             bus.on(ADD_VIDEO_SOURCE_DIALOG, this.showModal);
         },
-        destroyed() {
+        beforeUnmount() {
             bus.off(ADD_VIDEO_SOURCE_DIALOG, this.showModal);
         },
     }
