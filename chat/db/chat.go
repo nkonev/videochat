@@ -117,23 +117,22 @@ func provideScanToChat(chat *Chat) []any {
 }
 
 // rowNumber is in [1, count]
-func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderString, searchString string) (int, error) {
+func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderDirection, searchString string) (int, error) {
 
-	var dbSearchString = "%" + searchString + "%"
-	var theQuery = fmt.Sprintf(`
+	var searchStringWithPercents = "%" + searchString + "%"
+	var theQuery = `
 		SELECT al.nrow FROM (
 			SELECT 
 				ch.id as cid,
-				ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s) as nrow
+				ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) ` + orderDirection + `) as nrow
 			FROM 
 				chat ch 
 				LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1)
-			WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )
-				AND ch.title ILIKE $3
-		) al WHERE al.cid = $2
-	`, orderString)
+			WHERE `+ getChatSearchClause([]int64{}) +`
+		) al WHERE al.cid = $4
+	`
 	var position int
-	row := tx.QueryRow(theQuery, userId, itemId, dbSearchString)
+	row := tx.QueryRow(theQuery, userId, searchStringWithPercents, searchString, itemId)
 	err := row.Scan(&position)
 	if err != nil {
 		return 0, tracerr.Wrap(err)
@@ -175,11 +174,11 @@ func (tx *Tx) GetChatsByLimitOffset(participantId int64, limit int, offset int, 
 	return getChatsByLimitOffsetCommon(tx, participantId, limit, offset, orderDirection)
 }
 
-func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
-	var rows *sql.Rows
-	var err error
-	searchStringWithPercents := "%" + searchString + "%"
-
+// requires
+// $1 - owner_id
+// $2 - searchStringWithPercents
+// $3 - searchString
+func getChatSearchClause(additionalFoundUserIds []int64) string {
 	var additionalUserIds = ""
 	first := true
 	for _, userId := range additionalFoundUserIds {
@@ -189,16 +188,25 @@ func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId
 		additionalUserIds = additionalUserIds + utils.Int64ToString(userId)
 		first = false
 	}
+
 	var additionalUserIdsClause = ""
 	if len(additionalFoundUserIds) > 0 {
 		additionalUserIdsClause = fmt.Sprintf(" OR ( ch.tet_a_tet IS true AND ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
 	}
+	return fmt.Sprintf(" ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $2 %s ) ) OR ( ch.available_to_search IS TRUE AND $3 = '%s' ) )",
+		additionalUserIdsClause, ReservedPublicallyAvailableForSearchChats,
+	)
+}
 
-	rows, err = commonOps.Query(fmt.Sprintf(selectChatClause()+`
-			WHERE ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $4 %s ) ) OR ( ch.available_to_search IS TRUE AND $5 = '%s' )  ) 
-			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s 
-			LIMIT $2 OFFSET $3
-	`, additionalUserIdsClause, ReservedPublicallyAvailableForSearchChats, orderDirection), participantId, limit, offset, searchStringWithPercents, searchString)
+func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+	var rows *sql.Rows
+	var err error
+	searchStringWithPercents := "%" + searchString + "%"
+
+	rows, err = commonOps.Query(selectChatClause() + " WHERE " + getChatSearchClause(additionalFoundUserIds) + `
+			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) ` + orderDirection + ` 
+			LIMIT $4 OFFSET $5
+	`, participantId, searchStringWithPercents, searchString, limit, offset)
 	if err != nil {
 		return nil, tracerr.Wrap(err)
 	} else {
