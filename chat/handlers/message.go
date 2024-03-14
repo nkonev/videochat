@@ -299,8 +299,13 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 		reactionUserMap := getUsersRemotelyOrEmptyFromSlice(maxDisplayableReactionUsers, mc.restClient, c)
 
 		reactionUsers := make([]*dto.User, 0)
-		for _, user := range reactionUserMap {
-			reactionUsers = append(reactionUsers, user)
+		for _, userId := range reactionUserIds {
+			user := reactionUserMap[userId]
+			if user != nil {
+				reactionUsers = append(reactionUsers, user)
+			} else {
+				reactionUsers = append(reactionUsers, getDeletedUser(userId))
+			}
 		}
 
 		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, reactionUsers, count)
