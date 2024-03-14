@@ -239,20 +239,19 @@ func (not *Events) NotifyAboutProfileChanged(user *dto.User) {
 		return
 	}
 
-	coChatters, err := not.db.GetCoChattedParticipantIdsCommon(user.Id)
+	err := not.db.IterateOverCoChattedParticipantIds(user.Id, func(participantIds []int64) error {
+		var internalErr error
+		for _, participantId := range participantIds {
+			internalErr = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+				UserId:                  participantId,
+				EventType:               "participant_changed",
+				UserProfileNotification: user,
+			})
+		}
+		return internalErr
+	})
 	if err != nil {
 		Logger.Errorf("Error during get co-chatters for %v, error: %v", user.Id, err)
-	}
-
-	for _, participantId := range coChatters {
-		err = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
-			UserId:                  participantId,
-			EventType:               "participant_changed",
-			UserProfileNotification: user,
-		})
-		if err != nil {
-			Logger.Errorf("Error during sending to rabbitmq : %s", err)
-		}
 	}
 }
 
@@ -482,18 +481,12 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 	}
 }
 
-func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId, messageOwnerId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
 	var eventType string
 	if wasAdded {
 		eventType = "reaction_notification_added"
 	} else {
 		eventType = "reaction_notification_removed"
-	}
-
-	_, messageOwnerId, err := not.db.GetMessageBasic(chatId, messageId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
-		return
 	}
 
 	event := dto.ReactionEvent{
@@ -502,13 +495,13 @@ func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chat
 		MessageId: messageId,
 	}
 
-	if *messageOwnerId == behalfUserId {
+	if messageOwnerId == behalfUserId {
 		return
 	}
-	err = not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+	err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 		EventType:                  eventType,
 		ReactionEvent: 				&event,
-		UserId:                     *messageOwnerId,
+		UserId:                     messageOwnerId,
 		ChatId:                     chatId,
 		ByUserId:          behalfUserId,
 		ByLogin:           behalfLogin,

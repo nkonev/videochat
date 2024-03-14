@@ -311,8 +311,14 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return err
 		}
 
+		_, messageOwnerId, err := tx.GetMessageBasic(chatId, messageId)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+			return err
+		}
+
 		// sends notification to the notification microservice
-		mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+		mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
 		return c.NoContent(http.StatusOK)
