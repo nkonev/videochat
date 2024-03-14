@@ -353,10 +353,14 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
+func getDeletedUser(id int64) *dto.User {
+	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
+}
+
 func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64) *dto.DisplayMessageDto {
 	user := users[dbMessage.OwnerId]
 	if user == nil {
-		user = &dto.User{Login: fmt.Sprintf("user%v", dbMessage.OwnerId), Id: dbMessage.OwnerId}
+		user = getDeletedUser(dbMessage.OwnerId)
 	}
 	ret := &dto.DisplayMessageDto{
 		Id:             dbMessage.Id,
@@ -411,16 +415,17 @@ func convertReactions(dbReactionsOfMessage []db.Reaction, users map[int64]*dto.U
 	var convertedReactionsOfMessageToReturn = make([]dto.Reaction, 0)
 
 	for _, dbReaction := range dbReactionsOfMessage {
-
+		user := users[dbReaction.UserId]
 		wasSummed := false
 		for j, existingReaction := range convertedReactionsOfMessageToReturn {
 			if dbReaction.Reaction == existingReaction.Reaction {
 				convertedReactionsOfMessageToReturn[j].Count = existingReaction.Count + 1
 
 				usersOfThisReaction := convertedReactionsOfMessageToReturn[j].Users
-				user := users[dbReaction.UserId]
 				if user != nil {
 					usersOfThisReaction = append(usersOfThisReaction, user)
+				} else {
+					usersOfThisReaction = append(usersOfThisReaction, getDeletedUser(dbReaction.UserId))
 				}
 
 				convertedReactionsOfMessageToReturn[j].Users = usersOfThisReaction
@@ -430,9 +435,10 @@ func convertReactions(dbReactionsOfMessage []db.Reaction, users map[int64]*dto.U
 		}
 		if !wasSummed {
 			usersOfThisReaction := []*dto.User{}
-			user := users[dbReaction.UserId]
 			if user != nil {
 				usersOfThisReaction = append(usersOfThisReaction, user)
+			} else {
+				usersOfThisReaction = append(usersOfThisReaction, getDeletedUser(dbReaction.UserId))
 			}
 
 			convertedReactionsOfMessageToReturn = append(convertedReactionsOfMessageToReturn, dto.Reaction{
