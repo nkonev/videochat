@@ -44,7 +44,7 @@ public class UserListViewRepository {
 
             if (StringUtils.hasLength(searchString)) {
                 leftMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MIN(inn.id) FROM (SELECT u.id FROM user_account u WHERE id > 0 AND id <= :startingFromItemId AND u.username ILIKE :searchStringPercents ORDER BY id DESC LIMIT :leftLimit) inn
+                        SELECT MIN(inn.id) FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id <= :startingFromItemId AND u.username ILIKE :searchStringPercents ORDER BY u.id DESC LIMIT :leftLimit) inn
                     """,
                     Map.of(
                         "startingFromItemId", startingFromItemId,
@@ -55,7 +55,7 @@ public class UserListViewRepository {
                 );
             } else {
                 leftMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MIN(inn.id) FROM (SELECT u.id FROM user_account u WHERE id > 0 AND id <= :startingFromItemId ORDER BY id DESC LIMIT :leftLimit) inn
+                        SELECT MIN(inn.id) FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id <= :startingFromItemId ORDER BY u.id DESC LIMIT :leftLimit) inn
                     """,
                     Map.of(
                         "startingFromItemId", startingFromItemId,
@@ -67,7 +67,7 @@ public class UserListViewRepository {
 
             if (StringUtils.hasLength(searchString)) {
                 rightMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MAX(inn.id) + 1 FROM (SELECT u.id FROM user_account u WHERE id > 0 AND id >= :startingFromItemId AND u.username ILIKE :searchStringPercents ORDER BY id ASC LIMIT :rightLimit) inn
+                        SELECT MAX(inn.id) + 1 FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id >= :startingFromItemId AND u.username ILIKE :searchStringPercents ORDER BY u.id ASC LIMIT :rightLimit) inn
                     """,
                     Map.of(
                         "startingFromItemId", startingFromItemId,
@@ -78,7 +78,7 @@ public class UserListViewRepository {
                 );
             } else {
                 rightMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MAX(inn.id) + 1 FROM (SELECT u.id FROM user_account u WHERE id > 0 AND id >= :startingFromItemId ORDER BY id ASC LIMIT :rightLimit) inn
+                        SELECT MAX(inn.id) + 1 FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id >= :startingFromItemId ORDER BY u.id ASC LIMIT :rightLimit) inn
                     """,
                     Map.of(
                         "startingFromItemId", startingFromItemId,
