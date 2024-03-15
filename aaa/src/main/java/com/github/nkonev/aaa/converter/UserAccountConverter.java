@@ -151,7 +151,7 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         validateLoginAndEmail(userAccountDTO);
-        userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
+        userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
         String password = userAccountDTO.password();
         try {
             validateUserPassword(password);
@@ -195,7 +195,7 @@ public class UserAccountConverter {
         return login;
     }
 
-    public static void validateLoginNonAouth2(String login){
+    public static void validateLoginNonOAuth2(String login){
         Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
         Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
         Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
@@ -203,9 +203,9 @@ public class UserAccountConverter {
     }
 
 
-    public static com.github.nkonev.aaa.dto.EditUserDTO trimAndValidateNonAouth2Login(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
+    public static com.github.nkonev.aaa.dto.EditUserDTO trimAndValidateNonOAuth2Login(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
         var ret = userAccountDTO.withLogin(validateAndTrimLogin(userAccountDTO.login()));
-        validateLoginNonAouth2(ret.login());
+        validateLoginNonOAuth2(ret.login());
         return ret;
     }
 
@@ -372,7 +372,7 @@ public class UserAccountConverter {
 
     public static UserAccount updateUserAccountEntity(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         Assert.hasLength(userAccountDTO.login(), "login should have length");
-        userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
+        userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
         String password = userAccountDTO.password();
         if (StringUtils.hasLength(password)) {
             validateUserPassword(password);
@@ -401,7 +401,7 @@ public class UserAccountConverter {
 
     public static UserAccount updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         if (StringUtils.hasLength(userAccountDTO.login())) {
-            userAccountDTO = trimAndValidateNonAouth2Login(userAccountDTO);
+            userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
             userAccount = userAccount.withUsername(userAccountDTO.login());
         }
         String password = userAccountDTO.password();

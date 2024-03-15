@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.github.nkonev.aaa.Constants.Headers.*;
 import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
@@ -235,7 +234,7 @@ public class UserProfileController {
 
         UserAccount exists = findUserAccount(userAccount);
 
-        userAccountDTO = UserAccountConverter.trimAndValidateNonAouth2Login(userAccountDTO);
+        userAccountDTO = UserAccountConverter.trimAndValidateNonOAuth2Login(userAccountDTO);
 
         // check email already present
         if (!userService.checkEmailIsFree(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);

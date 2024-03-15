@@ -61,7 +61,7 @@ public class RegistrationController {
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
     @ResponseBody
     public void register(@RequestBody @Valid EditUserDTO userAccountDTO, Language language) {
-        userAccountDTO = UserAccountConverter.trimAndValidateNonAouth2Login(userAccountDTO);
+        userAccountDTO = UserAccountConverter.trimAndValidateNonOAuth2Login(userAccountDTO);
 
         userService.checkLoginIsFree(userAccountDTO);
         if(!userService.checkEmailIsFree(userAccountDTO)){
