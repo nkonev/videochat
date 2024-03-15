@@ -177,6 +177,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -235,6 +236,7 @@ public class UserAccountConverter {
                 facebookId,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -264,6 +266,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 vkontakteId,
+                null,
                 null,
                 null
         );
@@ -295,6 +298,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 googleId,
+                null,
                 null
         );
     }
@@ -325,11 +329,12 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
-                keycloakId
+                keycloakId,
+                null
         );
     }
 
-    public static UserAccount buildUserAccountEntityForLdapInsert(String login) {
+    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -355,7 +360,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
-                null
+                null,
+                ldapId
         );
     }
 

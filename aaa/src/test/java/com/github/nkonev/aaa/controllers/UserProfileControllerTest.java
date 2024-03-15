@@ -507,7 +507,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 login, null, null, null, null,false, false, true, true,
-                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null);
+                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null, null);
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccount.id();
@@ -571,10 +571,11 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @Test
     public void ldapLoginTest() throws Exception {
         // https://spring.io/guides/gs/authenticating-ldap/
-        getSession(USER_BOB, USER_BOB_LDAP_PASSWORD);
-        Optional<UserAccount> bob = userAccountRepository.findByUsername(USER_BOB);
+        getSession(USER_BOB_LDAP, USER_BOB_LDAP_PASSWORD);
+        Optional<UserAccount> bob = userAccountRepository.findByUsername(USER_BOB_LDAP);
         Assertions.assertTrue(bob.isPresent());
-        Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions(USER_BOB);
+        Assertions.assertEquals(USER_BOB_LDAP_ID, bob.get().ldapId());
+        Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions(USER_BOB_LDAP);
         Assertions.assertEquals(1, bobRedisSessions.size());
     }
 }

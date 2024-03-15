@@ -29,7 +29,8 @@ public record UserAccount(
     String facebookId,
     String vkontakteId,
     String googleId,
-    String keycloakId
+    String keycloakId,
+    String ldapId
 ) {
 
     public UserAccount withPassword(String newPassword) {
@@ -51,7 +52,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -74,7 +76,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -97,7 +100,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -120,7 +124,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -143,7 +148,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -166,7 +172,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -189,7 +196,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -212,7 +220,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -235,7 +244,8 @@ public record UserAccount(
             facebookId,
             vkontakteId,
             googleId,
-            keycloakId
+            keycloakId,
+            ldapId
         );
     }
 
@@ -258,7 +268,8 @@ public record UserAccount(
                 facebookId,
                 vkontakteId,
                 googleId,
-                keycloakId
+                keycloakId,
+                ldapId
         );
     }
 
@@ -281,7 +292,8 @@ public record UserAccount(
                 newOauthIdentifiers.facebookId,
                 newOauthIdentifiers.vkontakteId,
                 newOauthIdentifiers.googleId,
-                newOauthIdentifiers.keycloakId
+                newOauthIdentifiers.keycloakId,
+                ldapId
         );
     }
 

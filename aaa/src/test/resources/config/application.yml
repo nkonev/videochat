@@ -136,3 +136,4 @@ spring.ldap.embedded:
 custom.ldap.auth:
   enabled: true
   filter: "uid={0}"
+  uid-name: uid

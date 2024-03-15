@@ -139,3 +139,8 @@ management:
     ssl:
       enabled: false
     add-application-context-header: false
+
+custom.ldap.auth:
+  enabled: true
+  filter: "uid={0}"
+  uid-name: uid

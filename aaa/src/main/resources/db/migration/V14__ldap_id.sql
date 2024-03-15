@@ -1,0 +1,1 @@
+ALTER TABLE user_account ADD COLUMN ldap_id VARCHAR(128) UNIQUE;

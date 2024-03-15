@@ -40,6 +40,9 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     @Value("${custom.ldap.auth.filter:}")
     private String filter;
 
+    @Value("${custom.ldap.auth.uid-name:uid}")
+    private String uidName;
+
     @Value("${custom.ldap.auth.password-encoding.type:}")
     private String passwordEncodingType;
 
@@ -55,20 +58,24 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         if (enabled) {
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) authentication;
-            var user = usernamePasswordAuthenticationToken.getPrincipal().toString();
+            var userName = usernamePasswordAuthenticationToken.getPrincipal().toString();
             var password = usernamePasswordAuthenticationToken.getCredentials().toString();
 
             var encodedPassword = encodePassword(password);
 
             try {
-                var lq = LdapQueryBuilder.query().base(base).filter(filter, user);
+                var lq = LdapQueryBuilder.query().base(base).filter(filter, userName);
                 ldapOperations.authenticate(lq, encodedPassword);
+                var ctx = ldapOperations.searchForContext(lq);
                 UserAccount byUsername = userAccountRepository
-                        .findByUsername(user)
-                        .orElseGet(() -> userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(user)));
+                        .findByUsername(userName)
+                        .orElseGet(() -> {
+                            var userId = ctx.getObjectAttribute(uidName).toString();
+                            return userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId));
+                        });
                 UserAccountDetailsDTO userDetails = Optional.of(byUsername)
                         .map(UserAccountConverter::convertToUserAccountDetailsDTO)
-                        .orElseThrow(() -> new UsernameNotFoundException("User with login '" + user + "' not found"));
+                        .orElseThrow(() -> new UsernameNotFoundException("User with login '" + userName + "' not found"));
                 return new AaaAuthenticationToken(userDetails);
             } catch (IncorrectResultSizeDataAccessException | NamingException e) {
                 LOGGER.debug("Unable to authenticate via LDAP", e);
