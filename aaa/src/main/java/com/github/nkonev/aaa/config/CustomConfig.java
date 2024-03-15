@@ -22,6 +22,11 @@ public class CustomConfig {
     @Value("${custom.password-reset-enter-new-url}")
     private String passwordRestoreEnterNew;
 
+    @Value("${custom.confirm-change-email-exit-success-url}")
+    private String confirmChangeEmailExitSuccessUrl;
+
+    @Value("${custom.confirm-change-email-exit-token-not-found-url}")
+    private String confirmChangeEmailExitTokenNotFoundUrl;
 
     @Value("${http.client.connect-timeout:3s}")
     private Duration restClientConnectTimeout;
@@ -55,5 +60,13 @@ public class CustomConfig {
 
     public String getPasswordRestoreEnterNew() {
         return passwordRestoreEnterNew;
+    }
+
+    public String getConfirmChangeEmailExitSuccessUrl() {
+        return confirmChangeEmailExitSuccessUrl;
+    }
+
+    public String getConfirmChangeEmailExitTokenNotFoundUrl() {
+        return confirmChangeEmailExitTokenNotFoundUrl;
     }
 }

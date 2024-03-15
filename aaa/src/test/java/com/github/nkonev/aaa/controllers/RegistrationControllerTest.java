@@ -97,8 +97,8 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
             String parsedUrl = UrlParser.parseUrlFromMessage(content);
 
-            String tokenUuidString = UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0);
-            Assertions.assertTrue(userConfirmationTokenRepository.existsById(tokenUuidString));
+            var tokenUuid = UUID.fromString(UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0));
+            Assertions.assertTrue(userConfirmationTokenRepository.existsById(tokenUuid));
 
             // perform confirm
             mockMvc.perform(get(parsedUrl))
@@ -107,7 +107,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
                 // assert server returns session id
                 .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()))
             ;
-            Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuidString));
+            Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuid));
         }
 
         // login confirmed ok
@@ -176,15 +176,15 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
             String parsedUrl = UrlParser.parseUrlFromMessage(content);
 
-            String tokenUuidString = UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0);
-            Assertions.assertTrue(userConfirmationTokenRepository.existsById(tokenUuidString));
+            var tokenUuid = UUID.fromString(UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0));
+            Assertions.assertTrue(userConfirmationTokenRepository.existsById(tokenUuid));
 
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getRegistrationConfirmExitSuccessUrl()))
             ;
-            Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuidString));
+            Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuid));
         }
 
         // login confirmed ok
@@ -327,7 +327,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testConfirmationTokenNotFound() throws Exception {
-        String token = UUID.randomUUID().toString(); // create random token
+        var token = UUID.randomUUID(); // create random token
         userConfirmationTokenRepository.deleteById(token); // if random token exists we delete it
 
         // create /confirm?uuid=<uuid>
@@ -341,7 +341,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testConfirmationUserNotFound() throws Exception {
-        String tokenUuid = UUID.randomUUID().toString(); // create random token
+        var tokenUuid = UUID.randomUUID(); // create random token
         UserConfirmationToken token1 = new UserConfirmationToken(tokenUuid, -999L, 180);
         userConfirmationTokenRepository.save(token1); // save it
 

@@ -19,7 +19,8 @@ public record UserAccountDTOExtended (
     boolean canDelete,
 
     boolean canChangeRole,
-    boolean canConfirm
+    boolean canConfirm,
+    boolean awaitingForConfirmEmailChange
 ) {
 
     @JsonCreator
@@ -35,7 +36,8 @@ public record UserAccountDTOExtended (
         @JsonProperty("canLock") boolean canLock,
         @JsonProperty("canDelete") boolean canDelete,
         @JsonProperty("canChangeRole") boolean canChangeRole,
-        @JsonProperty("canConfirm") boolean canConfirm
+        @JsonProperty("canConfirm") boolean canConfirm,
+        @JsonProperty("awaitingForConfirmEmailChange") boolean awaitingForConfirmEmailChange
     ) {
         this(
             new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers),
@@ -43,7 +45,8 @@ public record UserAccountDTOExtended (
             canDelete,
             canLock,
             canChangeRole,
-            canConfirm
+            canConfirm,
+            awaitingForConfirmEmailChange
         );
     }
 

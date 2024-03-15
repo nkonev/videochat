@@ -18,8 +18,11 @@ public class Constants {
         public static final String AUTH = "/auth";
         public static final String REGISTER = "/register";
         public static final String REGISTER_CONFIRM = "/register/confirm"; // html for handle link from email
+        public static final String CHANGE_EMAIL_CONFIRM = "/change-email/confirm"; // html for handle link from email
         public static final String UUID = "uuid";
         public static final String RESEND_CONFIRMATION_EMAIL = "/resend-confirmation-email";
+
+        public static final String RESEND_CHANGE_EMAIL_CONFIRM = "/change-email/resend";
         public static final String USER = "/user";
 
         public static final String ONLINE = "/online";

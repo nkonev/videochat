@@ -11,14 +11,20 @@ import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
+import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.services.EventReceiver;
+import com.github.nkonev.aaa.util.UrlParser;
+import com.icegreen.greenmail.util.Retriever;
+import jakarta.mail.Message;
 import jakarta.servlet.http.Cookie;
 import org.awaitility.Awaitility;
+import org.eclipse.angus.mail.imap.IMAPMessage;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +32,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.github.nkonev.aaa.TestConstants.*;
 import static org.awaitility.Awaitility.await;
@@ -102,7 +111,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .with(csrf())
@@ -143,7 +152,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withPassword(newPassword);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -158,30 +167,6 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         UserAccount afterChange = getUserFromBd(newLogin);
         Assertions.assertNotEquals(initialPassword, afterChange.password(), "password should be changed if there is set explicitly");
         Assertions.assertTrue( passwordEncoder.matches(newPassword, afterChange.password()), "password should be changed if there is set explicitly");
-    }
-
-    @WithUserDetails(TestConstants.USER_ALICE)
-    @org.junit.jupiter.api.Test
-    public void fullyAuthenticatedUserCannotChangeHerProfileWithoutUsername() throws Exception {
-        UserAccount userAccount = getUserFromBd(TestConstants.USER_ALICE);
-        final String newPassword = "new_alice_password";
-
-        EditUserDTO edit = UserAccountConverter.convertToEditUserDto(userAccount);
-        edit = edit.withLogin(null);
-        edit = edit.withPassword(newPassword);
-
-        MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
-                        .content(objectMapper.writeValueAsString(edit))
-                        .contentType(MediaType.APPLICATION_JSON_UTF8)
-                        .with(csrf())
-        )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("validation error"))
-                .andExpect(jsonPath("$.message").value("empty login"))
-                .andReturn();
-
-        LOGGER.info(mvcResult.getResponse().getContentAsString());
     }
 
 
@@ -202,7 +187,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         userMap.put("id", foreignUserAccount.id());
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(userMap))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -226,7 +211,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -255,7 +240,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withEmail(newEmail);
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -507,7 +492,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 login, null, null, null, null,false, false, true, true,
-                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null, null);
+                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null, null, null);
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccount.id();
@@ -578,4 +563,118 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions(USER_BOB_LDAP);
         Assertions.assertEquals(1, bobRedisSessions.size());
     }
+
+    final String userForChangeEmail0 = "generated_user_20";
+    @WithUserDetails(userForChangeEmail0)
+    @Test
+    public void testConfirmationOfChangingEmailSuccess() throws Exception {
+        final String oldEmail = "generated20@example.com";
+        final String email = "generated_user_20_changed@example.com";
+        final String username = userForChangeEmail0;
+
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null,  null, null, email);
+
+        // changeEmail
+        mockMvc.perform(
+                MockMvcRequestBuilders.patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                    .content(objectMapper.writeValueAsString(createUserDTO))
+                    .queryParam("language", Language.en.name())
+                    .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .with(csrf())
+            )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        var user = userAccountRepository.findByUsername(username).get();
+        Assertions.assertEquals(oldEmail, user.email());
+        Assertions.assertEquals(email, user.newEmail());
+
+        // confirm
+        // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html
+        try (Retriever r = new Retriever(greenMail.getImap())) {
+            Message[] messages = await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 1);
+            IMAPMessage imapMessage = (IMAPMessage)messages[0];
+            String content = (String) imapMessage.getContent();
+
+            String parsedUrl = UrlParser.parseUrlFromMessage(content);
+
+            var tokenUuid = UUID.fromString(UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0));
+            Assertions.assertTrue(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+
+            // perform confirm
+            mockMvc.perform(get(parsedUrl))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getConfirmChangeEmailExitSuccessUrl()))
+            ;
+            Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+
+            var userAfterConfirm = userAccountRepository.findByUsername(username).get();
+            Assertions.assertEquals(email, userAfterConfirm.email());
+            Assertions.assertNull( userAfterConfirm.newEmail());
+        }
+
+    }
+
+    final String userForChangeEmail1 = "generated_user_21";
+    @WithUserDetails(userForChangeEmail1)
+    @Test
+    public void testConfirmationOfChangingEmailAfterReissuingTokenSuccess() throws Exception {
+        final String oldEmail = "generated21@example.com";
+        final String email = "generated_user_21_changed@example.com";
+        final String username = userForChangeEmail1;
+
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null,  null, null, email);
+
+        // changeEmail
+        mockMvc.perform(
+                MockMvcRequestBuilders.patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
+                    .content(objectMapper.writeValueAsString(createUserDTO))
+                    .queryParam("language", Language.en.name())
+                    .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .with(csrf())
+            )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        var user = userAccountRepository.findByUsername(username).get();
+        Assertions.assertEquals(oldEmail, user.email());
+        Assertions.assertEquals(email, user.newEmail());
+
+        // user lost email and reissues token
+        {
+            long tokenCountBeforeResend = changeEmailConfirmationTokenRepository.count();
+            mockMvc.perform(
+                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM + "?language=en")
+                        .with(csrf())
+                )
+                .andExpect(status().isOk());
+            Assertions.assertEquals(tokenCountBeforeResend+1, changeEmailConfirmationTokenRepository.count());
+        }
+
+        // confirm
+        // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html
+        try (Retriever r = new Retriever(greenMail.getImap())) {
+            Message[] messages = await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 2); // backend should send two email: a) during the first attempt; b) during the second attempt
+            IMAPMessage imapMessage = (IMAPMessage)messages[1];
+            String content = (String) imapMessage.getContent();
+
+            String parsedUrl = UrlParser.parseUrlFromMessage(content);
+
+            var tokenUuid = UUID.fromString(UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0));
+            Assertions.assertTrue(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+
+            // perform confirm
+            mockMvc.perform(get(parsedUrl))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getConfirmChangeEmailExitSuccessUrl()))
+            ;
+            Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+
+            var userAfterConfirm = userAccountRepository.findByUsername(username).get();
+            Assertions.assertEquals(email, userAfterConfirm.email());
+            Assertions.assertNull( userAfterConfirm.newEmail());
+        }
+
+    }
+
 }

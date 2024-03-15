@@ -17,6 +17,8 @@ custom.registration-confirm-exit-token-not-found-url: "http://localhost:8081/con
 custom.registration-confirm-exit-user-not-found-url: "http://localhost:8081/confirm/registration/user-not-found"
 custom.registration-confirm-exit-success-url: "http://localhost:8081"
 custom.password-reset-enter-new-url: "http://localhost:8081/password-restore/enter-new"
+custom.confirm-change-email-exit-success-url: "http://localhost:8081"
+custom.confirm-change-email-exit-token-not-found-url: "http://localhost:8081/confirm/change/email/token-not-found"
 
 # https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-email.html
 # https://yandex.ru/support/mail-new/mail-clients.html
@@ -53,6 +55,9 @@ custom:
       token:
         ttl: 5m
   password-reset:
+    token:
+      ttl: 5m
+  change-email:
     token:
       ttl: 5m
   online-estimation: 10m

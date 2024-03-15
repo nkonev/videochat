@@ -12,6 +12,7 @@ public record UserSelfProfileDTO(
         @JsonUnwrapped
         UserAccountDTO userAccountDTO,
         String email,
+        boolean awaitingForConfirmEmailChange,
 
         Collection<UserRole> roles,
 
@@ -25,6 +26,7 @@ public record UserSelfProfileDTO(
             String avatarBig,
             String shortInfo,
             String email,
+            boolean awaitingForConfirmEmailChange,
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauth2Identifiers,
             Collection<UserRole> roles,
@@ -38,7 +40,7 @@ public record UserSelfProfileDTO(
                 shortInfo,
                 lastLoginDateTime,
                 oauth2Identifiers
-        ), email, roles, expiresAt);
+        ), email, awaitingForConfirmEmailChange, roles, expiresAt);
     }
 
     public String login() {

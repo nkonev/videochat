@@ -25,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.time.Duration;
 import java.util.Optional;
@@ -61,8 +62,8 @@ public class PasswordResetController {
      * @param email
      */
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET)
-    public void requestPasswordReset(String email, Language language) {
-        String uuid = UUID.randomUUID().toString();
+    public void requestPasswordReset(@RequestParam String email, @RequestParam Language language) {
+        var uuid = UUID.randomUUID();
 
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);
         if (!userAccountOptional.isPresent()) {
@@ -93,7 +94,7 @@ public class PasswordResetController {
     ) {}
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
-    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpSession httpSession, HttpServletResponse httpResponse) {
+    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpSession httpSession) {
 
         // webpage parses token uuid from URL
         // .. and js sends this request

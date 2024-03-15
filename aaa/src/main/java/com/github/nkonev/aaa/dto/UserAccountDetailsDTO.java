@@ -35,7 +35,8 @@ public record UserAccountDetailsDTO (
     boolean confirmed,
 
     Collection<GrantedAuthority> roles,
-    String email
+    String email,
+    boolean awaitingForConfirmEmailChange
 ) implements UserDetails, OAuth2User, OidcUser {
 
     public UserAccountDetailsDTO(
@@ -51,6 +52,7 @@ public record UserAccountDetailsDTO (
             boolean confirmed,
             Collection<GrantedAuthority> roles,
             String email,
+            boolean awaitingForConfirmEmailChange,
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers
     ) {
@@ -58,7 +60,7 @@ public record UserAccountDetailsDTO (
                 new UserAccountDTO(
                     id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers
                 ),
-                new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email
+                new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange
         );
     }
 
@@ -164,7 +166,8 @@ public record UserAccountDetailsDTO (
                 enabled,
                 confirmed,
                 roles,
-                email
+                email,
+                awaitingForConfirmEmailChange
         );
     }
 }

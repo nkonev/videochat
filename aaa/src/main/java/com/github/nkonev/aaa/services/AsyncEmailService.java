@@ -1,6 +1,7 @@
 package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.dto.Language;
+import com.github.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -33,6 +34,13 @@ public class AsyncEmailService {
         Language language
     ) {}
 
+    record ChangeEmailConfirmationDTO(
+        String newEmail,
+        ChangeEmailConfirmationToken changeEmailConfirmationToken,
+        String login,
+        Language language
+    ) {}
+
     public record ArbitraryEmailDto(
         String recipient,
         String subject,
@@ -47,6 +55,10 @@ public class AsyncEmailService {
         rabbitTemplate.convertAndSend(QUEUE_PASSWORD_RESET_EMAILS_NAME, new PasswordResetEmailDTO(email, passwordResetToken, login, language));
     }
 
+    public void sendChangeEmailConfirmationToken(String newEmail, ChangeEmailConfirmationToken changeEmailConfirmationToken, String login, Language language) {
+        rabbitTemplate.convertAndSend(QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME, new ChangeEmailConfirmationDTO(newEmail, changeEmailConfirmationToken, login, language));
+    }
+
     public void sendArbitraryEmail(ArbitraryEmailDto dto) {
         rabbitTemplate.convertAndSend(QUEUE_ARBITRARY_EMAILS_NAME, dto);
     }
@@ -59,6 +71,11 @@ public class AsyncEmailService {
     @RabbitListener(queues = QUEUE_PASSWORD_RESET_EMAILS_NAME)
     public void handlePasswordReset(PasswordResetEmailDTO dto) {
         emailService.sendPasswordResetToken(dto.email(), dto.passwordResetToken(), dto.login(), dto.language());
+    }
+
+    @RabbitListener(queues = QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME)
+    public void handleChangeEmailConfirmationToken(ChangeEmailConfirmationDTO dto) {
+        emailService.changeEmailConfirmationToken(dto.newEmail(), dto.changeEmailConfirmationToken(), dto.login(), dto.language());
     }
 
     @RabbitListener(queues = QUEUE_ARBITRARY_EMAILS_NAME)

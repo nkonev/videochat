@@ -5,7 +5,9 @@ package com.github.nkonev.aaa;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
+import com.github.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.util.ContextPathHelper;
 import com.github.nkonev.aaa.services.UserTestService;
@@ -71,6 +73,12 @@ public abstract class AbstractTestRunner {
 
     @Autowired
     protected UserConfirmationTokenRepository userConfirmationTokenRepository;
+
+    @Autowired
+    protected ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
+
+    @Autowired
+    protected CustomConfig customConfig;
 
     @Autowired(required = false)
     protected TestRestTemplate testRestTemplate;

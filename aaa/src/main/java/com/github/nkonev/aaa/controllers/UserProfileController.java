@@ -1,17 +1,18 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
-import com.github.nkonev.aaa.dto.UserAccountDTO;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.dto.UserRole;
+import com.github.nkonev.aaa.dto.*;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import com.github.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import com.github.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
 import com.github.nkonev.aaa.security.*;
+import com.github.nkonev.aaa.services.AsyncEmailService;
 import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.OAuth2ProvidersService;
 import com.github.nkonev.aaa.services.UserService;
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -29,8 +31,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.session.Session;
+import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
@@ -42,7 +48,7 @@ import static com.github.nkonev.aaa.converter.UserAccountConverter.convertToUser
 /**
  * Created by nik on 08.06.17.
  */
-@RestController
+@Controller
 @Transactional
 public class UserProfileController {
 
@@ -73,6 +79,18 @@ public class UserProfileController {
     @Autowired
     private UserListViewRepository userListViewRepository;
 
+    @Autowired
+    private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
+
+    @Value("${custom.change-email.token.ttl}")
+    private Duration changeEmailConfirmationTokenTtl;
+
+    @Autowired
+    private AsyncEmailService asyncEmailService;
+
+    @Autowired
+    private CustomConfig customConfig;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
     private Long getExpiresAt(HttpSession session) {
@@ -88,6 +106,7 @@ public class UserProfileController {
      * @param userAccount
      * @return current logged in profile
      */
+    @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
     public com.github.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
@@ -96,6 +115,7 @@ public class UserProfileController {
         return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastLoginDateTime(), expiresAt);
     }
 
+    @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = {Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH}, produces = MediaType.APPLICATION_JSON_VALUE)
     public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
@@ -138,6 +158,7 @@ public class UserProfileController {
     ) {}
 
 
+    @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
     public List<com.github.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
@@ -153,6 +174,7 @@ public class UserProfileController {
         return result.stream().map(getConvertToUserAccountDTO(userAccount)).toList();
     }
 
+    @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
     public SearchUsersResponseInternalDto searchUsersInternal(@RequestBody SearchUsersRequestInternalDto request) {
@@ -182,6 +204,7 @@ public class UserProfileController {
         );
     }
 
+    @ResponseBody
     @PutMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE)
     public void requestUserOnline(@RequestParam(value = "userId") List<Long> userIds) {
         List<UserOnlineResponse> usersOnline = aaaUserDetailsService.getUsersOnline(userIds);
@@ -193,6 +216,7 @@ public class UserProfileController {
         return userAccount -> userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(currentUser, userRoleService), userAccount);
     }
 
+    @ResponseBody
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.USER_ID)
     public Record getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
@@ -206,6 +230,7 @@ public class UserProfileController {
         }
     }
 
+    @ResponseBody
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
     public List<UserAccountDTO> getUsersInternal(
         @RequestParam(value = "userId") List<Long> userIds
@@ -221,52 +246,20 @@ public class UserProfileController {
         return result;
     }
 
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
-    @PreAuthorize("isAuthenticated()")
-    public com.github.nkonev.aaa.dto.EditUserDTO editProfile(
-            @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
-            HttpSession httpSession
-    ) {
-        if (userAccount == null) {
-            throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
-        }
-
-        UserAccount exists = findUserAccount(userAccount);
-
-        userAccountDTO = UserAccountConverter.trimAndValidateNonOAuth2Login(userAccountDTO);
-
-        // check email already present
-        if (!userService.checkEmailIsFree(userAccountDTO, exists)) return UserAccountConverter.convertToEditUserDto(exists);
-
-        // check login already present
-        userService.checkLoginIsFree(userAccountDTO, exists);
-
-        exists = UserAccountConverter.updateUserAccountEntity(userAccountDTO, exists, passwordEncoder);
-        exists = userAccountRepository.save(exists);
-
-        SecurityUtils.convertAndSetToContext(httpSession, exists);
-        notifier.notifyProfileUpdated(exists);
-
-        return UserAccountConverter.convertToEditUserDto(exists);
-    }
-
-    private UserAccount findUserAccount(UserAccountDetailsDTO userAccount) {
-        return userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
-    }
-
+    @ResponseBody
     @PatchMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     @PreAuthorize("isAuthenticated()")
     public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
+            @RequestParam Language language,
             HttpSession httpSession
     ) {
         if (userAccount == null) {
             throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
         }
 
-        UserAccount exists = findUserAccount(userAccount);
+        UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
 
         // check email already present
         if (!userService.checkEmailIsFree(userAccountDTO, exists))
@@ -275,7 +268,12 @@ public class UserProfileController {
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);
 
-        exists = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+        var resp = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+        exists = resp.userAccount();
+        if (resp.wasEmailSet()) {
+            var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id());
+            asyncEmailService.sendChangeEmailConfirmationToken(exists.newEmail(), changeEmailConfirmationToken, exists.username(), language);
+        }
         exists = userAccountRepository.save(exists);
 
         SecurityUtils.convertAndSetToContext(httpSession, exists);
@@ -285,6 +283,55 @@ public class UserProfileController {
         return UserAccountConverter.convertToEditUserDto(exists);
     }
 
+    private ChangeEmailConfirmationToken createChangeEmailConfirmationToken(long userId) {
+        var uuid = UUID.randomUUID();
+        ChangeEmailConfirmationToken changeEmailConfirmationToken = new ChangeEmailConfirmationToken(uuid, userId, changeEmailConfirmationTokenTtl.getSeconds());
+        return changeEmailConfirmationTokenRepository.save(changeEmailConfirmationToken);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.CHANGE_EMAIL_CONFIRM)
+    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
+        Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(uuid);
+        if (!userConfirmationTokenOptional.isPresent()) {
+            return "redirect:" + customConfig.getConfirmChangeEmailExitTokenNotFoundUrl();
+        }
+        ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
+        UserAccount userAccount = userAccountRepository.findById(userConfirmationToken.userId()).orElseThrow();
+        if (!StringUtils.hasLength(userAccount.newEmail())) {
+            LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
+            return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
+        }
+
+        userAccount = userAccount.withEmail(userAccount.newEmail());
+        userAccount = userAccount.withNewEmail(null);
+        userAccount = userAccountRepository.save(userAccount);
+
+        changeEmailConfirmationTokenRepository.deleteById(uuid);
+
+        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        SecurityUtils.setToContext(httpSession, auth);
+
+        notifier.notifyProfileUpdated(userAccount);
+
+        return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM)
+    @ResponseBody
+    public void resendConfirmationChangeEmailToken(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam Language language) {
+        UserAccount theUserAccount = userAccountRepository.findById(userAccount.getId()).orElseThrow();
+        if (!StringUtils.hasLength(theUserAccount.newEmail())) {
+            LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
+            return;
+        }
+
+        var changeEmailConfirmationToken = createChangeEmailConfirmationToken(theUserAccount.id());
+        asyncEmailService.sendChangeEmailConfirmationToken(theUserAccount.newEmail(), changeEmailConfirmationToken, theUserAccount.username(), language);
+    }
+
+    @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS+"/my")
     public Map<String, Session> mySessions(@AuthenticationPrincipal UserAccountDetailsDTO userDetails){
@@ -293,28 +340,34 @@ public class UserProfileController {
 
     public record UserOnlineResponse (long userId, boolean online) {}
 
+    @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.ONLINE)
     public List<UserOnlineResponse> getOnlineForUsers(@RequestParam(value = "userId") List<Long> userIds){
         return aaaUserDetailsService.getUsersOnline(userIds);
     }
+
+    @ResponseBody
     @GetMapping(Constants.Urls.INTERNAL_API + Constants.Urls.USER+Constants.Urls.ONLINE)
     public List<UserOnlineResponse> getOnlineForUsersInternal(@RequestParam(value = "userId") List<Long> userIds){
         return aaaUserDetailsService.getUsersOnline(userIds);
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         return aaaUserDetailsService.getSessions(userId);
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.force_logged_out);
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.LOCK)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
@@ -330,6 +383,7 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.ConfirmDTO confirmDTO){
@@ -345,6 +399,7 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public void deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
@@ -353,6 +408,7 @@ public class UserProfileController {
         userService.deleteUser(userId);
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #userId)")
     @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
@@ -363,11 +419,13 @@ public class UserProfileController {
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }
 
+    @ResponseBody
     @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public List<UserRole> getAllRoles() {
         return Arrays.stream(UserRole.values()).toList();
     }
 
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.canSelfDelete(#userAccountDetailsDTO)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
@@ -377,6 +435,7 @@ public class UserProfileController {
         userService.deleteUser(userId);
     }
 
+    @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+"/{provider}")
     public void selfDeleteBindingOauth2Provider(
@@ -398,6 +457,7 @@ public class UserProfileController {
         SecurityUtils.convertAndSetToContext(httpSession, userAccount);
     }
 
+    @ResponseBody
     @GetMapping(Constants.Urls.PUBLIC_API + "/oauth2/providers")
     public Set<String> availableOauth2Providers() {
         return oAuth2ProvidersService.availableOauth2Providers();
@@ -409,6 +469,7 @@ public class UserProfileController {
     ) {}
 
 
+    @ResponseBody
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+"/exist")
     public List<UserExists> getUsersExistInternal(
         @RequestParam(value = "userId") List<Long> requestedUserIds

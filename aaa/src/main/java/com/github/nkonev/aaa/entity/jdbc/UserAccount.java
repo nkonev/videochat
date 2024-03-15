@@ -25,6 +25,7 @@ public record UserAccount(
     boolean confirmed,
     @NotNull UserRole role, // synonym to "authority"
     String email,
+    String newEmail,
     LocalDateTime lastLoginDateTime,
     String facebookId,
     String vkontakteId,
@@ -48,6 +49,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -72,6 +74,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -96,6 +99,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -120,6 +124,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -129,7 +134,7 @@ public record UserAccount(
         );
     }
 
-    public UserAccount withEmail(String newEmail) {
+    public UserAccount withEmail(String newEmailToSet) {
         return new UserAccount(
                 id,
                 creationType,
@@ -143,6 +148,7 @@ public record UserAccount(
                 enabled,
                 confirmed,
                 role,
+                newEmailToSet,
                 newEmail,
                 lastLoginDateTime,
                 facebookId,
@@ -150,6 +156,31 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId
+        );
+    }
+
+    public UserAccount withNewEmail(String newEmailToSet) {
+        return new UserAccount(
+            id,
+            creationType,
+            username,
+            password,
+            avatar,
+            avatarBig,
+            shortInfo,
+            expired,
+            locked,
+            enabled,
+            confirmed,
+            role,
+            email,
+            newEmailToSet,
+            lastLoginDateTime,
+            facebookId,
+            vkontakteId,
+            googleId,
+            keycloakId,
+            ldapId
         );
     }
 
@@ -168,6 +199,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -192,6 +224,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -216,6 +249,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -240,6 +274,7 @@ public record UserAccount(
             newConfirmed,
             role,
             email,
+            newEmail,
             lastLoginDateTime,
             facebookId,
             vkontakteId,
@@ -264,6 +299,7 @@ public record UserAccount(
                 confirmed,
                 newRole,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 facebookId,
                 vkontakteId,
@@ -288,6 +324,7 @@ public record UserAccount(
                 confirmed,
                 role,
                 email,
+                newEmail,
                 lastLoginDateTime,
                 newOauthIdentifiers.facebookId,
                 newOauthIdentifiers.vkontakteId,

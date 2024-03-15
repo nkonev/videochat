@@ -21,7 +21,8 @@
                   @keyup.native.enter="sendLogin()"
                   variant="outlined"
                   density="compact"
-                  class="mt-3"
+                  class="mt-3 mb-2"
+                  hide-details
                 >
                   <template v-slot:append>
                     <v-icon @click="sendLogin()" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
@@ -37,21 +38,31 @@
               <v-btn v-if="!showEmailInput" color="primary" size="x-small" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_email')" @click="showEmailInput = !showEmailInput; emailPrevious = chatStore.currentUser.email">
                 <v-icon dark>mdi-lead-pencil</v-icon>
               </v-btn>
-              <v-container v-if="showEmailInput" class="ma-0 pa-0 d-flex flex-row">
-                <v-text-field
-                  v-model="chatStore.currentUser.email"
-                  :rules="[rules.required, rules.email]"
-                  :label="$vuetify.locale.t('$vuetify.email')"
-                  @keyup.native.enter="sendEmail()"
-                  variant="outlined"
-                  density="compact"
-                  class="mt-3"
-                >
-                  <template v-slot:append>
-                    <v-icon @click="sendEmail()" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
-                    <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1">mdi-cancel</v-icon>
-                  </template>
-                </v-text-field>
+              <v-container v-if="showEmailInput" class="ma-0 pa-0 d-flex flex-column">
+                  <v-container class="ma-0 pa-0 d-flex flex-row">
+                        <v-text-field
+                          v-model="chatStore.currentUser.email"
+                          :rules="[rules.required, rules.email]"
+                          :label="$vuetify.locale.t('$vuetify.email')"
+                          @keyup.native.enter="sendEmail()"
+                          variant="outlined"
+                          density="compact"
+                          class="mt-3 mb-2"
+                          hide-details
+                        >
+                          <template v-slot:append>
+                            <v-icon @click="sendEmail(); chatStore.currentUser.email = emailPrevious" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
+                            <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1">mdi-cancel</v-icon>
+                          </template>
+                        </v-text-field>
+                  </v-container>
+                  <v-container class="ma-0 pa-0 d-flex flex-column" v-if="chatStore.currentUser.awaitingForConfirmEmailChange">
+                      <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_1') }}</span>
+                      <span>
+                        <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_2') }}</span>
+                        <v-btn class="mx-2 mb-1" density="compact" variant="outlined" @click="resendEmailConfirmation()">{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_btn') }}</v-btn>
+                      </span>
+                  </v-container>
               </v-container>
             </v-container>
 
@@ -347,11 +358,18 @@ export default {
                 })
         },
         sendEmail() {
-            axios.patch('/api/aaa/profile', {email: this.chatStore.currentUser.email})
+            axios.patch('/api/aaa/profile', {email: this.chatStore.currentUser.email}, { params: {
+                language: this.$vuetify.locale.current
+            }})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showEmailInput = false;
                 })
+        },
+        resendEmailConfirmation() {
+            axios.post('/api/aaa/change-email/resend', null, { params: {
+                    language: this.$vuetify.locale.current
+                }})
         },
         sendShortInfo() {
             axios.patch('/api/aaa/profile', {shortInfo: this.chatStore.currentUser.shortInfo})

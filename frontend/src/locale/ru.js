@@ -243,5 +243,9 @@ export default {
     delete_user: "Удалить пользователя",
     delete_user_title: "Удаление пользователя #{0}",
     delete_user_text: "Вы действительно хотите удалить пользователя '{0}' ?",
-    change_role: "Изменить роль"
+    change_role: "Изменить роль",
+    confirm_email_to_change_role_part_1: "Новая почта ожидает подтверждения",
+    confirm_email_to_change_role_part_2: "Если нужно - ",
+    confirm_email_to_change_role_btn: "переотправить",
+    change_email_confirmation_token_not_found: "Токен не найден"
 }

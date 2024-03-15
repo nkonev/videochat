@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserAccountDetailsDTOController {
     @GetMapping(Constants.Urls.PUBLIC_API + TestConstants.USER_DETAILS)
     public UserAccountDetailsDTO getUserDetails() {
-        return new UserAccountDetailsDTO(null, null, null, null, null, false, false, true, true, null, null);
+        return new UserAccountDetailsDTO(null, null, null, null, null, false, false, true, true, null, null, false);
     }
 
 }

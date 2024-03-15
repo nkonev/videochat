@@ -21,7 +21,7 @@ import {
     wrong_confirmation_token,
     wrong_confirmation_token_name,
     wrong_user,
-    wrong_user_name
+    wrong_user_name, wrong_change_email_confirmation_token, wrong_change_email_confirmation_token_name
 } from "@/router/routes";
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
@@ -97,6 +97,11 @@ const routes = [
         name: registration_resend_email_name,
         path: registration_resend_email,
         component: () => import('@/UserRegistrationResendEmail.vue'),
+    },
+    {
+        name: wrong_change_email_confirmation_token_name,
+        path: wrong_change_email_confirmation_token,
+        component: () => import('@/UserChangeEmailWrongConfirmationToken.vue'),
     },
 
 ]

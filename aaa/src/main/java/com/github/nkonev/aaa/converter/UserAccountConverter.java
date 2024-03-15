@@ -59,6 +59,7 @@ public class UserAccountConverter {
                 userAccount.confirmed(),
                 Collections.singletonList(convertRole(userAccount.role())),
                 userAccount.email(),
+                StringUtils.hasLength(userAccount.newEmail()),
                 userAccount.lastLoginDateTime(),
                 convertOauth(userAccount.oauth2Identifiers())
         );
@@ -73,6 +74,7 @@ public class UserAccountConverter {
                 userAccount.getAvatarBig(),
                 userAccount.userAccountDTO().shortInfo(),
                 userAccount.getEmail(),
+                userAccount.awaitingForConfirmEmailChange(),
                 lastLoginDateTime,
                 userAccount.getOauth2Identifiers(),
                 convertRoles2Enum(userAccount.getRoles()),
@@ -119,6 +121,7 @@ public class UserAccountConverter {
         } else {
             dataDTO = null;
         }
+        var awaitingForConfirmEmailChange = StringUtils.hasLength(userAccount.newEmail());
         return new UserAccountDTOExtended(
                 userAccount.id(),
                 userAccount.username(),
@@ -131,7 +134,8 @@ public class UserAccountConverter {
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
                 aaaSecurityService.canChangeRole(currentUser, userAccount),
-                aaaSecurityService.canConfirm(currentUser, userAccount)
+                aaaSecurityService.canConfirm(currentUser, userAccount),
+                awaitingForConfirmEmailChange
         );
     }
 
@@ -173,6 +177,7 @@ public class UserAccountConverter {
                 confirmed,
                 newUserRole,
                 userAccountDTO.email(),
+                null,
                 null,
                 null,
                 null,
@@ -233,6 +238,7 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
+                null,
                 facebookId,
                 null,
                 null,
@@ -262,6 +268,7 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 newUserRole,
+                null,
                 null,
                 null,
                 null,
@@ -297,6 +304,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
                 googleId,
                 null,
                 null
@@ -324,6 +332,7 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 newUserRole,
+                null,
                 null,
                 null,
                 null,
@@ -361,6 +370,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
                 ldapId
         );
     }
@@ -370,36 +380,13 @@ public class UserAccountConverter {
         Assert.hasLength(userAccountDTO.email(), "email should have length");
     }
 
-    public static UserAccount updateUserAccountEntity(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
-        Assert.hasLength(userAccountDTO.login(), "login should have length");
-        userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
-        String password = userAccountDTO.password();
-        if (StringUtils.hasLength(password)) {
-            validateUserPassword(password);
-            userAccount = userAccount.withPassword(passwordEncoder.encode(password));
-        }
-        userAccount = userAccount.withUsername(userAccountDTO.login());
-        if (Boolean.TRUE.equals(userAccountDTO.removeAvatar())){
-            userAccount = userAccount.withAvatar(null);
-            userAccount = userAccount.withAvatarBig(null);
-        } else {
-            userAccount = userAccount.withAvatar(userAccountDTO.avatar());
-            userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
-        }
-        if (StringUtils.hasLength(userAccountDTO.email())) {
-            String email = userAccountDTO.email();
-            email = email.trim();
-            userAccount = userAccount.withEmail(email);
-        }
-        if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
-            userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
-        } else {
-            userAccount = userAccount.withShortInfo(null);
-        }
-        return userAccount;
-    }
+    public record UpdateUserAccountEntityNotEmptyResponse(
+        UserAccount userAccount,
+        boolean wasEmailSet
+    ){}
 
-    public static UserAccount updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+    public static UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+        var wasEmailSet = false;
         if (StringUtils.hasLength(userAccountDTO.login())) {
             userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
             userAccount = userAccount.withUsername(userAccountDTO.login());
@@ -417,15 +404,20 @@ public class UserAccountConverter {
             userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
         }
         if (StringUtils.hasLength(userAccountDTO.email())) {
-            String email = userAccountDTO.email();
-            email = email.trim();
-            userAccount = userAccount.withEmail(email);
+            String newEmail = userAccountDTO.email();
+            newEmail = newEmail.trim();
+            if (!newEmail.equals(userAccount.email())) {
+                userAccount = userAccount.withNewEmail(newEmail);
+                wasEmailSet = true;
+            } else {
+                userAccount = userAccount.withNewEmail(null);
+            }
         }
         if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
             userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
         }
 
-        return userAccount;
+        return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
     }
 
     public static com.github.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {

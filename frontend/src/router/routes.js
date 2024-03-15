@@ -17,6 +17,8 @@ export const confirmation_pending = `${prefix}/registration/confirmation-pending
 
 export const wrong_confirmation_token = `${prefix}/confirm/registration/token-not-found`;
 
+export const wrong_change_email_confirmation_token = `${prefix}/confirm/change/email/token-not-found`;
+
 export const wrong_user = `${prefix}/confirm/registration/user-not-found`;
 
 export const forgot_password = `${prefix}/password-restore`;
@@ -58,3 +60,5 @@ export const check_email_name = "check_email";
 export const password_restore_enter_new_name = "password_restore_enter_new";
 
 export const registration_resend_email_name = "registration_resend_email";
+
+export const wrong_change_email_confirmation_token_name = "wrong_email_confirmation_token";

@@ -60,7 +60,7 @@ public class RegistrationController {
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
     @ResponseBody
-    public void register(@RequestBody @Valid EditUserDTO userAccountDTO, Language language) {
+    public void register(@RequestBody @Valid EditUserDTO userAccountDTO, @RequestParam Language language) {
         userAccountDTO = UserAccountConverter.trimAndValidateNonOAuth2Login(userAccountDTO);
 
         userService.checkLoginIsFree(userAccountDTO);
@@ -86,8 +86,7 @@ public class RegistrationController {
      */
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER_CONFIRM)
     public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
-        String stringUuid = uuid.toString();
-        Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(stringUuid);
+        Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
             return "redirect:" + customConfig.getRegistrationConfirmExitTokenNotFoundUrl();
         }
@@ -105,7 +104,7 @@ public class RegistrationController {
         userAccount = userAccount.withConfirmed(true);
         userAccount = userAccountRepository.save(userAccount);
 
-        userConfirmationTokenRepository.deleteById(stringUuid);
+        userConfirmationTokenRepository.deleteById(uuid);
 
         var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         SecurityUtils.setToContext(httpSession, auth);
@@ -116,7 +115,7 @@ public class RegistrationController {
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
     @ResponseBody
-    public void resendConfirmationToken(String email, Language language) {
+    public void resendConfirmationToken(@RequestParam String email, @RequestParam Language language) {
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);
         if(!userAccountOptional.isPresent()){
             LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this email is not found", email);
@@ -139,7 +138,7 @@ public class RegistrationController {
         long seconds = userConfirmationTokenTtl.getSeconds(); // Redis requires seconds
 
         UUID tokenUuid = UUID.randomUUID();
-        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid.toString(), userAccount.id(), seconds);
+        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid, userAccount.id(), seconds);
         return userConfirmationTokenRepository.save(userConfirmationToken);
     }
 

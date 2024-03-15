@@ -3,6 +3,7 @@ package com.github.nkonev.aaa.services;
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.config.CustomConfig;
 import com.github.nkonev.aaa.dto.Language;
+import com.github.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
 import freemarker.template.Configuration;
@@ -41,6 +42,8 @@ public class EmailService {
 
     private static final String REG_LINK_PLACEHOLDER = "REGISTRATION_LINK_PLACEHOLDER";
     private static final String PASSWORD_RESET_LINK_PLACEHOLDER = "PASSWORD_RESET_LINK_PLACEHOLDER";
+
+    private static final String CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER = "CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER";
     private static final String LOGIN_PLACEHOLDER = "LOGIN";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
@@ -85,6 +88,28 @@ public class EmailService {
             final var text = renderTemplate("password_reset_body_%s.ftlh".formatted(language),
                     Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
             LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
+            helper.setText(text, true);
+
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to send confirmation token", e);
+        }
+    }
+
+    public void changeEmailConfirmationToken(String newEmail, ChangeEmailConfirmationToken changeEmailConfirmationToken, String login, Language language) {
+        try {
+            var mimeMessage = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+
+            helper.setFrom(from);
+            final var subj = renderTemplate("confirm_change_email_subject_%s.ftlh".formatted(language), Map.of());
+            helper.setSubject(subj);
+            helper.setTo(newEmail);
+
+            final var confirmLink = customConfig.getBaseUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
+            final var text = renderTemplate("confirm_change_email_body_%s.ftlh".formatted(language),
+                Map.of(CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER, confirmLink, LOGIN_PLACEHOLDER, login));
+            LOGGER.trace("For password reset '{}' generated email text '{}'", newEmail, text);
             helper.setText(text, true);
 
             mailSender.send(mimeMessage);
