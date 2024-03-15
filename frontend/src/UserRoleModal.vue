@@ -5,7 +5,7 @@
                 <v-card-text class="pb-0">
                     <v-select v-if="!loading"
                         :items="allPossibleRoles"
-                        label="Select video device"
+                        label="Select a role"
                         v-model="chosenRole"
                         variant="outlined"
                         density="compact"
