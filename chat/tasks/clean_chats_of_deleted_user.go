@@ -47,14 +47,14 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 	logger.Logger.Infof("Starting cleaning chats of deleted user job")
 
 	// batch by chats // ... order by id
-	var hasChats = true
-	for chatPage := 0 ; hasChats; chatPage++ {
+	var hasMoreChats = true
+	for chatPage := 0 ; hasMoreChats; chatPage++ {
 		err := db.Transact(srv.dbR, func(tx *db.Tx) error {
 			chatIds, err := tx.GetChatIds(utils.DefaultSize, utils.GetOffset(chatPage, utils.DefaultSize))
 			if err != nil {
 				return err
 			}
-			hasChats = len(chatIds) > 0
+			hasMoreChats = len(chatIds) == utils.DefaultSize
 			for _, chatId := range chatIds {
 
 				err := tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
@@ -69,23 +69,23 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 						return nil
 					}
 
-					for _, exists := range *existResponse {
+					for _, userExists := range *existResponse {
 						// if user not exists
 						// indeed it's kinda duplication of all the constraints on delete cascade in chat
-						if !exists.Exists {
+						if !userExists.Exists {
 							// remove message_read
-							err = tx.DeleteMessageRead(exists.UserId, chatId)
+							err = tx.DeleteMessageRead(userExists.UserId, chatId)
 							if err != nil {
 								logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
 								continue
 							}
 							// remove from chat_participants
-							err = tx.DeleteParticipant(exists.UserId, chatId)
+							err = tx.DeleteParticipant(userExists.UserId, chatId)
 							if err != nil {
 								logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
 								continue
 							}
-							err = tx.DeleteChatsPinned(exists.UserId)
+							err = tx.DeleteChatsPinned(userExists.UserId)
 							if err != nil {
 								logger.GetLogEntry(c).Errorf("Got error DeleteChatsPinned %v", err)
 								continue
