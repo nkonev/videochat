@@ -1,6 +1,5 @@
 package com.github.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.*;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
@@ -77,7 +76,7 @@ public class EventService {
         });
     }
 
-    public void notifyOnlineChanged(List<UserProfileController.UserOnlineResponse> userOnline) {
+    public void notifyOnlineChanged(List<UserOnlineResponse> userOnline) {
         rabbitTemplate.convertAndSend(EXCHANGE_ONLINE_EVENTS_NAME, "", userOnline, message -> {
             message.getMessageProperties().setType("[]dto.UserOnline");
             return message;

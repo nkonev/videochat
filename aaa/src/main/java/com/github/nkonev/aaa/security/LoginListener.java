@@ -1,7 +1,7 @@
 package com.github.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import com.github.nkonev.aaa.dto.UserOnlineResponse;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class LoginListener implements ApplicationListener<AuthenticationSuccessE
     public void onApplicationEvent(UserAccountDetailsDTO userDetails) {
         LOGGER.info("User '{}' logged in", userDetails.getUsername());
         userAccountRepository.updateLastLogin(userDetails.getUsername(), getNowUTC());
-        eventService.notifyOnlineChanged(List.of(new UserProfileController.UserOnlineResponse(userDetails.getId(), true)));
+        eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userDetails.getId(), true)));
     }
 
 }

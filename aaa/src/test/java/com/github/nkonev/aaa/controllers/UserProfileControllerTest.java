@@ -11,7 +11,6 @@ import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.services.EventReceiver;
 import com.github.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
@@ -285,7 +284,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
-                    .content(objectMapper.writeValueAsString(new UserProfileController.SearchUsersRequestDto(0, 0, false, false, bob.username())))
+                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDto(0, 0, false, false, bob.username())))
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf())
         )

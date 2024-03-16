@@ -1,8 +1,8 @@
 package com.github.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
+import com.github.nkonev.aaa.dto.UserOnlineResponse;
 import com.github.nkonev.aaa.exception.DataNotFoundException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -69,21 +69,21 @@ public class AaaUserDetailsService implements UserDetailsService {
         return getSessions(userDetails.getUsername());
     }
 
-    public List<UserProfileController.UserOnlineResponse> getUsersOnline(List<Long> userIds){
+    public List<UserOnlineResponse> getUsersOnline(List<Long> userIds){
         if (userIds == null){
             throw new RuntimeException("userIds cannon be null");
         }
         return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
-                .map(u -> new UserProfileController.UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
                 .toList();
     }
 
-    public List<UserProfileController.UserOnlineResponse> getUsersOnlineByUsers(List<UserAccount> users){
+    public List<UserOnlineResponse> getUsersOnlineByUsers(List<UserAccount> users){
         if (users == null){
             throw new RuntimeException("users cannon be null");
         }
         return users.stream()
-                .map(u -> new UserProfileController.UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
                 .toList();
     }
 
