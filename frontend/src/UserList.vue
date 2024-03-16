@@ -512,6 +512,8 @@ export default {
     addItem(dto) {
       console.log("Adding item", dto);
       this.items.push(dto);
+      this.reduceListIfNeed();
+      this.updateTopAndBottomIds();
     },
     changeItem(dto) {
       console.log("Replacing item", dto);
