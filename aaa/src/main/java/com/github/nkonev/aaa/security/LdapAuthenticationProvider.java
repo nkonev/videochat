@@ -17,15 +17,13 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-@Transactional
 @Component
 public class LdapAuthenticationProvider implements AuthenticationProvider {
 
@@ -37,6 +35,9 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @Value("${custom.ldap.auth.base:}")
     private String base;
@@ -67,21 +68,29 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
 
             var encodedPassword = encodePassword(password);
 
+            AtomicBoolean created = new AtomicBoolean();
+
             try {
-                var lq = LdapQueryBuilder.query().base(base).filter(filter, userName);
-                ldapOperations.authenticate(lq, encodedPassword);
-                UserAccount byUsername = userAccountRepository
+                var userAccount = transactionTemplate.execute(status -> {
+                    var lq = LdapQueryBuilder.query().base(base).filter(filter, userName);
+                    ldapOperations.authenticate(lq, encodedPassword);
+                    UserAccount byUsername = userAccountRepository
                         .findByUsername(userName)
                         .orElseGet(() -> {
                             var ctx = ldapOperations.searchForContext(lq);
                             var userId = ctx.getObjectAttribute(uidName).toString();
                             var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId));
-                            eventService.notifyProfileCreated(user);
+                            created.set(true);
                             return user;
                         });
-                UserAccountDetailsDTO userDetails = Optional.of(byUsername)
-                        .map(UserAccountConverter::convertToUserAccountDetailsDTO)
-                        .orElseThrow(() -> new UsernameNotFoundException("User with login '" + userName + "' not found"));
+                    return byUsername;
+                });
+                UserAccountDetailsDTO userDetails = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+
+                if (created.get()) {
+                    eventService.notifyProfileCreated(userAccount);
+                }
+
                 return new AaaAuthenticationToken(userDetails);
             } catch (IncorrectResultSizeDataAccessException | NamingException e) {
                 LOGGER.debug("Unable to authenticate via LDAP", e);

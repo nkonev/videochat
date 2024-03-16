@@ -4,9 +4,6 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
-import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
-import com.github.nkonev.aaa.services.EventService;
 import com.nimbusds.jwt.JWTParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +14,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.text.ParseException;
@@ -25,7 +21,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-@Transactional
 @Component
 public class KeycloakOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
@@ -37,49 +32,17 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
     public static final String LOGIN_PREFIX = OAuth2Providers.KEYCLOAK + "_";
 
     @Autowired
-    private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
-
-    @Autowired
-    private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
-
-    @Autowired
     private DefaultOAuth2UserService delegate;
-
-    @Autowired
-    private EventService eventService;
-
-    @Override
-    protected EventService getEventService() {
-        return eventService;
-    }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
         var map = oAuth2User.getAttributes();
-        String keycloakId = getId(map);
-        Assert.notNull(keycloakId, "keycloakId cannot be null");
 
-        Set<String> roles = new HashSet<>();
-        try {
-            roles = ((ArrayList<String>) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().collect(Collectors.toSet());
-        } catch (ParseException e) {
-            LOGGER.error("Unable to parse roles", e);
-        }
+        UserAccountDetailsDTO processUserResponse = process(map, userRequest);
 
-        UserAccountDetailsDTO resultPrincipal = mergeOauthIdToExistsUser(keycloakId);
-        if (resultPrincipal != null) {
-            // ok
-        } else {
-            String login = getLogin(map);
-            userRequest.getAccessToken().getTokenValue();
-            resultPrincipal = createOrGetExistsUser(keycloakId, login, map, roles);
-        }
-
-        aaaPreAuthenticationChecks.check(resultPrincipal);
-        aaaPostAuthenticationChecks.check(resultPrincipal);
-        return resultPrincipal;
+        return processUserResponse;
     }
 
 
@@ -87,14 +50,16 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
         return null;
     }
 
-    private String getLogin(Map<String, Object> map) {
+    @Override
+    protected String getLogin(Map<String, Object> map) {
         String login = (String) map.get("preferred_username");
         Assert.hasLength(login, "keycloak name cannot be null");
         login = login.trim();
         return login;
     }
 
-    private String getId(Map<String, Object> map) {
+    @Override
+    protected String getId(Map<String, Object> map) {
         return (String) map.get("sub");
     }
 
@@ -104,25 +69,26 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected String getOauthName() {
+    protected String getOAuth2Name() {
         return OAuth2Providers.KEYCLOAK;
     }
 
     @Override
-    protected Optional<UserAccount> findByOauthId(String oauthId) {
+    protected Optional<UserAccount> findByOAuth2Id(String oauthId) {
         return userAccountRepository.findByKeycloakId(oauthId);
     }
 
     @Override
-    protected UserAccountDetailsDTO setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
+    protected UserAccountDetailsDTO setOAuth2IdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
         return principal.withOauth2Identifiers(principal.getOauth2Identifiers().withKeycloakId(oauthId));
     }
 
     @Override
-    protected void setOauthIdToEntity(Long id, String oauthId) {
+    protected UserAccount setOAuth2IdToEntity(Long id, String oauthId) {
         UserAccount userAccount = userAccountRepository.findById(id).orElseThrow();
         userAccount = userAccount.withOauthIdentifiers(userAccount.oauth2Identifiers().withKeycloakId(oauthId));
         userAccount = userAccountRepository.save(userAccount);
+        return userAccount;
     }
 
     @Override
@@ -131,7 +97,7 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
         boolean hasAdminRole = Optional.ofNullable(roles).orElse(new HashSet<>()).stream().anyMatch(s -> "ROLE_ADMIN".equalsIgnoreCase(s) || "ADMIN".equalsIgnoreCase(s));
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, hasAdminRole);
         userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created {} user id={} login='{}'", getOauthName(), oauthId, login);
+        LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 
         return userAccount;
     }
@@ -146,4 +112,14 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
         return userAccountRepository.findByUsername(login);
     }
 
+    @Override
+    protected Set<String> getRoles(OAuth2UserRequest userRequest) {
+        Set<String> roles = new HashSet<>();
+        try {
+            roles = ((ArrayList<String>) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().collect(Collectors.toSet());
+        } catch (ParseException e) {
+            LOGGER.error("Unable to parse roles", e);
+        }
+        return roles;
+    }
 }

@@ -4,9 +4,6 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
-import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
-import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +13,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.Map;
@@ -24,7 +20,6 @@ import java.util.Optional;
 import java.util.Set;
 
 
-@Transactional
 @Component
 public class FacebookOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
@@ -36,42 +31,17 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     public static final String LOGIN_PREFIX = OAuth2Providers.FACEBOOK + "_";
 
     @Autowired
-    private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
-
-    @Autowired
-    private AaaPostAuthenticationChecks aaaPostAuthenticationChecks;
-
-    @Autowired
     private DefaultOAuth2UserService delegate;
-
-    @Autowired
-    private EventService eventService;
-
-    @Override
-    protected EventService getEventService() {
-        return eventService;
-    }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
         var map = oAuth2User.getAttributes();
-        String facebookId = getId(map);
-        Assert.notNull(facebookId, "facebookId cannot be null");
 
+        UserAccountDetailsDTO processUserResponse = process(map, userRequest);
 
-        UserAccountDetailsDTO resultPrincipal = mergeOauthIdToExistsUser(facebookId);
-        if (resultPrincipal != null) {
-            // ok
-        } else {
-            String login = getLogin(map);
-            resultPrincipal = createOrGetExistsUser(facebookId, login, map, null);
-        }
-
-        aaaPreAuthenticationChecks.check(resultPrincipal);
-        aaaPostAuthenticationChecks.check(resultPrincipal);
-        return resultPrincipal;
+        return processUserResponse;
     }
 
 
@@ -79,7 +49,8 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
         return null;
     }
 
-    private String getLogin(Map<String, Object> map) {
+    @Override
+    protected String getLogin(Map<String, Object> map) {
         String login = (String) map.get("name");
         Assert.hasLength(login, "facebook name cannot be null");
         login = login.trim();
@@ -87,7 +58,8 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
         return login;
     }
 
-    private String getId(Map<String, Object> map) {
+    @Override
+    protected String getId(Map<String, Object> map) {
         return (String) map.get("id");
     }
 
@@ -97,25 +69,26 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected String getOauthName() {
+    protected String getOAuth2Name() {
         return OAuth2Providers.FACEBOOK;
     }
 
     @Override
-    protected Optional<UserAccount> findByOauthId(String oauthId) {
+    protected Optional<UserAccount> findByOAuth2Id(String oauthId) {
         return userAccountRepository.findByFacebookId(oauthId);
     }
 
     @Override
-    protected UserAccountDetailsDTO setOauthIdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
+    protected UserAccountDetailsDTO setOAuth2IdToPrincipal(UserAccountDetailsDTO principal, String oauthId) {
         return principal.withOauth2Identifiers(principal.getOauth2Identifiers().withFacebookId(oauthId));
     }
 
     @Override
-    protected void setOauthIdToEntity(Long id, String oauthId) {
+    protected UserAccount setOAuth2IdToEntity(Long id, String oauthId) {
         UserAccount userAccount = userAccountRepository.findById(id).orElseThrow();
         userAccount = userAccount.withOauthIdentifiers(userAccount.oauth2Identifiers().withFacebookId(oauthId));
         userAccount = userAccountRepository.save(userAccount);
+        return userAccount;
     }
 
     @Override
@@ -123,7 +96,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
         String maybeImageUrl = getAvatarUrl(map);
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForFacebookInsert(oauthId, login, maybeImageUrl);
         userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created {} user id={} login='{}'", getOauthName(), oauthId, login);
+        LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 
         return userAccount;
     }
