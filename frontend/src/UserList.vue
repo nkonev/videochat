@@ -571,7 +571,7 @@ export default {
           },
       },
       itemIds: function(newValue, oldValue) {
-        if (newValue.length == 0) {
+        if (oldValue.length !== 0 && newValue.length == 0) {
           this.graphQlUnsubscribe();
         } else {
           if (!isSetEqual(oldValue, newValue)) {

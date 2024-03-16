@@ -554,7 +554,7 @@ export default {
           },
       },
       tetAtetParticipants: function(newValue, oldValue) {
-          if (newValue.length == 0) {
+          if (oldValue.length !== 0 && newValue.length === 0) {
               this.graphQlUserStatusUnsubscribe();
           } else {
               if (!isSetEqual(oldValue, newValue)) {

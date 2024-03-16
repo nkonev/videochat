@@ -550,7 +550,7 @@
             participantsDto(newValue, oldValue) {
                 const oldArr = oldValue?.participants.map((p)=> p.id );
                 const newArr = newValue?.participants.map((p)=> p.id );
-                if (newArr == null || newArr.length == 0) {
+                if ((oldArr != null && oldArr.length !== 0) && (newArr == null || newArr.length === 0)) {
                     this.graphQlUserStatusUnsubscribe();
                 } else {
                     if (!isSetEqual(oldArr, newArr)) {
