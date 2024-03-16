@@ -262,8 +262,9 @@ public class UserProfileController {
         UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
 
         // check email already present
-        if (!userService.checkEmailIsFree(userAccountDTO, exists))
+        if (!userService.checkEmailIsFree(userAccountDTO, exists)) {
             return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
+        }
 
         // check login already present
         userService.checkLoginIsFree(userAccountDTO, exists);
@@ -300,6 +301,12 @@ public class UserProfileController {
         UserAccount userAccount = userAccountRepository.findById(userConfirmationToken.userId()).orElseThrow();
         if (!StringUtils.hasLength(userAccount.newEmail())) {
             LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
+            return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
+        }
+
+        // check email already present
+        if (!userService.checkEmailIsFree(userAccount.newEmail())) {
+            LOGGER.info("Somebody has already taken this email {}", userAccount.newEmail());
             return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
         }
 

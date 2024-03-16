@@ -41,6 +41,15 @@ public class UserService {
         }
     }
 
+    public boolean checkEmailIsFree(String email) {
+        if (userAccountRepository.findByEmail(email).isPresent()) {
+            LOGGER.warn("user with email '{}' already present. exiting...", email);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public boolean checkEmailIsFree(EditUserDTO userAccountDTO) {
         if(userAccountRepository.findByEmail(userAccountDTO.email()).isPresent()){
             LOGGER.warn("Skipping sent registration email '{}' because this user already present", userAccountDTO.email());
