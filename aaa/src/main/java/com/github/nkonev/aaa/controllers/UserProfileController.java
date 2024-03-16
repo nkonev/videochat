@@ -117,7 +117,7 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.CHANGE_EMAIL_CONFIRM)
     public String changeEmailConfirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
-        return userProfileService.changeEmailConfirm(uuid, httpSession);
+        return "redirect:" + userProfileService.changeEmailConfirm(uuid, httpSession);
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -172,7 +172,7 @@ public class UserProfileController {
     @PreAuthorize("@aaaPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
     public com.github.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.ConfirmDTO confirmDTO){
-        return userProfileService.setNewEmailConfirmed(userAccountDetailsDTO, confirmDTO);
+        return userProfileService.setConfirmed(userAccountDetailsDTO, confirmDTO);
     }
 
     @ResponseBody

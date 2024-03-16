@@ -92,17 +92,17 @@ public class RegistrationService {
     public String confirm(UUID uuid, HttpSession httpSession) {
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
-            return "redirect:" + customConfig.getRegistrationConfirmExitTokenNotFoundUrl();
+            return customConfig.getRegistrationConfirmExitTokenNotFoundUrl();
         }
         UserConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
         Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.userId());
         if (!userAccountOptional.isPresent()) {
-            return "redirect:" + customConfig.getRegistrationConfirmExitUserNotFoundUrl();
+            return customConfig.getRegistrationConfirmExitUserNotFoundUrl();
         }
         UserAccount userAccount = userAccountOptional.get();
         if (userAccount.confirmed()) {
             LOGGER.warn("Somebody attempts secondary confirm already confirmed user account with email='{}'", userAccount);
-            return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
+            return customConfig.getRegistrationConfirmExitSuccessUrl();
         }
 
         userAccount = userAccount.withConfirmed(true);
@@ -115,7 +115,7 @@ public class RegistrationService {
         loginListener.onApplicationEvent(auth);
         eventService.notifyProfileUpdated(userAccount);
 
-        return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
+        return customConfig.getRegistrationConfirmExitSuccessUrl();
     }
 
     @Transactional

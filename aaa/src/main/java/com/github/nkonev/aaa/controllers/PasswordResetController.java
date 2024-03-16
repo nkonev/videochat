@@ -6,8 +6,6 @@ import com.github.nkonev.aaa.dto.PasswordResetDTO;
 import com.github.nkonev.aaa.services.PasswordResetService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,8 +17,6 @@ public class PasswordResetController {
 
     @Autowired
     private PasswordResetService passwordResetService;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetController.class);
 
     /**
      * https://www.owasp.org/index.php/Forgot_Password_Cheat_Sheet

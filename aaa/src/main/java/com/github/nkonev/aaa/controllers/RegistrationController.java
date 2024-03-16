@@ -26,7 +26,7 @@ public class RegistrationController {
 
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER_CONFIRM)
     public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
-        return registrationService.confirm(uuid, httpSession);
+        return "redirect:" + registrationService.confirm(uuid, httpSession);
     }
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)

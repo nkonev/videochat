@@ -243,19 +243,19 @@ public class UserProfileService {
     public String changeEmailConfirm(UUID uuid, HttpSession httpSession) {
         Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
-            return "redirect:" + customConfig.getConfirmChangeEmailExitTokenNotFoundUrl();
+            return customConfig.getConfirmChangeEmailExitTokenNotFoundUrl();
         }
         ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
         UserAccount userAccount = userAccountRepository.findById(userConfirmationToken.userId()).orElseThrow();
         if (!StringUtils.hasLength(userAccount.newEmail())) {
             LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
-            return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
+            return customConfig.getConfirmChangeEmailExitSuccessUrl();
         }
 
         // check email already present
         if (!userService.checkEmailIsFree(userAccount.newEmail())) {
             LOGGER.info("Somebody has already taken this email {}", userAccount.newEmail());
-            return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
+            return customConfig.getConfirmChangeEmailExitSuccessUrl();
         }
 
         userAccount = userAccount.withEmail(userAccount.newEmail());
@@ -269,7 +269,7 @@ public class UserProfileService {
 
         notifier.notifyProfileUpdated(userAccount);
 
-        return "redirect:" + customConfig.getConfirmChangeEmailExitSuccessUrl();
+        return customConfig.getConfirmChangeEmailExitSuccessUrl();
     }
 
     @Transactional
@@ -324,7 +324,7 @@ public class UserProfileService {
     }
 
     @Transactional
-    public UserAccountDTOExtended setNewEmailConfirmed(UserAccountDetailsDTO userAccountDetailsDTO, ConfirmDTO confirmDTO){
+    public UserAccountDTOExtended setConfirmed(UserAccountDetailsDTO userAccountDetailsDTO, ConfirmDTO confirmDTO){
         UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
         if (!confirmDTO.confirm()){
             aaaUserDetailsService.killSessions(confirmDTO.userId(), ForceKillSessionsReasonType.user_unconfirmed);
