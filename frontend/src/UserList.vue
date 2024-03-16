@@ -197,7 +197,7 @@ export default {
       return this.chatStore.progressCount > 0
     },
     itemIds() {
-      return this.items.map(i => i.id);
+      return this.getUserIdsSubscribeTo();
     },
   },
 
@@ -434,10 +434,9 @@ export default {
     },
 
     getGraphQlSubscriptionQuery() {
-      const userIds = this.getUserIdsSubscribeTo();
       return `
                 subscription {
-                  userAccountEvents(userIds:[${userIds}]) {
+                  userAccountEvents(userIds:[${this.itemIds}]) {
                     userAccountEvent {
                       ... on UserAccountExtendedDto {
                         id
@@ -492,15 +491,13 @@ export default {
       if (d.eventType === 'user_account_changed') {
         const tmp = deepCopy(d.userAccountEvent);
         this.transformItem(tmp);
-        this.changeItem(tmp);
-        this.performMarking();
+        this.onEditUser(tmp);
       } else if (d.eventType === 'user_account_deleted') {
-          this.removeItem(d.userAccountEvent);
+          this.onDeleteUser(d.userAccountEvent);
       } else if (d.eventType === 'user_account_created') {
           const tmp = deepCopy(d.userAccountEvent);
           this.transformItem(tmp);
-          this.addItem(tmp);
-          this.performMarking();
+          this.onNewUser(tmp);
       }
     },
 
@@ -529,6 +526,35 @@ export default {
           console.log("Item was not be removed", dto);
       }
     },
+
+    onNewUser(dto) {
+      const isScrolledToBottom = this.loadedBottom;
+      const emptySearchString = !hasLength(this.searchString);
+      if (isScrolledToBottom && emptySearchString) {
+          this.addItem(dto);
+          this.performMarking();
+      } else if (isScrolledToBottom) { // not empty searchString
+          axios.put(`/api/aaa/user/filter`, {
+              searchString: this.searchString,
+              userId: dto.id
+          }).then(({data}) => {
+              if (data.found) {
+                  this.addItem(dto);
+                  this.performMarking();
+              }
+          })
+      } else {
+          console.log("Skipping", dto, isScrolledToBottom, emptySearchString)
+      }
+    },
+    onDeleteUser(dto) {
+      this.removeItem(dto);
+    },
+    onEditUser(dto) {
+      this.changeItem(dto);
+      this.performMarking();
+    },
+
 
     onShowContextMenu(e, menuableItem) {
       this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
@@ -581,13 +607,9 @@ export default {
           },
       },
       itemIds: function(newValue, oldValue) {
-        if (oldValue.length !== 0 && newValue.length == 0) {
-          this.graphQlUnsubscribe();
-        } else {
-          if (!isSetEqual(oldValue, newValue)) {
-            this.graphQlSubscribe();
+          if (!isSetEqual(oldValue, newValue) || oldValue.length === 0) { // second - to subscribe to new users
+              this.graphQlSubscribe();
           }
-        }
       },
       '$route': {
           handler: async function (newValue, oldValue) {

@@ -173,6 +173,19 @@ public class UserProfileController {
         return result.stream().map(getConvertToUserAccountDTO(userAccount)).toList();
     }
 
+    record FilterUserRequest(
+        String searchString,
+        long userId
+    ) {}
+
+    @ResponseBody
+    @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+"/filter")
+    public Map<String, Boolean> filter(@RequestBody FilterUserRequest filterUserRequest) {
+        var searchStringWithPercents = "%" + filterUserRequest.searchString() + "%";
+        var found = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(1, 0, searchStringWithPercents, List.of(filterUserRequest.userId()));
+        return Map.of("found", !found.isEmpty());
+    }
+
     @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)

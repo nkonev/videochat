@@ -769,7 +769,7 @@ type SearchRequestDto struct {
 	MessageId int64 `json:"messageId"`
 }
 
-func (mc *MessageHandler) Search(c echo.Context) error {
+func (mc *MessageHandler) Filter(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
