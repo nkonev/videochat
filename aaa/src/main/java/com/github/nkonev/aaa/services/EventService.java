@@ -2,10 +2,7 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.controllers.UserProfileController;
 import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
-import com.github.nkonev.aaa.dto.UserAccountDeletedEventDTO;
-import com.github.nkonev.aaa.dto.UserAccountEventGroupDTO;
-import com.github.nkonev.aaa.dto.UserSessionsKilledEventDTO;
+import com.github.nkonev.aaa.dto.*;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.security.PrincipalToCheck;
 import com.github.nkonev.aaa.security.UserRoleService;
@@ -29,6 +26,19 @@ public class EventService {
 
     @Autowired
     private UserRoleService userRoleService;
+
+    public void notifyProfileCreated(UserAccount userAccount) {
+        var data = new UserAccountCreatedEventGroupDTO(
+            userAccount.id(),
+            "user_account_created",
+            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.knownAdmin(), userAccount),
+            UserAccountConverter.convertToUserAccountDTO(userAccount)
+        );
+        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
+            message.getMessageProperties().setType("dto.UserAccountCreatedEventGroup");
+            return message;
+        });
+    }
 
     public void notifyProfileUpdated(UserAccount userAccount) {
         var data = new UserAccountEventGroupDTO(

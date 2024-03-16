@@ -4,6 +4,7 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
+
+    @Autowired
+    private EventService eventService;
 
     @Value("${custom.ldap.auth.base:}")
     private String base;
@@ -66,12 +70,14 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
             try {
                 var lq = LdapQueryBuilder.query().base(base).filter(filter, userName);
                 ldapOperations.authenticate(lq, encodedPassword);
-                var ctx = ldapOperations.searchForContext(lq);
                 UserAccount byUsername = userAccountRepository
                         .findByUsername(userName)
                         .orElseGet(() -> {
+                            var ctx = ldapOperations.searchForContext(lq);
                             var userId = ctx.getObjectAttribute(uidName).toString();
-                            return userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId));
+                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId));
+                            eventService.notifyProfileCreated(user);
+                            return user;
                         });
                 UserAccountDetailsDTO userDetails = Optional.of(byUsername)
                         .map(UserAccountConverter::convertToUserAccountDetailsDTO)

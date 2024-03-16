@@ -12,6 +12,7 @@ import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.security.LoginListener;
 import com.github.nkonev.aaa.security.SecurityUtils;
 import com.github.nkonev.aaa.services.AsyncEmailService;
+import com.github.nkonev.aaa.services.EventService;
 import com.github.nkonev.aaa.services.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -56,6 +57,9 @@ public class RegistrationController {
     @Autowired
     private LoginListener loginListener;
 
+    @Autowired
+    private EventService eventService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
@@ -71,6 +75,7 @@ public class RegistrationController {
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForInsert(userAccountDTO, passwordEncoder);
 
         userAccount = userAccountRepository.save(userAccount);
+        eventService.notifyProfileCreated(userAccount);
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
         asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username(), language);
     }
@@ -109,6 +114,7 @@ public class RegistrationController {
         var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         SecurityUtils.setToContext(httpSession, auth);
         loginListener.onApplicationEvent(auth);
+        eventService.notifyProfileUpdated(userAccount);
 
         return "redirect:" + customConfig.getRegistrationConfirmExitSuccessUrl();
     }

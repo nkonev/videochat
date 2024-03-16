@@ -4,6 +4,7 @@ import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.exception.OAuth2IdConflictException;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -81,6 +82,8 @@ public abstract class AbstractOAuth2UserService {
         }
     }
 
+    abstract protected EventService getEventService();
+
     protected UserAccountDetailsDTO createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
         UserAccount userAccount;
         validateAndTrimLogin(login);
@@ -93,6 +96,7 @@ public abstract class AbstractOAuth2UserService {
             }
 
             userAccount = insertEntity(oauthId, login, attributes, roles);
+            getEventService().notifyProfileCreated(userAccount);
         } else {
             userAccount = userAccountOpt.get();
         }

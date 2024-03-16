@@ -6,6 +6,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
+import com.github.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,14 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
 
     @Autowired
     private OidcUserService oidcUserService;
+
+    @Autowired
+    private EventService eventService;
+
+    @Override
+    protected EventService getEventService() {
+        return eventService;
+    }
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {

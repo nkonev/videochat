@@ -21,9 +21,9 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 	res.AddToRegistryIfNeed([]dto.UserOnline{})
 	res.AddToRegistryIfNeed(dto.GeneralEvent{})
 	res.AddToRegistryIfNeed(dto.UserAccountEventGroup{})
+	res.AddToRegistryIfNeed(dto.UserAccountCreatedEventGroup{})
 	res.AddToRegistryIfNeed(dto.UserAccountDeletedEvent{})
 	res.AddToRegistryIfNeed(dto.UserSessionsKilledEvent{})
-
 	return res
 }
 

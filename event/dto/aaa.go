@@ -51,6 +51,17 @@ func (UserAccountEventGroup) Name() eventbus.EventName {
 	return AAA_CHANGE
 }
 
+type UserAccountCreatedEventGroup struct {
+	UserId int64 `json:"userId"`
+	EventType string `json:"eventType"`
+	ForRoleAdmin *UserAccountExtended `json:"forRoleAdmin"`
+	ForRoleUser  *UserAccount `json:"forRoleUser"`
+}
+
+func (UserAccountCreatedEventGroup) Name() eventbus.EventName {
+	return AAA_CREATE
+}
+
 
 type UserAccountDeletedEvent struct {
 	UserId int64 `json:"userId"`

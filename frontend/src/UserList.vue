@@ -496,6 +496,11 @@ export default {
         this.performMarking();
       } else if (d.eventType === 'user_account_deleted') {
           this.removeItem(d.userAccountEvent);
+      } else if (d.eventType === 'user_account_created') {
+          const tmp = deepCopy(d.userAccountEvent);
+          this.transformItem(tmp);
+          this.addItem(tmp);
+          this.performMarking();
       }
     },
 
@@ -504,7 +509,10 @@ export default {
       let idxOf = findIndex(this.items, item);
       return idxOf !== -1;
     },
-
+    addItem(dto) {
+      console.log("Adding item", dto);
+      this.items.push(dto);
+    },
     changeItem(dto) {
       console.log("Replacing item", dto);
       replaceInArray(this.items, dto);

@@ -310,6 +310,40 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		return nil, err
 	}
 
+	subscribeHandlerAaaCreate, err := r.Bus.Subscribe(dto.AAA_CREATE, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+			}
+		}()
+
+		switch typedEvent := event.(type) {
+		case dto.UserAccountCreatedEventGroup:
+			// if I'm an admin then prepare dto with admin's fields
+			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") {
+				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
+				if anEvent != nil {
+					cam <- anEvent
+				}
+				break
+			}
+			// else if I'm un user then prepare dto with user's fields
+			if utils.ContainsString(authResult.Roles, "ROLE_USER") {
+				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
+				if anEvent != nil {
+					cam <- anEvent
+				}
+				break
+			}
+		default:
+			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+		}
+	})
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		return nil, err
+	}
+
 	subscribeHandlerAaaDelete, err := r.Bus.Subscribe(dto.AAA_DELETE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -340,6 +374,12 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 				err := r.Bus.Unsubscribe(subscribeHandlerAaaChange)
 				if err != nil {
 					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount change channel for user %v", authResult.UserId)
+				}
+
+				logger.GetLogEntry(ctx).Infof("Closing UserAccount create channel for user %v", authResult.UserId)
+				err = r.Bus.Unsubscribe(subscribeHandlerAaaCreate)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount create channel for user %v", authResult.UserId)
 				}
 
 				logger.GetLogEntry(ctx).Infof("Closing UserAccount delete channel for user %v", authResult.UserId)

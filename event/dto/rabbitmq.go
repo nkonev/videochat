@@ -11,6 +11,8 @@ const GLOBAL_USER_EVENTS = "events.user"
 const USER_ONLINE = "user.online"
 
 const GENERAL = "events.general"
+
+const AAA_CREATE = "events.aaa.create"
 const AAA_CHANGE = "events.aaa.change"
 const AAA_DELETE = "events.aaa.delete"
 
