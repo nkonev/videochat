@@ -211,6 +211,10 @@
                 return this.participantsDto != null && this.participantsDto.participantsCount > pageSize
             },
             ...mapStores(useChatStore),
+            participantIds() {
+                const tmps = deepCopy(this.participantsDto?.participants || []);
+                return tmps.map((item) => item.id);
+            },
         },
 
         methods: {
@@ -547,9 +551,7 @@
                     this.closeModal();
                 }
             },
-            participantsDto(newValue, oldValue) {
-                const oldArr = oldValue?.participants.map((p)=> p.id ) || [];
-                const newArr = newValue?.participants.map((p)=> p.id ) || [];
+            participantIds(newArr, oldArr) {
                 if (oldArr.length !== 0 && newArr.length === 0) {
                     this.graphQlUserStatusUnsubscribe();
                 } else {
