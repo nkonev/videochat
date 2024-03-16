@@ -111,7 +111,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
-                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .with(csrf())
@@ -152,7 +152,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withPassword(newPassword);
 
         MvcResult mvcResult = mockMvc.perform(
-                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -211,7 +211,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withLogin(newLogin);
 
         MvcResult mvcResult = mockMvc.perform(
-                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -240,7 +240,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         edit = edit.withEmail(newEmail);
 
         MvcResult mvcResult = mockMvc.perform(
-                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE + "?language=en")
+                patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                         .content(objectMapper.writeValueAsString(edit))
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .with(csrf())
@@ -578,7 +578,6 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         mockMvc.perform(
                 MockMvcRequestBuilders.patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                     .content(objectMapper.writeValueAsString(createUserDTO))
-                    .queryParam("language", Language.en.name())
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
             )
@@ -629,7 +628,6 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         mockMvc.perform(
                 MockMvcRequestBuilders.patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
                     .content(objectMapper.writeValueAsString(createUserDTO))
-                    .queryParam("language", Language.en.name())
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
             )
@@ -644,7 +642,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
         {
             long tokenCountBeforeResend = changeEmailConfirmationTokenRepository.count();
             mockMvc.perform(
-                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM + "?language=en")
+                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM)
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
