@@ -10,6 +10,7 @@ import com.icegreen.greenmail.util.Retriever;
 import jakarta.mail.Message;
 import org.eclipse.angus.mail.imap.IMAPMessage;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -24,6 +25,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@DisplayName("Password reset")
 public class PasswordResetControllerTest extends AbstractUtTestRunner {
 
     @Autowired

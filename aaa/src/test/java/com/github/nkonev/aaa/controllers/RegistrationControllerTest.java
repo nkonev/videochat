@@ -17,6 +17,7 @@ import org.eclipse.angus.mail.imap.IMAPMessage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//@DisplayName("Testing registration with GreenMail per test")
+@DisplayName("Registration")
 public class RegistrationControllerTest extends AbstractUtTestRunner {
 
     @Autowired
