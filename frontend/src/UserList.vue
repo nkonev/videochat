@@ -409,6 +409,13 @@ export default {
               return false
           }
     },
+    isScrolledToBottom() {
+        if (this.scrollerDiv) {
+            return Math.abs(this.scrollerDiv.scrollHeight - this.scrollerDiv.scrollTop - this.scrollerDiv.clientHeight) < SCROLLING_THRESHHOLD
+        } else {
+            return false
+        }
+    },
     updateTopAndBottomIds() {
       this.startingFromItemIdTop = this.getMinimumItemId();
       this.startingFromItemIdBottom = this.getMaximumItemId();
@@ -528,11 +535,12 @@ export default {
     },
 
     onNewUser(dto) {
-      const isScrolledToBottom = this.loadedBottom;
+      const isScrolledToBottom = this.isScrolledToBottom();
       const emptySearchString = !hasLength(this.searchString);
       if (isScrolledToBottom && emptySearchString) {
           this.addItem(dto);
           this.performMarking();
+          this.scrollTo(userIdHashPrefix + dto.id)
       } else if (isScrolledToBottom) { // not empty searchString
           axios.put(`/api/aaa/user/filter`, {
               searchString: this.searchString,
@@ -541,6 +549,7 @@ export default {
               if (data.found) {
                   this.addItem(dto);
                   this.performMarking();
+                  this.scrollTo(userIdHashPrefix + dto.id)
               }
           })
       } else {
