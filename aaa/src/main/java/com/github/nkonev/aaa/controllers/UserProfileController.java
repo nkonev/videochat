@@ -111,8 +111,7 @@ public class UserProfileController {
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
     public com.github.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting external user profile");
-        Long expiresAt = getExpiresAt(session);
-        return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastLoginDateTime(), expiresAt);
+        return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastLoginDateTime(), getExpiresAt(session));
     }
 
     @ResponseBody
@@ -249,7 +248,7 @@ public class UserProfileController {
     @ResponseBody
     @PatchMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
     @PreAuthorize("isAuthenticated()")
-    public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
+    public UserSelfProfileDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
             @RequestParam(defaultValue = Language.DEFAULT) Language language,
@@ -263,7 +262,8 @@ public class UserProfileController {
 
         // check email already present
         if (!userService.checkEmailIsFree(userAccountDTO, exists)) {
-            return UserAccountConverter.convertToEditUserDto(exists); // we care for email leak...
+            // we care for email leak...
+            return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
         }
 
         // check login already present
@@ -281,7 +281,7 @@ public class UserProfileController {
 
         notifier.notifyProfileUpdated(exists);
 
-        return UserAccountConverter.convertToEditUserDto(exists);
+        return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
     }
 
     private ChangeEmailConfirmationToken createChangeEmailConfirmationToken(long userId) {
@@ -445,7 +445,7 @@ public class UserProfileController {
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+"/{provider}")
-    public void selfDeleteBindingOauth2Provider(
+    public UserSelfProfileDTO selfDeleteBindingOauth2Provider(
         @AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO,
         @PathVariable("provider") String provider,
         HttpSession httpSession
@@ -462,6 +462,10 @@ public class UserProfileController {
         userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
         SecurityUtils.convertAndSetToContext(httpSession, userAccount);
+
+        notifier.notifyProfileUpdated(userAccount);
+
+        return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastLoginDateTime(), getExpiresAt(httpSession));
     }
 
     @ResponseBody

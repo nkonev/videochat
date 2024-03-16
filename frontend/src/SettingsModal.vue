@@ -116,13 +116,13 @@ export default {
       return axios.post('/api/storage/avatar', formData, config)
         .then((res) => {
           return axios.patch(`/api/aaa/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl}).then((response) => {
-            return this.chatStore.fetchUserProfile()
+              this.chatStore.currentUser = response.data;
           })
         })
     },
     removeAvatarFromProfile() {
       return axios.patch(`/api/aaa/profile`, {removeAvatar: true}).then((response) => {
-        return this.chatStore.fetchUserProfile()
+          this.chatStore.currentUser = response.data;
       });
     },
     openAvatarDialog() {

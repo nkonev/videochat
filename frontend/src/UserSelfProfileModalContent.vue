@@ -359,7 +359,7 @@ export default {
             this.loading = true;
             axios.patch('/api/aaa/profile', {login: this.chatStore.currentUser.login})
                 .then((response) => {
-                    this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                     this.showLoginInput = false;
                 }).finally(()=>{
                     this.loading = false;
@@ -369,6 +369,7 @@ export default {
             this.loading = true;
             axios.patch('/api/aaa/profile', {password: this.password})
                 .then((response) => {
+                    this.chatStore.currentUser = response.data;
                     this.showPasswordInput = false;
                 }).finally(()=>{
                     this.loading = false;
@@ -380,7 +381,7 @@ export default {
                 language: this.$vuetify.locale.current
             }})
                 .then((response) => {
-                    this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                     this.showEmailInput = false;
                 }).finally(()=>{
                     this.loading = false;
@@ -398,7 +399,7 @@ export default {
             this.loading = true;
             axios.patch('/api/aaa/profile', {shortInfo: this.chatStore.currentUser.shortInfo})
                 .then((response) => {
-                    this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                     this.showShortInfoInput = false;
                 }).finally(()=>{
                     this.loading = false;
@@ -408,7 +409,7 @@ export default {
             this.loading = true;
             axios.delete('/api/aaa/profile/vkontakte')
                 .then((response) => {
-                  this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                 }).finally(()=>{
                     this.loading = false;
                 })
@@ -417,7 +418,7 @@ export default {
             this.loading = true;
             axios.delete('/api/aaa/profile/facebook')
                 .then((response) => {
-                  this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                 }).finally(()=>{
                     this.loading = false;
                 })
@@ -426,7 +427,7 @@ export default {
             this.loading = true;
             axios.delete('/api/aaa/profile/google')
                 .then((response) => {
-                  this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                 }).finally(()=>{
                     this.loading = false;
                 })
@@ -435,7 +436,7 @@ export default {
             this.loading = true;
             axios.delete('/api/aaa/profile/keycloak')
                 .then((response) => {
-                    this.chatStore.fetchUserProfile()
+                    this.chatStore.currentUser = response.data;
                 }).finally(()=>{
                     this.loading = false;
                 })
