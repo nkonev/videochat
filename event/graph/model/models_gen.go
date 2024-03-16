@@ -249,6 +249,11 @@ type UserAccountExtendedDto struct {
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}
 
+type UserAccountSelfEvent struct {
+	EventType        string                  `json:"eventType"`
+	UserAccountEvent *UserAccountExtendedDto `json:"userAccountEvent"`
+}
+
 type UserDeletedDto struct {
 	ID int64 `json:"id"`
 }

@@ -256,6 +256,10 @@ const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
 };
 
+const getSelfEventsData = (message) => {
+    return message.data?.userAccountSelfEvents
+};
+
 export default {
     mixins: [
         searchStringFacade(),
@@ -464,6 +468,34 @@ export default {
                         reasonType
                       }
                     }
+                    userAccountSelfEvents {
+                      userAccountEvent {
+                        id
+                        login
+                        avatar
+                        avatarBig
+                        shortInfo
+                        lastLoginDateTime
+                        oauth2Identifiers {
+                          facebookId
+                          vkontakteId
+                          googleId
+                          keycloakId
+                        }
+                        additionalData {
+                          enabled
+                          expired
+                          locked
+                          confirmed
+                          roles
+                        }
+                        canLock
+                        canDelete
+                        canChangeRole
+                        canConfirm
+                      }
+                      eventType
+                    }
                   }
               `
         },
@@ -511,6 +543,9 @@ export default {
             const d = getGlobalEventsData(e).forceLogout;
             console.log("Killed sessions, reason:", d.reasonType)
             bus.emit(LOGGED_OUT);
+          } else if (getSelfEventsData(e).eventType === 'user_account_changed') {
+              const d = getSelfEventsData(e).userAccountEvent;
+              this.chatStore.currentUser = d;
           }
         },
         onChatAvatarClick() {

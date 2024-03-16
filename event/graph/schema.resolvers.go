@@ -279,7 +279,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		case dto.UserAccountEventGroup:
 			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
 			if authResult.UserId == typedEvent.UserId && utils.Contains(userIds, typedEvent.UserId) {
-				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForMyself)
+				var anEvent = convertUserAccountEventUnionExtended(typedEvent.EventType, typedEvent.ForMyself)
 				if anEvent != nil {
 					cam <- anEvent
 				}
@@ -287,7 +287,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 			}
 			// if I'm an admin then prepare dto with admin's fields
 			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") && utils.Contains(userIds, typedEvent.UserId) {
-				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
+				var anEvent = convertUserAccountEventUnionExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
 				if anEvent != nil {
 					cam <- anEvent
 				}
@@ -295,7 +295,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 			}
 			// else if I'm un user then prepare dto with user's fields
 			if utils.ContainsString(authResult.Roles, "ROLE_USER") && utils.Contains(userIds, typedEvent.UserId) {
-				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
+				var anEvent = convertUserAccountEventUnion(typedEvent.EventType, typedEvent.ForRoleUser)
 				if anEvent != nil {
 					cam <- anEvent
 				}
@@ -357,6 +357,61 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 	return cam, nil
 }
 
+// UserAccountSelfEvents is the resolver for the userAccountSelfEvents field.
+func (r *subscriptionResolver) UserAccountSelfEvents(ctx context.Context) (<-chan *model.UserAccountSelfEvent, error) {
+	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		return nil, errors.New("Unable to get auth context")
+	}
+	logger.GetLogEntry(ctx).Infof("Subscribing to UserAccount channel as user %v", authResult.UserId)
+
+	var cam = make(chan *model.UserAccountSelfEvent)
+
+	subscribeHandlerAaaChange, err := r.Bus.Subscribe(dto.AAA_CHANGE, func(event eventbus.Event, t time.Time) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+			}
+		}()
+
+		switch typedEvent := event.(type) {
+		case dto.UserAccountEventGroup:
+			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
+			if authResult.UserId == typedEvent.UserId {
+				var anEvent = convertUserAccountSelfEventExtended(typedEvent.EventType, typedEvent.ForMyself)
+				if anEvent != nil {
+					cam <- anEvent
+				}
+				break
+			}
+		default:
+			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+		}
+	})
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		return nil, err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				logger.GetLogEntry(ctx).Infof("Closing UserAccount change channel for user %v", authResult.UserId)
+				err := r.Bus.Unsubscribe(subscribeHandlerAaaChange)
+				if err != nil {
+					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount change channel for user %v", authResult.UserId)
+				}
+
+				close(cam)
+				return
+			}
+		}
+	}()
+
+	return cam, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -372,7 +427,7 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertUserAccountEvent(eventType string, aDto *dto.UserAccount) *model.UserAccountEvent {
+func convertUserAccountEventUnion(eventType string, aDto *dto.UserAccount) *model.UserAccountEvent {
 	if aDto != nil {
 		ret := model.UserAccountEvent{}
 		ret.EventType = eventType
@@ -395,12 +450,27 @@ func convertUserAccountDeletedEvent(eventType string, userId int64) *model.UserA
 	ret.EventType = eventType
 	return &ret
 }
-func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountEvent {
+func convertUserAccountEventUnionExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountEvent {
 	if aDto != nil {
 		ret := model.UserAccountEvent{}
 		ret.EventType = eventType
-
-		ret.UserAccountEvent = &model.UserAccountExtendedDto{
+		ret.UserAccountEvent = convertUserAccountEventExtended(aDto)
+		return &ret
+	}
+	return nil
+}
+func convertUserAccountSelfEventExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountSelfEvent {
+	if aDto != nil {
+		ret := model.UserAccountSelfEvent{}
+		ret.EventType = eventType
+		ret.UserAccountEvent = convertUserAccountEventExtended(aDto)
+		return &ret
+	}
+	return nil
+}
+func convertUserAccountEventExtended(aDto *dto.UserAccountExtended) *model.UserAccountExtendedDto {
+	if aDto != nil {
+		return &model.UserAccountExtendedDto{
 			ID:                aDto.Id,
 			Login:             aDto.Login,
 			Avatar:            aDto.Avatar,
@@ -420,7 +490,6 @@ func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExte
 			CanChangeRole: aDto.CanChangeRole,
 			CanConfirm:    aDto.CanConfirm,
 		}
-		return &ret
 	}
 	return nil
 }
@@ -722,16 +791,14 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 
 	return ret
 }
-
 func convertToUserSessionsKilledEvent(aDto *dto.UserSessionsKilledEvent) *model.GlobalEvent {
 	var ret = &model.GlobalEvent{
-		EventType: aDto.EventType,
+		EventType:   aDto.EventType,
 		ForceLogout: &model.ForceLogoutEvent{ReasonType: aDto.ReasonType},
 	}
 
 	return ret
 }
-
 func convertParticipant(owner *dto.User) *model.Participant {
 	if owner == nil {
 		return nil

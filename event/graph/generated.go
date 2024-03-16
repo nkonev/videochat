@@ -253,10 +253,11 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		ChatEvents        func(childComplexity int, chatID int64) int
-		GlobalEvents      func(childComplexity int) int
-		UserAccountEvents func(childComplexity int, userIds []int64) int
-		UserStatusEvents  func(childComplexity int, userIds []int64) int
+		ChatEvents            func(childComplexity int, chatID int64) int
+		GlobalEvents          func(childComplexity int) int
+		UserAccountEvents     func(childComplexity int, userIds []int64) int
+		UserAccountSelfEvents func(childComplexity int) int
+		UserStatusEvents      func(childComplexity int, userIds []int64) int
 	}
 
 	UserAccountDto struct {
@@ -287,6 +288,11 @@ type ComplexityRoot struct {
 		Login             func(childComplexity int) int
 		Oauth2Identifiers func(childComplexity int) int
 		ShortInfo         func(childComplexity int) int
+	}
+
+	UserAccountSelfEvent struct {
+		EventType        func(childComplexity int) int
+		UserAccountEvent func(childComplexity int) int
 	}
 
 	UserDeletedDto struct {
@@ -355,6 +361,7 @@ type SubscriptionResolver interface {
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
 	UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserStatusEvent, error)
 	UserAccountEvents(ctx context.Context, userIds []int64) (<-chan *model.UserAccountEvent, error)
+	UserAccountSelfEvents(ctx context.Context) (<-chan *model.UserAccountSelfEvent, error)
 }
 
 type executableSchema struct {
@@ -1352,6 +1359,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.UserAccountEvents(childComplexity, args["userIds"].([]int64)), true
 
+	case "Subscription.userAccountSelfEvents":
+		if e.complexity.Subscription.UserAccountSelfEvents == nil {
+			break
+		}
+
+		return e.complexity.Subscription.UserAccountSelfEvents(childComplexity), true
+
 	case "Subscription.userStatusEvents":
 		if e.complexity.Subscription.UserStatusEvents == nil {
 			break
@@ -1510,6 +1524,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAccountExtendedDto.ShortInfo(childComplexity), true
+
+	case "UserAccountSelfEvent.eventType":
+		if e.complexity.UserAccountSelfEvent.EventType == nil {
+			break
+		}
+
+		return e.complexity.UserAccountSelfEvent.EventType(childComplexity), true
+
+	case "UserAccountSelfEvent.userAccountEvent":
+		if e.complexity.UserAccountSelfEvent.UserAccountEvent == nil {
+			break
+		}
+
+		return e.complexity.UserAccountSelfEvent.UserAccountEvent(childComplexity), true
 
 	case "UserDeletedDto.id":
 		if e.complexity.UserDeletedDto.ID == nil {
@@ -8472,6 +8500,70 @@ func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_userAccountSelfEvents(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_userAccountSelfEvents(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().UserAccountSelfEvents(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.UserAccountSelfEvent):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNUserAccountSelfEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountSelfEvent(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_userAccountSelfEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "eventType":
+				return ec.fieldContext_UserAccountSelfEvent_eventType(ctx, field)
+			case "userAccountEvent":
+				return ec.fieldContext_UserAccountSelfEvent_userAccountEvent(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAccountSelfEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserAccountDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserAccountDto_id(ctx, field)
 	if err != nil {
@@ -9390,6 +9482,117 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_canConfirm(ctx c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountSelfEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountSelfEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountSelfEvent_eventType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EventType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountSelfEvent_eventType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountSelfEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountSelfEvent_userAccountEvent(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountSelfEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountSelfEvent_userAccountEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserAccountEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserAccountExtendedDto)
+	fc.Result = res
+	return ec.marshalOUserAccountExtendedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountExtendedDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountSelfEvent_userAccountEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountSelfEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserAccountExtendedDto_id(ctx, field)
+			case "login":
+				return ec.fieldContext_UserAccountExtendedDto_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_UserAccountExtendedDto_avatar(ctx, field)
+			case "avatarBig":
+				return ec.fieldContext_UserAccountExtendedDto_avatarBig(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_UserAccountExtendedDto_shortInfo(ctx, field)
+			case "lastLoginDateTime":
+				return ec.fieldContext_UserAccountExtendedDto_lastLoginDateTime(ctx, field)
+			case "oauth2Identifiers":
+				return ec.fieldContext_UserAccountExtendedDto_oauth2Identifiers(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_UserAccountExtendedDto_additionalData(ctx, field)
+			case "canLock":
+				return ec.fieldContext_UserAccountExtendedDto_canLock(ctx, field)
+			case "canDelete":
+				return ec.fieldContext_UserAccountExtendedDto_canDelete(ctx, field)
+			case "canChangeRole":
+				return ec.fieldContext_UserAccountExtendedDto_canChangeRole(ctx, field)
+			case "canConfirm":
+				return ec.fieldContext_UserAccountExtendedDto_canConfirm(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAccountExtendedDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -13634,6 +13837,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_userStatusEvents(ctx, fields[0])
 	case "userAccountEvents":
 		return ec._Subscription_userAccountEvents(ctx, fields[0])
+	case "userAccountSelfEvents":
+		return ec._Subscription_userAccountSelfEvents(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -13790,6 +13995,47 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userAccountSelfEventImplementors = []string{"UserAccountSelfEvent"}
+
+func (ec *executionContext) _UserAccountSelfEvent(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountSelfEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountSelfEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAccountSelfEvent")
+		case "eventType":
+			out.Values[i] = ec._UserAccountSelfEvent_eventType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userAccountEvent":
+			out.Values[i] = ec._UserAccountSelfEvent_userAccountEvent(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15018,6 +15264,20 @@ func (ec *executionContext) marshalNUserAccountEvent2ᚖnkonevᚗnameᚋeventᚋ
 	return ec._UserAccountEvent(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNUserAccountSelfEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountSelfEvent(ctx context.Context, sel ast.SelectionSet, v model.UserAccountSelfEvent) graphql.Marshaler {
+	return ec._UserAccountSelfEvent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserAccountSelfEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountSelfEvent(ctx context.Context, sel ast.SelectionSet, v *model.UserAccountSelfEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserAccountSelfEvent(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNUserStatusEvent2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserStatusEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserStatusEvent) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -15626,6 +15886,13 @@ func (ec *executionContext) marshalOUserAccountEventDto2nkonevᚗnameᚋeventᚋ
 		return graphql.Null
 	}
 	return ec._UserAccountEventDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserAccountExtendedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountExtendedDto(ctx context.Context, sel ast.SelectionSet, v *model.UserAccountExtendedDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserAccountExtendedDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx context.Context, sel ast.SelectionSet, v *model.UserTypingDto) graphql.Marshaler {

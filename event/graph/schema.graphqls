@@ -288,6 +288,11 @@ type UserAccountEvent {
     userAccountEvent: UserAccountEventDto
 }
 
+type UserAccountSelfEvent {
+    eventType:  String!
+    userAccountEvent: UserAccountExtendedDto
+}
+
 type Query {
     ping: Boolean
 }
@@ -297,4 +302,5 @@ type Subscription {
     globalEvents: GlobalEvent!
     userStatusEvents(userIds: [Int64!]!): [UserStatusEvent!]!
     userAccountEvents(userIds: [Int64!]!): UserAccountEvent!
+    userAccountSelfEvents: UserAccountSelfEvent!
 }
