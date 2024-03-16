@@ -2,7 +2,7 @@ package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.converter.UserAccountConverter;
 import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.PasswordResetDto;
+import com.github.nkonev.aaa.dto.PasswordResetDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
 import com.github.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
@@ -76,7 +76,7 @@ public class PasswordResetService {
     }
 
     @Transactional
-    public void resetPassword(PasswordResetDto passwordResetDto, HttpSession httpSession) {
+    public void resetPassword(PasswordResetDTO passwordResetDto, HttpSession httpSession) {
 
         // webpage parses token uuid from URL
         // .. and js sends this request

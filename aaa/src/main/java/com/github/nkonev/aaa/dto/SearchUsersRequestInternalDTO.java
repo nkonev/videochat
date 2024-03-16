@@ -2,7 +2,7 @@ package com.github.nkonev.aaa.dto;
 
 import java.util.List;
 
-public record SearchUsersRequestInternalDto(
+public record SearchUsersRequestInternalDTO(
     int page,
     int size,
     List<Long> userIds,

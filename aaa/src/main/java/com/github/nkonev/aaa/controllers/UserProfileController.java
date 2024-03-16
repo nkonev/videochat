@@ -59,7 +59,7 @@ public class UserProfileController {
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
     public List<com.github.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody SearchUsersRequestDto request
+            @RequestBody SearchUsersRequestDTO request
     ) {
         LOGGER.info("Searching users external");
         return userProfileService.searchUsers(userAccount, request);
@@ -74,7 +74,7 @@ public class UserProfileController {
     @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.SEARCH)
-    public SearchUsersResponseInternalDto searchUsersInternal(@RequestBody SearchUsersRequestInternalDto request) {
+    public SearchUsersResponseInternalDTO searchUsersInternal(@RequestBody SearchUsersRequestInternalDTO request) {
         LOGGER.info("Searching users internal");
         return userProfileService.searchUsersInternal(request);
     }

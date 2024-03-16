@@ -3,7 +3,7 @@ package com.github.nkonev.aaa.controllers;
 import com.github.nkonev.aaa.AbstractUtTestRunner;
 import com.github.nkonev.aaa.TestConstants;
 import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.PasswordResetDto;
+import com.github.nkonev.aaa.dto.PasswordResetDTO;
 import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import com.github.nkonev.aaa.security.SecurityConfig;
 import com.github.nkonev.aaa.util.UrlParser;
@@ -62,7 +62,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
 
         // after open link user see "input new password dialog"
         // user inputs code, code compares with another in ResetPasswordToken
-        PasswordResetDto passwordResetDto = new PasswordResetDto(UUID.fromString(passwordResetTokenUuidString), newPassword);
+        PasswordResetDTO passwordResetDto = new PasswordResetDTO(UUID.fromString(passwordResetTokenUuidString), newPassword);
 
         // user click "set new password" button in modal
         mockMvc.perform(
@@ -99,7 +99,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
             passwordResetTokenRepository.deleteById(tokenUuid); // delete random if one is occasionally present
         }
 
-        PasswordResetDto passwordResetDto = new PasswordResetDto(tokenUuid, "qwqwqwqwqwqwqwqw");
+        PasswordResetDTO passwordResetDto = new PasswordResetDTO(tokenUuid, "qwqwqwqwqwqwqwqw");
 
         mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
@@ -120,7 +120,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
             passwordResetTokenRepository.deleteById(tokenUuid); // delete random if one is occasionally present
         }
 
-        PasswordResetDto passwordResetDto = new PasswordResetDto(tokenUuid, "qwqwqwqwqwqwqwqw");
+        PasswordResetDTO passwordResetDto = new PasswordResetDTO(tokenUuid, "qwqwqwqwqwqwqwqw");
 
         mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
@@ -137,7 +137,7 @@ public class PasswordResetControllerTest extends AbstractUtTestRunner {
     @org.junit.jupiter.api.Test
     public void resetPasswordSetNewPasswordValidation() throws Exception {
         String emptyPassword = null;
-        PasswordResetDto passwordResetDto = new PasswordResetDto(UUID.randomUUID(), emptyPassword);
+        PasswordResetDTO passwordResetDto = new PasswordResetDTO(UUID.randomUUID(), emptyPassword);
 
         mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)

@@ -2,7 +2,7 @@ package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
 import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.PasswordResetDto;
+import com.github.nkonev.aaa.dto.PasswordResetDTO;
 import com.github.nkonev.aaa.services.PasswordResetService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -34,7 +34,7 @@ public class PasswordResetController {
     }
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
-    public void resetPassword(@RequestBody @Valid PasswordResetDto passwordResetDto, HttpSession httpSession) {
+    public void resetPassword(@RequestBody @Valid PasswordResetDTO passwordResetDto, HttpSession httpSession) {
         passwordResetService.resetPassword(passwordResetDto, httpSession);
     }
 

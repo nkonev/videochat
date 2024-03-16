@@ -284,7 +284,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
-                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDto(0, 0, false, false, bob.username())))
+                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDTO(0, 0, false, false, bob.username())))
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf())
         )

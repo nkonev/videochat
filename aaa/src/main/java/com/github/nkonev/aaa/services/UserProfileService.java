@@ -114,7 +114,7 @@ public class UserProfileService {
     @Transactional
     public List<UserAccountDTOExtended> searchUsers(
             UserAccountDetailsDTO userAccount,
-            SearchUsersRequestDto request
+            SearchUsersRequestDTO request
     ) {
         var searchString = request.searchString() != null ? request.searchString().trim() : "";
         var size = PageUtils.fixSize(request.size());
@@ -132,7 +132,7 @@ public class UserProfileService {
     }
 
     @Transactional
-    public SearchUsersResponseInternalDto searchUsersInternal(SearchUsersRequestInternalDto request) {
+    public SearchUsersResponseInternalDTO searchUsersInternal(SearchUsersRequestInternalDTO request) {
         PageRequest springDataPage = PageRequest.of(PageUtils.fixPage(request.page()), PageUtils.fixSize(request.size()), Sort.Direction.ASC, "id");
         var searchString = request.searchString() != null ? request.searchString().trim() : "";
 
@@ -152,7 +152,7 @@ public class UserProfileService {
             }
         }
 
-        return new SearchUsersResponseInternalDto(
+        return new SearchUsersResponseInternalDTO(
             resultPage.stream().map(UserAccountConverter::convertToUserAccountDTO).toList(),
             count
         );

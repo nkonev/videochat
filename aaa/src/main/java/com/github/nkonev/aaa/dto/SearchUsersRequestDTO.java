@@ -1,6 +1,6 @@
 package com.github.nkonev.aaa.dto;
 
-public record SearchUsersRequestDto(
+public record SearchUsersRequestDTO(
     int size,
     long startingFromItemId,
     boolean reverse,
