@@ -494,6 +494,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		return err
 	}
 
+	var messageId int64
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		if participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
 			return err
@@ -529,18 +530,25 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			creatableMessage.BlogPost = true
 		}
 
-		id, _, _, err := tx.CreateMessage(creatableMessage)
+		messageId, _, _, err = tx.CreateMessage(creatableMessage)
 		if err != nil {
 			return err
 		}
-		_, err = tx.AddMessageRead(id, userPrincipalDto.UserId, chatId)
+		_, err = tx.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
 		if tx.UpdateChatLastDatetimeChat(chatId) != nil {
 			return err
 		}
+		return nil
+	})
+	if errOuter != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
+		return errOuter
+	}
 
+	errOuter = db.Transact(mc.db, func(tx *db.Tx) error {
 		responseDto, err := getChat(tx, mc.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
@@ -550,7 +558,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		message, err := getMessage(c, tx, mc.restClient, chatId, id, userPrincipalDto.UserId)
+		message, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
