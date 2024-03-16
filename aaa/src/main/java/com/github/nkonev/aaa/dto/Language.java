@@ -4,4 +4,5 @@ public enum Language {
     en,
     ru;
 
+    public static final String DEFAULT = "en";
 }

@@ -60,7 +60,7 @@ public class RegistrationController {
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
     @ResponseBody
-    public void register(@RequestBody @Valid EditUserDTO userAccountDTO, @RequestParam Language language) {
+    public void register(@RequestBody @Valid EditUserDTO userAccountDTO, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
         userAccountDTO = UserAccountConverter.trimAndValidateNonOAuth2Login(userAccountDTO);
 
         userService.checkLoginIsFree(userAccountDTO);
@@ -115,7 +115,7 @@ public class RegistrationController {
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
     @ResponseBody
-    public void resendConfirmationToken(@RequestParam String email, @RequestParam Language language) {
+    public void resendConfirmationToken(@RequestParam String email, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);
         if(!userAccountOptional.isPresent()){
             LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this email is not found", email);

@@ -62,7 +62,7 @@ public class PasswordResetController {
      * @param email
      */
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET)
-    public void requestPasswordReset(@RequestParam String email, @RequestParam Language language) {
+    public void requestPasswordReset(@RequestParam String email, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
         var uuid = UUID.randomUUID();
 
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);

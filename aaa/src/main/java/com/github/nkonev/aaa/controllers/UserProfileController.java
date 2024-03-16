@@ -252,7 +252,7 @@ public class UserProfileController {
     public com.github.nkonev.aaa.dto.EditUserDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
-            @RequestParam Language language,
+            @RequestParam(defaultValue = Language.DEFAULT) Language language,
             HttpSession httpSession
     ) {
         if (userAccount == null) {
@@ -320,7 +320,7 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM)
     @ResponseBody
-    public void resendConfirmationChangeEmailToken(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam Language language) {
+    public void resendConfirmationChangeEmailToken(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
         UserAccount theUserAccount = userAccountRepository.findById(userAccount.getId()).orElseThrow();
         if (!StringUtils.hasLength(theUserAccount.newEmail())) {
             LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);

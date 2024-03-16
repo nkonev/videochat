@@ -1,6 +1,13 @@
 <template>
-        <v-card-title class="title pb-0 pt-2">{{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ chatStore.currentUser.id }}</v-card-title>
-
+    <v-progress-linear
+        :active="loading"
+        :indeterminate="loading"
+        absolute
+        bottom
+        color="primary"
+    ></v-progress-linear>
+    <v-card-title :disabled="loading" class="title">{{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ chatStore.currentUser.id }}</v-card-title>
+    <v-card :disabled="loading">
         <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container">
             <v-img v-if="hasAva"
                    :src="ava"
@@ -38,32 +45,30 @@
               <v-btn v-if="!showEmailInput" color="primary" size="x-small" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_email')" @click="showEmailInput = !showEmailInput; emailPrevious = chatStore.currentUser.email">
                 <v-icon dark>mdi-lead-pencil</v-icon>
               </v-btn>
-              <v-container v-if="showEmailInput" class="ma-0 pa-0 d-flex flex-column">
-                  <v-container class="ma-0 pa-0 d-flex flex-row">
-                        <v-text-field
-                          v-model="chatStore.currentUser.email"
-                          :rules="[rules.required, rules.email]"
-                          :label="$vuetify.locale.t('$vuetify.email')"
-                          @keyup.native.enter="sendEmail()"
-                          variant="outlined"
-                          density="compact"
-                          class="mt-3 mb-2"
-                          hide-details
-                        >
-                          <template v-slot:append>
-                            <v-icon @click="sendEmail(); chatStore.currentUser.email = emailPrevious" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
-                            <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1">mdi-cancel</v-icon>
-                          </template>
-                        </v-text-field>
-                  </v-container>
-                  <v-container class="ma-0 pa-0 d-flex flex-column" v-if="chatStore.currentUser.awaitingForConfirmEmailChange">
-                      <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_1') }}</span>
-                      <span>
-                        <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_2') }}</span>
-                        <v-btn class="mx-2 mb-1" density="compact" variant="outlined" @click="resendEmailConfirmation()">{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_btn') }}</v-btn>
-                      </span>
-                  </v-container>
+              <v-container v-if="showEmailInput" class="ma-0 pa-0 d-flex flex-row">
+                <v-text-field
+                  v-model="chatStore.currentUser.email"
+                  :rules="[rules.required, rules.email]"
+                  :label="$vuetify.locale.t('$vuetify.email')"
+                  @keyup.native.enter="sendEmail()"
+                  variant="outlined"
+                  density="compact"
+                  class="mt-3 mb-2"
+                  hide-details
+                >
+                  <template v-slot:append>
+                    <v-icon @click="sendEmail(); chatStore.currentUser.email = emailPrevious" color="primary" class="mx-1 ml-2">mdi-check-bold</v-icon>
+                    <v-icon @click="showEmailInput = false; chatStore.currentUser.email = emailPrevious" class="mx-1">mdi-cancel</v-icon>
+                  </template>
+                </v-text-field>
               </v-container>
+            </v-container>
+            <v-container class="ma-0 pa-0 d-flex flex-column text-caption" v-if="chatStore.currentUser.awaitingForConfirmEmailChange">
+                <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_1') }}</span>
+                <span>
+                    <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_2') }}</span>
+                    <v-btn class="mx-2 mb-1" density="compact" variant="outlined" size="" @click="resendEmailConfirmation()">{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_btn') }}</v-btn>
+                </span>
             </v-container>
 
         </v-container>
@@ -234,6 +239,7 @@
             </template>
           </v-text-field>
         </v-container>
+    </v-card>
 </template>
 
 <script>
@@ -244,10 +250,11 @@ import {deepCopy, hasLength} from "@/utils";
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
 
 export default {
-    props: ['enabled'],
     mixins: [userProfileValidationRules()],
     data() {
         return {
+            loading: false,
+
             showInputablePassword: false,
 
             showLoginInput: false,
@@ -332,74 +339,105 @@ export default {
         },
 
         submitOauthVkontakte() {
+            this.loading = true;
             window.location.href = '/api/aaa/login/oauth2/vkontakte';
         },
         submitOauthFacebook() {
+            this.loading = true;
             window.location.href = '/api/aaa/login/oauth2/facebook';
         },
         submitOauthGoogle() {
+            this.loading = true;
             window.location.href = '/api/aaa/login/oauth2/google';
         },
         submitOauthKeycloak() {
+            this.loading = true;
             window.location.href = '/api/aaa/login/oauth2/keycloak';
         },
 
         sendLogin() {
+            this.loading = true;
             axios.patch('/api/aaa/profile', {login: this.chatStore.currentUser.login})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showLoginInput = false;
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         sendPassword() {
+            this.loading = true;
             axios.patch('/api/aaa/profile', {password: this.password})
                 .then((response) => {
                     this.showPasswordInput = false;
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         sendEmail() {
+            this.loading = true;
             axios.patch('/api/aaa/profile', {email: this.chatStore.currentUser.email}, { params: {
                 language: this.$vuetify.locale.current
             }})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showEmailInput = false;
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         resendEmailConfirmation() {
+            this.loading = true;
             axios.post('/api/aaa/change-email/resend', null, { params: {
                     language: this.$vuetify.locale.current
-                }})
+                }}).finally(()=>{
+                    this.loading = false;
+                })
         },
         sendShortInfo() {
+            this.loading = true;
             axios.patch('/api/aaa/profile', {shortInfo: this.chatStore.currentUser.shortInfo})
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
                     this.showShortInfoInput = false;
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         removeVk() {
+            this.loading = true;
             axios.delete('/api/aaa/profile/vkontakte')
                 .then((response) => {
                   this.chatStore.fetchUserProfile()
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         removeFb() {
+            this.loading = true;
             axios.delete('/api/aaa/profile/facebook')
                 .then((response) => {
                   this.chatStore.fetchUserProfile()
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         removeGoogle() {
+            this.loading = true;
             axios.delete('/api/aaa/profile/google')
                 .then((response) => {
                   this.chatStore.fetchUserProfile()
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
         removeKeycloak() {
+            this.loading = true;
             axios.delete('/api/aaa/profile/keycloak')
                 .then((response) => {
                     this.chatStore.fetchUserProfile()
+                }).finally(()=>{
+                    this.loading = false;
                 })
         },
     },

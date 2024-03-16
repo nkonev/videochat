@@ -245,7 +245,7 @@ export default {
     delete_user_text: "Are you sure to delete user '{0}' ?",
     change_role: "Change role",
     confirm_email_to_change_role_part_1: "New email is waiting for confirmation",
-    confirm_email_to_change_role_part_2: "If need - click",
+    confirm_email_to_change_role_part_2: "If need",
     confirm_email_to_change_role_btn: "resend",
     change_email_confirmation_token_not_found: "Change email confirmation token is not found"
 }
