@@ -548,9 +548,9 @@
                 }
             },
             participantsDto(newValue, oldValue) {
-                const oldArr = oldValue?.participants.map((p)=> p.id );
-                const newArr = newValue?.participants.map((p)=> p.id );
-                if ((oldArr != null && oldArr.length !== 0) && (newArr == null || newArr.length === 0)) {
+                const oldArr = oldValue?.participants.map((p)=> p.id ) || [];
+                const newArr = newValue?.participants.map((p)=> p.id ) || [];
+                if (oldArr.length !== 0 && newArr.length === 0) {
                     this.graphQlUserStatusUnsubscribe();
                 } else {
                     if (!isSetEqual(oldArr, newArr)) {
