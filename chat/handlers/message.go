@@ -495,19 +495,23 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	}
 
 	var messageId int64
+	var businnessErrOuter any
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		if participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
 			return err
 		} else if !participant {
-			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
+			businnessErrOuter = &utils.H{"message": "You are not allowed to write to this chat"}
+			return nil
 		}
 		creatableMessage, err := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
 			var mediaError *MediaUrlErr
 			if errors.As(err, &mediaError) {
-				return c.JSON(http.StatusBadRequest, &utils.H{"message": err.Error(), "businessErrorCode": badMediaUrl})
+				businnessErrOuter = &utils.H{"message": err.Error(), "businessErrorCode": badMediaUrl}
+				return nil
 			} else {
-				return c.JSON(http.StatusBadRequest, mediaError.Error())
+				businnessErrOuter = mediaError.Error()
+				return nil
 			}
 		}
 
@@ -546,6 +550,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	if errOuter != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
+	}
+
+	if businnessErrOuter != nil {
+		return c.JSON(http.StatusBadRequest, businnessErrOuter)
 	}
 
 	errOuter = db.Transact(mc.db, func(tx *db.Tx) error {
