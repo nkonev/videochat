@@ -72,6 +72,11 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         )
                 .andExpect(status().isOk())
                 .andReturn();
+
+        var nonConfirmedUser = userAccountRepository.findByEmail(email).get();
+        Assertions.assertEquals(email, nonConfirmedUser.email());
+        Assertions.assertFalse(nonConfirmedUser.confirmed());
+
         String createAccountStr = createAccountRequest.getResponse().getContentAsString();
         LOGGER.info(createAccountStr);
 
@@ -292,6 +297,8 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         final String username = "newbie";
         final String password = "password";
 
+        var countBefore = userAccountRepository.count();
+
         UserAccount userAccountBefore = userAccountRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("user account not found in test"));
 
         EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, password, email);
@@ -310,6 +317,8 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
         UserAccount userAccountAfter = userAccountRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("user account not found in test"));
 
+        var countAfter = userAccountRepository.count();
+
         // check that initial user account is not affected
         Assertions.assertEquals(userAccountBefore.id(), userAccountAfter.id());
         Assertions.assertEquals(userAccountBefore.avatar(), userAccountAfter.avatar());
@@ -317,6 +326,8 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         Assertions.assertEquals(userAccountBefore.username(), userAccountAfter.username());
         Assertions.assertEquals(userAccountBefore.password(), userAccountAfter.password());
         Assertions.assertEquals(userAccountBefore.role(), userAccountAfter.role());
+
+        Assertions.assertEquals(countBefore, countAfter);
     }
 
 
