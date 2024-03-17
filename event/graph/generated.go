@@ -255,7 +255,7 @@ type ComplexityRoot struct {
 	Subscription struct {
 		ChatEvents        func(childComplexity int, chatID int64) int
 		GlobalEvents      func(childComplexity int) int
-		UserAccountEvents func(childComplexity int, userIds []int64) int
+		UserAccountEvents func(childComplexity int) int
 		UserStatusEvents  func(childComplexity int, userIds []int64) int
 	}
 
@@ -354,7 +354,7 @@ type SubscriptionResolver interface {
 	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
 	UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserStatusEvent, error)
-	UserAccountEvents(ctx context.Context, userIds []int64) (<-chan *model.UserAccountEvent, error)
+	UserAccountEvents(ctx context.Context) (<-chan *model.UserAccountEvent, error)
 }
 
 type executableSchema struct {
@@ -1345,12 +1345,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Subscription_userAccountEvents_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Subscription.UserAccountEvents(childComplexity, args["userIds"].([]int64)), true
+		return e.complexity.Subscription.UserAccountEvents(childComplexity), true
 
 	case "Subscription.userStatusEvents":
 		if e.complexity.Subscription.UserStatusEvents == nil {
@@ -1831,21 +1826,6 @@ func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Conte
 		}
 	}
 	args["chatId"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Subscription_userAccountEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 []int64
-	if tmp, ok := rawArgs["userIds"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
-		arg0, err = ec.unmarshalNInt642ᚕint64ᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["userIds"] = arg0
 	return args, nil
 }
 
@@ -8411,7 +8391,7 @@ func (ec *executionContext) _Subscription_userAccountEvents(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().UserAccountEvents(rctx, fc.Args["userIds"].([]int64))
+		return ec.resolvers.Subscription().UserAccountEvents(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8457,17 +8437,6 @@ func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx cont
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserAccountEvent", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Subscription_userAccountEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }

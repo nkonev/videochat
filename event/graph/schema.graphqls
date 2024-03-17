@@ -296,5 +296,5 @@ type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
     userStatusEvents(userIds: [Int64!]!): [UserStatusEvent!]!
-    userAccountEvents(userIds: [Int64!]!): UserAccountEvent!
+    userAccountEvents: UserAccountEvent!
 }

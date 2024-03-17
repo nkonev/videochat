@@ -196,9 +196,6 @@ export default {
     showProgress() {
       return this.chatStore.progressCount > 0
     },
-    itemIds() {
-      return this.getUserIdsSubscribeTo();
-    },
   },
 
   methods: {
@@ -335,6 +332,7 @@ export default {
     },
     async onProfileSet() {
       await this.setHashAndReloadItems();
+      this.graphQlSubscribe();
     },
 
     saveLastVisibleElement() {
@@ -443,7 +441,7 @@ export default {
     getGraphQlSubscriptionQuery() {
       return `
                 subscription {
-                  userAccountEvents(userIds:[${this.itemIds}]) {
+                  userAccountEvents {
                     userAccountEvent {
                       ... on UserAccountExtendedDto {
                         id
@@ -614,11 +612,6 @@ export default {
           handler: function (newValue, oldValue) {
               this.setTopTitle();
           },
-      },
-      itemIds: function(newValue, oldValue) {
-          if (!isSetEqual(oldValue, newValue) || oldValue.length === 0) { // second - to subscribe to new users
-              this.graphQlSubscribe();
-          }
       },
       '$route': {
           handler: async function (newValue, oldValue) {

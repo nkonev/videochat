@@ -258,7 +258,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 }
 
 // UserAccountEvents is the resolver for the userAccountEvents field.
-func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []int64) (<-chan *model.UserAccountEvent, error) {
+func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *model.UserAccountEvent, error) {
 	// user online
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -278,7 +278,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 		switch typedEvent := event.(type) {
 		case dto.UserAccountEventGroup:
 			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
-			if authResult.UserId == typedEvent.UserId && utils.Contains(userIds, typedEvent.UserId) {
+			if authResult.UserId == typedEvent.UserId {
 				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForMyself)
 				if anEvent != nil {
 					cam <- anEvent
@@ -286,7 +286,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 				break
 			}
 			// if I'm an admin then prepare dto with admin's fields
-			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") && utils.Contains(userIds, typedEvent.UserId) {
+			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") {
 				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
 				if anEvent != nil {
 					cam <- anEvent
@@ -294,7 +294,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIds []
 				break
 			}
 			// else if I'm un user then prepare dto with user's fields
-			if utils.ContainsString(authResult.Roles, "ROLE_USER") && utils.Contains(userIds, typedEvent.UserId) {
+			if utils.ContainsString(authResult.Roles, "ROLE_USER") {
 				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
 				if anEvent != nil {
 					cam <- anEvent
@@ -762,16 +762,14 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 
 	return ret
 }
-
 func convertToUserSessionsKilledEvent(aDto *dto.UserSessionsKilledEvent) *model.GlobalEvent {
 	var ret = &model.GlobalEvent{
-		EventType: aDto.EventType,
+		EventType:   aDto.EventType,
 		ForceLogout: &model.ForceLogoutEvent{ReasonType: aDto.ReasonType},
 	}
 
 	return ret
 }
-
 func convertParticipant(owner *dto.User) *model.Participant {
 	if owner == nil {
 		return nil
