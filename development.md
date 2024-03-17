@@ -787,3 +787,4 @@ still [does not support](https://stackoverflow.com/questions/76639412/freemarker
 It exists a resolved issue for that [FREEMARKER-218](https://issues.apache.org/jira/browse/FREEMARKER-218). It is solved but it is unknown then version 2.3.33 is released
 
 having this, [spring security taglibs](https://docs.spring.io/spring-security/reference/servlet/integrations/jsp-taglibs.html) were removed
+
