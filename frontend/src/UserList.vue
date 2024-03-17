@@ -196,6 +196,9 @@ export default {
     showProgress() {
       return this.chatStore.progressCount > 0
     },
+    itemIds() {
+      return this.getUserIdsSubscribeTo();
+    },
   },
 
   methods: {
@@ -612,6 +615,15 @@ export default {
           handler: function (newValue, oldValue) {
               this.setTopTitle();
           },
+      },
+      itemIds: function(newArr, oldArr) {
+          if (oldArr.length !== 0 && newArr.length === 0) {
+              this.graphQlUserStatusUnsubscribe();
+          } else {
+              if (!isSetEqual(oldArr, newArr)) {
+                  this.graphQlUserStatusSubscribe();
+              }
+          }
       },
       '$route': {
           handler: async function (newValue, oldValue) {
