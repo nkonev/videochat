@@ -496,50 +496,49 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		return err
 	}
 
-	var messageId int64
-	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
+	messageId, errOuter := db.TransactWithResult(mc.db, func(tx *db.Tx) (int64, error) {
 		if participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
-			return err
+			return 0, err
 		} else if !participant {
 			var e notParticipantError
-			return e
+			return 0, e
 		}
 		creatableMessage, err := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking embed %v", err)
-			return err
+			return 0, err
 		}
 
 		hasMessages, err := tx.HasMessages(chatId)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		chatBasic, err := tx.GetChatBasic(chatId)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		if !hasMessages && chatBasic.IsBlog {
 			creatableMessage.BlogPost = true
 		}
 
-		messageId, _, _, err = tx.CreateMessage(creatableMessage)
+		messageId, _, _, err := tx.CreateMessage(creatableMessage)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		_, err = tx.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if tx.UpdateChatLastDatetimeChat(chatId) != nil {
-			return err
+			return 0, err
 		}
-		return nil
+		return messageId, nil
 	})
 	if errOuter != nil {
 		var mediaError *MediaUrlErr
