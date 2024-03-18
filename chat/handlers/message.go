@@ -470,6 +470,8 @@ func (a *EditMessageDto) Validate() error {
 	)
 }
 
+type notParticipantError error
+
 func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
@@ -495,24 +497,16 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	}
 
 	var messageId int64
-	var businnessErrOuter any
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		if participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
 			return err
 		} else if !participant {
-			businnessErrOuter = &utils.H{"message": "You are not allowed to write to this chat"}
-			return nil
+			var e notParticipantError
+			return e
 		}
 		creatableMessage, err := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
-			var mediaError *MediaUrlErr
-			if errors.As(err, &mediaError) {
-				businnessErrOuter = &utils.H{"message": err.Error(), "businessErrorCode": badMediaUrl}
-				return nil
-			} else {
-				businnessErrOuter = mediaError.Error()
-				return nil
-			}
+			return err
 		}
 
 		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, bindTo, creatableMessage)
@@ -548,12 +542,17 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		return nil
 	})
 	if errOuter != nil {
+		var mediaError *MediaUrlErr
+		if errors.As(errOuter, &mediaError) {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": mediaError.Error(), "businessErrorCode": badMediaUrl})
+		}
+		var notParticipantError notParticipantError
+		if errors.As(errOuter, &notParticipantError) {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
+		}
+
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
-	}
-
-	if businnessErrOuter != nil {
-		return c.JSON(http.StatusBadRequest, businnessErrOuter)
 	}
 
 	errOuter = db.Transact(mc.db, func(tx *db.Tx) error {
@@ -700,12 +699,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
 		editableMessage, err := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
-			var mediaError *MediaUrlErr
-			if errors.As(err, &mediaError) {
-				return c.JSON(http.StatusBadRequest, &utils.H{"message": err.Error(), "businessErrorCode": badMediaUrl})
-			} else {
-				return c.JSON(http.StatusBadRequest, mediaError.Error())
-			}
+			return err
 		}
 
 		err = mc.validateAndSetEmbedFieldsEmbedMessage(tx, &bindTo.CreateMessageDto, editableMessage)
@@ -775,7 +769,13 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		return c.JSON(http.StatusCreated, &utils.H{"id": bindTo.Id})
 	})
 	if errOuter != nil {
+		var mediaError *MediaUrlErr
+		if errors.As(errOuter, &mediaError) {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": mediaError.Error(), "businessErrorCode": badMediaUrl})
+		}
+
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
+		return errOuter
 	}
 	return errOuter
 }
