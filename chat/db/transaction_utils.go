@@ -1,6 +1,6 @@
 package db
 
-func TransactWithResult(db *DB, txFunc func(*Tx) (interface{}, error)) (ret interface{}, err error) {
+func TransactWithResult [T any] (db *DB, txFunc func(*Tx) (T, error)) (ret T, err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return
