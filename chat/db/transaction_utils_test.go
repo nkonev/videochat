@@ -79,7 +79,7 @@ func TestTransactionNegative(t *testing.T) {
 }
 
 func TestTransactionWithResultPositive(t *testing.T) {
-	idRaw, err := TransactWithResult(dbInstance, func(tx *Tx) (interface{}, error) {
+	id, err := TransactWithResult(dbInstance, func(tx *Tx) (int64, error) {
 		if _, err := tx.Exec("CREATE TABLE tr1(id BIGSERIAL PRIMARY KEY, a text UNIQUE)"); err != nil {
 			return 0, err
 		}
@@ -94,8 +94,6 @@ func TestTransactionWithResultPositive(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
-	id, ok := idRaw.(int64)
-	assert.True(t, ok)
 	assert.True(t, id != 0)
 
 	row := dbInstance.QueryRow("SELECT a FROM tr1 WHERE id = $1", id)
@@ -109,7 +107,7 @@ func TestTransactionWithResultNegative(t *testing.T) {
 	_, err := dbInstance.Exec("CREATE TABLE tr2(id BIGSERIAL PRIMARY KEY, a text UNIQUE)")
 	assert.Nil(t, err)
 
-	idRaw, err := TransactWithResult(dbInstance, func(tx *Tx) (interface{}, error) {
+	idRaw, err := TransactWithResult(dbInstance, func(tx *Tx) (int64, error) {
 		res := tx.QueryRow(`INSERT INTO tr2(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
@@ -123,7 +121,7 @@ func TestTransactionWithResultNegative(t *testing.T) {
 		return id, nil
 	})
 	assert.NotNil(t, err)
-	assert.Equal(t, 0, idRaw)
+	assert.Equal(t, int64(0), idRaw)
 
 	row := dbInstance.QueryRow("SELECT a FROM tr2")
 	var a string
