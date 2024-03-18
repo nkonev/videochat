@@ -756,6 +756,33 @@ func TestMessageIsSanitized(t *testing.T) {
 	})
 }
 
+func TestNotPossibleToWriteAMessageWithNotAllowedMediaUrl(t *testing.T) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
+		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "<img src=\"http://malicious.example.com/virus.jpg\"> Lorem ipsum"}`), e)
+		assert.Equal(t, http.StatusBadRequest, c)
+
+		messageInterface := getJsonPathResult(t, b, "$.message").(interface{})
+		messageString := utils.InterfaceToString(messageInterface)
+		assert.Equal(t, "Media url is not allowed in image src: http://malicious.example.com/virus.jpg", messageString)
+	})
+}
+
+func TestNotPossibleToEditAMessageAndSetNotAllowedMediaUrl(t *testing.T) {
+	runTest(t, func(e *echo.Echo, db *db.DB) {
+		c1, b1, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "Lorem ipsum"}`), e)
+		assert.Equal(t, http.StatusCreated, c1)
+		idInterface := getJsonPathResult(t, b1, "$.id").(interface{})
+		idString := utils.InterfaceToString(idInterface)
+
+		c2, b2, _ := request("PUT", "/chat/1/message", strings.NewReader(fmt.Sprintf(`{ "id": %v, "text": "<img src=\"http://malicious.example.com/virus.jpg\"> Lorem ipsum"}`, idString)), e)
+		assert.Equal(t, http.StatusBadRequest, c2)
+
+		messageInterface := getJsonPathResult(t, b2, "$.message").(interface{})
+		messageString := utils.InterfaceToString(messageInterface)
+		assert.Equal(t, "Media url is not allowed in image src: http://malicious.example.com/virus.jpg", messageString)
+	})
+}
+
 func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 	h1 := map[string][]string{
 		echo.HeaderContentType: {"application/json"},
