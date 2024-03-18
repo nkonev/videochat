@@ -51,7 +51,7 @@ public class UserProfileService {
     private UserAccountConverter userAccountConverter;
 
     @Autowired
-    private UserService userService;
+    private CheckService userService;
 
     @Autowired
     private EventService notifier;
@@ -341,7 +341,7 @@ public class UserProfileService {
     public void deleteUser(UserAccountDetailsDTO userAccountDetailsDTO, long userId){
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
-        userService.deleteUser(userId);
+        userAccountRepository.deleteById(userId);
     }
 
     @Transactional
@@ -358,7 +358,7 @@ public class UserProfileService {
         long userId = userAccountDetailsDTO.getId();
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
-        userService.deleteUser(userId);
+        userAccountRepository.deleteById(userId);
     }
 
     @Transactional

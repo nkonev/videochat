@@ -42,7 +42,7 @@ public class RegistrationService {
     private Duration userConfirmationTokenTtl;
 
     @Autowired
-    private UserService userService;
+    private CheckService userService;
 
     @Autowired
     private CustomConfig customConfig;

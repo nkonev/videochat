@@ -4,21 +4,17 @@ import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.repository.jdbc.UserSettingsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+public class CheckService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CheckService.class);
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-
-    @Autowired
-    private UserSettingsRepository userSettingsRepository;
 
     public void checkLoginIsFree(EditUserDTO userAccountDTO, UserAccount exists) {
         if (!exists.username().equals(userAccountDTO.login()) && userAccountRepository.findByUsername(userAccountDTO.login()).isPresent()) {
@@ -57,10 +53,6 @@ public class UserService {
         } else {
             return true;
         }
-    }
-
-    public void deleteUser(long userId) {
-        userAccountRepository.deleteById(userId);
     }
 
 }
