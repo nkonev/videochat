@@ -52,13 +52,13 @@ custom:
   confirmation:
     registration:
       token:
-        ttl: 5m
+        ttl: 20m
   password-reset:
     token:
-      ttl: 5m
+      ttl: 20m
   change-email:
     token:
-      ttl: 5m
+      ttl: 20m
   online-estimation: 10m
   schedulers:
     user-online:
