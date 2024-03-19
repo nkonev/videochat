@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import axios from "axios";
 import {isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
+import {setStoredLanguage} from "@/store/localStore";
 
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
@@ -54,9 +55,14 @@ export const useChatStore = defineStore('chat', {
       this.currentUser = null
     },
     fetchUserProfile() {
-        axios.get(`/api/aaa/profile`).then(( {data} ) => {
+        return axios.get(`/api/aaa/profile`).then(( {data} ) => {
             console.debug("fetched profile =", data);
             this.currentUser = data;
+
+            return axios.get("/api/aaa/settings/init").then(({data}) => {
+                const lang = data.language;
+                setStoredLanguage(lang);
+            })
         });
     },
     fetchAvailableOauth2Providers() {

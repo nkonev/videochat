@@ -1,22 +1,28 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
+import com.github.nkonev.aaa.dto.Language;
+import com.github.nkonev.aaa.dto.LanguageDTO;
 import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
 import com.github.nkonev.aaa.services.UserSettingsService;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserSettingsController {
 
     @Autowired
     private UserSettingsService userSettingsService;
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.INIT, produces = MediaType.APPLICATION_JSON_VALUE)
+    public LanguageDTO init(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
+        return userSettingsService.initSettings(userAccount.getId());
+    }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -28,5 +34,11 @@ public class UserSettingsController {
     @PutMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public String[] setSmileys(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestBody String[] smileys) {
         return userSettingsService.setSmileys(userAccount.getId(), smileys);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.LANGUAGE, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Language setLanguage(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @NotNull @RequestBody LanguageDTO settingsDTO) {
+        return userSettingsService.setLanguage(userAccount.getId(), settingsDTO.language());
     }
 }

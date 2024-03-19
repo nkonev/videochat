@@ -15,6 +15,9 @@ public class Constants {
         public static final String PROFILE = "/profile";
         public static final String SETTINGS = "/settings";
         public static final String SMILEYS = "/smileys";
+
+        public static final String LANGUAGE = "/language";
+        public static final String INIT = "/init";
         public static final String AUTH = "/auth";
         public static final String REGISTER = "/register";
         public static final String REGISTER_CONFIRM = "/register/confirm"; // html for handle link from email

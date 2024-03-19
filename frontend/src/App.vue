@@ -180,7 +180,7 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import {getBlogLink, hasLength, isCalling, isChatRoute} from "@/utils";
+import {getBlogLink, hasLength, isCalling, isChatRoute, setLanguageToVuetify} from "@/utils";
 import {
     chat_list_name,
     chat_name,
@@ -249,6 +249,7 @@ import MessageEdit from "@/MessageEdit.vue";
 import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
+import {getStoredLanguage} from "@/store/localStore";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -558,7 +559,9 @@ export default {
                 if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == check_email_name || this.$route.name == confirmation_pending_name || this.$route.name == registration_resend_email_name) {
                     return
                 }
-                this.chatStore.fetchUserProfile();
+                this.chatStore.fetchUserProfile().then(()=>{
+                    setLanguageToVuetify(this, getStoredLanguage());
+                })
             }
         },
         onWsRestored() {

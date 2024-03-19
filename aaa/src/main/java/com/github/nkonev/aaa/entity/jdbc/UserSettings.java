@@ -1,5 +1,6 @@
 package com.github.nkonev.aaa.entity.jdbc;
 
+import com.github.nkonev.aaa.dto.Language;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -7,6 +8,9 @@ import org.springframework.data.relational.core.mapping.Table;
 public record UserSettings(
     @Id Long id,
 
-    String[] smileys
+    String[] smileys,
+
+    Language language
 ) {
+
 }

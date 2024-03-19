@@ -117,6 +117,8 @@ import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
       password_restore_enter_new_name, registration,
       registration_name
     } from "@/router/routes";
+import {setLanguageToVuetify} from "@/utils";
+import {getStoredLanguage} from "@/store/localStore";
 
     export default {
         data() {
@@ -219,8 +221,10 @@ import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
                             // store.dispatch(replayPreviousUrl());
                             console.log("You successfully logged in");
                             this.hideLoginModal();
-                            this.chatStore.fetchUserProfile();
-                            bus.emit(LOGGED_IN, null);
+                            this.chatStore.fetchUserProfile().then(()=>{
+                                bus.emit(LOGGED_IN, null);
+                                setLanguageToVuetify(this, getStoredLanguage());
+                            })
                         })
                         .catch((error) => {
                             // handle error

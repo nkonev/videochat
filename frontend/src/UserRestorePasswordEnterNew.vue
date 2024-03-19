@@ -37,11 +37,12 @@
 
 <script>
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
-import {hasLength, setTitle} from "@/utils";
+import {hasLength, setLanguageToVuetify, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {confirmation_pending_name, check_email_name, root_name} from "@/router/routes";
+import {getStoredLanguage} from "@/store/localStore";
 
 export default {
   mixins: [userProfileValidationRules()],
@@ -67,7 +68,9 @@ export default {
       })
         .then(() => {
           this.$router.push({name: root_name} );
-          this.chatStore.fetchUserProfile();
+          return this.chatStore.fetchUserProfile().then(()=>{
+              setLanguageToVuetify(this, getStoredLanguage());
+          })
         })
         .catch(e => {
           this.error = e.message

@@ -1,5 +1,7 @@
 package com.github.nkonev.aaa.services;
 
+import com.github.nkonev.aaa.dto.Language;
+import com.github.nkonev.aaa.dto.LanguageDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserSettings;
 import com.github.nkonev.aaa.repository.jdbc.UserSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +20,18 @@ public class UserSettingsService {
     private UserSettingsRepository userSettingsRepository;
 
     @Transactional
-    public String[] getSmileys(long userId) {
+    public LanguageDTO initSettings(long userId) {
         Optional<UserSettings> maybeSettings = userSettingsRepository.findById(userId);
         if (maybeSettings.isEmpty()) {
             userSettingsRepository.insertDefault(userId);
             maybeSettings = userSettingsRepository.findById(userId);
         }
+        return new LanguageDTO(maybeSettings.get().language());
+    }
+
+    @Transactional
+    public String[] getSmileys(long userId) {
+        Optional<UserSettings> maybeSettings = userSettingsRepository.findById(userId);
         return maybeSettings.get().smileys();
     }
 
@@ -32,7 +40,13 @@ public class UserSettingsService {
         if (smileys.length > MAX_SMILEYS_LENGTH) {
             smileys = Arrays.copyOf(smileys, MAX_SMILEYS_LENGTH);
         }
-        userSettingsRepository.save(new UserSettings(userId, smileys));
+        userSettingsRepository.updateSmileys(userId, smileys);
         return userSettingsRepository.findById(userId).get().smileys();
+    }
+
+    @Transactional
+    public Language setLanguage(long userId, Language language) {
+        userSettingsRepository.updateLanguage(userId, language);
+        return userSettingsRepository.findById(userId).get().language();
     }
 }

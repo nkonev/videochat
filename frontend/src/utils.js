@@ -261,3 +261,7 @@ export const renameFilePart = (file, newFileName) => {
 export const isCalling = (status) => {
   return status == "inviting"
 }
+
+export const setLanguageToVuetify = (that, newLanguage) => {
+    that.$vuetify.locale.current = newLanguage;
+}

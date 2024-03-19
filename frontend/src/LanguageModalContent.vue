@@ -19,6 +19,10 @@
 
 <script>
     import {getStoredLanguage, setStoredLanguage} from "@/store/localStore";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore";
+    import axios from "axios";
+    import {setLanguageToVuetify} from "@/utils";
 
     export default {
         data () {
@@ -26,19 +30,21 @@
                 language: null,
             }
         },
+        computed: {
+            ...mapStores(useChatStore),
+        },
         methods: {
             init() {
                 this.language = getStoredLanguage();
-                this.setToVuetify(this.language);
-            },
-            setToVuetify(newLanguage) {
-                this.$vuetify.locale.current = newLanguage;
             },
 
-            changeLanguage(newLanguage) {
-                console.log("Lang has been changed")
+            async changeLanguage(newLanguage) {
+                console.log("Changing language to", newLanguage)
+                if (this.chatStore.currentUser != null) {
+                    await axios.put("/api/aaa/settings/language", {language: newLanguage})
+                }
                 setStoredLanguage(newLanguage);
-                this.setToVuetify(newLanguage);
+                setLanguageToVuetify(this, newLanguage);
             },
         },
         mounted() {
