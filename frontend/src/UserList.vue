@@ -109,6 +109,12 @@
 
                     </v-list-item-subtitle>
                 </template>
+                <template v-slot:append v-if="!isMobile()">
+                    <v-list-item-action>
+                        <v-btn variant="flat" icon @click.stop.prevent="tetATet(item)" :title="$vuetify.locale.t('$vuetify.user_open_chat')"><v-icon size="large">mdi-message-text-outline</v-icon></v-btn>
+                    </v-list-item-action>
+                </template>
+
             </v-list-item>
             <template v-if="items.length == 0 && !showProgress">
               <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.users_not_found')}}</v-sheet>
