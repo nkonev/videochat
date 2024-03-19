@@ -54,10 +54,10 @@ custom:
     registration:
       token:
         ttl: 20m
+    change-email:
+      token:
+        ttl: 20m
   password-reset:
-    token:
-      ttl: 20m
-  change-email:
     token:
       ttl: 20m
   online-estimation: 10m

@@ -65,7 +65,7 @@ public class UserProfileService {
     @Autowired
     private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
-    @Value("${custom.change-email.token.ttl}")
+    @Value("${custom.confirmation.change-email.token.ttl}")
     private Duration changeEmailConfirmationTokenTtl;
 
     @Autowired
