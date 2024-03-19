@@ -1,12 +1,11 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" scrollable>
+        <v-dialog v-model="show" max-width="640" height="100%" scrollable>
           <v-card :title="title()">
                 <v-card-text>
                     <v-row
                       dense
                       v-if="!loading"
-                      class="fill-height"
                       align="center"
                       justify="start"
                     >
