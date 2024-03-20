@@ -29,13 +29,17 @@
 </template>
 
 <script>
-import {copyCallLink, copyChatLink, getBlogLink} from "@/utils";
 import contextMenuMixin from "@/mixins/contextMenuMixin";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore";
 
 export default {
     mixins: [
       contextMenuMixin(),
     ],
+    computed: {
+        ...mapStores(useChatStore),
+    },
     methods:{
         className() {
             return "user-list-item-context-menu"
@@ -58,7 +62,13 @@ export default {
                         }
                     });
                 }
-                ret.push({title: this.$vuetify.locale.t('$vuetify.user_open_chat'), icon: 'mdi-message-text-outline', action: () => this.$emit('tetATet', this.menuableItem) });
+                if (this.isNotMyself(this.menuableItem)) {
+                    ret.push({
+                        title: this.$vuetify.locale.t('$vuetify.user_open_chat'),
+                        icon: 'mdi-message-text-outline',
+                        action: () => this.$emit('tetATet', this.menuableItem)
+                    });
+                }
                 if (this.menuableItem.canLock){
                     if (this.menuableItem?.additionalData.locked) {
                         ret.push({title: this.$vuetify.locale.t('$vuetify.unlock_user'), icon: 'mdi-lock-open-outline', action: () => this.$emit('unlockUser', this.menuableItem) });
@@ -81,6 +91,9 @@ export default {
                 }
             }
             return ret;
+        },
+        isNotMyself(user) {
+            return this.chatStore.currentUser && this.chatStore.currentUser.id != user.id
         },
     }
 }
