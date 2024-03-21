@@ -40,6 +40,11 @@ export default () => {
 
         this.menuableItem = menuableItem;
 
+        if (!this.getContextMenuItems().length) {
+          console.log("No items in the context menu");
+          return;
+        }
+
         this.$nextTick(() => {
           this.showContextMenu = true;
         }).then(() => {
