@@ -4,6 +4,18 @@ import { createSSRApp, defineComponent, h, markRaw, reactive } from 'vue'
 import PageShell from './PageShell.vue'
 import { setPageContext } from './usePageContext'
 
+// Vuetify
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+
+const vuetify = createVuetify({
+    components,
+    directives,
+    ssr: true,
+})
+
 function createApp(pageContext) {
   const { Page } = pageContext
 
@@ -28,7 +40,7 @@ function createApp(pageContext) {
     }
   })
 
-  const app = createSSRApp(PageWithShell)
+  const app = createSSRApp(PageWithShell).use(vuetify)
 
   // We use `app.changePage()` to do Client Routing, see `+onRenderClient.ts`
   Object.assign(app, {
