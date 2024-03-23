@@ -101,7 +101,7 @@ export default {
     files_by: "загрузил",
     files_public_url: "Публичная ссылка",
     delete_from_chat: "Удалить из чата",
-    welcome_participant: "Добро пожаловать, {0}!",
+    welcome_participant: "Добро пожаловать, ",
     delete_participant: "Удаление из чата #{0}",
     delete_participant_text: "Вы действительно хотите удалить участника #{0} '{1}' из этого чата ?",
     audio_autoplay_permissions_title: "Разрешения",
@@ -247,5 +247,7 @@ export default {
     confirm_email_to_change_role_part_1: "Новая почта ожидает подтверждения",
     confirm_email_to_change_role_part_2: "Если нужно",
     confirm_email_to_change_role_btn: "переотправить",
-    change_email_confirmation_token_not_found: "Токен не найден"
+    change_email_confirmation_token_not_found: "Токен не найден",
+    login_color: "Цвет логина",
+    change_login_color: "Изменить цвет логина"
 }

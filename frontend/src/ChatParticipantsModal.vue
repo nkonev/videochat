@@ -42,7 +42,7 @@
 
                                 <v-row no-gutters align="center" class="d-flex flex-row">
                                     <v-col class="flex-grow-0 flex-shrink-0">
-                                        <v-list-item-title><a class="colored-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)">{{getUserNameWrapper(item)}}</a></v-list-item-title>
+                                        <v-list-item-title><a class="nodecorated-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)" :style="getLoginColoredStyle(item, true)">{{getUserNameWrapper(item)}}</a></v-list-item-title>
                                     </v-col>
                                     <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
                                         <v-progress-linear
@@ -158,12 +158,21 @@
       PARTICIPANT_ADDED,
       PARTICIPANT_DELETED,
       PARTICIPANT_EDITED,
-      PARTICIPANT_CHANGED,
+      CO_CHATTED_PARTICIPANT_CHANGED,
       VIDEO_DIAL_STATUS_CHANGED,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
-    import {deepCopy, findIndex, hasLength, isCalling, isSetEqual, moveToFirstPosition, replaceInArray} from "@/utils";
+    import {
+        deepCopy,
+        findIndex,
+        getLoginColoredStyle,
+        hasLength,
+        isCalling,
+        isSetEqual,
+        moveToFirstPosition,
+        replaceInArray
+    } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -218,6 +227,7 @@
         },
 
         methods: {
+            getLoginColoredStyle,
             hasLength,
             showModal(chatId) {
                 this.chatId = chatId;
@@ -244,7 +254,7 @@
             loadParticipantsData() {
                 console.log("Getting info about participants in modal, chatId=", this.chatId);
                 this.loading = true;
-                return axios.get('/api/chat/' + this.chatId + '/user', {
+                return axios.get('/api/chat/' + this.chatId + '/participant', {
                             params: {
                                 page: this.translatePage(),
                                 size: pageSize,
@@ -265,7 +275,7 @@
             },
             changeChatAdmin(item) {
                 item.adminLoading = true;
-                axios.put(`/api/chat/${this.dto.id}/user/${item.id}`, null, {
+                axios.put(`/api/chat/${this.dto.id}/participant/${item.id}`, null, {
                     params: {
                         admin: !item.admin,
                         page: this.translatePage(),
@@ -302,7 +312,7 @@
                     text: this.$vuetify.locale.t('$vuetify.delete_participant_text', participant.id, participant.login),
                     actionFunction: (that)=> {
                         that.loading = true;
-                        axios.delete(`/api/chat/${this.dto.id}/user/${participant.id}`, {
+                        axios.delete(`/api/chat/${this.dto.id}/participant/${participant.id}`, {
                                 params: {
                                     page: this.translatePage(),
                                     size: pageSize,
@@ -481,12 +491,12 @@
                 this.performMarking();
             },
             onUserProfileChanged(user) {
-              this.participantsDto.participants.forEach(item => {
-                if (item.id == user.id) { // replaces content of tet-a-tet. It's better to move it to chat
-                  item.avatar = user.avatar;
-                  item.login = user.login;
-                }
-              });
+                const tmp = deepCopy(user);
+                const arrTmp = [tmp];
+                this.transformParticipantsWrapper(arrTmp);
+
+                replaceInArray(this.participantsDto.participants, arrTmp[0]);
+
               this.performMarking();
             },
             hasSearchString() {
@@ -578,7 +588,7 @@
           bus.on(CHAT_DELETED, this.onChatDelete);
           bus.on(CHAT_EDITED, this.onChatEdit);
           bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-          bus.on(PARTICIPANT_CHANGED, this.onUserProfileChanged);
+          bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
 
           this.markInstance = new Mark(".participants-list");
         },
@@ -590,7 +600,7 @@
             bus.off(CHAT_DELETED, this.onChatDelete);
             bus.off(CHAT_EDITED, this.onChatEdit);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-            bus.off(PARTICIPANT_CHANGED, this.onUserProfileChanged);
+            bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
             this.markInstance.unmark();
             this.markInstance = null;
         },

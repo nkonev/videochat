@@ -156,7 +156,7 @@ func (rc RestClient) GetOnlines(userIds []int64, c context.Context) ([]*dto.User
 	return *users, nil
 }
 
-type searchUsersResuqstDto struct {
+type searchUsersRequestDto struct {
 	Page         int     `json:"page"`
 	Size         int     `json:"size"`
 	UserIds      []int64 `json:"userIds"`
@@ -187,7 +187,7 @@ func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []i
 		return nil, 0, err
 	}
 
-	req := searchUsersResuqstDto{
+	req := searchUsersRequestDto{
 		UserIds:      ids,
 		SearchString: searchString,
 		Including:    including,

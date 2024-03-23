@@ -88,6 +88,8 @@ export const chatEditMessageDtoFactory = () => {
 export const colorText = 'colorText';
 export const colorBackground = 'colorBackground';
 
+export const colorLogin = 'colorLogin';
+
 
 export const getUrlPrefix = () => {
   return window.location.protocol + "//" + window.location.host
@@ -264,4 +266,12 @@ export const isCalling = (status) => {
 
 export const setLanguageToVuetify = (that, newLanguage) => {
     that.$vuetify.locale.current = newLanguage;
+}
+
+export const linkColor = '#1976D2' // see also in App.vue
+
+export const getLoginColoredStyle = (item, defaultLinkColor) => {
+    const color = item?.loginColor;
+    const defaultColor = defaultLinkColor ? linkColor : null;
+    return color ? {'color': color} : {'color': defaultColor}
 }

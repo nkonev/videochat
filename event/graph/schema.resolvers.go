@@ -424,6 +424,7 @@ func convertUserAccountEvent(eventType string, aDto *dto.UserAccount) *model.Use
 			ShortInfo:         aDto.ShortInfo,
 			LastLoginDateTime: aDto.LastLoginDateTime,
 			Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
+			LoginColor:        aDto.LoginColor,
 		}
 		return &ret
 	}
@@ -459,6 +460,7 @@ func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExte
 			CanDelete:     aDto.CanDelete,
 			CanChangeRole: aDto.CanChangeRole,
 			CanConfirm:    aDto.CanConfirm,
+			LoginColor:    aDto.LoginColor,
 		}
 		return &ret
 	}
@@ -665,6 +667,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			IsResultFromSearch:  chatDtoWithAdmin.IsResultFromSearch.Ptr(),
 			Pinned:              chatDtoWithAdmin.Pinned,
 			Blog:                chatDtoWithAdmin.Blog,
+			LoginColor:          chatDtoWithAdmin.LoginColor.Ptr(),
 		}
 	}
 
@@ -675,13 +678,14 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 		}
 	}
 
-	userProfileDto := e.UserProfileNotification
+	userProfileDto := e.CoChattedParticipantNotification
 	if userProfileDto != nil {
-		ret.ParticipantEvent = &model.Participant{
-			ID:        userProfileDto.Id,
-			Login:     userProfileDto.Login,
-			Avatar:    userProfileDto.Avatar.Ptr(),
-			ShortInfo: userProfileDto.ShortInfo.Ptr(),
+		ret.CoChattedParticipantEvent = &model.Participant{
+			ID:         userProfileDto.Id,
+			Login:      userProfileDto.Login,
+			Avatar:     userProfileDto.Avatar.Ptr(),
+			ShortInfo:  userProfileDto.ShortInfo.Ptr(),
+			LoginColor: userProfileDto.LoginColor.Ptr(),
 		}
 	}
 
@@ -775,10 +779,11 @@ func convertParticipant(owner *dto.User) *model.Participant {
 		return nil
 	}
 	return &model.Participant{
-		ID:        owner.Id,
-		Login:     owner.Login,
-		Avatar:    owner.Avatar.Ptr(),
-		ShortInfo: owner.ShortInfo.Ptr(),
+		ID:         owner.Id,
+		Login:      owner.Login,
+		Avatar:     owner.Avatar.Ptr(),
+		ShortInfo:  owner.ShortInfo.Ptr(),
+		LoginColor: owner.LoginColor.Ptr(),
 	}
 }
 func convertParticipants(participants []*dto.User) []*model.Participant {
@@ -796,11 +801,12 @@ func convertParticipantWithAdmin(owner *dto.UserWithAdmin) *model.ParticipantWit
 		return nil
 	}
 	return &model.ParticipantWithAdmin{
-		ID:        owner.Id,
-		Login:     owner.Login,
-		Avatar:    owner.Avatar.Ptr(),
-		Admin:     owner.Admin,
-		ShortInfo: owner.ShortInfo.Ptr(),
+		ID:         owner.Id,
+		Login:      owner.Login,
+		Avatar:     owner.Avatar.Ptr(),
+		Admin:      owner.Admin,
+		ShortInfo:  owner.ShortInfo.Ptr(),
+		LoginColor: owner.LoginColor.Ptr(),
 	}
 }
 func convertParticipantsWithAdmin(participants []*dto.UserWithAdmin) []*model.ParticipantWithAdmin {

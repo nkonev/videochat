@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.github.nkonev.aaa.converter.UserAccountConverter.validateAndTrimLogin;
+import static com.github.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
 
 public abstract class AbstractOAuth2UserService {
 
@@ -112,7 +112,7 @@ public abstract class AbstractOAuth2UserService {
 
     private CreateOrGetExistsUserResponse createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
         UserAccount userAccount;
-        validateAndTrimLogin(login);
+        login = validateLengthAndTrimLogin(login, true);
         Optional<UserAccount> userAccountOpt = findByOAuth2Id(oauthId);
         var created = false;
         if (!userAccountOpt.isPresent()){

@@ -6,6 +6,7 @@ import com.github.nkonev.aaa.dto.EditUserDTO;
 import com.github.nkonev.aaa.dto.Language;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
+import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import com.github.nkonev.aaa.security.LoginListener;
@@ -20,9 +21,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.github.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
+import static com.github.nkonev.aaa.converter.UserAccountConverter.validateLengthEmail;
 
 @Service
 public class RegistrationService {
@@ -59,11 +64,15 @@ public class RegistrationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
     public void register(EditUserDTO editUserDTO, Language language) {
-        var userAccountOuter = transactionTemplate.execute(status -> {
-            var userAccountDTO = UserAccountConverter.trimAndValidateNonOAuth2Login(editUserDTO);
+        var userAccountEditDTO = UserAccountConverter.normalize(editUserDTO, false);
+        var login = validateLengthAndTrimLogin(userAccountEditDTO.login(), false);
+        var userAccountDTO = userAccountEditDTO.withLogin(login);
+        validateLengthEmail(userAccountDTO.email());
 
-            userService.checkLoginIsFree(userAccountDTO);
-            if(!userService.checkEmailIsFree(userAccountDTO)){
+        var userAccountOuter = transactionTemplate.execute(status -> {
+            userService.checkLoginIsFree(userAccountDTO.login());
+
+            if (!userService.checkEmailIsFree(userAccountDTO.email())){
                 return null; // we care for user email leak
             }
 

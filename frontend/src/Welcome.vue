@@ -2,7 +2,7 @@
   <v-container fill-height fluid :style="heightWithoutAppBar" v-if="chatStore.currentUser">
     <v-row align="center" justify="center" style="height: 100%">
       <v-card>
-        <v-card-title class="d-flex justify-space-around">{{$vuetify.locale.t('$vuetify.welcome_participant', chatStore.currentUser?.login)}}</v-card-title>
+        <v-card-title class="d-flex justify-center with-space">{{$vuetify.locale.t('$vuetify.welcome_participant')}}<span :style="getLoginColoredStyle(chatStore.currentUser)">{{chatStore.currentUser?.login}}</span>!</v-card-title>
         <v-card-actions class="d-flex justify-space-around flex-wrap flex-row pb-0">
           <v-btn :size="getBtnSize()" @click.prevent="findUser()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getUser()">
             <template v-slot:prepend>
@@ -51,7 +51,7 @@
 </template>
 
 <script>
-  import {publicallyAvailableForSearchChatsQuery, setTitle} from "@/utils";
+import {getLoginColoredStyle, publicallyAvailableForSearchChatsQuery, setTitle} from "@/utils";
   import {mapStores} from "pinia";
   import {useChatStore} from "@/store/chatStore";
   import heightMixin from "@/mixins/heightMixin";
@@ -67,6 +67,7 @@
       ...mapStores(useChatStore),
     },
     methods: {
+      getLoginColoredStyle,
       createChat() {
         bus.emit(OPEN_CHAT_EDIT, null);
       },

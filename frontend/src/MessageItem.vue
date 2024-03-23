@@ -7,7 +7,7 @@
         </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <a :href="getOwnerLink(item)" class="colored-link" @click.prevent.stop="onProfileClick(item)">{{getOwner(item.owner)}}</a>
+                <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)">{{getOwner(item.owner)}}</a>
                 <span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
                 <span class="mr-1">{{getDate(item)}}</span>
                 <template v-if="!isMobile() && !isInBlog">
@@ -46,7 +46,7 @@
     import {
         embed_message_reply,
         embed_message_resend, getBlogLink,
-        getHumanReadableDate, hasLength,
+        getHumanReadableDate, getLoginColoredStyle, hasLength,
     } from "@/utils";
     import "./messageBody.styl";
     import "./messageWrapper.styl";
@@ -57,6 +57,7 @@
     export default {
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'isInBlog'],
         methods: {
+            getLoginColoredStyle,
             hasLength,
             getOwnerRoute(item) {
                 return { name: profile_name, params: { id: item.owner?.id }}
@@ -197,6 +198,7 @@
             getReactedUsers(reactionObj) {
                 return reactionObj.users?.map(u => u.login).join(", ")
             },
+
         },
         created() {
             this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});

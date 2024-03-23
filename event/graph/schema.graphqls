@@ -7,6 +7,7 @@ type Participant {
     login:  String!
     avatar: String
     shortInfo:           String
+    loginColor: String
 }
 
 type EmbedMessageResponse {
@@ -54,6 +55,7 @@ type ParticipantWithAdmin {
     avatar: String
     admin: Boolean!
     shortInfo:           String
+    loginColor: String
 }
 
 type ChatDto {
@@ -79,7 +81,8 @@ type ChatDto {
     availableToSearch:   Boolean!
     isResultFromSearch:  Boolean
     pinned:              Boolean!
-    blog:              Boolean!
+    blog:                Boolean!
+    loginColor:          String
 }
 
 type ChatDeletedDto {
@@ -218,7 +221,7 @@ type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
     chatDeletedEvent: ChatDeletedDto
-    participantEvent: Participant
+    coChattedParticipantEvent: Participant
     videoUserCountChangedEvent: VideoUserCountChangedDto
     videoRecordingChangedEvent: VideoRecordingChangedDto
     videoCallInvitation: VideoCallInvitationDto
@@ -252,6 +255,7 @@ type UserAccountDto {
     shortInfo: String
     lastLoginDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
+    loginColor: String
 }
 
 type UserDeletedDto {
@@ -279,6 +283,7 @@ type UserAccountExtendedDto {
     canDelete: Boolean!
     canChangeRole: Boolean!
     canConfirm: Boolean!
+    loginColor:  String
 }
 
 union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto | UserDeletedDto

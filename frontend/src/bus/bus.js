@@ -19,9 +19,9 @@ export const SCROLL_DOWN = "scrollDown";
 
 export const OPEN_MESSAGE_EDIT_LINK = "openMessageEditLink";
 export const MESSAGE_EDIT_LINK_SET = "messageEditLinkSet";
-export const OPEN_MESSAGE_EDIT_COLOR = "messageEditColor";
+export const OPEN_CHOOSE_COLOR = "chooseColor";
 export const OPEN_MESSAGE_EDIT_SMILEY = "messageEditSmiley";
-export const MESSAGE_EDIT_COLOR_SET = "messageEditColorSet";
+export const COLOR_SET = "messageEditColorSet";
 export const OPEN_FILE_UPLOAD_MODAL = "openFileUploadModal";
 export const CLOSE_FILE_UPLOAD_MODAL = "closeFileUploadModal";
 export const OPEN_MESSAGE_EDIT_MEDIA = "openMessageEditMedia";
@@ -97,7 +97,7 @@ export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";
 
 export const OPEN_RESEND_TO_MODAL = "openSendTo";
 
-export const PARTICIPANT_CHANGED = "participantChanged";
+export const CO_CHATTED_PARTICIPANT_CHANGED = "participantChanged";
 
 export const ADD_VIDEO_SOURCE = "addVideoSource";
 export const ADD_SCREEN_SOURCE = "addScreenSource";

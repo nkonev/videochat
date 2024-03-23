@@ -101,7 +101,6 @@
 
       <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
       <MessageEditLinkModal/>
-      <MessageEditColorModal/>
       <MessageEditMediaModal/>
     </v-container>
 </template>
@@ -110,10 +109,10 @@
     import axios from "axios";
     import bus, {
       CLOSE_EDIT_MESSAGE, LOAD_FILES_COUNT,
-      MESSAGE_EDIT_COLOR_SET,
+      COLOR_SET,
       MESSAGE_EDIT_LINK_SET,
       OPEN_FILE_UPLOAD_MODAL,
-      OPEN_MESSAGE_EDIT_COLOR,
+      OPEN_CHOOSE_COLOR,
       OPEN_MESSAGE_EDIT_LINK,
       OPEN_MESSAGE_EDIT_MEDIA,
       OPEN_MESSAGE_EDIT_SMILEY,
@@ -142,7 +141,6 @@
     } from "@/store/localStore"
 
     import MessageEditLinkModal from "@/MessageEditLinkModal";
-    import MessageEditColorModal from "@/MessageEditColorModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
@@ -440,10 +438,10 @@
                 bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
             },
             textColorClick(){
-                bus.emit(OPEN_MESSAGE_EDIT_COLOR, colorText);
+                bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorText, color: null});
             },
             backgroundColorClick() {
-                bus.emit(OPEN_MESSAGE_EDIT_COLOR, colorBackground);
+                bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorBackground, color: null});
             },
             smileyClick() {
                 bus.emit(OPEN_MESSAGE_EDIT_SMILEY,
@@ -522,7 +520,7 @@
             bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
-            bus.on(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
@@ -531,7 +529,7 @@
             bus.off(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
-            bus.off(MESSAGE_EDIT_COLOR_SET, this.onColorSet);
+            bus.off(COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
             bus.off(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
@@ -576,7 +574,6 @@
         components: {
             Tiptap,
             MessageEditLinkModal,
-            MessageEditColorModal,
             MessageEditMediaModal,
         }
     }

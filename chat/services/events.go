@@ -245,7 +245,7 @@ func (not *Events) NotifyAboutProfileChanged(user *dto.User) {
 			internalErr = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
 				UserId:                  participantId,
 				EventType:               "participant_changed",
-				UserProfileNotification: user,
+				CoChattedParticipantNotification: user,
 			})
 		}
 		return internalErr

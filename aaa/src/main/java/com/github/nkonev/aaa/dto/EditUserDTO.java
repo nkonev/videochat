@@ -17,7 +17,9 @@ public record EditUserDTO (
 
     String avatarBig,
 
-    String shortInfo
+    String shortInfo,
+    String loginColor,
+    Boolean removeLoginColor
 ) {
 
     public EditUserDTO(String login, String avatar, String avatarBig, String shortInfo, String password, String email) {
@@ -28,7 +30,9 @@ public record EditUserDTO (
                 null,
                 email,
                 avatarBig,
-                shortInfo
+                shortInfo,
+                null,
+                null
         );
     }
 
@@ -40,7 +44,9 @@ public record EditUserDTO (
                 removeAvatar,
                 email,
                 avatarBig,
-                shortInfo
+                shortInfo,
+                loginColor,
+                removeLoginColor
         );
     }
 
@@ -52,7 +58,9 @@ public record EditUserDTO (
                 removeAvatar,
                 email,
                 avatarBig,
-                shortInfo
+                shortInfo,
+                loginColor,
+                removeLoginColor
         );
     }
 
@@ -64,7 +72,66 @@ public record EditUserDTO (
                 removeAvatar,
                 newEmail,
                 avatarBig,
-                shortInfo
+                shortInfo,
+                loginColor,
+                removeLoginColor
         );
     }
+
+    public EditUserDTO withAvatar(String newAvatar) {
+        return new EditUserDTO(
+            login,
+            newAvatar,
+            password,
+            removeAvatar,
+            email,
+            avatarBig,
+            shortInfo,
+            loginColor,
+            removeLoginColor
+        );
+    }
+
+    public EditUserDTO withAvatarBig(String newAvatar) {
+        return new EditUserDTO(
+            login,
+            avatar,
+            password,
+            removeAvatar,
+            email,
+            newAvatar,
+            shortInfo,
+            loginColor,
+            removeLoginColor
+        );
+    }
+
+    public EditUserDTO withShortInfo(String newShortInfo) {
+        return new EditUserDTO(
+            login,
+            avatar,
+            password,
+            removeAvatar,
+            email,
+            avatarBig,
+            newShortInfo,
+            loginColor,
+            removeLoginColor
+        );
+    }
+
+    public EditUserDTO withLoginColor(String newLoginColor) {
+        return new EditUserDTO(
+            login,
+            avatar,
+            password,
+            removeAvatar,
+            email,
+            avatarBig,
+            shortInfo,
+            newLoginColor,
+            removeLoginColor
+        );
+    }
+
 }

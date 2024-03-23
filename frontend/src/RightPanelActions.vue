@@ -4,6 +4,7 @@
                    :prepend-avatar="chatStore.currentUser.avatar"
                    :title="chatStore.currentUser.login"
                    :subtitle="chatStore.currentUser.shortInfo"
+                   :style="getLoginColoredStyle(chatStore.currentUser)"
       ></v-list-item>
     </v-list>
 
@@ -67,7 +68,7 @@ import bus, {
     OPEN_VIEW_FILES_DIALOG
 } from "@/bus/bus";
 import {goToPreservingQuery} from "@/mixins/searchString";
-import {copyCallLink, hasLength, isChatRoute} from "@/utils";
+import {copyCallLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 
 export default {
   data() {
@@ -88,6 +89,7 @@ export default {
       },
   },
   methods: {
+      getLoginColoredStyle,
     createChat() {
       bus.emit(OPEN_CHAT_EDIT, null);
     },

@@ -157,12 +157,6 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			return err
 		}
 
-		chatsWithMe, err := tx.GetChatsWithMe(userPrincipalDto.UserId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
-			return err
-		}
-
 		var chatIds []int64 = make([]int64, 0)
 		for _, cc := range dbChats {
 			chatIds = append(chatIds, cc.Id)
@@ -176,9 +170,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		for _, cc := range dbChats {
 			messages := unreadMessageBatch[cc.Id]
 
-			isParticipant := utils.Contains(chatsWithMe, cc.Id)
-
-			cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
+			cd := convertToDto(cc, []*dto.User{}, messages, true) // participant is true because we get chats with me above, in GetChatsWithParticipants(userPrincipalDto.UserId, ...)
 
 			chatDtos = append(chatDtos, cd)
 		}
@@ -389,6 +381,7 @@ func getChat(
 
 	chatDto := convertToDto(cc, users, unreadMessages, isParticipant)
 
+	// indeed it's possible to do w/o loop
 	for _, participant := range users {
 		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
 	}
@@ -1444,6 +1437,7 @@ type simpleChat struct {
 	IsTetATet bool
 	Avatar    null.String
 	ShortInfo null.String
+	LoginColor null.String
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -1468,6 +1462,10 @@ func (r *simpleChat) SetAvatar(s null.String) {
 
 func (r *simpleChat) SetShortInfo(s null.String) {
 	r.ShortInfo = s
+}
+
+func (r *simpleChat) SetLoginColor(s null.String) {
+	r.LoginColor = s
 }
 
 func (r *simpleChat) GetIsTetATet() bool {

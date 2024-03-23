@@ -74,7 +74,7 @@ type GlobalUserEvent struct {
 	UserId                        int64                         `json:"userId"`
 	ChatNotification              *ChatDtoWithAdmin             `json:"chatNotification"`
 	ChatDeletedDto                *ChatDeletedDto               `json:"chatDeletedNotification"`
-	UserProfileNotification       *User                         `json:"userProfileNotification"`
+	CoChattedParticipantNotification       *User                `json:"coChattedParticipantNotification"`
 	VideoCallUserCountEvent       *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`
 	VideoChatInvitation           *VideoCallInvitation          `json:"videoCallInvitation"`
 	VideoParticipantDialEvent     *VideoDialChanges             `json:"videoParticipantDialEvent"`

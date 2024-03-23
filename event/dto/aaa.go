@@ -20,6 +20,7 @@ type UserAccount struct {
 	ShortInfo *string `json:"shortInfo"`
 	LastLoginDateTime *time.Time `json:"lastLoginDateTime"`
 	Oauth2Identifiers *Oauth2Identifiers `json:"oauth2Identifiers"`
+	LoginColor    *string `json:"loginColor"`
 }
 
 type DataDTO struct {

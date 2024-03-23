@@ -75,6 +75,7 @@ type ComplexityRoot struct {
 		ID                  func(childComplexity int) int
 		IsResultFromSearch  func(childComplexity int) int
 		LastUpdateDateTime  func(childComplexity int) int
+		LoginColor          func(childComplexity int) int
 		Name                func(childComplexity int) int
 		ParticipantIds      func(childComplexity int) int
 		Participants        func(childComplexity int) int
@@ -167,10 +168,10 @@ type ComplexityRoot struct {
 		AllUnreadMessagesNotification  func(childComplexity int) int
 		ChatDeletedEvent               func(childComplexity int) int
 		ChatEvent                      func(childComplexity int) int
+		CoChattedParticipantEvent      func(childComplexity int) int
 		EventType                      func(childComplexity int) int
 		ForceLogout                    func(childComplexity int) int
 		NotificationEvent              func(childComplexity int) int
-		ParticipantEvent               func(childComplexity int) int
 		UnreadMessagesNotification     func(childComplexity int) int
 		VideoCallInvitation            func(childComplexity int) int
 		VideoCallScreenShareChangedDto func(childComplexity int) int
@@ -210,18 +211,20 @@ type ComplexityRoot struct {
 	}
 
 	Participant struct {
-		Avatar    func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Login     func(childComplexity int) int
-		ShortInfo func(childComplexity int) int
+		Avatar     func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Login      func(childComplexity int) int
+		LoginColor func(childComplexity int) int
+		ShortInfo  func(childComplexity int) int
 	}
 
 	ParticipantWithAdmin struct {
-		Admin     func(childComplexity int) int
-		Avatar    func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Login     func(childComplexity int) int
-		ShortInfo func(childComplexity int) int
+		Admin      func(childComplexity int) int
+		Avatar     func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Login      func(childComplexity int) int
+		LoginColor func(childComplexity int) int
+		ShortInfo  func(childComplexity int) int
 	}
 
 	PinnedMessageEvent struct {
@@ -265,6 +268,7 @@ type ComplexityRoot struct {
 		ID                func(childComplexity int) int
 		LastLoginDateTime func(childComplexity int) int
 		Login             func(childComplexity int) int
+		LoginColor        func(childComplexity int) int
 		Oauth2Identifiers func(childComplexity int) int
 		ShortInfo         func(childComplexity int) int
 	}
@@ -285,6 +289,7 @@ type ComplexityRoot struct {
 		ID                func(childComplexity int) int
 		LastLoginDateTime func(childComplexity int) int
 		Login             func(childComplexity int) int
+		LoginColor        func(childComplexity int) int
 		Oauth2Identifiers func(childComplexity int) int
 		ShortInfo         func(childComplexity int) int
 	}
@@ -494,6 +499,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDto.LastUpdateDateTime(childComplexity), true
+
+	case "ChatDto.loginColor":
+		if e.complexity.ChatDto.LoginColor == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.LoginColor(childComplexity), true
 
 	case "ChatDto.name":
 		if e.complexity.ChatDto.Name == nil {
@@ -971,6 +983,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.ChatEvent(childComplexity), true
 
+	case "GlobalEvent.coChattedParticipantEvent":
+		if e.complexity.GlobalEvent.CoChattedParticipantEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.CoChattedParticipantEvent(childComplexity), true
+
 	case "GlobalEvent.eventType":
 		if e.complexity.GlobalEvent.EventType == nil {
 			break
@@ -991,13 +1010,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalEvent.NotificationEvent(childComplexity), true
-
-	case "GlobalEvent.participantEvent":
-		if e.complexity.GlobalEvent.ParticipantEvent == nil {
-			break
-		}
-
-		return e.complexity.GlobalEvent.ParticipantEvent(childComplexity), true
 
 	case "GlobalEvent.unreadMessagesNotification":
 		if e.complexity.GlobalEvent.UnreadMessagesNotification == nil {
@@ -1188,6 +1200,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Participant.Login(childComplexity), true
 
+	case "Participant.loginColor":
+		if e.complexity.Participant.LoginColor == nil {
+			break
+		}
+
+		return e.complexity.Participant.LoginColor(childComplexity), true
+
 	case "Participant.shortInfo":
 		if e.complexity.Participant.ShortInfo == nil {
 			break
@@ -1222,6 +1241,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ParticipantWithAdmin.Login(childComplexity), true
+
+	case "ParticipantWithAdmin.loginColor":
+		if e.complexity.ParticipantWithAdmin.LoginColor == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.LoginColor(childComplexity), true
 
 	case "ParticipantWithAdmin.shortInfo":
 		if e.complexity.ParticipantWithAdmin.ShortInfo == nil {
@@ -1394,6 +1420,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountDto.Login(childComplexity), true
 
+	case "UserAccountDto.loginColor":
+		if e.complexity.UserAccountDto.LoginColor == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.LoginColor(childComplexity), true
+
 	case "UserAccountDto.oauth2Identifiers":
 		if e.complexity.UserAccountDto.Oauth2Identifiers == nil {
 			break
@@ -1491,6 +1524,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAccountExtendedDto.Login(childComplexity), true
+
+	case "UserAccountExtendedDto.loginColor":
+		if e.complexity.UserAccountExtendedDto.LoginColor == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.LoginColor(childComplexity), true
 
 	case "UserAccountExtendedDto.oauth2Identifiers":
 		if e.complexity.UserAccountExtendedDto.Oauth2Identifiers == nil {
@@ -2705,6 +2745,8 @@ func (ec *executionContext) fieldContext_ChatDto_participants(ctx context.Contex
 				return ec.fieldContext_ParticipantWithAdmin_admin(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_ParticipantWithAdmin_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_ParticipantWithAdmin_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParticipantWithAdmin", field.Name)
 		},
@@ -2968,6 +3010,47 @@ func (ec *executionContext) fieldContext_ChatDto_blog(ctx context.Context, field
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDto_loginColor(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_loginColor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoginColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_loginColor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3332,6 +3415,8 @@ func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(ctx context
 				return ec.fieldContext_ParticipantWithAdmin_admin(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_ParticipantWithAdmin_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_ParticipantWithAdmin_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParticipantWithAdmin", field.Name)
 		},
@@ -4137,6 +4222,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_owner(ctx context.Con
 				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -4725,6 +4812,8 @@ func (ec *executionContext) fieldContext_EmbedMessageResponse_owner(ctx context.
 				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -5342,6 +5431,8 @@ func (ec *executionContext) fieldContext_FileInfoDto_owner(ctx context.Context, 
 				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -5695,6 +5786,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(ctx context.Conte
 				return ec.fieldContext_ChatDto_pinned(ctx, field)
 			case "blog":
 				return ec.fieldContext_ChatDto_blog(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_ChatDto_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -5747,8 +5840,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatDeletedEvent(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _GlobalEvent_participantEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GlobalEvent_participantEvent(ctx, field)
+func (ec *executionContext) _GlobalEvent_coChattedParticipantEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_coChattedParticipantEvent(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5761,7 +5854,7 @@ func (ec *executionContext) _GlobalEvent_participantEvent(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ParticipantEvent, nil
+		return obj.CoChattedParticipantEvent, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5775,7 +5868,7 @@ func (ec *executionContext) _GlobalEvent_participantEvent(ctx context.Context, f
 	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GlobalEvent_participantEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GlobalEvent_coChattedParticipantEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalEvent",
 		Field:      field,
@@ -5791,6 +5884,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_participantEvent(ctx contex
 				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -7168,6 +7263,47 @@ func (ec *executionContext) fieldContext_Participant_shortInfo(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Participant_loginColor(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Participant_loginColor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoginColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Participant_loginColor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Participant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ParticipantWithAdmin_id(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParticipantWithAdmin_id(ctx, field)
 	if err != nil {
@@ -7370,6 +7506,47 @@ func (ec *executionContext) _ParticipantWithAdmin_shortInfo(ctx context.Context,
 }
 
 func (ec *executionContext) fieldContext_ParticipantWithAdmin_shortInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParticipantWithAdmin_loginColor(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_loginColor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoginColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_loginColor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ParticipantWithAdmin",
 		Field:      field,
@@ -7974,6 +8151,8 @@ func (ec *executionContext) fieldContext_Reaction_users(ctx context.Context, fie
 				return ec.fieldContext_Participant_avatar(ctx, field)
 			case "shortInfo":
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -8271,8 +8450,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(ctx context.C
 				return ec.fieldContext_GlobalEvent_chatEvent(ctx, field)
 			case "chatDeletedEvent":
 				return ec.fieldContext_GlobalEvent_chatDeletedEvent(ctx, field)
-			case "participantEvent":
-				return ec.fieldContext_GlobalEvent_participantEvent(ctx, field)
+			case "coChattedParticipantEvent":
+				return ec.fieldContext_GlobalEvent_coChattedParticipantEvent(ctx, field)
 			case "videoUserCountChangedEvent":
 				return ec.fieldContext_GlobalEvent_videoUserCountChangedEvent(ctx, field)
 			case "videoRecordingChangedEvent":
@@ -8739,6 +8918,47 @@ func (ec *executionContext) fieldContext_UserAccountDto_oauth2Identifiers(ctx co
 				return ec.fieldContext_OAuth2Identifiers_keycloakId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OAuth2Identifiers", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountDto_loginColor(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_loginColor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoginColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountDto_loginColor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9359,6 +9579,47 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_canConfirm(ctx c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_loginColor(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_loginColor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoginColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_loginColor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12465,6 +12726,8 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "loginColor":
+			out.Values[i] = ec._ChatDto_loginColor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12971,8 +13234,8 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._GlobalEvent_chatEvent(ctx, field, obj)
 		case "chatDeletedEvent":
 			out.Values[i] = ec._GlobalEvent_chatDeletedEvent(ctx, field, obj)
-		case "participantEvent":
-			out.Values[i] = ec._GlobalEvent_participantEvent(ctx, field, obj)
+		case "coChattedParticipantEvent":
+			out.Values[i] = ec._GlobalEvent_coChattedParticipantEvent(ctx, field, obj)
 		case "videoUserCountChangedEvent":
 			out.Values[i] = ec._GlobalEvent_videoUserCountChangedEvent(ctx, field, obj)
 		case "videoRecordingChangedEvent":
@@ -13250,6 +13513,8 @@ func (ec *executionContext) _Participant(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._Participant_avatar(ctx, field, obj)
 		case "shortInfo":
 			out.Values[i] = ec._Participant_shortInfo(ctx, field, obj)
+		case "loginColor":
+			out.Values[i] = ec._Participant_loginColor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13303,6 +13568,8 @@ func (ec *executionContext) _ParticipantWithAdmin(ctx context.Context, sel ast.S
 			}
 		case "shortInfo":
 			out.Values[i] = ec._ParticipantWithAdmin_shortInfo(ctx, field, obj)
+		case "loginColor":
+			out.Values[i] = ec._ParticipantWithAdmin_loginColor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13639,6 +13906,8 @@ func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._UserAccountDto_lastLoginDateTime(ctx, field, obj)
 		case "oauth2Identifiers":
 			out.Values[i] = ec._UserAccountDto_oauth2Identifiers(ctx, field, obj)
+		case "loginColor":
+			out.Values[i] = ec._UserAccountDto_loginColor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13759,6 +14028,8 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "loginColor":
+			out.Values[i] = ec._UserAccountExtendedDto_loginColor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

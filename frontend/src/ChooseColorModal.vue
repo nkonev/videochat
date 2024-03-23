@@ -25,8 +25,8 @@
 </template>
 
 <script>
-    import bus, {MESSAGE_EDIT_COLOR_SET, OPEN_MESSAGE_EDIT_COLOR} from "./bus/bus";
-    import {colorBackground, colorText} from "@/utils";
+    import bus, {COLOR_SET, OPEN_CHOOSE_COLOR} from "./bus/bus";
+    import {colorBackground, colorLogin, colorText} from "@/utils";
 
     export default {
         data () {
@@ -44,17 +44,17 @@
             }
         },
         methods: {
-            showModal(colorMode, color) {
+            showModal({colorMode, color}) {
                 this.$data.show = true;
                 this.colorMode = colorMode;
                 this.color = color;
             },
             accept() {
-                bus.emit(MESSAGE_EDIT_COLOR_SET, {color: this.color, colorMode: this.colorMode});
+                bus.emit(COLOR_SET, {color: this.color, colorMode: this.colorMode});
                 this.closeModal();
             },
             clear() {
-                bus.emit(MESSAGE_EDIT_COLOR_SET, {color: null, colorMode: this.colorMode});
+                bus.emit(COLOR_SET, {color: null, colorMode: this.colorMode});
                 this.closeModal();
             },
             closeModal() {
@@ -67,14 +67,16 @@
                     return this.$vuetify.locale.t('$vuetify.message_edit_text_color');
                 } else if (this.colorMode == colorBackground) {
                     return this.$vuetify.locale.t('$vuetify.message_edit_background_color');
+                } else if (this.colorMode == colorLogin) {
+                    return this.$vuetify.locale.t('$vuetify.login_color');
                 }
             }
         },
         mounted() {
-            bus.on(OPEN_MESSAGE_EDIT_COLOR, this.showModal);
+            bus.on(OPEN_CHOOSE_COLOR, this.showModal);
         },
         beforeUnmount() {
-            bus.off(OPEN_MESSAGE_EDIT_COLOR, this.showModal);
+            bus.off(OPEN_CHOOSE_COLOR, this.showModal);
         },
     }
 </script>

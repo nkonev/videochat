@@ -28,7 +28,7 @@ type GlobalUserEvent struct {
 	UserId                        int64                     `json:"userId"`
 	ChatNotification              *ChatDtoWithAdmin         `json:"chatNotification"`
 	ChatDeletedDto                *ChatDeletedDto           `json:"chatDeletedNotification"`
-	UserProfileNotification       *User                     `json:"userProfileNotification"`
+	CoChattedParticipantNotification       *User            `json:"coChattedParticipantNotification"`
 	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
 	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
 }

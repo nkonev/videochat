@@ -16,7 +16,7 @@
             </v-img>
 
             <v-container class="ma-0 pa-0 mt-2 d-flex flex-row">
-              <span v-if="!showLoginInput" class="align-self-center text-h3">{{ chatStore.currentUser.login }}</span>
+              <span v-if="!showLoginInput" class="align-self-center text-h3" :style="getLoginColoredStyle(chatStore.currentUser)">{{ chatStore.currentUser.login }}</span>
               <v-btn v-if="!showLoginInput" color="primary" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_login')" @click="showLoginInput = !showLoginInput; loginPrevious = chatStore.currentUser.login">
                 <v-icon dark size="x-large">mdi-lead-pencil</v-icon>
               </v-btn>
@@ -239,6 +239,19 @@
             </template>
           </v-text-field>
         </v-container>
+
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.login_color') }}</v-card-title>
+        <v-btn class="mx-4 mb-4" color="primary" dark
+               @click="changeLoginColor()">
+            <template v-slot:default>
+                {{ $vuetify.locale.t('$vuetify.change_login_color') }}
+            </template>
+            <template v-slot:append>
+                <v-icon dark>mdi-invert-colors</v-icon>
+            </template>
+        </v-btn>
+
     </v-card>
 </template>
 
@@ -246,8 +259,9 @@
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {deepCopy, hasLength} from "@/utils";
+import {colorLogin, getLoginColoredStyle, hasLength} from "@/utils";
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
+import bus, {COLOR_SET, OPEN_CHOOSE_COLOR} from "@/bus/bus";
 
 export default {
     mixins: [userProfileValidationRules()],
@@ -289,6 +303,7 @@ export default {
 
     },
     methods: {
+        getLoginColoredStyle,
         shouldShowBound() {
             return this.shouldShowBoundVkontakte() ||
                 this.shouldShowBoundFacebook() ||
@@ -441,10 +456,36 @@ export default {
                     this.loading = false;
                 })
         },
+        changeLoginColor() {
+            bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorLogin});
+        },
+        onColorSet({color, colorMode}) {
+            if (colorMode == colorLogin) {
+                console.debug("Setting color", color, colorMode);
+                this.loading = true;
+                if (color) {
+                    axios.patch('/api/aaa/profile', {loginColor: color})
+                        .then((response) => {
+                            this.chatStore.currentUser = response.data;
+                        }).finally(()=>{
+                            this.loading = false;
+                        })
+                } else {
+                    axios.patch('/api/aaa/profile', {loginColor: null, removeLoginColor: true})
+                        .then((response) => {
+                            this.chatStore.currentUser = response.data;
+                        }).finally(()=>{
+                            this.loading = false;
+                        })
+                }
+            }
+        },
     },
     mounted() {
+        bus.on(COLOR_SET, this.onColorSet);
     },
     beforeUnmount() {
+        bus.off(COLOR_SET, this.onColorSet);
     },
 }
 </script>

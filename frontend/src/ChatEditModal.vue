@@ -295,7 +295,7 @@
                         axios.put(`/api/chat`, dtoToPost).then(()=>{
                             if (this.editDto.participantIds && this.editDto.participantIds.length) {
                                 // we firstly add users...
-                                return axios.put(`/api/chat/${this.editDto.id}/user`, {
+                                return axios.put(`/api/chat/${this.editDto.id}/participant`, {
                                     addParticipantIds: this.editDto.participantIds
                                 })
                             } else {

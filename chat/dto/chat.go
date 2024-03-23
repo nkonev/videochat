@@ -28,6 +28,7 @@ type BaseChatDto struct {
 	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
 	Pinned              bool        `json:"pinned"`
 	Blog                bool        `json:"blog"`
+	LoginColor          null.String `json:"loginColor"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -62,6 +63,7 @@ type ChatDtoWithTetATet interface {
 	SetName(s string)
 	SetAvatar(s null.String)
 	SetShortInfo(s null.String)
+	SetLoginColor(s null.String)
 }
 
 func (r *ChatDto) GetId() int64 {
@@ -102,6 +104,10 @@ func (r *BaseChatDto) SetAvatar(s null.String) {
 
 func (r *BaseChatDto) SetShortInfo(s null.String) {
 	r.ShortInfo = s
+}
+
+func (r *BaseChatDto) SetLoginColor(s null.String) {
+	r.LoginColor = s
 }
 
 func (r *BaseChatDto) GetIsTetATet() bool {

@@ -57,7 +57,7 @@
       OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
       SCROLL_DOWN,
-      SET_EDIT_MESSAGE, PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
+      SET_EDIT_MESSAGE, CO_CHATTED_PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
     } from "@/bus/bus";
     import {
       deepCopy, edit_message, embed_message_reply,
@@ -587,7 +587,7 @@
         bus.on(MESSAGE_EDITED, this.onEditMessage);
         bus.on(REACTION_CHANGED, this.onReactionChanged);
         bus.on(REACTION_REMOVED, this.onReactionRemoved);
-        bus.on(PARTICIPANT_CHANGED, this.onUserProfileChanged);
+        bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
@@ -607,7 +607,7 @@
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
-        bus.off(PARTICIPANT_CHANGED, this.onUserProfileChanged);
+        bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
       }
     }

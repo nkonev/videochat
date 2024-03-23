@@ -28,6 +28,7 @@ type BaseChatDto struct {
 	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
 	Pinned              bool        `json:"pinned"`
 	Blog                bool        `json:"blog"`
+	LoginColor          null.String `json:"loginColor"`
 }
 
 type ChatDeletedDto struct {

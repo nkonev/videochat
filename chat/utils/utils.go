@@ -196,6 +196,7 @@ func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participan
 		chatDto.SetName(participant.Login)
 		chatDto.SetAvatar(participant.Avatar)
 		chatDto.SetShortInfo(participant.ShortInfo)
+		chatDto.SetLoginColor(participant.LoginColor)
 	}
 }
 

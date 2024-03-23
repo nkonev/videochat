@@ -30,7 +30,8 @@ public record UserSelfProfileDTO(
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauth2Identifiers,
             Collection<UserRole> roles,
-            Long expiresAt
+            Long expiresAt,
+            String loginColor
     ) {
         this(new UserAccountDTO(
                 id,
@@ -39,7 +40,8 @@ public record UserSelfProfileDTO(
                 avatarBig,
                 shortInfo,
                 lastLoginDateTime,
-                oauth2Identifiers
+                oauth2Identifiers,
+                loginColor
         ), email, awaitingForConfirmEmailChange, roles, expiresAt);
     }
 

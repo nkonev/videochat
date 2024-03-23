@@ -1,7 +1,7 @@
 package com.github.nkonev.aaa.services;
 
 import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.LanguageDTO;
+import com.github.nkonev.aaa.dto.SettingsDTO;
 import com.github.nkonev.aaa.entity.jdbc.UserSettings;
 import com.github.nkonev.aaa.repository.jdbc.UserSettingsRepository;
 import org.owasp.encoder.Encode;
@@ -21,13 +21,14 @@ public class UserSettingsService {
     private UserSettingsRepository userSettingsRepository;
 
     @Transactional
-    public LanguageDTO initSettings(long userId) {
+    public SettingsDTO initSettings(long userId) {
         Optional<UserSettings> maybeSettings = userSettingsRepository.findById(userId);
         if (maybeSettings.isEmpty()) {
             userSettingsRepository.insertDefault(userId);
             maybeSettings = userSettingsRepository.findById(userId);
         }
-        return new LanguageDTO(maybeSettings.get().language());
+        var userSettings = maybeSettings.get();
+        return new SettingsDTO(userSettings.language());
     }
 
     @Transactional
@@ -52,4 +53,5 @@ public class UserSettingsService {
         userSettingsRepository.updateLanguage(userId, language);
         return userSettingsRepository.findById(userId).get().language();
     }
+
 }

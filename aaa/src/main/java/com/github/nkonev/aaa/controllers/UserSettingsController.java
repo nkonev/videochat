@@ -1,9 +1,7 @@
 package com.github.nkonev.aaa.controllers;
 
 import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.LanguageDTO;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import com.github.nkonev.aaa.dto.*;
 import com.github.nkonev.aaa.services.UserSettingsService;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,7 @@ public class UserSettingsController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.INIT, produces = MediaType.APPLICATION_JSON_VALUE)
-    public LanguageDTO init(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
+    public SettingsDTO init(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
         return userSettingsService.initSettings(userAccount.getId());
     }
 
@@ -38,7 +36,8 @@ public class UserSettingsController {
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.LANGUAGE, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Language setLanguage(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @NotNull @RequestBody LanguageDTO settingsDTO) {
-        return userSettingsService.setLanguage(userAccount.getId(), settingsDTO.language());
+    public Language setLanguage(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @NotNull @RequestBody LanguageDTO aDto) {
+        return userSettingsService.setLanguage(userAccount.getId(), aDto.language());
     }
+
 }

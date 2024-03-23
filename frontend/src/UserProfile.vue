@@ -13,7 +13,7 @@
       >
       </v-img>
       <span class="d-flex">
-        <span class="text-h3">
+        <span class="text-h3" :style="getLoginColoredStyle(viewableUser)">
           {{ viewableUser.login }}
         </span>
 
@@ -98,7 +98,7 @@
 
 import axios from "axios";
 import {chat_name} from "./router/routes";
-import {deepCopy, hasLength, setTitle} from "@/utils";
+import {deepCopy, getLoginColoredStyle, hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
@@ -138,6 +138,7 @@ export default {
     },
   },
   methods: {
+    getLoginColoredStyle,
     isNotMyself() {
       return this.chatStore.currentUser && this.chatStore.currentUser.id != this.viewableUser.id
     },

@@ -1,12 +1,9 @@
 package com.github.nkonev.aaa.converter;
 
 import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.OAuth2IdentifiersDTO;
-import com.github.nkonev.aaa.dto.UserAccountDTOExtended;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import com.github.nkonev.aaa.dto.*;
 import com.github.nkonev.aaa.entity.jdbc.CreationType;
 import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.security.*;
 import com.github.nkonev.aaa.utils.NullEncode;
@@ -33,11 +30,21 @@ public class UserAccountConverter {
         return UserRole.ROLE_USER;
     }
 
+    public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isForOauth2) {
+        var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isForOauth2));
+        userAccountDTO = userAccountDTO.withEmail(trimToNull(NullEncode.forHtml(userAccountDTO.email())));
+        userAccountDTO = userAccountDTO.withAvatar(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatar())));
+        userAccountDTO = userAccountDTO.withAvatarBig(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig())));
+        userAccountDTO = userAccountDTO.withShortInfo(trimToNull(NullEncode.forHtml(userAccountDTO.shortInfo())));
+        userAccountDTO = userAccountDTO.withLoginColor(trimToNull(userAccountDTO.loginColor()));
+        return userAccountDTO;
+    }
+
     public static List<String> convertRolesToStringList(Collection<GrantedAuthority> roles) {
         return Optional.ofNullable(roles).map(rs -> rs.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList())).orElse(Collections.emptyList());
     }
 
-    private static OAuth2IdentifiersDTO convertOauth(UserAccount.OAuth2Identifiers oAuth2Identifiers){
+    private static OAuth2IdentifiersDTO convertOAuth2(UserAccount.OAuth2Identifiers oAuth2Identifiers){
         if (oAuth2Identifiers ==null) return null;
         return new OAuth2IdentifiersDTO(oAuth2Identifiers.facebookId(), oAuth2Identifiers.vkontakteId(), oAuth2Identifiers.googleId(), oAuth2Identifiers.keycloakId());
     }
@@ -59,7 +66,8 @@ public class UserAccountConverter {
                 userAccount.email(),
                 StringUtils.hasLength(userAccount.newEmail()),
                 userAccount.lastLoginDateTime(),
-                convertOauth(userAccount.oauth2Identifiers())
+                convertOAuth2(userAccount.oauth2Identifiers()),
+                userAccount.loginColor()
         );
     }
 
@@ -76,7 +84,8 @@ public class UserAccountConverter {
                 lastLoginDateTime,
                 userAccount.getOauth2Identifiers(),
                 convertRoles2Enum(userAccount.getRoles()),
-                expiresAt
+                expiresAt,
+                userAccount.getLoginColor()
         );
     }
 
@@ -107,7 +116,8 @@ public class UserAccountConverter {
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
                 userAccount.lastLoginDateTime(),
-                convertOauth(userAccount.oauth2Identifiers())
+                convertOAuth2(userAccount.oauth2Identifiers()),
+                userAccount.loginColor()
         );
     }
 
@@ -128,12 +138,13 @@ public class UserAccountConverter {
                 userAccount.shortInfo(),
                 dataDTO,
                 userAccount.lastLoginDateTime(),
-                convertOauth(userAccount.oauth2Identifiers()),
+                convertOAuth2(userAccount.oauth2Identifiers()),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
                 aaaSecurityService.canChangeRole(currentUser, userAccount),
                 aaaSecurityService.canConfirm(currentUser, userAccount),
-                awaitingForConfirmEmailChange
+                awaitingForConfirmEmailChange,
+                userAccount.loginColor()
         );
     }
 
@@ -144,6 +155,7 @@ public class UserAccountConverter {
         }
     }
 
+    // EditUserDTO userAccountDTO is already filtered by normalize()
     public static UserAccount buildUserAccountEntityForInsert(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, PasswordEncoder passwordEncoder) {
         final boolean expired = false;
         final boolean locked = false;
@@ -153,7 +165,6 @@ public class UserAccountConverter {
         final UserRole newUserRole = getDefaultUserRole();
 
         validateLoginAndEmail(userAccountDTO);
-        userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
         String password = userAccountDTO.password();
         try {
             validateUserPassword(password);
@@ -164,54 +175,64 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.REGISTRATION,
-                NullEncode.forHtml(userAccountDTO.login()),
+                userAccountDTO.login(),
                 passwordEncoder.encode(password),
-                NullEncode.forHtmlAttribute(userAccountDTO.avatar()),
-                NullEncode.forHtmlAttribute(userAccountDTO.avatarBig()),
-                NullEncode.forHtml(userAccountDTO.shortInfo()),
+                userAccountDTO.avatar(),
+                userAccountDTO.avatarBig(),
+                userAccountDTO.shortInfo(),
                 expired,
                 locked,
                 enabled,
                 confirmed,
                 newUserRole,
-                NullEncode.forHtml(userAccountDTO.email()),
+                userAccountDTO.email(),
                 null,
                 null,
                 null,
                 null,
                 null,
                 null,
-                null
+                null,
+                userAccountDTO.loginColor()
         );
     }
 
-    public static String validateAndTrimLogin(String login){
-        login = login != null ? login.trim() : null;
+    public static String validateLengthAndTrimLogin(String login, boolean isForOauth2) {
+        login = checkAndTrimLogin(login, isForOauth2);
 
         if (!StringUtils.hasLength(login)) {
-            throw new BadRequestException("empty login");
+            throw new BadRequestException("login must be set");
         }
-        if (FORBIDDEN_USERNAMES.contains(login)) {
-            throw new BadRequestException("forbidden login");
-        }
-
-        login = NullEncode.forHtml(login);
 
         return login;
     }
 
-    public static void validateLoginNonOAuth2(String login){
-        Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-        Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-        Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-        Assert.isTrue(!login.startsWith(KeycloakOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+    public static void validateLengthEmail(String email) {
+        if (!StringUtils.hasLength(email)) {
+            throw new BadRequestException("email must be set");
+        }
     }
 
+    private static String checkAndTrimLogin(String login, boolean isForOauth2) {
+        login = login != null ? login.trim() : null;
+        login = trimToNull(login);
 
-    public static com.github.nkonev.aaa.dto.EditUserDTO trimAndValidateNonOAuth2Login(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
-        var ret = userAccountDTO.withLogin(validateAndTrimLogin(userAccountDTO.login()));
-        validateLoginNonOAuth2(ret.login());
-        return ret;
+        if (login != null) {
+            if (FORBIDDEN_USERNAMES.contains(login)) {
+                throw new BadRequestException("forbidden login");
+            }
+        }
+
+        login = NullEncode.forHtml(login);
+
+        if (login != null && !isForOauth2) {
+            Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+            Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+            Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+            Assert.isTrue(!login.startsWith(KeycloakOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        }
+
+        return login;
     }
 
     // used for just get user id
@@ -240,6 +261,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 facebookId,
+                null,
                 null,
                 null,
                 null,
@@ -275,6 +297,7 @@ public class UserAccountConverter {
                 vkontakteId,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -306,6 +329,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 googleId,
+                null,
                 null,
                 null
         );
@@ -339,6 +363,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 keycloakId,
+                null,
                 null
         );
     }
@@ -371,7 +396,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
-                ldapId
+                ldapId,
+                null
         );
     }
 
@@ -385,10 +411,21 @@ public class UserAccountConverter {
         boolean wasEmailSet
     ){}
 
+    private static String trimToNull(String input) {
+        if (input == null) {
+            return null;
+        }
+        var ret = input.trim();
+        if (ret.isEmpty()) {
+            return null;
+        }
+        return ret;
+    }
+
+    // EditUserDTO userAccountDTO is already filtered through normalize()
     public static UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         var wasEmailSet = false;
         if (StringUtils.hasLength(userAccountDTO.login())) {
-            userAccountDTO = trimAndValidateNonOAuth2Login(userAccountDTO);
             userAccount = userAccount.withUsername(userAccountDTO.login());
         }
         String password = userAccountDTO.password();
@@ -400,21 +437,24 @@ public class UserAccountConverter {
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
         } else if (StringUtils.hasLength(userAccountDTO.avatar())) {
-            userAccount = userAccount.withAvatar(NullEncode.forHtmlAttribute(userAccountDTO.avatar()));
-            userAccount = userAccount.withAvatarBig(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig()));
+            userAccount = userAccount.withAvatar(userAccountDTO.avatar());
+            userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
         }
         if (StringUtils.hasLength(userAccountDTO.email())) {
-            String newEmail = userAccountDTO.email();
-            newEmail = NullEncode.forHtml(newEmail.trim());
-            if (!newEmail.equals(userAccount.email())) {
-                userAccount = userAccount.withNewEmail(newEmail);
+            if (!userAccountDTO.email().equals(userAccount.email())) {
+                userAccount = userAccount.withNewEmail(userAccountDTO.email());
                 wasEmailSet = true;
             } else {
                 userAccount = userAccount.withNewEmail(null);
             }
         }
         if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
-            userAccount = userAccount.withShortInfo(NullEncode.forHtml(userAccountDTO.shortInfo()));
+            userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
+        }
+        if (Boolean.TRUE.equals(userAccountDTO.removeLoginColor())) {
+            userAccount = userAccount.withLoginColor(null);
+        } else if (StringUtils.hasLength(userAccountDTO.loginColor())) {
+            userAccount = userAccount.withLoginColor(userAccountDTO.loginColor());
         }
 
         return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
@@ -428,7 +468,9 @@ public class UserAccountConverter {
                 null,
                 userAccount.email(),
                 userAccount.avatarBig(),
-                userAccount.shortInfo()
+                userAccount.shortInfo(),
+                userAccount.loginColor(),
+                null
         );
     }
 

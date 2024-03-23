@@ -233,6 +233,7 @@ export default {
                                     login
                                     avatar
                                     shortInfo
+                                    loginColor
                                   }
                                   canEdit
                                   canDelete
@@ -247,6 +248,7 @@ export default {
                                       login
                                       avatar
                                       shortInfo
+                                      loginColor
                                     }
                                     embedType
                                     isParticipant
@@ -261,6 +263,7 @@ export default {
                                       login
                                       avatar
                                       shortInfo
+                                      loginColor
                                     }
                                     reaction
                                   }
@@ -298,6 +301,7 @@ export default {
                                       avatar
                                       admin
                                       shortInfo
+                                      loginColor
                                     }
                                     promoteMessageEvent {
                                       totalCount
@@ -339,6 +343,7 @@ export default {
                                           login
                                           avatar
                                           shortInfo
+                                          loginColor
                                         }
                                         reaction
                                       }

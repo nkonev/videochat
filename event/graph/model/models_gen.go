@@ -44,6 +44,7 @@ type ChatDto struct {
 	IsResultFromSearch  *bool                   `json:"isResultFromSearch"`
 	Pinned              bool                    `json:"pinned"`
 	Blog                bool                    `json:"blog"`
+	LoginColor          *string                 `json:"loginColor"`
 }
 
 type ChatEvent struct {
@@ -128,7 +129,7 @@ type GlobalEvent struct {
 	EventType                      string                          `json:"eventType"`
 	ChatEvent                      *ChatDto                        `json:"chatEvent"`
 	ChatDeletedEvent               *ChatDeletedDto                 `json:"chatDeletedEvent"`
-	ParticipantEvent               *Participant                    `json:"participantEvent"`
+	CoChattedParticipantEvent      *Participant                    `json:"coChattedParticipantEvent"`
 	VideoUserCountChangedEvent     *VideoUserCountChangedDto       `json:"videoUserCountChangedEvent"`
 	VideoRecordingChangedEvent     *VideoRecordingChangedDto       `json:"videoRecordingChangedEvent"`
 	VideoCallInvitation            *VideoCallInvitationDto         `json:"videoCallInvitation"`
@@ -171,18 +172,20 @@ type OAuth2Identifiers struct {
 }
 
 type Participant struct {
-	ID        int64   `json:"id"`
-	Login     string  `json:"login"`
-	Avatar    *string `json:"avatar"`
-	ShortInfo *string `json:"shortInfo"`
+	ID         int64   `json:"id"`
+	Login      string  `json:"login"`
+	Avatar     *string `json:"avatar"`
+	ShortInfo  *string `json:"shortInfo"`
+	LoginColor *string `json:"loginColor"`
 }
 
 type ParticipantWithAdmin struct {
-	ID        int64   `json:"id"`
-	Login     string  `json:"login"`
-	Avatar    *string `json:"avatar"`
-	Admin     bool    `json:"admin"`
-	ShortInfo *string `json:"shortInfo"`
+	ID         int64   `json:"id"`
+	Login      string  `json:"login"`
+	Avatar     *string `json:"avatar"`
+	Admin      bool    `json:"admin"`
+	ShortInfo  *string `json:"shortInfo"`
+	LoginColor *string `json:"loginColor"`
 }
 
 type PinnedMessageEvent struct {
@@ -223,6 +226,7 @@ type UserAccountDto struct {
 	ShortInfo         *string            `json:"shortInfo"`
 	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
 	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
+	LoginColor        *string            `json:"loginColor"`
 }
 
 func (UserAccountDto) IsUserAccountEventDto() {}
@@ -245,6 +249,7 @@ type UserAccountExtendedDto struct {
 	CanDelete         bool               `json:"canDelete"`
 	CanChangeRole     bool               `json:"canChangeRole"`
 	CanConfirm        bool               `json:"canConfirm"`
+	LoginColor        *string            `json:"loginColor"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

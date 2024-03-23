@@ -27,9 +27,10 @@ public record UserAccountDTO (
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
     LocalDateTime lastLoginDateTime,
 
-    OAuth2IdentifiersDTO oauth2Identifiers
+    OAuth2IdentifiersDTO oauth2Identifiers,
+    String loginColor
 ) {
-    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, String shortInfo, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers) {
+    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, String shortInfo, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers, String loginColor) {
         this.id = id;
         this.login = login;
         this.avatar = avatar;
@@ -37,6 +38,7 @@ public record UserAccountDTO (
         this.shortInfo = shortInfo;
         this.lastLoginDateTime = lastLoginDateTime;
         this.oauth2Identifiers = oauth2Identifiers;
+        this.loginColor = loginColor;
     }
 
     @JsonIgnore // to use in Freemarker template header.ftlh

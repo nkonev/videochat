@@ -170,7 +170,9 @@
         <VideoAddNewSourceModal/>
         <MessageEditModal/>
         <ChooseSmileyModal/>
-    </v-main>
+        <ChooseColorModal/>
+
+      </v-main>
 
     <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
         <RightPanelActions/>
@@ -207,7 +209,7 @@ import bus, {
   REFRESH_ON_WEBSOCKET_RESTORED,
   SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
   UNREAD_MESSAGES_CHANGED,
-  PARTICIPANT_CHANGED,
+  CO_CHATTED_PARTICIPANT_CHANGED,
   VIDEO_CALL_INVITED,
   VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED,
@@ -250,6 +252,7 @@ import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
 import {getStoredLanguage} from "@/store/localStore";
+import ChooseColorModal from "@/ChooseColorModal.vue";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -399,21 +402,24 @@ export default {
                           avatar
                           admin
                           shortInfo
+                          loginColor
                         }
                         canResend
                         availableToSearch
                         isResultFromSearch
                         pinned
                         blog
+                        loginColor
                       }
                       chatDeletedEvent {
                         id
                       }
-                      participantEvent {
+                      coChattedParticipantEvent {
                         id
                         login
                         avatar
                         shortInfo
+                        loginColor
                       }
                       videoUserCountChangedEvent {
                         usersCount
@@ -482,8 +488,8 @@ export default {
             const d = getGlobalEventsData(e).chatDeletedEvent;
             bus.emit(CHAT_DELETED, d);
           } else if (getGlobalEventsData(e).eventType === 'participant_changed') {
-            const d = getGlobalEventsData(e).participantEvent;
-            bus.emit(PARTICIPANT_CHANGED, d);
+            const d = getGlobalEventsData(e).coChattedParticipantEvent;
+            bus.emit(CO_CHATTED_PARTICIPANT_CHANGED, d);
           } else if (getGlobalEventsData(e).eventType === "video_user_count_changed") {
             const d = getGlobalEventsData(e).videoUserCountChangedEvent;
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, d);
@@ -659,7 +665,8 @@ export default {
         },
     },
     components: {
-      MessageEdit,
+        ChooseColorModal,
+        MessageEdit,
         ChatEditModal,
         RightPanelActions,
         LoginModal,
@@ -802,6 +809,9 @@ html {
     text-decoration none
 }
 
+.nodecorated-link {
+    text-decoration none
+}
 
 .with-space {
   white-space: pre;

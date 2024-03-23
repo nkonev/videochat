@@ -29,7 +29,7 @@
 
                 <template v-slot:default>
                     <v-list-item-title>
-                        <span class="user-name" v-html="getUserNameOverride(item)"></span>
+                        <span class="user-name" :style="getLoginColoredStyle(item)" v-html="getUserNameOverride(item)"></span>
                     </v-list-item-title>
                     <v-list-item-subtitle>
                       <v-chip
@@ -156,7 +156,7 @@ import bus, {
 import {searchString, goToPreservingQuery, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-    deepCopy, findIndex,
+    deepCopy, findIndex, getLoginColoredStyle,
     hasLength, isSetEqual, replaceInArray,
     replaceOrAppend,
     replaceOrPrepend,
@@ -189,8 +189,8 @@ export default {
     hashMixin(),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
-    graphqlSubscriptionMixin('userAccountEvents'),
-    userStatusMixin('userStatusInUserList'),
+    graphqlSubscriptionMixin('userAccountEvents'), // subscription
+    userStatusMixin('userStatusInUserList'), // another subscription
   ],
   data() {
     return {
@@ -208,6 +208,7 @@ export default {
   },
 
   methods: {
+    getLoginColoredStyle,
     isNotMyself(user) {
           return this.chatStore.currentUser && this.chatStore.currentUser.id != user.id
     },
@@ -479,6 +480,7 @@ export default {
                         canDelete
                         canChangeRole
                         canConfirm
+                        loginColor
                       }
                       ... on UserAccountDto {
                         id
@@ -493,6 +495,7 @@ export default {
                           googleId
                           keycloakId
                         }
+                        loginColor
                       }
                       ... on UserDeletedDto {
                         id

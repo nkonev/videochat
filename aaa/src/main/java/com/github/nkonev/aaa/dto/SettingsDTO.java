@@ -1,6 +1,6 @@
 package com.github.nkonev.aaa.dto;
 
-public record LanguageDTO(
+public record SettingsDTO(
     Language language
 ) {
 }

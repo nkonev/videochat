@@ -32,8 +32,7 @@ import java.util.function.Function;
 
 import static com.github.nkonev.aaa.Constants.Headers.*;
 import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
-import static com.github.nkonev.aaa.converter.UserAccountConverter.convertRolesToStringList;
-import static com.github.nkonev.aaa.converter.UserAccountConverter.convertToUserAccountDTO;
+import static com.github.nkonev.aaa.converter.UserAccountConverter.*;
 
 @Service
 public class UserProfileService {
@@ -51,7 +50,7 @@ public class UserProfileService {
     private UserAccountConverter userAccountConverter;
 
     @Autowired
-    private CheckService userService;
+    private CheckService checkService;
 
     @Autowired
     private EventService notifier;
@@ -207,24 +206,30 @@ public class UserProfileService {
             throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
         }
 
+        userAccountDTO = UserAccountConverter.normalize(userAccountDTO, false);
+
         UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
 
         // check email already present
-        if (!userService.checkEmailIsFree(userAccountDTO, exists)) {
+        if (userAccountDTO.email() != null && exists.email() != null && !exists.email().equals(userAccountDTO.email()) && !checkService.checkEmailIsFree(userAccountDTO.email())) {
+            LOGGER.info("User {} tries to take an email {} which is already busy", userAccount.getId(), userAccountDTO.email());
             // we care for email leak...
             return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
         }
 
         // check login already present
-        userService.checkLoginIsFree(userAccountDTO, exists);
+        if (userAccountDTO.login() != null && !exists.username().equals(userAccountDTO.login())) {
+            checkService.checkLoginIsFree(userAccountDTO.login());
+        }
 
         var resp = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = resp.userAccount();
+        exists = userAccountRepository.save(exists);
+
         if (resp.wasEmailSet()) {
             var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id());
             asyncEmailService.sendChangeEmailConfirmationToken(exists.newEmail(), changeEmailConfirmationToken, exists.username(), language);
         }
-        exists = userAccountRepository.save(exists);
 
         SecurityUtils.convertAndSetToContext(httpSession, exists);
 
@@ -253,7 +258,7 @@ public class UserProfileService {
         }
 
         // check email already present
-        if (!userService.checkEmailIsFree(userAccount.newEmail())) {
+        if (!checkService.checkEmailIsFree(userAccount.newEmail())) {
             LOGGER.info("Somebody has already taken this email {}", userAccount.newEmail());
             return customConfig.getConfirmChangeEmailExitSuccessUrl();
         }

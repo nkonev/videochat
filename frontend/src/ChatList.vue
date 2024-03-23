@@ -29,7 +29,7 @@
 
                 <template v-slot:default>
                     <v-list-item-title>
-                        <span class="chat-name" :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getItemClass(item)" v-html="getChatName(item)"></span>
+                        <span class="chat-name" :style="getStyle(item)" :class="getItemClass(item)" v-html="getChatName(item)"></span>
                         <v-badge v-if="item.unreadMessages" color="primary" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.call_in_process')"/>
                         <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
@@ -91,21 +91,21 @@ import bus, {
   REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED,
   UNREAD_MESSAGES_CHANGED,
-  PARTICIPANT_CHANGED,
+  CO_CHATTED_PARTICIPANT_CHANGED,
   VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-  deepCopy,
-  dynamicSortMultiple,
-  findIndex,
-  hasLength,
-  isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
-  replaceOrAppend,
-  replaceOrPrepend,
-  setTitle
+    deepCopy,
+    dynamicSortMultiple,
+    findIndex,
+    hasLength,
+    isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
+    replaceOrAppend,
+    replaceOrPrepend,
+    setTitle, getLoginColoredStyle
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -519,6 +519,7 @@ export default {
           item.avatar = user.avatar;
           item.name = user.login;
           item.shortInfo = user.shortInfo;
+          item.loginColor = user.loginColor;
         }
       });
     },
@@ -536,7 +537,16 @@ export default {
               }
           });
     },
-
+    getStyle(item) {
+        let obj = {};
+        if (item.tetATet) {
+            obj = getLoginColoredStyle(item)
+        }
+        if (this.isSearchResult(item)) {
+            obj.color = 'gray';
+        }
+        return obj;
+    },
   },
   components: {
     ChatListContextMenu
@@ -578,7 +588,7 @@ export default {
     bus.on(CHAT_EDITED, this.changeItem);
     bus.on(CHAT_REDRAW, this.redrawItem);
     bus.on(CHAT_DELETED, this.removeItem);
-    bus.on(PARTICIPANT_CHANGED, this.onUserProfileChanged);
+    bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
@@ -602,7 +612,7 @@ export default {
     bus.off(CHAT_EDITED, this.changeItem);
     bus.off(CHAT_REDRAW, this.redrawItem);
     bus.off(CHAT_DELETED, this.removeItem);
-    bus.off(PARTICIPANT_CHANGED, this.onUserProfileChanged);
+    bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);

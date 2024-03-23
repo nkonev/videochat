@@ -101,7 +101,7 @@ export default {
     files_by: "by",
     files_public_url: "Public url",
     delete_from_chat: "Delete from chat",
-    welcome_participant: "Welcome, {0}!",
+    welcome_participant: "Welcome, ",
     delete_participant: "Remove participant #{0}",
     delete_participant_text: "Are you sure to remove user #{0} '{1}' from this chat ?",
     audio_autoplay_permissions_title: "Browser permissions",
@@ -247,5 +247,7 @@ export default {
     confirm_email_to_change_role_part_1: "New email is waiting for confirmation",
     confirm_email_to_change_role_part_2: "If need",
     confirm_email_to_change_role_btn: "resend",
-    change_email_confirmation_token_not_found: "Change email confirmation token is not found"
+    change_email_confirmation_token_not_found: "Change email confirmation token is not found",
+    login_color: "Login color",
+    change_login_color: "Change login color"
 }

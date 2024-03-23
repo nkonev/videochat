@@ -244,7 +244,48 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
                 .andReturn();
         String stringResponse = createAccountResult.getResponse().getContentAsString();
         LOGGER.info(stringResponse);
+    }
 
+    @Test
+    public void testRegistrationLoginIsRequired() throws Exception {
+        final String email = "newbie@example.com";
+
+        EditUserDTO createUserDTO = new EditUserDTO(null, null, null, null, "asdfghjkl", email);
+
+        // register
+        MvcResult createAccountResult = mockMvc.perform(
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                    .content(objectMapper.writeValueAsString(createUserDTO))
+                    .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .with(csrf())
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("validation error"))
+            .andExpect(jsonPath("$.message").value("login must be set"))
+            .andReturn();
+        String stringResponse = createAccountResult.getResponse().getContentAsString();
+        LOGGER.info(stringResponse);
+    }
+
+    @Test
+    public void testRegistrationEmailIsRequired() throws Exception {
+        final String username = "newbie";
+
+        EditUserDTO createUserDTO = new EditUserDTO(username, null, null, null, "asdfghjkl", null);
+
+        // register
+        MvcResult createAccountResult = mockMvc.perform(
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                    .content(objectMapper.writeValueAsString(createUserDTO))
+                    .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .with(csrf())
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("validation error"))
+            .andExpect(jsonPath("$.message").value("email must be set"))
+            .andReturn();
+        String stringResponse = createAccountResult.getResponse().getContentAsString();
+        LOGGER.info(stringResponse);
     }
 
     @Test

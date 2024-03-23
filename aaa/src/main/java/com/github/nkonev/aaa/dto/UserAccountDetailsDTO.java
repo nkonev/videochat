@@ -54,11 +54,12 @@ public record UserAccountDetailsDTO (
             String email,
             boolean awaitingForConfirmEmailChange,
             LocalDateTime lastLoginDateTime,
-            OAuth2IdentifiersDTO oauthIdentifiers
+            OAuth2IdentifiersDTO oauthIdentifiers,
+            String loginColor
     ) {
         this(
                 new UserAccountDTO(
-                    id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers
+                    id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor
                 ),
                 new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange
         );
@@ -152,10 +153,14 @@ public record UserAccountDetailsDTO (
         return userAccountDTO.lastLoginDateTime();
     }
 
+    public String getLoginColor() {
+        return userAccountDTO.loginColor();
+    }
+
     public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
         return new UserAccountDetailsDTO(
                 new UserAccountDTO(
-                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers
+                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers, userAccountDTO.loginColor()
                 ),
                 oauth2Attributes,
                 idToken,

@@ -31,7 +31,8 @@ public record UserAccount(
     String vkontakteId,
     String googleId,
     String keycloakId,
-    String ldapId
+    String ldapId,
+    String loginColor
 ) {
 
     public UserAccount withPassword(String newPassword) {
@@ -55,7 +56,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -80,7 +82,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -105,7 +108,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -130,7 +134,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -155,7 +160,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -180,7 +186,8 @@ public record UserAccount(
             vkontakteId,
             googleId,
             keycloakId,
-            ldapId
+            ldapId,
+            loginColor
         );
     }
 
@@ -205,7 +212,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -230,7 +238,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -255,7 +264,8 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
@@ -280,7 +290,8 @@ public record UserAccount(
             vkontakteId,
             googleId,
             keycloakId,
-            ldapId
+            ldapId,
+            loginColor
         );
     }
 
@@ -305,7 +316,34 @@ public record UserAccount(
                 vkontakteId,
                 googleId,
                 keycloakId,
-                ldapId
+                ldapId,
+                loginColor
+        );
+    }
+
+    public UserAccount withLoginColor(String newLoginColor) {
+        return new UserAccount(
+            id,
+            creationType,
+            username,
+            password,
+            avatar,
+            avatarBig,
+            shortInfo,
+            expired,
+            locked,
+            enabled,
+            confirmed,
+            role,
+            email,
+            newEmail,
+            lastLoginDateTime,
+            facebookId,
+            vkontakteId,
+            googleId,
+            keycloakId,
+            ldapId,
+            newLoginColor
         );
     }
 
@@ -330,7 +368,8 @@ public record UserAccount(
                 newOauthIdentifiers.vkontakteId,
                 newOauthIdentifiers.googleId,
                 newOauthIdentifiers.keycloakId,
-                ldapId
+                ldapId,
+                loginColor
         );
     }
 
