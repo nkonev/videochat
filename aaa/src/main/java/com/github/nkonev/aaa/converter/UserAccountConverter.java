@@ -9,6 +9,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.security.*;
+import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,9 +28,6 @@ public class UserAccountConverter {
 
     @Autowired
     private AaaPermissionService aaaSecurityService;
-
-    @Autowired
-    private UserRoleService userRoleService;
 
     private static UserRole getDefaultUserRole(){
         return UserRole.ROLE_USER;
@@ -166,17 +164,17 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.REGISTRATION,
-                userAccountDTO.login(),
+                Encode.forHtml(userAccountDTO.login()),
                 passwordEncoder.encode(password),
-                userAccountDTO.avatar(),
-                userAccountDTO.avatarBig(),
-                userAccountDTO.shortInfo(),
+                Encode.forHtmlAttribute(userAccountDTO.avatar()),
+                Encode.forHtmlAttribute(userAccountDTO.avatarBig()),
+                Encode.forHtml(userAccountDTO.shortInfo()),
                 expired,
                 locked,
                 enabled,
                 confirmed,
                 newUserRole,
-                userAccountDTO.email(),
+                Encode.forHtml(userAccountDTO.email()),
                 null,
                 null,
                 null,
@@ -196,6 +194,8 @@ public class UserAccountConverter {
         if (FORBIDDEN_USERNAMES.contains(login)) {
             throw new BadRequestException("forbidden login");
         }
+
+        login = Encode.forHtml(login);
 
         return login;
     }
@@ -400,12 +400,12 @@ public class UserAccountConverter {
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
         } else if (StringUtils.hasLength(userAccountDTO.avatar())) {
-            userAccount = userAccount.withAvatar(userAccountDTO.avatar());
-            userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
+            userAccount = userAccount.withAvatar(Encode.forHtmlAttribute(userAccountDTO.avatar()));
+            userAccount = userAccount.withAvatarBig(Encode.forHtmlAttribute(userAccountDTO.avatarBig()));
         }
         if (StringUtils.hasLength(userAccountDTO.email())) {
             String newEmail = userAccountDTO.email();
-            newEmail = newEmail.trim();
+            newEmail = Encode.forHtml(newEmail.trim());
             if (!newEmail.equals(userAccount.email())) {
                 userAccount = userAccount.withNewEmail(newEmail);
                 wasEmailSet = true;
@@ -414,7 +414,7 @@ public class UserAccountConverter {
             }
         }
         if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
-            userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
+            userAccount = userAccount.withShortInfo(Encode.forHtml(userAccountDTO.shortInfo()));
         }
 
         return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
