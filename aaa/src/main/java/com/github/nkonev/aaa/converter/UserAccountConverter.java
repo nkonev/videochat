@@ -9,7 +9,7 @@ import com.github.nkonev.aaa.entity.jdbc.UserAccount;
 import com.github.nkonev.aaa.dto.UserRole;
 import com.github.nkonev.aaa.exception.BadRequestException;
 import com.github.nkonev.aaa.security.*;
-import org.owasp.encoder.Encode;
+import com.github.nkonev.aaa.utils.NullEncode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -164,17 +164,17 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.REGISTRATION,
-                Encode.forHtml(userAccountDTO.login()),
+                NullEncode.forHtml(userAccountDTO.login()),
                 passwordEncoder.encode(password),
-                Encode.forHtmlAttribute(userAccountDTO.avatar()),
-                Encode.forHtmlAttribute(userAccountDTO.avatarBig()),
-                Encode.forHtml(userAccountDTO.shortInfo()),
+                NullEncode.forHtmlAttribute(userAccountDTO.avatar()),
+                NullEncode.forHtmlAttribute(userAccountDTO.avatarBig()),
+                NullEncode.forHtml(userAccountDTO.shortInfo()),
                 expired,
                 locked,
                 enabled,
                 confirmed,
                 newUserRole,
-                Encode.forHtml(userAccountDTO.email()),
+                NullEncode.forHtml(userAccountDTO.email()),
                 null,
                 null,
                 null,
@@ -195,7 +195,7 @@ public class UserAccountConverter {
             throw new BadRequestException("forbidden login");
         }
 
-        login = Encode.forHtml(login);
+        login = NullEncode.forHtml(login);
 
         return login;
     }
@@ -226,9 +226,9 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.FACEBOOK,
-                login,
+                NullEncode.forHtml(login),
                 null,
-                maybeImageUrl,
+                NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
                 null,
                 expired,
@@ -258,7 +258,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.VKONTAKTE,
-                login,
+                NullEncode.forHtml(login),
                 null,
                 null,
                 null,
@@ -290,9 +290,9 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.GOOGLE,
-                login,
+                NullEncode.forHtml(login),
                 null,
-                maybeImageUrl,
+                NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
                 null,
                 expired,
@@ -322,9 +322,9 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.KEYCLOAK,
-                login,
+                NullEncode.forHtml(login),
                 null,
-                maybeImageUrl,
+                NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
                 null,
                 expired,
@@ -354,7 +354,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.LDAP,
-                login,
+                NullEncode.forHtml(login),
                 null,
                 null,
                 null,
@@ -400,12 +400,12 @@ public class UserAccountConverter {
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
         } else if (StringUtils.hasLength(userAccountDTO.avatar())) {
-            userAccount = userAccount.withAvatar(Encode.forHtmlAttribute(userAccountDTO.avatar()));
-            userAccount = userAccount.withAvatarBig(Encode.forHtmlAttribute(userAccountDTO.avatarBig()));
+            userAccount = userAccount.withAvatar(NullEncode.forHtmlAttribute(userAccountDTO.avatar()));
+            userAccount = userAccount.withAvatarBig(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig()));
         }
         if (StringUtils.hasLength(userAccountDTO.email())) {
             String newEmail = userAccountDTO.email();
-            newEmail = Encode.forHtml(newEmail.trim());
+            newEmail = NullEncode.forHtml(newEmail.trim());
             if (!newEmail.equals(userAccount.email())) {
                 userAccount = userAccount.withNewEmail(newEmail);
                 wasEmailSet = true;
@@ -414,7 +414,7 @@ public class UserAccountConverter {
             }
         }
         if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
-            userAccount = userAccount.withShortInfo(Encode.forHtml(userAccountDTO.shortInfo()));
+            userAccount = userAccount.withShortInfo(NullEncode.forHtml(userAccountDTO.shortInfo()));
         }
 
         return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
