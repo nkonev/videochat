@@ -8,6 +8,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/araddon/dateparse"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
@@ -250,6 +251,15 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 	})
 
 	return sanitizedHtml, retErr
+}
+
+func TrimAmdSanitizeAvatar(policy *services.SanitizerPolicy, input null.String) (null.String) {
+	if input.IsZero() {
+		return input
+	}
+
+	sanitizedHtml := Trim(SanitizeMessage(policy, input.String))
+	return null.StringFrom(sanitizedHtml)
 }
 
 func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {

@@ -624,8 +624,8 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		_, err := tx.EditChat(
 			bindTo.Id,
 			TrimAmdSanitize(ch.policy, bindTo.Name),
-			bindTo.Avatar,
-			bindTo.AvatarBig,
+			TrimAmdSanitizeAvatar(ch.policy, bindTo.Avatar),
+			TrimAmdSanitizeAvatar(ch.policy, bindTo.AvatarBig),
 			bindTo.CanResend,
 			bindTo.AvailableToSearch,
 			bindTo.Blog,
