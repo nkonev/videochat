@@ -1,10 +1,6 @@
 <template>
     <v-app>
         <v-app-bar color='indigo' dark :density="getDensity()">
-          <template v-slot:prepend>
-              <v-app-bar-nav-icon></v-app-bar-nav-icon>
-          </template>
-
             <v-breadcrumbs
                 :items="getBreadcrumbs()"
             />
