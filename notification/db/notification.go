@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"github.com/ztrue/tracerr"
+	"github.com/rotisserie/eris"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
 	"time"
@@ -15,7 +15,7 @@ func (db *DB) DeleteNotification(id int64, userId int64) error {
 	} else {
 		affected, err := res.RowsAffected()
 		if err != nil {
-			return tracerr.Wrap(err)
+			return eris.Wrap(err, "error during interacting with db")
 		}
 		if affected == 0 {
 			Logger.Infof("No rows affected")
@@ -32,12 +32,12 @@ func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType st
 		res = db.QueryRow(`delete from notification where message_id = $1 and user_id = $2 and notification_type = $3 returning id`, messageId, userId, notificationType)
 	}
 	if res.Err() != nil {
-		return 0, tracerr.Wrap(res.Err())
+		return 0, eris.Wrap(res.Err(), "error during interacting with db")
 	}
 	var id int64
 	err := res.Scan(&id)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	}
 
 	return id, nil
@@ -53,12 +53,12 @@ func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, noti
 			returning id, create_date_time`,
 		notificationType, description, messageId, userId, chatId, byUserId, byLogin, chatTitle, messageSubId)
 	if res.Err() != nil {
-		return 0, time.Now(), tracerr.Wrap(res.Err())
+		return 0, time.Now(), eris.Wrap(res.Err(), "error during interacting with db")
 	}
 	var id int64
 	var createDatetime time.Time
 	if err := res.Scan(&id, &createDatetime); err != nil {
-		return 0, time.Now(), tracerr.Wrap(err)
+		return 0, time.Now(), eris.Wrap(err, "error during interacting with db")
 	}
 	return id, createDatetime, nil
 }
@@ -67,7 +67,7 @@ func (db *DB) GetNotifications(userId int64, size, offset int) ([]dto.Notificati
 
 	rows, err := db.Query("select id, notification_type, description, chat_id, message_id, create_date_time, by_user_id, by_login, chat_title from notification where user_id = $1 order by id desc limit $2 offset $3", userId, size, offset)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	defer rows.Close()
 
@@ -75,7 +75,7 @@ func (db *DB) GetNotifications(userId int64, size, offset int) ([]dto.Notificati
 	for rows.Next() {
 		notificationDto := dto.NotificationDto{}
 		if err := rows.Scan(&notificationDto.Id, &notificationDto.NotificationType, &notificationDto.Description, &notificationDto.ChatId, &notificationDto.MessageId, &notificationDto.CreateDateTime, &notificationDto.ByUserId, &notificationDto.ByLogin, &notificationDto.ChatTitle); err != nil {
-			return nil, tracerr.Wrap(err)
+			return nil, eris.Wrap(err, "error during interacting with db")
 		} else {
 			list = append(list, notificationDto)
 		}
@@ -87,12 +87,12 @@ func (db *DB) GetNotifications(userId int64, size, offset int) ([]dto.Notificati
 func (db *DB) GetNotificationCount(userId int64) (int64, error) {
 	row := db.QueryRow("select count(*) from notification where user_id = $1", userId)
 	if row.Err() != nil {
-		return 0, tracerr.Wrap(row.Err())
+		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 	var count int64
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	}
 
 	return count, nil
@@ -101,7 +101,7 @@ func (db *DB) GetNotificationCount(userId int64) (int64, error) {
 func (db *DB) GetExcessUserNotificationIds(userId int64, numToDelete int64) ([]int64, error) {
 	rows, err := db.Query("select id from notification where user_id = $1 order by id asc limit $2", userId, numToDelete)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	defer rows.Close()
 
@@ -109,7 +109,7 @@ func (db *DB) GetExcessUserNotificationIds(userId int64, numToDelete int64) ([]i
 	for rows.Next() {
 		var id int64
 		if err := rows.Scan(&id); err != nil {
-			return nil, tracerr.Wrap(err)
+			return nil, eris.Wrap(err, "error during interacting with db")
 		} else {
 			list = append(list, id)
 		}
