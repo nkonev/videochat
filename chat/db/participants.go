@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/ztrue/tracerr"
+	"github.com/rotisserie/eris"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 )
@@ -18,24 +18,24 @@ type ChatParticipant struct {
 
 func (tx *Tx) AddParticipant(userId int64, chatId int64, admin bool) error {
 	_, err := tx.Exec(`INSERT INTO chat_participant (chat_id, user_id, admin) VALUES ($1, $2, $3)`, chatId, userId, admin)
-	return tracerr.Wrap(err)
+	return eris.Wrap(err, "error during interacting with db")
 }
 
 func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 	_, err := tx.Exec(`DELETE FROM chat_participant WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
-	return tracerr.Wrap(err)
+	return eris.Wrap(err, "error during interacting with db")
 }
 
 func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
 	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY user_id LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]int64, 0)
 		for rows.Next() {
 			var participantId int64
 			if err := rows.Scan(&participantId); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, participantId)
 			}
@@ -68,18 +68,18 @@ func getParticipantIdsBatchCommon(qq CommonOperations, chatIds []int64, particip
 		first = false
 	}
 	if rows, err := qq.Query(fmt.Sprintf("SELECT chat_id, jsonb_agg(user_id) FROM chat_participant WHERE chat_id in (%v) group by chat_id;", builder)); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		for rows.Next() {
 			var pi = new(ParticipantIds)
 			var arr string
 			if err := rows.Scan(&pi.ChatId, &arr); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				err := json.Unmarshal([]byte(arr), &pi.ParticipantIds)
 				if err != nil {
-					return nil, tracerr.Wrap(err)
+					return nil, eris.Wrap(err, "error during interacting with db")
 				}
 
 				pi.ParticipantIds = pi.ParticipantIds[:utils.Min(len(pi.ParticipantIds), int(participantsSize))]
@@ -138,7 +138,7 @@ func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) 
 	row := qq.QueryRow("SELECT count(*) FROM chat_participant WHERE chat_id = $1", chatId)
 
 	if err := row.Scan(&count); err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return count, nil
 	}
@@ -174,7 +174,7 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 	var err error
 	rows, err = qq.Query(builder)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		for _, cid := range chatIds {
@@ -184,7 +184,7 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 			var chatId int64
 			var count int
 			if err := rows.Scan(&chatId, &count); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				res[chatId] = count
 			}
@@ -205,7 +205,7 @@ func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, er
 	var admin bool = false
 	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&admin); err != nil {
-		return false, tracerr.Wrap(err)
+		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return admin, nil
 	}
@@ -241,7 +241,7 @@ func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (
 	}
 
 	if rows, err := qq.Query(fmt.Sprintf(`SELECT chat_id, admin FROM chat_participant WHERE user_id = $1 AND chat_id IN (%v) AND admin = true`, builder), userId); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 
@@ -249,7 +249,7 @@ func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (
 			var admin bool = false
 			var chatId int64 = 0
 			if err := rows.Scan(&chatId, &admin); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				result[chatId] = admin
 			}
@@ -270,7 +270,7 @@ func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool,
 	var exists bool = false
 	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&exists); err != nil {
-		return false, tracerr.Wrap(err)
+		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return exists, nil
 	}
@@ -288,7 +288,7 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 	var pid int64
 	row := tx.QueryRow(`SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT 1`, chatId)
 	if err := row.Scan(&pid); err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return pid, nil
 	}
@@ -303,7 +303,7 @@ func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64, limit, offse
 		for rows.Next() {
 			var coParticipantId int64
 			if err := rows.Scan(&coParticipantId); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, coParticipantId)
 			}
@@ -341,7 +341,7 @@ func (db *DB) IterateOverCoChattedParticipantIds(participantId int64, consumer f
 
 func setAdminCommon(qq CommonOperations, userId int64, chatId int64, newAdmin bool) error {
 	if _, err := qq.Exec("UPDATE chat_participant SET admin = $3 WHERE user_id = $1 AND chat_id = $2", userId, chatId, newAdmin); err != nil {
-		return tracerr.Wrap(err)
+		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
@@ -356,14 +356,14 @@ func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 
 func getChatsWithMeCommon(qq CommonOperations, userId int64) ([]int64, error) {
 	if rows, err := qq.Query("SELECT DISTINCT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]int64, 0)
 		for rows.Next() {
 			var chatId int64
 			if err := rows.Scan(&chatId); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, chatId)
 			}
@@ -385,7 +385,7 @@ func (tx *Tx) HasParticipants(chatId int64) (bool, error) {
 	var exists bool = false
 	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE chat_id = $1 LIMIT 1)`, chatId)
 	if err := row.Scan(&exists); err != nil {
-		return false, tracerr.Wrap(err)
+		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return exists, nil
 	}

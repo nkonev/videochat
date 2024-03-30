@@ -9,8 +9,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
-	"github.com/ztrue/tracerr"
 	"go.uber.org/fx"
 	"net/http"
 	"nkonev.name/chat/auth"
@@ -94,7 +94,7 @@ const postgresDriverString = "pgx"
 // Open returns a DB reference for a data source.
 func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
 	if db, err := sql.Open(postgresDriverString, conninfo); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		db.SetConnMaxLifetime(maxLifetime)
 		db.SetMaxIdleConns(maxIdle)
@@ -106,7 +106,7 @@ func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) 
 // Begin starts an returns a new transaction.
 func (db *DB) Begin() (*Tx, error) {
 	if tx, err := db.DB.Begin(); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return &Tx{tx}, nil
 	}

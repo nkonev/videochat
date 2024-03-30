@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/ztrue/tracerr"
+	"github.com/rotisserie/eris"
 	"net/url"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
@@ -100,7 +100,7 @@ func GetBoolean(s string) bool {
 
 func GetBooleanWithError(s string) (bool, error) {
 	if parseBool, err := strconv.ParseBool(s); err != nil {
-		return false, tracerr.Wrap(err)
+		return false, eris.Wrap(err, "unable to parse bool")
 	} else {
 		return parseBool, nil
 	}
@@ -108,7 +108,7 @@ func GetBooleanWithError(s string) (bool, error) {
 
 func ParseInt64(s string) (int64, error) {
 	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "unable to parse int")
 	} else {
 		return i, nil
 	}

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/guregu/null"
 	"github.com/spf13/viper"
-	"github.com/ztrue/tracerr"
+	"github.com/rotisserie/eris"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -48,9 +48,9 @@ type ChatWithParticipants struct {
 func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	// Validate the input.
 	if u == nil {
-		return 0, nil, tracerr.Wrap(errors.New("chat required"))
+		return 0, nil, eris.New("chat required")
 	} else if u.Title == "" {
-		return 0, nil, tracerr.Wrap(errors.New("title required"))
+		return 0, nil, eris.New("title required")
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
@@ -58,7 +58,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
-		return 0, nil, tracerr.Wrap(err)
+		return 0, nil, eris.Wrap(err, "error during interacting with db")
 	}
 
 	return id, &lastUpdateDateTime, nil
@@ -78,7 +78,7 @@ func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int
 			// there were no rows, but otherwise no error occurred
 			return false, 0, nil
 		}
-		return false, 0, tracerr.Wrap(err)
+		return false, 0, eris.Wrap(err, "error during interacting with db")
 	}
 	return true, chatId, nil
 }
@@ -135,7 +135,7 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderDirection, searchStrin
 	row := tx.QueryRow(theQuery, userId, searchStringWithPercents, searchString, itemId)
 	err := row.Scan(&position)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return position, nil
 	}
@@ -150,14 +150,14 @@ func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit
 		LIMIT $2 OFFSET $3
 	`, orderDirection), participantId, limit, offset)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
 			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, &chat)
 			}
@@ -208,14 +208,14 @@ func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId
 			LIMIT $4 OFFSET $5
 	`, participantId, searchStringWithPercents, searchString, limit, offset)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]*Chat, 0)
 		for rows.Next() {
 			chat := Chat{}
 			if err := rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, &chat)
 			}
@@ -399,7 +399,7 @@ func (db *DB) CountChats() (int64, error) {
 	row := db.QueryRow("SELECT count(*) FROM chat")
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return count, nil
 	}
@@ -410,7 +410,7 @@ func countChatsPerUser(commonOps CommonOperations, userId int64) (int64, error) 
 	row := commonOps.QueryRow("SELECT count(*) FROM chat_participant WHERE user_id = $1", userId)
 	err := row.Scan(&count)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return count, nil
 	}
@@ -426,7 +426,7 @@ func (tx *Tx) CountChatsPerUser(userId int64) (int64, error) {
 
 func (tx *Tx) DeleteChat(id int64) error {
 	if _, err := tx.Exec(`CALL DELETE_CHAT($1)`, id); err != nil {
-		return tracerr.Wrap(err)
+		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
@@ -446,17 +446,17 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 	} else {
 		affected, err := res.RowsAffected()
 		if err != nil {
-			return nil, tracerr.Wrap(err)
+			return nil, eris.Wrap(err, "error during interacting with db")
 		}
 		if affected == 0 {
-			return nil, tracerr.Wrap(errors.New("No rows affected"))
+			return nil, eris.New("No rows affected")
 		}
 	}
 
 	var lastUpdateDateTime time.Time
 	res2 := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, id)
 	if err := res2.Scan(&lastUpdateDateTime); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 
 	return &lastUpdateDateTime, nil
@@ -471,7 +471,7 @@ func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, err
 		return nil, nil
 	}
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return &chat, nil
 	}
@@ -504,7 +504,7 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error
 		return nil, nil
 	}
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return &chat, nil
 	}
@@ -554,14 +554,14 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 		WHERE c.id IN (%s)`, inClause),
 		behalfParticipantId)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
 			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.CreateDateTime); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, dto)
 			}
@@ -598,7 +598,7 @@ type BasicChatDtoExtended struct {
 
 func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
 	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
-		return tracerr.Wrap(err)
+		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		return nil
 	}
@@ -609,7 +609,7 @@ func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
 	var lastUpdateDateTime time.Time
 	err := row.Scan(&lastUpdateDateTime)
 	if err != nil {
-		return lastUpdateDateTime, tracerr.Wrap(err)
+		return lastUpdateDateTime, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return lastUpdateDateTime, nil
 	}
@@ -635,14 +635,14 @@ func (db *DB) GetExistingChatIds(chatIds []int64) (*[]int64, error) {
 
 	rows, err := db.Query(fmt.Sprintf(`SELECT id FROM chat WHERE id IN (%s)`, additionalChatIds))
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var chatId int64
 		if err := rows.Scan(&chatId); err != nil {
-			return nil, tracerr.Wrap(err)
+			return nil, eris.Wrap(err, "error during interacting with db")
 		} else {
 			list = append(list, chatId)
 		}
@@ -655,12 +655,12 @@ func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) er
 	if pin {
 		_, err := co.Exec("insert into chat_pinned(user_id, chat_id) values ($1, $2) on conflict do nothing", userId, chatId)
 		if err != nil {
-			return tracerr.Wrap(err)
+			return eris.Wrap(err, "error during interacting with db")
 		}
 	} else {
 		_, err := co.Exec("delete from chat_pinned where user_id = $1 and chat_id = $2", userId, chatId)
 		if err != nil {
-			return tracerr.Wrap(err)
+			return eris.Wrap(err, "error during interacting with db")
 		}
 	}
 	return nil
@@ -684,17 +684,17 @@ func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
 		chatId,
 	)
 	if row.Err() != nil {
-		return false, tracerr.Wrap(row.Err())
+		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 	if err := row.Scan(&res); err != nil {
-		return false, tracerr.Wrap(err)
+		return false, eris.Wrap(err, "error during interacting with db")
 	}
 	return res, nil
 }
 
 func (tx *Tx) DeleteChatsPinned(userId int64) error {
 	if _, err := tx.Exec("DELETE FROM chat_pinned WHERE user_id = $1", userId); err != nil {
-		return tracerr.Wrap(err)
+		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		return nil
 	}
@@ -703,21 +703,21 @@ func (tx *Tx) DeleteChatsPinned(userId int64) error {
 func (tx *Tx) RenameChat(chatId int64, title string) error {
 	_, err := tx.Exec("update chat set title = $1 where id = $2", title, chatId)
 	if err != nil {
-		return tracerr.Wrap(err)
+		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
 
 func getChatIdsCommon(qq CommonOperations, chatsSize, chatsOffset int) ([]int64, error) {
 	if rows, err := qq.Query("SELECT id FROM chat ORDER BY id LIMIT $1 OFFSET $2", chatsSize, chatsOffset); err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]int64, 0)
 		for rows.Next() {
 			var chatId int64
 			if err := rows.Scan(&chatId); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, chatId)
 			}
@@ -756,14 +756,14 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, reverse bool, limit in
 		LIMIT $1 OFFSET $2`, sort),
 		limit, offset)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]*Blog, 0)
 		for rows.Next() {
 			chat := Blog{}
 			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, &chat)
 			}
@@ -804,14 +804,14 @@ func (db *DB) GetBlogPostsStartingFromItemId(reverse bool, limit int, startingFr
 		LIMIT $1`, nonEquality, sort),
 		limit, startingFromItemId)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]*Blog, 0)
 		for rows.Next() {
 			chat := Blog{}
 			if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, &chat)
 			}
@@ -825,7 +825,7 @@ func (db *DB) GetBlogPostLeftChatId(startingFromItemId int64, leftLimit int) (in
 	leftLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT ch.id FROM chat ch WHERE ch.blog IS TRUE AND id <= $1 ORDER BY id DESC LIMIT $2) inn`), startingFromItemId, leftLimit)
 	err := leftLimitRes.Scan(&leftChatId)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	}
 	return leftChatId, nil
 }
@@ -835,7 +835,7 @@ func (db *DB) GetBlogPostRightChatId(startingFromItemId int64, rightLimit int) (
 	rightLimitRes := db.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT ch.id FROM chat ch WHERE ch.blog IS TRUE AND id >= $1 ORDER BY id ASC LIMIT $2) inn`), startingFromItemId, rightLimit)
 	err := rightLimitRes.Scan(&rightChatId)
 	if err != nil {
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	}
 	return rightChatId, nil
 }
@@ -862,13 +862,13 @@ func (db *DB) GetBlogPostsBetweenItemIds(reverse bool, limit int, leftChatId, ri
 					LIMIT $1`, order),
 		limit, leftChatId, rightChatId)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	defer rows.Close()
 	for rows.Next() {
 		chat := Blog{}
 		if err := rows.Scan(&chat.Id, &chat.Title, &chat.CreateDateTime, &chat.Avatar); err != nil {
-			return nil, tracerr.Wrap(err)
+			return nil, eris.Wrap(err, "error during interacting with db")
 		} else {
 			list = append(list, &chat)
 		}
@@ -899,14 +899,14 @@ func getBlogPostsByChatIdsCommon(co CommonOperations, ids []int64) ([]*BlogPost,
 	var err error
 	rows, err = co.Query(builder)
 	if err != nil {
-		return nil, tracerr.Wrap(err)
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
 		list := make([]*BlogPost, 0)
 		for rows.Next() {
 			chat := BlogPost{}
 			if err := rows.Scan(&chat.ChatId, &chat.MessageId, &chat.OwnerId, &chat.Text); err != nil {
-				return nil, tracerr.Wrap(err)
+				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, &chat)
 			}
@@ -931,7 +931,7 @@ func (db *DB) GetBlogPostMessageId(chatId int64) (int64, error) {
 			// there were no rows, but otherwise no error occurred
 			return 0, nil
 		}
-		return 0, tracerr.Wrap(err)
+		return 0, eris.Wrap(err, "error during interacting with db")
 	}
 	return messageId, nil
 }
@@ -945,5 +945,5 @@ func (db *DB) DeleteAllParticipants() error {
 	// 4 bob
 	// 5 John Smith
 	_, err := db.Exec("DELETE FROM chat_participant WHERE user_id > 5")
-	return tracerr.Wrap(err)
+	return eris.Wrap(err, "error during interacting with db")
 }
