@@ -1,56 +1,57 @@
 <template>
-  <div id="page-container">
-    <div id="sidebar">
-      <a href="/" id="logo-container">
-        <img src="./logo.svg" height="64" width="64" alt="logo" />
-      </a>
-      <Link href="/">Welcome</Link>
-      <Link href="/about">About</Link>
-      <Link href="/star-wars">Data Fetching</Link>
-      <v-btn variant="text">
-        Button
-      </v-btn>
-    </div>
-    <div id="page-content"><slot /></div>
-  </div>
+    <v-app>
+        <v-app-bar color='indigo' dark :density="getDensity()">
+          <template v-slot:prepend>
+              <v-app-bar-nav-icon></v-app-bar-nav-icon>
+          </template>
+
+            <v-breadcrumbs
+                :items="getBreadcrumbs()"
+            />
+            <v-spacer></v-spacer>
+        </v-app-bar>
+
+        <v-main>
+            <!--  -->
+        </v-main>
+    </v-app>
 </template>
 
-<script setup>
-import Link from './Link.vue'
-import './css/index.css'
+<script>
+    import {isMobileBrowser} from "./utils.js";
+    import {blog, root} from "./routes.js";
+
+    export default {
+        methods: {
+            getDensity() {
+                return isMobileBrowser() ? "comfortable" : "compact";
+            },
+            getBreadcrumbs() {
+                const ret = [
+                    {
+                        title: 'Videochat',
+                        disabled: false,
+                        href: root,
+                    },
+                    {
+                        title: 'Blog',
+                        disabled: false,
+                        exactPath: true,
+                        href: blog,
+                    },
+                ];
+                // if (this.$route.name == blog_post_name) {
+                //     ret.push(
+                //         {
+                //             title: 'Post #' + this.$route.params.id,
+                //             disabled: false,
+                //             to: blog_post + "/" + this.$route.params.id,
+                //         },
+                //     )
+                // }
+                return ret
+            },
+        }
+    }
 </script>
 
-<style>
-#sidebar a {
-  padding: 2px 10px;
-  margin-left: -10px;
-}
-#sidebar a.is-active {
-  background-color: #eee;
-}
-</style>
-
-<style scoped>
-#page-container {
-  display: flex;
-  max-width: 900px;
-  margin: auto;
-}
-#page-content {
-  padding: 20px;
-  padding-bottom: 50px;
-  min-height: 100vh;
-}
-#sidebar {
-  padding: 20px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.8em;
-  border-right: 2px solid #eee;
-}
-#logo-container {
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-</style>
