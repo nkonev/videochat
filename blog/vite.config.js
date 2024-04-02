@@ -14,4 +14,10 @@ export default {
     // https://github.com/vuetifyjs/vuetify/issues/15700
     noExternal: [ /\.css$/, /^vuetify/ ],
   },
+  resolve: {
+    alias: {
+        "#root": __dirname,
+    }
+  }
+
 }

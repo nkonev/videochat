@@ -8,14 +8,14 @@
         </v-app-bar>
 
         <v-main>
-            <!--  -->
+            <slot />
         </v-main>
     </v-app>
 </template>
 
 <script>
     import {isMobileBrowser} from "./utils.js";
-    import {blog, root} from "./routes.js";
+    import {blog, root} from "./router/routes.js";
 
     export default {
         methods: {
