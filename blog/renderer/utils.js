@@ -43,3 +43,21 @@ export const replaceOrPrepend = (array, newArray) => {
 export const setTitle = (newTitle) => {
     document.title = newTitle;
 }
+
+export const replaceInArray = (array, element) => {
+    const foundIndex = findIndex(array, element);
+    if (foundIndex === -1) {
+        return false;
+    } else {
+        array[foundIndex] = element;
+        return true;
+    }
+};
+
+export const findIndex = (array, element) => {
+    return array.findIndex(value => value.id === element.id);
+};
+
+export const findIndexNonStrictly = (array, element) => {
+    return array.findIndex(value => value.id == element.id);
+};

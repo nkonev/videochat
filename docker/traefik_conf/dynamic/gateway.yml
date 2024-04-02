@@ -8,6 +8,11 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:3000
+    frontend-blog-service:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3100
+
     aaa-service:
       loadBalancer:
         servers:
@@ -47,11 +52,12 @@ http:
       service: frontend-service
       middlewares:
         - "retry-middleware"
-#    frontend-old-router:
-#      rule: "PathPrefix(`/`)"
-#      service: frontend-old-service
-#      middlewares:
-#        - "retry-middleware"
+    frontend-blog-router:
+      rule: "PathPrefix(`/blog`)"
+      service: frontend-blog-service
+      middlewares:
+        - "retry-middleware"
+
     aaa-router:
       rule: "PathPrefix(`/api/aaa`)"
       service: aaa-service
