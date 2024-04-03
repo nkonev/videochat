@@ -80,6 +80,9 @@ import {
     setTopBlogPosition,
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
+//import { useData } from '../../renderer/useData';
+import { usePageContext } from '../../renderer/usePageContext'
+
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -94,10 +97,14 @@ export default {
       // searchString(SEARCH_MODE_POSTS), // TODO
   ],
   data() {
-    return {
-      items: [],
-      markInstance: null,
-    }
+    // const obj = useData();
+    // obj.markInstance = null;
+    // console.log(">>>>>>>>>>>>>>>>>>", obj);
+    // return obj;
+      const obj = usePageContext().data;
+      obj.markInstance = null;
+      console.log(">>>>>>>>>>>>>>>>>>", obj);
+      return obj;
   },
   methods: {
     hasLength,

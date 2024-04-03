@@ -61,3 +61,5 @@ export const findIndex = (array, element) => {
 export const findIndexNonStrictly = (array, element) => {
     return array.findIndex(value => value.id == element.id);
 };
+
+export const PAGE_SIZE = 40;
