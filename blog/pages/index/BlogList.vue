@@ -337,7 +337,7 @@ export default {
     // bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   },
   watch: {
-    '$route': {
+    '$route': { // TODO check if working in vike
         handler: async function (newValue, oldValue) {
 
             // reaction on setting hash
