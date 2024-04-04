@@ -97,13 +97,8 @@ export default {
       // searchString(SEARCH_MODE_POSTS), // TODO
   ],
   data() {
-    // const obj = useData();
-    // obj.markInstance = null;
-    // console.log(">>>>>>>>>>>>>>>>>>", obj);
-    // return obj;
       const obj = usePageContext().data;
       obj.markInstance = null;
-      console.log(">>>>>>>>>>>>>>>>>>", obj);
       return obj;
   },
   methods: {
@@ -358,9 +353,8 @@ export default {
 </script>
 
 <style lang="stylus">
-// TODO
-//@import "#root/renderer/styles/constants.styl"
-//@import "#root/renderer/styles/itemAvatar.styl"
+@import "../../renderer/styles/constants.styl"
+@import "../../renderer/styles/itemAvatar.styl"
 
 .my-blog-scroller {
   height 100%
