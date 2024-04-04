@@ -374,10 +374,10 @@ export default {
     word-break: break-word;
   }
 }
-// TODO
-//.post-text {
-//    color $blackColor
-//}
+
+.post-text {
+    color $blackColor
+}
 
 .blog-item-root {
   flex: 1 1 300px;

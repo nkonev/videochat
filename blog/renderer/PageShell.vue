@@ -51,3 +51,31 @@
     }
 </script>
 
+
+<style lang="stylus">
+@import "./styles/constants.styl"
+
+// removes extraneous scroll at right side of the screen on Chrome
+html {
+    overflow-y: unset !important;
+}
+
+.with-space {
+    white-space: pre;
+}
+
+.colored-link {
+    color: $linkColor;
+    text-decoration none
+}
+
+.v-breadcrumbs {
+    li > a {
+        color white
+    }
+}
+
+.with-pointer {
+    cursor pointer
+}
+</style>
