@@ -80,7 +80,7 @@ import {
     setTopBlogPosition,
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
-//import { useData } from '../../renderer/useData';
+import { getData } from '../../renderer/useData';
 import { usePageContext } from '../../renderer/usePageContext'
 
 
@@ -97,7 +97,7 @@ export default {
       // searchString(SEARCH_MODE_POSTS), // TODO
   ],
   data() {
-      const obj = usePageContext().data;
+      const obj = getData();
       obj.markInstance = null;
       return obj;
   },
