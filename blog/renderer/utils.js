@@ -63,3 +63,7 @@ export const findIndexNonStrictly = (array, element) => {
 };
 
 export const PAGE_SIZE = 40;
+
+export const getApiHost = () => {
+    return process.env.API_HOST || 'http://localhost:8081'
+}
