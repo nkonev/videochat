@@ -97,9 +97,7 @@ export default {
       // searchString(SEARCH_MODE_POSTS), // TODO
   ],
   data() {
-      const obj = getData();
-      obj.markInstance = null;
-      return obj;
+      return getData();
   },
   methods: {
     hasLength,
@@ -147,7 +145,14 @@ export default {
     },
 
     async load() {
+        console.log("in load");
         if (!this.canDrawBlogs()) {
+            return Promise.resolve()
+        }
+
+        if (this.items.length) {
+            this.updateTopAndBottomIds();
+            this.performMarking();
             return Promise.resolve()
         }
 
@@ -211,8 +216,8 @@ export default {
     scrollerSelector() {
         return ".my-blog-scroller"
     },
-    reset() {
-      this.resetInfiniteScrollVars();
+    reset(skipResetting) {
+      this.resetInfiniteScrollVars(skipResetting);
 
       this.startingFromItemIdTop = null;
       this.startingFromItemIdBottom = null;
@@ -269,7 +274,7 @@ export default {
         return blog_post + "/" + item.id
     },
     async start() {
-        await this.setHashAndReloadItems();
+        await this.setHashAndReloadItems(true);
     },
 
     saveLastVisibleElement() {

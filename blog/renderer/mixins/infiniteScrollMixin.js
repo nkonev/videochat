@@ -88,8 +88,10 @@ export default (name) => {
         }
       },
 
-      resetInfiniteScrollVars() {
-          this.items = [];
+      resetInfiniteScrollVars(skipResetting) {
+          if (!skipResetting) {
+              this.items = [];
+          }
           this.isFirstLoad = true;
           this.loadedTop = false;
           this.loadedBottom = false;
@@ -194,17 +196,17 @@ export default (name) => {
         // b) refresh page 30 times when the hash is present (#message-523)
         // c) input search string - search by messages
       },
-      uninstallScroller() {
+      uninstallScroller(skipResetting) {
         if (this.timeout) {
           clearTimeout(this.timeout);
           this.timeout = null;
         }
         this.destroyScroller();
-        this.reset();
+        this.reset(skipResetting);
         console.log("Scroller", name, "has been uninstalled");
       },
-      async reloadItems() {
-        this.uninstallScroller();
+      async reloadItems(skipResetting) {
+        this.uninstallScroller(skipResetting);
         await this.initialLoad();
         await this.$nextTick(() => {
           this.installScroller();

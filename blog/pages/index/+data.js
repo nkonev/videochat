@@ -14,6 +14,7 @@ async function data(pageContext) {
     });
 
     return {
-        items: response.data
+        items: response.data,
+        markInstance: null,
     }
 }

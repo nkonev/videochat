@@ -81,9 +81,9 @@ export default () => {
                 // console.log("Cleaning hash");
                 // this.$router.push({ hash: null, query: this.$route.query }) // TODO
             },
-            async setHashAndReloadItems() {
+            async setHashAndReloadItems(skipResetting) {
                 this.setHashes();
-                await this.reloadItems();
+                await this.reloadItems(skipResetting);
             },
         }
     }
