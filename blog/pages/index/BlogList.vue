@@ -80,7 +80,7 @@ import {
     setTopBlogPosition,
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
-import { getData } from '../../renderer/useData';
+import { getData } from '#root/renderer/useData';
 
 
 const PAGE_SIZE = 40;
