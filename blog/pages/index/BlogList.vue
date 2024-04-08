@@ -71,7 +71,7 @@ import infiniteScrollMixin, {directionBottom, directionTop} from "#root/renderer
 // import {useBlogStore} from "@/store/blogStore";
 // TODO
 // import {goToPreservingQuery, SEARCH_MODE_POSTS, searchString} from "@/mixins/searchString";
-// import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus";m // TODO
+// import bus, {SEARCH_STRING_CHANGED} from "@/bus/bus"; // TODO
 import heightMixin from "#root/renderer/mixins/heightMixin";
 import hashMixin from "#root/renderer/mixins/hashMixin";
 import {
