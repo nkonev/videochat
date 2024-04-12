@@ -7,12 +7,12 @@ node_modules
 vendor
 .vendor-new
 target
-/frontend-nginx
 /storage/storage
 build
 git.json
 /video/video
 /event/event
+/notification/notification
 test-results/
 playwright-report/
 __debug_bin

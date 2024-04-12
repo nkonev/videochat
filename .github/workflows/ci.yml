@@ -411,17 +411,16 @@ jobs:
       - name: Build microservices
         if: env.SHOULD_RUN == 'true'
         run: |
-          (cd aaa; make check-env clean download package-java)
-          (cd frontend; make check-env clean download package)
-          (cd chat; make check-env clean download generate package-go)
-          (cd event; make check-env clean download generate package-go)
+          (cd aaa; make check-env clean download generate)
+          (cd frontend; make check-env clean download)
+          (cd chat; make check-env clean download generate)
+          (cd event; make check-env clean download generate)
       - name: Run microservices
         if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make run-with-oauth2 &)
           (cd chat; make run &)
           (cd event; make run &)
-          # Using port 3000 we mimic to Vite's npm run dev
           (cd frontend; make run-docker-image &)
       - name: Wait for microservices
         if: env.SHOULD_RUN == 'true'

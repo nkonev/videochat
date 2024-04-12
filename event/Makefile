@@ -65,5 +65,5 @@ deploy-docker-image:
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
 
-run:
-	go run main.go
+run: package-go
+	./$(EXECUTABLE)

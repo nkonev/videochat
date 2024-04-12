@@ -68,5 +68,5 @@ run-dev:
 	npm run dev
 
 # Using port 3000 we mimic to Vite's npm run dev in order to match traefik's dev config
-run-docker-image:
+run-docker-image: package
 	docker run --rm -p 3000:8082 $(IMAGE)
