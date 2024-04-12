@@ -81,6 +81,7 @@ import {
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
 import { getData } from '#root/renderer/useData';
+import {usePageContext} from "../../renderer/usePageContext.js";
 
 
 const PAGE_SIZE = 40;
@@ -309,10 +310,20 @@ export default {
       // ...mapStores(useBlogStore), // TODO
   },
   created() {
-      this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
+      this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});
+
+      console.log("AAAAAAAAAAAAAAAAAAAAAAa");
+      const pc = usePageContext();
+      console.log("pc a>", pc);
+
   },
   async mounted() {
-    // this.blogStore.isShowSearch = true; // TODO
+      console.log("BBBBBBBBBBBBBBBB");
+      const pc = usePageContext();
+      console.log("pc b>", pc);
+
+
+      // this.blogStore.isShowSearch = true; // TODO
     this.markInstance = new Mark("div#blog-post-list");
     this.setTopTitle();
     // this.blogStore.searchType = SEARCH_MODE_POSTS; // TODO
