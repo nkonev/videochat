@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker test push-docker clean push-docker-image-to-server deploy-docker-image
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2
 
 BUILDDIR := ./build
 IMAGE := nkonev/chat-aaa:changing
@@ -42,7 +42,7 @@ package-docker:
 
 package: package-java package-docker
 
-push-docker:
+push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
 	docker tag $(IMAGE) $(IMAGE_TO_PUBLISH) && \
 	docker push $(IMAGE_TO_PUBLISH)
@@ -65,7 +65,7 @@ run-oauth2-emu:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	./mvnw -Poauth2_emulator spring-boot:run
 
-run-with-oauth2: clean package-java
+run-with-oauth2: package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	# You need to start EmulatorServersController firstly
 	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/user-test-controller.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml || true

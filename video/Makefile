@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker test push-docker clean push-docker-image-to-server deploy-docker-image
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run
 
 BUILDDIR := ./build
 EXECUTABLE := video
@@ -40,7 +40,7 @@ package-docker:
 
 package: package-go package-docker
 
-push-docker:
+push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
 	docker tag $(IMAGE) $(IMAGE_TO_PUBLISH) && \
 	docker push $(IMAGE_TO_PUBLISH)
@@ -58,3 +58,6 @@ deploy-docker-image:
 
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
+
+run:
+	go run main.go

@@ -61,7 +61,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd aaa; make push-docker)
+          (cd aaa; make push-docker-image-to-registry)
 
   frontend:
     runs-on: ubuntu-22.04
@@ -102,7 +102,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd frontend; make push-docker)
+          (cd frontend; make push-docker-image-to-registry)
 
   chat:
     runs-on: ubuntu-22.04
@@ -157,7 +157,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd chat; make push-docker)
+          (cd chat; make push-docker-image-to-registry)
 
   event:
     runs-on: ubuntu-22.04
@@ -199,7 +199,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd event; make push-docker)
+          (cd event; make push-docker-image-to-registry)
 
   notification:
     runs-on: ubuntu-22.04
@@ -241,7 +241,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd notification; make push-docker)
+          (cd notification; make push-docker-image-to-registry)
 
   storage:
     runs-on: ubuntu-22.04
@@ -283,7 +283,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd storage; make push-docker)
+          (cd storage; make push-docker-image-to-registry)
 
   video:
     runs-on: ubuntu-22.04
@@ -325,7 +325,7 @@ jobs:
         run: |
           echo "Will login to docker" &&
           docker login -u="nkonev" -p="${{ secrets.DockerPassword }}" 
-          (cd video; make push-docker)
+          (cd video; make push-docker-image-to-registry)
 
   e2e-test:
     runs-on: ubuntu-22.04
@@ -370,12 +370,9 @@ jobs:
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-browsers-v0-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install Playwright Node.js dependencies
+      - name: Install Playwright Node.js dependencies and browsers
         if: env.SHOULD_RUN == 'true'
-        run: (cd e2e-test; npm ci)
-      - name: Install Playwright browsers
-        if: env.SHOULD_RUN == 'true'
-        run: (cd e2e-test; npx playwright install)
+        run: (cd e2e-test; make check-env clean download)
       - name: Cache frontend Node.js dependencies
         if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v4
@@ -422,10 +419,10 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make run-with-oauth2 &)
-          (cd chat; ./chat &)
-          (cd event; ./event &)
+          (cd chat; make run &)
+          (cd event; make run &)
           # Using port 3000 we mimic to Vite's npm run dev
-          (docker run --rm -p 3000:8082 nkonev/chat-frontend:changing &)
+          (cd frontend; make run-docker-image &)
       - name: Wait for microservices
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -438,7 +435,7 @@ jobs:
           ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
       - name: Run your Playwright tests
         if: env.SHOULD_RUN == 'true'
-        run: (cd e2e-test; npx playwright test)
+        run: (cd e2e-test; make test)
       - name: Upload test results
         if: env.SHOULD_RUN == 'true' && always()
         uses: actions/upload-artifact@v4

@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker push-docker clean clean-builddir clean-cache push-docker-image-to-server deploy-docker-image
+.PHONY: check-env download package-docker push-docker-image-to-registry clean clean-builddir clean-cache push-docker-image-to-server deploy-docker-image run-dev run-docker-image
 
 BUILDDIR := ./build
 DIST := ./dist
@@ -38,7 +38,7 @@ package-docker:
 
 package: package-node generate-git package-docker
 
-push-docker:
+push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
 	docker tag $(IMAGE) $(IMAGE_TO_PUBLISH) && \
 	docker push $(IMAGE_TO_PUBLISH)
@@ -63,3 +63,10 @@ clean-builddir:
 # https://vitejs.dev/guide/dep-pre-bundling.html
 clean-cache:
 	rm -rf node_modules/.vite node_modules/.cache
+
+run-dev:
+	npm run dev
+
+# Using port 3000 we mimic to Vite's npm run dev in order to match traefik's dev config
+run-docker-image:
+	docker run --rm -p 3000:8082 $(IMAGE)
