@@ -411,10 +411,10 @@ jobs:
       - name: Build microservices
         if: env.SHOULD_RUN == 'true'
         run: |
-          (cd aaa; make check-env clean download generate)
-          (cd frontend; make check-env clean download)
-          (cd chat; make check-env clean download generate)
-          (cd event; make check-env clean download generate)
+          (cd aaa; make check-env clean download generate package-java)
+          (cd frontend; make check-env clean download package)
+          (cd chat; make check-env clean download generate package-go)
+          (cd event; make check-env clean download generate package-go)
       - name: Run microservices
         if: env.SHOULD_RUN == 'true'
         run: |
