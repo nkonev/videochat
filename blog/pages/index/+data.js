@@ -1,5 +1,5 @@
 import axios from "axios";
-import { PAGE_SIZE, getApiHost } from "#root/renderer/utils";
+import { PAGE_SIZE, getApiHost, SEARCH_MODE_POSTS } from "#root/renderer/utils";
 
 export { data };
 
@@ -9,7 +9,7 @@ async function data(pageContext) {
         params: {
             size: PAGE_SIZE,
             reverse: false,
-            searchString: null,
+            searchString: pageContext.urlParsed.search[SEARCH_MODE_POSTS],
             hasHash: false,
         },
     });

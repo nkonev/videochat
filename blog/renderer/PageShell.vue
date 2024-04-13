@@ -5,6 +5,10 @@
                 :items="getBreadcrumbs()"
             />
             <v-spacer></v-spacer>
+
+            <template v-if="true">
+                <CollapsedSearch :provider="getProvider()"/>
+            </template>
         </v-app-bar>
 
         <v-main>
@@ -14,10 +18,34 @@
 </template>
 
 <script>
-    import {isMobileBrowser} from "./utils.js";
+    import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "./utils.js";
     import {blog, root} from "./router/routes.js";
+    import { navigate } from 'vike/client/router';
+    import {usePageContext} from "./usePageContext.js";
+    import CollapsedSearch from "./CollapsedSearch.vue";
+    import { getData } from '#root/renderer/useData';
 
     export default {
+        components: {CollapsedSearch},
+        data() {
+            return getData();
+        },
+        computed: {
+            searchStringFacade: {
+                get() {
+                    const value = usePageContext().urlParsed.search[SEARCH_MODE_POSTS];
+                    console.log(">>>", value);
+                    return value
+                },
+                set(newVal) {
+                    if (hasLength(newVal)) {
+                        navigate(blog + '?' + SEARCH_MODE_POSTS + "=" + newVal)
+                    } else {
+                        navigate(blog)
+                    }
+                }
+            }
+        },
         methods: {
             getDensity() {
                 return isMobileBrowser() ? "comfortable" : "compact";
@@ -47,8 +75,34 @@
                 // }
                 return ret
             },
-        }
+            getProvider() {
+                return {
+                    getModelValue: this.getModelValue,
+                    setModelValue: this.setModelValue,
+                    getShowSearchButton: this.getShowSearchButton,
+                    setShowSearchButton: this.setShowSearchButton,
+                    searchName: this.searchName,
+                    textFieldVariant: 'solo',
+                }
+            },
+            getModelValue() {
+                return this.searchStringFacade
+            },
+            setModelValue(v) {
+                this.searchStringFacade = v
+            },
+            getShowSearchButton() {
+                return this.showSearchButton
+            },
+            setShowSearchButton(v) {
+                this.showSearchButton = v
+            },
+            searchName() {
+                return this.$vuetify.locale.t('$vuetify.search_by_posts')
+            },
+        },
     }
+
 </script>
 
 

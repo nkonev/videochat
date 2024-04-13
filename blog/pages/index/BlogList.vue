@@ -83,7 +83,6 @@ import {isMobileBrowser} from "#root/renderer/utils.js";
 import { getData } from '#root/renderer/useData';
 import {usePageContext} from "../../renderer/usePageContext.js";
 
-
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
 
@@ -94,7 +93,6 @@ export default {
       heightMixin(),
       infiniteScrollMixin(scrollerName),
       hashMixin(),
-      // searchString(SEARCH_MODE_POSTS), // TODO
   ],
   data() {
       return getData();
@@ -311,18 +309,12 @@ export default {
   },
   created() {
       this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});
-
-      console.log("AAAAAAAAAAAAAAAAAAAAAAa");
-      const pc = usePageContext();
-      console.log("pc a>", pc);
-
+      // const pageContext = usePageContext();
+      // // pageContext.routeParams.id
+      // // pageContext.urlParsed
+      // console.log("pc a>", pageContext.urlParsed.search.qm);
   },
   async mounted() {
-      console.log("BBBBBBBBBBBBBBBB");
-      const pc = usePageContext();
-      console.log("pc b>", pc);
-
-
       // this.blogStore.isShowSearch = true; // TODO
     this.markInstance = new Mark("div#blog-post-list");
     this.setTopTitle();
