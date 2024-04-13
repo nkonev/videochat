@@ -225,12 +225,6 @@ export default {
                     this.performMarking();
                 })
         },
-        closeModal() {
-            this.show = false;
-            this.messageIdToDetachFiles = null;
-            this.isMessageEditing = false;
-            this.showSearchButton = true;
-        },
         doSearch(){
             this.page = firstPage;
             this.updateFiles();
@@ -351,7 +345,7 @@ export default {
               return
             }
             console.log("onFileCreated", dto);
-            if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
+            if (!this.hasSearchString() && (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid)) {
                 if (!hasLength(this.fileItemUuid)) {
                     this.dto.count = dto.count;
                 }
@@ -371,7 +365,7 @@ export default {
               return
             }
             console.log("onFileUpdated", dto);
-            if (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid) {
+            if (!this.hasSearchString() && (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid)) {
                 if (!hasLength(this.fileItemUuid)) {
                   this.dto.count = dto.count;
                 }
@@ -390,7 +384,7 @@ export default {
             if (!this.dataLoaded) {
               return
             }
-            if (!hasLength(this.fileItemUuid)) {
+            if (!this.hasSearchString() && !hasLength(this.fileItemUuid)) {
                 this.dto.count = dto.count;
             }
             this.removeItem(dto.fileInfoDto);
@@ -449,6 +443,12 @@ export default {
             } else {
                 return 1
             }
+        },
+        closeModal() {
+            this.show = false;
+            this.messageIdToDetachFiles = null;
+            this.isMessageEditing = false;
+            this.showSearchButton = true;
         },
         reset() {
             this.fileItemUuid = null;

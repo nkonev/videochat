@@ -91,8 +91,21 @@
 <script>
     import axios from "axios";
 
-    import bus, {OPEN_MESSAGE_EDIT_LINK, OPEN_MESSAGE_EDIT_MEDIA} from "./bus/bus";
-    import {link_dialog_type_add_media_by_link, media_audio, media_image, media_video} from "@/utils";
+    import bus, {
+        FILE_CREATED, FILE_REMOVED,
+        FILE_UPDATED,
+        LOGGED_OUT,
+        OPEN_MESSAGE_EDIT_LINK,
+        OPEN_MESSAGE_EDIT_MEDIA, PREVIEW_CREATED
+    } from "./bus/bus";
+    import {
+        findIndex,
+        link_dialog_type_add_media_by_link,
+        media_audio,
+        media_image,
+        media_video,
+        replaceOrPrepend
+    } from "@/utils";
 
     const firstPage = 1;
     const pageSize = 20;
@@ -109,21 +122,9 @@
                 loading: false,
                 dto: dtoFactory(),
                 page: firstPage,
+                dataLoaded: false,
+                resetLater: false,
             }
-        },
-        watch: {
-            show(newValue) {
-                if (!newValue) {
-                    this.closeModal();
-                }
-            },
-            page(newValue) {
-                if (this.show) {
-                    console.debug("SettingNewPage", newValue);
-                    this.dto = dtoFactory();
-                    this.updateFiles();
-                }
-            },
         },
         computed: {
             pagesCount() {
@@ -140,11 +141,27 @@
         },
         methods: {
             showModal({type, fromDiskCallback, setExistingMediaCallback}) {
+
+                if (this.type != type) {
+                    this.reset();
+                }
+
+                if (this.resetLater) {
+                    this.reset();
+                    this.resetLater = false;
+                }
+
                 this.$data.show = true;
+
                 this.type = type;
                 this.fromDiskCallback = fromDiskCallback;
                 this.setExistingMediaCallback = setExistingMediaCallback;
-                this.updateFiles();
+
+                if (!this.dataLoaded) {
+                    this.updateFiles();
+                } else {
+                    //
+                }
             },
             accept(item) {
                 if (this.setExistingMediaCallback) {
@@ -154,15 +171,6 @@
             },
             clear() {
                 this.closeModal();
-            },
-            closeModal() {
-                this.show = false;
-                this.type = '';
-                this.fromDiskCallback = null;
-                this.setExistingMediaCallback = null;
-                this.loading = false;
-                this.dto = dtoFactory();
-                this.page = firstPage;
             },
             title() {
                 switch (this.type) {
@@ -204,6 +212,7 @@
                     })
                     .finally(() => {
                         this.loading = false;
+                        this.dataLoaded = true;
                     })
             },
             getTotalVisible() {
@@ -215,12 +224,127 @@
                     return 1
                 }
             },
+
+            removeItem(dto) {
+                console.log("Removing item", dto);
+                const idxToRemove = findIndex(this.dto.files, dto);
+                this.dto.files.splice(idxToRemove, 1);
+            },
+            replaceItem(dto) {
+                console.log("Replacing item", dto);
+                replaceOrPrepend(this.dto.files, [dto]);
+            },
+            getType(fileInfoDto) {
+              if (fileInfoDto.canPlayAsVideo) {
+                  return media_video
+              } else if (fileInfoDto.canShowAsImage) {
+                  return media_image
+              } else if (fileInfoDto.canPlayAsAudio) {
+                  return media_audio
+              }
+            },
+            onPreviewCreated(dto) {
+                if (!this.dataLoaded) {
+                    return
+                }
+                console.log("Replacing preview", dto);
+                for (const fileItem of this.dto.files) {
+                    if (fileItem.id == dto.id) {
+                        fileItem.previewUrl = dto.previewUrl;
+                        break
+                    }
+                }
+            },
+            onFileCreated(dto) {
+                if (!this.dataLoaded) {
+                    return
+                }
+                if (this.getType(dto.fileInfoDto) !== this.type) {
+                    return;
+                }
+                if (!this.show) {
+                    this.reset()
+                } else {
+                    this.resetLater = true;
+                }
+            },
+            onFileUpdated(dto) {
+                if (!this.dataLoaded) {
+                    return
+                }
+                if (this.getType(dto.fileInfoDto) !== this.type) {
+                    return;
+                }
+                if (!this.show) {
+                    this.reset()
+                } else {
+                    this.resetLater = true;
+                }
+            },
+            onFileRemoved(dto) {
+                if (!this.dataLoaded) {
+                    return
+                }
+                if (this.getType(dto.fileInfoDto) !== this.type) {
+                    return;
+                }
+                if (!this.show) {
+                    this.reset()
+                } else {
+                    this.resetLater = true;
+                }
+            },
+            onLogout() {
+                this.reset();
+                this.closeModal();
+            },
+            closeModal() {
+                this.show = false;
+                this.fromDiskCallback = null;
+                this.setExistingMediaCallback = null;
+            },
+            reset() {
+                this.type = '';
+                this.dataLoaded = false;
+                this.loading = false;
+                this.dto = dtoFactory();
+                this.page = firstPage;
+            },
+        },
+        watch: {
+            show(newValue) {
+                if (!newValue) {
+                    this.closeModal();
+                }
+            },
+            page(newValue) {
+                if (this.show) {
+                    console.debug("SettingNewPage", newValue);
+                    this.dto = dtoFactory();
+                    this.updateFiles();
+                }
+            },
+            '$route.params.id': function (newValue, oldValue) {
+                if (newValue != oldValue) {
+                    this.reset();
+                }
+            }
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
+            bus.on(PREVIEW_CREATED, this.onPreviewCreated);
+            bus.on(FILE_CREATED, this.onFileCreated);
+            bus.on(FILE_UPDATED, this.onFileUpdated);
+            bus.on(FILE_REMOVED, this.onFileRemoved);
+            bus.on(LOGGED_OUT, this.onLogout);
         },
         beforeUnmount() {
             bus.off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
+            bus.off(PREVIEW_CREATED, this.onPreviewCreated);
+            bus.off(FILE_CREATED, this.onFileCreated);
+            bus.off(FILE_UPDATED, this.onFileUpdated);
+            bus.off(FILE_REMOVED, this.onFileRemoved);
+            bus.off(LOGGED_OUT, this.onLogout);
         },
     }
 </script>
