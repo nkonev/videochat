@@ -33,7 +33,7 @@
         computed: {
             searchStringFacade: {
                 get() {
-                    const value = usePageContext().urlParsed.search[SEARCH_MODE_POSTS];
+                    const value = this.pageContext.urlParsed.search[SEARCH_MODE_POSTS];
                     console.log(">>>", value);
                     return value
                 },
@@ -101,6 +101,9 @@
                 return this.$vuetify.locale.t('$vuetify.search_by_posts')
             },
         },
+        created() {
+            this.pageContext = usePageContext();
+        }
     }
 
 </script>

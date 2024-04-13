@@ -81,7 +81,6 @@ import {
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
 import { getData } from '#root/renderer/useData';
-import {usePageContext} from "../../renderer/usePageContext.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
