@@ -123,7 +123,7 @@
                 dto: dtoFactory(),
                 page: firstPage,
                 dataLoaded: false,
-                resetLater: false,
+                isDirty: false,
             }
         },
         computed: {
@@ -146,9 +146,9 @@
                     this.reset();
                 }
 
-                if (this.resetLater) {
+                if (this.isDirty) {
                     this.reset();
-                    this.resetLater = false;
+                    this.isDirty = false;
                 }
 
                 this.$data.show = true;
@@ -234,64 +234,34 @@
                 console.log("Replacing item", dto);
                 replaceOrPrepend(this.dto.files, [dto]);
             },
-            getType(fileInfoDto) {
-              if (fileInfoDto.canPlayAsVideo) {
-                  return media_video
-              } else if (fileInfoDto.canShowAsImage) {
-                  return media_image
-              } else if (fileInfoDto.canPlayAsAudio) {
-                  return media_audio
-              }
-            },
-            onPreviewCreated(dto) {
-                if (!this.dataLoaded) {
-                    return
-                }
-                console.log("Replacing preview", dto);
-                for (const fileItem of this.dto.files) {
-                    if (fileItem.id == dto.id) {
-                        fileItem.previewUrl = dto.previewUrl;
-                        break
-                    }
-                }
-            },
             onFileCreated(dto) {
                 if (!this.dataLoaded) {
                     return
                 }
-                if (this.getType(dto.fileInfoDto) !== this.type) {
-                    return;
-                }
                 if (!this.show) {
                     this.reset()
                 } else {
-                    this.resetLater = true;
+                    this.isDirty = true;
                 }
             },
             onFileUpdated(dto) {
                 if (!this.dataLoaded) {
                     return
                 }
-                if (this.getType(dto.fileInfoDto) !== this.type) {
-                    return;
-                }
                 if (!this.show) {
                     this.reset()
                 } else {
-                    this.resetLater = true;
+                    this.isDirty = true;
                 }
             },
             onFileRemoved(dto) {
                 if (!this.dataLoaded) {
                     return
                 }
-                if (this.getType(dto.fileInfoDto) !== this.type) {
-                    return;
-                }
                 if (!this.show) {
                     this.reset()
                 } else {
-                    this.resetLater = true;
+                    this.isDirty = true;
                 }
             },
             onLogout() {
@@ -332,7 +302,6 @@
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
-            bus.on(PREVIEW_CREATED, this.onPreviewCreated);
             bus.on(FILE_CREATED, this.onFileCreated);
             bus.on(FILE_UPDATED, this.onFileUpdated);
             bus.on(FILE_REMOVED, this.onFileRemoved);
@@ -340,7 +309,6 @@
         },
         beforeUnmount() {
             bus.off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
-            bus.off(PREVIEW_CREATED, this.onPreviewCreated);
             bus.off(FILE_CREATED, this.onFileCreated);
             bus.off(FILE_UPDATED, this.onFileUpdated);
             bus.off(FILE_REMOVED, this.onFileRemoved);

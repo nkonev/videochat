@@ -6,7 +6,7 @@
                     <template v-if="showSearchButton">
                         {{ $vuetify.locale.t('$vuetify.share_to') }}
                     </template>
-
+                    <v-spacer/>
                     <CollapsedSearch :provider="{
                       getModelValue: this.getModelValue,
                       setModelValue: this.setModelValue,
@@ -64,6 +64,7 @@
 <script>
 
 import bus, {
+    CHAT_ADD, CHAT_DELETED, CHAT_EDITED, LOGGED_OUT,
     OPEN_RESEND_TO_MODAL,
 } from "./bus/bus";
 import {hasLength} from "./utils";
@@ -82,23 +83,28 @@ export default {
             messageDto: null,
             showSearchButton: true,
             markInstance: null,
+            dataLoaded: false,
+            isDirty: false,
         }
     },
 
     methods: {
         hasLength,
         showModal(messageDto) {
-            this.show = true;
+            if (this.isDirty) {
+                this.reset();
+                this.isDirty = false;
+            }
+
             this.messageDto = messageDto;
-            this.loadData();
-        },
-        closeModal() {
-            this.show = false;
-            this.chats = [];
-            this.loading = false;
-            this.searchString = null;
-            this.messageDto = null;
-            this.showSearchButton = true;
+
+            this.show = true;
+
+            if (!this.dataLoaded) {
+                this.loadData();
+            } else {
+                //
+            }
         },
         loadData() {
             if (!this.show) {
@@ -111,8 +117,10 @@ export default {
                 },
             }).then(({data}) => {
                 this.chats = data.data;
-                this.loading = false;
                 this.performMarking();
+            }).finally(()=>{
+                this.loading = false;
+                this.dataLoaded = true;
             })
         },
         getChatName(item) {
@@ -160,6 +168,52 @@ export default {
                 }
             })
         },
+
+        addItem(dto) {
+            if (!this.dataLoaded) {
+                return
+            }
+            if (!this.show) {
+                this.reset()
+            } else {
+                this.isDirty = true;
+            }
+        },
+        changeItem(dto) {
+            if (!this.dataLoaded) {
+                return
+            }
+            if (!this.show) {
+                this.reset()
+            } else {
+                this.isDirty = true;
+            }
+        },
+        removeItem(dto) {
+            if (!this.dataLoaded) {
+                return
+            }
+            if (!this.show) {
+                this.reset()
+            } else {
+                this.isDirty = true;
+            }
+        },
+        onLogout() {
+            this.reset();
+            this.closeModal();
+        },
+        closeModal() {
+            this.show = false;
+            this.showSearchButton = true;
+        },
+        reset() {
+            this.dataLoaded = false;
+            this.messageDto = null;
+            this.chats = [];
+            this.loading = false;
+            this.searchString = null;
+        },
     },
     computed: {
         chatId() {
@@ -178,6 +232,11 @@ export default {
         searchString (searchString) {
             this.doSearch();
         },
+        '$route.params.id': function (newValue, oldValue) {
+            if (newValue != oldValue) {
+                this.reset();
+            }
+        }
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
@@ -185,11 +244,21 @@ export default {
     mounted() {
         this.markInstance = new Mark(".resend-to-wrapper .chat-name");
         bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
+
+        bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(CHAT_ADD, this.addItem);
+        bus.on(CHAT_EDITED, this.changeItem);
+        bus.on(CHAT_DELETED, this.removeItem);
     },
     beforeUnmount() {
         this.markInstance.unmark();
         this.markInstance = null;
         bus.off(OPEN_RESEND_TO_MODAL, this.showModal);
+
+        bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(CHAT_ADD, this.addItem);
+        bus.off(CHAT_EDITED, this.changeItem);
+        bus.off(CHAT_DELETED, this.removeItem);
     },
 }
 </script>
