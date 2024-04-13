@@ -1,4 +1,4 @@
-.PHONY: check-env download package-docker test push-docker clean push-docker-image-to-server deploy-docker-image
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2
 
 BUILDDIR := ./build
 IMAGE := nkonev/chat-aaa:changing
@@ -42,7 +42,7 @@ package-docker:
 
 package: package-java package-docker
 
-push-docker:
+push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
 	docker tag $(IMAGE) $(IMAGE_TO_PUBLISH) && \
 	docker push $(IMAGE_TO_PUBLISH)
