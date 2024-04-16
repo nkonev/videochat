@@ -155,6 +155,7 @@ export default {
             return Promise.resolve()
         }
 
+        // TODO it's incorrect for the subsequent invocations
         if (this.items.length) {
             this.updateTopAndBottomIds();
             this.performMarking();
