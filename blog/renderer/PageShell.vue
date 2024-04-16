@@ -25,6 +25,7 @@
     import CollapsedSearch from "./CollapsedSearch.vue";
     import { getData } from '#root/renderer/useData';
 
+    let pageContext;
     export default {
         components: {CollapsedSearch},
         data() {
@@ -33,8 +34,8 @@
         computed: {
             searchStringFacade: {
                 get() {
-                    const value = this.pageContext.urlParsed.search[SEARCH_MODE_POSTS];
-                    console.log(">>>", value);
+                    const value = pageContext.urlParsed.search[SEARCH_MODE_POSTS];
+                    console.debug(SEARCH_MODE_POSTS, "=", value);
                     return value
                 },
                 set(newVal) {
@@ -102,7 +103,7 @@
             },
         },
         created() {
-            this.pageContext = usePageContext();
+            pageContext = usePageContext();
         }
     }
 
