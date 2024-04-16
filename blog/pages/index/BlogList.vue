@@ -80,7 +80,7 @@ import {
     setTopBlogPosition,
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
-import { getData } from '#root/renderer/useData';
+import {usePageContext} from "../../renderer/usePageContext.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -88,13 +88,21 @@ const SCROLLING_THRESHHOLD = 200; // px
 const scrollerName = 'BlogList';
 
 export default {
+  setup() {
+    const pageContext = usePageContext();
+
+    // expose to template and other options API hooks
+    return {
+        pageContext
+    }
+  },
   mixins: [
       heightMixin(),
       infiniteScrollMixin(scrollerName),
       hashMixin(),
   ],
   data() {
-      return getData();
+      return this.pageContext.data;
   },
   methods: {
     hasLength,

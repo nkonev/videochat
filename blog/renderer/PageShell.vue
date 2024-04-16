@@ -23,18 +23,25 @@
     import { navigate } from 'vike/client/router';
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "./CollapsedSearch.vue";
-    import { getData } from '#root/renderer/useData';
 
-    let pageContext;
     export default {
+        // https://vuejs.org/api/composition-api-setup.html
+        setup() {
+            const pageContext = usePageContext();
+
+            // expose to template and other options API hooks
+            return {
+                pageContext
+            }
+        },
         components: {CollapsedSearch},
         data() {
-            return getData();
+            return this.pageContext.data;
         },
         computed: {
             searchStringFacade: {
                 get() {
-                    const value = pageContext.urlParsed.search[SEARCH_MODE_POSTS];
+                    const value = this.pageContext.urlParsed.search[SEARCH_MODE_POSTS];
                     console.debug(SEARCH_MODE_POSTS, "=", value);
                     return value
                 },
@@ -103,7 +110,6 @@
             },
         },
         created() {
-            pageContext = usePageContext();
         }
     }
 

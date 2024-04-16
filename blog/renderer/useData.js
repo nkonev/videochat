@@ -1,5 +1,5 @@
 // https://vike.dev/useData
-export { useData, getData }
+export { useData }
 
 import { computed } from 'vue'
 import { usePageContext } from './usePageContext'
@@ -8,8 +8,4 @@ import { usePageContext } from './usePageContext'
 function useData() {
   const data = computed(() => usePageContext().data)
   return data
-}
-
-function getData() {
-    return usePageContext().data;
 }
