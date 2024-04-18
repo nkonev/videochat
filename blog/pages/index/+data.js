@@ -9,8 +9,7 @@ async function data(pageContext) {
         params: {
             size: PAGE_SIZE,
             reverse: false,
-            // TODO if set pageContext.urlParsed.search[SEARCH_MODE_POSTS] - then it leads us to parasite download
-            searchString: "",
+            searchString: pageContext.urlParsed.search[SEARCH_MODE_POSTS],
             hasHash: false,
         },
     });
