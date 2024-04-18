@@ -135,11 +135,13 @@ export default {
             this.scrollerDiv.scrollTop = 0;
         });
     },
-    async onFirstLoad(loadedResult) {
+    async onFirstLoad() {
+      this.setLoadedTopOrBottom(this.items);
+
       await this.doScrollOnFirstLoad(blogIdHashPrefix);
-      if (loadedResult === true) {
-          removeTopBlogPosition();
-      }
+      this.performMarking();
+
+      removeTopBlogPosition();
     },
     async doDefaultScroll() {
       this.loadedTop = true;
@@ -148,17 +150,18 @@ export default {
     getPositionFromStore() {
       return getTopBlogPosition()
     },
-
-    async load() {
-        console.log("in load");
-        if (!this.canDrawBlogs()) {
-            return Promise.resolve()
+    setLoadedTopOrBottom(items) {
+        if (items.length < PAGE_SIZE) {
+            if (this.isTopDirection()) {
+                this.loadedTop = true;
+            } else {
+                this.loadedBottom = true;
+            }
         }
-
-        // TODO it's incorrect for the subsequent invocations
-        if (this.items.length) {
-            this.updateTopAndBottomIds();
-            this.performMarking();
+        this.updateTopAndBottomIds();
+    },
+    async load() {
+        if (!this.canDrawBlogs()) {
             return Promise.resolve()
         }
 
@@ -185,14 +188,7 @@ export default {
                     replaceOrAppend(this.items, items);
                 }
 
-                if (items.length < PAGE_SIZE) {
-                    if (this.isTopDirection()) {
-                        this.loadedTop = true;
-                    } else {
-                        this.loadedBottom = true;
-                    }
-                }
-                this.updateTopAndBottomIds();
+                this.setLoadedTopOrBottom(items);
 
                 if (!this.isFirstLoad) {
                     this.clearRouteHash()

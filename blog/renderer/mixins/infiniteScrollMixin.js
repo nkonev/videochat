@@ -105,9 +105,9 @@ export default (name) => {
         if (this.scrollerDiv == null) {
           this.scrollerDiv = document.querySelector(this.scrollerSelector());
         }
-        const loadedResult = await this.load();
+        // difference
         await this.$nextTick();
-        await this.onFirstLoad(loadedResult);
+        await this.onFirstLoad();
         this.isFirstLoad = false;
       },
 
