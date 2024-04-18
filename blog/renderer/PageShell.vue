@@ -41,16 +41,28 @@
         computed: {
             searchStringFacade: {
                 get() {
-                    const value = this.pageContext.urlParsed.search[SEARCH_MODE_POSTS];
-                    console.debug(SEARCH_MODE_POSTS, "=", value);
-                    return value
+                    if (typeof window === 'undefined') {
+                        return this.pageContext.urlParsed.search[SEARCH_MODE_POSTS];
+                    } else {
+                        // TODO fix mismatch
+
+                        // idea from https://github.com/vikejs/vike/issues/1231
+                        // see also https://stackoverflow.com/questions/4570093/how-to-get-notified-about-changes-of-the-history-via-history-pushstate/4585031#4585031
+                        const url = new URL(location);
+                        const ret = url.searchParams.get(SEARCH_MODE_POSTS);
+                        // console.log("ret is", url);
+                        return ret;
+                    }
                 },
                 set(newVal) {
-                    if (hasLength(newVal)) {
-                        navigate(blog + '?' + SEARCH_MODE_POSTS + "=" + newVal)
-                    } else {
-                        navigate(blog)
-                    }
+                    // if (hasLength(newVal)) {
+                    //     navigate(blog + '?' + SEARCH_MODE_POSTS + "=" + newVal)
+                    // } else {
+                    //     navigate(blog)
+                    // }
+                    const url = new URL(location);
+                    url.searchParams.set(SEARCH_MODE_POSTS, newVal);
+                    history.pushState({}, "", url);
                 }
             }
         },
