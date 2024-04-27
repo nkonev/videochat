@@ -20,51 +20,45 @@
 <script>
     import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "./utils.js";
     import {blog, root} from "./router/routes.js";
-    import { navigate } from 'vike/client/router';
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "./CollapsedSearch.vue";
+    import { computed, ref } from "vue";
 
     export default {
         // https://vuejs.org/api/composition-api-setup.html
         setup() {
             const pageContext = usePageContext();
 
+            const searchString = ref("");
+
+            searchString.value = typeof window === 'undefined' ? pageContext.urlParsed.search[SEARCH_MODE_POSTS] : new URL(location).searchParams.get(SEARCH_MODE_POSTS);
+
+            const searchStringFacade = computed({
+                get: () => {
+                    return searchString.value
+                },
+                set: val => {
+                    searchString.value = val
+
+                    const url = new URL(location);
+                    if (hasLength(val)) {
+                        url.searchParams.set(SEARCH_MODE_POSTS, val);
+                    } else {
+                        url.searchParams.delete(SEARCH_MODE_POSTS);
+                    }
+                    history.pushState({}, "", url);
+                }
+            })
+
             // expose to template and other options API hooks
             return {
-                pageContext
+                pageContext,
+                searchStringFacade,
             }
         },
         components: {CollapsedSearch},
         data() {
             return this.pageContext.data;
-        },
-        computed: {
-            searchStringFacade: {
-                get() {
-                    if (typeof window === 'undefined') {
-                        return this.pageContext.urlParsed.search[SEARCH_MODE_POSTS];
-                    } else {
-                        // TODO fix mismatch
-
-                        // idea from https://github.com/vikejs/vike/issues/1231
-                        // see also https://stackoverflow.com/questions/4570093/how-to-get-notified-about-changes-of-the-history-via-history-pushstate/4585031#4585031
-                        const url = new URL(location);
-                        const ret = url.searchParams.get(SEARCH_MODE_POSTS);
-                        // console.log("ret is", url);
-                        return ret;
-                    }
-                },
-                set(newVal) {
-                    // if (hasLength(newVal)) {
-                    //     navigate(blog + '?' + SEARCH_MODE_POSTS + "=" + newVal)
-                    // } else {
-                    //     navigate(blog)
-                    // }
-                    const url = new URL(location);
-                    url.searchParams.set(SEARCH_MODE_POSTS, newVal);
-                    history.pushState({}, "", url);
-                }
-            }
         },
         methods: {
             getDensity() {
@@ -120,6 +114,8 @@
             searchName() {
                 return this.$vuetify.locale.t('$vuetify.search_by_posts')
             },
+        },
+        mounted() {
         },
         created() {
         }
