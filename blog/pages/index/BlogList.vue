@@ -81,6 +81,8 @@ import {
 } from "#root/renderer/store/localStore";
 import {isMobileBrowser} from "#root/renderer/utils.js";
 import {usePageContext} from "../../renderer/usePageContext.js";
+import {SEARCH_MODE_POSTS} from "../../renderer/utils.js";
+import bus, {SEARCH_STRING_CHANGED} from "../../renderer/bus/bus.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -136,7 +138,6 @@ export default {
         });
     },
     async onFirstLoad() {
-      this.setLoadedTopOrBottom(this.items);
 
       await this.doScrollOnFirstLoad(blogIdHashPrefix);
       this.performMarking();
@@ -149,16 +150,6 @@ export default {
     },
     getPositionFromStore() {
       return getTopBlogPosition()
-    },
-    setLoadedTopOrBottom(items) {
-        if (items.length < PAGE_SIZE) {
-            if (this.isTopDirection()) {
-                this.loadedTop = true;
-            } else {
-                this.loadedBottom = true;
-            }
-        }
-        this.updateTopAndBottomIds();
     },
     async load() {
         if (!this.canDrawBlogs()) {
@@ -188,7 +179,14 @@ export default {
                     replaceOrAppend(this.items, items);
                 }
 
-                this.setLoadedTopOrBottom(items);
+                if (items.length < PAGE_SIZE) {
+                    if (this.isTopDirection()) {
+                        this.loadedTop = true;
+                    } else {
+                        this.loadedBottom = true;
+                    }
+                }
+                this.updateTopAndBottomIds();
 
                 if (!this.isFirstLoad) {
                     this.clearRouteHash()
@@ -329,8 +327,7 @@ export default {
     }
     addEventListener("beforeunload", this.beforeUnload);
 
-    // TODO
-    // bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
+    bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   },
   beforeUnmount() {
     // this.blogStore.isShowSearch = false; // TODO
@@ -344,8 +341,7 @@ export default {
     removeEventListener("beforeunload", this.beforeUnload);
 
     this.uninstallScroller();
-    // TODO
-    // bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
+    bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, this.onSearchStringChanged);
   },
   watch: {
     '$route': { // TODO check if working in vike

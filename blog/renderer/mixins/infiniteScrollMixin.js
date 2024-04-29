@@ -60,6 +60,10 @@ export default (name) => {
         this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
         // console.debug("onScroll in", name, " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
+        // to have an ability to load new portion
+        this.loadedBottom = false;
+        this.loadedTop = false;
+
         this.trySwitchDirection();
       },
       trySwitchDirection() {
@@ -89,9 +93,10 @@ export default (name) => {
       },
 
       resetInfiniteScrollVars(skipResetting) {
-          if (!skipResetting) {
-              this.items = [];
+          if (skipResetting) {
+              return
           }
+          this.items = [];
           this.isFirstLoad = true;
           this.loadedTop = false;
           this.loadedBottom = false;

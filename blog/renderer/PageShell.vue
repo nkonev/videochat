@@ -23,6 +23,7 @@
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "./CollapsedSearch.vue";
     import { computed, ref } from "vue";
+    import bus, {SEARCH_STRING_CHANGED} from "./bus/bus.js";
 
     export default {
         // https://vuejs.org/api/composition-api-setup.html
@@ -114,6 +115,12 @@
             searchName() {
                 return this.$vuetify.locale.t('$vuetify.search_by_posts')
             },
+        },
+        watch: {
+            searchStringFacade: function(newValue, oldValue) {
+                console.debug("Route changed from q", SEARCH_MODE_POSTS, oldValue, "->", newValue);
+                bus.emit(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_POSTS, {oldValue: oldValue, newValue: newValue});
+            }
         },
         mounted() {
         },
