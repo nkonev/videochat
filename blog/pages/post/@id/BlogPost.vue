@@ -1,6 +1,5 @@
 <template>
-  <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
-  <div class="my-messages-scroller">
+  <v-container class="ma-0 pa-0" fluid>
     <h1 v-html="blogDto.title" class="ml-3 mt-2"></h1>
 
     <div class="pr-1 mr-1 pl-1 mt-0 ml-3 message-item-root" >
@@ -38,7 +37,6 @@
     </div>
 
     <template v-if="blogDto.messageId">
-        <div class="message-first-element" style="min-height: 1px; background: white"></div>
         <v-container class="ma-0 pa-0 mb-2" fluid>
           <MessageItem v-for="(item, index) in items"
             :id="getItemId(item.id)"
@@ -48,9 +46,7 @@
             :isInBlog="true"
           ></MessageItem>
         </v-container>
-        <div class="message-last-element" style="min-height: 1px; background: white"></div>
     </template>
-  </div>
   </v-container>
 </template>
 
@@ -58,7 +54,6 @@
 import MessageItem from "./MessageItem.vue";
 import {getHumanReadableDate, hasLength, isMobileBrowser} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
-import heightMixin from "#root/common/mixins/heightMixin";
 import { navigate } from 'vike/client/router';
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
@@ -72,9 +67,6 @@ export default {
         pageContext
     }
   },
-  mixins: [
-    heightMixin(),
-  ],
   data() {
       return this.pageContext.data;
   },

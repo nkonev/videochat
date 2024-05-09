@@ -1,7 +1,5 @@
 <template>
-  <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
-    <div class="my-blog-scroller" id="blog-post-list">
-      <div class="blog-first-element" style="min-height: 1px; background: white"></div>
+  <v-container class="ma-0 pa-0" fluid>
 
       <v-card
         v-for="(item, index) in items"
@@ -53,17 +51,13 @@
           </v-list-item>
         </v-card-actions>
       </v-card>
-      <div class="blog-last-element" style="min-height: 1px; background: white"></div>
-
-    </div>
 
   </v-container>
 </template>
 
 <script>
-import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "#root/common/utils";
-import {blog_post, blog_post_name, blogIdPrefix, blogIdHashPrefix, profile} from "#root/common/router/routes";
-import heightMixin from "#root/common/mixins/heightMixin";
+import {getHumanReadableDate, hasLength} from "#root/common/utils";
+import {blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
 import {isMobileBrowser} from "#root/common/utils.js";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
@@ -76,9 +70,6 @@ export default {
         pageContext
     }
   },
-  mixins: [
-      heightMixin(),
-  ],
   data() {
       return this.pageContext.data;
   },
@@ -115,14 +106,6 @@ export default {
 <style lang="stylus">
 @import "../../common/styles/constants.styl"
 @import "../../common/styles/itemAvatar.styl"
-
-.my-blog-scroller {
-  height 100%
-  overflow-y scroll !important
-  display flex
-  flex-wrap wrap
-  align-items start
-}
 
 .post-title {
   background rgba(0, 0, 0, 0.5);
