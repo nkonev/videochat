@@ -1,4 +1,4 @@
-FROM node:22.1.0
+FROM node:22.1.0-alpine
 RUN mkdir /opt/blog
 WORKDIR /opt/blog
 ENV NODE_ENV=production
