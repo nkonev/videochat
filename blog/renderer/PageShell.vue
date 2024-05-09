@@ -16,7 +16,7 @@
 
 <script>
     import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "./utils.js";
-    import {blog, root} from "./router/routes.js";
+    import {blog, root, blog_post, blog_post_name} from "./router/routes.js";
     import {usePageContext} from "./usePageContext.js";
 
     export default {
@@ -50,15 +50,16 @@
                         href: blog,
                     },
                 ];
-                // if (this.$route.name == blog_post_name) {
-                //     ret.push(
-                //         {
-                //             title: 'Post #' + this.$route.params.id,
-                //             disabled: false,
-                //             to: blog_post + "/" + this.$route.params.id,
-                //         },
-                //     )
-                // }
+                if (this.pageContext.urlOriginal.startsWith(blog_post)) {
+                    const id = this.pageContext.urlOriginal.replace(blog_post+"/", "");
+                    ret.push(
+                        {
+                            title: 'Post #' + id,
+                            disabled: false,
+                            href: blog_post + "/" + id,
+                        },
+                    )
+                }
                 return ret
             },
             getProvider() {
