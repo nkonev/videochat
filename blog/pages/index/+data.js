@@ -5,7 +5,7 @@ export { data };
 
 async function data(pageContext) {
     const apiHost = getApiHost();
-    const response = await axios.get(apiHost + '/api/blog', {
+    const response = await axios.get(apiHost + '/blog', {
         params: {
             size: PAGE_SIZE,
             reverse: false,

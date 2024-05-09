@@ -15,6 +15,7 @@ import express from 'express'
 import compression from 'compression'
 import { renderPage } from 'vike/server'
 import { root } from './root.js'
+import { blog } from "../common/router/routes.js"
 const isProduction = process.env.NODE_ENV === 'production'
 
 startServer()
@@ -26,6 +27,14 @@ async function startServer() {
 
   // Vite integration
   if (isProduction) {
+    app.get('/*',function (req, res, next) {
+        if (req.url.startsWith(blog)) {
+            const newUrl = req.url.slice(blog.length);
+            req.url = newUrl;
+        }
+        next();
+    });
+
     // In production, we need to serve our static assets ourselves.
     // (In dev, Vite's middleware serves our static assets.)
     const sirv = (await import('sirv')).default

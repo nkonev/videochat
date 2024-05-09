@@ -47,7 +47,7 @@
                         title: 'Blog',
                         disabled: false,
                         exactPath: true,
-                        href: blog,
+                        href: blog +"/",
                     },
                 ];
                 if (this.pageContext.urlOriginal.startsWith(blog_post)) {
