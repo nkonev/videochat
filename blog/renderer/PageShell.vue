@@ -62,31 +62,6 @@
                 }
                 return ret
             },
-            getProvider() {
-                return {
-                    getModelValue: this.getModelValue,
-                    setModelValue: this.setModelValue,
-                    getShowSearchButton: this.getShowSearchButton,
-                    setShowSearchButton: this.setShowSearchButton,
-                    searchName: this.searchName,
-                    textFieldVariant: 'solo',
-                }
-            },
-            getModelValue() {
-                return this.searchStringFacade
-            },
-            setModelValue(v) {
-                this.searchStringFacade = v
-            },
-            getShowSearchButton() {
-                return this.showSearchButton
-            },
-            setShowSearchButton(v) {
-                this.showSearchButton = v
-            },
-            searchName() {
-                return this.$vuetify.locale.t('$vuetify.search_by_posts')
-            },
         },
         mounted() {
         },
