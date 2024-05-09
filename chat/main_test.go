@@ -922,6 +922,41 @@ func TestGetBlogsHasHash(t *testing.T) {
 	})
 }
 
+func TestGetBlogsHasHash2(t *testing.T) {
+	runTest(t, func(e *echo.Echo) {
+		// get first page
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/blog?startingFromItemId=995&size=40&reverse=false&hasHash=true", nil, e)
+		assert.Equal(t, http.StatusOK, httpFirstPage)
+		assert.NotEmpty(t, bodyFirstPage)
+
+		firstPageResult := []handlers.BlogPostPreviewDto{}
+		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 40, len(firstPageResult))
+		//assert.Equal(t, "generated_chat12", firstPageResult[0].Title)
+		//assert.Equal(t, "generated_chat11", firstPageResult[1].Title)
+		//assert.Equal(t, "generated_chat10", firstPageResult[2].Title)
+		//assert.Equal(t, "generated_chat9", firstPageResult[3].Title)
+		//assert.Equal(t, "generated_chat8", firstPageResult[4].Title)
+		//assert.Equal(t, "generated_chat7", firstPageResult[5].Title)
+		//assert.Equal(t, "generated_chat6", firstPageResult[6].Title)
+		//assert.Equal(t, "generated_chat5", firstPageResult[7].Title)
+		//assert.Equal(t, "generated_chat4", firstPageResult[8].Title)
+		//assert.Equal(t, "generated_chat3", firstPageResult[9].Title)
+		//assert.Equal(t, int64(12), firstPageResult[0].Id)
+		//assert.Equal(t, int64(11), firstPageResult[1].Id)
+		//assert.Equal(t, int64(10), firstPageResult[2].Id)
+		//assert.Equal(t, int64(9), firstPageResult[3].Id)
+		//assert.Equal(t, int64(8), firstPageResult[4].Id)
+		//assert.Equal(t, int64(7), firstPageResult[5].Id)
+		//assert.Equal(t, int64(6), firstPageResult[6].Id)
+		//assert.Equal(t, int64(5), firstPageResult[7].Id)
+		//assert.Equal(t, int64(4), firstPageResult[8].Id)
+		//assert.Equal(t, int64(3), firstPageResult[9].Id)
+	})
+}
+
 func TestGetBlogsHasHashSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
