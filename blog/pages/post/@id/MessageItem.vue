@@ -96,7 +96,7 @@
                 return this.isMobile() ? ['message-item-text', 'message-item-text-mobile'] : ['message-item-text']
             },
             messageClass(item) {
-              let classes = ['message-item-text', 'ml-0'];
+              let classes = ['message-item-text', 'ml-0', 'v-container'];
               if (this.isMobile()) {
                 classes.push('message-item-text-mobile');
               }
