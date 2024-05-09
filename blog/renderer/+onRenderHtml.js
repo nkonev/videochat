@@ -4,7 +4,7 @@ export { onRenderHtml }
 import { renderToString as renderToString_ } from '@vue/server-renderer'
 import { escapeInject, dangerouslySkipEscape } from 'vike/server'
 import { createApp } from './app'
-import logoUrl from './logo.svg'
+import logoUrl from './favicon.svg'
 import { getPageTitle } from './getPageTitle'
 
 async function onRenderHtml(pageContext) {
