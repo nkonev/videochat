@@ -23,7 +23,8 @@
                     </template>
                     <div :class="embedClass()" v-html="item.embedMessage.text"></div>
                 </div>
-                <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" :class="messageClass(item)"></v-container>
+                <!-- We use div instead of v-container because last is not working with SSR -->
+                <div v-if="shouldShowMainContainer(item)" v-html="item.text" :class="messageClass(item)"></div>
                 <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(item)">
                   <v-btn v-for="(reaction, i) in item.reactions" variant="flat" size="small" height="32px" rounded :class="reactionClass(i)" :title="getReactedUsers(reaction)"><span v-if="reaction.count > 1" class="text-body-1 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
                 </div>
