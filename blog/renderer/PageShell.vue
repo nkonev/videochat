@@ -6,9 +6,6 @@
             />
             <v-spacer></v-spacer>
 
-            <template v-if="true">
-                <CollapsedSearch :provider="getProvider()"/>
-            </template>
         </v-app-bar>
 
         <v-main>
@@ -21,8 +18,6 @@
     import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "./utils.js";
     import {blog, root} from "./router/routes.js";
     import {usePageContext} from "./usePageContext.js";
-    import CollapsedSearch from "./CollapsedSearch.vue";
-    import { computed, ref } from "vue";
     import bus, {SEARCH_STRING_CHANGED} from "./bus/bus.js";
 
     export default {
@@ -30,34 +25,11 @@
         setup() {
             const pageContext = usePageContext();
 
-            const searchString = ref("");
-
-            searchString.value = typeof window === 'undefined' ? pageContext.urlParsed.search[SEARCH_MODE_POSTS] : new URL(location).searchParams.get(SEARCH_MODE_POSTS);
-
-            const searchStringFacade = computed({
-                get: () => {
-                    return searchString.value
-                },
-                set: val => {
-                    searchString.value = val
-
-                    const url = new URL(location);
-                    if (hasLength(val)) {
-                        url.searchParams.set(SEARCH_MODE_POSTS, val);
-                    } else {
-                        url.searchParams.delete(SEARCH_MODE_POSTS);
-                    }
-                    history.pushState({}, "", url);
-                }
-            })
-
             // expose to template and other options API hooks
             return {
-                pageContext,
-                searchStringFacade,
+                pageContext
             }
         },
-        components: {CollapsedSearch},
         data() {
             return this.pageContext.data;
         },
