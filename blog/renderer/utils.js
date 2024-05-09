@@ -69,3 +69,14 @@ export const getApiHost = () => {
 }
 
 export const SEARCH_MODE_POSTS = "qp"
+
+export const embed_message_reply = "reply";
+export const embed_message_resend = "resend";
+
+export const linkColor = '#1976D2' // see also in App.vue
+
+export const getLoginColoredStyle = (item, defaultLinkColor) => {
+    const color = item?.loginColor;
+    const defaultColor = defaultLinkColor ? linkColor : null;
+    return color ? {'color': color} : {'color': defaultColor}
+}

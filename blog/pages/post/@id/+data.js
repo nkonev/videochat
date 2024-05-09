@@ -5,7 +5,10 @@ export { data };
 
 async function data(pageContext) {
     const apiHost = getApiHost();
-    const response = await axios.get(apiHost + '/api/blog', {
+
+    const blogResponse = await axios.get(apiHost + `/api/blog/${pageContext.routeParams.id}`);
+
+    const commentResponse = await axios.get(apiHost + `/api/blog/${pageContext.routeParams.id}/comment`, {
         params: {
             size: PAGE_SIZE,
             reverse: false,
@@ -14,9 +17,8 @@ async function data(pageContext) {
         },
     });
 
-    const items = response.data
-
     return {
-        items,
+        blogDto: blogResponse.data,
+        items: commentResponse.data,
     }
 }

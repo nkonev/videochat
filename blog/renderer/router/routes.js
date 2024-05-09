@@ -10,3 +10,7 @@ export const blogIdHashPrefix = '#' + blogIdPrefix; // element id
 
 export const profile = `/user`;
 
+export const messageIdPrefix = "message-"
+export const messageIdHashPrefix = '#' + messageIdPrefix; // element id
+
+export const chat = `/chat`;
