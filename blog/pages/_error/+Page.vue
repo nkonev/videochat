@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { usePageContext } from '../../renderer/usePageContext'
+import { usePageContext } from '#root/renderer/usePageContext'
 
 const pageContext = usePageContext()
 let { is404, abortReason } = pageContext

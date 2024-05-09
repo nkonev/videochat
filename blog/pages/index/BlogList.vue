@@ -61,11 +61,11 @@
 </template>
 
 <script>
-import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "#root/renderer/utils";
-import {blog_post, blog_post_name, blogIdPrefix, blogIdHashPrefix, profile} from "#root/renderer/router/routes";
-import heightMixin from "#root/renderer/mixins/heightMixin";
-import {isMobileBrowser} from "#root/renderer/utils.js";
-import {usePageContext} from "../../renderer/usePageContext.js";
+import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "#root/common/utils";
+import {blog_post, blog_post_name, blogIdPrefix, blogIdHashPrefix, profile} from "#root/common/router/routes";
+import heightMixin from "#root/common/mixins/heightMixin";
+import {isMobileBrowser} from "#root/common/utils.js";
+import {usePageContext} from "#root/renderer/usePageContext.js";
 
 export default {
   setup() {
@@ -121,8 +121,8 @@ export default {
 </script>
 
 <style lang="stylus">
-@import "../../renderer/styles/constants.styl"
-@import "../../renderer/styles/itemAvatar.styl"
+@import "../../common/styles/constants.styl"
+@import "../../common/styles/itemAvatar.styl"
 
 .my-blog-scroller {
   height 100%

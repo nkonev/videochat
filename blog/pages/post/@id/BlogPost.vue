@@ -57,9 +57,9 @@
 
 <script>
 import MessageItem from "./MessageItem.vue";
-import {getHumanReadableDate, hasLength, isMobileBrowser} from "#root/renderer/utils";
-import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/renderer/router/routes";
-import heightMixin from "#root/renderer/mixins/heightMixin";
+import {getHumanReadableDate, hasLength, isMobileBrowser} from "#root/common/utils";
+import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
+import heightMixin from "#root/common/mixins/heightMixin";
 import { navigate } from 'vike/client/router';
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
@@ -139,9 +139,9 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "../../../renderer/styles/common.styl"
-@import "../../../renderer/styles/messageWrapper.styl"
-@import "../../../renderer/styles/itemAvatar.styl"
+@import "../../../common/styles/common.styl"
+@import "../../../common/styles/messageWrapper.styl"
+@import "../../../common/styles/itemAvatar.styl"
 
 .my-messages-scroller {
   height 100%

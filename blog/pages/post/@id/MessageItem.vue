@@ -39,12 +39,12 @@
         embed_message_resend,
         getHumanReadableDate, getLoginColoredStyle, hasLength,
         isMobileBrowser,
-    } from "#root/renderer/utils";
-    import "#root/renderer/styles/messageBody.styl";
-    import "#root/renderer/styles/messageWrapper.styl";
-    import "#root/renderer/styles/itemAvatar.styl";
+    } from "#root/common/utils";
+    import "#root/common/styles/messageBody.styl";
+    import "#root/common/styles/messageWrapper.styl";
+    import "#root/common/styles/itemAvatar.styl";
 
-    import {profile} from "#root/renderer/router/routes"
+    import {profile} from "#root/common/router/routes"
 
     export default {
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'isInBlog'],
@@ -128,7 +128,7 @@
 </script>
 
 <style lang="stylus" scoped>
-  @import "../../../renderer/styles/common.styl"
+  @import "../../../common/styles/common.styl"
 
   .list-item-head {
     text-decoration none

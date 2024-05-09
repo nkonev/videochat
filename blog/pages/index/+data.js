@@ -1,5 +1,5 @@
 import axios from "axios";
-import { PAGE_SIZE, getApiHost, SEARCH_MODE_POSTS } from "#root/renderer/utils";
+import { PAGE_SIZE, getApiHost, SEARCH_MODE_POSTS } from "#root/common/utils";
 
 export { data };
 

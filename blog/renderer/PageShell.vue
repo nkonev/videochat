@@ -15,8 +15,8 @@
 </template>
 
 <script>
-    import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "./utils.js";
-    import {blog, root, blog_post, blog_post_name} from "./router/routes.js";
+    import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "../common/utils.js";
+    import {blog, root, blog_post, blog_post_name} from "../common/router/routes.js";
     import {usePageContext} from "./usePageContext.js";
 
     export default {
@@ -98,7 +98,7 @@
 
 
 <style lang="stylus">
-@import "./styles/constants.styl"
+@import "../common/styles/constants.styl"
 
 // removes extraneous scroll at right side of the screen on Chrome
 html {
