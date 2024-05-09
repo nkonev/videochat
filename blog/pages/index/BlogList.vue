@@ -21,7 +21,7 @@
               :src="item.imageUrl"
             >
               <v-container class="post-title ma-0 pa-0">
-                <v-card-title @click.prevent="goToBlog(item)">
+                <v-card-title>
                   <a class="post-title-text" v-html="item.title" :href="getLink(item)"></a>
                 </v-card-title>
               </v-container>
@@ -93,14 +93,6 @@ export default {
     getProfileLink(user) {
       let url = profile + "/" + user.id;
       return url;
-    },
-    setTopTitle() {
-        setTitle(this.$vuetify.locale.t('$vuetify.blogs'));
-        // this.blogStore.title = this.$vuetify.locale.t('$vuetify.blogs'); // TODO
-    },
-    goToBlog(item) {
-        // TODO
-        // goToPreservingQuery(this.$route, this.$router, { name: blog_post_name, params: { id: item.id} })
     },
     getLink(item) {
         return blog_post + "/" + item.id
