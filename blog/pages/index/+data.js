@@ -18,5 +18,6 @@ async function data(pageContext) {
 
     return {
         items,
+        title: "Blog"
     }
 }
