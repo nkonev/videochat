@@ -1,5 +1,5 @@
 import axios from "axios";
-import { PAGE_SIZE, getApiHost, SEARCH_MODE_POSTS } from "#root/common/utils";
+import { PAGE_SIZE, getApiHost } from "#root/common/utils";
 
 export { data };
 
@@ -8,12 +8,12 @@ async function data(pageContext) {
 
     const blogResponse = await axios.get(apiHost + `/api/blog/${pageContext.routeParams.id}`);
 
+    const startingFromItemId = blogResponse.data.messageId;
     const commentResponse = await axios.get(apiHost + `/api/blog/${pageContext.routeParams.id}/comment`, {
         params: {
+            startingFromItemId: startingFromItemId,
             size: PAGE_SIZE,
             reverse: false,
-            searchString: pageContext.urlParsed.search[SEARCH_MODE_POSTS],
-            hasHash: false,
         },
     });
 

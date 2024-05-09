@@ -33,7 +33,6 @@
 </template>
 
 <script>
-    import debounce from "lodash/debounce";
     import {
         embed_message_reply,
         embed_message_resend,
@@ -122,7 +121,6 @@
 
         },
         created() {
-            this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});
         },
     }
 </script>
