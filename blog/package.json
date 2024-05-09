@@ -17,13 +17,13 @@
     "date-fns": "^3.3.1",
     "express": "^4.18.2",
     "lodash": "^4.17.21",
-    "sirv": "^2.0.3",
+    "sirv": "^2.0.4",
     "typeface-roboto": "^1.1.13",
     "vike": "^0.4.171",
-    "vite": "^5.0.10",
+    "vite": "^5.2.11",
     "vite-plugin-vuetify": "^2.0.3",
-    "vue": "^3.3.10",
-    "vuetify": "^3.5.11"
+    "vue": "^3.4.27",
+    "vuetify": "^3.6.4"
   },
   "type": "module",
   "devDependencies": {
