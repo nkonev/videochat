@@ -319,6 +319,7 @@
           if (this.chatStore.showScrollDown) {
             // during scrolling we disable adding new elements, so some messages can appear on server, so
             // we set loadedBottom to false in order to force infiniteScrollMixin to fetch new messages during scrollBottom()
+            // also this setting loaded* to false helps to avoid non-loading new portion when response with hashHash=true returned less than PAGE_SIZE
             this.loadedBottom = false;
             this.loadedTop = false;
           }

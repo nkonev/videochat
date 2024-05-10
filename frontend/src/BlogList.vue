@@ -139,6 +139,15 @@ export default {
     getPositionFromStore() {
       return getTopBlogPosition()
     },
+    onScrollCallback() {
+          const isScrolledToTop = this.isScrolledToTop();
+          if (!isScrolledToTop) {
+              // copy-paste from MessageList.vue
+              // this setting loaded* to false helps to avoid non-loading new portion when response with hashHash=true returned less than PAGE_SIZE
+              this.loadedBottom = false;
+              this.loadedTop = false;
+          }
+    },
 
     async load() {
         if (!this.canDrawBlogs()) {

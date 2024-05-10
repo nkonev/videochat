@@ -214,7 +214,6 @@ export default {
     },
     reset() {
       this.resetInfiniteScrollVars();
-      this.blogStore.showScrollDown = false;
 
       this.startingFromItemIdTop = null;
       this.startingFromItemIdBottom = null;
