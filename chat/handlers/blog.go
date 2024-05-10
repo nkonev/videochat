@@ -13,6 +13,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
+	"sort"
 	"strings"
 	"time"
 )
@@ -303,6 +304,10 @@ func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
 			LastModified: aDate,
 		})
 	}
+
+	sort.SliceStable(res, func(i, j int) bool {
+		return res[i].LastModified.Unix() > res[j].LastModified.Unix()
+	})
 
 	return c.JSON(http.StatusOK, res)
 }
