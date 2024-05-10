@@ -1,11 +1,12 @@
 FROM node:22.1.0-alpine
-RUN mkdir /opt/seo
-WORKDIR /opt/seo
+ARG DEST=/opt/seo
+RUN mkdir -p $DEST
+WORKDIR $DEST
 ENV NODE_ENV=production
-COPY ./package.json /opt/seo
-COPY ./package-lock.json /opt/seo
-COPY ./node_modules /opt/seo/node_modules
-COPY ./server /opt/seo/server
-COPY ./common /opt/seo/common
-COPY ./dist /opt/seo/dist
+COPY ./package.json $DEST
+COPY ./package-lock.json $DEST
+COPY ./node_modules $DEST/node_modules
+COPY ./server $DEST/server
+COPY ./common $DEST/common
+COPY ./dist $DEST/dist
 ENTRYPOINT ["node", "./server"]
