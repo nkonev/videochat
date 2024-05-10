@@ -224,7 +224,7 @@
               <v-icon dark>mdi-information</v-icon>
             </template>
         </v-btn>
-        <v-container v-if="showShortInfoInput" class="ma-0 py-0 d-flex flex-row user-self-settings-container">
+        <v-container v-if="showShortInfoInput" class="ma-0 pt-0 d-flex flex-row user-self-settings-container">
           <v-text-field
             v-model="chatStore.currentUser.shortInfo"
             label="Short info"

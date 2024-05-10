@@ -17,7 +17,9 @@
                             :label="$vuetify.locale.t('$vuetify.chat_name')"
                             v-model="editDto.name"
                             variant="outlined"
+                            density="compact"
                             :rules="chatNameRules"
+                            class="mt-2"
                         ></v-text-field>
                         <v-autocomplete
                                 v-model="editDto.participantIds"
