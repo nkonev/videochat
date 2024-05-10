@@ -6,7 +6,7 @@ trigger_commit=$1
 service_pattern=$2
 website_prefix=$3
 
-all_services=( aaa chat e2e-test event frontend notification storage video blog )
+all_services=( aaa chat e2e-test event frontend notification storage video seo )
 
 echo "Service pattern: $service_pattern, commit: $trigger_commit"
 
