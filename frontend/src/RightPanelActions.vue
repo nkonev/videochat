@@ -1,10 +1,17 @@
 <template>
     <v-list>
       <v-list-item id="test-user-login" v-if="chatStore.currentUser"
-                   :prepend-avatar="chatStore.currentUser.avatar"
-                   :title="chatStore.currentUser.login"
-                   :subtitle="chatStore.currentUser.shortInfo"
-      ></v-list-item>
+      >
+          <template v-slot:prepend>
+              <v-avatar :image="chatStore.currentUser.avatar"></v-avatar>
+          </template>
+          <template v-slot:title>
+              <span :style="getLoginColoredStyle(chatStore.currentUser)">{{ chatStore.currentUser.login }}</span>
+          </template>
+          <template v-slot:subtitle>
+              <span>{{ chatStore.currentUser.shortInfo }}</span>
+          </template>
+      </v-list-item>
     </v-list>
 
     <v-divider></v-divider>
@@ -67,7 +74,7 @@ import bus, {
     OPEN_VIEW_FILES_DIALOG
 } from "@/bus/bus";
 import {goToPreservingQuery} from "@/mixins/searchString";
-import {copyCallLink, hasLength, isChatRoute} from "@/utils";
+import {copyCallLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 
 export default {
   data() {
@@ -76,7 +83,7 @@ export default {
       }
   },
   computed: {
-    ...mapStores(useChatStore),
+      ...mapStores(useChatStore),
       notificationsCount() {
           return this.chatStore.notificationsCount
       },
@@ -88,6 +95,7 @@ export default {
       },
   },
   methods: {
+    getLoginColoredStyle,
     createChat() {
       bus.emit(OPEN_CHAT_EDIT, null);
     },
