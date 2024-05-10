@@ -12,7 +12,7 @@ SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := ./videochat
 STACK_NAME := VIDEOCHATSTACK
-JSON_DIR := $(DIST)/client/assets
+JSON_DIR := $(DIST)/client
 STATIC_JSON := $(JSON_DIR)/git.json
 
 download:

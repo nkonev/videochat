@@ -17,6 +17,11 @@ services:
         - "traefik.http.routers.blog-router.entrypoints=http"
         - "traefik.http.routers.blog-router.middlewares=retry-middleware@file"
 
+        - "traefik.http.middlewares.blog-ssr-stripprefix-middleware.stripprefix.prefixes=/blog"
+        - "traefik.http.routers.blog-ssr-version-router.rule=Path(`/blog/git.json`)"
+        - "traefik.http.routers.blog-ssr-version-router.entrypoints=http"
+        - "traefik.http.routers.blog-ssr-version-router.middlewares=blog-ssr-stripprefix-middleware"
+
     environment:
       - API_HOST=http://chat:1235
 
