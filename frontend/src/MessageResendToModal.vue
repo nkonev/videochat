@@ -245,7 +245,7 @@ export default {
         this.markInstance = new Mark(".resend-to-wrapper .chat-name");
         bus.on(OPEN_RESEND_TO_MODAL, this.showModal);
 
-        bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(LOGGED_OUT, this.onLogout);
         bus.on(CHAT_ADD, this.addItem);
         bus.on(CHAT_EDITED, this.changeItem);
         bus.on(CHAT_DELETED, this.removeItem);
@@ -255,7 +255,7 @@ export default {
         this.markInstance = null;
         bus.off(OPEN_RESEND_TO_MODAL, this.showModal);
 
-        bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(LOGGED_OUT, this.onLogout);
         bus.off(CHAT_ADD, this.addItem);
         bus.off(CHAT_EDITED, this.changeItem);
         bus.off(CHAT_DELETED, this.removeItem);
