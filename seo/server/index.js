@@ -16,6 +16,10 @@ import compression from 'compression'
 import { renderPage } from 'vike/server'
 import { root } from './root.js'
 import { blog } from "../common/router/routes.js"
+import { SitemapStream } from 'sitemap'
+import { getApiHost, getSeoHost } from "../common/config.js";
+import axios from "axios";
+
 const isProduction = process.env.NODE_ENV === 'production'
 
 startServer()
@@ -53,6 +57,45 @@ async function startServer() {
     app.use(viteDevMiddleware)
   }
 
+  app.get('/sitemap.xml', async function(req, res) {
+    res.header('Content-Type', 'application/xml');
+
+    try {
+        const smStream = new SitemapStream({ hostname: getSeoHost() });
+
+        // index page
+        smStream.write({url: `/blog/`, lastmod: new Date()})
+
+        const apiHost = getApiHost();
+        const PAGE_SIZE = 40;
+        for (let page = 0; ; page++) {
+            const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
+            const data = response.data;
+            if (data.length == 0) {
+                break
+            }
+            for (const item of data) {
+                smStream.write({url: `/blog/post/${item.chatId}`, lastmod: item.lastModified})
+            }
+        }
+
+        // stream write the response
+        smStream.pipe(res).on('error', (e) => {throw e})
+
+        // make sure to attach a write stream such as streamToPromise before ending
+        smStream.end()
+    } catch (e) {
+        console.error(e)
+        res.status(500).end()
+    }
+  })
+
+  app.get('/robots.txt', function (req, res) {
+    res.type('text/plain');
+    const sitemapUrl = getSeoHost() + '/sitemap.xml';
+    res.send(`User-agent: *
+Sitemap: ${sitemapUrl}`);
+  });
   // ...
   // Other middlewares (e.g. some RPC middleware such as Telefunc)
   // ...

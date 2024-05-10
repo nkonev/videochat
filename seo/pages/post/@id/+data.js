@@ -1,5 +1,6 @@
 import axios from "axios";
-import { PAGE_SIZE, getApiHost } from "#root/common/utils";
+import { PAGE_SIZE } from "#root/common/utils";
+import { getApiHost } from "#root/common/config";
 
 export { data };
 

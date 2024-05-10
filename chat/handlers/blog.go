@@ -271,6 +271,42 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+type BlogSeoItem struct {
+	ChatId int64 `json:"chatId"`
+	LastModified time.Time `json:"lastModified"`
+}
+
+func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
+
+	page := utils.FixPageString(c.QueryParam("page"))
+	size := utils.FixSizeString(c.QueryParam("size"))
+
+	posts, err := h.db.GetBlogPostsByLimitOffset(false, size, page*size)
+	if err != nil {
+		return err
+	}
+
+	var chatIds = make([]int64, 0)
+	for _, post := range posts {
+		chatIds = append(chatIds, post.Id)
+	}
+
+	dates, err := h.db.GetBlobPostModifiedDates(chatIds)
+	if err != nil {
+		return err
+	}
+
+	res := make([]BlogSeoItem, 0)
+	for chatId, aDate := range dates {
+		res = append(res, BlogSeoItem{
+			ChatId:       chatId,
+			LastModified: aDate,
+		})
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
 func appendKeepingN(input []*BlogPostPreviewDto, post *BlogPostPreviewDto, sizeToKeep int) ([]*BlogPostPreviewDto, int) {
 	var response []*BlogPostPreviewDto = make([]*BlogPostPreviewDto, 0)
 	if len(input) < sizeToKeep {

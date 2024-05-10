@@ -188,6 +188,7 @@ func configureEcho(
 
 	e.PUT("/chat/:id/message/:messageId/blog-post", mc.MakeBlogPost)
 	e.GET("/blog", bh.GetBlogPosts)
+	e.GET("/internal/blog/seo", bh.GetAllBlogPostsForSeo)
 	e.GET("/blog/:id", bh.GetBlogPost)
 	e.GET("/blog/:id/comment", bh.GetBlogPostComments)
 

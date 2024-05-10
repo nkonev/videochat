@@ -1,5 +1,6 @@
 import axios from "axios";
-import { PAGE_SIZE, getApiHost, SEARCH_MODE_POSTS } from "#root/common/utils";
+import { PAGE_SIZE, SEARCH_MODE_POSTS } from "#root/common/utils";
+import { getApiHost } from "#root/common/config";
 
 export { data };
 

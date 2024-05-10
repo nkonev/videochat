@@ -936,6 +936,42 @@ func (db *DB) GetBlogPostMessageId(chatId int64) (int64, error) {
 	return messageId, nil
 }
 
+func (db *DB) GetBlobPostModifiedDates(chatIds []int64) (map[int64]time.Time, error) {
+	res := map[int64]time.Time{}
+
+	if len(chatIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, chatId := range chatIds {
+		if !first {
+			builder += " union "
+		}
+		builder += fmt.Sprintf("(select %v, coalesce(edit_date_time, create_date_time) from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = db.Query(builder)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var chatId int64
+		var modifiedDateTime time.Time
+		if err := rows.Scan(&chatId, &modifiedDateTime); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			res[chatId] = modifiedDateTime
+		}
+	}
+	return res, nil
+}
 
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
