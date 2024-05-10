@@ -249,5 +249,7 @@ export default {
     confirm_email_to_change_role_btn: "переотправить",
     change_email_confirmation_token_not_found: "Токен не найден",
     login_color: "Цвет логина",
-    change_login_color: "Изменить цвет логина"
+    change_login_color: "Изменить цвет логина",
+    message_edit_bullet_list: "Список точками",
+    message_edit_ordered_list: "Нумерованный список"
 }

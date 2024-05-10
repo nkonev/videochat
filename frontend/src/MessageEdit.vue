@@ -56,6 +56,14 @@
                               <v-icon :size="getIconSize()">mdi-music</v-icon>
                           </v-btn>
 
+                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="bulletListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bullet_list')">
+                              <v-icon :size="getIconSize()">mdi-format-list-bulleted</v-icon>
+                          </v-btn>
+
+                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="orderedListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_ordered_list')">
+                              <v-icon :size="getIconSize()">mdi-format-list-numbered</v-icon>
+                          </v-btn>
+
                           <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
                               <v-icon :size="getIconSize()">mdi-invert-colors</v-icon>
                           </v-btn>
@@ -377,6 +385,12 @@
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
                 bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_link_to_text, previousUrl});
+            },
+            bulletListClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleBulletList().run()
+            },
+            orderedListClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleOrderedList().run()
             },
             onMessageLinkSet(url) {
                 // empty

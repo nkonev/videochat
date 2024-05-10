@@ -249,5 +249,7 @@ export default {
     confirm_email_to_change_role_btn: "resend",
     change_email_confirmation_token_not_found: "Change email confirmation token is not found",
     login_color: "Login color",
-    change_login_color: "Change login color"
+    change_login_color: "Change login color",
+    message_edit_bullet_list: "Bullet list",
+    message_edit_ordered_list: "Ordered list"
 }

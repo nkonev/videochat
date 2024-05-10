@@ -26,6 +26,9 @@ import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
 import Mention from '@tiptap/extension-mention';
 import Code from '@tiptap/extension-code';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, isFireFox, media_audio, media_image, media_video} from "@/utils";
@@ -230,6 +233,9 @@ export default {
           }),
           Code,
           Iframe,
+          ListItem,
+          BulletList,
+          OrderedList,
       ],
       editorProps: {
           // Preserves newline on text paste.
