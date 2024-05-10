@@ -56,11 +56,11 @@
                               <v-icon :size="getIconSize()">mdi-music</v-icon>
                           </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="bulletListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bullet_list')">
+                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="bulletListValue() ? 'tonal' : 'plain'" density="comfortable" @click="bulletListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bullet_list')">
                               <v-icon :size="getIconSize()">mdi-format-list-bulleted</v-icon>
                           </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="orderedListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_ordered_list')">
+                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="orderedListValue() ? 'tonal' : 'plain'" density="comfortable" @click="orderedListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_ordered_list')">
                               <v-icon :size="getIconSize()">mdi-format-list-numbered</v-icon>
                           </v-btn>
 
@@ -391,6 +391,12 @@
             },
             orderedListClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleOrderedList().run()
+            },
+            bulletListValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('bulletList')
+            },
+            orderedListValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('orderedList')
             },
             onMessageLinkSet(url) {
                 // empty
