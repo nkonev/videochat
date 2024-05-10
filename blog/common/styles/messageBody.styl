@@ -60,7 +60,7 @@
   }
 }
 
-code {
+.message-item-wrapper code, .editorContent code {
   border-radius: 3px;
   font-size: 85%;
   font-weight: normal;
@@ -68,10 +68,13 @@ code {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-.editorContent a {
+.message-item-wrapper a, .editorContent a {
   color: $linkColor;
 }
 
-.message-item-wrapper a {
-  color: $linkColor;
+.message-item-wrapper ul,
+.message-item-wrapper ol,
+.editorContent ul,
+.editorContent ol {
+  padding: 0 1rem;
 }
