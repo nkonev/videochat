@@ -62,7 +62,7 @@ import bus, {
     SET_FILE_ITEM_UUID,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     ATTACH_FILES_TO_MESSAGE_MODAL,
-    LOAD_FILES_COUNT
+    MESSAGE_EDIT_LOAD_FILES_COUNT
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
@@ -267,7 +267,7 @@ export default {
                         fileItemUuid: fileToUpload.fileItemUuid,
                         chatId: fileToUpload.chatId,
                       });
-                      bus.emit(LOAD_FILES_COUNT, {
+                      bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {
                         chatId: fileToUpload.chatId,
                       });
                     }

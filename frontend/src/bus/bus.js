@@ -87,7 +87,7 @@ export const REACTION_REMOVED = "reactionRemoved";
 export const ATTACH_FILES_TO_MESSAGE_MODAL = "attachFilesToMessage";
 export const OPEN_CHAT_EDIT = "openChatEdit";
 
-export const LOAD_FILES_COUNT = "loadFilesCount";
+export const MESSAGE_EDIT_LOAD_FILES_COUNT = "loadFilesCount";
 
 export const OPEN_MESSAGE_READ_USERS_DIALOG = "openMessageReadUsersDialog";
 

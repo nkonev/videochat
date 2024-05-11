@@ -124,7 +124,7 @@ import bus, {
   FILE_CREATED,
   FILE_REMOVED,
   PLAYER_MODAL,
-  FILE_UPDATED, LOAD_FILES_COUNT, LOGGED_OUT
+  FILE_UPDATED, MESSAGE_EDIT_LOAD_FILES_COUNT, LOGGED_OUT
 } from "./bus/bus";
 import axios from "axios";
 import {
@@ -246,7 +246,7 @@ export default {
             fileItemUuid: null
           }).then(()=>{
             bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: null, chatId: this.chatId});
-            bus.emit(LOAD_FILES_COUNT, {chatId: this.chatId});
+            bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal();
           })
         },
@@ -267,7 +267,7 @@ export default {
                     })
                     .then((response) => {
                         if (this.$data.isMessageEditing) {
-                            bus.emit(LOAD_FILES_COUNT, {chatId: this.chatId});
+                            bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
                         }
 
                         bus.emit(CLOSE_SIMPLE_MODAL);

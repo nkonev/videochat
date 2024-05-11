@@ -116,7 +116,7 @@
 <script>
     import axios from "axios";
     import bus, {
-      CLOSE_EDIT_MESSAGE, LOAD_FILES_COUNT,
+      CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_LOAD_FILES_COUNT,
       COLOR_SET,
       MESSAGE_EDIT_LINK_SET,
       OPEN_FILE_UPLOAD_MODAL,
@@ -542,7 +542,7 @@
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
-            bus.on(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
+            bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -551,7 +551,7 @@
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
-            bus.off(LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
+            bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
