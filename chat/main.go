@@ -140,6 +140,7 @@ func configureEcho(
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.GET("/chat", ch.GetChats)
+	e.PUT("/chat/filter", ch.Filter)
 	e.GET("/chat/:id", ch.GetChat)
 	e.POST("/chat", ch.CreateChat)
 	e.DELETE("/chat/:id", ch.DeleteChat)

@@ -782,7 +782,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	return errOuter
 }
 
-type SearchRequestDto struct {
+type MessageFilterDto struct {
 	SearchString string `json:"searchString"`
 	MessageId int64 `json:"messageId"`
 }
@@ -799,7 +799,7 @@ func (mc *MessageHandler) Filter(c echo.Context) error {
 		return err
 	}
 
-	var bindTo = new(SearchRequestDto)
+	var bindTo = new(MessageFilterDto)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
@@ -813,7 +813,7 @@ func (mc *MessageHandler) Filter(c echo.Context) error {
 		if !participant {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to search in this chat"})
 		}
-		found, err := tx.Search(chatId, bindTo.SearchString, bindTo.MessageId)
+		found, err := tx.MessageFilter(chatId, bindTo.SearchString, bindTo.MessageId)
 		if err != nil {
 			return err
 		}

@@ -75,7 +75,7 @@ import axios from "axios";
 import infiniteScrollMixin, {
     directionBottom,
 } from "@/mixins/infiniteScrollMixin";
-import {chat, chat_list_name, chat_name} from "@/router/routes";
+import {chat, chat_list_name, chat_name, userIdHashPrefix} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -478,6 +478,19 @@ export default {
             this.items.unshift(dto);
             this.sort(this.items);
             this.performMarking();
+        } else if (isScrolledToTop) { // like in UserList.vue
+            axios.put(`/api/chat/filter`, {
+                searchString: this.searchString,
+                chatId: dto.id
+            }).then(({data}) => {
+                if (data.found) {
+                    console.log("Adding item", dto);
+                    this.transformItem(dto);
+                    this.items.unshift(dto);
+                    this.sort(this.items);
+                    this.performMarking();
+                }
+            })
         } else {
             console.log("Skipping", dto, isScrolledToTop, emptySearchString)
         }
