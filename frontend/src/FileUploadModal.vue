@@ -59,7 +59,7 @@
 import bus, {
     OPEN_FILE_UPLOAD_MODAL,
     CLOSE_FILE_UPLOAD_MODAL,
-    SET_FILE_ITEM_UUID,
+    MESSAGE_EDIT_SET_FILE_ITEM_UUID,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     ATTACH_FILES_TO_MESSAGE_MODAL,
     MESSAGE_EDIT_LOAD_FILES_COUNT
@@ -263,7 +263,7 @@ export default {
                     });
 
                     if (fileToUpload.shouldSetFileUuidToMessage) {
-                      bus.emit(SET_FILE_ITEM_UUID, {
+                      bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {
                         fileItemUuid: fileToUpload.fileItemUuid,
                         chatId: fileToUpload.chatId,
                       });

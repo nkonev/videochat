@@ -120,7 +120,7 @@ import bus, {
   OPEN_SIMPLE_MODAL,
   OPEN_TEXT_EDIT_MODAL,
   OPEN_VIEW_FILES_DIALOG,
-  SET_FILE_ITEM_UUID,
+  MESSAGE_EDIT_SET_FILE_ITEM_UUID,
   FILE_CREATED,
   FILE_REMOVED,
   PLAYER_MODAL,
@@ -181,7 +181,7 @@ export default {
 
     methods: {
         showModal({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
-            console.log("Opening files modal, fileItemUuid=", fileItemUuid);
+            console.log("Opening files modal, fileItemUuid=", fileItemUuid, "messageEditing=", messageEditing, "messageIdToDetachFiles=", messageIdToDetachFiles);
             if (this.fileItemUuid != fileItemUuid) {
                 this.reset();
             }
@@ -245,7 +245,7 @@ export default {
             messageId: this.messageIdToDetachFiles,
             fileItemUuid: null
           }).then(()=>{
-            bus.emit(SET_FILE_ITEM_UUID, {fileItemUuid: null, chatId: this.chatId});
+            bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {fileItemUuid: null, chatId: this.chatId});
             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal();
           })

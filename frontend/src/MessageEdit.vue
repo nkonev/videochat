@@ -127,7 +127,7 @@
       OPEN_VIEW_FILES_DIALOG,
       PROFILE_SET,
       SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
-      SET_FILE_ITEM_UUID,
+      MESSAGE_EDIT_SET_FILE_ITEM_UUID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -538,7 +538,7 @@
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
-            bus.on(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
@@ -547,7 +547,7 @@
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
-            bus.off(SET_FILE_ITEM_UUID, this.onFileItemUuid);
+            bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
