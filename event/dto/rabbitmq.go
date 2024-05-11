@@ -25,7 +25,6 @@ type PinnedMessageEvent struct {
 
 type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
-	Count       int64        `json:"count"`
 }
 
 type ReactionChangedEvent struct {

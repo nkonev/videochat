@@ -169,7 +169,7 @@ http:
     minio-fix-host-middleware:
       headers:
         customRequestHeaders:
-          Host: "127.0.0.1:9000"
+          Host: "127.0.0.1:39000"
     retry-middleware:
       retry:
         attempts: 4

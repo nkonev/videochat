@@ -416,20 +416,9 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 
 	GetLogEntry(c.Request().Context()).Debugf("Listing bucket '%v':", bucketName)
 
-	var filenameChatPrefix string
-	if fileItemUuid == "" {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
-	} else {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	}
+	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
 
-	var filter func(info *minio.ObjectInfo) bool = nil
-	if searchString != "" {
-		filter = func(info *minio.ObjectInfo) bool {
-			normalizedFileName := strings.ToLower(services.ReadFilename(info.Key))
-			return strings.Contains(normalizedFileName, searchString)
-		}
-	}
+	filter := h.getFilterFunction(searchString)
 
 	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, true, filesSize, filesOffset)
 	if err != nil {
@@ -437,6 +426,27 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
+}
+
+func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {
+	var filenameChatPrefix string
+	if fileItemUuid == "" {
+		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
+	} else {
+		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+	}
+	return filenameChatPrefix
+}
+
+func (h *FilesHandler) getFilterFunction(searchString string) func(info *minio.ObjectInfo) bool {
+	var filter func(info *minio.ObjectInfo) bool = nil
+	if searchString != "" {
+		filter = func(info *minio.ObjectInfo) bool {
+			normalizedFileName := strings.ToLower(services.ReadFilename(info.Key))
+			return strings.Contains(normalizedFileName, searchString)
+		}
+	}
+	return filter
 }
 
 func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
@@ -642,6 +652,10 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
+	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
+	searchString = strings.ToLower(searchString)
+
 	// check user belongs to chat
 	fileItemUuid := c.Param("fileItemUuid")
 	chatIdString := c.Param("chatId")
@@ -662,7 +676,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	}
 	// end check
 
-	counter := h.countFilesUnderFileUuid(chatId, fileItemUuid, bucketName)
+	counter := h.countFilesUnderFileUuid(chatId, fileItemUuid, bucketName, searchString)
 
 	var countDto = CountResponse{
 		Count: counter,
@@ -671,8 +685,11 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, countDto)
 }
 
-func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string, bucketName string) int {
-	var filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string, bucketName string, searchString string) int {
+	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
+
+	filter := h.getFilterFunction(searchString)
+
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: false,
 		Prefix:       filenameChatPrefix,
@@ -680,8 +697,12 @@ func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string
 	})
 
 	var counter = 0
-	for _ = range objects {
-		counter++
+	for objInfo := range objects {
+		if filter != nil && filter(&objInfo) {
+			counter++
+		} else if filter == nil {
+			counter++
+		}
 	}
 	return counter
 }

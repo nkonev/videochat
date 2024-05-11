@@ -134,7 +134,6 @@ type FileInfoDto {
 
 type WrappedFileInfoDto {
     fileInfoDto: FileInfoDto
-    count: Int64!
 }
 
 type ReactionChangedEvent {

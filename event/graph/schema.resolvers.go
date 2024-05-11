@@ -567,7 +567,6 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanPlayAsAudio: fileEvent.FileInfoDto.CanPlayAsAudio,
 				FileItemUUID:   &fileEvent.FileInfoDto.FileItemUuid,
 			},
-			Count: fileEvent.Count,
 		}
 	}
 

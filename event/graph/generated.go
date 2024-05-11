@@ -342,7 +342,6 @@ type ComplexityRoot struct {
 	}
 
 	WrappedFileInfoDto struct {
-		Count       func(childComplexity int) int
 		FileInfoDto func(childComplexity int) int
 	}
 
@@ -1685,13 +1684,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.VideoUserCountChangedDto.UsersCount(childComplexity), true
-
-	case "WrappedFileInfoDto.count":
-		if e.complexity.WrappedFileInfoDto.Count == nil {
-			break
-		}
-
-		return e.complexity.WrappedFileInfoDto.Count(childComplexity), true
 
 	case "WrappedFileInfoDto.fileInfoDto":
 		if e.complexity.WrappedFileInfoDto.FileInfoDto == nil {
@@ -3509,8 +3501,6 @@ func (ec *executionContext) fieldContext_ChatEvent_fileEvent(ctx context.Context
 			switch field.Name {
 			case "fileInfoDto":
 				return ec.fieldContext_WrappedFileInfoDto_fileInfoDto(ctx, field)
-			case "count":
-				return ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WrappedFileInfoDto", field.Name)
 		},
@@ -10580,50 +10570,6 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _WrappedFileInfoDto_count(ctx context.Context, field graphql.CollectedField, obj *model.WrappedFileInfoDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WrappedFileInfoDto_count(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Count, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_WrappedFileInfoDto_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "WrappedFileInfoDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _WrapperNotificationDto_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WrapperNotificationDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_WrapperNotificationDto_totalCount(ctx, field)
 	if err != nil {
@@ -14466,11 +14412,6 @@ func (ec *executionContext) _WrappedFileInfoDto(ctx context.Context, sel ast.Sel
 			out.Values[i] = graphql.MarshalString("WrappedFileInfoDto")
 		case "fileInfoDto":
 			out.Values[i] = ec._WrappedFileInfoDto_fileInfoDto(ctx, field, obj)
-		case "count":
-			out.Values[i] = ec._WrappedFileInfoDto_count(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

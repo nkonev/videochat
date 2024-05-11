@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"nkonev.name/storage/client"
@@ -53,13 +52,6 @@ func (s *EventService) HandleEvent(normalizedKey string, chatId int64, eventType
 		}
 	}
 
-	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
-	count, err := s.filesService.GetCount(ctx, filenameChatPrefix)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting count %v", err)
-		return nil, err
-	}
-
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
@@ -76,7 +68,6 @@ func (s *EventService) HandleEvent(normalizedKey string, chatId int64, eventType
 	return &HandleEventResponse{
 		objectInfo:  &objectInfo,
 		tagging:     tagging,
-		count:       count,
 		users:       users,
 		fileOwnerId: fileOwnerId,
 	}, nil
@@ -85,7 +76,6 @@ func (s *EventService) HandleEvent(normalizedKey string, chatId int64, eventType
 type HandleEventResponse struct {
 	objectInfo *minio.ObjectInfo
 	tagging *tags.Tags
-	count int
 	users map[int64]*dto.User
 	fileOwnerId int64
 }
@@ -115,7 +105,6 @@ func (s *EventService) SendToParticipants(normalizedKey string, chatId int64, ev
 		}
 		s.publisher.PublishFileEvent(participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,
-			Count:       int64(response.count),
 		}, eventType, ctx)
 	}
 

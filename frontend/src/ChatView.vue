@@ -332,7 +332,6 @@ export default {
                                         canPlayAsAudio
                                         fileItemUuid
                                       }
-                                      count
                                     }
                                     reactionChangedEvent {
                                       messageId

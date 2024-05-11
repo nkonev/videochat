@@ -345,56 +345,75 @@ export default {
               return
             }
             console.log("onFileCreated", dto);
-            if (!this.hasSearchString() && (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid)) {
-                if (!hasLength(this.fileItemUuid)) {
-                    this.dto.count = dto.count;
-                }
-                this.replaceItem(dto.fileInfoDto);
-                if (this.shouldReduceToFitPageSize()) {
-                  if (this.show) {
+            this.replaceItem(dto.fileInfoDto);
+            if (this.shouldReduceToFitPageSize()) {
+                if (this.show) {
                     this.updateFiles();
-                  } else {
+                } else {
                     this.reset()
-                  }
                 }
-                this.performMarking();
             }
+
+            // load filesCount
+            axios.get(`/api/storage/${this.chatId}/file/count`, {
+                params: {
+                    searchString: this.searchString,
+                },
+            })
+                .then((response) => {
+                    this.dto.count = response.data.count;
+                }).then(()=>{
+                    this.performMarking();
+                })
         },
         onFileUpdated(dto) {
             if (!this.dataLoaded) {
               return
             }
             console.log("onFileUpdated", dto);
-            if (!this.hasSearchString() && (!hasLength(this.fileItemUuid) || dto.fileInfoDto.fileItemUuid == this.fileItemUuid)) {
-                if (!hasLength(this.fileItemUuid)) {
-                  this.dto.count = dto.count;
+            this.replaceItem(dto.fileInfoDto);
+            if (this.shouldReduceToFitPageSize()) {
+                if (this.show) {
+                    this.updateFiles();
+                } else {
+                    this.reset()
                 }
-                this.replaceItem(dto.fileInfoDto);
-                if (this.shouldReduceToFitPageSize()) {
-                    if (this.show) {
-                      this.updateFiles();
-                    } else {
-                      this.reset()
-                    }
-                }
-                this.performMarking();
             }
+            // load filesCount
+            axios.get(`/api/storage/${this.chatId}/file/count`, {
+                params: {
+                    searchString: this.searchString,
+                },
+            })
+                .then((response) => {
+                    this.dto.count = response.data.count;
+                }).then(()=>{
+                    this.performMarking();
+                })
         },
         onFileRemoved(dto) {
             if (!this.dataLoaded) {
               return
             }
-            if (!this.hasSearchString() && !hasLength(this.fileItemUuid)) {
-                this.dto.count = dto.count;
-            }
             this.removeItem(dto.fileInfoDto);
-            if (this.shouldAddUpToFitPageSize(dto.count)) {
-                if (this.show) {
-                  this.updateFiles();
-                } else {
-                  this.reset()
+            // load filesCount
+            axios.get(`/api/storage/${this.chatId}/file/count`, {
+                params: {
+                    searchString: this.searchString,
+                },
+            })
+                .then((response) => {
+                    this.dto.count = response.data.count;
+                }).then(() => {
+                if (this.shouldAddUpToFitPageSize(this.dto.count)) {
+                    if (this.show) {
+                        this.updateFiles();
+                    } else {
+                        this.reset()
+                    }
                 }
-            }
+            })
+
         },
         onLogout() {
             this.reset();
