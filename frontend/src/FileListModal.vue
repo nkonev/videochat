@@ -201,8 +201,10 @@ export default {
         translatePage() {
             return this.page - 1;
         },
-        updateFiles() {
-            this.loading = true;
+        updateFiles(silent) {
+            if (!silent) {
+                this.loading = true;
+            }
             axios.get(`/api/storage/${this.chatId}`, {
                 params: {
                     page: this.translatePage(),
@@ -217,7 +219,9 @@ export default {
                     this.dto = dto;
                 })
                 .finally(() => {
-                    this.loading = false;
+                    if (!silent) {
+                        this.loading = false;
+                    }
                     this.dataLoaded = true;
                     this.performMarking();
                 })
@@ -400,7 +404,7 @@ export default {
                     const notEnoughFilesOnPage = this.dto.count > pageSize && this.dto.files.length < pageSize;
                     const nonLastPage = this.page != this.pagesCount;
                     if (notEnoughFilesOnPage && nonLastPage) {
-                        this.updateFiles();
+                        this.updateFiles(true);
                     }
                 })
         },
