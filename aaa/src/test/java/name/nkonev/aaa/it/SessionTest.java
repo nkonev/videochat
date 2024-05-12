@@ -3,7 +3,6 @@ package name.nkonev.aaa.it;
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.LockDTO;
-import name.nkonev.aaa.dto.SuccessfulLoginDTO;
 import name.nkonev.aaa.util.ContextPathHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

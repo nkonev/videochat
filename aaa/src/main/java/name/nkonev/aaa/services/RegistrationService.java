@@ -6,7 +6,6 @@ import name.nkonev.aaa.dto.EditUserDTO;
 import name.nkonev.aaa.dto.Language;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.UserConfirmationToken;
-import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import name.nkonev.aaa.security.LoginListener;

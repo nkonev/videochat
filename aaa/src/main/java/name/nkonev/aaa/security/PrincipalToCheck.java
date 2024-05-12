@@ -1,9 +1,6 @@
 package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
-import name.nkonev.aaa.dto.UserRole;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import static name.nkonev.aaa.Constants.NonExistentUser;
 

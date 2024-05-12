@@ -3,7 +3,6 @@ package name.nkonev.aaa.entity.jdbc;
 import name.nkonev.aaa.dto.UserRole;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Embedded;
 import org.springframework.data.relational.core.mapping.Table;
 import java.time.LocalDateTime;
 
