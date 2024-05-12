@@ -390,7 +390,8 @@ export default {
                     this.dto.count = response.data.count;
                 }).then(() => {
                     if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
-                        this.page = this.pagesCount;
+                        this.page = this.pagesCount; // this causes update() because of watch
+                        return
                     }
 
                     const notEnoughFilesOnPage = this.dto.count > pageSize && this.dto.files.length < pageSize;
