@@ -327,6 +327,10 @@ export default {
             console.log("Replacing item", dto);
             replaceOrPrepend(this.dto.files, [dto]);
         },
+        addItem(dto) {
+            console.log("Adding item", dto);
+            this.dto.files.unshift(dto);
+        },
 
         onPreviewCreated(dto) {
           if (!this.dataLoaded) {
@@ -345,26 +349,24 @@ export default {
               return
             }
             console.log("onFileCreated", dto);
-            this.replaceItem(dto.fileInfoDto);
-            if (this.shouldReduceToFitPageSize()) {
-                if (this.show) {
-                    this.updateFiles();
-                } else {
-                    this.reset()
-                }
-            }
 
-            // load filesCount
-            axios.get(`/api/storage/${this.chatId}/file/count`, {
-                params: {
-                    searchString: this.searchString,
-                },
-            })
-                .then((response) => {
+            if (this.page == firstPage) {
+                this.addItem(dto.fileInfoDto);
+                if (this.dto.files.length > pageSize) {
+                    this.dto.files.splice(this.dto.files.length - 1, 1);
+                }
+                // load filesCount
+                axios.get(`/api/storage/${this.chatId}/file/count`, {
+                    params: {
+                        searchString: this.searchString,
+                    },
+                }).then((response) => {
                     this.dto.count = response.data.count;
-                }).then(()=>{
+                })
+                this.$nextTick(()=>{
                     this.performMarking();
                 })
+            }
         },
         onFileUpdated(dto) {
             if (!this.dataLoaded) {
@@ -372,24 +374,9 @@ export default {
             }
             console.log("onFileUpdated", dto);
             this.replaceItem(dto.fileInfoDto);
-            if (this.shouldReduceToFitPageSize()) {
-                if (this.show) {
-                    this.updateFiles();
-                } else {
-                    this.reset()
-                }
-            }
-            // load filesCount
-            axios.get(`/api/storage/${this.chatId}/file/count`, {
-                params: {
-                    searchString: this.searchString,
-                },
+            this.$nextTick(()=>{
+                this.performMarking();
             })
-                .then((response) => {
-                    this.dto.count = response.data.count;
-                }).then(()=>{
-                    this.performMarking();
-                })
         },
         onFileRemoved(dto) {
             if (!this.dataLoaded) {
@@ -405,28 +392,20 @@ export default {
                 .then((response) => {
                     this.dto.count = response.data.count;
                 }).then(() => {
-                if (this.shouldAddUpToFitPageSize(this.dto.count)) {
-                    if (this.show) {
-                        this.updateFiles();
-                    } else {
-                        this.reset()
+                    if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
+                        this.page = this.pagesCount;
                     }
-                }
-            })
 
+                    const notEnoughFilesOnPage = this.dto.count > pageSize && this.dto.files.length < pageSize;
+                    const nonLastPage = this.page != this.pagesCount;
+                    if (notEnoughFilesOnPage && nonLastPage) {
+                        this.updateFiles();
+                    }
+                })
         },
         onLogout() {
             this.reset();
             this.closeModal();
-        },
-        shouldReduceToFitPageSize() {
-            return this.dto.files.length > dialogReloadUpperThreshold
-        },
-        shouldAddUpToFitPageSize(dtoCount) {
-            if (dtoCount < pageSize) {
-              return false
-            }
-            return this.dto.files.length < dialogReloadBottomThreshold
         },
         formattedSize(size) {
             return formatSize(size)
