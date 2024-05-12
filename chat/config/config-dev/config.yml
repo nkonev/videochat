@@ -33,9 +33,8 @@ aaa:
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
 
-jaeger:
-  host: "localhost"
-  port: 6831
+otlp:
+  endpoint: "localhost:4317"
 
 previewMaxTextSize: 240
 # Along with resending, it makes all files in private chat available to GET by any logged in user
