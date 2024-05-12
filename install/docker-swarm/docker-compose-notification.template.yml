@@ -29,8 +29,8 @@ services:
     environment:
       - NOTIFICATION_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - NOTIFICATION_POSTGRESQL.URL=postgres://notification:notificationPazZw0rd@postgresql:5432/notification?sslmode=disable&application_name=notification-app
-      - NOTIFICATION_JAEGER.HOST=jaeger
-      - NOTIFICATION_JAEGER.PORT=6831
+      - NOTIFICATION_OTLP.ENDPOINT=jaeger:4317
+
     logging:
       driver: "journald"
       options:
