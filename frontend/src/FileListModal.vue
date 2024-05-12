@@ -202,9 +202,6 @@ export default {
             return this.page - 1;
         },
         updateFiles() {
-            if (!this.show) {
-                return
-            }
             this.loading = true;
             axios.get(`/api/storage/${this.chatId}`, {
                 params: {
