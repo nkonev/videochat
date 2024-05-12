@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

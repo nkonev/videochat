@@ -1,10 +1,10 @@
-package com.github.nkonev.aaa;
+package name.nkonev.aaa;
 
 /**
  * Created by nik on 27.05.17.
  */
 
-import com.github.nkonev.aaa.security.SecurityConfig;
+import name.nkonev.aaa.security.SecurityConfig;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetup;
@@ -19,8 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
-import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
+import static name.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
+import static name.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

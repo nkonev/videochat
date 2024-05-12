@@ -1,10 +1,10 @@
-package com.github.nkonev.aaa.it;
+package name.nkonev.aaa.it;
 
-import com.github.nkonev.aaa.TestConstants;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.LockDTO;
-import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
-import com.github.nkonev.aaa.util.ContextPathHelper;
+import name.nkonev.aaa.TestConstants;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.LockDTO;
+import name.nkonev.aaa.dto.SuccessfulLoginDTO;
+import name.nkonev.aaa.util.ContextPathHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,9 +16,9 @@ import org.springframework.http.ResponseEntity;
 
 import java.net.URI;
 
-import static com.github.nkonev.aaa.TestConstants.*;
-import static com.github.nkonev.aaa.Constants.Urls.PUBLIC_API;
-import static com.github.nkonev.aaa.Constants.Urls.LOCK;
+import static name.nkonev.aaa.TestConstants.*;
+import static name.nkonev.aaa.Constants.Urls.PUBLIC_API;
+import static name.nkonev.aaa.Constants.Urls.LOCK;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
 @DisplayName("Sessions")

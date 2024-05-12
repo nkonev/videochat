@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.entity.redis;
+package name.nkonev.aaa.entity.redis;
 
 import org.springframework.data.redis.core.RedisHash;
 

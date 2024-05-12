@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;

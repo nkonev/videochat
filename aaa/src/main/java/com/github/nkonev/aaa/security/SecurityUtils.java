@@ -1,8 +1,8 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

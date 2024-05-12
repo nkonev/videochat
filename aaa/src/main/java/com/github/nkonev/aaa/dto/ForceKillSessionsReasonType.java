@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.dto;
+package name.nkonev.aaa.dto;
 
 public enum ForceKillSessionsReasonType {
     user_deleted,

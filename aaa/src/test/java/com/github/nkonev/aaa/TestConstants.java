@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa;
+package name.nkonev.aaa;
 
 public class TestConstants {
     public static final String USER = "${custom.it.user}";

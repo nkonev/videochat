@@ -1,16 +1,16 @@
-package com.github.nkonev.aaa;
+package name.nkonev.aaa;
 
 /**
  * Created by nik on 27.05.17.
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
-import com.github.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
-import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
-import com.github.nkonev.aaa.util.ContextPathHelper;
-import com.github.nkonev.aaa.services.UserTestService;
+import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.dto.SuccessfulLoginDTO;
+import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
+import name.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
+import name.nkonev.aaa.util.ContextPathHelper;
+import name.nkonev.aaa.services.UserTestService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,8 +43,8 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.github.nkonev.aaa.TestConstants.*;
-import static com.github.nkonev.aaa.security.SecurityConfig.*;
+import static name.nkonev.aaa.TestConstants.*;
+import static name.nkonev.aaa.security.SecurityConfig.*;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
 

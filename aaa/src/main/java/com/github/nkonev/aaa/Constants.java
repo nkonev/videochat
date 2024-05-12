@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa;
+package name.nkonev.aaa;
 
 
 import java.util.Set;

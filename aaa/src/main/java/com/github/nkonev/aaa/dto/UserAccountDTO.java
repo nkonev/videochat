@@ -1,8 +1,8 @@
-package com.github.nkonev.aaa.dto;
+package name.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.nkonev.aaa.Constants;
+import name.nkonev.aaa.Constants;
 import jakarta.validation.constraints.NotEmpty;
 
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 public abstract class OAuth2Providers {
     public static final String VKONTAKTE = "vkontakte";

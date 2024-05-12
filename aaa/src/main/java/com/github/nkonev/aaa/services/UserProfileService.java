@@ -1,17 +1,17 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.*;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
-import com.github.nkonev.aaa.exception.BadRequestException;
-import com.github.nkonev.aaa.exception.DataNotFoundException;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
-import com.github.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
-import com.github.nkonev.aaa.security.*;
-import com.github.nkonev.aaa.utils.PageUtils;
+import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.*;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
+import name.nkonev.aaa.exception.BadRequestException;
+import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
+import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
+import name.nkonev.aaa.security.*;
+import name.nkonev.aaa.utils.PageUtils;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +30,9 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
-import static com.github.nkonev.aaa.Constants.Headers.*;
-import static com.github.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
-import static com.github.nkonev.aaa.converter.UserAccountConverter.*;
+import static name.nkonev.aaa.Constants.Headers.*;
+import static name.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
+import static name.nkonev.aaa.converter.UserAccountConverter.*;
 
 @Service
 public class UserProfileService {

@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

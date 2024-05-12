@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.exception;
+package name.nkonev.aaa.exception;
 
 public class UnsupportedMessageTypeException extends RuntimeException{
     private static final long serialVersionUID = -4890563984936375272L;

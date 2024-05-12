@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.utils;
+package name.nkonev.aaa.utils;
 
 import org.springframework.core.io.Resource;
 

@@ -1,15 +1,15 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.PasswordResetDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
-import com.github.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
-import com.github.nkonev.aaa.security.LoginListener;
-import com.github.nkonev.aaa.security.SecurityUtils;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.dto.PasswordResetDTO;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.redis.PasswordResetToken;
+import name.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
+import name.nkonev.aaa.security.LoginListener;
+import name.nkonev.aaa.security.SecurityUtils;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security.converter;
+package name.nkonev.aaa.security.converter;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;

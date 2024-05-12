@@ -1,8 +1,8 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.services.EventService;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.services.EventService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,13 +1,13 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.OAuth2IdentifiersDTO;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.services.AsyncEmailService;
-import com.github.nkonev.aaa.services.OAuth2ProvidersService;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.OAuth2IdentifiersDTO;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.services.AsyncEmailService;
+import name.nkonev.aaa.services.OAuth2ProvidersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-import com.github.nkonev.aaa.dto.UserAccountDTO;
+import name.nkonev.aaa.dto.UserAccountDTO;
 import java.util.Map;
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.utils;
+package name.nkonev.aaa.utils;
 
 /**
  * Created by nik on 05.07.17.

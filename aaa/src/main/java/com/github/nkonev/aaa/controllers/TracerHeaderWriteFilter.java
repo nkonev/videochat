@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
 import io.micrometer.tracing.Tracer;
 import jakarta.servlet.FilterChain;

@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
 import jakarta.annotation.PostConstruct;
 import org.apache.catalina.Context;

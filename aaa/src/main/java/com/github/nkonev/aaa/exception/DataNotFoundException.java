@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.exception;
+package name.nkonev.aaa.exception;
 
 public class DataNotFoundException extends RuntimeException {
     private static final long serialVersionUID = -7006664788237375370L;

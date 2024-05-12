@@ -1,7 +1,7 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.dto.AaaError;
+import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,7 +22,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.IOException;
 import java.util.*;
 
-import static com.github.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
+import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
 /**
  * @see org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController, it describes how to use both REST And ModelAndView handling depends on Accept header

@@ -1,8 +1,8 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.dto.AaaError;
-import com.github.nkonev.aaa.dto.ValidationError;
-import com.github.nkonev.aaa.exception.*;
+import name.nkonev.aaa.dto.AaaError;
+import name.nkonev.aaa.dto.ValidationError;
+import name.nkonev.aaa.exception.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

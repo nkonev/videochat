@@ -1,11 +1,11 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
-import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
-import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
+import name.nkonev.aaa.entity.redis.PasswordResetToken;
+import name.nkonev.aaa.entity.redis.UserConfirmationToken;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.slf4j.Logger;

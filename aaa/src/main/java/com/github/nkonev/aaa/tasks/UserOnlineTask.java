@@ -1,8 +1,8 @@
-package com.github.nkonev.aaa.tasks;
+package name.nkonev.aaa.tasks;
 
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.AaaUserDetailsService;
-import com.github.nkonev.aaa.services.EventService;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.security.AaaUserDetailsService;
+import name.nkonev.aaa.services.EventService;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

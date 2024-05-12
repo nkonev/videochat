@@ -1,11 +1,11 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.ConfirmDTO;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.dto.LockDTO;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.ConfirmDTO;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.dto.LockDTO;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

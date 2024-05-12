@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

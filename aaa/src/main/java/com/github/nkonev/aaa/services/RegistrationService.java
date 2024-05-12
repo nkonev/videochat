@@ -1,16 +1,16 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.EditUserDTO;
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
-import com.github.nkonev.aaa.exception.BadRequestException;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
-import com.github.nkonev.aaa.security.LoginListener;
-import com.github.nkonev.aaa.security.SecurityUtils;
+import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.EditUserDTO;
+import name.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.redis.UserConfirmationToken;
+import name.nkonev.aaa.exception.BadRequestException;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
+import name.nkonev.aaa.security.LoginListener;
+import name.nkonev.aaa.security.SecurityUtils;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +26,8 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.github.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
-import static com.github.nkonev.aaa.converter.UserAccountConverter.validateLengthEmail;
+import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
+import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthEmail;
 
 @Service
 public class RegistrationService {

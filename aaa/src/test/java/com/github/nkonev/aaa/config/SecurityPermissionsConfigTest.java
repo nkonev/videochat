@@ -1,7 +1,7 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
-import com.github.nkonev.aaa.dto.UserRole;
-import com.github.nkonev.aaa.security.SecurityPermissionsConfig;
+import name.nkonev.aaa.dto.UserRole;
+import name.nkonev.aaa.security.SecurityPermissionsConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;

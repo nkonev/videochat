@@ -1,9 +1,9 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.dto.UserAccountDTO;
-import com.github.nkonev.aaa.dto.UserAccountDeletedEventDTO;
-import com.github.nkonev.aaa.dto.UserAccountEventGroupDTO;
+import name.nkonev.aaa.dto.UserAccountDTO;
+import name.nkonev.aaa.dto.UserAccountDeletedEventDTO;
+import name.nkonev.aaa.dto.UserAccountEventGroupDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.github.nkonev.aaa.config.RabbitMqTestConfig.QUEUE_PROFILE_TEST;
+import static name.nkonev.aaa.config.RabbitMqTestConfig.QUEUE_PROFILE_TEST;
 
 @Component
 public class EventReceiver {

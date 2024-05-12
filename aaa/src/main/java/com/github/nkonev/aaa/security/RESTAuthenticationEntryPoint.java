@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 /**
  * Created by nik on 07.03.17.

@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.client.RestTemplateBuilder;

@@ -1,8 +1,8 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.*;
-import com.github.nkonev.aaa.services.UserSettingsService;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.*;
+import name.nkonev.aaa.services.UserSettingsService;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

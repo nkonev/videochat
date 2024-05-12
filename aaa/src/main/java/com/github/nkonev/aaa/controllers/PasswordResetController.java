@@ -1,9 +1,9 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.PasswordResetDTO;
-import com.github.nkonev.aaa.services.PasswordResetService;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.dto.PasswordResetDTO;
+import name.nkonev.aaa.services.PasswordResetService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

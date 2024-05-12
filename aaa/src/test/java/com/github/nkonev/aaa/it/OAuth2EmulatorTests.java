@@ -1,9 +1,9 @@
-package com.github.nkonev.aaa.it;
+package name.nkonev.aaa.it;
 
-import com.github.nkonev.aaa.AbstractTestRunner;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.oauth2emu.OAuth2EmulatorServers;
-import com.github.nkonev.aaa.services.UserTestService;
+import name.nkonev.aaa.AbstractTestRunner;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.oauth2emu.OAuth2EmulatorServers;
+import name.nkonev.aaa.services.UserTestService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

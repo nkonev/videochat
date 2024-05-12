@@ -1,10 +1,10 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.nkonev.aaa.AbstractUtTestRunner;
-import com.github.nkonev.aaa.TestConstants;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.security.SecurityConfig;
+import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.TestConstants;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.security.SecurityConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -13,8 +13,8 @@ import org.springframework.http.*;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Map;
-import static com.github.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
-import static com.github.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
+import static name.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
+import static name.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

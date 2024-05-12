@@ -1,6 +1,6 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.exception.OAuth2IdConflictException;
+import name.nkonev.aaa.exception.OAuth2IdConflictException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

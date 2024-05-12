@@ -1,7 +1,7 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.exception.UserAlreadyPresentException;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.exception.UserAlreadyPresentException;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

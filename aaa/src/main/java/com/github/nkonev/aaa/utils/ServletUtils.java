@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.utils;
+package name.nkonev.aaa.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;

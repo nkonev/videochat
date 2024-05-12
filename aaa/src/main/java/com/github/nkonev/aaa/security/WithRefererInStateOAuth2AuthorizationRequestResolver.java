@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.util.StringUtils;
 
 
-import static com.github.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
+import static name.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 
 class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 

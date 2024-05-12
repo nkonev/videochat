@@ -1,7 +1,7 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.services.UserTestService;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.services.UserTestService;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

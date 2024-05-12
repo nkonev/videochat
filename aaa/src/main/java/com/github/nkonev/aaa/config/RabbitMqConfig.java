@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Queue;

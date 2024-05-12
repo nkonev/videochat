@@ -12,4 +12,4 @@ spring:
 
 server.port: 9080
 
-server.tomcat.basedir: ${java.io.tmpdir}/com.github.nkonev.oauth2emu.tomcat
+server.tomcat.basedir: ${java.io.tmpdir}/name.nkonev.oauth2emu.tomcat

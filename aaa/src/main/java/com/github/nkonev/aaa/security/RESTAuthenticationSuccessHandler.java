@@ -1,12 +1,12 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 /**
  * Created by nik on 07.03.17.
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nkonev.aaa.dto.SuccessfulLoginDTO;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.dto.SuccessfulLoginDTO;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

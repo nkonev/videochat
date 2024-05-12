@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.dto;
+package name.nkonev.aaa.dto;
 
 import java.util.Collection;
 

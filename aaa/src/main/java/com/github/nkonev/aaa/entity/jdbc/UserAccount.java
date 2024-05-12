@@ -1,6 +1,6 @@
-package com.github.nkonev.aaa.entity.jdbc;
+package name.nkonev.aaa.entity.jdbc;
 
-import com.github.nkonev.aaa.dto.UserRole;
+import name.nkonev.aaa.dto.UserRole;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Embedded;

@@ -1,13 +1,13 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.ForceKillSessionsReasonType;
-import com.github.nkonev.aaa.dto.UserOnlineResponse;
-import com.github.nkonev.aaa.exception.DataNotFoundException;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.services.EventService;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
+import name.nkonev.aaa.dto.UserOnlineResponse;
+import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;

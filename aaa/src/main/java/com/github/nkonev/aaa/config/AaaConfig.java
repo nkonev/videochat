@@ -1,12 +1,12 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.github.nkonev.aaa.utils.ResourceUtils;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.utils.ResourceUtils;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;

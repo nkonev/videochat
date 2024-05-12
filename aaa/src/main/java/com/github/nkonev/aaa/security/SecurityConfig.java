@@ -1,10 +1,10 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
-import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
-import com.github.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
+import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
+import name.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;

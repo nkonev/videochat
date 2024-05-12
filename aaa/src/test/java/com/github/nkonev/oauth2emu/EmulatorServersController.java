@@ -1,4 +1,4 @@
-package com.github.nkonev.oauth2emu;
+package name.nkonev.oauth2emu;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -24,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.List;
 
-import static com.github.nkonev.aaa.it.OAuth2EmulatorTests.*;
+import static name.nkonev.aaa.it.OAuth2EmulatorTests.*;
 
 @Configuration
 @ComponentScan

@@ -1,4 +1,4 @@
-package com.github.nkonev.oauth2emu;
+package name.nkonev.oauth2emu;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;

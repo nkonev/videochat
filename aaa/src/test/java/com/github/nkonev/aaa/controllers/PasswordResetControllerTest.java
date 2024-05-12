@@ -1,12 +1,12 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.AbstractUtTestRunner;
-import com.github.nkonev.aaa.TestConstants;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.PasswordResetDTO;
-import com.github.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
-import com.github.nkonev.aaa.security.SecurityConfig;
-import com.github.nkonev.aaa.util.UrlParser;
+import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.TestConstants;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.PasswordResetDTO;
+import name.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
+import name.nkonev.aaa.security.SecurityConfig;
+import name.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
 import jakarta.mail.Message;
 import org.eclipse.angus.mail.imap.IMAPMessage;
@@ -20,7 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
-import static com.github.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
+import static name.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

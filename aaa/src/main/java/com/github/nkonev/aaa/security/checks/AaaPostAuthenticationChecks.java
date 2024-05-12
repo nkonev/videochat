@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.security.checks;
+package name.nkonev.aaa.security.checks;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

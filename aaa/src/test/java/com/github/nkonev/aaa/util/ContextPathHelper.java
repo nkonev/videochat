@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.util;
+package name.nkonev.aaa.util;
 
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;

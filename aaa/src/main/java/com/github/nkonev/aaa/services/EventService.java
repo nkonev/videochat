@@ -1,18 +1,18 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.dto.*;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.security.PrincipalToCheck;
-import com.github.nkonev.aaa.security.UserRoleService;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.*;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.security.PrincipalToCheck;
+import name.nkonev.aaa.security.UserRoleService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_PROFILE_EVENTS_NAME;
-import static com.github.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_ONLINE_EVENTS_NAME;
+import static name.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_PROFILE_EVENTS_NAME;
+import static name.nkonev.aaa.config.RabbitMqConfig.EXCHANGE_ONLINE_EVENTS_NAME;
 
 @Service
 public class EventService {

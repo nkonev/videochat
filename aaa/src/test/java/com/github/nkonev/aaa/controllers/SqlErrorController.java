@@ -1,7 +1,7 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.TestConstants;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.TestConstants;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

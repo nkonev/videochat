@@ -1,12 +1,12 @@
-package com.github.nkonev.aaa.converter;
+package name.nkonev.aaa.converter;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.*;
-import com.github.nkonev.aaa.entity.jdbc.CreationType;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.exception.BadRequestException;
-import com.github.nkonev.aaa.security.*;
-import com.github.nkonev.aaa.utils.NullEncode;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.*;
+import name.nkonev.aaa.entity.jdbc.CreationType;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.exception.BadRequestException;
+import name.nkonev.aaa.security.*;
+import name.nkonev.aaa.utils.NullEncode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.github.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
+import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
 
 @Component
 public class UserAccountConverter {
@@ -71,9 +71,9 @@ public class UserAccountConverter {
         );
     }
 
-    public static com.github.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastLoginDateTime, Long expiresAt) {
+    public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastLoginDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
-        return new com.github.nkonev.aaa.dto.UserSelfProfileDTO(
+        return new name.nkonev.aaa.dto.UserSelfProfileDTO(
                 userAccount.getId(),
                 userAccount.getUsername(),
                 userAccount.getAvatar(),
@@ -107,9 +107,9 @@ public class UserAccountConverter {
         return roles.stream().map(ur -> new SimpleGrantedAuthority(ur.name())).collect(Collectors.toSet());
     }
 
-    public static com.github.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
+    public static name.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
-        return new com.github.nkonev.aaa.dto.UserAccountDTO(
+        return new name.nkonev.aaa.dto.UserAccountDTO(
                 userAccount.id(),
                 userAccount.username(),
                 userAccount.avatar(),
@@ -121,11 +121,11 @@ public class UserAccountConverter {
         );
     }
 
-    public com.github.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount) {
+    public name.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) { return null; }
-        com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
+        name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
         if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
-            dataDTO = new com.github.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Set.of(userAccount.role()));
+            dataDTO = new name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Set.of(userAccount.role()));
         } else {
             dataDTO = null;
         }
@@ -156,7 +156,7 @@ public class UserAccountConverter {
     }
 
     // EditUserDTO userAccountDTO is already filtered by normalize()
-    public static UserAccount buildUserAccountEntityForInsert(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, PasswordEncoder passwordEncoder) {
+    public static UserAccount buildUserAccountEntityForInsert(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, PasswordEncoder passwordEncoder) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -401,7 +401,7 @@ public class UserAccountConverter {
         );
     }
 
-    private static void validateLoginAndEmail(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO){
+    private static void validateLoginAndEmail(name.nkonev.aaa.dto.EditUserDTO userAccountDTO){
         Assert.hasLength(userAccountDTO.login(), "login should have length");
         Assert.hasLength(userAccountDTO.email(), "email should have length");
     }
@@ -423,7 +423,7 @@ public class UserAccountConverter {
     }
 
     // EditUserDTO userAccountDTO is already filtered through normalize()
-    public static UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+    public static UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         var wasEmailSet = false;
         if (StringUtils.hasLength(userAccountDTO.login())) {
             userAccount = userAccount.withUsername(userAccountDTO.login());
@@ -460,8 +460,8 @@ public class UserAccountConverter {
         return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
     }
 
-    public static com.github.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
-        return new com.github.nkonev.aaa.dto.EditUserDTO(
+    public static name.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
+        return new name.nkonev.aaa.dto.EditUserDTO(
                 userAccount.username(),
                 userAccount.avatar(),
                 null,

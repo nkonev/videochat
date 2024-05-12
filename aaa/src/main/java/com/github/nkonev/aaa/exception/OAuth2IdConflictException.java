@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.exception;
+package name.nkonev.aaa.exception;
 
 
 public class OAuth2IdConflictException extends RuntimeException {

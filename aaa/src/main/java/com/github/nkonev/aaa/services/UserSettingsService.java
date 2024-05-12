@@ -1,9 +1,9 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.dto.SettingsDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserSettings;
-import com.github.nkonev.aaa.repository.jdbc.UserSettingsRepository;
+import name.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.dto.SettingsDTO;
+import name.nkonev.aaa.entity.jdbc.UserSettings;
+import name.nkonev.aaa.repository.jdbc.UserSettingsRepository;
 import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static com.github.nkonev.aaa.Constants.MAX_SMILEYS_LENGTH;
+import static name.nkonev.aaa.Constants.MAX_SMILEYS_LENGTH;
 
 @Service
 public class UserSettingsService {

@@ -1,6 +1,6 @@
-package com.github.nkonev.aaa.entity.jdbc;
+package name.nkonev.aaa.entity.jdbc;
 
-import com.github.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.dto.Language;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 

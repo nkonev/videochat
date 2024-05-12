@@ -1,6 +1,6 @@
-package com.github.nkonev.aaa.dto;
+package name.nkonev.aaa.dto;
 
-import com.github.nkonev.aaa.Constants;
+import name.nkonev.aaa.Constants;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

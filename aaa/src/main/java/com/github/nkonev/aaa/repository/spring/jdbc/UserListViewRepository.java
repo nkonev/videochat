@@ -1,6 +1,6 @@
-package com.github.nkonev.aaa.repository.spring.jdbc;
+package name.nkonev.aaa.repository.spring.jdbc;
 
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.RowMapper;

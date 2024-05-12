@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.config;
+package name.nkonev.aaa.config;
 
 import ch.qos.logback.access.servlet.TeeFilter;
 import ch.qos.logback.access.tomcat.LogbackValve;

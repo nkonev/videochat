@@ -1,15 +1,15 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
-import com.github.nkonev.aaa.dto.Language;
-import com.github.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
-import com.github.nkonev.aaa.entity.redis.PasswordResetToken;
-import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
+import name.nkonev.aaa.dto.Language;
+import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
+import name.nkonev.aaa.entity.redis.PasswordResetToken;
+import name.nkonev.aaa.entity.redis.UserConfirmationToken;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static com.github.nkonev.aaa.config.RabbitMqConfig.*;
+import static name.nkonev.aaa.config.RabbitMqConfig.*;
 
 
 @Service

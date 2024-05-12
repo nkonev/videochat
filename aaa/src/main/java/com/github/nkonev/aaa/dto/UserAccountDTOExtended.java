@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.dto;
+package name.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

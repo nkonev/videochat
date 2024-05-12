@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa;
+package name.nkonev.aaa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @EnableAsync
 @SpringBootApplication(
-        scanBasePackages = {"com.github.nkonev.aaa"}
+        scanBasePackages = {"name.nkonev.aaa"}
 )
 public class AaaApplication {
 

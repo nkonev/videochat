@@ -1,13 +1,13 @@
-package com.github.nkonev.aaa.it;
+package name.nkonev.aaa.it;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.Cookie;
-import com.github.nkonev.aaa.AbstractHtmlUnitRunner;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.security.OAuth2Providers;
+import name.nkonev.aaa.AbstractHtmlUnitRunner;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.security.OAuth2Providers;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 
-import static com.github.nkonev.aaa.TestConstants.*;
-import static com.github.nkonev.aaa.Constants.Urls.PUBLIC_API;
+import static name.nkonev.aaa.TestConstants.*;
+import static name.nkonev.aaa.Constants.Urls.PUBLIC_API;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.COOKIE;
 

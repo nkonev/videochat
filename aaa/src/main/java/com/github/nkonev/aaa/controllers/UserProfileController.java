@@ -1,9 +1,9 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.dto.*;
-import com.github.nkonev.aaa.services.OAuth2ProvidersService;
-import com.github.nkonev.aaa.services.UserProfileService;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.*;
+import name.nkonev.aaa.services.OAuth2ProvidersService;
+import name.nkonev.aaa.services.UserProfileService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class UserProfileController {
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public com.github.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+    public name.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting external user profile");
         return userProfileService.checkAuthenticated(userAccount, session);
     }
@@ -57,7 +57,7 @@ public class UserProfileController {
     @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
-    public List<com.github.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
+    public List<name.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDTO request
     ) {
@@ -107,7 +107,7 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     public UserSelfProfileDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody @Valid com.github.nkonev.aaa.dto.EditUserDTO userAccountDTO,
+            @RequestBody @Valid name.nkonev.aaa.dto.EditUserDTO userAccountDTO,
             @RequestParam(defaultValue = Language.DEFAULT) Language language,
             HttpSession httpSession
     ) {
@@ -164,14 +164,14 @@ public class UserProfileController {
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.LOCK)
-    public com.github.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.LockDTO lockDTO){
+    public name.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.LockDTO lockDTO){
         return userProfileService.setLocked(userAccountDetailsDTO, lockDTO);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
-    public com.github.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody com.github.nkonev.aaa.dto.ConfirmDTO confirmDTO){
+    public name.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.ConfirmDTO confirmDTO){
         return userProfileService.setConfirmed(userAccountDetailsDTO, confirmDTO);
     }
 
@@ -185,7 +185,7 @@ public class UserProfileController {
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #userId)")
     @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
-    public com.github.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
+    public name.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
         return userProfileService.setRole(userAccountDetailsDTO, userId, role);
     }
 

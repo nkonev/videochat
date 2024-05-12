@@ -1,7 +1,7 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 

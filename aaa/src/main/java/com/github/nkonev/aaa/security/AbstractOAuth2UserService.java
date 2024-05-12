@@ -1,12 +1,12 @@
-package com.github.nkonev.aaa.security;
+package name.nkonev.aaa.security;
 
-import com.github.nkonev.aaa.converter.UserAccountConverter;
-import com.github.nkonev.aaa.exception.OAuth2IdConflictException;
-import com.github.nkonev.aaa.dto.UserAccountDetailsDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
-import com.github.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
-import com.github.nkonev.aaa.services.EventService;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.exception.OAuth2IdConflictException;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
+import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
+import name.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.github.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
+import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
 
 public abstract class AbstractOAuth2UserService {
 

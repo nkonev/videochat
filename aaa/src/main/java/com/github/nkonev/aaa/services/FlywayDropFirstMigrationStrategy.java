@@ -1,4 +1,4 @@
-package com.github.nkonev.aaa.services;
+package name.nkonev.aaa.services;
 
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;

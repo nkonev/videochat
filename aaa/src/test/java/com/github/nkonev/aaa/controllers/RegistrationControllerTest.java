@@ -1,15 +1,15 @@
-package com.github.nkonev.aaa.controllers;
+package name.nkonev.aaa.controllers;
 
-import com.github.nkonev.aaa.AbstractUtTestRunner;
-import com.github.nkonev.aaa.Constants;
-import com.github.nkonev.aaa.TestConstants;
-import com.github.nkonev.aaa.config.CustomConfig;
-import com.github.nkonev.aaa.dto.EditUserDTO;
-import com.github.nkonev.aaa.entity.jdbc.UserAccount;
-import com.github.nkonev.aaa.entity.redis.UserConfirmationToken;
-import com.github.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import com.github.nkonev.aaa.security.SecurityConfig;
-import com.github.nkonev.aaa.util.UrlParser;
+import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.TestConstants;
+import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.dto.EditUserDTO;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.redis.UserConfirmationToken;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.security.SecurityConfig;
+import name.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
 import jakarta.mail.Message;
 import org.awaitility.Awaitility;
@@ -32,8 +32,8 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
 
-import static com.github.nkonev.aaa.TestConstants.HEADER_SET_COOKIE;
-import static com.github.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
+import static name.nkonev.aaa.TestConstants.HEADER_SET_COOKIE;
+import static name.nkonev.aaa.TestConstants.SESSION_COOKIE_NAME;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
