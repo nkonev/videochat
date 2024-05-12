@@ -168,17 +168,17 @@ services:
     hostname: jaeger
     networks:
       backend:
-#    deploy:
-#      resources:
-#        limits:
+    deploy:
+      resources:
+        limits:
 #          cpus: '0.40'
-#          memory: '450M'
+          memory: '2G'
     logging:
       driver: "journald"
       options:
         tag: chat-jaeger
     command:
-      - --memory.max-traces=100000
+      - --memory.max-traces=10000
 
 volumes:
   postgres_data:
