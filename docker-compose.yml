@@ -136,8 +136,6 @@ services:
     image: jaegertracing/all-in-one:1.54.0
     hostname: jaeger
     restart: unless-stopped
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
     ports:
       # https://www.jaegertracing.io/docs/1.54/deployment/
       - 4318:4318 # OTLP GRPC over HTTP (aaa)
@@ -151,6 +149,8 @@ services:
       options:
         max-size: "50m"
         max-file: "1"
+    command:
+      - --memory.max-traces=100000
 
 volumes:
   postgres_data:
