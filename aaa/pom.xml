@@ -288,7 +288,7 @@
 
         <dependency>
             <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-zipkin</artifactId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
         <dependency> <!-- to consume uber-formatted headers from traefik -->
             <groupId>io.opentelemetry</groupId>

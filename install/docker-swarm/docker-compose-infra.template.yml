@@ -167,7 +167,7 @@ services:
     image: jaegertracing/all-in-one:1.54.0
     hostname: jaeger
     environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
     networks:
       backend:
     deploy:
