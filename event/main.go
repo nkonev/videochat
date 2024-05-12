@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/montag451/go-eventbus"
 	"github.com/spf13/viper"
+	gqlgen_opentelemetry "github.com/zhevron/gqlgen-opentelemetry/v2"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
@@ -146,7 +147,7 @@ func configureEcho(
 	return e
 }
 
-func configureGraphQlServer(bus *eventbus.Bus, httpClient *client.RestClient) *handler.Server {
+func configureGraphQlServer(bus *eventbus.Bus, httpClient *client.RestClient, tp *sdktrace.TracerProvider) *handler.Server {
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient}}))
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
@@ -158,6 +159,9 @@ func configureGraphQlServer(bus *eventbus.Bus, httpClient *client.RestClient) *h
 		},
 	})
 	srv.Use(extension.Introspection{})
+	srv.Use(gqlgen_opentelemetry.Tracer{
+		TracerProvider: tp,
+	})
 	return srv
 }
 
