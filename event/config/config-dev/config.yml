@@ -27,6 +27,5 @@ aaa:
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
 
-jaeger:
-  host: "localhost"
-  port: 6831
+otlp:
+  endpoint: "localhost:4317"
