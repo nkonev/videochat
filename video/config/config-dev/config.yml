@@ -14,9 +14,8 @@ auth:
     - "^/video/public.*"
     - "^/internal/.*"
 
-jaeger:
-  host: "localhost"
-  port: 6831
+otlp:
+  endpoint: "localhost:4317"
 
 chat:
   url:

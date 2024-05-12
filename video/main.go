@@ -10,12 +10,14 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
-	jaegerExporter "go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
@@ -196,11 +198,12 @@ func configureApiEcho(
 
 func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.TracerProvider, error) {
 	Logger.Infof("Configuring Jaeger tracing")
-	endpoint := jaegerExporter.WithAgentEndpoint(
-		jaegerExporter.WithAgentHost(cfg.JaegerConfig.Host),
-		jaegerExporter.WithAgentPort(cfg.JaegerConfig.Port),
-	)
-	exporter, err := jaegerExporter.New(endpoint)
+	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		return nil, err
+	}
+
+	exporter, err := otlptracegrpc.New(context.Background(), otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {
 		return nil, err
 	}
@@ -208,15 +211,16 @@ func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.Tra
 		semconv.SchemaURL,
 		semconv.ServiceNameKey.String(TRACE_RESOURCE),
 	)
+	batchSpanProcessor := sdktrace.NewBatchSpanProcessor(exporter)
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithBatcher(exporter),
+		sdktrace.WithSpanProcessor(batchSpanProcessor),
 		sdktrace.WithResource(resources),
 	)
 	otel.SetTracerProvider(tp)
-	jaeger := jaegerPropagator.Jaeger{}
+	aJaegerPropagator := jaegerPropagator.Jaeger{}
 	// register jaeger propagator
-	otel.SetTextMapPropagator(jaeger)
+	otel.SetTextMapPropagator(aJaegerPropagator)
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			Logger.Infof("Stopping tracer")
