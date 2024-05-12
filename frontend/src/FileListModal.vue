@@ -348,20 +348,24 @@ export default {
             console.log("onFileCreated", dto);
 
             if (this.page == firstPage) {
-                this.addItem(dto.fileInfoDto);
-                if (this.dto.files.length > pageSize) {
-                    this.dto.files.splice(this.dto.files.length - 1, 1);
-                }
-                // load filesCount
-                axios.get(`/api/storage/${this.chatId}/file/count`, {
-                    params: {
-                        searchString: this.searchString,
-                    },
+                // filter and load filesCount
+                axios.post(`/api/storage/${this.chatId}/file/count`, {
+                    fileItemUuid: this.fileItemUuid,
+                    searchString: this.searchString,
+                    fileId: dto.fileInfoDto.id
                 }).then((response) => {
                     this.dto.count = response.data.count;
-                })
-                this.$nextTick(()=>{
-                    this.performMarking();
+                    if (response.data.found) {
+                        this.addItem(dto.fileInfoDto);
+                        // remove the last to fit to pageSize
+                        if (this.dto.files.length > pageSize) {
+                            this.dto.files.splice(this.dto.files.length - 1, 1);
+                        }
+
+                        this.$nextTick(()=>{
+                            this.performMarking();
+                        })
+                    }
                 })
             }
         },
@@ -381,10 +385,9 @@ export default {
             }
             this.removeItem(dto.fileInfoDto);
             // load filesCount
-            axios.get(`/api/storage/${this.chatId}/file/count`, {
-                params: {
-                    searchString: this.searchString,
-                },
+            axios.post(`/api/storage/${this.chatId}/file/count`, {
+                fileItemUuid: this.fileItemUuid,
+                searchString: this.searchString,
             })
                 .then((response) => {
                     this.dto.count = response.data.count;

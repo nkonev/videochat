@@ -201,7 +201,9 @@
             },
             loadFilesCount() {
                 if (this.editMessageDto.fileItemUuid) {
-                    return axios.get(`/api/storage/${this.chatId}/file/count/${this.editMessageDto.fileItemUuid}`)
+                    return axios.post(`/api/storage/${this.chatId}/file/count`, {
+                        fileItemUuid: this.editMessageDto.fileItemUuid
+                    })
                         .then((response) => {
                             this.fileCount = response.data.count;
                             return response
