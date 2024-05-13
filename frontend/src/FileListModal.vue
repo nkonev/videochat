@@ -22,7 +22,7 @@
                     <v-row v-if="!loading">
                         <template v-if="dto.count > 0">
                             <v-col
-                                v-for="item in dto.files"
+                                v-for="item in dto.items"
                                 :key="item.id"
                                 :cols="isMobile() ? 12 : 6"
                             >
@@ -131,8 +131,6 @@ import {
   getHumanReadableDate,
   formatSize,
   hasLength,
-  findIndex,
-  replaceOrPrepend, deepCopy
 } from "./utils";
 import debounce from "lodash/debounce";
 import {mapStores} from "pinia";
@@ -140,39 +138,21 @@ import {useChatStore} from "@/store/chatStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
 import {messageIdHashPrefix} from "@/router/routes";
-
-const firstPage = 1;
-const pageSize = 20;
-const dialogReloadUpperThreshold = pageSize + 10;
-const dialogReloadBottomThreshold = pageSize - 10;
-
-const dtoFactory = () => {return {files: [], count: 0} };
+import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
 
 export default {
+    mixins: [pageableModalMixin()],
     data () {
         return {
-            show: false,
             messageIdToDetachFiles: null,
-            dto: dtoFactory(),
             fileItemUuid: null,
-            loading: false,
             isMessageEditing: false,
-            page: firstPage,
             searchString: null,
             showSearchButton: true,
             markInstance: null,
-            dataLoaded: false,
         }
     },
     computed: {
-        pagesCount() {
-            const count = Math.ceil(this.dto.count / pageSize);
-            // console.debug("Calc pages count", count);
-            return count;
-        },
-        shouldShowPagination() {
-            return this.dto != null && this.dto.files && this.dto.count > pageSize
-        },
         chatId() {
             return this.$route.params.id
         },
@@ -180,32 +160,16 @@ export default {
     },
 
     methods: {
-        showModal({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
-            console.log("Opening files modal, fileItemUuid=", fileItemUuid, "messageEditing=", messageEditing, "messageIdToDetachFiles=", messageIdToDetachFiles);
-            if (this.fileItemUuid != fileItemUuid) {
-                this.reset();
-            }
-
-            this.show = true;
-
+        isCachedRelevantToArguments({fileItemUuid}) {
+            return this.fileItemUuid == fileItemUuid
+        },
+        initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
             this.messageIdToDetachFiles = messageIdToDetachFiles;
             this.isMessageEditing = messageEditing;
-
-            if (!this.dataLoaded) {
-                this.fileItemUuid = fileItemUuid;
-                this.updateFiles();
-            } else {
-                this.performMarking();
-            }
+            this.fileItemUuid = fileItemUuid;
         },
-        translatePage() {
-            return this.page - 1;
-        },
-        updateFiles(silent) {
-            if (!silent) {
-                this.loading = true;
-            }
-            axios.get(`/api/storage/${this.chatId}`, {
+        initiateRequest() {
+            return axios.get(`/api/storage/${this.chatId}`, {
                 params: {
                     page: this.translatePage(),
                     size: pageSize,
@@ -213,30 +177,21 @@ export default {
                     searchString: this.searchString
                 },
             })
-                .then((response) => {
-                    const dto = deepCopy(response.data);
-                    this.transformItems(dto);
-                    this.dto = dto;
-                })
-                .finally(() => {
-                    if (!silent) {
-                        this.loading = false;
-                    }
-                    this.dataLoaded = true;
-                    this.performMarking();
-                })
         },
         doSearch(){
             this.page = firstPage;
-            this.updateFiles();
+            this.updateItems();
         },
         transformItems(data) {
-          if (data?.files) {
-            data.files.forEach(item => {
-              item.hasNoMessage = false;
-              item.loadingHasNoMessage = false;
+          if (data?.items) {
+            data.items.forEach(item => {
+              this.transformItem(item);
             });
           }
+        },
+        transformItem(item) {
+            item.hasNoMessage = false;
+            item.loadingHasNoMessage = false;
         },
         openUploadModal() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.isMessageEditing});
@@ -319,98 +274,18 @@ export default {
         hasSearchString() {
             return hasLength(this.searchString)
         },
-        removeItem(dto) {
-            console.log("Removing item", dto);
-            const idxToRemove = findIndex(this.dto.files, dto);
-            this.dto.files.splice(idxToRemove, 1);
-        },
-        replaceItem(dto) {
-            console.log("Replacing item", dto);
-            replaceOrPrepend(this.dto.files, [dto]);
-        },
-        addItem(dto) {
-            console.log("Adding item", dto);
-            this.dto.files.unshift(dto);
-        },
 
         onPreviewCreated(dto) {
           if (!this.dataLoaded) {
             return
           }
           console.log("Replacing preview", dto);
-          for (const fileItem of this.dto.files) {
+          for (const fileItem of this.dto.items) {
             if (fileItem.id == dto.id) {
               fileItem.previewUrl = dto.previewUrl;
               break
             }
           }
-        },
-        onFileCreated(dto) {
-            if (!this.dataLoaded) {
-              return
-            }
-            console.log("onFileCreated", dto);
-
-            if (this.page == firstPage) {
-                // filter and load filesCount
-                axios.post(`/api/storage/${this.chatId}/file/count`, {
-                    fileItemUuid: this.fileItemUuid,
-                    searchString: this.searchString,
-                    fileId: dto.fileInfoDto.id
-                }).then((response) => {
-                    this.dto.count = response.data.count;
-                    if (response.data.found) {
-                        this.addItem(dto.fileInfoDto);
-                        // remove the last to fit to pageSize
-                        if (this.dto.files.length > pageSize) {
-                            this.dto.files.splice(this.dto.files.length - 1, 1);
-                        }
-
-                        this.$nextTick(()=>{
-                            this.performMarking();
-                        })
-                    }
-                })
-            }
-        },
-        onFileUpdated(dto) {
-            if (!this.dataLoaded) {
-              return
-            }
-            console.log("onFileUpdated", dto);
-            this.replaceItem(dto.fileInfoDto);
-            this.$nextTick(()=>{
-                this.performMarking();
-            })
-        },
-        onFileRemoved(dto) {
-            if (!this.dataLoaded) {
-              return
-            }
-            this.removeItem(dto.fileInfoDto);
-            // load filesCount
-            axios.post(`/api/storage/${this.chatId}/file/count`, {
-                fileItemUuid: this.fileItemUuid,
-                searchString: this.searchString,
-            })
-                .then((response) => {
-                    this.dto.count = response.data.count;
-                }).then(() => {
-                    if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
-                        this.page = this.pagesCount; // this causes update() because of watch
-                        return
-                    }
-
-                    const notEnoughFilesOnPage = this.dto.count > pageSize && this.dto.files.length < pageSize;
-                    const nonLastPage = this.page != this.pagesCount;
-                    if (notEnoughFilesOnPage && nonLastPage) {
-                        this.updateFiles(true);
-                    }
-                })
-        },
-        onLogout() {
-            this.reset();
-            this.closeModal();
         },
         formattedSize(size) {
             return formatSize(size)
@@ -438,50 +313,39 @@ export default {
             }
           })
         },
-        getTotalVisible() {
-            if (!this.isMobile()) {
-                return 7
-            } else if (this.page == firstPage || this.page == this.pagesCount) {
-                return 3
-            } else {
-                return 1
-            }
+        extractDtoFromEventDto(eventDto) {
+            return eventDto.fileInfoDto
         },
-        closeModal() {
-            this.show = false;
+        initiateFilteredCountRequest(dto) {
+            return axios.post(`/api/storage/${this.chatId}/file/count`, {
+                fileItemUuid: this.fileItemUuid,
+                searchString: this.searchString,
+                fileId: dto.id
+            })
+        },
+        initiateCountRequest() {
+            return axios.post(`/api/storage/${this.chatId}/file/count`, {
+                fileItemUuid: this.fileItemUuid,
+                searchString: this.searchString,
+            })
+        },
+        clearOnClose() {
             this.messageIdToDetachFiles = null;
             this.isMessageEditing = false;
             this.showSearchButton = true;
         },
-        reset() {
+        clearOnReset() {
             this.fileItemUuid = null;
-            this.page = firstPage;
-            this.dto = dtoFactory();
             this.searchString = null;
-            this.dataLoaded = false;
+        },
+        resetOnRouteIdChange(){
+            return true
         },
     },
     watch: {
-        page(newValue) {
-            if (this.show) {
-                console.debug("SettingNewPage", newValue);
-                this.dto = dtoFactory();
-                this.updateFiles();
-            }
-        },
-        show(newValue) {
-            if (!newValue) {
-                this.closeModal();
-            }
-        },
         searchString(searchString) {
             this.doSearch();
         },
-        '$route.params.id': function (newValue, oldValue) {
-          if (newValue != oldValue) {
-            this.reset();
-          }
-        }
     },
     components: {
         CollapsedSearch
@@ -492,18 +356,18 @@ export default {
     mounted() {
       bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
       bus.on(PREVIEW_CREATED, this.onPreviewCreated);
-      bus.on(FILE_CREATED, this.onFileCreated);
-      bus.on(FILE_UPDATED, this.onFileUpdated);
-      bus.on(FILE_REMOVED, this.onFileRemoved);
+      bus.on(FILE_CREATED, this.onItemCreatedEvent);
+      bus.on(FILE_UPDATED, this.onItemUpdatedEvent);
+      bus.on(FILE_REMOVED, this.onItemRemovedEvent);
       bus.on(LOGGED_OUT, this.onLogout);
       this.markInstance = new Mark(".files-list");
     },
     beforeUnmount() {
         bus.off(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.off(PREVIEW_CREATED, this.onPreviewCreated);
-        bus.off(FILE_CREATED, this.onFileCreated);
-        bus.off(FILE_UPDATED, this.onFileUpdated);
-        bus.off(FILE_REMOVED, this.onFileRemoved);
+        bus.off(FILE_CREATED, this.onItemCreatedEvent);
+        bus.off(FILE_UPDATED, this.onItemUpdatedEvent);
+        bus.off(FILE_REMOVED, this.onItemRemovedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
         this.markInstance.unmark();
         this.markInstance = null;

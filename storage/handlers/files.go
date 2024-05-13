@@ -425,7 +425,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": list, "count": count})
 }
 
 func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {
