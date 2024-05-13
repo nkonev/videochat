@@ -44,6 +44,7 @@ minio:
   secured: false
   internalEndpoint: 127.0.0.1:39000
   interContainerUrl: http://minio:9000
+  # set   publicUrl: http://192.168.1.103:8081/api/s3 to work from local network
   publicUrl: http://localhost:8081/api/s3
   publicDownloadTtl: 24h
   publicUploadTtl: 24h
