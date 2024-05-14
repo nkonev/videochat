@@ -20,9 +20,9 @@
 
                 <v-card-text class="py-2 files-list">
                     <v-row v-if="!loading">
-                        <template v-if="dto.count > 0">
+                        <template v-if="itemsDto.count > 0">
                             <v-col
-                                v-for="item in dto.items"
+                                v-for="item in itemsDto.items"
                                 :key="item.id"
                                 :cols="isMobile() ? 12 : 6"
                             >
@@ -280,7 +280,7 @@ export default {
             return
           }
           console.log("Replacing preview", dto);
-          for (const fileItem of this.dto.items) {
+          for (const fileItem of this.itemsDto.items) {
             if (fileItem.id == dto.id) {
               fileItem.previewUrl = dto.previewUrl;
               break

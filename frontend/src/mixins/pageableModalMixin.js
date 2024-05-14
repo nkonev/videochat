@@ -16,7 +16,7 @@ export default () => {
         data() {
             return {
                 show: false,
-                dto: dtoFactory(),
+                itemsDto: dtoFactory(),
                 loading: false,
                 page: firstPage,
                 dataLoaded: false,
@@ -24,11 +24,11 @@ export default () => {
         },
         computed: {
             pagesCount() {
-                const count = Math.ceil(this.dto.count / pageSize);
+                const count = Math.ceil(this.itemsDto.count / pageSize);
                 return count;
             },
             shouldShowPagination() {
-                return this.dto != null && this.dto.items && this.dto.count > pageSize
+                return this.itemsDto != null && this.itemsDto.items && this.itemsDto.count > pageSize
             },
         },
         methods: {
@@ -62,7 +62,7 @@ export default () => {
                         if (this.transformItems) {
                             this.transformItems(dto);
                         }
-                        this.dto = dto;
+                        this.itemsDto = dto;
                     })
                     .finally(() => {
                         if (!silent) {
@@ -87,19 +87,19 @@ export default () => {
 
             removeItem(dto) {
                 console.debug("Removing item", dto);
-                const idxToRemove = findIndex(this.dto.items, dto);
-                this.dto.items.splice(idxToRemove, 1);
+                const idxToRemove = findIndex(this.itemsDto.items, dto);
+                this.itemsDto.items.splice(idxToRemove, 1);
             },
             replaceItem(dto) {
                 console.debug("Replacing item", dto);
-                replaceOrPrepend(this.dto.items, [dto]);
+                replaceOrPrepend(this.itemsDto.items, [dto]);
             },
             addItem(dto) {
                 console.debug("Adding item", dto);
                 if (this.transformItem) {
                     this.transformItem(dto);
                 }
-                this.dto.items.unshift(dto);
+                this.itemsDto.items.unshift(dto);
             },
 
             onItemCreatedEvent(dto) {
@@ -111,12 +111,12 @@ export default () => {
                 if (this.page == firstPage) {
                     // filter and load items count
                     this.initiateFilteredCountRequest(this.extractDtoFromEventDto(dto)).then((response) => {
-                        this.dto.count = response.data.count;
+                        this.itemsDto.count = response.data.count;
                         if (response.data.found) {
                             this.addItem(this.extractDtoFromEventDto(dto));
                             // remove the last to fit to pageSize
-                            if (this.dto.items.length > pageSize) {
-                                this.dto.items.splice(this.dto.items.length - 1, 1);
+                            if (this.itemsDto.items.length > pageSize) {
+                                this.itemsDto.items.splice(this.itemsDto.items.length - 1, 1);
                             }
 
                             if (this.performMarking) {
@@ -148,14 +148,14 @@ export default () => {
                 this.removeItem(this.extractDtoFromEventDto(dto));
                 // load items count
                 this.initiateCountRequest().then((response) => {
-                        this.dto.count = response.data.count;
+                        this.itemsDto.count = response.data.count;
                     }).then(() => {
                     if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
                         this.page = this.pagesCount; // this causes update() because of watch
                         return
                     }
 
-                    const notEnoughItemsOnPage = this.dto.count > pageSize && this.dto.items.length < pageSize;
+                    const notEnoughItemsOnPage = this.itemsDto.count > pageSize && this.itemsDto.items.length < pageSize;
                     const nonLastPage = this.page != this.pagesCount;
                     if (notEnoughItemsOnPage && nonLastPage) {
                         this.updateItems(true);
@@ -170,7 +170,7 @@ export default () => {
             },
             reset() {
                 this.page = firstPage;
-                this.dto = dtoFactory();
+                this.itemsDto = dtoFactory();
                 this.dataLoaded = false;
                 this.clearOnReset();
                 this.clearOnClose();
@@ -189,7 +189,7 @@ export default () => {
             page(newValue) {
                 if (this.show) {
                     console.debug("SettingNewPage", newValue);
-                    this.dto = dtoFactory();
+                    this.itemsDto = dtoFactory();
                     this.updateItems();
                 }
             },
