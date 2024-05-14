@@ -115,17 +115,27 @@ export default () => {
                 }
                 console.debug("onItemCreatedEvent", dto);
 
-                if (this.page == firstPage) {
-                    // filter and load items count
-                    this.initiateFilteredCountRequest(dto).then((response) => {
-                        this.itemsDto.count = response.data.count;
-                        if (response.data.found) {
-                            const tmp = deepCopy(this.extractDtoFromEventDto(dto));
+                // filter and load items count
+                this.initiateCountRequest().then((response) => {
+                    this.itemsDto.count = response.data.count;
+                }).then(()=> {
+                    if (this.page == firstPage) {
+                        this.initiateFilteredRequest(dto).then((response) => {
+                            const extracted = this.extractDtoFromEventDto(dto);
+                            const filteredItems = [];
+                            extracted.forEach((item) => {
+                                const foundIndex = findIndex(response.data, item);
+                                if (foundIndex !== -1) {
+                                    filteredItems.push(item);
+                                }
+                            })
+
+                            const transformedItems = deepCopy(filteredItems);
                             if (this.transformItems) {
-                                this.transformItems(tmp);
+                                this.transformItems(transformedItems);
                             }
 
-                            this.addItems(tmp);
+                            this.addItems(transformedItems);
                             // remove the last to fit to pageSize
                             if (this.itemsDto.items.length > pageSize) {
                                 this.itemsDto.items.splice(this.itemsDto.items.length - 1, 1);
@@ -136,9 +146,10 @@ export default () => {
                                     this.performMarking();
                                 })
                             }
-                        }
-                    })
-                }
+                        })
+                    }
+                })
+
             },
             onItemUpdatedEvent(dto) {
                 if (!this.dataLoaded) {

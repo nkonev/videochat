@@ -315,8 +315,8 @@ export default {
         extractDtoFromEventDto(eventDto) {
             return [eventDto.fileInfoDto]
         },
-        initiateFilteredCountRequest(eventDto) {
-            return axios.post(`/api/storage/${this.chatId}/file/count`, {
+        initiateFilteredRequest(eventDto) {
+            return axios.post(`/api/storage/${this.chatId}/file/filter`, {
                 fileItemUuid: this.fileItemUuid,
                 searchString: this.searchString,
                 fileId: eventDto.fileInfoDto.id

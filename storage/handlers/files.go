@@ -647,7 +647,6 @@ type CountResponse struct {
 type CountRequest struct {
 	SearchString  string  `json:"searchString"`
 	FileItemUuid string `json:"fileItemUuid"`
-	FileId string `json:"fileId"`
 }
 
 func (h *FilesHandler) CountHandler(c echo.Context) error {
@@ -658,6 +657,81 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	}
 
 	var bindTo = new(CountRequest)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	bucketName := h.minioConfig.Files
+
+	searchString := bindTo.SearchString
+	searchString = strings.TrimSpace(searchString)
+	searchString = strings.ToLower(searchString)
+
+	// check user belongs to chat
+	fileItemUuid := bindTo.FileItemUuid
+	chatIdString := c.Param("chatId")
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
+
+	filter := h.getFilterFunction(searchString)
+
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+		WithMetadata: false,
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
+	})
+
+	var counter = 0
+	var exists bool
+	for objInfo := range objects {
+		if (filter != nil && filter(&objInfo)) || filter == nil {
+			counter++
+		}
+	}
+
+	var countDto = CountResponse{
+		Count: counter,
+		Found: exists,
+	}
+
+	return c.JSON(http.StatusOK, countDto)
+}
+
+type FilterRequest struct {
+	SearchString  string  `json:"searchString"`
+	FileItemUuid string `json:"fileItemUuid"`
+	FileId string `json:"fileId"`
+}
+
+type FilterResponseItem struct {
+	Id string `json:"id"`
+}
+
+func (h *FilesHandler) FilterHandler(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	var bindTo = new(FilterRequest)
 	if err := c.Bind(bindTo); err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
@@ -690,17 +764,6 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	}
 	// end check
 
-	counter, exists := h.countFilesUnderFileUuid(chatId, fileItemUuid, bucketName, searchString, fileId)
-
-	var countDto = CountResponse{
-		Count: counter,
-		Found: exists,
-	}
-
-	return c.JSON(http.StatusOK, countDto)
-}
-
-func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string, bucketName string, searchString string, fileId string) (int, bool) {
 	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
 
 	filter := h.getFilterFunction(searchString)
@@ -711,17 +774,18 @@ func (h *FilesHandler) countFilesUnderFileUuid(chatId int64, fileItemUuid string
 		Recursive:    true,
 	})
 
-	var counter = 0
-	var exists bool
+	var filterResponseItemArray = make([]FilterResponseItem, 0)
 	for objInfo := range objects {
 		if (filter != nil && filter(&objInfo)) || filter == nil {
-			counter++
 			if objInfo.Key == fileId {
-				exists = true
+				filterResponseItemArray = append(filterResponseItemArray, FilterResponseItem{
+					Id: objInfo.Key,
+				})
 			}
 		}
 	}
-	return counter, exists
+
+	return c.JSON(http.StatusOK, filterResponseItemArray)
 }
 
 func (h *FilesHandler) LimitsHandler(c echo.Context) error {

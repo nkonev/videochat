@@ -226,7 +226,7 @@
                     })
             },
             initiateRequest() {
-                return axios.get('/api/chat/' + this.chatId + '/participant', {
+                return axios.get(`/api/chat/${this.chatId}/participant`, {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,
@@ -410,9 +410,12 @@
                 }
               })
             },
-            // TODO implement
-            initiateFilteredCountRequest(dto) {
-
+            // TODO implement and return list because participantIds
+            initiateFilteredRequest(eventDto) {
+                return axios.post(`/api/chat/${this.chatId}/participant/count`, {
+                    searchString: this.userSearchString,
+                    participantIds: eventDto.map(p => p.id)
+                })
             },
             // TODO implement
             initiateCountRequest() {
