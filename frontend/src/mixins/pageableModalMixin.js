@@ -63,7 +63,7 @@ export default () => {
                     .then((response) => {
                         const dto = deepCopy(response.data);
                         if (this.transformItems) {
-                            this.transformItems(dto);
+                            this.transformItems(dto?.items);
                         }
                         this.itemsDto = dto;
                     })
@@ -91,21 +91,22 @@ export default () => {
                 }
             },
 
-            removeItem(dto) {
-                console.debug("Removing item", dto);
-                const idxToRemove = findIndex(this.itemsDto.items, dto);
-                this.itemsDto.items.splice(idxToRemove, 1);
-            },
-            replaceItem(dto) {
-                console.debug("Replacing item", dto);
-                replaceOrPrepend(this.itemsDto.items, [dto]);
-            },
-            addItem(dto) {
-                console.debug("Adding item", dto);
-                if (this.transformItem) {
-                    this.transformItem(dto);
+            removeItems(dtos) {
+                console.debug("Removing items", dtos);
+                for (const dto of dtos) {
+                    const idxToRemove = findIndex(this.itemsDto.items, dto);
+                    this.itemsDto.items.splice(idxToRemove, 1);
                 }
-                this.itemsDto.items.unshift(dto);
+            },
+            replaceItems(dtos) {
+                console.debug("Replacing items", dtos);
+                replaceOrPrepend(this.itemsDto.items, dtos);
+            },
+            addItems(dtos) {
+                console.debug("Adding items", dtos);
+                for (const dto of dtos) {
+                    this.itemsDto.items.unshift(dto);
+                }
             },
 
             onItemCreatedEvent(dto) {
@@ -116,10 +117,15 @@ export default () => {
 
                 if (this.page == firstPage) {
                     // filter and load items count
-                    this.initiateFilteredCountRequest(this.extractDtoFromEventDto(dto)).then((response) => {
+                    this.initiateFilteredCountRequest(dto).then((response) => {
                         this.itemsDto.count = response.data.count;
                         if (response.data.found) {
-                            this.addItem(this.extractDtoFromEventDto(dto));
+                            const tmp = deepCopy(this.extractDtoFromEventDto(dto));
+                            if (this.transformItems) {
+                                this.transformItems(tmp);
+                            }
+
+                            this.addItems(tmp);
                             // remove the last to fit to pageSize
                             if (this.itemsDto.items.length > pageSize) {
                                 this.itemsDto.items.splice(this.itemsDto.items.length - 1, 1);
@@ -139,7 +145,12 @@ export default () => {
                     return
                 }
                 console.debug("onItemUpdatedEvent", dto);
-                this.replaceItem(this.extractDtoFromEventDto(dto));
+                const tmp = deepCopy(this.extractDtoFromEventDto(dto));
+                if (this.transformItems) {
+                    this.transformItems(tmp);
+                }
+
+                this.replaceItems(tmp);
                 if (this.performMarking) {
                     this.$nextTick(() => {
                         this.performMarking();
@@ -151,7 +162,7 @@ export default () => {
                     return
                 }
                 console.debug("onItemRemovedEvent", dto);
-                this.removeItem(this.extractDtoFromEventDto(dto));
+                this.removeItems(this.extractDtoFromEventDto(dto));
                 // load items count
                 this.initiateCountRequest().then((response) => {
                         this.itemsDto.count = response.data.count;

@@ -181,9 +181,9 @@ export default {
             this.page = firstPage;
             this.updateItems();
         },
-        transformItems(data) {
-          if (data?.items) {
-            data.items.forEach(item => {
+        transformItems(items) {
+          if (items != null) {
+            items.forEach(item => {
               this.transformItem(item);
             });
           }
@@ -313,13 +313,13 @@ export default {
           })
         },
         extractDtoFromEventDto(eventDto) {
-            return eventDto.fileInfoDto
+            return [eventDto.fileInfoDto]
         },
-        initiateFilteredCountRequest(dto) {
+        initiateFilteredCountRequest(eventDto) {
             return axios.post(`/api/storage/${this.chatId}/file/count`, {
                 fileItemUuid: this.fileItemUuid,
                 searchString: this.searchString,
-                fileId: dto.id
+                fileId: eventDto.fileInfoDto.id
             })
         },
         initiateCountRequest() {

@@ -354,9 +354,9 @@
                 this.page = firstPage;
                 this.updateItems();
             },
-            transformItems(data) {
-                if (data?.items != null) {
-                    data.items.forEach(item => {
+            transformItems(items) {
+                if (items != null) {
+                    items.forEach(item => {
                         item.adminLoading = false;
                         item.callingTo = false;
                         this.transformItem(item);
@@ -380,7 +380,6 @@
                 return idxOf !== -1;
             },
 
-            // TODO что делать ? - в оригинале тут приходит список, а в миксине - логика заточена на 1
             extractDtoFromEventDto(eventDto) {
                 return eventDto
             },
