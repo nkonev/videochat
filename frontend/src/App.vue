@@ -124,16 +124,21 @@
               </v-btn>
             </template>
           </v-snackbar>
-          <v-snackbar v-model="showWebsocketRestored" color="black" timeout="-1" :multi-line="true" :transition="false">
+          <v-snackbar v-model="showWebsocketRestored" color="black" timeout="10000" timer :transition="false" @update:modelValue="onSnackbarWebsocketRestore">
             {{ $vuetify.locale.t('$vuetify.websocket_restored') }}
             <template v-slot:actions>
-              <v-btn
-                text
-                @click="onPressWebsocketRestored()"
-              >
-                {{ $vuetify.locale.t('$vuetify.btn_update') }}
-              </v-btn>
-              <v-btn text @click="showWebsocketRestored = false">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                <v-btn
+                    text
+                    @click="onPressWebsocketRestoredCancel()"
+                >
+                    {{ $vuetify.locale.t('$vuetify.cancel') }}
+                </v-btn>
+                <v-btn
+                    text
+                    @click="onPressWebsocketRestoredRefresh()"
+                  >
+                    {{ $vuetify.locale.t('$vuetify.btn_update') }}
+                  </v-btn>
 
             </template>
           </v-snackbar>
@@ -573,9 +578,19 @@ export default {
         onWsRestored() {
           this.showWebsocketRestored = true;
         },
-        onPressWebsocketRestored() {
+        onSnackbarWebsocketRestore(value) {
+            if (!value ) {
+                console.warn("REFRESH_ON_WEBSOCKET_RESTORED auto");
+                bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+            }
+        },
+        onPressWebsocketRestoredCancel() {
+            this.showWebsocketRestored = false;
+        },
+        onPressWebsocketRestoredRefresh() {
           this.showWebsocketRestored = false;
-          bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+            console.warn("REFRESH_ON_WEBSOCKET_RESTORED manual");
+            bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
         resetVideoInvitation() {
           this.invitedVideoChatAlert = false;
