@@ -150,23 +150,22 @@ export default {
             searchString: null,
             showSearchButton: true,
             markInstance: null,
+            chatId: null,
         }
     },
     computed: {
-        chatId() {
-            return this.$route.params.id
-        },
         ...mapStores(useChatStore),
     },
 
     methods: {
-        isCachedRelevantToArguments({fileItemUuid}) {
-            return this.fileItemUuid == fileItemUuid
+        isCachedRelevantToArguments({fileItemUuid, chatId}) {
+            return this.fileItemUuid == fileItemUuid && this.chatId == chatId
         },
-        initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles}) {
+        initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles, chatId}) {
             this.messageIdToDetachFiles = messageIdToDetachFiles;
             this.isMessageEditing = messageEditing;
             this.fileItemUuid = fileItemUuid;
+            this.chatId = chatId;
         },
         initiateRequest() {
             return axios.get(`/api/storage/${this.chatId}`, {
@@ -335,11 +334,9 @@ export default {
             this.showSearchButton = true;
         },
         clearOnReset() {
+            this.chatId = null;
             this.fileItemUuid = null;
             this.searchString = null;
-        },
-        resetOnRouteIdChange(){
-            return true
         },
     },
     watch: {

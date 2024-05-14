@@ -533,7 +533,7 @@ export default {
         },
         onInfoClicked() {
           if (this.isInChat()) {
-            bus.emit(OPEN_PARTICIPANTS_DIALOG, this.chatId);
+            bus.emit(OPEN_PARTICIPANTS_DIALOG, {chatId: this.chatId});
           }
         },
         onShowFileUploadClicked() {

@@ -43,8 +43,8 @@ type ChatWrapper struct {
 }
 
 type ParticipantsWithAdminWrapper struct {
-	Data  []*dto.UserWithAdmin `json:"participants"`
-	Count int                  `json:"participantsCount"` // for paginating purposes
+	Data  []*dto.UserWithAdmin `json:"items"`
+	Count int                  `json:"count"` // for paginating purposes
 }
 
 type ParticipantsWrapper struct {

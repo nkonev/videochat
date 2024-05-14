@@ -171,7 +171,7 @@ export default {
       bus.emit(OPEN_NOTIFICATIONS_DIALOG);
     },
     openFiles() {
-      bus.emit(OPEN_VIEW_FILES_DIALOG, { });
+      bus.emit(OPEN_VIEW_FILES_DIALOG, { chatId: this.$route.params.id });
     },
     openPinnedMessages() {
       bus.emit(OPEN_PINNED_MESSAGES_MODAL);

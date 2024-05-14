@@ -6,10 +6,10 @@ export const pageSize = 20;
 export const dtoFactory = () => {return {items: [], count: 0} };
 
 // requires extractDtoFromEventDto(), isCachedRelevantToArguments(), initializeWithArguments(),
-// resetOnRouteIdChange(), initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
+// initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
 // clearOnClose(), clearOnReset()
 
-// optionally transformItems(), performMarking()
+// optionally transformItems(), performMarking(), onInitialized(), afterUpdateItems()
 
 export default () => {
     return {
@@ -43,6 +43,9 @@ export default () => {
                 this.show = true;
 
                 if (!this.dataLoaded) {
+                    if (this.onInitialized) {
+                        this.onInitialized()
+                    }
                     this.updateItems();
                 } else if (this.performMarking) {
                     this.performMarking();
@@ -71,6 +74,9 @@ export default () => {
                         this.dataLoaded = true;
                         if (this.performMarking) {
                             this.performMarking();
+                        }
+                        if (this.afterUpdateItems){
+                            this.afterUpdateItems()
                         }
                     })
             },
@@ -193,11 +199,6 @@ export default () => {
                     this.updateItems();
                 }
             },
-            '$route.params.id': function (newValue, oldValue) {
-                if (newValue != oldValue && this.resetOnRouteIdChange()) {
-                    this.reset();
-                }
-            }
         },
     }
 }
