@@ -1,4 +1,4 @@
-import {deepCopy, findIndex, replaceOrPrepend} from "@/utils.js";
+import {deepCopy, findIndex, replaceInArray} from "@/utils.js";
 
 export const firstPage = 1;
 export const pageSize = 20;
@@ -100,7 +100,9 @@ export default () => {
             },
             replaceItems(dtos) {
                 console.debug("Replacing items", dtos);
-                replaceOrPrepend(this.itemsDto.items, dtos);
+                for (const dto of dtos) {
+                    replaceInArray(this.itemsDto.items, dto);
+                }
             },
             addItems(dtos) {
                 console.debug("Adding items", dtos);
