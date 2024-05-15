@@ -1,4 +1,4 @@
-import {deepCopy, findIndex, replaceInArray} from "@/utils.js";
+import {deepCopy, findIndex, replaceInArray, replaceOrPrepend} from "@/utils.js";
 
 export const firstPage = 1;
 export const pageSize = 20;
@@ -96,7 +96,9 @@ export default () => {
                 console.debug("Removing items", dtos);
                 for (const dto of dtos) {
                     const idxToRemove = findIndex(this.itemsDto.items, dto);
-                    this.itemsDto.items.splice(idxToRemove, 1);
+                    if (foundIndex === -1) {
+                        this.itemsDto.items.splice(idxToRemove, 1);
+                    }
                 }
             },
             replaceItems(dtos) {
@@ -107,9 +109,7 @@ export default () => {
             },
             addItems(dtos) {
                 console.debug("Adding items", dtos);
-                for (const dto of dtos) {
-                    this.itemsDto.items.unshift(dto);
-                }
+                replaceOrPrepend(this.itemsDto.items, dtos)
             },
 
             onItemCreatedEvent(dto) {
