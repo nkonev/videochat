@@ -461,6 +461,9 @@
 
                 this.userSearchString = null;
             },
+            resetOnRouteIdChange(){
+                return true
+            },
         },
         watch: {
             userSearchString (searchString) {

@@ -6,7 +6,7 @@ export const pageSize = 20;
 export const dtoFactory = () => {return {items: [], count: 0} };
 
 // requires extractDtoFromEventDto(), isCachedRelevantToArguments(), initializeWithArguments(),
-// initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
+// resetOnRouteIdChange(), initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
 // clearOnClose(), clearOnReset()
 
 // optionally transformItems(), performMarking(), onInitialized(), afterUpdateItems()
@@ -221,6 +221,12 @@ export default () => {
                     this.updateItems();
                 }
             },
+            // needed for case when we switch over chats and probably can occasionally receive wrong data over bus or not to unsubscribe and produce a leak
+            '$route.params.id': function (newValue, oldValue) {
+                if (newValue != oldValue && this.resetOnRouteIdChange()) {
+                    this.reset();
+                }
+            }
         },
     }
 }

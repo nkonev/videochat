@@ -338,6 +338,9 @@ export default {
             this.fileItemUuid = null;
             this.searchString = null;
         },
+        resetOnRouteIdChange(){
+            return true
+        },
     },
     watch: {
         searchString(searchString) {
