@@ -38,7 +38,6 @@
     </div>
 
     <template v-if="blogDto.messageId">
-        <div class="message-first-element" style="min-height: 1px; background: white"></div>
         <v-container class="ma-0 pa-0 mb-2" fluid>
           <MessageItem v-for="(item, index) in items"
             :id="getItemId(item.id)"
@@ -48,7 +47,6 @@
             :isInBlog="true"
           ></MessageItem>
         </v-container>
-        <div class="message-last-element" style="min-height: 1px; background: white"></div>
     </template>
   </div>
   </v-container>

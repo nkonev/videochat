@@ -1,7 +1,6 @@
 <template>
   <v-container class="ma-0 pa-0 my-list-container" fluid>
     <div class="my-blog-scroller" id="blog-post-list">
-      <div class="blog-first-element" style="min-height: 1px; background: white"></div>
 
       <v-card
         v-for="(item, index) in items"
@@ -53,7 +52,6 @@
           </v-list-item>
         </v-card-actions>
       </v-card>
-      <div class="blog-last-element" style="min-height: 1px; background: white"></div>
 
     </div>
 
