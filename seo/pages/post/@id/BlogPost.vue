@@ -1,5 +1,5 @@
 <template>
-  <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
+  <v-container class="ma-0 pa-0 my-list-container" fluid>
   <div class="my-messages-scroller">
     <h1 v-html="blogDto.title" class="ml-3 mt-2"></h1>
 
@@ -22,7 +22,7 @@
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
-                <v-btn variant="plain" rounded size="large" :href="getChatLink()" @click.prevent="toChat()"><v-icon size="large">mdi-forum</v-icon></v-btn>
+                <v-btn variant="plain" rounded size="large" :href="getChatLink()"><v-icon size="large">mdi-forum</v-icon></v-btn>
               </div>
             </div>
           </template>
@@ -58,10 +58,7 @@
 import MessageItem from "./MessageItem.vue";
 import {getHumanReadableDate, hasLength, isMobileBrowser, getLoginColoredStyle} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
-import heightMixin from "#root/common/mixins/heightMixin";
-import { navigate } from 'vike/client/router';
 import {usePageContext} from "#root/renderer/usePageContext.js";
-
 
 export default {
   setup() {
@@ -72,9 +69,6 @@ export default {
         pageContext
     }
   },
-  mixins: [
-    heightMixin(),
-  ],
   data() {
       return this.pageContext.data;
   },
@@ -90,9 +84,6 @@ export default {
     },
     getChatLink() {
       return chat + '/' + this.blogDto.chatId + messageIdHashPrefix + this.blogDto.messageId;
-    },
-    async toChat() {
-        await navigate(this.getChatLink());
     },
     getDate(date) {
       if (hasLength(date)) {

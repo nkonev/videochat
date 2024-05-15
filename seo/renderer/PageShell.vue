@@ -15,8 +15,8 @@
 </template>
 
 <script>
-    import {hasLength, isMobileBrowser, SEARCH_MODE_POSTS} from "../common/utils.js";
-    import {blog, root, blog_post, blog_post_name} from "../common/router/routes.js";
+    import {hasLength} from "../common/utils.js";
+    import {blog, root, blog_post} from "../common/router/routes.js";
     import {usePageContext} from "./usePageContext.js";
 
     export default {
@@ -34,7 +34,7 @@
         },
         methods: {
             getDensity() {
-                return isMobileBrowser() ? "comfortable" : "compact";
+                return "compact";
             },
             getBreadcrumbs() {
                 const ret = [
@@ -50,8 +50,9 @@
                         href: blog +"/",
                     },
                 ];
-                if (this.pageContext.urlOriginal.startsWith(blog_post)) {
-                    const id = this.pageContext.urlOriginal.replace(blog_post+"/", "");
+                const id = this.pageContext.routeParams?.id;
+
+                if (hasLength(id)) {
                     ret.push(
                         {
                             title: 'Post #' + id,
@@ -102,4 +103,11 @@ html {
 .with-pointer {
     cursor pointer
 }
+
+.my-list-container {
+    height: calc(100dvh - 48px)
+    top: 48px
+    position: absolute
+}
+
 </style>

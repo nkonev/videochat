@@ -1,5 +1,5 @@
 <template>
-  <v-container class="ma-0 pa-0" :style="heightWithoutAppBar" fluid>
+  <v-container class="ma-0 pa-0 my-list-container" fluid>
     <div class="my-blog-scroller" id="blog-post-list">
       <div class="blog-first-element" style="min-height: 1px; background: white"></div>
 
@@ -63,7 +63,6 @@
 <script>
 import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
 import {blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
-import heightMixin from "#root/common/mixins/heightMixin";
 import {isMobileBrowser} from "#root/common/utils.js";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
@@ -76,9 +75,6 @@ export default {
         pageContext
     }
   },
-  mixins: [
-      heightMixin(),
-  ],
   data() {
       return this.pageContext.data;
   },
