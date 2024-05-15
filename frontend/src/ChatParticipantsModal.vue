@@ -19,86 +19,88 @@
                 </v-card-title>
 
                 <v-card-text class="ma-0 pa-0 participants-list">
-                    <v-list v-if="itemsDto.items && itemsDto.count > 0">
-                        <template v-for="(item, index) in itemsDto.items">
-                            <v-list-item
-                              class="list-item-prepend-spacer-16"
-                              @contextmenu.stop="onShowContextMenu($event, item)"
-                            >
-                                <template v-slot:prepend v-if="hasLength(item.avatar)">
-                                    <v-badge
-                                        v-if="item.avatar"
-                                        :color="getUserBadgeColor(item)"
-                                        dot
-                                        location="right bottom"
-                                        overlap
-                                        bordered
-                                        :model-value="item.online"
-                                    >
-                                        <v-avatar :image="item.avatar"></v-avatar>
-                                    </v-badge>
+                    <template v-if="!loading">
+                        <v-list v-if="itemsDto.items && itemsDto.count > 0">
+                            <template v-for="(item, index) in itemsDto.items">
+                                <v-list-item
+                                  class="list-item-prepend-spacer-16"
+                                  @contextmenu.stop="onShowContextMenu($event, item)"
+                                >
+                                    <template v-slot:prepend v-if="hasLength(item.avatar)">
+                                        <v-badge
+                                            v-if="item.avatar"
+                                            :color="getUserBadgeColor(item)"
+                                            dot
+                                            location="right bottom"
+                                            overlap
+                                            bordered
+                                            :model-value="item.online"
+                                        >
+                                            <v-avatar :image="item.avatar"></v-avatar>
+                                        </v-badge>
 
-                                </template>
-
-                                <v-row no-gutters align="center" class="d-flex flex-row">
-                                    <v-col class="flex-grow-0 flex-shrink-0">
-                                        <v-list-item-title><a class="nodecorated-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)" :style="getLoginColoredStyle(item, true)">{{getUserNameWrapper(item)}}</a></v-list-item-title>
-                                    </v-col>
-                                    <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
-                                        <v-progress-linear
-                                            v-if="item.callingTo"
-                                            color="success"
-                                            buffer-value="0"
-                                            height="16"
-                                            indeterminate
-                                            stream
-                                            rounded
-                                            reverse
-                                        ></v-progress-linear>
-                                    </v-col>
-                                </v-row>
-
-                                <template v-slot:append>
-                                    <template v-if="item.admin || dto.canChangeChatAdmins">
-                                        <template v-if="dto.canChangeChatAdmins && item.id != chatStore.currentUser.id && !isMobile()">
-                                            <v-btn
-                                                variant="flat"
-                                                :loading="item.adminLoading ? true : false"
-                                                @click="changeChatAdmin(item)"
-                                                icon
-                                                :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_chat_admin') : $vuetify.locale.t('$vuetify.grant_chat_admin')"
-                                            >
-                                                <v-icon :color="item.admin ? 'primary' : 'disabled'">mdi-crown</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <template v-else-if="item.admin">
-                                              <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.chat_admin')">
-                                                  <v-icon color="primary">mdi-crown</v-icon>
-                                              </span>
-                                        </template>
-                                    </template>
-                                    <template v-if="!isMobile()">
-                                        <template v-if="dto.canEdit && item.id != chatStore.currentUser.id">
-                                            <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
-                                        </template>
-                                        <template v-if="dto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
-                                            <v-btn variant="flat" icon @click="kickFromVideoCall(item)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
-                                        </template>
-                                        <template v-if="dto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
-                                            <v-btn variant="flat" icon @click="forceMute(item)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
-                                        </template>
                                     </template>
 
-                                    <template v-if="item.id != chatStore.currentUser.id">
-                                        <v-btn variant="flat" icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.locale.t('$vuetify.stop_call') : $vuetify.locale.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                    <v-row no-gutters align="center" class="d-flex flex-row">
+                                        <v-col class="flex-grow-0 flex-shrink-0">
+                                            <v-list-item-title><a class="nodecorated-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)" :style="getLoginColoredStyle(item, true)">{{getUserNameWrapper(item)}}</a></v-list-item-title>
+                                        </v-col>
+                                        <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
+                                            <v-progress-linear
+                                                v-if="item.callingTo"
+                                                color="success"
+                                                buffer-value="0"
+                                                height="16"
+                                                indeterminate
+                                                stream
+                                                rounded
+                                                reverse
+                                            ></v-progress-linear>
+                                        </v-col>
+                                    </v-row>
+
+                                    <template v-slot:append>
+                                        <template v-if="item.admin || dto.canChangeChatAdmins">
+                                            <template v-if="dto.canChangeChatAdmins && item.id != chatStore.currentUser.id && !isMobile()">
+                                                <v-btn
+                                                    variant="flat"
+                                                    :loading="item.adminLoading ? true : false"
+                                                    @click="changeChatAdmin(item)"
+                                                    icon
+                                                    :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_chat_admin') : $vuetify.locale.t('$vuetify.grant_chat_admin')"
+                                                >
+                                                    <v-icon :color="item.admin ? 'primary' : 'disabled'">mdi-crown</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <template v-else-if="item.admin">
+                                                  <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.chat_admin')">
+                                                      <v-icon color="primary">mdi-crown</v-icon>
+                                                  </span>
+                                            </template>
+                                        </template>
+                                        <template v-if="!isMobile()">
+                                            <template v-if="dto.canEdit && item.id != chatStore.currentUser.id">
+                                                <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
+                                            </template>
+                                            <template v-if="dto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
+                                                <v-btn variant="flat" icon @click="kickFromVideoCall(item)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
+                                            </template>
+                                            <template v-if="dto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
+                                                <v-btn variant="flat" icon @click="forceMute(item)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
+                                            </template>
+                                        </template>
+
+                                        <template v-if="item.id != chatStore.currentUser.id">
+                                            <v-btn variant="flat" icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.locale.t('$vuetify.stop_call') : $vuetify.locale.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                        </template>
                                     </template>
-                                </template>
-                            </v-list-item>
-                            <v-divider></v-divider>
+                                </v-list-item>
+                                <v-divider></v-divider>
+                            </template>
+                        </v-list>
+                        <template v-else-if="!loading">
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.participants_not_found') }}</v-card-text>
                         </template>
-                    </v-list>
-                    <template v-else-if="!loading">
-                        <v-card-text>{{ $vuetify.locale.t('$vuetify.participants_not_found') }}</v-card-text>
                     </template>
                     <ChatParticipantsContextMenu
                       ref="contextMenuRef"
