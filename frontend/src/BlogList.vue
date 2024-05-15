@@ -43,7 +43,7 @@
               </template>
 
               <template v-slot:default>
-                  <v-list-item-title><a :href="getProfileLink(item.owner)" class="colored-link">{{ item?.owner?.login }}</a></v-list-item-title>
+                  <v-list-item-title><a :href="getProfileLink(item.owner)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{ item?.owner?.login }}</a></v-list-item-title>
                   <v-list-item-subtitle>
                       {{ getDate(item) }}
                   </v-list-item-subtitle>
@@ -61,7 +61,14 @@
 </template>
 
 <script>
-import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
+import {
+    getHumanReadableDate,
+    getLoginColoredStyle,
+    hasLength,
+    replaceOrAppend,
+    replaceOrPrepend,
+    setTitle
+} from "@/utils";
 import axios from "axios";
 import debounce from "lodash/debounce";
 import Mark from "mark.js";
@@ -99,6 +106,7 @@ export default {
     }
   },
   methods: {
+    getLoginColoredStyle,
     hasLength,
     getMaxItemsLength() {
         return 240

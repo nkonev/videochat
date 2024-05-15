@@ -18,7 +18,7 @@
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
               <div class="author-and-date">
-                <v-list-item-title><a class="colored-link" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
+                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(blogDto.owner, true)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
@@ -56,7 +56,7 @@
 
 <script>
 import MessageItem from "./MessageItem.vue";
-import {getHumanReadableDate, hasLength, isMobileBrowser} from "#root/common/utils";
+import {getHumanReadableDate, hasLength, isMobileBrowser, getLoginColoredStyle} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
 import heightMixin from "#root/common/mixins/heightMixin";
 import { navigate } from 'vike/client/router';
@@ -79,6 +79,7 @@ export default {
       return this.pageContext.data;
   },
   methods: {
+    getLoginColoredStyle,
     hasLength,
     isMobile() {
        return isMobileBrowser()

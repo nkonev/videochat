@@ -18,7 +18,7 @@
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
               <div class="author-and-date">
-                <v-list-item-title><a class="colored-link" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
+                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(blogDto.owner, true)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
@@ -58,12 +58,18 @@
 <script>
 import axios from "axios";
 import MessageItem from "@/MessageItem";
-import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "@/utils";
+import {
+    getHumanReadableDate,
+    getLoginColoredStyle,
+    hasLength,
+    replaceOrAppend,
+    replaceOrPrepend,
+    setTitle
+} from "@/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile, profile_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";
 import infiniteScrollMixin, {directionBottom, directionTop} from "@/mixins/infiniteScrollMixin";
-import {removeTopMessagePosition} from "@/store/localStore";
 import heightMixin from "@/mixins/heightMixin";
 
 const PAGE_SIZE = 40;
@@ -91,6 +97,7 @@ export default {
     }
   },
   methods: {
+    getLoginColoredStyle,
     hasLength,
     getProfileLink(user) {
       let url = profile + "/" + user.id;

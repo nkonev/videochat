@@ -43,7 +43,7 @@
               </template>
 
               <template v-slot:default>
-                  <v-list-item-title><a :href="getProfileLink(item.owner)" class="colored-link">{{ item?.owner?.login }}</a></v-list-item-title>
+                  <v-list-item-title><a :href="getProfileLink(item.owner)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{ item?.owner?.login }}</a></v-list-item-title>
                   <v-list-item-subtitle>
                       {{ getDate(item) }}
                   </v-list-item-subtitle>
@@ -61,8 +61,8 @@
 </template>
 
 <script>
-import {getHumanReadableDate, hasLength, replaceOrAppend, replaceOrPrepend, setTitle} from "#root/common/utils";
-import {blog_post, blog_post_name, blogIdPrefix, blogIdHashPrefix, profile} from "#root/common/router/routes";
+import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
+import {blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
 import heightMixin from "#root/common/mixins/heightMixin";
 import {isMobileBrowser} from "#root/common/utils.js";
 import {usePageContext} from "#root/renderer/usePageContext.js";
@@ -83,6 +83,7 @@ export default {
       return this.pageContext.data;
   },
   methods: {
+    getLoginColoredStyle,
     hasLength,
     isMobile() {
         return isMobileBrowser()

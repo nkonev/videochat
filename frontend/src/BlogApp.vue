@@ -142,6 +142,10 @@ html {
     text-decoration none
 }
 
+.nodecorated-link {
+    text-decoration none
+}
+
 .v-breadcrumbs {
   li > a {
     color white
