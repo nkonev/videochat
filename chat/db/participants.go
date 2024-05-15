@@ -267,18 +267,14 @@ func (db *DB) IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error
 }
 
 
-func getIsAdminBatchByParticipantsCommon(qq CommonOperations, userIds []int64, chatId int64) (map[int64]bool, error) {
-	var result = map[int64]bool{}
+func getIsAdminBatchByParticipantsCommon(qq CommonOperations, userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
+	var result = []UserAdminDbDTO{}
 
 	if len(userIds) == 0 {
 		return result, nil
 	}
 
-	for _, userId := range userIds {
-		result[userId] = false // prefill all with false
-	}
-
-	if rows, err := qq.Query(fmt.Sprintf(`SELECT user_id, admin FROM chat_participant WHERE user_id = ANY($1) AND chat_id = $2 AND admin = true`), userIds, chatId); err != nil {
+	if rows, err := qq.Query(fmt.Sprintf(`SELECT user_id, admin FROM chat_participant WHERE user_id = ANY($1) AND chat_id = $2 ORDER BY create_date_time DESC`), userIds, chatId); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -289,17 +285,17 @@ func getIsAdminBatchByParticipantsCommon(qq CommonOperations, userIds []int64, c
 			if err := rows.Scan(&userId, &admin); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
-				result[userId] = admin
+				result = append(result, UserAdminDbDTO{userId, admin})
 			}
 		}
 		return result, nil
 	}
 }
-func (db *DB) IsAdminBatchByParticipants(userIds []int64, chatId int64) (map[int64]bool, error) {
+func (db *DB) IsAdminBatchByParticipants(userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
 	return getIsAdminBatchByParticipantsCommon(db, userIds, chatId)
 }
 
-func (tx *Tx) IsAdminBatchByParticipants(userIds []int64, chatId int64) (map[int64]bool, error) {
+func (tx *Tx) IsAdminBatchByParticipants(userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
 	return getIsAdminBatchByParticipantsCommon(tx, userIds, chatId)
 }
 

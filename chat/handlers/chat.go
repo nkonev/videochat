@@ -1020,11 +1020,22 @@ func (ch *ChatHandler) enrichWithAdmin(cdo db.CommonOperations, users []*dto.Use
 		return nil, err
 	}
 
-	for _, anUser := range users {
-		isAdmin := areAdmins[anUser.Id]
+	for _, anAdmin := range areAdmins { // keep order
+		var anUser *dto.User
+		for _, u := range users {
+			if u.Id == anAdmin.UserId {
+				anUser = u
+				break
+			}
+		}
+		if anUser == nil {
+			GetLogEntry(ctx).Errorf("Unable to find an user")
+			continue
+		}
+
 		newUsersWithAdmin = append(newUsersWithAdmin, &dto.UserWithAdmin{
 			User:  *anUser,
-			Admin: isAdmin,
+			Admin: anAdmin.Admin,
 		})
 	}
 	return newUsersWithAdmin, nil
