@@ -1152,10 +1152,12 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string, chatId int64, pageSize int) ([]*dto.User, int, error) {
+func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string, chatId int64, pageSize, requestOffset int) ([]*dto.User, int, error) {
 	var users []*dto.User = make([]*dto.User, 0)
 
 	shouldContinue := true
+
+	processedItems := 0
 
 	totalCountInChat := 0
 	for page := 0; shouldContinue; page++ {
@@ -1179,7 +1181,10 @@ func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string
 		}
 		for _, u := range usersPortion {
 			if len(users) < pageSize {
-				users = append(users, u)
+				if processedItems >= requestOffset {
+					users = append(users, u)
+				}
+				processedItems++
 			}
 			totalCountInChat++
 		}
@@ -1251,7 +1256,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 
 	if userSearchString != "" {
 		var users []*dto.User
-		users, totalFoundInChatUserCount, err = ch.searchUsersContaining(c, userSearchString, chatId, participantsSize)
+		users, totalFoundInChatUserCount, err = ch.searchUsersContaining(c, userSearchString, chatId, participantsSize, participantsOffset)
 		usersWithAdmin, err = ch.enrichWithAdmin(ch.db, users, chatId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
@@ -1309,7 +1314,7 @@ func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 	totalFoundUserCount := 0
 
 	if userSearchString != "" {
-		_, aCount, err := ch.searchUsersContaining(c, userSearchString, chatId, utils.DefaultSize)
+		_, aCount, err := ch.searchUsersContaining(c, userSearchString, chatId, utils.DefaultSize, utils.DefaultOffset)
 		if err != nil {
 			return err
 		}
@@ -1418,7 +1423,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
 
-	users, _, err := ch.searchUsersContaining(c, searchString, chatId, utils.DefaultSize)
+	users, _, err := ch.searchUsersContaining(c, searchString, chatId, utils.DefaultSize, utils.DefaultOffset)
 	if err != nil {
 		return err
 	}

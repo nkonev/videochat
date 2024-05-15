@@ -41,6 +41,7 @@ func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 const maxSize = 100
 const DefaultSize = 20
 const DefaultPage = 0
+const DefaultOffset = 0
 
 func FixPage(page int) int {
 	if page < 0 {
