@@ -32,7 +32,7 @@ export default () => {
             },
         },
         methods: {
-            showModal(data) {
+            async showModal(data) {
                 console.log("Opening modal, data=", data);
                 if (!this.isCachedRelevantToArguments(data)) {
                     this.reset();
@@ -44,7 +44,7 @@ export default () => {
 
                 if (!this.dataLoaded) {
                     if (this.onInitialized) {
-                        this.onInitialized()
+                        await this.onInitialized()
                     }
                     this.updateItems();
                 } else if (this.performMarking) {

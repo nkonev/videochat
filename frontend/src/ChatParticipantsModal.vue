@@ -221,7 +221,6 @@
             },
             onInitialized(){
                 console.log("Getting info about chat id in modal, chatId=", this.chatId);
-                this.loading = true;
                 return axios.get(`/api/chat/${this.chatId}`)
                     .then((response) => {
                         this.dto = response.data;
