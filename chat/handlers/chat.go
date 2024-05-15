@@ -1156,16 +1156,14 @@ func (ch *ChatHandler) searchUsers(c echo.Context, searchString string, chatId i
 	var users []*dto.User = make([]*dto.User, 0)
 	var allFoundUsers []*dto.User = make([]*dto.User, 0)
 	shouldContinueSearch := true
-	totalCount := 0
 	for page := 0; shouldContinueSearch; page++ {
-		usersPortion, aTotalCount, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, page, pageSize, c.Request().Context())
+		usersPortion, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, page, pageSize, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 		}
 		if len(usersPortion) < pageSize {
 			shouldContinueSearch = false
 		}
-		totalCount = aTotalCount
 		for _, up := range usersPortion {
 			allFoundUsers = append(allFoundUsers, up)
 		}
@@ -1192,17 +1190,18 @@ func (ch *ChatHandler) searchUsers(c echo.Context, searchString string, chatId i
 		}
 	}
 
+	totalCountInChat := 0
 	if containedInChat {
 		for _, participantId := range allChatParticipantIds {
 			if containUserId(allFoundUsers, participantId) {
 				found := getParticipantById(allFoundUsers, participantId)
 				if found != nil {
-					// then append to the response
-					users = append(users, found)
+					if len(users) < pageSize {
+						// then append to the response
+						users = append(users, found)
+					}
+					totalCountInChat++
 				}
-			}
-			if len(users) == pageSize {
-				break
 			}
 		}
 	} else {
@@ -1216,7 +1215,7 @@ func (ch *ChatHandler) searchUsers(c echo.Context, searchString string, chatId i
 		}
 	}
 
-	return users, totalCount, nil
+	return users, totalCountInChat, nil
 }
 
 func containUserId(accumulatingUsers []*dto.User, userId int64) bool {
@@ -1258,11 +1257,11 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 
 	var usersWithAdmin []*dto.UserWithAdmin = []*dto.UserWithAdmin{}
 
-	totalFoundUserCount := 0
+	totalFoundInChatUserCount := 0
 
 	if userSearchString != "" {
 		var users []*dto.User
-		users, totalFoundUserCount, err = ch.searchUsers(c, userSearchString, chatId, true, participantsSize)
+		users, totalFoundInChatUserCount, err = ch.searchUsers(c, userSearchString, chatId, true, participantsSize)
 		usersWithAdmin, err = ch.enrichWithAdmin(ch.db, users, chatId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
@@ -1284,12 +1283,12 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		totalFoundUserCount = count
+		totalFoundInChatUserCount = count
 	}
 
 	return c.JSON(http.StatusOK, &ParticipantsWithAdminWrapper{
 		Data:  usersWithAdmin,
-		Count: totalFoundUserCount,
+		Count: totalFoundInChatUserCount,
 	})
 }
 
