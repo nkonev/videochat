@@ -96,7 +96,7 @@ export default () => {
                 console.debug("Removing items", dtos);
                 for (const dto of dtos) {
                     const idxToRemove = findIndex(this.itemsDto.items, dto);
-                    if (idxToRemove === -1) {
+                    if (idxToRemove !== -1) {
                         this.itemsDto.items.splice(idxToRemove, 1);
                     }
                 }
