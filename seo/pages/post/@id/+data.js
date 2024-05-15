@@ -22,6 +22,7 @@ async function data(pageContext) {
         blogDto: blogResponse.data,
         items: commentResponse.data,
         // see getPageTitle.js
-        title: blogResponse.data.title
+        title: blogResponse.data.title,
+        description: blogResponse.data.preview,
     }
 }

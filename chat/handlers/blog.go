@@ -415,6 +415,7 @@ type BlogPostResponse struct {
 	Text           *string   `json:"text"`
 	CreateDateTime time.Time `json:"createDateTime"`
 	Reactions 	   []dto.Reaction `json:"reactions"`
+	Preview        *string   `json:"preview"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -475,6 +476,8 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		response.Owner = user
 
 		response.Reactions = convertReactions(reactions, users)
+
+		response.Preview = h.cutText(post.Text)
 	}
 
 	return c.JSON(http.StatusOK, response)

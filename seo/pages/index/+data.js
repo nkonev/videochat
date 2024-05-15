@@ -19,6 +19,7 @@ async function data(pageContext) {
 
     return {
         items,
-        title: "Blog"
+        title: "Blog",
+        description: "Various tech blog"
     }
 }
