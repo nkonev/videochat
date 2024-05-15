@@ -32,7 +32,7 @@ export default () => {
             },
         },
         methods: {
-            async showModal(data) {
+            showModal(data) {
                 console.log("Opening modal, data=", data);
                 if (!this.isCachedRelevantToArguments(data)) {
                     this.reset();
@@ -43,10 +43,11 @@ export default () => {
                 this.show = true;
 
                 if (!this.dataLoaded) {
-                    if (this.onInitialized) {
-                        await this.onInitialized()
-                    }
-                    this.updateItems();
+                    this.updateItems().then(()=>{
+                        if (this.onInitialized) {
+                            this.onInitialized()
+                        }
+                    })
                 } else if (this.performMarking) {
                     this.performMarking();
                 }
@@ -59,7 +60,7 @@ export default () => {
                 if (!silent) {
                     this.loading = true;
                 }
-                this.initiateRequest()
+                return this.initiateRequest()
                     .then((response) => {
                         const dto = deepCopy(response.data);
                         if (this.transformItems) {
