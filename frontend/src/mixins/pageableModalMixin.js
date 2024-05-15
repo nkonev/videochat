@@ -33,7 +33,7 @@ export default () => {
         },
         methods: {
             showModal(data) {
-                console.log("Opening modal, data=", data);
+                console.debug("Opening modal, data=", data);
                 if (!this.isCachedRelevantToArguments(data)) {
                     this.reset();
                 }
@@ -219,7 +219,7 @@ export default () => {
             },
             page(newValue) {
                 if (this.show) {
-                    console.debug("SettingNewPage", newValue);
+                    console.debug("Setting new page", newValue);
                     this.itemsDto = dtoFactory();
                     this.updateItems();
                 }
