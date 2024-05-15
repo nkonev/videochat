@@ -1144,7 +1144,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
 
-	users, _, err := ch.searchUsers(c, searchString, chatId, false, utils.DefaultSize)
+	users, err := ch.searchUsersNotContaining(c, searchString, chatId, utils.DefaultSize)
 	if err != nil {
 		return err
 	}
@@ -1152,7 +1152,43 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-func (ch *ChatHandler) searchUsers(c echo.Context, searchString string, chatId int64, containedInChat bool, pageSize int) ([]*dto.User, int, error) {
+func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string, chatId int64, pageSize int) ([]*dto.User, int, error) {
+	var users []*dto.User = make([]*dto.User, 0)
+
+	shouldContinue := true
+
+	totalCountInChat := 0
+	for page := 0; shouldContinue; page++ {
+		offset := utils.GetOffset(page, pageSize)
+		participantIds, err := ch.db.GetParticipantIds(chatId, pageSize, offset)
+		if len(participantIds) == 0 {
+			break
+		}
+		if len(participantIds) < pageSize {
+			shouldContinue = false
+		}
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Got error during getting portion %v", err)
+			break
+		}
+
+		usersPortion, _, err := ch.restClient.SearchGetUsers(searchString, true, participantIds, 0, pageSize, c.Request().Context())
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
+			break
+		}
+		for _, u := range usersPortion {
+			if len(users) < pageSize {
+				users = append(users, u)
+			}
+			totalCountInChat++
+		}
+	}
+
+	return users, totalCountInChat, nil
+}
+
+func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString string, chatId int64, pageSize int) ([]*dto.User, error) {
 	var users []*dto.User = make([]*dto.User, 0)
 	var allFoundUsers []*dto.User = make([]*dto.User, 0)
 	shouldContinueSearch := true
@@ -1190,32 +1226,16 @@ func (ch *ChatHandler) searchUsers(c echo.Context, searchString string, chatId i
 		}
 	}
 
-	totalCountInChat := 0
-	if containedInChat {
-		for _, participantId := range allChatParticipantIds {
-			if containUserId(allFoundUsers, participantId) {
-				found := getParticipantById(allFoundUsers, participantId)
-				if found != nil {
-					if len(users) < pageSize {
-						// then append to the response
-						users = append(users, found)
-					}
-					totalCountInChat++
-				}
-			}
+	for _, u := range allFoundUsers {
+		if !utils.Contains(allChatParticipantIds, u.Id) {
+			users = append(users, u)
 		}
-	} else {
-		for _, u := range allFoundUsers {
-			if !utils.Contains(allChatParticipantIds, u.Id) {
-				users = append(users, u)
-			}
-			if len(users) == pageSize {
-				break
-			}
+		if len(users) == pageSize {
+			break
 		}
 	}
 
-	return users, totalCountInChat, nil
+	return users, nil
 }
 
 func containUserId(accumulatingUsers []*dto.User, userId int64) bool {
@@ -1261,7 +1281,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 
 	if userSearchString != "" {
 		var users []*dto.User
-		users, totalFoundInChatUserCount, err = ch.searchUsers(c, userSearchString, chatId, true, participantsSize)
+		users, totalFoundInChatUserCount, err = ch.searchUsersContaining(c, userSearchString, chatId, participantsSize)
 		usersWithAdmin, err = ch.enrichWithAdmin(ch.db, users, chatId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
@@ -1319,20 +1339,11 @@ func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 	totalFoundUserCount := 0
 
 	if userSearchString != "" {
-		err = ch.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
-			usersPortion, _, err := ch.restClient.SearchGetUsers(userSearchString, true, participantIds, 0, utils.DefaultSize, c.Request().Context())
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
-			} else {
-				for _, _ = range usersPortion {
-					totalFoundUserCount++
-				}
-			}
-			return nil
-		})
+		_, aCount, err := ch.searchUsersContaining(c, userSearchString, chatId, utils.DefaultSize)
 		if err != nil {
 			return err
 		}
+		totalFoundUserCount = aCount
 	} else {
 		count, err := ch.db.GetParticipantsCount(chatId)
 		if err != nil {
@@ -1437,7 +1448,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
 
-	users, _, err := ch.searchUsers(c, searchString, chatId, true, utils.DefaultSize)
+	users, _, err := ch.searchUsersContaining(c, searchString, chatId, utils.DefaultSize)
 	if err != nil {
 		return err
 	}
