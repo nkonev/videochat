@@ -138,7 +138,7 @@
             this.addItem(dto);
             this.performMarking();
           } else if (chatIdsAreEqual && isScrolledToBottom) { // not empty searchString
-              axios.put(`/api/chat/${this.chatId}/message/filter`, {
+              axios.post(`/api/chat/${this.chatId}/message/filter`, {
                   searchString: this.searchString,
                   messageId: dto.id
               }).then(({data}) => {

@@ -42,6 +42,7 @@ type CommonOperations interface {
 	GetParticipantsCount(chatId int64) (int, error)
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error)
+	IsAdminBatchByParticipants(userIds []int64, chatId int64) (map[int64]bool, error)
 	IsParticipant(userId int64, chatId int64) (bool, error)
 	GetChat(participantId, chatId int64) (*Chat, error)
 	GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)

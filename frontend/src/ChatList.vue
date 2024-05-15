@@ -479,7 +479,7 @@ export default {
             this.sort(this.items);
             this.performMarking();
         } else if (isScrolledToTop) { // like in UserList.vue
-            axios.put(`/api/chat/filter`, {
+            axios.post(`/api/chat/filter`, {
                 searchString: this.searchString,
                 chatId: dto.id
             }).then(({data}) => {

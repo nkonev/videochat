@@ -1008,16 +1008,22 @@ func (ch *ChatHandler) getParticipantsWithAdmin(cdo db.CommonOperations, partici
 
 func (ch *ChatHandler) enrichWithAdmin(cdo db.CommonOperations, users []*dto.User, chatId int64, ctx context.Context) ([]*dto.UserWithAdmin, error) {
 	newUsersWithAdmin := []*dto.UserWithAdmin{}
-	for _, newUser := range users {
-		isAdmin, err := cdo.IsAdmin(newUser.Id, chatId)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during isAdmin %v", err)
-			return nil, err
-		}
 
-		u := newUser
+	userIds := []int64{}
+	for _, anUser := range users {
+		userIds = append(userIds, anUser.Id)
+	}
+
+	areAdmins, err := cdo.IsAdminBatchByParticipants(userIds, chatId)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting users %v", err)
+		return nil, err
+	}
+
+	for _, anUser := range users {
+		isAdmin := areAdmins[anUser.Id]
 		newUsersWithAdmin = append(newUsersWithAdmin, &dto.UserWithAdmin{
-			User:  *u,
+			User:  *anUser,
 			Admin: isAdmin,
 		})
 	}
@@ -1125,6 +1131,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	}
 
 	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
 
 	users, _, err := ch.searchUsers(c, searchString, chatId, false, utils.DefaultSize)
 	if err != nil {
@@ -1275,6 +1282,128 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 	})
 }
 
+type CountRequestDto struct {
+	SearchString string `json:"searchString"`
+}
+
+func (ch *ChatHandler) CountParticipants(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	bindTo := new(CountRequestDto)
+	err = c.Bind(bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
+		return err
+	}
+	userSearchString := strings.TrimSpace(bindTo.SearchString)
+
+	totalFoundUserCount := 0
+
+	if userSearchString != "" {
+		err = ch.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			usersPortion, _, err := ch.restClient.SearchGetUsers(userSearchString, true, participantIds, 0, utils.DefaultSize, c.Request().Context())
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
+			} else {
+				for _, _ = range usersPortion {
+					totalFoundUserCount++
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	} else {
+		count, err := ch.db.GetParticipantsCount(chatId)
+		if err != nil {
+			return err
+		}
+		totalFoundUserCount = count
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"count": totalFoundUserCount})
+}
+
+type FilteredRequestDto struct {
+	SearchString string `json:"searchString"`
+	UserId []int64 `json:"userId"`
+}
+
+type FilteredParticipantItemResponse struct {
+	Id  int64 `json:"id"`
+}
+
+func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+
+	bindTo := new(FilteredRequestDto)
+	err = c.Bind(bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
+		return err
+	}
+
+	userSearchString := bindTo.SearchString
+	userSearchString = strings.TrimSpace(userSearchString)
+
+	requestedParticipantIds := bindTo.UserId
+
+	var response = []*FilteredParticipantItemResponse{}
+
+	if userSearchString != "" {
+		var batches = [][]int64{}
+		var batch = []int64{}
+		for _, pid := range requestedParticipantIds {
+			batch = append(batch, pid)
+			if len(batch) == utils.DefaultSize {
+				batches = append(batches, batch)
+				batch = []int64{}
+			}
+		}
+		for _, aBatch := range batches { // we already know that requestedParticipantIds belong to this chat, so our sole task is to pass them through aaa filter
+			usersPortion, _, err := ch.restClient.SearchGetUsers(userSearchString, true, aBatch, 0, utils.DefaultSize, c.Request().Context())
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
+			} else {
+				for _, user := range usersPortion {
+					response = append(response, &FilteredParticipantItemResponse{user.Id})
+				}
+			}
+		}
+	} else {
+		foundParticipantIds, err := ch.db.ParticipantsExistence(chatId, requestedParticipantIds)
+		if err != nil {
+			return err
+		}
+
+		for _, userId := range foundParticipantIds {
+			response = append(response, &FilteredParticipantItemResponse{userId})
+		}
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
 func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
@@ -1296,6 +1425,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	}
 
 	searchString := c.QueryParam("searchString")
+	searchString = strings.TrimSpace(searchString)
 
 	users, _, err := ch.searchUsers(c, searchString, chatId, true, utils.DefaultSize)
 	if err != nil {

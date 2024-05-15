@@ -555,7 +555,7 @@ export default {
           this.performMarking();
           this.scrollTo(userIdHashPrefix + dto.id)
       } else if (isScrolledToBottom) { // not empty searchString
-          axios.put(`/api/aaa/user/filter`, {
+          axios.post(`/api/aaa/user/filter`, {
               searchString: this.searchString,
               userId: dto.id
           }).then(({data}) => {

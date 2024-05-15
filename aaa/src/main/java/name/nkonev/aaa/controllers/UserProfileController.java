@@ -66,7 +66,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+"/filter")
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+"/filter")
     public Map<String, Boolean> filter(@RequestBody FilterUserRequest filterUserRequest) {
         return userProfileService.filter(filterUserRequest);
     }

@@ -410,16 +410,16 @@
                 }
               })
             },
-            // TODO implement and return list because participantIds
             initiateFilteredRequest(eventDto) {
-                return axios.post(`/api/chat/${this.chatId}/participant/count`, {
+                return axios.post(`/api/chat/${this.chatId}/participant/filter`, {
                     searchString: this.userSearchString,
-                    participantIds: eventDto.map(p => p.id)
+                    userId: eventDto.map(p => p.id) // participantIds
                 })
             },
-            // TODO implement
             initiateCountRequest() {
-
+                return axios.post(`/api/chat/${this.chatId}/participant/count`,{
+                    searchString: this.userSearchString,
+                })
             },
             getModelValue() {
               return this.userSearchString

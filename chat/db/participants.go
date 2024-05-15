@@ -27,7 +27,7 @@ func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 }
 
 func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
-	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY user_id LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
+	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY create_date_time DESC LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -266,6 +266,43 @@ func (db *DB) IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error
 	return getIsAdminBatchCommon(db, userId, chatIds)
 }
 
+
+func getIsAdminBatchByParticipantsCommon(qq CommonOperations, userIds []int64, chatId int64) (map[int64]bool, error) {
+	var result = map[int64]bool{}
+
+	if len(userIds) == 0 {
+		return result, nil
+	}
+
+	for _, userId := range userIds {
+		result[userId] = false // prefill all with false
+	}
+
+	if rows, err := qq.Query(fmt.Sprintf(`SELECT user_id, admin FROM chat_participant WHERE user_id = ANY($1) AND chat_id = $2 AND admin = true`), userIds, chatId); err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+
+		for rows.Next() {
+			var admin bool = false
+			var userId int64 = 0
+			if err := rows.Scan(&userId, &admin); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				result[userId] = admin
+			}
+		}
+		return result, nil
+	}
+}
+func (db *DB) IsAdminBatchByParticipants(userIds []int64, chatId int64) (map[int64]bool, error) {
+	return getIsAdminBatchByParticipantsCommon(db, userIds, chatId)
+}
+
+func (tx *Tx) IsAdminBatchByParticipants(userIds []int64, chatId int64) (map[int64]bool, error) {
+	return getIsAdminBatchByParticipantsCommon(tx, userIds, chatId)
+}
+
 func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
 	var exists bool = false
 	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
@@ -296,6 +333,25 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 
 func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64, limit, offset int) ([]int64, error) {
 	if rows, err := db.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id LIMIT $2 OFFSET $3", participantId, limit, offset); err != nil {
+		return nil, err
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var coParticipantId int64
+			if err := rows.Scan(&coParticipantId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				list = append(list, coParticipantId)
+			}
+		}
+		return list, nil
+	}
+}
+
+// returns only found participant ids
+func (db *DB) ParticipantsExistence(chatId int64, participantIds []int64) ([]int64, error) {
+	if rows, err := db.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 AND user_id = ANY ($2)", chatId, participantIds); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
