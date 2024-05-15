@@ -1189,71 +1189,41 @@ func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string
 }
 
 func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString string, chatId int64, pageSize int) ([]*dto.User, error) {
-	var users []*dto.User = make([]*dto.User, 0)
-	var allFoundUsers []*dto.User = make([]*dto.User, 0)
+	var notFoundUsers []*dto.User = make([]*dto.User, 0)
 	shouldContinueSearch := true
 	for page := 0; shouldContinueSearch; page++ {
-		usersPortion, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, page, pageSize, c.Request().Context())
+		ignoredInAaa := false
+		usersPortion, _, err := ch.restClient.SearchGetUsers(searchString, ignoredInAaa, []int64{}, page, pageSize, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 		}
 		if len(usersPortion) < pageSize {
 			shouldContinueSearch = false
 		}
-		for _, up := range usersPortion {
-			allFoundUsers = append(allFoundUsers, up)
-		}
-	}
 
-	var allChatParticipantIds []int64 = make([]int64, 0)
-	shouldContinue := true
-	for page := 0; shouldContinue; page++ {
-		offset := utils.GetOffset(page, pageSize)
-		participantIds, err := ch.db.GetParticipantIds(chatId, pageSize, offset)
-		if len(participantIds) == 0 {
-			break
+		var portionUserIds = []int64{}
+		for _, u := range usersPortion {
+			portionUserIds = append(portionUserIds, u.Id)
 		}
-		if len(participantIds) < pageSize {
-			shouldContinue = false
-		}
+
+		foundParticipantIds, err := ch.db.ParticipantsExistence(chatId, portionUserIds)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Got error during getting portion %v", err)
+			GetLogEntry(c.Request().Context()).Errorf("Got error during getting ParticipantsNonExistence %v", err)
 			break
 		}
-
-		for _, pid := range participantIds {
-			allChatParticipantIds = append(allChatParticipantIds, pid)
+		for _, u := range usersPortion {
+			if len(notFoundUsers) < pageSize {
+				if !utils.Contains(foundParticipantIds, u.Id) {
+					notFoundUsers = append(notFoundUsers, u)
+				}
+			} else {
+				shouldContinueSearch = false // break outer
+				break // inner
+			}
 		}
 	}
 
-	for _, u := range allFoundUsers {
-		if !utils.Contains(allChatParticipantIds, u.Id) {
-			users = append(users, u)
-		}
-		if len(users) == pageSize {
-			break
-		}
-	}
-
-	return users, nil
-}
-
-func containUserId(accumulatingUsers []*dto.User, userId int64) bool {
-	for _, u := range accumulatingUsers {
-		if u.Id == userId {
-			return true
-		}
-	}
-	return false
-}
-
-func getParticipantById(accumulatingUsers []*dto.User, userId int64) *dto.User {
-	for _, u := range accumulatingUsers {
-		if u.Id == userId {
-			return u
-		}
-	}
-	return nil
+	return notFoundUsers, nil
 }
 
 func (ch *ChatHandler) GetParticipants(c echo.Context) error {
