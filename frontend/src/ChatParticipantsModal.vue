@@ -151,17 +151,17 @@
 <script>
     import axios from "axios";
     import bus, {
-      CHAT_DELETED,
-      CHAT_EDITED,
-      CLOSE_SIMPLE_MODAL,
-      OPEN_CHAT_EDIT,
-      OPEN_PARTICIPANTS_DIALOG,
-      OPEN_SIMPLE_MODAL,
-      PARTICIPANT_ADDED,
-      PARTICIPANT_DELETED,
-      PARTICIPANT_EDITED,
-      CO_CHATTED_PARTICIPANT_CHANGED,
-      VIDEO_DIAL_STATUS_CHANGED,
+        CHAT_DELETED,
+        CHAT_EDITED,
+        CLOSE_SIMPLE_MODAL,
+        OPEN_CHAT_EDIT,
+        OPEN_PARTICIPANTS_DIALOG,
+        OPEN_SIMPLE_MODAL,
+        PARTICIPANT_ADDED,
+        PARTICIPANT_DELETED,
+        PARTICIPANT_EDITED,
+        CO_CHATTED_PARTICIPANT_CHANGED,
+        VIDEO_DIAL_STATUS_CHANGED, LOGGED_OUT,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
@@ -498,6 +498,7 @@
           bus.on(CHAT_EDITED, this.onChatEdit);
           bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
           bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+          bus.on(LOGGED_OUT, this.onLogout);
 
           this.markInstance = new Mark(".participants-list");
         },
@@ -510,6 +511,7 @@
             bus.off(CHAT_EDITED, this.onChatEdit);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
             bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+            bus.off(LOGGED_OUT, this.onLogout);
             this.markInstance.unmark();
             this.markInstance = null;
         },
