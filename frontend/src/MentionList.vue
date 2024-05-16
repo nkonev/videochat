@@ -110,8 +110,6 @@ export default {
     border-radius: 0.4rem;
     border: 1px solid transparent;
     padding: 0.2rem 0.4rem;
-    font-family: "Roboto", sans-serif;
-    font-size: 1rem !important;
 
     &.is-selected {
         border-color: $borderColor;
