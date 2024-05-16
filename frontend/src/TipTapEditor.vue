@@ -229,7 +229,7 @@ export default {
               HTMLAttributes: {
                   class: 'mention',
               },
-              suggestion: suggestion(this.chatId),
+              suggestion: suggestion(this),
           }),
           Code,
           Iframe,

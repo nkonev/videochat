@@ -4,10 +4,11 @@ import axios from "axios";
 
 import MentionList from './MentionList.vue'
 
-export default (chatId) => {
+export default (tipTapEditorVue) => {
 
     return {
         items: ({query}) => {
+            const chatId = tipTapEditorVue.$route.params.id;
             return axios.get(`/api/chat/${chatId}/suggest-participants`, {
                 params: {
                     searchString: query,
