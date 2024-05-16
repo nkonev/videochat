@@ -42,6 +42,7 @@ export default (tipTapEditorVue) => {
                         interactive: true,
                         trigger: 'manual',
                         placement: 'bottom-start',
+                        hideOnClick: 'toggle'
                     })
                 },
 
