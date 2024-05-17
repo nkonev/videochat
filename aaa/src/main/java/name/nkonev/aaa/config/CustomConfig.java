@@ -23,7 +23,7 @@ public class CustomConfig {
     private String registrationConfirmExitSuccessUrl;
 
     @Value("${custom.password-reset-enter-new-url}")
-    private String passwordRestoreEnterNew;
+    private String passwordResetEnterNewUrl;
 
     @Value("${custom.confirm-change-email-exit-success-url}")
     private String confirmChangeEmailExitSuccessUrl;

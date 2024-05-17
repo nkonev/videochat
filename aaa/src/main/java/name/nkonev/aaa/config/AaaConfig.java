@@ -13,9 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
+@EnableConfigurationProperties({AaaProperties.class, LdapAuthProperties.class, LdapPasswordEncodingProperties.class, HttpClientProperties.class})
 @Configuration
 public class AaaConfig {
 
@@ -24,6 +26,9 @@ public class AaaConfig {
 
     @Value("classpath:/static/git.json")
     private Resource resource;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaConfig.class);
 
