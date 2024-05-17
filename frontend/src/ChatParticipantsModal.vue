@@ -325,7 +325,7 @@
                 }
             },
             onChatDialStatusChange(dto) {
-                if (!this.show || dto.chatId != this.chatId || !this.itemsDto.items) {
+                if (dto.chatId != this.chatId || !this.itemsDto.items) {
                     return;
                 }
 
