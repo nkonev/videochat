@@ -58,6 +58,7 @@ services:
       - spring.security.oauth2.client.provider.vkontakte.user-name-attribute=response
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
       - CSRF_COOKIE_SECURE=true
+      - CSRF_COOKIE_SAME-SITE=Strict
       - server.servlet.session.cookie.same-site=Strict
       - management.otlp.tracing.endpoint=http://jaeger:4318/v1/traces
       - spring.data.redis.url=redis://redis:6379/0

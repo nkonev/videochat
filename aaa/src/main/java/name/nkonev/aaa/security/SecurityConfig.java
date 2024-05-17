@@ -89,6 +89,9 @@ public class SecurityConfig {
     @Value("${csrf.cookie.secure:false}")
     private boolean cookieSecure;
 
+    @Value("${csrf.cookie.same-site:}")
+    private String cookieSameSite;
+
     @Value("${csrf.cookie.http-only:false}")
     private boolean cookieHttpOnly;
 
@@ -99,8 +102,11 @@ public class SecurityConfig {
     public CsrfTokenRepository csrfTokenRepository() {
         final CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
         cookieCsrfTokenRepository.setCookieName(cookieName);
-        cookieCsrfTokenRepository.setSecure(cookieSecure);
-        cookieCsrfTokenRepository.setCookieHttpOnly(cookieHttpOnly);
+        cookieCsrfTokenRepository.setCookieCustomizer(responseCookieBuilder -> {
+            responseCookieBuilder.sameSite(cookieSameSite);
+            responseCookieBuilder.secure(cookieSecure);
+            responseCookieBuilder.httpOnly(cookieHttpOnly);
+        });
         return cookieCsrfTokenRepository;
     }
 
