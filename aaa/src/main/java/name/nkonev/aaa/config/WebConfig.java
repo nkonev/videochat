@@ -34,9 +34,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private ServerProperties serverProperties;
 
-    @Value("${cookie.same-site:}")
-    private String sameSite;
-
     /**
      *  https://spring.io/blog/2013/05/11/content-negotiation-using-spring-mvc
      */
@@ -62,8 +59,7 @@ public class WebConfig implements WebMvcConfigurer {
     // see https://github.com/spring-projects/spring-boot/issues/14302#issuecomment-418712080 if you want to customize management tomcat
     @Bean
     public ServletWebServerFactory servletContainer(Valve... valves) {
-        CustomizedTomcatServletWebServerFactory tomcat = new CustomizedTomcatServletWebServerFactory();
-        tomcat.setSameSite(sameSite);
+        var tomcat = new TomcatServletWebServerFactory();
         if (valves != null) {
             tomcat.addContextValves(valves);
         }
@@ -77,22 +73,5 @@ public class WebConfig implements WebMvcConfigurer {
         tomcat.setProtocol("org.apache.coyote.http11.Http11Nio2Protocol");
 
         return tomcat;
-    }
-}
-
-class CustomizedTomcatServletWebServerFactory extends TomcatServletWebServerFactory {
-    private String sameSite;
-
-    @Override
-    protected void postProcessContext(Context context) {
-        if (StringUtils.hasLength(sameSite)) {
-            Rfc6265CookieProcessor rfc6265Processor = new Rfc6265CookieProcessor();
-            rfc6265Processor.setSameSiteCookies(sameSite);
-            context.setCookieProcessor(rfc6265Processor);
-        }
-    }
-
-    public void setSameSite(String sameSite) {
-        this.sameSite = sameSite;
     }
 }
