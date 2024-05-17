@@ -208,9 +208,9 @@ export default () => {
             },
             onLogout() {
                 this.$nextTick(()=>{
-                    this.reset();
+                    this.closeModal(); // make show false to
                 }).then(()=>{
-                    this.closeModal();
+                    this.reset(); // not to react in watch on page and not to load
                 })
             },
         },
