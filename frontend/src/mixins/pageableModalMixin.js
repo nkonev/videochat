@@ -207,8 +207,11 @@ export default () => {
                 this.clearOnClose();
             },
             onLogout() {
-                this.reset();
-                this.closeModal();
+                this.$nextTick(()=>{
+                    this.reset();
+                }).then(()=>{
+                    this.closeModal();
+                })
             },
         },
         watch: {
