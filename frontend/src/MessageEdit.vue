@@ -1,110 +1,110 @@
 <template>
     <v-container class="ma-0 pa-0" style="height: 100%" fluid>
       <v-container id="sendButtonContainer" class="py-0 px-0 pr-1 pb-1 d-flex flex-column" fluid>
-            <div class="answer-wrapper" v-if="showAnswer">
-              <div class="answer-text"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
-            </div>
-              <tiptap
-                  ref="tipTapRef"
-                  @myinput="onInput"
-                  @keydown.ctrl.enter.native="sendMessageToChat"
-                  @keydown.esc.native="resetInput()"
-              />
+        <div class="answer-wrapper" v-if="showAnswer">
+            <div class="answer-text"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
+        </div>
+        <tiptap
+            ref="tipTapRef"
+            @myinput="onInput"
+            @keydown.ctrl.enter.native="sendMessageToChat"
+            @keydown.esc.native="resetInput()"
+        />
 
-                  <div class="d-flex flex-wrap flex-row dashed-borders">
-                      <v-slide-group
-                          multiple
-                          show-arrows
-                      >
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="boldValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="boldValue()" @click="boldClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bold')">
-                              <v-icon :size="getIconSize()">mdi-format-bold</v-icon>
-                          </v-btn>
+        <div class="d-flex flex-wrap flex-row dashed-borders" v-if="shouldShowSendMessageButtons">
+          <v-slide-group
+              multiple
+              show-arrows
+          >
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="boldValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="boldValue()" @click="boldClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bold')">
+                  <v-icon :size="getIconSize()">mdi-format-bold</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="italicValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="italicValue()" @click="italicClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_italic')">
-                              <v-icon :size="getIconSize()">mdi-format-italic</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="italicValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="italicValue()" @click="italicClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_italic')">
+                  <v-icon :size="getIconSize()">mdi-format-italic</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="underlineValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="underlineValue()" @click="underlineClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_underline')">
-                              <v-icon :size="getIconSize()">mdi-format-underline</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="underlineValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="underlineValue()" @click="underlineClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_underline')">
+                  <v-icon :size="getIconSize()">mdi-format-underline</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="strikeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="strikeValue()" @click="strikeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_strike')">
-                              <v-icon :size="getIconSize()">mdi-format-strikethrough-variant</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="strikeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="strikeValue()" @click="strikeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_strike')">
+                  <v-icon :size="getIconSize()">mdi-format-strikethrough-variant</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_code')">
-                              <v-icon :size="getIconSize()">mdi-code-braces</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_code')">
+                  <v-icon :size="getIconSize()">mdi-code-braces</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
-                              <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
+                  <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
-                            <v-icon :size="getIconSize()">mdi-youtube</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
+                <v-icon :size="getIconSize()">mdi-youtube</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="imageClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_image')">
-                              <v-icon :size="getIconSize()">mdi-image-outline</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="imageClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_image')">
+                  <v-icon :size="getIconSize()">mdi-image-outline</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="videoClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_video')">
-                              <v-icon :size="getIconSize()">mdi-video</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="videoClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_video')">
+                  <v-icon :size="getIconSize()">mdi-video</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="audioClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_audio')">
-                              <v-icon :size="getIconSize()">mdi-music</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="audioClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_audio')">
+                  <v-icon :size="getIconSize()">mdi-music</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="bulletListValue() ? 'tonal' : 'plain'" density="comfortable" @click="bulletListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bullet_list')">
-                              <v-icon :size="getIconSize()">mdi-format-list-bulleted</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="bulletListValue() ? 'tonal' : 'plain'" density="comfortable" @click="bulletListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_bullet_list')">
+                  <v-icon :size="getIconSize()">mdi-format-list-bulleted</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" :variant="orderedListValue() ? 'tonal' : 'plain'" density="comfortable" @click="orderedListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_ordered_list')">
-                              <v-icon :size="getIconSize()">mdi-format-list-numbered</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="orderedListValue() ? 'tonal' : 'plain'" density="comfortable" @click="orderedListClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_ordered_list')">
+                  <v-icon :size="getIconSize()">mdi-format-list-numbered</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
-                              <v-icon :size="getIconSize()">mdi-invert-colors</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
+                  <v-icon :size="getIconSize()">mdi-invert-colors</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
-                              <v-icon :size="getIconSize()">mdi-format-color-fill</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
+                  <v-icon :size="getIconSize()">mdi-format-color-fill</v-icon>
+              </v-btn>
 
-                          <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="smileyClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
-                              <v-icon :size="getIconSize()">mdi-emoticon-outline</v-icon>
-                          </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="smileyClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_smiley')">
+                  <v-icon :size="getIconSize()">mdi-emoticon-outline</v-icon>
+              </v-btn>
 
-                      </v-slide-group>
+          </v-slide-group>
 
-                      <div class="custom-toolbar-send">
-                          <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
-                            <v-icon :size="getIconSize()" color="primary">mdi-file-upload</v-icon>
-                          </v-btn>
-                          <template v-if="this.editMessageDto.fileItemUuid">
-                              <v-badge
-                                  :value="fileCount"
-                                  :content="fileCount"
-                                  color="green"
-                                  overlap
-                                  left
-                              >
-                                  <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="onFilesClicked()" :title="$vuetify.locale.t('$vuetify.message_edit_attached_files')">
-                                    <v-icon :size="getIconSize()">mdi-file-document-multiple</v-icon>
-                                  </v-btn>
-                              </v-badge>
-                          </template>
-                          <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
-                            <v-icon :size="getIconSize()">mdi-delete</v-icon>
-                          </v-btn>
-                          <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
-                            <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
-                          </v-btn>
-                        <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
-                      </div>
+          <div class="custom-toolbar-send">
+              <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
+                <v-icon :size="getIconSize()" color="primary">mdi-file-upload</v-icon>
+              </v-btn>
+              <template v-if="this.editMessageDto.fileItemUuid">
+                  <v-badge
+                      :value="fileCount"
+                      :content="fileCount"
+                      color="green"
+                      overlap
+                      left
+                  >
+                      <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="onFilesClicked()" :title="$vuetify.locale.t('$vuetify.message_edit_attached_files')">
+                        <v-icon :size="getIconSize()">mdi-file-document-multiple</v-icon>
+                      </v-btn>
+                  </v-badge>
+              </template>
+              <v-btn icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="resetInput()" :title="$vuetify.locale.t('$vuetify.message_edit_clear')">
+                <v-icon :size="getIconSize()">mdi-delete</v-icon>
+              </v-btn>
+              <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
+                <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
+              </v-btn>
+            <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
+          </div>
 
-                  </div>
+        </div>
       </v-container>
 
       <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
@@ -116,31 +116,32 @@
 <script>
     import axios from "axios";
     import bus, {
-      CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_LOAD_FILES_COUNT,
-      COLOR_SET,
-      MESSAGE_EDIT_LINK_SET,
-      OPEN_FILE_UPLOAD_MODAL,
-      OPEN_CHOOSE_COLOR,
-      OPEN_MESSAGE_EDIT_LINK,
-      OPEN_MESSAGE_EDIT_MEDIA,
-      OPEN_MESSAGE_EDIT_SMILEY,
-      OPEN_VIEW_FILES_DIALOG,
-      PROFILE_SET,
-      SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
-      MESSAGE_EDIT_SET_FILE_ITEM_UUID,
+        CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_LOAD_FILES_COUNT,
+        COLOR_SET,
+        MESSAGE_EDIT_LINK_SET,
+        OPEN_FILE_UPLOAD_MODAL,
+        OPEN_CHOOSE_COLOR,
+        OPEN_MESSAGE_EDIT_LINK,
+        OPEN_MESSAGE_EDIT_MEDIA,
+        OPEN_MESSAGE_EDIT_SMILEY,
+        OPEN_VIEW_FILES_DIALOG,
+        PROFILE_SET,
+        SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
+        MESSAGE_EDIT_SET_FILE_ITEM_UUID, ON_WINDOW_RESIZED,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
     import {
-      chatEditMessageDtoFactory,
-      colorBackground,
-      colorText,
-      embed, getAnswerPreviewFields, getEmbed,
-      hasLength, haveEmbed, isChatRoute,
-      link_dialog_type_add_link_to_text,
-      link_dialog_type_add_media_embed, media_audio,
-      media_image,
-      media_video, new_message, reply_message, setEmbed
+        chatEditMessageDtoFactory,
+        colorBackground,
+        colorText,
+        embed, getAnswerPreviewFields, getEmbed, setEmbed,
+        hasLength, haveEmbed, isChatRoute,
+        link_dialog_type_add_link_to_text,
+        link_dialog_type_add_media_embed, media_audio,
+        media_image,
+        media_video, new_message, reply_message,
+        shouldShowSendMessageButtons
     } from "@/utils";
     import {
       getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull,
@@ -165,6 +166,7 @@
                 sending: false,
                 showAnswer: false,
                 answerOnPreview: null,
+                shouldShowSendMessageButtons: true,
             }
         },
         methods: {
@@ -533,6 +535,9 @@
             removeFromStore() {
                 removeStoredChatEditMessageDto(this.chatId);
             },
+            updateShouldShowSendMessageButtons() {
+                this.shouldShowSendMessageButtons = shouldShowSendMessageButtons()
+            },
         },
         computed: {
           ...mapStores(useChatStore),
@@ -545,6 +550,8 @@
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
+            this.updateShouldShowSendMessageButtons();
+            bus.on(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
         },
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -554,6 +561,7 @@
             bus.off(COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
+            bus.off(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);

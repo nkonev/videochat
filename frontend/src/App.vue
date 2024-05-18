@@ -198,29 +198,29 @@ import {
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
-  ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
-  CHAT_ADD,
-  CHAT_DELETED,
-  CHAT_EDITED, CHAT_REDRAW,
-  FOCUS,
-  LOGGED_OUT,
-  NOTIFICATION_ADD,
-  NOTIFICATION_DELETE,
-  OPEN_FILE_UPLOAD_MODAL,
-  OPEN_PARTICIPANTS_DIALOG,
-  OPEN_PERMISSIONS_WARNING_MODAL,
-  PLAYER_MODAL,
-  PROFILE_SET,
-  REFRESH_ON_WEBSOCKET_RESTORED,
-  SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
-  UNREAD_MESSAGES_CHANGED,
-  CO_CHATTED_PARTICIPANT_CHANGED,
-  VIDEO_CALL_INVITED,
-  VIDEO_CALL_SCREEN_SHARE_CHANGED,
-  VIDEO_CALL_USER_COUNT_CHANGED,
-  VIDEO_DIAL_STATUS_CHANGED,
-  VIDEO_RECORDING_CHANGED,
-  WEBSOCKET_RESTORED,
+    ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
+    CHAT_ADD,
+    CHAT_DELETED,
+    CHAT_EDITED, CHAT_REDRAW,
+    FOCUS,
+    LOGGED_OUT,
+    NOTIFICATION_ADD,
+    NOTIFICATION_DELETE,
+    OPEN_FILE_UPLOAD_MODAL,
+    OPEN_PARTICIPANTS_DIALOG,
+    OPEN_PERMISSIONS_WARNING_MODAL,
+    PLAYER_MODAL,
+    PROFILE_SET,
+    REFRESH_ON_WEBSOCKET_RESTORED,
+    SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
+    UNREAD_MESSAGES_CHANGED,
+    CO_CHATTED_PARTICIPANT_CHANGED,
+    VIDEO_CALL_INVITED,
+    VIDEO_CALL_SCREEN_SHARE_CHANGED,
+    VIDEO_CALL_USER_COUNT_CHANGED,
+    VIDEO_DIAL_STATUS_CHANGED,
+    VIDEO_RECORDING_CHANGED,
+    WEBSOCKET_RESTORED, ON_WINDOW_RESIZED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -678,6 +678,9 @@ export default {
         setShowSearchButton(v) {
             this.showSearchButton = v
         },
+        onWindowResized() {
+            bus.emit(ON_WINDOW_RESIZED)
+        },
     },
     components: {
         ChooseColorModal,
@@ -713,6 +716,7 @@ export default {
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
 
         addEventListener("focus", this.onFocus);
+        window.addEventListener("resize", this.onWindowResized);
 
         // It's placed after each route in order not to have a race-condition
         this.afterRouteInitialized = once(this.afterRouteInitialized);
@@ -723,6 +727,7 @@ export default {
         })
     },
     beforeUnmount() {
+        window.removeEventListener("resize", this.onWindowResized);
         removeEventListener("focus", this.onFocus);
 
         this.graphQlUnsubscribe();
