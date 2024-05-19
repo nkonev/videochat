@@ -379,7 +379,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         userConfirmationTokenRepository.deleteById(token); // if random token exists we delete it
 
         // create /confirm?uuid=<uuid>
-        String uri = UriComponentsBuilder.fromUriString(customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, token).build().toUriString();
+        String uri = UriComponentsBuilder.fromUriString(customConfig.getApiUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, token).build().toUriString();
 
         mockMvc.perform(get(uri))
                 .andExpect(status().is3xxRedirection())
@@ -394,7 +394,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         userConfirmationTokenRepository.save(token1); // save it
 
         // create /confirm?uuid=<uuid>
-        String uri = UriComponentsBuilder.fromUriString(customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, tokenUuid).build().toUriString();
+        String uri = UriComponentsBuilder.fromUriString(customConfig.getApiUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, tokenUuid).build().toUriString();
 
         mockMvc.perform(get(uri))
                 .andExpect(status().is3xxRedirection())

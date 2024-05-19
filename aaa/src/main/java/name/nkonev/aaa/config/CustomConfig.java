@@ -7,8 +7,11 @@ import java.time.Duration;
 
 @Configuration
 public class CustomConfig {
-    @Value("${custom.base-url}")
-    private String baseUrl;
+    @Value("${custom.api-url}")
+    private String apiUrl;
+
+    @Value("${custom.frontend-url}")
+    private String frontendUrl;
 
     @Value("${custom.registration-confirm-exit-token-not-found-url}")
     private String registrationConfirmExitTokenNotFoundUrl;
@@ -34,8 +37,8 @@ public class CustomConfig {
     @Value("${http.client.read-timeout:30s}")
     private Duration restClientReadTimeout;
 
-    public String getBaseUrl() {
-        return baseUrl;
+    public String getApiUrl() {
+        return apiUrl;
     }
 
     public Duration getRestClientConnectTimeout() {
@@ -68,5 +71,13 @@ public class CustomConfig {
 
     public String getConfirmChangeEmailExitTokenNotFoundUrl() {
         return confirmChangeEmailExitTokenNotFoundUrl;
+    }
+
+    public String getFrontendUrl() {
+        return frontendUrl;
+    }
+
+    public void setFrontendUrl(String frontendUrl) {
+        this.frontendUrl = frontendUrl;
     }
 }

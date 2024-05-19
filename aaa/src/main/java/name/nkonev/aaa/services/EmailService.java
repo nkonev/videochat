@@ -61,7 +61,7 @@ public class EmailService {
             helper.setSubject(subj);
             helper.setTo(recipient);
 
-            final var regLink = customConfig.getBaseUrl() + Constants.Urls.REGISTER_CONFIRM + "?" + Constants.Urls.UUID + "=" + userConfirmationToken.uuid();
+            final var regLink = customConfig.getApiUrl() + Constants.Urls.REGISTER_CONFIRM + "?" + Constants.Urls.UUID + "=" + userConfirmationToken.uuid();
             final var text = renderTemplate("confirm_registration_body_%s.ftlh".formatted(language),
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
@@ -106,7 +106,7 @@ public class EmailService {
             helper.setSubject(subj);
             helper.setTo(newEmail);
 
-            final var confirmLink = customConfig.getBaseUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
+            final var confirmLink = customConfig.getApiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
             final var text = renderTemplate("confirm_change_email_body_%s.ftlh".formatted(language),
                 Map.of(CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER, confirmLink, LOGIN_PLACEHOLDER, login));
             LOGGER.trace("For password reset '{}' generated email text '{}'", newEmail, text);
