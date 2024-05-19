@@ -18,7 +18,7 @@ export const isMobileWidth = () => {
 }
 
 export const shouldShowSendMessageButtons = () => {
-    return !isMobileWidth() && !isMobileBrowser()
+    return !isMobileWidth() || isMobileBrowser()
 }
 
 export const hasLength = (str) => {
