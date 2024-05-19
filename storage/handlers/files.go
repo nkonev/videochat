@@ -907,18 +907,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 
 	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
 
-	filter := func(info *minio.ObjectInfo) bool {
-		switch requestedMediaType {
-		case services.Media_image:
-			return utils.IsImage(info.Key)
-		case services.Media_video:
-			return utils.IsVideo(info.Key)
-		case services.Media_audio:
-			return utils.IsAudio(info.Key)
-		default:
-			return false
-		}
-	}
+	filter := h.getFilterByType(requestedMediaType)
 
 	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
 	if err != nil {
@@ -931,7 +920,121 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 		list = append(list, convert(item))
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "files": list, "count": count})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": list, "count": count})
+}
+
+func (h *FilesHandler) CountEmbed(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	requestedMediaType := c.QueryParam("type")
+
+	bucketName := h.minioConfig.Files
+
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
+
+	filter := h.getFilterByType(requestedMediaType)
+
+	_, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, 10, 0)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "count": count})
+}
+
+func (h *FilesHandler) getFilterByType(requestedMediaType string) func(info *minio.ObjectInfo) bool {
+	return func(info *minio.ObjectInfo) bool {
+		switch requestedMediaType {
+		case services.Media_image:
+			return utils.IsImage(info.Key)
+		case services.Media_video:
+			return utils.IsVideo(info.Key)
+		case services.Media_audio:
+			return utils.IsAudio(info.Key)
+		default:
+			return false
+		}
+	}
+}
+
+type CandidatesFilterRequest struct {
+	Type  string  `json:"type"`
+	FileId string `json:"fileId"`
+}
+
+func (h *FilesHandler) FilterEmbed(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatIdString := c.Param("chatId")
+	chatId, err := utils.ParseInt64(chatIdString)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !belongs {
+		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	// end check
+
+	bucketName := h.minioConfig.Files
+
+	var bindTo = new(CandidatesFilterRequest)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
+
+	filter := h.getFilterByType(bindTo.Type)
+
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+		WithMetadata: false,
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
+	})
+
+	var filterResponseItemArray = make([]FilterResponseItem, 0)
+	for objInfo := range objects {
+		if (filter != nil && filter(&objInfo)) || filter == nil {
+			if objInfo.Key == bindTo.FileId {
+				filterResponseItemArray = append(filterResponseItemArray, FilterResponseItem{
+					Id: objInfo.Key,
+				})
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, filterResponseItemArray)
 }
 
 func convert(item *dto.FileInfoDto) *MediaDto {

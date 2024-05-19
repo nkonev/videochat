@@ -432,6 +432,7 @@
                 bus.emit(
                   OPEN_MESSAGE_EDIT_MEDIA,
                   {
+                    chatId: this.chatId,
                     type: media_image,
                     fromDiskCallback: () => this.$refs.tipTapRef.addImage(),
                     setExistingMediaCallback: this.$refs.tipTapRef.setImage
@@ -442,6 +443,7 @@
                 bus.emit(
                   OPEN_MESSAGE_EDIT_MEDIA,
                   {
+                    chatId: this.chatId,
                     type: media_video,
                     fromDiskCallback: () => this.$refs.tipTapRef.addVideo(),
                     setExistingMediaCallback: this.$refs.tipTapRef.setVideo
@@ -452,6 +454,7 @@
                 bus.emit(
                     OPEN_MESSAGE_EDIT_MEDIA,
                     {
+                        chatId: this.chatId,
                         type: media_audio,
                         fromDiskCallback: () => this.$refs.tipTapRef.addAudio(),
                         setExistingMediaCallback: this.$refs.tipTapRef.setAudio

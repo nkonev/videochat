@@ -172,7 +172,6 @@
         hasLength,
         isCalling,
         isSetEqual,
-        moveToFirstPosition,
         replaceInArray
     } from "@/utils";
     import debounce from "lodash/debounce";
@@ -439,15 +438,6 @@
             },
             onShowContextMenu(e, menuableItem) {
               this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, this.dto);
-            },
-            getTotalVisible() {
-                if (!this.isMobile()) {
-                    return 7
-                } else if (this.page == firstPage || this.page == this.pagesCount) {
-                    return 3
-                } else {
-                    return 1
-                }
             },
             clearOnClose() {
                 this.showSearchButton = true;

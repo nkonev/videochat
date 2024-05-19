@@ -162,6 +162,8 @@ func configureEcho(
 	e.GET("/storage/:chatId/file-item-uuid", fh.ListFileItemUuids)
 	e.GET("/storage/:chatId/file", fh.LimitsHandler)
 	e.GET("/storage/:chatId/embed/candidates", fh.ListCandidatesForEmbed)
+	e.POST("/storage/:chatId/embed/filter", fh.FilterEmbed)
+	e.POST("/storage/:chatId/embed/count", fh.CountEmbed)
 	e.GET("/storage/embed/preview", fh.PreviewDownloadHandler)
 	e.GET(utils.UrlStoragePublicPreviewFile, fh.PublicPreviewDownloadHandler)
 	e.GET(utils.UrlStoragePublicGetFile, fh.PublicDownloadHandler)

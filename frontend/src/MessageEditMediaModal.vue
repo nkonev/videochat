@@ -10,8 +10,8 @@
                       justify="start"
                     >
                         <template
-                          v-if="dto.count > 0"
-                          v-for="(mediaFile, i) in dto.files"
+                          v-if="itemsDto.count > 0"
+                          v-for="(mediaFile, i) in itemsDto.items"
                           :key="mediaFile.id"
                         >
                             <v-col :cols="isMobile() ? 12 : 6">
@@ -96,80 +96,42 @@
         FILE_UPDATED,
         LOGGED_OUT,
         OPEN_MESSAGE_EDIT_LINK,
-        OPEN_MESSAGE_EDIT_MEDIA, PREVIEW_CREATED
+        OPEN_MESSAGE_EDIT_MEDIA
     } from "./bus/bus";
     import {
-        findIndex,
         link_dialog_type_add_media_by_link,
         media_audio,
         media_image,
         media_video,
-        replaceOrPrepend
     } from "@/utils";
-
-    const firstPage = 1;
-    const pageSize = 20;
-
-    const dtoFactory = () => {return {files: []} };
+    import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
 
     export default {
+        mixins: [
+            pageableModalMixin(),
+        ],
         data () {
             return {
-                show: false,
+                chatId: null,
                 type: '',
                 fromDiskCallback: null,
                 setExistingMediaCallback: null,
-                loading: false,
-                dto: dtoFactory(),
-                page: firstPage,
-                dataLoaded: false,
-                isDirty: false,
             }
         },
-        computed: {
-            pagesCount() {
-                const count = Math.ceil(this.dto.count / pageSize);
-                // console.debug("Calc pages count", count);
-                return count;
-            },
-            shouldShowPagination() {
-                return this.dto != null && this.dto.files && this.dto.count > pageSize
-            },
-            chatId() {
-                return this.$route.params.id
-            },
-        },
         methods: {
-            showModal({type, fromDiskCallback, setExistingMediaCallback}) {
-
-                if (this.type != type) {
-                    this.reset();
-                }
-
-                if (this.isDirty) {
-                    this.reset();
-                    this.isDirty = false;
-                }
-
-                this.$data.show = true;
-
+            isCachedRelevantToArguments({chatId, type}) {
+                return this.chatId == chatId && this.type == type
+            },
+            initializeWithArguments({chatId, type, fromDiskCallback, setExistingMediaCallback}) {
+                this.chatId = chatId;
                 this.type = type;
                 this.fromDiskCallback = fromDiskCallback;
                 this.setExistingMediaCallback = setExistingMediaCallback;
-
-                if (!this.dataLoaded) {
-                    this.updateFiles();
-                } else {
-                    //
-                }
             },
             accept(item) {
                 if (this.setExistingMediaCallback) {
                     this.setExistingMediaCallback(item.url, item.previewUrl)
                 }
-                this.closeModal();
-            },
-            clear() {
                 this.closeModal();
             },
             title() {
@@ -192,126 +154,55 @@
                 }
                 this.closeModal();
             },
-            translatePage() {
-                return this.page - 1;
-            },
-            updateFiles() {
-                if (!this.show) {
-                    return
-                }
-                this.loading = true;
-                axios.get(`/api/storage/${this.chatId}/embed/candidates`, {
+            initiateRequest() {
+                return axios.get(`/api/storage/${this.chatId}/embed/candidates`, {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,
                         type: this.type
                     },
                 })
-                    .then((response) => {
-                        this.dto = response.data;
-                    })
-                    .finally(() => {
-                        this.loading = false;
-                        this.dataLoaded = true;
-                    })
             },
-            getTotalVisible() {
-                if (!this.isMobile()) {
-                    return 7
-                } else if (this.page == firstPage || this.page == this.pagesCount) {
-                    return 3
-                } else {
-                    return 1
-                }
+            extractDtoFromEventDto(eventDto) {
+                return [eventDto.fileInfoDto]
             },
-
-            removeItem(dto) {
-                console.log("Removing item", dto);
-                const idxToRemove = findIndex(this.dto.files, dto);
-                this.dto.files.splice(idxToRemove, 1);
+            initiateFilteredRequest(eventDto) {
+                return axios.post(`/api/storage/${this.chatId}/embed/filter`, {
+                    type: this.type,
+                    fileId: eventDto.fileInfoDto.id
+                })
             },
-            replaceItem(dto) {
-                console.log("Replacing item", dto);
-                replaceOrPrepend(this.dto.files, [dto]);
+            initiateCountRequest() {
+                return axios.post(`/api/storage/${this.chatId}/embed/count`, null, {
+                    params: {
+                        type: this.type,
+                    }
+                })
             },
-            onFileCreated(dto) {
-                if (!this.dataLoaded) {
-                    return
-                }
-                if (!this.show) {
-                    this.reset()
-                } else {
-                    this.isDirty = true;
-                }
-            },
-            onFileUpdated(dto) {
-                if (!this.dataLoaded) {
-                    return
-                }
-                if (!this.show) {
-                    this.reset()
-                } else {
-                    this.isDirty = true;
-                }
-            },
-            onFileRemoved(dto) {
-                if (!this.dataLoaded) {
-                    return
-                }
-                if (!this.show) {
-                    this.reset()
-                } else {
-                    this.isDirty = true;
-                }
-            },
-            onLogout() {
-                this.reset();
-                this.closeModal();
-            },
-            closeModal() {
-                this.show = false;
+            clearOnClose() {
                 this.fromDiskCallback = null;
                 this.setExistingMediaCallback = null;
             },
-            reset() {
+            clearOnReset() {
+                this.chatId = null;
                 this.type = '';
-                this.dataLoaded = false;
-                this.loading = false;
-                this.dto = dtoFactory();
-                this.page = firstPage;
             },
-        },
-        watch: {
-            show(newValue) {
-                if (!newValue) {
-                    this.closeModal();
-                }
+            resetOnRouteIdChange(){
+                return true
             },
-            page(newValue) {
-                if (this.show) {
-                    console.debug("SettingNewPage", newValue);
-                    this.dto = dtoFactory();
-                    this.updateFiles();
-                }
-            },
-            '$route.params.id': function (newValue, oldValue) {
-                if (newValue != oldValue) {
-                    this.reset();
-                }
-            }
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
-            bus.on(FILE_CREATED, this.onFileCreated);
-            bus.on(FILE_UPDATED, this.onFileUpdated);
-            bus.on(FILE_REMOVED, this.onFileRemoved);
+            bus.on(FILE_CREATED, this.onItemCreatedEvent);
+            bus.on(FILE_UPDATED, this.onItemUpdatedEvent);
+            bus.on(FILE_REMOVED, this.onItemRemovedEvent);
             bus.on(LOGGED_OUT, this.onLogout);
         },
         beforeUnmount() {
             bus.off(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);
-            bus.off(FILE_CREATED, this.onFileCreated);
-            bus.off(FILE_UPDATED, this.onFileUpdated);
-            bus.off(FILE_REMOVED, this.onFileRemoved);
+            bus.off(FILE_CREATED, this.onItemCreatedEvent);
+            bus.off(FILE_UPDATED, this.onItemUpdatedEvent);
+            bus.off(FILE_REMOVED, this.onItemRemovedEvent);
             bus.off(LOGGED_OUT, this.onLogout);
         },
     }
