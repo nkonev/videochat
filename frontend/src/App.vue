@@ -73,7 +73,7 @@
             <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
           </v-btn>
           <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
-            <v-icon :x-large="isMobile()">mdi-cloud-upload</v-icon>
+              {{ chatStore.fileUploadOverallProgress + "%" }}
           </v-btn>
 
         <template v-if="showSearchButton">

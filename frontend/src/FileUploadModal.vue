@@ -118,14 +118,25 @@ export default {
           bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
           this.hideModal();
         },
+        fileUploadOverallProgress() {
+            let loaded = 0;
+            let total = 0;
+            for (const item of this.chatStore.fileUploadingQueue) {
+                loaded += item.progressLoaded;
+                total += item.progressTotal;
+            }
+            return Math.round((100 * loaded) / total)
+        },
         onProgressFunction(add, total, progressReceiver) {
             const progressFunction = (event) => {
                 const loaded = add + event.loaded;
-                progressReceiver.progress = Math.round((100 * loaded) / total);
-                progressReceiver.progressLoaded = loaded;
-                progressReceiver.progressTotal = total;
+                progressReceiver.progress = Math.round((100 * loaded) / total); // in percents
+                progressReceiver.progressLoaded = loaded; // in *bytes
+
+                // calculate total
+                this.chatStore.fileUploadOverallProgress = this.fileUploadOverallProgress();
             }
-            return throttle(progressFunction, 100)
+            return throttle(progressFunction, 200)
         },
         checkLimits(totalSize) {
             return axios.get(`/api/storage/${this.chatId}/file`, { params: {
@@ -185,7 +196,7 @@ export default {
                     existingCount: response.data.existingCount,
                     progress: 0,
                     progressLoaded: 0,
-                    progressTotal: 0,
+                    progressTotal: file.size,
                     cancelSource: CancelToken.source(),
                     chatId: response.data.chatId,
                     shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage,
@@ -201,10 +212,11 @@ export default {
 
             const fileUploadingQueueCopy = [...this.chatStore.fileUploadingQueue];
             for (const fileToUpload of fileUploadingQueueCopy) {
-                if (fileToUpload.isProcessing) {
+                if (fileToUpload.isProcessing || fileToUpload.finished) {
                     continue
                 }
                 fileToUpload.isProcessing = true;
+                fileToUpload.finished = false;
 
                 try {
                     // renaming a file
@@ -278,8 +290,13 @@ export default {
                         console.warn('Request failed', thrown);
                     }
                 } finally {
-                    this.chatStore.removeFromFileUploadingQueue(fileToUpload.id);
+                    fileToUpload.finished = true;
                 }
+            }
+
+            if (this.chatStore.fileUploadingQueue.length == this.chatStore.fileUploadingQueue.filter((item) => item.finished).length) {
+                this.chatStore.fileUploadingQueue = [];
+                this.chatStore.fileUploadOverallProgress = 0;
             }
             this.hideModal();
             return Promise.resolve();
