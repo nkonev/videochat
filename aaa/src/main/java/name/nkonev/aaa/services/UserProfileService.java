@@ -248,6 +248,7 @@ public class UserProfileService {
     public String changeEmailConfirm(UUID uuid, HttpSession httpSession) {
         Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
+            LOGGER.info("For uuid {}, change email token is not found", uuid);
             return customConfig.getConfirmChangeEmailExitTokenNotFoundUrl();
         }
         ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();

@@ -100,11 +100,13 @@ public class RegistrationService {
     public String confirm(UUID uuid, HttpSession httpSession) {
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
+            LOGGER.info("For uuid {}, confirm user token is not found", uuid);
             return customConfig.getRegistrationConfirmExitTokenNotFoundUrl();
         }
         UserConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
         Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.userId());
         if (!userAccountOptional.isPresent()) {
+            LOGGER.info("For uuid {}, user account is not found", uuid);
             return customConfig.getRegistrationConfirmExitUserNotFoundUrl();
         }
         UserAccount userAccount = userAccountOptional.get();
