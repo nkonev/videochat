@@ -155,4 +155,10 @@ html {
 .with-pointer {
   cursor pointer
 }
+
+.stop-scrolling {
+    height: 100%;
+    overflow-y: hidden !important;
+}
+
 </style>

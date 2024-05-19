@@ -9,6 +9,8 @@ export const directionBottom = 'bottom';
 // reduceTop(), reduceBottom()
 // onScrollCallback(), afterScrollRestored()
 // onScroll() should be called from template
+
+// stop-scrolling class (in App.vue)
 export default (name) => {
   return {
     data() {
@@ -98,12 +100,19 @@ export default (name) => {
           this.scrollerProbeCurrent = 0;
           this.preservedScroll = null;
       },
-
+      setNoScroll() {
+          this.scrollerDiv.classList.add("stop-scrolling");
+      },
+      unsetNoScroll() {
+          this.scrollerDiv.classList.remove("stop-scrolling");
+      },
       async initialLoad() {
         if (this.scrollerDiv == null) {
           this.scrollerDiv = document.querySelector(this.scrollerSelector());
         }
+        this.setNoScroll();
         const loadedResult = await this.load();
+        this.unsetNoScroll()
         await this.$nextTick();
         await this.onFirstLoad(loadedResult);
         this.isFirstLoad = false;
@@ -112,19 +121,23 @@ export default (name) => {
       async loadTop() {
           console.log("going to load top in", name);
           this.saveScroll(true); // saves scroll between new portion load
+          this.setNoScroll();
           await this.load(); // restores scroll after new portion load
           await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(true);
+          this.unsetNoScroll()
       },
 
       async loadBottom() {
           console.log("going to load bottom in", name);
           this.saveScroll(false);
+          this.setNoScroll();
           await this.load();
           await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(false);
+          this.unsetNoScroll()
       },
       isReady() {
           return this.scrollerDiv != null

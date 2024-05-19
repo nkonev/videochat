@@ -219,7 +219,7 @@ export default {
           // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
           // e.g. some chat has been popped up on sever due to somebody updated it
           if (this.isTopDirection()) {
-              replaceOrPrepend(this.items, items.reverse());
+              replaceOrPrepend(this.items, items);
               // sorts possibly wrong order after loading items, appeared on server while user was scrolling
               // it makes sense only when user scrolls to top - in order to have more or less "fresh" view
               this.sort(this.items);
@@ -456,7 +456,7 @@ export default {
     onScrollCallback() {
           const isScrolledToTop = this.isScrolledToTop();
           if (!isScrolledToTop) {
-              // during scrolling we disable adding new elements, so some messages can appear on server, so
+              // during scrolling we disable adding new elements, so some chats can appear on server, so
               // we set loadedTop to false in order to force infiniteScrollMixin to fetch new messages during scrollTop()
               this.loadedTop = false;
               // see also this.sort(this.items) in load()
