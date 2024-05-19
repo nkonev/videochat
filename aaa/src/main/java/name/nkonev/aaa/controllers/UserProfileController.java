@@ -114,7 +114,7 @@ public class UserProfileController {
         return userProfileService.editNonEmpty(userAccount, userAccountDTO, language, httpSession);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    // here we don't use @PreAuthorize("isAuthenticated()") because it prevents aaa to process cookie when sameSite=strict and secure=true
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.CHANGE_EMAIL_CONFIRM)
     public String changeEmailConfirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
         return "redirect:" + userProfileService.changeEmailConfirm(uuid, httpSession);
