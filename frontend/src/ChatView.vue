@@ -95,10 +95,6 @@ const getChatEventsData = (message) => {
 
 let writingUsersTimerId;
 
-const MESSAGE_EDIT_PANE_SIZE_INITIAL = 20; // percents
-const MESSAGE_EDIT_PANE_SIZE_EXPANDED = 60; // percents
-const ONTOP_VIDEO_PANE_SIZE = 30;
-
 const panelSizesKey = "panelSizes";
 
 const emptyStoredPanes = () => {
