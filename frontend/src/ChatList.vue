@@ -453,15 +453,6 @@ export default {
             }
         })
     },
-    onScrollCallback() {
-          const isScrolledToTop = this.isScrolledToTop();
-          if (!isScrolledToTop) {
-              // during scrolling we disable adding new elements, so some chats can appear on server, so
-              // we set loadedTop to false in order to force infiniteScrollMixin to fetch new messages during scrollTop()
-              this.loadedTop = false;
-              // see also this.sort(this.items) in load()
-          }
-    },
     isScrolledToTop() {
           if (this.scrollerDiv) {
               return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
