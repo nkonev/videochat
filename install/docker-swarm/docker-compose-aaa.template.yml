@@ -54,9 +54,9 @@ services:
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
       - CSRF_COOKIE_SECURE=true
       - CSRF_COOKIE_SAME-SITE=Strict
-      # enabling them breaks password restoring
-      # - server.servlet.session.cookie.same-site=Strict
-      # - server.servlet.session.cookie.secure=true
+      # Lax needed to have possibility to go by confirmation link in change email confirmation and to take the existing cookie
+      - server.servlet.session.cookie.same-site=Lax
+      - server.servlet.session.cookie.secure=true
       - management.otlp.tracing.endpoint=http://jaeger:4318/v1/traces
       - spring.data.redis.url=redis://redis:6379/0
       - spring.flyway.out-of-order=false
