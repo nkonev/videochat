@@ -501,7 +501,7 @@ export default {
           if (this.hasItem(dto)) {
               replaceInArray(this.items, dto);
           } else {
-              this.items.unshift(dto);
+              this.items.unshift(dto); // used to/along with redraw a public chat when user leaves from it
           }
           this.sort(this.items);
           this.performMarking();
