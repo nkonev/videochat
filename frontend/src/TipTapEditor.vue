@@ -31,7 +31,7 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {hasLength, isFireFox, media_audio, media_image, media_video} from "@/utils";
+import {hasLength, isFireFox, media_audio, media_image, media_video, shouldShowSendMessageButtons} from "@/utils";
 import bus, {
   FILE_UPLOAD_MODAL_START_UPLOADING,
   PREVIEW_CREATED,
@@ -207,7 +207,11 @@ export default {
           History,
           Placeholder.configure({
               placeholder: ({ node }) => {
-                return this.$vuetify.locale.t('$vuetify.message_edit_placeholder')
+                  if (shouldShowSendMessageButtons()) {
+                      return this.$vuetify.locale.t('$vuetify.message_edit_placeholder')
+                  } else {
+                      return null
+                  }
               },
           }),
           Text,

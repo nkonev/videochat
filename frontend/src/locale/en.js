@@ -251,5 +251,13 @@ export default {
     login_color: "Login color",
     change_login_color: "Change login color",
     message_edit_bullet_list: "Bullet list",
-    message_edit_ordered_list: "Ordered list"
+    message_edit_ordered_list: "Ordered list",
+    message_edit_bullet_list_short: "Bullet",
+    message_edit_ordered_list_short: "Ordered",
+    message_edit_bold_short: "Bold",
+    message_edit_italic_short: "Italic",
+    message_edit_underline_short: "Under",
+    message_edit_image_short: "Image",
+    message_edit_video_short: "Video",
+    message_edit_embed_short: "Youtube"
 }

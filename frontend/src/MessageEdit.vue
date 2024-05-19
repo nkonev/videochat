@@ -103,8 +103,48 @@
               </v-btn>
             <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
-
         </div>
+        <template v-else>
+            <bubble-menu
+                class="bubble-menu"
+                :tippy-options="{ duration: 0 }"
+                :editor="this.$refs.tipTapRef.$data.editor"
+            >
+                <button @click="boldClick" :class="{ 'is-active': boldValue() }">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
+                </button>
+                <button @click="italicClick" :class="{ 'is-active': italicValue() }">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_italic_short') }}
+                </button>
+                <button @click="underlineClick" :class="{ 'is-active': underlineValue() }">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_underline_short') }}
+                </button>
+            </bubble-menu>
+
+            <floating-menu
+                class="floating-menu"
+                :tippy-options="{ duration: 0, zIndex: 200, interactive: true }"
+                :editor="this.$refs.tipTapRef.$data.editor"
+            >
+                <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
+                </button>
+                <button @click="orderedListClick" :class="{ 'is-active': orderedListValue() }">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_ordered_list_short') }}
+                </button>
+
+                <button @click="imageClick">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_image_short') }}
+                </button>
+                <button @click="videoClick">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_video_short') }}
+                </button>
+                <button @click="embedClick">
+                    {{ $vuetify.locale.t('$vuetify.message_edit_embed_short') }}
+                </button>
+
+            </floating-menu>
+        </template>
       </v-container>
 
       <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
@@ -155,6 +195,10 @@
     import {useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
     import {v4 as uuidv4} from "uuid";
+    import {
+        BubbleMenu,
+        FloatingMenu,
+    } from '@tiptap/vue-3';
 
     export default {
         props:['chatId'],
@@ -539,7 +583,19 @@
                 removeStoredChatEditMessageDto(this.chatId);
             },
             updateShouldShowSendMessageButtons() {
-                this.shouldShowSendMessageButtons = shouldShowSendMessageButtons()
+                const oldValue = this.shouldShowSendMessageButtons;
+                const newValue = shouldShowSendMessageButtons();
+                if (oldValue != newValue) {
+                    this.reloadTipTap();
+                }
+                this.shouldShowSendMessageButtons = newValue;
+            },
+            reloadTipTap() {
+                // reload
+                this.$refs.tipTapRef.clearContent();
+                this.$nextTick(() => {
+                    this.loadFromStore();
+                })
             },
         },
         computed: {
@@ -582,11 +638,7 @@
             },
             '$vuetify.locale.current': {
                 handler: function (newValue, oldValue) {
-                    // reload
-                    this.$refs.tipTapRef.clearContent();
-                    this.$nextTick(() => {
-                        this.loadFromStore();
-                    })
+                    this.reloadTipTap()
                 },
             },
             '$route': {
@@ -608,6 +660,8 @@
             Tiptap,
             MessageEditLinkModal,
             MessageEditMediaModal,
+            BubbleMenu,
+            FloatingMenu,
         }
     }
 </script>
@@ -651,5 +705,48 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.bubble-menu {
+    display: flex;
+    background-color: #0D0D0D;
+    padding: 0.2rem;
+    border-radius: 0.5rem;
+
+    button {
+        border: none;
+        background: none;
+        color: #FFF;
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0 0.2rem;
+        opacity: 0.6;
+
+        &:hover,
+        &.is-active {
+            opacity: 1;
+        }
+    }
+}
+
+.floating-menu {
+    display: flex;
+    background-color: #0D0D0D10;
+    padding: 0.2rem;
+    border-radius: 0.5rem;
+
+    button {
+        border: none;
+        background: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0 0.2rem;
+        opacity: 0.6;
+
+        &:hover,
+        &.is-active {
+            opacity: 1;
+        }
+    }
 }
 </style>

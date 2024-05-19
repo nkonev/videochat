@@ -251,5 +251,13 @@ export default {
     login_color: "Цвет логина",
     change_login_color: "Изменить цвет логина",
     message_edit_bullet_list: "Список точками",
-    message_edit_ordered_list: "Нумерованный список"
+    message_edit_ordered_list: "Нумерованный список",
+    message_edit_bullet_list_short: "Точками",
+    message_edit_ordered_list_short: "Нумерован.",
+    message_edit_bold_short: "Жирный",
+    message_edit_italic_short: "Курсив",
+    message_edit_underline_short: "Подчёкрнутый",
+    message_edit_image_short: "Картинка",
+    message_edit_video_short: "Видео",
+    message_edit_embed_short: "Youtube"
 }

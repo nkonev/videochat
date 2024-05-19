@@ -23,7 +23,7 @@ import FontAwesomeIcon from "@/plugins/faIcons";
 axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
 axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
-const webSplitpanesCss = () => import('splitpanes/dist/splitpanes.css');
+const webSplitpanesCss = () => import('@/splitpanesWeb.css');
 const mobileSplitpanesCss = () => import("@/splitpanesMobile.scss");
 
 // it's placed here, before app creation
