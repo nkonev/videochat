@@ -29,15 +29,20 @@ const config = {
   locale: {
     locale: getStoredLanguage(),
     messages: { en, ru },
+  },
+  defaults: {
+      global: {
+          transition: false,
+          ripple: false,
+      },
   }
 }
 
 if (isMobileBrowser()) {
   config.defaults = {
     global: {
-      transition: false,
-      ripple: false,
       scrim: false,
+      ripple: false,
     },
   }
 }
