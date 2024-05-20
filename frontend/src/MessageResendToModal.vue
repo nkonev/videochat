@@ -67,11 +67,12 @@ import bus, {
     CHAT_ADD, CHAT_DELETED, CHAT_EDITED, LOGGED_OUT,
     OPEN_RESEND_TO_MODAL,
 } from "./bus/bus";
-import {hasLength} from "./utils";
+import {findIndex, hasLength, replaceInArray, replaceOrPrepend} from "./utils";
 import axios from "axios";
 import debounce from "lodash/debounce";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
+import {pageSize} from "@/mixins/pageableModalMixin.js";
 
 export default {
     data () {
@@ -84,18 +85,14 @@ export default {
             showSearchButton: true,
             markInstance: null,
             dataLoaded: false,
-            isDirty: false,
+            pageSize: 0,
+            totalCount: 0,
         }
     },
 
     methods: {
         hasLength,
         showModal(messageDto) {
-            if (this.isDirty) {
-                this.reset();
-                this.isDirty = false;
-            }
-
             this.messageDto = messageDto;
 
             this.show = true;
@@ -106,20 +103,26 @@ export default {
                 //
             }
         },
-        loadData() {
+        loadData(silent) {
             if (!this.show) {
                 return
             }
-            this.loading = true;
+            if (!silent) {
+                this.loading = true;
+            }
             axios.get('/api/chat', {
                 params: {
                     searchString: this.searchString,
                 },
             }).then(({data}) => {
                 this.chats = data.data;
+                this.pageSize = data.pageSize;
+                this.totalCount = data.totalCount;
                 this.performMarking();
             }).finally(()=>{
-                this.loading = false;
+                if (!silent) {
+                    this.loading = false;
+                }
                 this.dataLoaded = true;
             })
         },
@@ -173,30 +176,27 @@ export default {
             if (!this.dataLoaded) {
                 return
             }
-            if (!this.show) {
-                this.reset()
-            } else {
-                this.isDirty = true;
+            replaceOrPrepend(this.chats, [dto]);
+            if (this.chats.length > this.pageSize) {
+                this.chats.splice(this.chats.length - 1, 1);
             }
+            this.performMarking();
         },
         changeItem(dto) {
-            if (!this.dataLoaded) {
-                return
-            }
-            if (!this.show) {
-                this.reset()
-            } else {
-                this.isDirty = true;
-            }
+            this.addItem(dto)
         },
         removeItem(dto) {
             if (!this.dataLoaded) {
                 return
             }
-            if (!this.show) {
-                this.reset()
-            } else {
-                this.isDirty = true;
+            const idxToRemove = findIndex(this.chats, dto);
+            if (idxToRemove !== -1) {
+                this.chats.splice(idxToRemove, 1);
+            }
+
+            const notEnoughItemsOnPage = this.totalCount > this.pageSize && this.chats.length < this.pageSize;
+            if (notEnoughItemsOnPage) {
+                this.loadData(true);
             }
         },
         onLogout() {
@@ -205,6 +205,7 @@ export default {
         },
         closeModal() {
             this.show = false;
+            this.messageDto = null;
             this.showSearchButton = true;
         },
         reset() {
@@ -213,6 +214,8 @@ export default {
             this.chats = [];
             this.loading = false;
             this.searchString = null;
+            this.pageSize = 0;
+            this.totalCount = 0;
         },
     },
     computed: {
@@ -232,11 +235,6 @@ export default {
         searchString (searchString) {
             this.doSearch();
         },
-        '$route.params.id': function (newValue, oldValue) {
-            if (newValue != oldValue) {
-                this.reset();
-            }
-        }
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
