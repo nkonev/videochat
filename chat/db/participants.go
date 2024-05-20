@@ -26,6 +26,11 @@ func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 	return eris.Wrap(err, "error during interacting with db")
 }
 
+func (tx *Tx) DeleteUserAsAParticipant(userId int64) error {
+	_, err := tx.Exec(`DELETE FROM chat_participant WHERE user_id = $1`, userId)
+	return eris.Wrap(err, "error during interacting with db")
+}
+
 func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
 	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY create_date_time DESC LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
@@ -104,16 +109,16 @@ func getAllParticipantIdsCommon(qq CommonOperations, chatId int64, consumer func
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		participantIds, err := getParticipantIdsCommon(qq, chatId, utils.DefaultSize, offset)
+		if err != nil {
+			logger.Logger.Errorf("Got error during getting portion %v", err)
+			lastError = err
+			break
+		}
 		if len(participantIds) == 0 {
 			return nil
 		}
 		if len(participantIds) < utils.DefaultSize {
 			shouldContinue = false
-		}
-		if err != nil {
-			logger.Logger.Errorf("Got error during getting portion %v", err)
-			lastError = err
-			break
 		}
 		err = consumer(participantIds)
 		if err != nil {
@@ -131,6 +136,60 @@ func (tx *Tx) IterateOverAllParticipantIds(chatId int64, consumer func(participa
 
 func (db *DB) IterateOverAllParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
 	return getAllParticipantIdsCommon(db, chatId, consumer)
+}
+
+func getParticipantIdsCommonWoChat(qq CommonOperations, participantsSize, participantsOffset int) ([]int64, error) {
+	if rows, err := qq.Query("SELECT distinct (user_id) FROM chat_participant ORDER BY user_id LIMIT $1 OFFSET $2", participantsSize, participantsOffset); err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var participantId int64
+			if err := rows.Scan(&participantId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				list = append(list, participantId)
+			}
+		}
+		return list, nil
+	}
+}
+
+func getParticipantIdsCommonIterate(qq CommonOperations, consumer func(participantIds []int64) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := 0; shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		participantIds, err := getParticipantIdsCommonWoChat(qq, utils.DefaultSize, offset)
+		if err != nil {
+			logger.Logger.Errorf("Got error during getting portion %v", err)
+			lastError = err
+			break
+		}
+
+		if len(participantIds) == 0 {
+			return nil
+		}
+		if len(participantIds) < utils.DefaultSize {
+			shouldContinue = false
+		}
+		err = consumer(participantIds)
+		if err != nil {
+			logger.Logger.Errorf("Got error during invoking consumer portion %v", err)
+			lastError = err
+			break
+		}
+	}
+	return lastError
+}
+
+func (tx *Tx) IterateOverParticipantIds(consumer func(participantIds []int64) error) error {
+	return getParticipantIdsCommonIterate(tx, consumer)
+}
+
+func (db *DB) IterateOverParticipantIds(consumer func(participantIds []int64) error) error {
+	return getParticipantIdsCommonIterate(db, consumer)
 }
 
 func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) {
@@ -370,16 +429,16 @@ func (db *DB) IterateOverCoChattedParticipantIds(participantId int64, consumer f
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		participantIds, err := db.GetCoChattedParticipantIdsCommon(participantId, utils.DefaultSize, offset)
+		if err != nil {
+			logger.Logger.Errorf("Got error during getting portion %v", err)
+			lastError = err
+			break
+		}
 		if len(participantIds) == 0 {
 			return nil
 		}
 		if len(participantIds) < utils.DefaultSize {
 			shouldContinue = false
-		}
-		if err != nil {
-			logger.Logger.Errorf("Got error during getting portion %v", err)
-			lastError = err
-			break
 		}
 		err = consumer(participantIds)
 		if err != nil {

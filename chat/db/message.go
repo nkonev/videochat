@@ -443,6 +443,19 @@ func (tx *Tx) DeleteMessageRead(userId int64, chatId int64) error {
 	return deleteMessageReadCommon(tx, userId, chatId)
 }
 
+func deleteAllMessageReadCommon(co CommonOperations, userId int64) error {
+	_, err := co.Exec(`DELETE FROM message_read WHERE user_id = $1`, userId)
+	return eris.Wrap(err, "error during interacting with db")
+}
+
+func (db *DB) DeleteAllMessageRead(userId int64) error {
+	return deleteAllMessageReadCommon(db, userId)
+}
+
+func (tx *Tx) DeleteAllMessageRead(userId int64) error {
+	return deleteAllMessageReadCommon(tx, userId)
+}
+
 
 func (tx *Tx) EditMessage(m *Message) error {
 	if m == nil {
