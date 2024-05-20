@@ -390,7 +390,7 @@
         editMessage(dto){
           const editMessageDto = deepCopy(dto);
           if (haveEmbed(dto)) {
-            setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner.login);
+            setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner?.login);
           }
           if (!this.isMobile()) {
             bus.emit(SET_EDIT_MESSAGE, {dto: editMessageDto, actionType: edit_message});
@@ -405,7 +405,7 @@
                   embedType: embed_message_reply
               },
           };
-          setAnswerPreviewFields(replyMessage, dto.text, dto.owner.login);
+          setAnswerPreviewFields(replyMessage, dto.text, dto.owner?.login);
           if (!this.isMobile()) {
               bus.emit(SET_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
           } else {
