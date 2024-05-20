@@ -37,7 +37,6 @@ if (isMobileBrowser()) {
     global: {
       transition: false,
       ripple: false,
-      scrim: false,
     },
   }
 }
