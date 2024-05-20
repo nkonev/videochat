@@ -103,7 +103,7 @@ func (db *DB) GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*
 	return getParticipantIdsBatchCommon(db, chatIds, participantsSize)
 }
 
-func getAllParticipantIdsCommon(qq CommonOperations, chatId int64, consumer func(participantIds []int64) error) error {
+func getChatParticipantIdsCommon(qq CommonOperations, chatId int64, consumer func(participantIds []int64) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := 0; shouldContinue; page++ {
@@ -130,15 +130,15 @@ func getAllParticipantIdsCommon(qq CommonOperations, chatId int64, consumer func
 	return lastError
 }
 
-func (tx *Tx) IterateOverAllParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
-	return getAllParticipantIdsCommon(tx, chatId, consumer)
+func (tx *Tx) IterateOverChatParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
+	return getChatParticipantIdsCommon(tx, chatId, consumer)
 }
 
-func (db *DB) IterateOverAllParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
-	return getAllParticipantIdsCommon(db, chatId, consumer)
+func (db *DB) IterateOverChatParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
+	return getChatParticipantIdsCommon(db, chatId, consumer)
 }
 
-func getParticipantIdsCommonWoChat(qq CommonOperations, participantsSize, participantsOffset int) ([]int64, error) {
+func getPortionOfAllParticipantIdsCommon(qq CommonOperations, participantsSize, participantsOffset int) ([]int64, error) {
 	if rows, err := qq.Query("SELECT distinct (user_id) FROM chat_participant ORDER BY user_id LIMIT $1 OFFSET $2", participantsSize, participantsOffset); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -156,12 +156,12 @@ func getParticipantIdsCommonWoChat(qq CommonOperations, participantsSize, partic
 	}
 }
 
-func getParticipantIdsCommonIterate(qq CommonOperations, consumer func(participantIds []int64) error) error {
+func getAllParticipantIdsCommon(qq CommonOperations, consumer func(participantIds []int64) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
-		participantIds, err := getParticipantIdsCommonWoChat(qq, utils.DefaultSize, offset)
+		participantIds, err := getPortionOfAllParticipantIdsCommon(qq, utils.DefaultSize, offset)
 		if err != nil {
 			logger.Logger.Errorf("Got error during getting portion %v", err)
 			lastError = err
@@ -184,12 +184,12 @@ func getParticipantIdsCommonIterate(qq CommonOperations, consumer func(participa
 	return lastError
 }
 
-func (tx *Tx) IterateOverParticipantIds(consumer func(participantIds []int64) error) error {
-	return getParticipantIdsCommonIterate(tx, consumer)
+func (tx *Tx) IterateOverAllParticipantIds(consumer func(participantIds []int64) error) error {
+	return getAllParticipantIdsCommon(tx, consumer)
 }
 
-func (db *DB) IterateOverParticipantIds(consumer func(participantIds []int64) error) error {
-	return getParticipantIdsCommonIterate(db, consumer)
+func (db *DB) IterateOverAllParticipantIds(consumer func(participantIds []int64) error) error {
+	return getAllParticipantIdsCommon(db, consumer)
 }
 
 func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) {

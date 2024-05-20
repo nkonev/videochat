@@ -579,7 +579,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
 		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
@@ -738,7 +738,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
 
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var oldMentions, _ = mc.findMentions(oldMessage.Text, false, users, userOnlines)
@@ -876,7 +876,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return err
 	}
 	// notifying
-	err = mc.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+	err = mc.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
 		return nil
 	})
@@ -938,7 +938,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		return err
 	}
 
-	err = mc.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+	err = mc.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 		var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 
@@ -1184,7 +1184,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		err = mc.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = mc.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message)
 			return nil
 		})
@@ -1250,7 +1250,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
-			err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 				mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
 				// notify about newly promoted result (promoted can be different)
@@ -1277,7 +1277,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return err
 			}
 
-			err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 				mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
 
 				// actually instead of unpromote - remove is better
@@ -1306,7 +1306,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 
 					res2, err := getMessage(c, tx, mc.restClient, chatId, promoted.Id, userPrincipalDto.UserId)
 
-					err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+					err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 						errInternal := mc.sendPromotePinnedMessageEvent(c, res2, tx, chatId, participantIds, userPrincipalDto.UserId, true, count2)
 						return errInternal
 					})
@@ -1380,7 +1380,7 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 			return err
 		}
 
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			if res0 != nil {
 				mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res0)
 			}

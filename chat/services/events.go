@@ -209,7 +209,7 @@ func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *
 		ParticipantId: user.Id,
 	}
 
-	err := not.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+	err := not.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			if participantId == user.Id {
 				continue
@@ -262,7 +262,7 @@ func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId in
 		Text:   text,
 	}
 
-	err := not.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+	err := not.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:                    "user_broadcast",
@@ -461,7 +461,7 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 		Reaction:  aReaction,
 	}
 
-	err := not.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+	err := not.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:                  eventType,

@@ -607,7 +607,7 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 		}
-		err := tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err := tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutDeleteChat(c, chatId, participantIds, tx)
 			return nil
 		})
@@ -679,7 +679,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		err = tx.IterateOverAllParticipantIds(bindTo.Id, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(bindTo.Id, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			return nil
 		})
@@ -724,7 +724,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
-			err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+			err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 				ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{userPrincipalDto.UserId})
 				ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 				return nil
@@ -794,7 +794,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, []*dto.UserWithAdmin{
 				{
 					User: dto.User{
@@ -870,7 +870,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return err
 		}
 
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutChangeParticipants(c, participantIds, chatId, newUsersWithAdmin)
 			return nil
 		})
@@ -977,7 +977,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{interestingUserId})
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			return nil
@@ -1103,7 +1103,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		err = tx.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, newUsersWithAdmin)
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
 			return nil
@@ -1785,7 +1785,7 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 		users = append(users, belongs)
 	}
 
-	err = ch.db.IterateOverAllParticipantIds(chatId, func(participantIds []int64) error {
+	err = ch.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, user := range users {
 			if utils.Contains(participantIds, user.UserId) {
 				user.Belongs = true
