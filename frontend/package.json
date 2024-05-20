@@ -29,6 +29,7 @@
     "@tiptap/suggestion": "2.3.2",
     "@tiptap/vue-3": "2.3.2",
     "axios": "^1.6.7",
+    "chroma-js": "^2.4.2",
     "core-js": "^3.36.0",
     "date-fns": "^3.3.1",
     "graphql-ws": "5.15.0",

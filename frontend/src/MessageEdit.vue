@@ -199,6 +199,7 @@
         BubbleMenu,
         FloatingMenu,
     } from '@tiptap/vue-3';
+    import chroma from "chroma-js";
 
     export default {
         props:['chatId'],
@@ -508,11 +509,18 @@
             embedClick() {
                 bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
             },
+            convertColor(givenColor) {
+                return hasLength(givenColor) ? chroma(givenColor).hex() : null;
+            },
             textColorClick(){
-                bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorText, color: null});
+                const givenColor = this.$refs.tipTapRef?.$data.editor.getAttributes('textStyle')?.color;
+                const hexColor = this.convertColor(givenColor);
+                bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorText, color: hexColor});
             },
             backgroundColorClick() {
-                bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorBackground, color: null});
+                const givenColor = this.$refs.tipTapRef?.$data.editor.getAttributes('highlight')?.color;
+                const hexColor = this.convertColor(givenColor);
+                bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorBackground, color: hexColor});
             },
             smileyClick() {
                 bus.emit(OPEN_MESSAGE_EDIT_SMILEY,
