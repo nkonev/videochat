@@ -8,7 +8,7 @@
                     hide-inputs
                     hide-sliders
                     show-swatches
-                    swatches-max-height="300"
+                    swatches-max-height="100%"
                     :elevation="0"
                     v-model="color"
                     width="100%"
