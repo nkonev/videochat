@@ -11,6 +11,8 @@
                 @contextmenu.stop="onShowContextMenu($event, item)"
                 @click.prevent="openChat(item)"
                 :href="getLink(item)"
+                :active="isActiveChat(item)"
+                color="primary"
             >
                 <template v-slot:prepend v-if="hasLength(item.avatar)">
                     <v-badge
@@ -75,7 +77,7 @@ import axios from "axios";
 import infiniteScrollMixin, {
     directionBottom,
 } from "@/mixins/infiniteScrollMixin";
-import {chat, chat_list_name, chat_name, userIdHashPrefix} from "@/router/routes";
+import {chat, chat_list_name, chat_name, userIdHashPrefix, videochat_name} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -332,6 +334,13 @@ export default {
     },
     getLink(item) {
           return chat + "/" + item.id
+    },
+    isActiveChat(item) {
+        if (!this.isMobile() && this.$route.name == chat_name || this.$route.name == videochat_name) {
+            return this.$route.params.id == item.id
+        } else {
+            return false
+        }
     },
     printParticipants(chat) {
           if (hasLength(chat.shortInfo)) {
