@@ -235,11 +235,6 @@ export default {
         searchString (searchString) {
             this.doSearch();
         },
-        '$route.params.id': function (newValue, oldValue) {
-            if (newValue != oldValue) {
-                this.reset();
-            }
-        }
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
