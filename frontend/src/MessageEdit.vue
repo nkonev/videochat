@@ -199,7 +199,7 @@
         BubbleMenu,
         FloatingMenu,
     } from '@tiptap/vue-3';
-    import chroma from "chroma-js";
+    import chroma from "chroma-js/chroma-light.js";
 
     export default {
         props:['chatId'],
@@ -510,7 +510,7 @@
                 bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
             },
             convertColor(givenColor) {
-                return hasLength(givenColor) ? chroma(givenColor).hex() : null;
+                return hasLength(givenColor) ? chroma(givenColor).hex().toUpperCase() : null;
             },
             textColorClick(){
                 const givenColor = this.$refs.tipTapRef?.$data.editor.getAttributes('textStyle')?.color;
