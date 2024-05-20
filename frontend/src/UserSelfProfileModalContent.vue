@@ -457,7 +457,7 @@ export default {
                 })
         },
         changeLoginColor() {
-            bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorLogin});
+            bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorLogin, color: this.chatStore.currentUser.loginColor});
         },
         onColorSet({color, colorMode}) {
             if (colorMode == colorLogin) {
