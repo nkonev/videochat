@@ -118,12 +118,12 @@ export default {
                 this.chats = data.data;
                 this.pageSize = data.pageSize;
                 this.totalCount = data.totalCount;
-                this.performMarking();
             }).finally(()=>{
                 if (!silent) {
                     this.loading = false;
                 }
                 this.dataLoaded = true;
+                this.performMarking();
             })
         },
         getChatName(item) {
@@ -176,11 +176,20 @@ export default {
             if (!this.dataLoaded) {
                 return
             }
-            replaceOrPrepend(this.chats, [dto]);
-            if (this.chats.length > this.pageSize) {
-                this.chats.splice(this.chats.length - 1, 1);
-            }
-            this.performMarking();
+            axios.post(`/api/chat/filter`, {
+                searchString: this.searchString,
+                chatId: dto.id
+            }).then(({data}) => {
+                if (data.found) {
+                    console.log("Adding item", dto);
+                    this.markInstance.unmark();
+                    replaceOrPrepend(this.chats, [dto]);
+                    if (this.chats.length > this.pageSize) {
+                        this.chats.splice(this.chats.length - 1, 1);
+                    }
+                    this.performMarking();
+                }
+            })
         },
         changeItem(dto) {
             this.addItem(dto)
