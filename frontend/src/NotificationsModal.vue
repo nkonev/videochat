@@ -71,8 +71,9 @@
 <script>
 
 import bus, {
-  NOTIFICATION_ADD, NOTIFICATION_DELETE,
-  OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
+    LOGGED_OUT,
+    NOTIFICATION_ADD, NOTIFICATION_DELETE,
+    OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
 import {findIndex, getHumanReadableDate, hasLength} from "./utils";
 import axios from "axios";
@@ -229,11 +230,13 @@ export default {
         bus.on(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
         bus.on(NOTIFICATION_ADD, this.notificationAdd);
         bus.on(NOTIFICATION_DELETE, this.notificationDelete);
+        bus.on(LOGGED_OUT, this.onLogout);
     },
     beforeUnmount() {
         bus.off(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
         bus.off(NOTIFICATION_ADD, this.notificationAdd);
         bus.off(NOTIFICATION_DELETE, this.notificationDelete);
+        bus.off(LOGGED_OUT, this.onLogout);
     },
 }
 </script>
