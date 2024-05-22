@@ -1,11 +1,11 @@
 import axios from "axios";
 import { PAGE_SIZE, SEARCH_MODE_POSTS } from "#root/common/utils";
-import { getApiHost } from "#root/common/config";
+import { getChatApiUrl } from "#root/common/config";
 
 export { data };
 
 async function data(pageContext) {
-    const apiHost = getApiHost();
+    const apiHost = getChatApiUrl();
     const response = await axios.get(apiHost + '/blog', {
         params: {
             size: PAGE_SIZE,

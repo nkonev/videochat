@@ -32,8 +32,8 @@ services:
         - "traefik.http.routers.seo-version-router.middlewares=seo-stripprefix-middleware"
 
     environment:
-      - API_HOST=http://chat:1235
-      - SEO_HOST=http://api.site.local:8080
+      - CHAT_API_URL=http://chat:1235
+      - FRONTEND_URL=http://api.site.local:8080
 
     logging:
       driver: "journald"

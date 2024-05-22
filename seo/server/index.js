@@ -17,7 +17,7 @@ import { renderPage } from 'vike/server'
 import { root } from './root.js'
 import { blog } from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
-import { getApiHost, getSeoHost } from "../common/config.js";
+import { getChatApiUrl, getFrontendUrl } from "../common/config.js";
 import axios from "axios";
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -61,12 +61,12 @@ async function startServer() {
     res.header('Content-Type', 'application/xml');
 
     try {
-        const smStream = new SitemapStream({ hostname: getSeoHost() });
+        const smStream = new SitemapStream({ hostname: getFrontendUrl() });
 
         // index page
         smStream.write({url: `/blog/`, lastmod: new Date()})
 
-        const apiHost = getApiHost();
+        const apiHost = getChatApiUrl();
         const PAGE_SIZE = 40;
         for (let page = 0; ; page++) {
             const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
@@ -92,7 +92,7 @@ async function startServer() {
 
   app.get('/robots.txt', function (req, res) {
     res.type('text/plain');
-    const sitemapUrl = getSeoHost() + '/sitemap.xml';
+    const sitemapUrl = getFrontendUrl() + '/sitemap.xml';
     res.send(`User-agent: *
 Sitemap: ${sitemapUrl}`);
   });
