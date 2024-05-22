@@ -26,8 +26,8 @@ func NewMessageHandler(dbR *db.DB, rabbitEventsPublisher *producer.RabbitEventPu
 }
 
 type NotificationsWrapper struct {
-	Data  []dto.NotificationDto  `json:"data"`
-	Count int64          		  `json:"totalCount"` // total notification number for this user
+	Data  []dto.NotificationDto   `json:"items"`
+	Count int64          		  `json:"count"` // total notification number for this user
 }
 
 type NotificationsCount struct {

@@ -234,7 +234,7 @@
                     },
                 })
             },
-            afterUpdateItems() {
+            afterFirstDrawItems() {
                 this.$nextTick(()=>{
                     axios.put(`/api/video/${this.chatId}/dial/request-for-is-calling`);
                 })
@@ -454,6 +454,9 @@
             },
             resetOnRouteIdChange(){
                 return true
+            },
+            shouldReactOnPageChange() {
+                return this.show
             },
         },
         watch: {

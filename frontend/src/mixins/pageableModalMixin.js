@@ -7,9 +7,9 @@ export const dtoFactory = () => {return {items: [], count: 0} };
 
 // requires extractDtoFromEventDto(), isCachedRelevantToArguments(), initializeWithArguments(),
 // resetOnRouteIdChange(), initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
-// clearOnClose(), clearOnReset()
+// clearOnClose(), clearOnReset(), shouldReactOnPageChange()
 
-// optionally transformItems(), performMarking(), onInitialized(), afterUpdateItems()
+// optionally transformItems(), performMarking(), onInitialized(), afterUpdateItems(), afterFirstDrawItems()
 
 export default () => {
     return {
@@ -67,6 +67,9 @@ export default () => {
                             this.transformItems(dto?.items);
                         }
                         this.itemsDto = dto;
+                        if (this.afterUpdateItems){
+                            this.afterUpdateItems(dto)
+                        }
                     })
                     .finally(() => {
                         if (!silent) {
@@ -76,8 +79,8 @@ export default () => {
                         if (this.performMarking) {
                             this.performMarking();
                         }
-                        if (this.afterUpdateItems){
-                            this.afterUpdateItems()
+                        if (this.afterFirstDrawItems){
+                            this.afterFirstDrawItems()
                         }
                     })
             },
@@ -119,7 +122,7 @@ export default () => {
                 console.debug("onItemCreatedEvent", dto);
 
                 // filter and load items count
-                this.initiateCountRequest().then((response) => {
+                this.initiateCountRequest(dto).then((response) => {
                     this.itemsDto.count = response.data.count;
                 }).then(()=> {
                     if (this.page == firstPage) {
@@ -178,20 +181,20 @@ export default () => {
                 console.debug("onItemRemovedEvent", dto);
                 this.removeItems(this.extractDtoFromEventDto(dto));
                 // load items count
-                this.initiateCountRequest().then((response) => {
+                this.initiateCountRequest(dto).then((response) => {
                         this.itemsDto.count = response.data.count;
                     }).then(() => {
-                    if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
-                        this.page = this.pagesCount; // this causes update() because of watch
-                        return
-                    }
+                        if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
+                            this.page = this.pagesCount; // this causes update() because of watch
+                            return
+                        }
 
-                    const notEnoughItemsOnPage = this.itemsDto.count > pageSize && this.itemsDto.items.length < pageSize;
-                    const nonLastPage = this.page != this.pagesCount;
-                    if (notEnoughItemsOnPage && nonLastPage) {
-                        this.updateItems(true);
-                    }
-                })
+                        const notEnoughItemsOnPage = this.itemsDto.count > pageSize && this.itemsDto.items.length < pageSize;
+                        const nonLastPage = this.page != this.pagesCount;
+                        if (notEnoughItemsOnPage && nonLastPage) {
+                            this.updateItems(true);
+                        }
+                    })
             },
 
 
@@ -221,7 +224,7 @@ export default () => {
                 }
             },
             page(newValue) {
-                if (this.show) {
+                if (this.shouldReactOnPageChange()) {
                     console.debug("Setting new page", newValue);
                     this.itemsDto = dtoFactory();
                     this.updateItems();

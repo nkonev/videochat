@@ -341,6 +341,9 @@ export default {
         resetOnRouteIdChange(){
             return true
         },
+        shouldReactOnPageChange() {
+            return this.show
+        },
     },
     watch: {
         searchString(searchString) {

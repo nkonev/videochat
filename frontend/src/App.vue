@@ -470,7 +470,7 @@ export default {
                           byLogin
                           chatTitle
                         }
-                        totalCount
+                        count
                       }
                       forceLogout {
                         reasonType

@@ -748,7 +748,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	userNotification := e.UserNotificationEvent
 	if userNotification != nil {
 		ret.NotificationEvent = &model.WrapperNotificationDto{
-			TotalCount: userNotification.TotalCount,
+			Count: userNotification.TotalCount,
 			NotificationDto: &model.NotificationDto{
 				ID:               userNotification.NotificationDto.Id,
 				ChatID:           userNotification.NotificationDto.ChatId,

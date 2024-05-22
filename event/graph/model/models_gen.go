@@ -308,6 +308,6 @@ type WrappedFileInfoDto struct {
 }
 
 type WrapperNotificationDto struct {
-	TotalCount      int64            `json:"totalCount"`
+	Count           int64            `json:"count"`
 	NotificationDto *NotificationDto `json:"notificationDto"`
 }

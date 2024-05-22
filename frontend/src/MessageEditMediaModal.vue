@@ -190,6 +190,9 @@
             resetOnRouteIdChange(){
                 return true
             },
+            shouldReactOnPageChange() {
+                return this.show
+            },
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_MEDIA, this.showModal);

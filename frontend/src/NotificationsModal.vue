@@ -4,8 +4,8 @@
             <v-card :title="$vuetify.locale.t('$vuetify.notifications')">
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0 notification-list" v-if="!loading">
-                        <template v-if="dto.data.length > 0">
-                            <template v-for="(item, index) in dto.data">
+                        <template v-if="itemsDto.items.length > 0">
+                            <template v-for="(item, index) in itemsDto.items">
                                 <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
                                   <template v-slot:prepend>
                                     <v-icon size="x-large">
@@ -74,84 +74,76 @@ import bus, {
   NOTIFICATION_ADD, NOTIFICATION_DELETE,
   OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
-import {findIndex, getHumanReadableDate, hasLength, setIcon} from "./utils";
+import {findIndex, getHumanReadableDate, hasLength} from "./utils";
 import axios from "axios";
 import {chat, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import pageableModalMixin from "@/mixins/pageableModalMixin.js";
 
 const firstPage = 1;
 const pageSize = 20;
 
-const dtoFactory = () => {return {data: [], totalCount: 0} };
-
 export default {
-    data () {
-        return {
-            show: false,
-            dto: dtoFactory(),
-            page: firstPage,
-            loading: false,
-        }
-    },
-
+    mixins: [
+        pageableModalMixin()
+    ],
     methods: {
-        showModal() {
-            this.show = true;
-            this.loadData();
+        isCachedRelevantToArguments() {
+            return true
         },
-        loadData() {
-          if (!this.show) {
-            return
-          }
-          this.loading = true;
-          axios.get(`/api/notification/notification`, {
-            params: {
-              page: this.translatePage(),
-              size: pageSize,
-            },
-          }).then(({data}) => {
-            this.dto = data;
-            this.chatStore.setNotificationCount(data.totalCount);
-          }).finally(()=>{
-              this.loading = false;
-          })
+        initializeWithArguments() {
+            // empty
         },
-        translatePage() {
-          return this.page - 1;
+        initiateRequest() {
+            return axios.get(`/api/notification/notification`, {
+                params: {
+                    page: this.translatePage(),
+                    size: pageSize,
+                },
+            })
+        },
+        afterUpdateItems(dto) {
+            this.chatStore.setNotificationCount(dto.count);
+        },
+
+        extractDtoFromEventDto(dto) {
+            return [dto.notificationDto]
+        },
+
+        initiateFilteredRequest(dto) {
+            return Promise.resolve({
+                data: [
+                    {
+                        id: dto.notificationDto.id
+                    }
+                ]
+            })
+        },
+        initiateCountRequest(dto) {
+            return Promise.resolve({
+                data: {
+                    count: dto.count
+                }
+            })
         },
 
         notificationAdd(payload) {
-          const count = payload.totalCount;
-          this.chatStore.setNotificationCount(count);
+          this.chatStore.setNotificationCount(payload.count);
 
-          if (this.show) {
-            this.dto.totalCount = count;
-            const data = payload.notificationDto;
-            const newArr = [data, ...this.dto.data];
-            this.dto.data = newArr;
-          }
+          this.onItemCreatedEvent(payload);
         },
         notificationDelete(payload) {
-          const count = payload.totalCount;
-          this.chatStore.setNotificationCount(count);
+          this.chatStore.setNotificationCount(payload.count);
 
-          if (this.show) {
-            this.dto.totalCount = count;
-
-            const data = payload.notificationDto;
-            const arr = this.dto.data;
-            const idxToRemove = findIndex(arr, data);
-            arr.splice(idxToRemove, 1);
-            this.dto.data = arr;
-          }
+          this.onItemRemovedEvent(payload);
         },
 
-        closeModal() {
-            this.show = false;
-            this.page = firstPage;
-            this.dto = dtoFactory();
-            this.loading = false;
+        clearOnClose() {
+            // empty
+        },
+        clearOnReset() {
+            // empty
         },
         getNotificationIcon(type) {
             switch (type) {
@@ -229,33 +221,17 @@ export default {
         openNotificationSettings() {
             bus.emit(OPEN_SETTINGS, 'the_notifications')
         },
+        resetOnRouteIdChange() {
+            return false
+        },
+        shouldReactOnPageChange() {
+            return true
+        },
     },
     computed: {
         ...mapStores(useChatStore),
         chatId() {
             return this.$route.params.id
-        },
-        shouldShowPagination() {
-          return this.dto != null && this.dto.data && this.dto.totalCount > pageSize
-        },
-        pagesCount() {
-          const count = Math.ceil(this.dto.totalCount / pageSize);
-          // console.debug("Calc pages count", count);
-          return count;
-        },
-    },
-    watch: {
-        show(newValue) {
-            if (!newValue) {
-                this.closeModal();
-            }
-        },
-        page(newValue) {
-          if (this.show) {
-            console.debug("SettingNewPage", newValue);
-            this.dto = dtoFactory();
-            this.loadData();
-          }
         },
     },
     mounted() {

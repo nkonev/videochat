@@ -196,7 +196,7 @@ type AllUnreadMessages {
 }
 
 type WrapperNotificationDto {
-    totalCount: Int64!
+    count: Int64!
     notificationDto: NotificationDto!
 }
 

@@ -346,8 +346,8 @@ type ComplexityRoot struct {
 	}
 
 	WrapperNotificationDto struct {
+		Count           func(childComplexity int) int
 		NotificationDto func(childComplexity int) int
-		TotalCount      func(childComplexity int) int
 	}
 }
 
@@ -1692,19 +1692,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WrappedFileInfoDto.FileInfoDto(childComplexity), true
 
+	case "WrapperNotificationDto.count":
+		if e.complexity.WrapperNotificationDto.Count == nil {
+			break
+		}
+
+		return e.complexity.WrapperNotificationDto.Count(childComplexity), true
+
 	case "WrapperNotificationDto.notificationDto":
 		if e.complexity.WrapperNotificationDto.NotificationDto == nil {
 			break
 		}
 
 		return e.complexity.WrapperNotificationDto.NotificationDto(childComplexity), true
-
-	case "WrapperNotificationDto.totalCount":
-		if e.complexity.WrapperNotificationDto.TotalCount == nil {
-			break
-		}
-
-		return e.complexity.WrapperNotificationDto.TotalCount(childComplexity), true
 
 	}
 	return 0, false
@@ -6203,8 +6203,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_notificationEvent(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "totalCount":
-				return ec.fieldContext_WrapperNotificationDto_totalCount(ctx, field)
+			case "count":
+				return ec.fieldContext_WrapperNotificationDto_count(ctx, field)
 			case "notificationDto":
 				return ec.fieldContext_WrapperNotificationDto_notificationDto(ctx, field)
 			}
@@ -10570,8 +10570,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _WrapperNotificationDto_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.WrapperNotificationDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WrapperNotificationDto_totalCount(ctx, field)
+func (ec *executionContext) _WrapperNotificationDto_count(ctx context.Context, field graphql.CollectedField, obj *model.WrapperNotificationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WrapperNotificationDto_count(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -10584,7 +10584,7 @@ func (ec *executionContext) _WrapperNotificationDto_totalCount(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalCount, nil
+		return obj.Count, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10601,7 +10601,7 @@ func (ec *executionContext) _WrapperNotificationDto_totalCount(ctx context.Conte
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_WrapperNotificationDto_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_WrapperNotificationDto_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "WrapperNotificationDto",
 		Field:      field,
@@ -14446,8 +14446,8 @@ func (ec *executionContext) _WrapperNotificationDto(ctx context.Context, sel ast
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("WrapperNotificationDto")
-		case "totalCount":
-			out.Values[i] = ec._WrapperNotificationDto_totalCount(ctx, field, obj)
+		case "count":
+			out.Values[i] = ec._WrapperNotificationDto_count(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

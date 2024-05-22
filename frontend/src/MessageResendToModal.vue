@@ -226,6 +226,9 @@ export default {
             this.pageSize = 0;
             this.totalCount = 0;
         },
+        shouldReactOnPageChange() {
+            return false
+        },
     },
     computed: {
         chatId() {
