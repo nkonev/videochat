@@ -209,15 +209,6 @@ export default {
                     axios.put('/api/notification/read/' + item.id);
                 })
         },
-        getTotalVisible() {
-            if (!this.isMobile()) {
-                return 7
-            } else if (this.page == firstPage || this.page == this.pagesCount) {
-                return 3
-            } else {
-                return 1
-            }
-        },
         openNotificationSettings() {
             bus.emit(OPEN_SETTINGS, 'the_notifications')
         },
