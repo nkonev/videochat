@@ -96,7 +96,11 @@ export default {
       this.$emit("myinput", value);
     },
     setCursorToEnd() {
-      this.editor.commands.focus('end')
+        this.$nextTick(()=>{
+            setTimeout(()=>{
+                this.editor.commands.focus('end')
+            }, 1)
+        })
     },
     addImage() {
         this.fileInput.click();
