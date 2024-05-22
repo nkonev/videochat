@@ -1604,7 +1604,7 @@ func patchStorageUrlToPreventCachingVideo(text string) string {
 		return ""
 	}
 
-	wlArr := []string{"", viper.GetString("baseUrl")}
+	wlArr := []string{"", viper.GetString("frontendUrl")}
 
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()

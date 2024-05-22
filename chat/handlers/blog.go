@@ -556,7 +556,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		return ""
 	}
 
-	wlArr := []string{"", viper.GetString("baseUrl")}
+	wlArr := []string{"", viper.GetString("frontendUrl")}
 
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
