@@ -608,7 +608,7 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 		}
 		err := tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			ch.notificator.NotifyAboutDeleteChat(c, chatId, participantIds, tx) // TODO it should be after the real deletion to have the correct count in the subsequent request from Message ResendToModal
+			ch.notificator.NotifyAboutDeleteChat(c, chatId, participantIds, tx)
 			return nil
 		})
 		if err != nil {
