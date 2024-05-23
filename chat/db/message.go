@@ -616,7 +616,7 @@ func (tx *Tx) GetPinnedMessages(chatId int64, limit, offset int) ([]*Message, er
 	rows, err := tx.Query(fmt.Sprintf(`%v
 			WHERE 
 			    m.pinned IS TRUE
-			ORDER BY m.id desc
+			ORDER BY m.pin_promoted DESC, m.id DESC
 			LIMIT $1 OFFSET $2`, selectMessageClause(chatId)),
 		limit, offset)
 	if err != nil {

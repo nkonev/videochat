@@ -4,8 +4,8 @@
             <v-card :title="$vuetify.locale.t('$vuetify.pinned_messages_full')">
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0" v-if="!loading">
-                        <template v-if="dto.totalCount > 0">
-                            <template v-for="(item, index) in dto.data">
+                        <template v-if="itemsDto.count > 0">
+                            <template v-for="(item, index) in itemsDto.items">
                                 <v-list-item class="list-item-prepend-spacer-16">
                                     <template v-slot:prepend v-if="hasLength(item.owner.avatar)">
                                         <v-avatar :image="item.owner.avatar"></v-avatar>
@@ -80,72 +80,65 @@
 <script>
 
 import bus, {
+    LOGGED_OUT,
     OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, formatSize, findIndex, replaceOrAppend, hasLength, deepCopy} from "./utils";
+import {getHumanReadableDate, hasLength} from "./utils";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
-
-const firstPage = 1;
-const pageSize = 20;
-
-const dtoFactory = () => {return {data: []} };
+import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 
 export default {
+    mixins: [
+        pageableModalMixin()
+    ],
     data () {
         return {
-            show: false,
-            dto: dtoFactory(),
-            loading: false,
-            page: firstPage,
+            chatId: null,
         }
     },
-    computed: {
-        pagesCount() {
-            const count = Math.ceil(this.dto.totalCount / pageSize);
-            // console.debug("Calc pages count", count);
-            return count;
-        },
-        shouldShowPagination() {
-            return this.dto != null && this.dto.data && this.dto.totalCount > pageSize
-        },
-        chatId() {
-            return this.$route.params.id
-        },
-    },
-
     methods: {
         hasLength,
-        showModal() {
-            this.show = true;
-            this.getPinnedMessages();
+        isCachedRelevantToArguments({chatId}) {
+            return this.chatId == chatId
         },
-        translatePage() {
-            return this.page - 1;
+        initializeWithArguments({chatId}) {
+            this.chatId = chatId;
         },
-        getPinnedMessages() {
-            if (!this.show) {
-                return
-            }
-            this.loading = true;
-            axios.get(`/api/chat/${this.chatId}/message/pin`, {
+        initiateRequest() {
+            return axios.get(`/api/chat/${this.chatId}/message/pin`, {
                 params: {
                     page: this.translatePage(),
                     size: pageSize,
                 },
             })
-                .then(({data}) => {
-                    this.dto = data;
-                })
-                .finally(() => {
-                    this.loading = false;
-                })
         },
-        closeModal() {
-            this.show = false;
-            this.page = firstPage;
-            this.dto = dtoFactory();
+        extractDtoFromEventDto(dto) {
+            return [dto.message]
         },
+        initiateFilteredRequest(dto) {
+            return Promise.resolve({
+                data: [
+                    {
+                        id: dto.message.id
+                    }
+                ]
+            })
+        },
+        initiateCountRequest(dto) {
+            return Promise.resolve({
+                data: {
+                    count: dto.count
+                }
+            })
+        },
+        clearOnClose() {
+            // empty
+        },
+        clearOnReset() {
+            this.chatId = null;
+        },
+
         unpinMessage(dto) {
             axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
                 params: {
@@ -167,39 +160,18 @@ export default {
         getOwner(owner) {
             return owner.login
         },
-        removeItem(dto) {
-            console.log("Removing item", dto);
-            const idxToRemove = findIndex(this.dto.data, dto);
-            this.dto.data.splice(idxToRemove, 1);
-        },
-        replaceItem(dto) {
-            //console.log("Replacing item", dto);
-            replaceOrAppend(this.dto.data, [dto]);
-        },
         onPinnedMessageUnpromoted(dto) {
-            if (this.show) {
-                if (dto.message.chatId == this.chatId) {
-                    this.removeItem(dto.message);
-                    this.dto.totalCount = dto.totalCount;
-                } else {
-                    console.log("Skipping", dto)
-                }
-            }
+            this.onItemRemovedEvent(dto);
         },
         onPinnedMessagePromoted(dto) {
-            if (this.show) {
-                if (dto.message.chatId == this.chatId) {
-                    //reset previous promoted
-                    this.dto.data.forEach((item)=>{
-                        item.pinnedPromoted = false;
-                    })
-                    const copied = deepCopy(dto.message);
-                    this.replaceItem(copied);
-                    this.dto.totalCount = dto.totalCount;
-                } else {
-                    console.log("Skipping", dto)
-                }
+            if (this.dataLoaded) {
+                // reset previously promoted
+                this.itemsDto.items.forEach((item)=>{
+                    item.pinnedPromoted = false;
+                })
             }
+
+            this.onItemCreatedEvent(dto);
         },
         isVideoRoute() {
             return this.$route.name == videochat_name
@@ -215,44 +187,24 @@ export default {
                 'pinned-bold': !!item.pinnedPromoted,
             }
         },
-        getTotalVisible() {
-            if (!this.isMobile()) {
-                return 7
-            } else if (this.page == firstPage || this.page == this.pagesCount) {
-                return 3
-            } else {
-                return 1
-            }
+        resetOnRouteIdChange() {
+            return true
         },
-    },
-    filters: {
-        formatSizeFilter(size) {
-            return formatSize((size))
+        shouldReactOnPageChange() {
+            return this.show
         },
-    },
-    watch: {
-        page(newValue) {
-            if (this.show) {
-                console.debug("SettingNewPage", newValue);
-                this.dto = dtoFactory();
-                this.getPinnedMessages();
-            }
-        },
-        show(newValue) {
-            if (!newValue) {
-                this.closeModal();
-            }
-        }
     },
     mounted() {
         bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+        bus.on(LOGGED_OUT, this.onLogout);
     },
     beforeUnmount() {
         bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+        bus.off(LOGGED_OUT, this.onLogout);
     },
 }
 </script>

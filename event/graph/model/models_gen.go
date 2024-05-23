@@ -189,8 +189,8 @@ type ParticipantWithAdmin struct {
 }
 
 type PinnedMessageEvent struct {
-	Message    *DisplayMessageDto `json:"message"`
-	TotalCount int64              `json:"totalCount"`
+	Message *DisplayMessageDto `json:"message"`
+	Count   int64              `json:"count"`
 }
 
 type PreviewCreatedEvent struct {

@@ -631,8 +631,8 @@ func convertReaction(r *dto.Reaction) *model.Reaction {
 }
 func convertPinnedMessageEvent(e *dto.PinnedMessageEvent) *model.PinnedMessageEvent {
 	return &model.PinnedMessageEvent{
-		Message:    convertDisplayMessageDto(&e.Message),
-		TotalCount: e.TotalCount,
+		Message: convertDisplayMessageDto(&e.Message),
+		Count:   e.TotalCount,
 	}
 }
 func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {

@@ -9,7 +9,7 @@ export const dtoFactory = () => {return {items: [], count: 0} };
 // resetOnRouteIdChange(), initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
 // clearOnClose(), clearOnReset(), shouldReactOnPageChange()
 
-// optionally transformItems(), performMarking(), onInitialized(), afterUpdateItems(), afterFirstDrawItems()
+// optionally transformItems(), performMarking(), onInitialized(), afterFirstDrawItems()
 
 export default () => {
     return {
@@ -67,9 +67,6 @@ export default () => {
                             this.transformItems(dto?.items);
                         }
                         this.itemsDto = dto;
-                        if (this.afterUpdateItems){
-                            this.afterUpdateItems(dto)
-                        }
                     })
                     .finally(() => {
                         if (!silent) {

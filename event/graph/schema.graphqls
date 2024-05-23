@@ -110,7 +110,7 @@ type PreviewCreatedEvent {
 
 type PinnedMessageEvent {
     message: DisplayMessageDto!
-    totalCount: Int64!
+    count: Int64!
 }
 
 type FileInfoDto {

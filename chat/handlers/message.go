@@ -1395,9 +1395,9 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 	})
 }
 
-type MessageWrapper struct {
-	Data  []*dto.DisplayMessageDto `json:"data"`
-	Count int64                    `json:"totalCount"` // total message number for this user
+type PinnedMessagesWrapper struct {
+	Data  []*dto.DisplayMessageDto `json:"items"`
+	Count int64                    `json:"count"` // total pinned messages number
 }
 
 func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
@@ -1455,7 +1455,7 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 			return err
 		}
 
-		return c.JSON(http.StatusOK, MessageWrapper{
+		return c.JSON(http.StatusOK, PinnedMessagesWrapper{
 			Data:  messageDtos,
 			Count: count,
 		})

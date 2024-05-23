@@ -300,7 +300,7 @@ export default {
                                       loginColor
                                     }
                                     promoteMessageEvent {
-                                      totalCount
+                                      count
                                       message {
                                         ...DisplayMessageDtoFragment
                                       }

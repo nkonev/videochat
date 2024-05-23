@@ -75,15 +75,12 @@ import bus, {
     NOTIFICATION_ADD, NOTIFICATION_DELETE,
     OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
-import {findIndex, getHumanReadableDate, hasLength} from "./utils";
+import {getHumanReadableDate, hasLength} from "./utils";
 import axios from "axios";
 import {chat, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import pageableModalMixin from "@/mixins/pageableModalMixin.js";
-
-const firstPage = 1;
-const pageSize = 20;
+import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 
 export default {
     mixins: [
@@ -103,9 +100,6 @@ export default {
                     size: pageSize,
                 },
             })
-        },
-        afterUpdateItems(dto) {
-            this.chatStore.setNotificationCount(dto.count);
         },
 
         extractDtoFromEventDto(dto) {

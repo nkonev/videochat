@@ -174,7 +174,7 @@ export default {
       bus.emit(OPEN_VIEW_FILES_DIALOG, { chatId: this.$route.params.id });
     },
     openPinnedMessages() {
-      bus.emit(OPEN_PINNED_MESSAGES_MODAL);
+      bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.$route.params.id});
     },
     shouldPinnedMessages() {
       return this.chatStore.currentUser && hasLength(this.chatId);

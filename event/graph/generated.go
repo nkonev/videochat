@@ -228,8 +228,8 @@ type ComplexityRoot struct {
 	}
 
 	PinnedMessageEvent struct {
-		Message    func(childComplexity int) int
-		TotalCount func(childComplexity int) int
+		Count   func(childComplexity int) int
+		Message func(childComplexity int) int
 	}
 
 	PreviewCreatedEvent struct {
@@ -1255,19 +1255,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ParticipantWithAdmin.ShortInfo(childComplexity), true
 
+	case "PinnedMessageEvent.count":
+		if e.complexity.PinnedMessageEvent.Count == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageEvent.Count(childComplexity), true
+
 	case "PinnedMessageEvent.message":
 		if e.complexity.PinnedMessageEvent.Message == nil {
 			break
 		}
 
 		return e.complexity.PinnedMessageEvent.Message(childComplexity), true
-
-	case "PinnedMessageEvent.totalCount":
-		if e.complexity.PinnedMessageEvent.TotalCount == nil {
-			break
-		}
-
-		return e.complexity.PinnedMessageEvent.TotalCount(childComplexity), true
 
 	case "PreviewCreatedEvent.aType":
 		if e.complexity.PreviewCreatedEvent.AType == nil {
@@ -3454,8 +3454,8 @@ func (ec *executionContext) fieldContext_ChatEvent_promoteMessageEvent(_ context
 			switch field.Name {
 			case "message":
 				return ec.fieldContext_PinnedMessageEvent_message(ctx, field)
-			case "totalCount":
-				return ec.fieldContext_PinnedMessageEvent_totalCount(ctx, field)
+			case "count":
+				return ec.fieldContext_PinnedMessageEvent_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PinnedMessageEvent", field.Name)
 		},
@@ -7625,8 +7625,8 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_message(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _PinnedMessageEvent_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PinnedMessageEvent_totalCount(ctx, field)
+func (ec *executionContext) _PinnedMessageEvent_count(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageEvent_count(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7639,7 +7639,7 @@ func (ec *executionContext) _PinnedMessageEvent_totalCount(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalCount, nil
+		return obj.Count, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7656,7 +7656,7 @@ func (ec *executionContext) _PinnedMessageEvent_totalCount(ctx context.Context, 
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PinnedMessageEvent_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PinnedMessageEvent_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PinnedMessageEvent",
 		Field:      field,
@@ -13555,8 +13555,8 @@ func (ec *executionContext) _PinnedMessageEvent(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "totalCount":
-			out.Values[i] = ec._PinnedMessageEvent_totalCount(ctx, field, obj)
+		case "count":
+			out.Values[i] = ec._PinnedMessageEvent_count(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
