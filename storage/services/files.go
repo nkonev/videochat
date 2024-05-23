@@ -52,28 +52,13 @@ func (h *FilesService) GetListFilesInFileItem(
 		Recursive:    true,
 	})
 
-	var intermediateList []minio.ObjectInfo = make([]minio.ObjectInfo, 0)
+	var totalCount int
+	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
+
 	for objInfo := range objects {
 		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
-		if filter != nil && filter(&objInfo) {
-			intermediateList = append(intermediateList, objInfo)
-		} else if filter == nil {
-			intermediateList = append(intermediateList, objInfo)
-		}
-	}
-	sort.SliceStable(intermediateList, func(i, j int) bool {
-		return intermediateList[i].LastModified.Unix() > intermediateList[j].LastModified.Unix()
-	})
+		if (filter != nil && filter(&objInfo)) || (filter == nil) {
 
-	count := len(intermediateList)
-
-	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
-	var offsetCounter = 0
-	var respCounter = 0
-
-	for _, objInfo := range intermediateList {
-
-		if offsetCounter >= offset {
 			tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 			if err != nil {
 				GetLogEntry(c).Errorf("Error during getting tags %v", err)
@@ -87,13 +72,19 @@ func (h *FilesService) GetListFilesInFileItem(
 			}
 
 			list = append(list, info)
-			respCounter++
-			if respCounter >= size {
-				break
+			sort.SliceStable(list, func(i, j int) bool {
+				return list[i].LastModified.Unix() > list[j].LastModified.Unix()
+			})
+
+			if len(list) > offset + size {
+				list = removeTailElement(list)
 			}
+
+			totalCount++
 		}
-		offsetCounter++
 	}
+
+	list = list[offset:]
 
 	if requestOwners {
 		var participantIdSet = map[int64]bool{}
@@ -109,7 +100,15 @@ func (h *FilesService) GetListFilesInFileItem(
 		}
 	}
 
-	return list, count, nil
+	return list, totalCount, nil
+}
+
+func removeTailElement(list []*dto.FileInfoDto) []*dto.FileInfoDto {
+	result := list
+	if len(list) > 0 {
+		result = list[:len(list)-1]
+	}
+	return result
 }
 
 type SimpleFileItem struct {
