@@ -18,6 +18,7 @@
                      v-model="sendButtonsType"
                      @update:modelValue="changeSendButtonsType"
                      color="primary"
+                     hide-details
       >
           <template v-slot:label>
               <div>{{ $vuetify.locale.t('$vuetify.message_send_buttons_type') }}</div>
