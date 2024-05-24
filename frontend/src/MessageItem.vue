@@ -75,7 +75,7 @@
             },
             onMessageClick(event, dto) {
                 if (this.isMobile()) {
-                  this.onShowContextMenu(event, dto);
+                  this.emitContextmenuEvent(event, dto);
                 }
                 this.sendRead(dto);
             },
@@ -166,6 +166,11 @@
                 return item.embedMessage == null || item.embedMessage.embedType == embed_message_reply
             },
             onShowContextMenu(event, item) {
+                if (!this.isMobile()) {
+                    this.emitContextmenuEvent(event, item)
+                }
+            },
+            emitContextmenuEvent(event, item) {
                 this.$emit('customcontextmenu', event, item)
             },
             embedClass() {
