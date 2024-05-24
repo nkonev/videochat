@@ -249,3 +249,36 @@ export const getTopBlogPosition = () => {
 export const removeTopBlogPosition = () => {
     localStorage.removeItem(KEY_TOP_BLOG);
 }
+
+export const KEY_MESSAGE_EDIT_NORMALIZE_TEXT = 'messageEditNormalizeText';
+
+export const getStoredMessageEditNormalizeText = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_MESSAGE_EDIT_NORMALIZE_TEXT));
+    if (v === null) {
+        console.log("Resetting messageEditNormalizeText to default");
+        setStoredMessageEditNormalizeText(true);
+        v = JSON.parse(localStorage.getItem(KEY_MESSAGE_EDIT_NORMALIZE_TEXT));
+    }
+    return v;
+}
+
+export const setStoredMessageEditNormalizeText = (v) => {
+    localStorage.setItem(KEY_MESSAGE_EDIT_NORMALIZE_TEXT, JSON.stringify(v));
+}
+
+
+export const KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE = 'messageEditSendButtonsType';
+
+export const getStoredMessageEditSendButtonsType = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE));
+    if (v === null) {
+        console.log("Resetting messageEditSendButtonsType to default");
+        setStoredMessageEditSendButtonsType('auto'); // see MessageEditSettingsModalContent
+        v = JSON.parse(localStorage.getItem(KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE));
+    }
+    return v;
+}
+
+export const setStoredMessageEditSendButtonsType = (v) => {
+    localStorage.setItem(KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE, JSON.stringify(v));
+}

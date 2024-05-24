@@ -63,7 +63,6 @@
     export default {
         data () {
             return {
-                language: null,
                 loading: false,
             }
         },

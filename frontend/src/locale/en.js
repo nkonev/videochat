@@ -259,5 +259,13 @@ export default {
     message_edit_underline_short: "Under",
     message_edit_image_short: "Image",
     message_edit_video_short: "Video",
-    message_edit_embed_short: "Youtube"
+    message_edit_embed_short: "Youtube",
+    message_edit_settings: "Message edit settings",
+    message_edit_settings_tab: "Messaging",
+    normalize_pasted_text: "Normalize pasted text from clipboard",
+    message_send_buttons_type: "Editing buttons",
+    message_send_buttons_type_full: "Full",
+    message_send_buttons_type_compact: "Compact",
+    message_send_buttons_type_auto: "Auto"
+
 }

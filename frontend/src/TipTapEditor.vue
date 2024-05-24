@@ -43,6 +43,7 @@ import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
+import {getStoredMessageEditNormalizeText} from "@/store/localStore.js";
 
 const empty = "";
 
@@ -252,6 +253,10 @@ export default {
           //  and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
           //  and prosemirror-view/src/clipboard.ts parseFromClipboard()
           transformPastedHTML(html) {
+            if (!getStoredMessageEditNormalizeText()) {
+                return html
+            }
+
             if (isFireFox()) {
               const str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "</p><p>");
               const str2 = str.replace(/(\r\n|\r|\n)/g, " ");

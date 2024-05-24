@@ -25,6 +25,9 @@
             <v-tab value="the_notifications" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.notifications') }}
             </v-tab>
+            <v-tab value="message_edit_settings">
+              {{ $vuetify.locale.t('$vuetify.message_edit_settings_tab') }}
+            </v-tab>
           </v-tabs>
         </v-sheet>
 
@@ -41,6 +44,9 @@
             </v-window-item>
             <v-window-item value="the_notifications">
                 <NotificationSettingsModalContent/>
+            </v-window-item>
+            <v-window-item value="message_edit_settings">
+                <MessageEditSettingsModalContent/>
             </v-window-item>
         </v-window>
       </v-card-text>
@@ -77,8 +83,8 @@ import LanguageModalContent from "@/LanguageModalContent.vue";
 import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.vue";
 import NotificationSettingsModalContent from "@/NotificationSettingsModalContent.vue";
 import UserSelfProfileModalContent from "@/UserSelfProfileModalContent.vue";
+import MessageEditSettingsModalContent from "@/MessageEditSettingsModalContent.vue";
 import {hasLength} from "@/utils";
-import {v4 as uuidv4} from "uuid";
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
@@ -96,6 +102,7 @@ export default {
       VideoGlobalSettingsModalContent,
       NotificationSettingsModalContent,
       UserSelfProfileModalContent,
+      MessageEditSettingsModalContent,
   },
   methods: {
     showSettingsModal(tab) {

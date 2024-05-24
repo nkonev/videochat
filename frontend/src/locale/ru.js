@@ -259,5 +259,12 @@ export default {
     message_edit_underline_short: "Подчёкрнутый",
     message_edit_image_short: "Картинка",
     message_edit_video_short: "Видео",
-    message_edit_embed_short: "Youtube"
+    message_edit_embed_short: "Youtube",
+    message_edit_settings: "Настройки отправки",
+    message_edit_settings_tab: "Сообщения",
+    normalize_pasted_text: "Нормализовывать вставляемый текст из буфера обмена",
+    message_send_buttons_type: "Кнопки редактирования",
+    message_send_buttons_type_full: "Полные",
+    message_send_buttons_type_compact: "Компактные",
+    message_send_buttons_type_auto: "Авто"
 }

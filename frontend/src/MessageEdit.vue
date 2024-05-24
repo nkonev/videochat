@@ -101,7 +101,10 @@
               <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
                 <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
               </v-btn>
-            <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
+              <v-btn icon rounded="0" variant="plain" :size="getBtnSize()" density="comfortable" @click="openMessageEditSettings()" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_settings')">
+                  <v-icon :size="getIconSize()">mdi-cog</v-icon>
+              </v-btn>
+              <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
         <template v-else>
@@ -167,7 +170,7 @@
         OPEN_VIEW_FILES_DIALOG,
         PROFILE_SET,
         SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
-        MESSAGE_EDIT_SET_FILE_ITEM_UUID, ON_WINDOW_RESIZED,
+        MESSAGE_EDIT_SET_FILE_ITEM_UUID, ON_WINDOW_RESIZED, OPEN_SETTINGS, ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -184,9 +187,9 @@
         shouldShowSendMessageButtons
     } from "@/utils";
     import {
-      getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull,
-      removeStoredChatEditMessageDto,
-      setStoredChatEditMessageDto
+        getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull, getStoredMessageEditSendButtonsType,
+        removeStoredChatEditMessageDto,
+        setStoredChatEditMessageDto
     } from "@/store/localStore"
 
     import MessageEditLinkModal from "@/MessageEditLinkModal";
@@ -590,13 +593,28 @@
             removeFromStore() {
                 removeStoredChatEditMessageDto(this.chatId);
             },
+            setShouldShowSendMessageButtons() {
+                const type = getStoredMessageEditSendButtonsType();
+                switch (type) { // see MessageEditSettingsModalContent
+                    case 'auto':
+                        this.shouldShowSendMessageButtons = shouldShowSendMessageButtons();
+                        break;
+                    case 'full':
+                        this.shouldShowSendMessageButtons = true;
+                        break;
+                    case 'compact':
+                        this.shouldShowSendMessageButtons = false;
+                        break;
+                }
+
+            },
             updateShouldShowSendMessageButtons() {
                 const oldValue = this.shouldShowSendMessageButtons;
-                const newValue = shouldShowSendMessageButtons();
+                this.setShouldShowSendMessageButtons();
+                const newValue = this.shouldShowSendMessageButtons;
                 if (oldValue != newValue) {
                     this.reloadTipTap();
                 }
-                this.shouldShowSendMessageButtons = newValue;
             },
             reloadTipTap() {
                 // reload
@@ -604,6 +622,9 @@
                 this.$nextTick(() => {
                     this.loadFromStore();
                 })
+            },
+            openMessageEditSettings() {
+                bus.emit(OPEN_SETTINGS, 'message_edit_settings')
             },
         },
         computed: {
@@ -619,6 +640,7 @@
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             this.updateShouldShowSendMessageButtons();
             bus.on(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
+            bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
         },
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -629,6 +651,7 @@
             bus.off(PROFILE_SET, this.onProfileSet);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
+            bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
