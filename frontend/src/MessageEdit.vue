@@ -11,7 +11,7 @@
             @keydown.esc.native="resetInput()"
         />
 
-        <div class="d-flex flex-wrap flex-row dashed-borders" v-if="shouldShowSendMessageButtons">
+        <div class="d-flex flex-wrap flex-row dashed-borders" v-if="chatStore.shouldShowSendMessageButtons">
           <v-slide-group
               multiple
               show-arrows
@@ -214,7 +214,6 @@
                 sending: false,
                 showAnswer: false,
                 answerOnPreview: null,
-                shouldShowSendMessageButtons: true,
             }
         },
         methods: {
@@ -597,21 +596,21 @@
                 const type = getStoredMessageEditSendButtonsType();
                 switch (type) { // see MessageEditSettingsModalContent
                     case 'auto':
-                        this.shouldShowSendMessageButtons = shouldShowSendMessageButtons();
+                        this.chatStore.shouldShowSendMessageButtons = shouldShowSendMessageButtons();
                         break;
                     case 'full':
-                        this.shouldShowSendMessageButtons = true;
+                        this.chatStore.shouldShowSendMessageButtons = true;
                         break;
                     case 'compact':
-                        this.shouldShowSendMessageButtons = false;
+                        this.chatStore.shouldShowSendMessageButtons = false;
                         break;
                 }
 
             },
             updateShouldShowSendMessageButtons() {
-                const oldValue = this.shouldShowSendMessageButtons;
+                const oldValue = this.chatStore.shouldShowSendMessageButtons;
                 this.setShouldShowSendMessageButtons();
-                const newValue = this.shouldShowSendMessageButtons;
+                const newValue = this.chatStore.shouldShowSendMessageButtons;
                 if (oldValue != newValue) {
                     this.reloadTipTap();
                 }
@@ -638,7 +637,7 @@
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
-            this.updateShouldShowSendMessageButtons();
+            this.setShouldShowSendMessageButtons();
             bus.on(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
             bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
         },

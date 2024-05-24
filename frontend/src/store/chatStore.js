@@ -48,7 +48,8 @@ export const useChatStore = defineStore('chat', {
         leavingVideoAcceptableParam: false,
         initializingVideoCall: false,
         isEditingBigText: false,
-        fileUploadOverallProgress: 0
+        fileUploadOverallProgress: 0,
+        shouldShowSendMessageButtons: true,
     }
   },
   actions: {

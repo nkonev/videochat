@@ -31,7 +31,7 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {hasLength, isFireFox, media_audio, media_image, media_video, shouldShowSendMessageButtons} from "@/utils";
+import {hasLength, isFireFox, media_audio, media_image, media_video} from "@/utils";
 import bus, {
   FILE_UPLOAD_MODAL_START_UPLOADING,
   PREVIEW_CREATED,
@@ -44,6 +44,8 @@ import Audio from "@/TipTapAudio";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
 import {getStoredMessageEditNormalizeText} from "@/store/localStore.js";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore.js";
 
 const empty = "";
 
@@ -72,6 +74,7 @@ export default {
     chatId() {
       return this.$route.params.id
     },
+    ...mapStores(useChatStore),
   },
   methods: {
     setContent(value) {
@@ -212,7 +215,7 @@ export default {
           History,
           Placeholder.configure({
               placeholder: ({ node }) => {
-                  if (shouldShowSendMessageButtons()) {
+                  if (this.chatStore.shouldShowSendMessageButtons) {
                       return this.$vuetify.locale.t('$vuetify.message_edit_placeholder')
                   } else {
                       return null
