@@ -13,7 +13,6 @@ export const useChatStore = defineStore('chat', {
     return {
         currentUser: null,
         notificationsCount: 0,
-        notificationsSettings: {},
         showCallManagement: false,
         callState: callStateReady,
         shouldPhoneBlink: false,
@@ -81,10 +80,6 @@ export const useChatStore = defineStore('chat', {
       axios.get(`/api/notification/count`).then(( {data} ) => {
         console.debug("fetched notifications =", data);
         this.setNotificationCount(data.totalCount);
-      });
-      axios.get(`/api/notification/settings`).then(( {data} ) => {
-        console.debug("fetched notifications settings =", data);
-        this.notificationsSettings = data;
       });
     },
     unsetNotifications() {

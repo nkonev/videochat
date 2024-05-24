@@ -16,7 +16,7 @@
           color="primary"
           hide-details
           class="ma-0 ml-2 mr-4 py-1"
-          v-model="chatStore.notificationsSettings.mentionsEnabled"
+          v-model="notificationsSettings.mentionsEnabled"
           @update:modelValue="putNotificationsSettings()"
           :disabled="loading"
       ></v-switch>
@@ -26,7 +26,7 @@
           color="primary"
           hide-details
           class="ma-0 ml-2 mr-4 py-1"
-          v-model="chatStore.notificationsSettings.missedCallsEnabled"
+          v-model="notificationsSettings.missedCallsEnabled"
           @update:modelValue="putNotificationsSettings()"
           :disabled="loading"
       ></v-switch>
@@ -36,7 +36,7 @@
           color="primary"
           hide-details
           class="ma-0 ml-2 mr-4 py-1"
-          v-model="chatStore.notificationsSettings.answersEnabled"
+          v-model="notificationsSettings.answersEnabled"
           @update:modelValue="putNotificationsSettings()"
           :disabled="loading"
       ></v-switch>
@@ -46,7 +46,7 @@
           color="primary"
           hide-details
           class="ma-0 ml-2 mr-4 py-1"
-          v-model="chatStore.notificationsSettings.reactionsEnabled"
+          v-model="notificationsSettings.reactionsEnabled"
           @update:modelValue="putNotificationsSettings()"
           :disabled="loading"
     ></v-switch>
@@ -64,6 +64,7 @@
         data () {
             return {
                 loading: false,
+                notificationsSettings: {}
             }
         },
         computed: {
@@ -72,8 +73,8 @@
         methods: {
             putNotificationsSettings() {
                 this.loading = true;
-                axios.put('/api/notification/settings', this.chatStore.notificationsSettings).then(({data}) => {
-                    this.chatStore.notificationsSettings = data;
+                axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
+                    this.notificationsSettings = data;
                     console.log("Stored notificationsSetting", data)
                 }).finally(()=>{
                     this.loading = false;
@@ -81,7 +82,11 @@
             },
         },
         mounted() {
-            console.log("Loaded notificationsSetting", this.chatStore.notificationsSettings)
+            axios.get(`/api/notification/settings`).then(( {data} ) => {
+                console.debug("fetched notifications settings =", data);
+                this.notificationsSettings = data;
+            });
+            console.log("Loaded notificationsSetting", this.notificationsSettings)
         }
     }
 </script>
