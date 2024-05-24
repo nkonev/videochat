@@ -1,18 +1,28 @@
 <template>
   <v-card-text class="pb-0 d-flex justify-center">
-    <v-btn-toggle
-      v-model="language"
-      @update:modelValue="changeLanguage"
-    >
-      <v-btn value="ru">
-        Русский
-      </v-btn>
 
-      <v-btn value="en">
-        English
-      </v-btn>
+      <v-progress-linear
+          :active="loading"
+          :indeterminate="loading"
+          absolute
+          bottom
+          color="primary"
+      ></v-progress-linear>
 
-    </v-btn-toggle>
+      <v-btn-toggle
+          v-model="language"
+          @update:modelValue="changeLanguage"
+          :disabled="loading"
+      >
+            <v-btn value="ru">
+            Русский
+            </v-btn>
+
+            <v-btn value="en">
+            English
+            </v-btn>
+
+      </v-btn-toggle>
   </v-card-text>
 
 </template>
@@ -28,6 +38,7 @@
         data () {
             return {
                 language: null,
+                loading: false,
             }
         },
         computed: {
@@ -41,7 +52,9 @@
             async changeLanguage(newLanguage) {
                 console.log("Changing language to", newLanguage)
                 if (this.chatStore.currentUser != null) {
-                    await axios.put("/api/aaa/settings/language", {language: newLanguage})
+                    this.loading = true;
+                    await axios.put("/api/aaa/settings/language", {language: newLanguage});
+                    this.loading = false;
                 }
                 setStoredLanguage(newLanguage);
                 setLanguageToVuetify(this, newLanguage);
