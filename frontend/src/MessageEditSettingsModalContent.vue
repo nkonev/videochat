@@ -2,21 +2,12 @@
 
   <v-card-text class="pb-0">
 
-      <v-progress-linear
-          :active="loading"
-          :indeterminate="loading"
-          absolute
-          bottom
-          color="primary"
-      ></v-progress-linear>
-
       <v-switch
           :label="$vuetify.locale.t('$vuetify.normalize_pasted_text')"
           density="comfortable"
           color="primary"
           hide-details
           class="ma-0 pt-0 ml-4 mr-4 mb-2"
-          :disabled="loading"
           v-model="normalizeText"
           @update:modelValue="changeNormalizeText"
       ></v-switch>
@@ -53,7 +44,6 @@
     export default {
         data () {
             return {
-                loading: false,
                 normalizeText: null,
                 sendButtonsType: null,
             }
