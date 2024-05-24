@@ -95,7 +95,7 @@ public class SecurityConfig {
     @Value("${csrf.cookie.http-only:false}")
     private boolean cookieHttpOnly;
 
-    @Value("${csrf.cookie.name:VIDEOCHAT_XSRF_TOKEN}")
+    @Value("${csrf.cookie.name}")
     private String cookieName;
 
     @Bean

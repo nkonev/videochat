@@ -77,6 +77,8 @@ spring.servlet.multipart.max-request-size: 8MB
 server.servlet.encoding.force-response: true
 server.servlet.session.cookie.name: VIDEOCHAT_SESSION
 
+csrf.cookie.name: VIDEOCHAT_XSRF_TOKEN
+
 # this is URL
 spring.mvc.static-path-pattern: /**
 # You need to remove "file:..." element for production or you can to remove spring.resources.static-locations

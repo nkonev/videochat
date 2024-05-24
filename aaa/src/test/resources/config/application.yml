@@ -76,6 +76,8 @@ spring.servlet.multipart.max-request-size: 8MB
 server.servlet.encoding.force-response: true
 server.servlet.session.cookie.name: VIDEOCHAT_SESSION
 
+csrf.cookie.name: VIDEOCHAT_XSRF_TOKEN
+
 custom.it.user: admin
 custom.it.password: admin
 custom.it.user.id: 1
