@@ -94,7 +94,7 @@ export default {
             // empty
         },
         initiateRequest() {
-            return axios.get(`/api/notification/notification`, {
+            return axios.get(`/api/notification/list`, {
                 params: {
                     page: this.translatePage(),
                     size: pageSize,

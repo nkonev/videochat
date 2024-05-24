@@ -1,6 +1,6 @@
 <template>
 
-  <v-card-text class="pb-0">
+  <v-card-text class="pb-0 notification-settings-wrapper">
 
       <v-progress-linear
           :active="loading"
@@ -10,47 +10,114 @@
           color="primary"
       ></v-progress-linear>
 
-      <v-switch
-          :label="$vuetify.locale.t('$vuetify.notify_about_mentions')"
-          density="comfortable"
-          color="primary"
-          hide-details
-          class="ma-0 ml-2 mr-4 py-1"
-          v-model="notificationsSettings.mentionsEnabled"
-          @update:modelValue="putNotificationsSettings()"
-          :disabled="loading"
-      ></v-switch>
-      <v-switch
-          :label="$vuetify.locale.t('$vuetify.notify_about_missed_calls')"
-          density="comfortable"
-          color="primary"
-          hide-details
-          class="ma-0 ml-2 mr-4 py-1"
-          v-model="notificationsSettings.missedCallsEnabled"
-          @update:modelValue="putNotificationsSettings()"
-          :disabled="loading"
-      ></v-switch>
-      <v-switch
-          :label="$vuetify.locale.t('$vuetify.notify_about_replies')"
-          density="comfortable"
-          color="primary"
-          hide-details
-          class="ma-0 ml-2 mr-4 py-1"
-          v-model="notificationsSettings.answersEnabled"
-          @update:modelValue="putNotificationsSettings()"
-          :disabled="loading"
-      ></v-switch>
-    <v-switch
-          :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
-          density="comfortable"
-          color="primary"
-          hide-details
-          class="ma-0 ml-2 mr-4 py-1"
-          v-model="notificationsSettings.reactionsEnabled"
-          @update:modelValue="putNotificationsSettings()"
-          :disabled="loading"
-    ></v-switch>
+      <v-card
+          rounded
+          border
+          class="notification-global mb-1"
+          :title="$vuetify.locale.t('$vuetify.notifications_settings_global')"
+      >
+          <v-switch
+              :label="$vuetify.locale.t('$vuetify.notify_about_mentions')"
+              density="compact"
+              color="primary"
+              hide-details
+              class="ml-4 mr-4 pb-1"
+              v-model="notificationsSettings.mentionsEnabled"
+              @update:modelValue="putGlobalNotificationsSettings()"
+              :disabled="loading"
+          ></v-switch>
+          <v-switch
+              :label="$vuetify.locale.t('$vuetify.notify_about_missed_calls')"
+              density="compact"
+              color="primary"
+              hide-details
+              class="ml-4 mr-4 py-1"
+              v-model="notificationsSettings.missedCallsEnabled"
+              @update:modelValue="putGlobalNotificationsSettings()"
+              :disabled="loading"
+          ></v-switch>
+          <v-switch
+              :label="$vuetify.locale.t('$vuetify.notify_about_replies')"
+              density="compact"
+              color="primary"
+              hide-details
+              class="ml-4 mr-4 py-1"
+              v-model="notificationsSettings.answersEnabled"
+              @update:modelValue="putGlobalNotificationsSettings()"
+              :disabled="loading"
+          ></v-switch>
+        <v-switch
+              :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
+              density="compact"
+              color="primary"
+              hide-details
+              class="ml-4 mr-4 py-1"
+              v-model="notificationsSettings.reactionsEnabled"
+              @update:modelValue="putGlobalNotificationsSettings()"
+              :disabled="loading"
+        ></v-switch>
+      </v-card>
 
+      <v-card
+          :disabled="!isInChat()"
+          rounded
+          border
+          class="notification-overrides mb-1"
+          :title="$vuetify.locale.t('$vuetify.notifications_settings_per_chat_override')"
+      >
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.notify_about_mentions')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="notificationsChatSettings.mentionsEnabled"
+                         @update:modelValue="putPerChatNotificationsSettings()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
+
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.notify_about_missed_calls')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="notificationsChatSettings.missedCallsEnabled"
+                         @update:modelValue="putPerChatNotificationsSettings()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
+
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.notify_about_replies')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="notificationsChatSettings.answersEnabled"
+                         @update:modelValue="putPerChatNotificationsSettings()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
+
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="notificationsChatSettings.reactionsEnabled"
+                         @update:modelValue="putPerChatNotificationsSettings()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
+
+      </v-card>
   </v-card-text>
 
 </template>
@@ -59,34 +126,88 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import axios from "axios";
+    import {chat_name, videochat_name} from "@/router/routes.js";
 
     export default {
         data () {
             return {
                 loading: false,
-                notificationsSettings: {}
+                notificationsSettings: {},
+                notificationsChatSettings: {}
             }
         },
         computed: {
             ...mapStores(useChatStore),
+            chatId() {
+                return this.$route.params.id
+            },
         },
         methods: {
-            putNotificationsSettings() {
+            putGlobalNotificationsSettings() {
                 this.loading = true;
-                axios.put('/api/notification/settings', this.notificationsSettings).then(({data}) => {
+                axios.put('/api/notification/settings/global', this.notificationsSettings).then(({data}) => {
                     this.notificationsSettings = data;
-                    console.log("Stored notificationsSetting", data)
                 }).finally(()=>{
                     this.loading = false;
                 })
             },
+            putPerChatNotificationsSettings() {
+                this.loading = true;
+                axios.put(`/api/notification/settings/${this.chatId}/chat`, this.notificationsChatSettings).then(({data}) => {
+                    this.notificationsChatSettings = data;
+                }).finally(()=>{
+                    this.loading = false;
+                })
+            },
+            isInChat() {
+                return this.$route.name == chat_name || this.$route.name == videochat_name
+            },
         },
         mounted() {
-            axios.get(`/api/notification/settings`).then(( {data} ) => {
-                console.debug("fetched notifications settings =", data);
+            axios.get(`/api/notification/settings/global`).then(( {data} ) => {
                 this.notificationsSettings = data;
+                console.log("Loaded notificationsGlobalSetting", this.notificationsSettings)
             });
-            console.log("Loaded notificationsSetting", this.notificationsSettings)
+            axios.get(`/api/notification/settings/${this.chatId}/chat`).then(( {data} ) => {
+                this.notificationsChatSettings = data;
+                console.log("Loaded notificationsChatSetting", this.notificationsChatSettings)
+            });
         }
     }
 </script>
+
+<style lang="stylus">
+.notification-settings-wrapper {
+    .v-card-item {
+        padding-bottom 0
+    }
+
+    .notification-overrides {
+        .v-radio-group > .v-input__control {
+            margin-top 0.4rem
+        }
+
+        .v-selection-control--density-default {
+            --v-selection-control-size: 32px;
+        }
+
+        .v-radio-group > .v-input__control > .v-label + .v-selection-control-group {
+            margin-top: 0
+            padding-inline-start: 0;
+            margin-inline-start: 0.7rem
+        }
+
+        .v-selection-control--density-default {
+            margin-right 0.4rem
+        }
+    }
+
+    .notification-global {
+        .v-switch .v-label {
+            padding-inline-start: 0;
+            margin-inline-start: 0.9rem;
+        }
+    }
+}
+
+</style>

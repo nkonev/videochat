@@ -266,5 +266,10 @@ export default {
     message_send_buttons_type: "Кнопки редактирования",
     message_send_buttons_type_full: "Полные",
     message_send_buttons_type_compact: "Компактные",
-    message_send_buttons_type_auto: "Авто"
+    message_send_buttons_type_auto: "Авто",
+    notifications_settings_global: "Общие",
+    notifications_settings_per_chat_override: "Переопределённые для этого чата",
+    option_not_set: "Не задано",
+    option_on: "Вкл",
+    option_off: "Выкл"
 }

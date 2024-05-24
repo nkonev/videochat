@@ -21,11 +21,18 @@ type WrapperNotificationDto struct {
 	TotalCount      int64             `json:"totalCount"`
 }
 
-type NotificationSettings struct {
+type NotificationGlobalSettings struct {
 	MentionsEnabled    bool `json:"mentionsEnabled"`
 	MissedCallsEnabled bool `json:"missedCallsEnabled"`
 	AnswersEnabled     bool `json:"answersEnabled"`
 	ReactionsEnabled   bool `json:"reactionsEnabled"`
+}
+
+type NotificationPerChatSettings struct {
+	MentionsEnabled    *bool `json:"mentionsEnabled"`
+	MissedCallsEnabled *bool `json:"missedCallsEnabled"`
+	AnswersEnabled     *bool `json:"answersEnabled"`
+	ReactionsEnabled   *bool `json:"reactionsEnabled"`
 }
 
 func NewNotificationDeleteDto(id int64) *NotificationDto {

@@ -266,6 +266,10 @@ export default {
     message_send_buttons_type: "Editing buttons",
     message_send_buttons_type_full: "Full",
     message_send_buttons_type_compact: "Compact",
-    message_send_buttons_type_auto: "Auto"
-
+    message_send_buttons_type_auto: "Auto",
+    notifications_settings_global: "Global",
+    notifications_settings_per_chat_override: "Override for this chat",
+    option_not_set: "Not set",
+    option_on: "On",
+    option_off: "Off"
 }

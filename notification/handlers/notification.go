@@ -107,20 +107,20 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 	return c.NoContent(http.StatusAccepted)
 }
 
-func (mc *NotificationHandler) GetNotificationSettings(c echo.Context) error {
+func (mc *NotificationHandler) GetGlobalNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
-	err := mc.db.InitNotificationSettings(userPrincipalDto.UserId)
+	err := mc.db.InitGlobalNotificationSettings(userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
-	notSett, err := mc.db.GetNotificationSettings(userPrincipalDto.UserId)
+	notSett, err := mc.db.GetNotificationGlobalSettings(userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
 		return err
@@ -129,33 +129,33 @@ func (mc *NotificationHandler) GetNotificationSettings(c echo.Context) error {
 	return c.JSON(http.StatusOK, notSett)
 }
 
-func (mc *NotificationHandler) PutNotificationSettings(c echo.Context) error {
+func (mc *NotificationHandler) PutGlobalNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
-	var bindTo = new(dto.NotificationSettings)
+	var bindTo = new(dto.NotificationGlobalSettings)
 	err := c.Bind(bindTo)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during reading notification settings %v", err)
 		return err
 	}
 
-	err = mc.db.InitNotificationSettings(userPrincipalDto.UserId)
+	err = mc.db.InitGlobalNotificationSettings(userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
-	err = mc.db.PutNotificationSettings(userPrincipalDto.UserId, bindTo)
+	err = mc.db.PutNotificationGlobalSettings(userPrincipalDto.UserId, bindTo)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during writing notification settings %v", err)
 		return err
 	}
 
-	notSett, err := mc.db.GetNotificationSettings(userPrincipalDto.UserId)
+	notSett, err := mc.db.GetNotificationGlobalSettings(userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
 		return err
@@ -163,3 +163,71 @@ func (mc *NotificationHandler) PutNotificationSettings(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, notSett)
 }
+
+func (mc *NotificationHandler) GetChatNotificationSettings(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = mc.db.InitPerChatNotificationSettings(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
+		return err
+	}
+
+	notSett, err := mc.db.GetNotificationPerChatSettings(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, notSett)
+}
+
+func (mc *NotificationHandler) PutChatNotificationSettings(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	var bindTo = new(dto.NotificationPerChatSettings)
+	err := c.Bind(bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during reading notification settings %v", err)
+		return err
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = mc.db.InitPerChatNotificationSettings(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
+		return err
+	}
+
+	err = mc.db.PutNotificationPerChatSettings(userPrincipalDto.UserId, chatId, bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during writing notification settings %v", err)
+		return err
+	}
+
+	notSett, err := mc.db.GetNotificationPerChatSettings(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, notSett)
+}
+

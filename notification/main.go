@@ -124,10 +124,12 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/notification/notification", ch.GetNotifications)
+	e.GET("/notification/list", ch.GetNotifications)
 	e.GET("/notification/count", ch.GetNotificationsCount)
-	e.GET("/notification/settings", ch.GetNotificationSettings)
-	e.PUT("/notification/settings", ch.PutNotificationSettings)
+	e.GET("/notification/settings/global", ch.GetGlobalNotificationSettings)
+	e.PUT("/notification/settings/global", ch.PutGlobalNotificationSettings)
+	e.GET("/notification/settings/:id/chat", ch.GetChatNotificationSettings)
+	e.PUT("/notification/settings/:id/chat", ch.PutChatNotificationSettings)
 	e.PUT("/notification/read/:notificationId", ch.ReadNotification)
 
 	lc.Append(fx.Hook{

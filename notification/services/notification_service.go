@@ -27,20 +27,16 @@ const NotificationAdd = "notification_add"
 const NotificationDelete = "notification_delete"
 
 func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEvent) {
+
+	settings, err := srv.getNotificationSettings(event)
+	if err != nil {
+		Logger.Errorf("Unable to get notification settings %v", err)
+		return
+	}
+
 	var count int64
-	err := srv.dbs.InitNotificationSettings(event.UserId)
-	if err != nil {
-		Logger.Errorf("Error during initializing notification settings %v", err)
-		return
-	}
 
-	userNotificationsSettings, err := srv.dbs.GetNotificationSettings(event.UserId)
-	if err != nil {
-		Logger.Errorf("Error during initializing notification settings %v", err)
-		return
-	}
-
-	if event.MentionNotification != nil && userNotificationsSettings.MentionsEnabled {
+	if event.MentionNotification != nil && settings.MentionsEnabled {
 		mentionNotification := event.MentionNotification
 		notificationType := "mention"
 		switch event.EventType {
@@ -110,7 +106,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		default:
 			Logger.Errorf("Unexpected event type %v", event.EventType)
 		}
-	} else if event.MissedCallNotification != nil && userNotificationsSettings.MissedCallsEnabled {
+	} else if event.MissedCallNotification != nil && settings.MissedCallsEnabled {
 		err := srv.removeExcessNotificationsIfNeed(event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)
@@ -153,7 +149,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		if err != nil {
 			Logger.Errorf("Unable to send notification delete %v", err)
 		}
-	} else if event.ReplyNotification != nil && userNotificationsSettings.AnswersEnabled {
+	} else if event.ReplyNotification != nil && settings.AnswersEnabled {
 		err := srv.removeExcessNotificationsIfNeed(event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)
@@ -222,7 +218,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			Logger.Errorf("Unexpected event type %v", event.EventType)
 		}
 
-	} else if event.ReactionEvent != nil && userNotificationsSettings.ReactionsEnabled {
+	} else if event.ReactionEvent != nil && settings.ReactionsEnabled {
 		err := srv.removeExcessNotificationsIfNeed(event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)
@@ -290,6 +286,59 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		}
 	}
 
+}
+
+func (srv *NotificationService) getNotificationSettings(event *dto.NotificationEvent) (*dto.NotificationGlobalSettings, error) {
+	err := srv.dbs.InitGlobalNotificationSettings(event.UserId)
+	if err != nil {
+		Logger.Errorf("Error during initializing global notification settings %v", err)
+		return nil, err
+	}
+
+	err = srv.dbs.InitPerChatNotificationSettings(event.UserId, event.ChatId)
+	if err != nil {
+		Logger.Errorf("Error during initializing per chat notification settings %v", err)
+		return nil, err
+	}
+
+
+	userNotificationsGlobalSettings, err := srv.dbs.GetNotificationGlobalSettings(event.UserId)
+	if err != nil {
+		Logger.Errorf("Error during getting global notification settings %v", err)
+		return nil, err
+	}
+
+	userNotificationsPerChatSettings, err := srv.dbs.GetNotificationPerChatSettings(event.UserId, event.ChatId)
+	if err != nil {
+		Logger.Errorf("Error during getting per chat notification settings %v", err)
+		return nil, err
+	}
+
+	result := dto.NotificationGlobalSettings{
+		MentionsEnabled:    userNotificationsGlobalSettings.MentionsEnabled,
+		MissedCallsEnabled: userNotificationsGlobalSettings.MissedCallsEnabled,
+		AnswersEnabled:     userNotificationsGlobalSettings.AnswersEnabled,
+		ReactionsEnabled:   userNotificationsGlobalSettings.ReactionsEnabled,
+	}
+
+	// override
+	if userNotificationsPerChatSettings.MentionsEnabled != nil {
+		result.MentionsEnabled = *userNotificationsPerChatSettings.MentionsEnabled
+	}
+
+	if userNotificationsPerChatSettings.MissedCallsEnabled != nil {
+		result.MissedCallsEnabled = *userNotificationsPerChatSettings.MissedCallsEnabled
+	}
+
+	if userNotificationsPerChatSettings.AnswersEnabled != nil {
+		result.AnswersEnabled = *userNotificationsPerChatSettings.AnswersEnabled
+	}
+
+	if userNotificationsPerChatSettings.ReactionsEnabled != nil {
+		result.ReactionsEnabled = *userNotificationsPerChatSettings.ReactionsEnabled
+	}
+
+	return &result, nil
 }
 
 func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) error {
