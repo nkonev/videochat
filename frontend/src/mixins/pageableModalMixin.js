@@ -182,7 +182,7 @@ export default () => {
                         this.itemsDto.count = response.data.count;
                     }).then(() => {
                         if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
-                            this.page = this.pagesCount; // this causes update() because of watch
+                            this.page = this.pagesCount == 0 ? firstPage : this.pagesCount; // this causes update() because of watch
                             return
                         }
 
