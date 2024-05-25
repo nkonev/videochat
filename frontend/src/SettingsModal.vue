@@ -25,7 +25,7 @@
             <v-tab value="the_notifications" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.notifications') }}
             </v-tab>
-            <v-tab value="message_edit_settings">
+            <v-tab value="message_edit_settings" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.message_edit_settings_tab') }}
             </v-tab>
           </v-tabs>
