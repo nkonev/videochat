@@ -162,6 +162,7 @@ export default {
             try {
                 await this.checkLimits(totalSize)
             } catch (errMsg) {
+                this.$data.isLoadingPresignedLinks = false;
                 return Promise.resolve();
             }
 
