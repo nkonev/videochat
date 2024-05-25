@@ -46,7 +46,7 @@
                     <v-spacer></v-spacer>
                     <v-btn variant="outlined" min-width="0" v-if="shouldShowAttachExistingFilesToMessage" @click="onAttachFilesToMessage()" :title="$vuetify.locale.t('$vuetify.attach_files_to_message')"><v-icon size="large">mdi-attachment-plus</v-icon></v-btn>
                     <template v-if="!limitError && fileInputQueueHasElements">
-                        <v-btn color="primary" variant="flat" @click="upload()">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
+                        <v-btn color="primary" variant="flat" @click="upload()" :loading="checkingLimitsStep" :disabled="checkingLimitsStep">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>
                     </template>
                     <v-btn @click="hideModal()" color="red" variant="flat">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
@@ -86,6 +86,7 @@ export default {
             correlationId: null,
             messageIdToAttachFiles: null,
             shouldAddDateToTheFilename: null,
+            checkingLimitsStep: false,
         }
     },
     methods: {
@@ -153,6 +154,7 @@ export default {
         },
         async upload() {
             this.$data.isLoadingPresignedLinks = true;
+            this.checkingLimitsStep = true;
 
             let totalSize = 0;
             for (const file of this.inputFiles) {
@@ -163,8 +165,10 @@ export default {
                 await this.checkLimits(totalSize)
             } catch (errMsg) {
                 this.$data.isLoadingPresignedLinks = false;
+                this.checkingLimitsStep = false;
                 return Promise.resolve();
             }
+            this.checkingLimitsStep = false;
 
             while (this.fileInputQueueHasElements) {
                 const file = this.inputFiles.shift();
