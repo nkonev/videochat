@@ -422,6 +422,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		// set myself to temporarily status
 		vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 	}
+	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
 	return c.NoContent(http.StatusOK)
 }
 
