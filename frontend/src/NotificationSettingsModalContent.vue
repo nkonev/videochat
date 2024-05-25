@@ -168,10 +168,12 @@
                 this.notificationsSettings = data;
                 console.log("Loaded notificationsGlobalSetting", this.notificationsSettings)
             });
-            axios.get(`/api/notification/settings/${this.chatId}/chat`).then(( {data} ) => {
-                this.notificationsChatSettings = data;
-                console.log("Loaded notificationsChatSetting", this.notificationsChatSettings)
-            });
+            if (this.isInChat()) {
+                axios.get(`/api/notification/settings/${this.chatId}/chat`).then(({data}) => {
+                    this.notificationsChatSettings = data;
+                    console.log("Loaded notificationsChatSetting", this.notificationsChatSettings)
+                });
+            }
         }
     }
 </script>

@@ -289,18 +289,6 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 }
 
 func (srv *NotificationService) getNotificationSettings(event *dto.NotificationEvent) (*dto.NotificationGlobalSettings, error) {
-	err := srv.dbs.InitGlobalNotificationSettings(event.UserId)
-	if err != nil {
-		Logger.Errorf("Error during initializing global notification settings %v", err)
-		return nil, err
-	}
-
-	err = srv.dbs.InitPerChatNotificationSettings(event.UserId, event.ChatId)
-	if err != nil {
-		Logger.Errorf("Error during initializing per chat notification settings %v", err)
-		return nil, err
-	}
-
 
 	userNotificationsGlobalSettings, err := srv.dbs.GetNotificationGlobalSettings(event.UserId)
 	if err != nil {

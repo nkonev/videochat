@@ -1,6 +1,8 @@
 package db
 
 import (
+	"database/sql"
+	"errors"
 	"github.com/rotisserie/eris"
 	"nkonev.name/notification/dto"
 )
@@ -27,6 +29,15 @@ func (db *DB) GetNotificationGlobalSettings(userId int64) (*dto.NotificationGlob
 	var result = new(dto.NotificationGlobalSettings)
 	err := row.Scan(&result.MentionsEnabled, &result.MissedCallsEnabled, &result.AnswersEnabled, &result.ReactionsEnabled)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// if there is no rows then return default
+			return &dto.NotificationGlobalSettings{ // should match to defaults
+				MentionsEnabled:    true,
+				MissedCallsEnabled: true,
+				AnswersEnabled:     true,
+				ReactionsEnabled:   true,
+			}, nil
+		}
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	return result, nil
@@ -47,6 +58,15 @@ func (db *DB) GetNotificationPerChatSettings(userId, chatId int64) (*dto.Notific
 	var result = new(dto.NotificationPerChatSettings)
 	err := row.Scan(&result.MentionsEnabled, &result.MissedCallsEnabled, &result.AnswersEnabled, &result.ReactionsEnabled)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// if there is no rows then return default
+			return &dto.NotificationPerChatSettings{ // should match to defaults
+				MentionsEnabled:    nil,
+				MissedCallsEnabled: nil,
+				AnswersEnabled:     nil,
+				ReactionsEnabled:   nil,
+			}, nil
+		}
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	return result, nil

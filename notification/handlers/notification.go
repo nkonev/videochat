@@ -114,12 +114,6 @@ func (mc *NotificationHandler) GetGlobalNotificationSettings(c echo.Context) err
 		return errors.New("Error during getting auth context")
 	}
 
-	err := mc.db.InitGlobalNotificationSettings(userPrincipalDto.UserId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
-		return err
-	}
-
 	notSett, err := mc.db.GetNotificationGlobalSettings(userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
@@ -173,12 +167,6 @@ func (mc *NotificationHandler) GetChatNotificationSettings(c echo.Context) error
 
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
-		return err
-	}
-
-	err = mc.db.InitPerChatNotificationSettings(userPrincipalDto.UserId, chatId)
-	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
