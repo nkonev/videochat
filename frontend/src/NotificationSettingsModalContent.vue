@@ -15,6 +15,7 @@
           border
           class="notification-global mb-1"
           :title="$vuetify.locale.t('$vuetify.notifications_settings_global')"
+          :disabled="loading"
       >
           <v-switch
               :label="$vuetify.locale.t('$vuetify.notify_about_mentions')"
@@ -24,7 +25,6 @@
               class="ml-4 mr-4 pb-1"
               v-model="notificationsSettings.mentionsEnabled"
               @update:modelValue="putGlobalNotificationsSettings()"
-              :disabled="loading"
           ></v-switch>
           <v-switch
               :label="$vuetify.locale.t('$vuetify.notify_about_missed_calls')"
@@ -34,7 +34,6 @@
               class="ml-4 mr-4 py-1"
               v-model="notificationsSettings.missedCallsEnabled"
               @update:modelValue="putGlobalNotificationsSettings()"
-              :disabled="loading"
           ></v-switch>
           <v-switch
               :label="$vuetify.locale.t('$vuetify.notify_about_replies')"
@@ -44,7 +43,6 @@
               class="ml-4 mr-4 py-1"
               v-model="notificationsSettings.answersEnabled"
               @update:modelValue="putGlobalNotificationsSettings()"
-              :disabled="loading"
           ></v-switch>
         <v-switch
               :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
@@ -54,12 +52,11 @@
               class="ml-4 mr-4 py-1"
               v-model="notificationsSettings.reactionsEnabled"
               @update:modelValue="putGlobalNotificationsSettings()"
-              :disabled="loading"
         ></v-switch>
       </v-card>
 
       <v-card
-          :disabled="!isInChat()"
+          :disabled="!isInChat() || loading"
           rounded
           border
           class="notification-overrides mb-1"
@@ -164,16 +161,24 @@
             },
         },
         mounted() {
+            console.debug("Initially set loading true")
+            this.loading = true;
             axios.get(`/api/notification/settings/global`).then(( {data} ) => {
                 this.notificationsSettings = data;
-                console.log("Loaded notificationsGlobalSetting", this.notificationsSettings)
-            });
-            if (this.isInChat()) {
-                axios.get(`/api/notification/settings/${this.chatId}/chat`).then(({data}) => {
-                    this.notificationsChatSettings = data;
-                    console.log("Loaded notificationsChatSetting", this.notificationsChatSettings)
-                });
-            }
+                console.debug("Loaded notificationsGlobalSetting", this.notificationsSettings)
+            }).then(()=>{
+                if (this.isInChat()) {
+                    return axios.get(`/api/notification/settings/${this.chatId}/chat`).then(({data}) => {
+                        this.notificationsChatSettings = data;
+                        console.debug("Loaded notificationsChatSetting", this.notificationsChatSettings)
+                    });
+                } else {
+                    return Promise.resolve()
+                }
+            }).then(()=>{
+                console.debug("Finally set loading false")
+                this.loading = false;
+            })
         }
     }
 </script>
