@@ -99,7 +99,10 @@
                 <v-icon :size="getIconSize()">mdi-delete</v-icon>
               </v-btn>
               <v-btn v-if="chatStore.canBroadcastTextMessage" icon rounded="0" :size="getBtnSize()" :variant="sendBroadcast ? 'tonal' : 'plain'" density="comfortable" @click="sendBroadcast = !sendBroadcast" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_broadcast')">
-                <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
+                  <v-icon :size="getIconSize()">mdi-broadcast</v-icon>
+              </v-btn>
+              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="openRecordingModal()" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.make_a_recording')">
+                  <v-icon :size="getIconSize()">mdi-record-rec</v-icon>
               </v-btn>
               <v-btn icon rounded="0" variant="plain" :size="getBtnSize()" density="comfortable" @click="openMessageEditSettings()" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_settings')">
                   <v-icon :size="getIconSize()">mdi-cog</v-icon>
@@ -159,7 +162,8 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE, MESSAGE_EDIT_LOAD_FILES_COUNT,
+        CLOSE_EDIT_MESSAGE,
+        MESSAGE_EDIT_LOAD_FILES_COUNT,
         COLOR_SET,
         MESSAGE_EDIT_LINK_SET,
         OPEN_FILE_UPLOAD_MODAL,
@@ -169,8 +173,13 @@
         OPEN_MESSAGE_EDIT_SMILEY,
         OPEN_VIEW_FILES_DIALOG,
         PROFILE_SET,
-        SET_EDIT_MESSAGE, SET_EDIT_MESSAGE_MODAL,
-        MESSAGE_EDIT_SET_FILE_ITEM_UUID, ON_WINDOW_RESIZED, OPEN_SETTINGS, ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
+        SET_EDIT_MESSAGE,
+        SET_EDIT_MESSAGE_MODAL,
+        MESSAGE_EDIT_SET_FILE_ITEM_UUID,
+        ON_WINDOW_RESIZED,
+        OPEN_SETTINGS,
+        ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
+        OPEN_RECORDING_MODAL,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -361,9 +370,9 @@
             },
             getBtnWidth() {
                 if (this.isMobile()) {
-                    return '64px'
+                    return '54px'
                 } else {
-                    return '48px'
+                    return '44px'
                 }
             },
             getBtnHeight() {
@@ -624,6 +633,9 @@
             },
             openMessageEditSettings() {
                 bus.emit(OPEN_SETTINGS, 'message_edit_settings')
+            },
+            openRecordingModal() {
+                bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.$refs.tipTapRef.getFileItemUuid(), correlationId: this.$refs.tipTapRef.setAndGetCorrelationId()})
             },
         },
         computed: {

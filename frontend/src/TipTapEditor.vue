@@ -135,6 +135,13 @@ export default {
     resetFileItemUuid() {
       this.preallocatedCandidateFileItemId = null;
     },
+    getFileItemUuid() {
+      return this.preallocatedCandidateFileItemId
+    },
+    setAndGetCorrelationId() {
+      this.correlationId = uuidv4();
+      return this.correlationId
+    },
     onPreviewCreated(dto) {
         if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
             if (dto.aType == media_video) {

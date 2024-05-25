@@ -16,6 +16,7 @@ export default {
     profile: "Профиль",
     video_settings: "Настройки видео",
     video: "Видео",
+    audio: "Аудио",
     language: "Язык",
     logout: "Выход",
     type_to_find_user: "Введите текст для поиска",
@@ -271,5 +272,9 @@ export default {
     notifications_settings_per_chat_override: "Переопределённые для этого чата",
     option_not_set: "Не задано",
     option_on: "Вкл",
-    option_off: "Выкл"
+    option_off: "Выкл",
+    start_recording: "Начать запись",
+    stop_recording: "Остановить запись",
+    make_a_recording: "Записать...",
+    add_to_message: "Добавить"
 }

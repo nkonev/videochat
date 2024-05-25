@@ -112,3 +112,4 @@ export const CHANGE_ROLE_DIALOG = "changeRoleDialog";
 
 export const ON_WINDOW_RESIZED = "onWindowResized";
 export const ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED = "onMessageEditSendButtonsChanged";
+export const OPEN_RECORDING_MODAL = "openRecordingModal";

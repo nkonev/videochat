@@ -38,6 +38,7 @@
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
     "pinia": "2.1.7",
+    "recordrtc": "^5.6.2",
     "splitpanes": "^3.1.5",
     "typeface-roboto": "1.1.13",
     "uuid": "^9.0.1",

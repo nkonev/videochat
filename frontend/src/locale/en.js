@@ -16,6 +16,7 @@ export default {
     profile: "Profile",
     video_settings: "Video settings",
     video: "Video",
+    audio: "Audio",
     language: "Language",
     logout: "Logout",
     type_to_find_user: "Type to search",
@@ -271,5 +272,9 @@ export default {
     notifications_settings_per_chat_override: "Override for this chat",
     option_not_set: "Not set",
     option_on: "On",
-    option_off: "Off"
+    option_off: "Off",
+    start_recording: "Start recording",
+    stop_recording: "Stop recording",
+    make_a_recording: "Make a recording",
+    add_to_message: "Add"
 }

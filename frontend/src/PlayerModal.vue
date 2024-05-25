@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" width="fit-content" max-width="100%" scrollable>
             <v-card :title="getTitle()">
-                <v-card-text class="d-flex justify-center">
+                <v-card-text class="d-flex justify-center pb-0 px-2">
                     <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                     <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
                     <audio class="audio-custom-class" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
