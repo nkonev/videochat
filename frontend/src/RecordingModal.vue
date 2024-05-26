@@ -6,11 +6,8 @@
     persistent
     width="fit-content" max-width="100%"
   >
-    <v-card>
-      <v-card-title class="d-flex align-center ml-2">
-          {{ $vuetify.locale.t('$vuetify.video') }}
-      </v-card-title>
-      <v-card-text class="d-flex justify-center py-0 px-2 recording-wrapper">
+    <v-card :title="$vuetify.locale.t('$vuetify.video')">
+      <v-card-text class="d-flex justify-center pb-0 px-2 recording-wrapper">
         <video class="video-custom-class" playsinline></video>
       </v-card-text>
       <v-card-actions>
