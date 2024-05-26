@@ -33,9 +33,9 @@
         </v-card-text>
 
         <v-card-actions v-if="item?.owner != null">
-          <v-list-item>
+          <v-list-item class="px-0 ml-2">
               <template v-slot:prepend v-if="hasLength(item?.owner?.avatar)">
-                  <div class="item-avatar pr-0 mr-3">
+                  <div class="item-avatar mr-3">
                       <a :href="getProfileLink(item.owner)" class="user-link">
                           <img :src="item?.owner?.avatar">
                       </a>
