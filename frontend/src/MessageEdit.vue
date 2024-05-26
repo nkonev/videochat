@@ -230,7 +230,7 @@
                 return this.$refs.tipTapRef.getContent();
             },
             sendMessageToChat() {
-                if (this.messageTextIsPresent(this.editMessageDto.text)) {
+                if (this.messageTextIsPresent(this.editMessageDto.text) || this.editMessageDto.fileItemUuid) {
                     this.sending = true;
                     (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
                         .then(response => {
@@ -577,7 +577,7 @@
             setContentToEditorAndLoad() {
               this.loadEmbedPreviewIfNeed(this.editMessageDto);
               this.loadFilesCount();
-              if (!this.$refs.tipTapRef.messageTextIsNotEmpty(this.editMessageDto.text)) {
+              if (!this.$refs.tipTapRef.messageHasMeaningfulContent(this.editMessageDto.text)) {
                 this.chatStore.isEditingBigText = false;
               }
               this.$nextTick(()=>{

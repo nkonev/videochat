@@ -86,14 +86,28 @@ export default {
     },
     getContent() {
       const value = this.editor.getHTML();
-      if (this.messageTextIsNotEmpty(value)) {
+      if (this.messageHasMeaningfulContent(value)) {
           return value
       } else {
           return empty
       }
     },
-    messageTextIsNotEmpty(text) {
-        return text && domParser.parseFromString(text, 'text/html').documentElement.textContent.trim() !== ""
+    messageHasMeaningfulContent(htmlString) {
+        const htmlDoc = domParser.parseFromString(htmlString, 'text/html');
+
+        const videos = htmlDoc.getElementsByTagName('video');
+        const audios = htmlDoc.getElementsByTagName('audio');
+        const iframes = htmlDoc.getElementsByTagName('iframe');
+        const images = htmlDoc.getElementsByTagName('img');
+        const textContent = htmlDoc.documentElement.textContent.trim();
+
+        return htmlDoc && (
+            textContent !== ""
+            || videos.length > 0
+            || audios.length > 0
+            || iframes.length > 0
+            || images.length > 0
+        )
     },
     onUpdateContent() {
       const value = this.getContent();
