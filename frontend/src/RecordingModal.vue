@@ -114,7 +114,8 @@ export default {
         this.blob = null;
 
         this.recorder = new RecordRTCPromisesHandler(this.stream, {
-            type: 'video'
+            type: 'video',
+            mimeType: 'video/webm',
         });
         await this.recorder.startRecording();
 
