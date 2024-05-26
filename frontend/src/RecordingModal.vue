@@ -7,28 +7,12 @@
     width="fit-content" max-width="100%"
   >
     <v-card>
-        <v-sheet elevation="6">
-            <v-tabs
-                v-model="tab"
-                bg-color="indigo"
-            >
-                <v-tab value="video">{{$vuetify.locale.t('$vuetify.video')}}</v-tab>
-                <v-tab value="audio">{{$vuetify.locale.t('$vuetify.audio')}}</v-tab>
-            </v-tabs>
-        </v-sheet>
-
-        <v-card-text class="ma-0 pa-0 wrapper">
-            <v-window v-model="tab">
-                <v-window-item value="video">
-                    <v-card-text class="d-flex justify-center py-0 px-2">
-                        <video class="video-custom-class" playsinline></video>
-                    </v-card-text>
-                </v-window-item>
-
-                <v-window-item value="audio">
-                </v-window-item>
-            </v-window>
-        </v-card-text>
+      <v-card-title class="d-flex align-center ml-2">
+          {{ $vuetify.locale.t('$vuetify.video') }}
+      </v-card-title>
+      <v-card-text class="d-flex justify-center py-0 px-2 recording-wrapper">
+        <video class="video-custom-class" playsinline></video>
+      </v-card-text>
       <v-card-actions>
         <v-spacer/>
           <v-btn :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()">{{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }}</v-btn>
@@ -102,7 +86,7 @@ export default {
         }
     },
     async onShow() {
-        this.videoElement = document.querySelector('.wrapper video');
+        this.videoElement = document.querySelector('.recording-wrapper video');
 
         this.stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
 
