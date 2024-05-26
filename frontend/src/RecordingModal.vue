@@ -12,7 +12,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer/>
-          <v-btn :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()">{{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }}</v-btn>
+          <v-btn :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()"><v-icon size="x-large">{{isRecording ? 'mdi-stop' : 'mdi-record'}}</v-icon> {{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }} </v-btn>
           <v-btn :color="blob ? 'primary' : null" :variant="blob ? 'flat' : 'outlined'" @click="onAddToMessage()" :disabled="!blob">{{ $vuetify.locale.t('$vuetify.add_to_message') }}</v-btn>
           <v-btn color="red" variant="flat" @click="hideModal()" :disabled="isRecording">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
       </v-card-actions>
