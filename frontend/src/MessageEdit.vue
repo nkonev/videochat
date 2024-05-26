@@ -64,11 +64,11 @@
                   <v-icon :size="getIconSize()">mdi-format-list-numbered</v-icon>
               </v-btn>
 
-              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="textColorValue() ? 'tonal' : 'plain'" density="comfortable" @click="textColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_text_color')">
                   <v-icon :size="getIconSize()">mdi-invert-colors</v-icon>
               </v-btn>
 
-              <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="backgroundColorValue() ? 'tonal' : 'plain'" density="comfortable" @click="backgroundColorClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_background_color')">
                   <v-icon :size="getIconSize()">mdi-format-color-fill</v-icon>
               </v-btn>
 
@@ -528,10 +528,16 @@
                 const hexColor = this.convertColor(givenColor);
                 bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorText, color: hexColor});
             },
+            textColorValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('textStyle')
+            },
             backgroundColorClick() {
                 const givenColor = this.$refs.tipTapRef?.$data.editor.getAttributes('highlight')?.color;
                 const hexColor = this.convertColor(givenColor);
                 bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorBackground, color: hexColor});
+            },
+            backgroundColorValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('highlight')
             },
             smileyClick() {
                 bus.emit(OPEN_MESSAGE_EDIT_SMILEY,
