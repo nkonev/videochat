@@ -594,7 +594,7 @@ export default {
             bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
         resetVideoInvitation() {
-            this.$nextTick(()=>{ // $nextTick() to ensure Firefox will apply this changes came from WebSocket-based GraphQL subscription
+            this.$nextTick(()=>{
               this.invitedVideoChatAlert = false;
               this.invitedVideoChatId = 0;
               this.invitedVideoChatName = null;
