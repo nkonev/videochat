@@ -594,20 +594,25 @@ export default {
             bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
         resetVideoInvitation() {
-          this.invitedVideoChatAlert = false;
-          this.invitedVideoChatId = 0;
-          this.invitedVideoChatName = null;
+            this.$nextTick(()=>{
+              this.invitedVideoChatAlert = false;
+              this.invitedVideoChatId = 0;
+              this.invitedVideoChatName = null;
+            })
         },
         onVideoCallInvited(data) {
           if (isCalling(data.status)) {
-            this.invitedVideoChatId = data.chatId;
-            this.invitedVideoChatName = data.chatName;
-            this.invitedVideoChatAlert = true;
+              this.$nextTick(()=>{
+                this.invitedVideoChatId = data.chatId;
+                this.invitedVideoChatName = data.chatName;
+                this.invitedVideoChatAlert = true;
+              }).then(()=>{
+                  audio.play().catch(error => {
+                      console.warn("Unable to play sound", error);
+                      bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
+                  })
+              })
 
-            audio.play().catch(error => {
-              console.warn("Unable to play sound", error);
-              bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
-            })
           } else {
             this.resetVideoInvitation();
           }
