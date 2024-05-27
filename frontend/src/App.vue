@@ -142,7 +142,9 @@
 
             </template>
           </v-snackbar>
-          <v-snackbar v-model="invitedVideoChatAlert" :key="invitedVideoChatKey" color="success" timeout="-1" :multi-line="true" :transition="false">
+
+          <!-- "if" is to fix rare issue with snackbar in case background tab in Firefox - it doesn't react on 'removing' or '' status -->
+          <v-snackbar v-if="invitedVideoChatAlert" color="success" timeout="-1" :multi-line="true" :transition="false">
             <span class="call-blink">
                 {{ $vuetify.locale.t('$vuetify.you_called', invitedVideoChatId, invitedVideoChatName) }}
             </span>
@@ -278,7 +280,6 @@ export default {
             invitedVideoChatId: 0,
             invitedVideoChatName: null,
             invitedVideoChatAlert: false,
-            invitedVideoChatKey: +new Date(),
         }
     },
     computed: {
@@ -595,7 +596,6 @@ export default {
             bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
         resetVideoInvitation() {
-            this.invitedVideoChatKey++;
             this.$nextTick(()=>{
               this.invitedVideoChatAlert = false;
               this.invitedVideoChatId = 0;
@@ -604,7 +604,6 @@ export default {
         },
         onVideoCallInvited(data) {
           if (isCalling(data.status)) {
-              this.invitedVideoChatKey++; // to fix rare issue with snackbar in case background tab in Firefox - it doesn't react on 'removing' or '' status
               this.$nextTick(()=>{
                 this.invitedVideoChatId = data.chatId;
                 this.invitedVideoChatName = data.chatName;
