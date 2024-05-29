@@ -23,7 +23,7 @@
                   <RecordingVideoModal ref="recordingVideoModalRef" @closemodal="onCloseModal"/>
               </v-window-item>
               <v-window-item value="audio">
-                  <RecordingAudioModal ref="recordingAudioModalRef"/>
+                  <RecordingAudioModal ref="recordingAudioModalRef" @closemodal="onCloseModal"/>
               </v-window-item>
           </v-window>
       </v-card>
