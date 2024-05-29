@@ -208,7 +208,7 @@ export default {
 
     const imagePluginInstance = buildImageHandler(
     (image, shouldAddDateToTheFilename) => {
-        this.correlationId = uuidv4();
+        this.setCorrelationId(uuidv4());
         embedUploadFunction(this.chatId, [image], this.correlationId, this.preallocatedCandidateFileItemId, shouldAddDateToTheFilename);
     })
         .configure({
@@ -302,7 +302,7 @@ export default {
         this.fileInput = document.getElementById('file-input');
         // triggered when we upload image or video after this.fileInput.click()
         this.fileInput.onchange = e => {
-          this.correlationId = uuidv4();
+          this.setCorrelationId(uuidv4());
           if (e.target.files.length) {
               const files = Array.from(e.target.files);
               embedUploadFunction(this.chatId, files, this.correlationId, this.preallocatedCandidateFileItemId)
