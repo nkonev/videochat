@@ -36,6 +36,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import RecordingVideoModal from "@/RecordingVideoModal.vue";
 import RecordingAudioModal from "@/RecordingAudioModal.vue";
+import {getStoreRecordingTab, setStoreRecordingTab} from "@/store/localStore.js";
 
 export default {
   data () {
@@ -50,10 +51,12 @@ export default {
   },
   methods: {
     showModal() {
+        this.tab = getStoreRecordingTab('video');
         this.$data.show = true;
     },
     onUpdateTab(tab) {
         console.debug("Setting tab", tab);
+        setStoreRecordingTab(tab)
     },
     onCloseModal() {
       this.$data.show = false;

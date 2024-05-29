@@ -608,7 +608,7 @@
                 removeStoredChatEditMessageDto(this.chatId);
             },
             setShouldShowSendMessageButtons() {
-                const type = getStoredMessageEditSendButtonsType();
+                const type = getStoredMessageEditSendButtonsType('auto');
                 switch (type) { // see MessageEditSettingsModalContent
                     case 'auto':
                         this.chatStore.shouldShowSendMessageButtons = shouldShowSendMessageButtons();

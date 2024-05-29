@@ -269,11 +269,11 @@ export const setStoredMessageEditNormalizeText = (v) => {
 
 export const KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE = 'messageEditSendButtonsType';
 
-export const getStoredMessageEditSendButtonsType = () => {
+export const getStoredMessageEditSendButtonsType = (defaultValue) => {
     let v = JSON.parse(localStorage.getItem(KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE));
     if (v === null) {
         console.log("Resetting messageEditSendButtonsType to default");
-        setStoredMessageEditSendButtonsType('auto'); // see MessageEditSettingsModalContent
+        setStoredMessageEditSendButtonsType(defaultValue); // see MessageEditSettingsModalContent
         v = JSON.parse(localStorage.getItem(KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE));
     }
     return v;
@@ -281,4 +281,20 @@ export const getStoredMessageEditSendButtonsType = () => {
 
 export const setStoredMessageEditSendButtonsType = (v) => {
     localStorage.setItem(KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE, JSON.stringify(v));
+}
+
+export const KEY_RECORDING_TAB = 'recordingTab';
+
+export const getStoreRecordingTab = (defaultValue) => {
+    let v = JSON.parse(localStorage.getItem(KEY_RECORDING_TAB));
+    if (v === null) {
+        console.log("Resetting recordingTab to default");
+        setStoredMessageEditSendButtonsType(defaultValue);
+        v = JSON.parse(localStorage.getItem(KEY_RECORDING_TAB));
+    }
+    return v;
+}
+
+export const setStoreRecordingTab = (v) => {
+    localStorage.setItem(KEY_RECORDING_TAB, JSON.stringify(v));
 }
