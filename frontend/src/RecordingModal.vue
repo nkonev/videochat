@@ -179,7 +179,7 @@ export default {
           });
           return [file]
       } else {
-          const file = new File([this.blob], "video.mp3", {
+          const file = new File([this.blob], "audio.mp3", {
               type: 'audio/mp3'
           });
           return [file]
