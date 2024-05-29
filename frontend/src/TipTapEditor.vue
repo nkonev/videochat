@@ -33,11 +33,11 @@ import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {hasLength, isFireFox, media_audio, media_image, media_video} from "@/utils";
 import bus, {
-  FILE_UPLOAD_MODAL_START_UPLOADING,
-  PREVIEW_CREATED,
-  OPEN_FILE_UPLOAD_MODAL,
-  MEDIA_LINK_SET,
-  EMBED_LINK_SET,
+    FILE_UPLOAD_MODAL_START_UPLOADING,
+    PREVIEW_CREATED,
+    OPEN_FILE_UPLOAD_MODAL,
+    MEDIA_LINK_SET,
+    EMBED_LINK_SET, CORRELATION_ID_SET,
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
@@ -149,12 +149,8 @@ export default {
     resetFileItemUuid() {
       this.preallocatedCandidateFileItemId = null;
     },
-    getFileItemUuid() {
-      return this.preallocatedCandidateFileItemId
-    },
-    setAndGetCorrelationId() {
-      this.correlationId = uuidv4();
-      return this.correlationId
+    setCorrelationId(newCorrelationId) {
+      this.correlationId = newCorrelationId;
     },
     onPreviewCreated(dto) {
         if (hasLength(this.correlationId) && this.correlationId == dto.correlationId) {
@@ -207,6 +203,7 @@ export default {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.on(CORRELATION_ID_SET, this.setCorrelationId);
     this.regenerateNewFileItemUuid();
 
     const imagePluginInstance = buildImageHandler(
@@ -318,6 +315,7 @@ export default {
     bus.off(PREVIEW_CREATED, this.onPreviewCreated);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.off(CORRELATION_ID_SET, this.setCorrelationId);
     this.resetFileItemUuid();
 
     this.editor.destroy();

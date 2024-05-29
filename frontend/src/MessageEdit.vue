@@ -641,7 +641,7 @@
                 bus.emit(OPEN_SETTINGS, 'message_edit_settings')
             },
             openRecordingModal() {
-                bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.$refs.tipTapRef.getFileItemUuid(), correlationId: this.$refs.tipTapRef.setAndGetCorrelationId()})
+                bus.emit(OPEN_RECORDING_MODAL)
             },
         },
         computed: {
