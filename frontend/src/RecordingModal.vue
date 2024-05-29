@@ -122,21 +122,20 @@ export default {
       }
     },
     async onShow() {
-        this.$nextTick(async ()=>{
-          if (this.isVideo()) {
-              this.videoElement = document.querySelector('.recording-wrapper video');
-              this.stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-          } else {
-              this.videoElement = document.querySelector('.recording-wrapper audio');
-              this.stream = await navigator.mediaDevices.getUserMedia({video: false, audio: true});
-          }
+      await this.$nextTick();
+      if (this.isVideo()) {
+          this.videoElement = document.querySelector('.recording-wrapper video');
+          this.stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+      } else {
+          this.videoElement = document.querySelector('.recording-wrapper audio');
+          this.stream = await navigator.mediaDevices.getUserMedia({video: false, audio: true});
+      }
 
-          // set
-          this.videoElement.muted = true;
-          this.videoElement.controls = false;
-          this.videoElement.autoplay = true;
-          this.videoElement.srcObject = this.stream;
-        })
+      // set
+      this.videoElement.muted = true;
+      this.videoElement.controls = false;
+      this.videoElement.autoplay = true;
+      this.videoElement.srcObject = this.stream;
     },
     async startRecording() {
       this.isRecording = true;
