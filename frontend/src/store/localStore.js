@@ -289,7 +289,7 @@ export const getStoreRecordingTab = (defaultValue) => {
     let v = JSON.parse(localStorage.getItem(KEY_RECORDING_TAB));
     if (v === null) {
         console.log("Resetting recordingTab to default");
-        setStoredMessageEditSendButtonsType(defaultValue);
+        setStoreRecordingTab(defaultValue);
         v = JSON.parse(localStorage.getItem(KEY_RECORDING_TAB));
     }
     return v;

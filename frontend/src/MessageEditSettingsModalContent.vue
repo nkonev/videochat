@@ -55,7 +55,7 @@
         methods: {
             showModal() {
                 this.normalizeText = getStoredMessageEditNormalizeText();
-                this.sendButtonsType = getStoredMessageEditSendButtonsType();
+                this.sendButtonsType = getStoredMessageEditSendButtonsType('auto');
             },
             changeNormalizeText(v) {
                 setStoredMessageEditNormalizeText(v);
