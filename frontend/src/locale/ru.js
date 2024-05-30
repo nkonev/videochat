@@ -276,5 +276,6 @@ export default {
     start_recording: "Начать запись",
     stop_recording: "Остановить запись",
     make_a_recording: "Записать...",
-    add_to_message: "Добавить"
+    add_to_message: "Добавить",
+    seconds: "сек."
 }

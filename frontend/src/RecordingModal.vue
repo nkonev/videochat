@@ -27,7 +27,8 @@
                   </v-window-item>
 
                   <v-window-item value="audio">
-                      <v-card-text class="d-flex justify-center pb-0 pt-2 px-2 recording-wrapper">
+                      <v-card-text class="d-flex justify-start pb-0 pt-2 px-2 recording-wrapper">
+                          <v-code v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</v-code>
                           <audio class="audio-custom-class" playsinline></audio>
                       </v-card-text>
                   </v-window-item>
@@ -62,6 +63,9 @@ export default {
       isRecording: false,
       stream: null,
       blob: null,
+      recordingCounter: 0,
+      recordingLabel: "",
+      recordingLabelUpdateInterval: null,
     }
   },
   methods: {
@@ -91,12 +95,20 @@ export default {
       this.blob = null;
       this.fileItemUuid = null;
       this.correlationId = null;
+      this.recordingCounter = 0;
+      this.recordingLabel = "";
+      this.recordingLabelUpdateInterval = null;
     },
     isVideo() {
         return this.tab == 'video'
     },
     async stopRecording() {
       try {
+          this.recordingCounter = 0;
+          this.recordingLabel = "";
+          clearInterval(this.recordingLabelUpdateInterval);
+          this.recordingLabelUpdateInterval = null;
+
           await this.recorder.stopRecording();
 
           this.videoElement.srcObject = null;
@@ -160,6 +172,14 @@ export default {
               bufferSize: 16384
           });
       }
+      const getCurrentTime = ()=>{
+          return Math.round(+new Date()/1000)
+      }
+      this.recordingCounter = getCurrentTime();
+      this.recordingLabelUpdateInterval = setInterval(()=>{
+          const delta = getCurrentTime() - this.recordingCounter;
+          this.recordingLabel = "" + delta + " " + this.$vuetify.locale.t('$vuetify.seconds')
+      }, 500)
       await this.recorder.startRecording();
 
       // helps releasing camera on stopRecording

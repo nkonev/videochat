@@ -276,5 +276,6 @@ export default {
     start_recording: "Start recording",
     stop_recording: "Stop recording",
     make_a_recording: "Make a recording",
-    add_to_message: "Add"
+    add_to_message: "Add",
+    seconds: "sec"
 }
