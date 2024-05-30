@@ -59,19 +59,20 @@ func (h *FilesService) GetListFilesInFileItem(
 		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
 		if (filter != nil && filter(&objInfo)) || filter == nil {
 			if offsetCounter >= offset {
-				tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
-				if err != nil {
-					GetLogEntry(c).Errorf("Error during getting tags %v", err)
-					return nil, 0, err
-				}
-
-				info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
-				if err != nil {
-					GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
-					continue
-				}
 
 				if respCounter < size {
+					tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
+					if err != nil {
+						GetLogEntry(c).Errorf("Error during getting tags %v", err)
+						return nil, 0, err
+					}
+
+					info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
+					if err != nil {
+						GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
+						continue
+					}
+
 					list = append(list, info)
 					respCounter++
 				}
