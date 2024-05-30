@@ -112,8 +112,6 @@ export default {
       });
       this.stream = null;
       this.blob = null;
-      this.fileItemUuid = null;
-      this.correlationId = null;
       this.recordingCounter = 0;
       this.recordingLabel = "";
       this.recordingLabelUpdateInterval = null;
