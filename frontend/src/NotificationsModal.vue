@@ -1,7 +1,12 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" scrollable>
-            <v-card :title="$vuetify.locale.t('$vuetify.notifications')">
+            <v-card>
+                <v-card-title class="d-flex align-center ml-2">
+                    {{ $vuetify.locale.t('$vuetify.notifications') }}
+                    <v-spacer/>
+                    <v-btn v-if="itemsDto.items.length > 0" variant="outlined" @click="onClickClear()"><v-icon>mdi-delete</v-icon> {{ $vuetify.locale.t('$vuetify.clear') }} </v-btn>
+                </v-card-title>
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0 notification-list" v-if="!loading">
                         <template v-if="itemsDto.items.length > 0">
