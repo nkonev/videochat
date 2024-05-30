@@ -98,6 +98,11 @@ func (db *DB) GetNotificationCount(userId int64) (int64, error) {
 	return count, nil
 }
 
+func (db *DB) ClearAllNotifications(userId int64) error {
+	_, err := db.Exec("delete FROM notification where user_id = $1", userId)
+	return err
+}
+
 func (db *DB) GetExcessUserNotificationIds(userId int64, numToDelete int64) ([]int64, error) {
 	rows, err := db.Query("select id from notification where user_id = $1 order by id asc limit $2", userId, numToDelete)
 	if err != nil {

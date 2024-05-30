@@ -5,7 +5,7 @@
                 <v-card-title class="d-flex align-center ml-2">
                     {{ $vuetify.locale.t('$vuetify.notifications') }}
                     <v-spacer/>
-                    <v-btn v-if="itemsDto.items.length > 0" variant="outlined" @click="onClickClear()"><v-icon>mdi-delete</v-icon> {{ $vuetify.locale.t('$vuetify.clear') }} </v-btn>
+                    <v-btn v-if="itemsDto.items.length > 0" variant="outlined" @click="onClickClearAllNotifications()"><v-icon>mdi-delete</v-icon> {{ $vuetify.locale.t('$vuetify.clear') }} </v-btn>
                 </v-card-title>
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0 notification-list" v-if="!loading">
@@ -77,7 +77,7 @@
 
 import bus, {
     LOGGED_OUT,
-    NOTIFICATION_ADD, NOTIFICATION_DELETE,
+    NOTIFICATION_ADD, NOTIFICATION_CLEAR_ALL, NOTIFICATION_DELETE,
     OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
 import {getHumanReadableDate, hasLength} from "./utils";
@@ -137,6 +137,13 @@ export default {
           this.chatStore.setNotificationCount(payload.count);
 
           this.onItemRemovedEvent(payload);
+        },
+        notificationClearAll() {
+            this.chatStore.setNotificationCount(0);
+            this.itemsDto = {
+                count: 0,
+                items: []
+            }
         },
 
         clearOnClose() {
@@ -212,6 +219,9 @@ export default {
         openNotificationSettings() {
             bus.emit(OPEN_SETTINGS, 'the_notifications')
         },
+        onClickClearAllNotifications() {
+            axios.delete('/api/notification')
+        },
         resetOnRouteIdChange() {
             return false
         },
@@ -229,12 +239,14 @@ export default {
         bus.on(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
         bus.on(NOTIFICATION_ADD, this.notificationAdd);
         bus.on(NOTIFICATION_DELETE, this.notificationDelete);
+        bus.on(NOTIFICATION_CLEAR_ALL, this.notificationClearAll);
         bus.on(LOGGED_OUT, this.onLogout);
     },
     beforeUnmount() {
         bus.off(OPEN_NOTIFICATIONS_DIALOG, this.showModal);
         bus.off(NOTIFICATION_ADD, this.notificationAdd);
         bus.off(NOTIFICATION_DELETE, this.notificationDelete);
+        bus.off(NOTIFICATION_CLEAR_ALL, this.notificationClearAll);
         bus.off(LOGGED_OUT, this.onLogout);
     },
 }

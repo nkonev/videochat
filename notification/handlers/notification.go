@@ -69,11 +69,30 @@ func (mc *NotificationHandler) GetNotificationsCount(c echo.Context) error {
 
 	notificationsCount, err := mc.db.GetNotificationCount(userPrincipalDto.UserId)
 	if err != nil {
-		return errors.New("Error during getting user chat count")
+		return errors.New("Error during getting user notification count")
 	}
 
 	return c.JSON(http.StatusOK, NotificationsCount{	Count: notificationsCount})
+}
 
+func (mc *NotificationHandler) DeleteAllNotifications(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	err := mc.db.ClearAllNotifications(userPrincipalDto.UserId)
+	if err != nil {
+		return errors.New("Error during getting user chat count")
+	}
+
+	err = mc.rabbitEventsPublisher.Publish(userPrincipalDto.UserId, nil, services.NotificationClearAll, c.Request().Context())
+	if err != nil {
+		Logger.Errorf("Unable to send notification delete %v", err)
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (mc *NotificationHandler) ReadNotification(c echo.Context) error {

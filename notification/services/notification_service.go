@@ -25,6 +25,7 @@ func CreateNotificationService(dbs *db.DB, rabbitEventsPublisher *producer.Rabbi
 
 const NotificationAdd = "notification_add"
 const NotificationDelete = "notification_delete"
+const NotificationClearAll = "notification_clear_all"
 
 func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEvent) {
 

@@ -222,7 +222,7 @@ import bus, {
     VIDEO_CALL_USER_COUNT_CHANGED,
     VIDEO_DIAL_STATUS_CHANGED,
     VIDEO_RECORDING_CHANGED,
-    WEBSOCKET_RESTORED, ON_WINDOW_RESIZED,
+    WEBSOCKET_RESTORED, ON_WINDOW_RESIZED, NOTIFICATION_CLEAR_ALL,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -521,8 +521,11 @@ export default {
             const d = getGlobalEventsData(e).notificationEvent;
             bus.emit(NOTIFICATION_ADD, d);
           } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
-            const d = getGlobalEventsData(e).notificationEvent;
-            bus.emit(NOTIFICATION_DELETE, d);
+              const d = getGlobalEventsData(e).notificationEvent;
+              bus.emit(NOTIFICATION_DELETE, d);
+          } else if (getGlobalEventsData(e).eventType === 'notification_clear_all') {
+              const d = getGlobalEventsData(e).notificationEvent;
+              bus.emit(NOTIFICATION_CLEAR_ALL, d);
           } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
             const d = getGlobalEventsData(e).forceLogout;
             console.log("Killed sessions, reason:", d.reasonType)

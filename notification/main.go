@@ -126,6 +126,7 @@ func configureEcho(
 
 	e.GET("/notification/list", ch.GetNotifications)
 	e.GET("/notification/count", ch.GetNotificationsCount)
+	e.DELETE("/notification", ch.DeleteAllNotifications)
 	e.GET("/notification/settings/global", ch.GetGlobalNotificationSettings)
 	e.PUT("/notification/settings/global", ch.PutGlobalNotificationSettings)
 	e.GET("/notification/settings/:id/chat", ch.GetChatNotificationSettings)

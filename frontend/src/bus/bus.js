@@ -57,6 +57,7 @@ export const OPEN_PARTICIPANTS_DIALOG = "openInfo";
 
 export const NOTIFICATION_ADD = "notificationAdd";
 export const NOTIFICATION_DELETE = "notificationDelete";
+export const NOTIFICATION_CLEAR_ALL = "notificationClearAll";
 
 
 export const WEBSOCKET_RESTORED = "wsRestored";
