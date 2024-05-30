@@ -64,7 +64,7 @@ func (h *FilesService) GetListFilesInFileItem(
 					tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 					if err != nil {
 						GetLogEntry(c).Errorf("Error during getting tags %v", err)
-						return nil, 0, err
+						continue
 					}
 
 					info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
