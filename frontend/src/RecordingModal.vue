@@ -21,14 +21,17 @@
           <v-card-text class="ma-0 pa-0 wrapper">
               <v-window v-model="tab">
                   <v-window-item value="video">
-                      <v-card-text class="d-flex justify-center pb-0 pt-2 px-2 recording-wrapper">
+                      <v-card-text class="d-flex justify-start pb-0 pt-2 px-2 recording-wrapper">
+                          <div style="position:absolute;">
+                              <div v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
+                          </div>
                           <video class="video-custom-class" playsinline></video>
                       </v-card-text>
                   </v-window-item>
 
                   <v-window-item value="audio">
                       <v-card-text class="d-flex justify-start pb-0 pt-2 px-2 recording-wrapper">
-                          <v-code v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</v-code>
+                          <div v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
                           <audio class="audio-custom-class" playsinline></audio>
                       </v-card-text>
                   </v-window-item>
