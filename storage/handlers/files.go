@@ -472,7 +472,7 @@ func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 
 	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId)
 
-	list, count, err := h.filesService.GetListFilesItemUuids( bucketName, filenameChatPrefix, c.Request().Context(), filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesItemUuids(bucketName, filenameChatPrefix, c.Request().Context(), filesSize, filesOffset)
 	if err != nil {
 		return err
 	}

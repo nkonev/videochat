@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="480" scrollable>
+        <v-dialog v-model="show" max-width="700" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.attach_files_to_message')">
                 <v-card-text class="px-0">
                     <v-list class="pb-0" v-if="!loading">

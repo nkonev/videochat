@@ -13,7 +13,6 @@ import (
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"sort"
 	"strings"
 	"time"
 )
@@ -121,57 +120,51 @@ func (h *FilesService) GetListFilesItemUuids(
 		Recursive:    true,
 	})
 
-	tmpMap := make(map[string][]SimpleFileItem)
+	var list []*GroupedByFileItemUuid = make([]*GroupedByFileItemUuid, 0)
+	var counter = 0
+	var lastItemUuid = ""
+
+	var files = []SimpleFileItem{}
 	for m := range objects {
 		itemUuid, err := utils.ParseFileItemUuid(m.Key)
 		if err != nil {
 			GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
-		} else {
-			if _, ok := tmpMap[itemUuid]; !ok {
-				tmpMap[itemUuid] = []SimpleFileItem{}
-			}
-
-			tmpMap[itemUuid] = append(tmpMap[itemUuid], SimpleFileItem{
-				m.Key,
-				ReadFilename(m.Key),
-				m.LastModified,
-			})
+			continue
 		}
-	}
 
-	tmlList := make([]*GroupedByFileItemUuid, 0)
-	for k, v := range tmpMap {
-		tmlList = append(tmlList, &GroupedByFileItemUuid{k, v})
-	}
-	sort.SliceStable(tmlList, func(i, j int) bool {
-		first := tmlList[i]
-		second := tmlList[j]
-		if len(first.Files) > 0 && len(second.Files) > 0 {
-			return first.Files[0].LastModified.Unix() > second.Files[0].LastModified.Unix()
-		} else {
-			return false
+		itemIdHasChanged := itemUuid != lastItemUuid
+		if itemIdHasChanged {
+			counter++
 		}
-	})
-
-	count := len(tmlList)
-
-	var list []*GroupedByFileItemUuid = make([]*GroupedByFileItemUuid, 0)
-	var counter = 0
-	var respCounter = 0
-
-	for _, item := range tmlList {
+		lastLastItemId := lastItemUuid
+		lastItemUuid = itemUuid
 
 		if counter >= offset {
-			list = append(list, item)
-			respCounter++
-			if respCounter >= size {
-				break
+			if len(list) < size {
+				if itemIdHasChanged {
+					if len(files) > 0 {
+						list = append(list, &GroupedByFileItemUuid{lastLastItemId, files}) // process from previous iteration
+					}
+
+					// prepare for current iteration
+					files = []SimpleFileItem{}
+				}
+
+				files = append(files, SimpleFileItem{
+					Id:           m.Key,
+					Filename:     ReadFilename(m.Key),
+					LastModified: m.LastModified,
+				})
 			}
 		}
-		counter++
 	}
 
-	return list, count, nil
+	// process leftovers
+	if len(files) > 0 && len(list) < size && lastItemUuid != "" {
+		list = append(list, &GroupedByFileItemUuid{lastItemUuid, files})
+	}
+
+	return list, counter, nil
 }
 
 func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) (int, error) {
