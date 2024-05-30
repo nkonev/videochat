@@ -181,7 +181,7 @@ export const getStoredVideoPosition = () => {
     let v = JSON.parse(localStorage.getItem(KEY_VIDEO_POSITION));
     if (v === null) {
         console.log("Resetting videoPosition to default");
-        setStoredVideoPosition(VIDEO_POSITION_AUTO);
+        setStoredVideoPosition(VIDEO_POSITION_ON_THE_TOP);
         v = JSON.parse(localStorage.getItem(KEY_VIDEO_POSITION));
     }
     return v;
