@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
 	"nkonev.name/chat/dto"
@@ -27,7 +26,7 @@ type Message struct {
 	OwnerId        int64
 	CreateDateTime time.Time
 	EditDateTime   null.Time
-	FileItemUuid   *uuid.UUID
+	FileItemUuid   *string
 
 	RequestEmbeddedMessageId      *int64
 	RequestEmbeddedMessageType    *string
@@ -500,8 +499,8 @@ func (db *DB) DeleteMessage(messageId int64, ownerId int64, chatId int64) error 
 	return nil
 }
 
-func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64, bool, error) {
-	res := dbR.QueryRow(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), uuid, ownerId)
+func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, fileItemUuid string) (int64, bool, error) {
+	res := dbR.QueryRow(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), fileItemUuid, ownerId)
 
 	if res.Err() != nil {
 		Logger.Errorf("Error during nulling file_item_uuid message id %v", res.Err())
@@ -520,8 +519,8 @@ func (dbR *DB) SetFileItemUuidToNull(ownerId, chatId int64, uuid string) (int64,
 	}
 }
 
-func (dbR *DB) SetFileItemUuidTo(ownerId, chatId, messageId int64, uuid *string) (error) {
-	_, err := dbR.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = $1 WHERE id = $2 AND owner_id = $3`, chatId), uuid, messageId, ownerId)
+func (dbR *DB) SetFileItemUuidTo(ownerId, chatId, messageId int64, fileItemUuid *string) (error) {
+	_, err := dbR.Exec(fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = $1 WHERE id = $2 AND owner_id = $3`, chatId), fileItemUuid, messageId, ownerId)
 
 	if err != nil {
 		Logger.Errorf("Error during nulling file_item_uuid message id %v", err)

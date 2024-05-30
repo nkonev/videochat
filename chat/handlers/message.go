@@ -6,7 +6,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/getlantern/deepcopy"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -45,7 +44,7 @@ type EditMessageDto struct {
 type CreateMessageDto struct {
 	Text                string                   `json:"text"`
 	BlogPost            bool                     `json:"blogPost"`
-	FileItemUuid        *uuid.UUID               `json:"fileItemUuid"`
+	FileItemUuid        *string               `json:"fileItemUuid"`
 	EmbedMessageRequest *dto.EmbedMessageRequest `json:"embedMessage"`
 }
 

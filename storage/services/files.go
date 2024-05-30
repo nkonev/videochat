@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
@@ -52,48 +51,35 @@ func (h *FilesService) GetListFilesInFileItem(
 		Recursive:    true,
 	})
 
-	var intermediateList []minio.ObjectInfo = make([]minio.ObjectInfo, 0)
-	for objInfo := range objects {
-		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
-		if filter != nil && filter(&objInfo) {
-			intermediateList = append(intermediateList, objInfo)
-		} else if filter == nil {
-			intermediateList = append(intermediateList, objInfo)
-		}
-	}
-	sort.SliceStable(intermediateList, func(i, j int) bool {
-		return intermediateList[i].LastModified.Unix() > intermediateList[j].LastModified.Unix()
-	})
-
-	count := len(intermediateList)
-
 	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
 	var offsetCounter = 0
 	var respCounter = 0
 
-	for _, objInfo := range intermediateList {
+	for objInfo := range objects {
+		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
+		if (filter != nil && filter(&objInfo)) || filter == nil {
+			if offsetCounter >= offset {
+				tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
+				if err != nil {
+					GetLogEntry(c).Errorf("Error during getting tags %v", err)
+					return nil, 0, err
+				}
 
-		if offsetCounter >= offset {
-			tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
-			if err != nil {
-				GetLogEntry(c).Errorf("Error during getting tags %v", err)
-				return nil, 0, err
-			}
+				info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
+				if err != nil {
+					GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
+					continue
+				}
 
-			info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
-			if err != nil {
-				GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
-				continue
+				if respCounter < size {
+					list = append(list, info)
+					respCounter++
+				}
 			}
-
-			list = append(list, info)
-			respCounter++
-			if respCounter >= size {
-				break
-			}
+			offsetCounter++
 		}
-		offsetCounter++
 	}
+
 
 	if requestOwners {
 		var participantIdSet = map[int64]bool{}
@@ -109,7 +95,7 @@ func (h *FilesService) GetListFilesInFileItem(
 		}
 	}
 
-	return list, count, nil
+	return list, offsetCounter, nil
 }
 
 type SimpleFileItem struct {
@@ -119,7 +105,7 @@ type SimpleFileItem struct {
 }
 
 type GroupedByFileItemUuid struct {
-	FileItemUuid uuid.UUID `json:"fileItemUuid"`
+	FileItemUuid string `json:"fileItemUuid"`
 	Files []SimpleFileItem `json:"files"`
 }
 
@@ -134,7 +120,7 @@ func (h *FilesService) GetListFilesItemUuids(
 		Recursive:    true,
 	})
 
-	tmpMap := make(map[uuid.UUID][]SimpleFileItem)
+	tmpMap := make(map[string][]SimpleFileItem)
 	for m := range objects {
 		itemUuid, err := utils.ParseFileItemUuid(m.Key)
 		if err != nil {

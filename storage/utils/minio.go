@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"errors"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	. "nkonev.name/storage/logger"
@@ -89,7 +88,7 @@ const FileParam = "file"
 const TimeParam = "time"
 
 func ParseChatId(minioKey string) (int64, error) {
-	// "chat/116/ad36c70a-c9ae-4846-9c25-6d5f5ac94873/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
+	// "chat/116/0W007Z2P0CRT2G4E1X0DCWB0DK/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
 	split := strings.Split(minioKey, "/")
 	if len(split) >= 2 {
 		str := split[1]
@@ -98,18 +97,18 @@ func ParseChatId(minioKey string) (int64, error) {
 	return 0, errors.New("Unable to parse chat id")
 }
 
-func ParseFileItemUuid(minioKey string) (uuid.UUID, error) {
-	// "chat/116/ad36c70a-c9ae-4846-9c25-6d5f5ac94873/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
+func ParseFileItemUuid(minioKey string) (string, error) {
+	// "chat/116/0W007Z2P0CRT2G4E1X0DCWB0DK/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
 	split := strings.Split(minioKey, "/")
 	if len(split) >= 3 {
 		str := split[2]
-		return uuid.Parse(str)
+		return str, nil
 	}
-	return uuid.UUID{}, errors.New("Unable to parse file id")
+	return "", errors.New("Unable to parse file id")
 }
 
 func StripBucketName(minioKey string, bucketName string) string {
-	// "files/chat/116/ad36c70a-c9ae-4846-9c25-6d5f5ac94873/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
+	// "files/chat/116/0W007Z2P0CRT2G4E1X0DCWB0DK/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
 	toStrip := bucketName + "/"
 	return strings.ReplaceAll(minioKey, toStrip, "")
 }

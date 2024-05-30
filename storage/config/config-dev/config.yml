@@ -102,3 +102,6 @@ response:
   cache:
     preview: 24h
     avatar: 48h
+
+ulid:
+  topYear: 3000

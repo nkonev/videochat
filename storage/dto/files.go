@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -21,7 +20,7 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
-	FileItemUuid   uuid.UUID `json:"fileItemUuid"`
+	FileItemUuid   string `json:"fileItemUuid"`
 }
 
 type WrappedFileInfoDto struct {

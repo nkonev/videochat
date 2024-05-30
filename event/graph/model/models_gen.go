@@ -4,8 +4,6 @@ package model
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type UserAccountEventDto interface {
@@ -84,7 +82,7 @@ type DisplayMessageDto struct {
 	Owner          *Participant          `json:"owner"`
 	CanEdit        bool                  `json:"canEdit"`
 	CanDelete      bool                  `json:"canDelete"`
-	FileItemUUID   *uuid.UUID            `json:"fileItemUuid"`
+	FileItemUUID   *string               `json:"fileItemUuid"`
 	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
@@ -118,7 +116,7 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool         `json:"canPlayAsVideo"`
 	CanShowAsImage bool         `json:"canShowAsImage"`
 	CanPlayAsAudio bool         `json:"canPlayAsAudio"`
-	FileItemUUID   *uuid.UUID   `json:"fileItemUuid"`
+	FileItemUUID   string       `json:"fileItemUuid"`
 }
 
 type ForceLogoutEvent struct {

@@ -36,7 +36,7 @@ type DisplayMessageDto {
     owner:          Participant
     canEdit:        Boolean!
     canDelete:      Boolean!
-    fileItemUuid:   UUID
+    fileItemUuid:   String
     embedMessage:   EmbedMessageResponse
     pinned:         Boolean!
     blogPost:       Boolean!
@@ -129,7 +129,7 @@ type FileInfoDto {
     canPlayAsVideo:           Boolean!
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
-    fileItemUuid: UUID!
+    fileItemUuid: String!
 }
 
 type WrappedFileInfoDto {

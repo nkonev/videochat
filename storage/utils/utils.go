@@ -2,11 +2,13 @@ package utils
 
 import (
 	"fmt"
+	"github.com/oklog/ulid/v2"
 	"github.com/spf13/viper"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -243,3 +245,15 @@ const UrlStoragePublicGetFile = "/storage/public/download"
 const UrlStoragePublicPreviewFile = "/storage/public/download/embed/preview"
 const UrlStorageGetFile = "/storage/download"
 const UrlStorageGetFilePublicExternal = "/public/download"
+
+// returns monotonically decreasing lexically sequence to use S3's lexical sorting
+func GetFileItemId() string {
+	location := time.UTC
+	dt0 := time.Date(viper.GetInt("ulid.topYear"), time.January, 1, 0, 0, 0, 0, location)
+	dt1 := time.Now()
+	delta := dt0.UnixMilli() - dt1.UnixMilli()
+	initializingReverseTime := time.UnixMilli(delta)
+	ms := ulid.Timestamp(initializingReverseTime)
+	id, _ := ulid.New(ms, ulid.DefaultEntropy())
+	return id.String()
+}

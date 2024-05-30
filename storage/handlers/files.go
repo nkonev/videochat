@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
@@ -141,7 +140,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	chatFileItemUuid := uuid.New().String()
+	chatFileItemUuid := utils.GetFileItemId()
 
 	fileItemUuidString := reqDto.FileItemUuid
 	if fileItemUuidString != nil && *fileItemUuidString != "" {
@@ -852,7 +851,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	isRecording := true
 	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isRecording)
 
-	chatFileItemUuid := uuid.New().String()
+	chatFileItemUuid := utils.GetFileItemId()
 
 	aKey := services.GetKey(bindTo.FileName, chatFileItemUuid, bindTo.ChatId)
 

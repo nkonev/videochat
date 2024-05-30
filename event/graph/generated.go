@@ -16,11 +16,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"nkonev.name/event/graph/model"
-	"nkonev.name/event/graph_types"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -4332,9 +4330,9 @@ func (ec *executionContext) _DisplayMessageDto_fileItemUuid(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*uuid.UUID)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4344,7 +4342,7 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_fileItemUuid(_ contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5588,9 +5586,9 @@ func (ec *executionContext) _FileInfoDto_fileItemUuid(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*uuid.UUID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FileInfoDto_fileItemUuid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5600,7 +5598,7 @@ func (ec *executionContext) fieldContext_FileInfoDto_fileItemUuid(_ context.Cont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -15164,27 +15162,6 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v interface{}) (*uuid.UUID, error) {
-	res, err := graph_types.UnmarshalUUID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v *uuid.UUID) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	res := graph_types.MarshalUUID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) marshalNUserAccountEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserAccountEvent(ctx context.Context, sel ast.SelectionSet, v model.UserAccountEvent) graphql.Marshaler {
 	return ec._UserAccountEvent(ctx, sel, &v)
 }
@@ -15783,22 +15760,6 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 		return graphql.Null
 	}
 	res := graphql.MarshalTime(*v)
-	return res
-}
-
-func (ec *executionContext) unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v interface{}) (*uuid.UUID, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graph_types.UnmarshalUUID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v *uuid.UUID) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graph_types.MarshalUUID(v)
 	return res
 }
 

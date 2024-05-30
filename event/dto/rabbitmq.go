@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/google/uuid"
 	"github.com/montag451/go-eventbus"
 	"time"
 )
@@ -123,7 +122,7 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
-	FileItemUuid   uuid.UUID `json:"fileItemUuid"`
+	FileItemUuid   string `json:"fileItemUuid"`
 }
 
 type GeneralEvent struct {

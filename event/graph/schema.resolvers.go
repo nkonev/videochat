@@ -565,7 +565,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanPlayAsVideo: fileEvent.FileInfoDto.CanPlayAsVideo,
 				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
 				CanPlayAsAudio: fileEvent.FileInfoDto.CanPlayAsAudio,
-				FileItemUUID:   &fileEvent.FileInfoDto.FileItemUuid,
+				FileItemUUID:   fileEvent.FileInfoDto.FileItemUuid,
 			},
 		}
 	}
