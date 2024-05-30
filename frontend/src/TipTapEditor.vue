@@ -143,9 +143,6 @@ export default {
           this.editor.chain().focus().setIframe({ src: url }).run()
       }
     },
-    regenerateNewFileItemUuid() {
-      this.preallocatedCandidateFileItemId = uuidv4();
-    },
     resetFileItemUuid() {
       this.preallocatedCandidateFileItemId = null;
     },
@@ -204,7 +201,6 @@ export default {
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
     bus.on(CORRELATION_ID_SET, this.setCorrelationId);
-    this.regenerateNewFileItemUuid();
 
     const imagePluginInstance = buildImageHandler(
     (image, shouldAddDateToTheFilename) => {

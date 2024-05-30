@@ -252,7 +252,7 @@
               this.notifyAboutBroadcast(true);
 
               this.chatStore.isEditingBigText = false;
-              this.$refs.tipTapRef.regenerateNewFileItemUuid();
+              this.$refs.tipTapRef.resetFileItemUuid();
             },
             messageTextIsPresent(text) {
                 return text && text !== ""
@@ -397,10 +397,7 @@
               }
             },
             openFileUploadForAddingFiles() {
-                let fileItemUuid = this.editMessageDto.fileItemUuid;
-                if (!hasLength(fileItemUuid)) {
-                    fileItemUuid = uuidv4();
-                }
+                const fileItemUuid = this.editMessageDto.fileItemUuid;
                 bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id});
             },
             onFilesClicked() {
@@ -408,6 +405,7 @@
             },
             onFileItemUuid({fileItemUuid, chatId}) {
               if (chatId == this.chatId) {
+                this.$refs.tipTapRef.setFileItemUuid(fileItemUuid);
                 this.editMessageDto.fileItemUuid = fileItemUuid;
                 this.saveToStore();
               }
