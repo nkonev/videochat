@@ -39,8 +39,8 @@
           </v-card-text>
           <v-card-actions>
               <v-spacer/>
-              <v-btn :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()"><v-icon size="x-large">{{isRecording ? 'mdi-stop' : 'mdi-record'}}</v-icon> {{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }} </v-btn>
-              <v-btn :color="blob ? 'primary' : null" :variant="blob ? 'flat' : 'outlined'" @click="onAddToMessage()" :disabled="!blob">{{ $vuetify.locale.t('$vuetify.add_to_message') }}</v-btn>
+              <v-btn v-if="mediaDevicesGotten" :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()"><v-icon size="x-large">{{isRecording ? 'mdi-stop' : 'mdi-record'}}</v-icon> {{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }} </v-btn>
+              <v-btn v-if="mediaDevicesGotten" :color="blob ? 'primary' : null" :variant="blob ? 'flat' : 'outlined'" @click="onAddToMessage()" :disabled="!blob">{{ $vuetify.locale.t('$vuetify.add_to_message') }}</v-btn>
               <v-btn color="red" variant="flat" @click="closeModal()" :disabled="isRecording">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
           </v-card-actions>
       </v-card>
@@ -69,6 +69,7 @@ export default {
       recordingCounter: 0,
       recordingLabel: "",
       recordingLabelUpdateInterval: null,
+      mediaDevicesGotten: false,
     }
   },
   methods: {
@@ -88,6 +89,7 @@ export default {
     closeModal() {
       this.$data.show = false;
       this.tab = null;
+      this.mediaDevicesGotten = false;
       this.onClose();
     },
     onClose() {
@@ -145,6 +147,7 @@ export default {
           this.videoElement = document.querySelector('.recording-wrapper audio');
           this.stream = await navigator.mediaDevices.getUserMedia({video: false, audio: true});
       }
+      this.mediaDevicesGotten = true;
 
       // set
       this.videoElement.muted = true;
