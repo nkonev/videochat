@@ -639,7 +639,7 @@
                 bus.emit(OPEN_SETTINGS, 'message_edit_settings')
             },
             openRecordingModal() {
-                bus.emit(OPEN_RECORDING_MODAL)
+                bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.editMessageDto.fileItemUuid})
             },
         },
         computed: {

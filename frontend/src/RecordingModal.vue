@@ -49,7 +49,13 @@
 
 <script>
 import {getStoreRecordingTab, setStoreRecordingTab} from "@/store/localStore.js";
-import bus, {OPEN_RECORDING_MODAL, CORRELATION_ID_SET, FILE_UPLOAD_MODAL_START_UPLOADING, OPEN_FILE_UPLOAD_MODAL} from "@/bus/bus";
+import bus, {
+    OPEN_RECORDING_MODAL,
+    CORRELATION_ID_SET,
+    FILE_UPLOAD_MODAL_START_UPLOADING,
+    OPEN_FILE_UPLOAD_MODAL,
+    MESSAGE_EDIT_SET_FILE_ITEM_UUID
+} from "@/bus/bus";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {RecordRTCPromisesHandler} from "recordrtc";
@@ -70,12 +76,14 @@ export default {
       recordingLabel: "",
       recordingLabelUpdateInterval: null,
       mediaDevicesGotten: false,
+      fileItemUuid: null,
     }
   },
   methods: {
-    showModal() {
+    showModal({fileItemUuid}) {
         this.tab = getStoreRecordingTab('video');
         this.$data.show = true;
+        this.fileItemUuid = fileItemUuid;
         this.onShow();
     },
     onUpdateTab(tab) {
@@ -86,10 +94,16 @@ export default {
 
         this.onShow();
     },
+    onFileItemUuid({fileItemUuid, chatId}) {
+      if (chatId == this.chatId) {
+          this.fileItemUuid = fileItemUuid;
+      }
+    },
     closeModal() {
       this.$data.show = false;
       this.tab = null;
       this.mediaDevicesGotten = false;
+      this.fileItemUuid = null;
       this.onClose();
     },
     onClose() {
@@ -215,7 +229,7 @@ export default {
       const correlationId = uuidv4();
       bus.emit(CORRELATION_ID_SET, correlationId);
       const files = this.makeFiles();
-      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: true});
+      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: true});
       bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 
       this.closeModal();
@@ -230,12 +244,17 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
+    chatId() {
+      return this.$route.params.id
+    },
   },
   beforeUnmount() {
     bus.off(OPEN_RECORDING_MODAL, this.showModal);
+    bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
   },
   mounted() {
     bus.on(OPEN_RECORDING_MODAL, this.showModal);
+    bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
   }
 }
 </script>
