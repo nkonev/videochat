@@ -1,6 +1,7 @@
 <template>
   <v-container class="ma-0 pa-0 my-list-container" fluid>
-  <div class="my-messages-scroller">
+  <h1 v-if="blogDto.is404">404 Not found</h1>
+  <div v-else class="my-messages-scroller">
     <h1 v-html="blogDto.title" class="ml-3 mt-2"></h1>
 
     <div class="pr-1 mr-1 pl-1 mt-0 ml-3 message-item-root" >
@@ -17,7 +18,7 @@
 
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
-              <div class="author-and-date">
+              <div class="author-and-date" v-if="blogDto.owner">
                 <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(blogDto.owner, true)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>

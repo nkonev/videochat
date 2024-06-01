@@ -111,6 +111,10 @@ Sitemap: ${sitemapUrl}`);
       // Install error tracking here, see https://vike.dev/errors
     }
     const { httpResponse } = pageContext
+    let overrideStatus = null;
+    if (pageContext.httpStatus) {
+        overrideStatus = pageContext.httpStatus;
+    }
     if (!httpResponse) {
       return next()
     } else {
@@ -118,7 +122,7 @@ Sitemap: ${sitemapUrl}`);
       // to help YandexBot to get the page
       // if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
       headers.forEach(([name, value]) => res.setHeader(name, value))
-      res.status(statusCode)
+      res.status(overrideStatus ? overrideStatus : statusCode)
       // For HTTP streams use httpResponse.pipe() instead, see https://vike.dev/streaming
       res.send(body)
     }
