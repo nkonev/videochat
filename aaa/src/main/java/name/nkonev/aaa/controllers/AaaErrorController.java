@@ -1,6 +1,7 @@
 package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorController;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -31,13 +31,13 @@ import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 @Controller
 public class AaaErrorController extends AbstractErrorController {
 
-    @Value("${debugResponse:false}")
-    private boolean debug;
-
     private static final String PATH = "/error";
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorController.class);
 
@@ -50,11 +50,11 @@ public class AaaErrorController extends AbstractErrorController {
 
         final List<String> acceptValues = getAcceptHeaderValues(request);
 
-        Map<String, Object> errorAttributes = getCustomErrorAttributes(request, debug);
+        Map<String, Object> errorAttributes = getCustomErrorAttributes(request, aaaProperties.debugResponse());
         if (acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             try {
-                if (debug) {
+                if (aaaProperties.debugResponse()) {
                     objectMapper.writeValue(response.getWriter(), new AaaError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),

@@ -77,7 +77,9 @@ spring.servlet.multipart.max-request-size: 8MB
 server.servlet.encoding.force-response: true
 server.servlet.session.cookie.name: VIDEOCHAT_SESSION
 
-csrf.cookie.name: VIDEOCHAT_XSRF_TOKEN
+custom.csrf.cookie:
+  name: VIDEOCHAT_XSRF_TOKEN
+  same-site: ""
 
 # this is URL
 spring.mvc.static-path-pattern: /**
@@ -147,13 +149,14 @@ management:
       enabled: false
     add-application-context-header: false
 
-custom.ldap.auth:
-  base: ""
-  enabled: true
-  filter: "uid={0}"
-  uid-name: uid
-  password-encoding:
-    type: ""
+custom.ldap:
+  auth:
+    base: ""
+    enabled: false
+    filter: "uid={0}"
+    uid-name: uid
+  password:
+    encodingType: ""
     strength: 10
 
 custom.http-client:

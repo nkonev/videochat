@@ -1,5 +1,6 @@
 package name.nkonev.aaa.services;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.Language;
 import name.nkonev.aaa.dto.PasswordResetDTO;
@@ -14,12 +15,10 @@ import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,9 +31,6 @@ public class PasswordResetService {
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
-    @Value("${custom.password-reset.token.ttl}")
-    private Duration passwordResetTokenTtl;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -43,6 +39,9 @@ public class PasswordResetService {
 
     @Autowired
     private LoginListener loginListener;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetService.class);
 
@@ -68,7 +67,7 @@ public class PasswordResetService {
             return; // we care for precondition
         }
 
-        PasswordResetToken passwordResetToken = new PasswordResetToken(uuid, userAccount.id(), passwordResetTokenTtl.getSeconds());
+        PasswordResetToken passwordResetToken = new PasswordResetToken(uuid, userAccount.id(), aaaProperties.passwordReset().token().ttl().getSeconds());
 
         passwordResetToken = passwordResetTokenRepository.save(passwordResetToken);
 

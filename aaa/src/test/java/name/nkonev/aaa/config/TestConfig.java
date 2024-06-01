@@ -5,5 +5,5 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(HtmlUnitProperties.class)
-public class HtmlUnitCustomConfig {
+public class TestConfig {
 }

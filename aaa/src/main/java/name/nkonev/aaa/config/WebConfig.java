@@ -1,6 +1,7 @@
 package name.nkonev.aaa.config;
 
 import jakarta.annotation.PostConstruct;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import org.apache.catalina.Valve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class WebConfig implements WebMvcConfigurer {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebConfig.class);
 
     @Autowired
-    private CustomConfig customConfig;
+    private AaaProperties aaaProperties;
 
     @Autowired
     private ServerProperties serverProperties;
@@ -40,14 +41,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @PostConstruct
     public void log(){
-        LOGGER.info("api url: {}, frontend url: {}", customConfig.getApiUrl(), customConfig.getFrontendUrl());
+        LOGGER.info("api url: {}, frontend url: {}", aaaProperties.apiUrl(), aaaProperties.frontendUrl());
     }
 
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplateBuilder()
-                .setConnectTimeout(customConfig.getRestClientConnectTimeout())
-                .setReadTimeout(customConfig.getRestClientReadTimeout())
+                .setConnectTimeout(aaaProperties.httpClient().connectTimeout())
+                .setReadTimeout(aaaProperties.httpClient().readTimeout())
                 .requestFactory(JdkClientHttpRequestFactory.class)
                 .build();
     }

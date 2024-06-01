@@ -1,5 +1,6 @@
 package name.nkonev.aaa.security;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.dto.UserOnlineResponse;
@@ -9,7 +10,6 @@ import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,7 +19,6 @@ import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +39,8 @@ public class AaaUserDetailsService implements UserDetailsService {
     @Autowired
     private EventService eventService;
 
-    @Value("${custom.online-estimation}")
-    private Duration onlineEstimatedDuration;
+    @Autowired
+    private AaaProperties aaaProperties;
 
     /**
      * load UserAccountDetailsDTO from database, or throws UsernameNotFoundException
@@ -89,7 +88,7 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     private boolean calcOnline(Map<String, Session> sessions) {
         return sessions.entrySet().stream().anyMatch(session -> {
-            return session.getValue().getLastAccessedTime().plus(onlineEstimatedDuration).isAfter(Instant.now(Clock.systemUTC()));
+            return session.getValue().getLastAccessedTime().plus(aaaProperties.onlineEstimation()).isAfter(Instant.now(Clock.systemUTC()));
         });
     }
 

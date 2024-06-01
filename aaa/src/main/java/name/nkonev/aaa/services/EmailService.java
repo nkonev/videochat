@@ -1,7 +1,7 @@
 package name.nkonev.aaa.services;
 
 import name.nkonev.aaa.Constants;
-import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.Language;
 import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import name.nkonev.aaa.entity.redis.PasswordResetToken;
@@ -11,7 +11,6 @@ import freemarker.template.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -32,13 +31,10 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     @Autowired
-    private CustomConfig customConfig;
-
-    @Value("${custom.email.from}")
-    private String from;
+    private Configuration freemarkerConfiguration;
 
     @Autowired
-    private Configuration freemarkerConfiguration;
+    private AaaProperties aaaProperties;
 
     private static final String REG_LINK_PLACEHOLDER = "REGISTRATION_LINK_PLACEHOLDER";
     private static final String PASSWORD_RESET_LINK_PLACEHOLDER = "PASSWORD_RESET_LINK_PLACEHOLDER";
@@ -56,12 +52,12 @@ public class EmailService {
             var mimeMessage = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-            helper.setFrom(from);
+            helper.setFrom(aaaProperties.email().from());
             final var subj = renderTemplate("confirm_registration_subject_%s.ftlh".formatted(language), Map.of());
             helper.setSubject(subj);
             helper.setTo(recipient);
 
-            final var regLink = customConfig.getApiUrl() + Constants.Urls.REGISTER_CONFIRM + "?" + Constants.Urls.UUID + "=" + userConfirmationToken.uuid();
+            final var regLink = aaaProperties.apiUrl() + Constants.Urls.REGISTER_CONFIRM + "?" + Constants.Urls.UUID + "=" + userConfirmationToken.uuid();
             final var text = renderTemplate("confirm_registration_body_%s.ftlh".formatted(language),
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
@@ -79,12 +75,12 @@ public class EmailService {
             var mimeMessage = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-            helper.setFrom(from);
+            helper.setFrom(aaaProperties.email().from());
             final var subj = renderTemplate("password_reset_subject_%s.ftlh".formatted(language), Map.of());
             helper.setSubject(subj);
             helper.setTo(recipient);
 
-            final var passwordResetLink = customConfig.getPasswordRestoreEnterNew() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
+            final var passwordResetLink = aaaProperties.passwordResetEnterNewUrl() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
             final var text = renderTemplate("password_reset_body_%s.ftlh".formatted(language),
                     Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
             LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
@@ -101,12 +97,12 @@ public class EmailService {
             var mimeMessage = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-            helper.setFrom(from);
+            helper.setFrom(aaaProperties.email().from());
             final var subj = renderTemplate("confirm_change_email_subject_%s.ftlh".formatted(language), Map.of());
             helper.setSubject(subj);
             helper.setTo(newEmail);
 
-            final var confirmLink = customConfig.getApiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
+            final var confirmLink = aaaProperties.apiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
             final var text = renderTemplate("confirm_change_email_body_%s.ftlh".formatted(language),
                 Map.of(CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER, confirmLink, LOGIN_PLACEHOLDER, login));
             LOGGER.trace("For password reset '{}' generated email text '{}'", newEmail, text);
@@ -131,7 +127,7 @@ public class EmailService {
 
     public void sendArbitraryEmail(String recipient, String subject, String body) {
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(from);
+        msg.setFrom(aaaProperties.email().from());
         msg.setSubject(subject);
         msg.setTo(recipient);
         msg.setText(body);

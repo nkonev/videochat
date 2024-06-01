@@ -1,6 +1,6 @@
 package name.nkonev.aaa.services;
 
-import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -64,14 +63,11 @@ public class UserProfileService {
     @Autowired
     private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
-    @Value("${custom.confirmation.change-email.token.ttl}")
-    private Duration changeEmailConfirmationTokenTtl;
-
     @Autowired
     private AsyncEmailService asyncEmailService;
 
     @Autowired
-    private CustomConfig customConfig;
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileService.class);
 
@@ -240,7 +236,7 @@ public class UserProfileService {
 
     private ChangeEmailConfirmationToken createChangeEmailConfirmationToken(long userId) {
         var uuid = UUID.randomUUID();
-        ChangeEmailConfirmationToken changeEmailConfirmationToken = new ChangeEmailConfirmationToken(uuid, userId, changeEmailConfirmationTokenTtl.getSeconds());
+        ChangeEmailConfirmationToken changeEmailConfirmationToken = new ChangeEmailConfirmationToken(uuid, userId, aaaProperties.confirmation().changeEmail().token().ttl().getSeconds());
         return changeEmailConfirmationTokenRepository.save(changeEmailConfirmationToken);
     }
 
@@ -249,19 +245,19 @@ public class UserProfileService {
         Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
             LOGGER.info("For uuid {}, change email token is not found", uuid);
-            return customConfig.getConfirmChangeEmailExitTokenNotFoundUrl();
+            return aaaProperties.confirmChangeEmailExitTokenNotFoundUrl();
         }
         ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
         UserAccount userAccount = userAccountRepository.findById(userConfirmationToken.userId()).orElseThrow();
         if (!StringUtils.hasLength(userAccount.newEmail())) {
             LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
-            return customConfig.getConfirmChangeEmailExitSuccessUrl();
+            return aaaProperties.confirmChangeEmailExitSuccessUrl();
         }
 
         // check email already present
         if (!checkService.checkEmailIsFree(userAccount.newEmail())) {
             LOGGER.info("Somebody has already taken this email {}", userAccount.newEmail());
-            return customConfig.getConfirmChangeEmailExitSuccessUrl();
+            return aaaProperties.confirmChangeEmailExitSuccessUrl();
         }
 
         userAccount = userAccount.withEmail(userAccount.newEmail());
@@ -275,7 +271,7 @@ public class UserProfileService {
 
         notifier.notifyProfileUpdated(userAccount);
 
-        return customConfig.getConfirmChangeEmailExitSuccessUrl();
+        return aaaProperties.confirmChangeEmailExitSuccessUrl();
     }
 
     @Transactional

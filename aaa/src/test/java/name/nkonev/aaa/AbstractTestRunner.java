@@ -5,7 +5,7 @@ package name.nkonev.aaa;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.SuccessfulLoginDTO;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
@@ -78,7 +78,7 @@ public abstract class AbstractTestRunner {
     protected ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
     @Autowired
-    protected CustomConfig customConfig;
+    protected AaaProperties aaaProperties;
 
     @Autowired(required = false)
     protected TestRestTemplate testRestTemplate;

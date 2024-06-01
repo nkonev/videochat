@@ -1,5 +1,6 @@
 package name.nkonev.aaa.tasks;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.services.EventService;
@@ -26,16 +27,16 @@ public class UserOnlineTask {
     @Autowired
     private EventService eventService;
 
-    @Value("${custom.schedulers.user-online.batch-size}")
-    private int userOnlineBatchSize;
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserOnlineTask.class);
 
     @Scheduled(cron = "${custom.schedulers.user-online.cron}")
     @SchedulerLock(name = "userOnlineTask")
     public void scheduledTask() {
-        final int pageSize = userOnlineBatchSize;
-        LOGGER.debug("User online task start, userOnlineBatchSize={}", userOnlineBatchSize);
+        final int pageSize = aaaProperties.schedulers().userOnline().batchSize();
+        LOGGER.debug("User online task start, userOnlineBatchSize={}", pageSize);
         var count = userAccountRepository.count();
         var pages = (count / pageSize) + ((count > pageSize && count % pageSize > 0) ? 1 : 0) + 1;
 

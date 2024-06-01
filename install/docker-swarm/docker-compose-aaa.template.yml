@@ -52,8 +52,8 @@ services:
       - spring.security.oauth2.client.provider.vkontakte.user-info-authentication-method=form
       - spring.security.oauth2.client.provider.vkontakte.user-name-attribute=response
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
-      - CSRF_COOKIE_SECURE=true
-      - CSRF_COOKIE_SAME-SITE=Strict
+      - CUSTOM_CSRF_COOKIE_SECURE=true
+      - CUSTOM_CSRF_COOKIE_SAME-SITE=Strict
       # Lax needed to have possibility to go by confirmation link in change email confirmation and to take the existing cookie
       - server.servlet.session.cookie.same-site=Lax
       - server.servlet.session.cookie.secure=true

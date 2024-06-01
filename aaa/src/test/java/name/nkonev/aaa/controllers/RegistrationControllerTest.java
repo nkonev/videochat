@@ -3,7 +3,6 @@ package name.nkonev.aaa.controllers;
 import name.nkonev.aaa.AbstractUtTestRunner;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.TestConstants;
-import name.nkonev.aaa.config.CustomConfig;
 import name.nkonev.aaa.dto.EditUserDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.UserConfirmationToken;
@@ -45,9 +44,6 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-
-    @Autowired
-    private CustomConfig customConfig;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationControllerTest.class);
 
@@ -107,7 +103,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getRegistrationConfirmExitSuccessUrl()))
+                .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.registrationConfirmExitSuccessUrl()))
                 // assert server returns session id
                 .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()))
             ;
@@ -186,7 +182,7 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getRegistrationConfirmExitSuccessUrl()))
+                .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.registrationConfirmExitSuccessUrl()))
             ;
             Assertions.assertFalse(userConfirmationTokenRepository.existsById(tokenUuid));
         }
@@ -379,11 +375,11 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         userConfirmationTokenRepository.deleteById(token); // if random token exists we delete it
 
         // create /confirm?uuid=<uuid>
-        String uri = UriComponentsBuilder.fromUriString(customConfig.getApiUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, token).build().toUriString();
+        String uri = UriComponentsBuilder.fromUriString(aaaProperties.apiUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, token).build().toUriString();
 
         mockMvc.perform(get(uri))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getRegistrationConfirmExitTokenNotFoundUrl()))
+                .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.registrationConfirmExitTokenNotFoundUrl()))
         ;
     }
 
@@ -394,11 +390,11 @@ public class RegistrationControllerTest extends AbstractUtTestRunner {
         userConfirmationTokenRepository.save(token1); // save it
 
         // create /confirm?uuid=<uuid>
-        String uri = UriComponentsBuilder.fromUriString(customConfig.getApiUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, tokenUuid).build().toUriString();
+        String uri = UriComponentsBuilder.fromUriString(aaaProperties.apiUrl() + Constants.Urls.REGISTER_CONFIRM).queryParam(Constants.Urls.UUID, tokenUuid).build().toUriString();
 
         mockMvc.perform(get(uri))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getRegistrationConfirmExitUserNotFoundUrl()))
+                .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.registrationConfirmExitUserNotFoundUrl()))
         ;
 
     }

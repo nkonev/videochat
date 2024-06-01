@@ -1,12 +1,11 @@
 package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.Constants;
-import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import name.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -84,28 +83,16 @@ public class SecurityConfig {
     private OAuth2ExceptionHandler OAuth2ExceptionHandler;
 
     @Autowired
-    private CustomConfig customConfig;
-
-    @Value("${csrf.cookie.secure:false}")
-    private boolean cookieSecure;
-
-    @Value("${csrf.cookie.same-site:}")
-    private String cookieSameSite;
-
-    @Value("${csrf.cookie.http-only:false}")
-    private boolean cookieHttpOnly;
-
-    @Value("${csrf.cookie.name}")
-    private String cookieName;
+    private AaaProperties aaaProperties;
 
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
         final CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
-        cookieCsrfTokenRepository.setCookieName(cookieName);
+        cookieCsrfTokenRepository.setCookieName(aaaProperties.csrf().cookie().name());
         cookieCsrfTokenRepository.setCookieCustomizer(responseCookieBuilder -> {
-            responseCookieBuilder.sameSite(cookieSameSite);
-            responseCookieBuilder.secure(cookieSecure);
-            responseCookieBuilder.httpOnly(cookieHttpOnly);
+            responseCookieBuilder.sameSite(aaaProperties.csrf().cookie().sameSite());
+            responseCookieBuilder.secure(aaaProperties.csrf().cookie().secure());
+            responseCookieBuilder.httpOnly(aaaProperties.csrf().cookie().httpOnly());
         });
         return cookieCsrfTokenRepository;
     }
@@ -170,8 +157,8 @@ public class SecurityConfig {
         oAuth2AccessTokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new BearerOAuth2AccessTokenResponseConverter());
 
         RestTemplate restTemplate = new RestTemplateBuilder()
-                .setConnectTimeout(customConfig.getRestClientConnectTimeout())
-                .setReadTimeout(customConfig.getRestClientReadTimeout())
+                .setConnectTimeout(aaaProperties.httpClient().connectTimeout())
+                .setReadTimeout(aaaProperties.httpClient().readTimeout())
                 .requestFactory(JdkClientHttpRequestFactory.class)
                 .messageConverters(Arrays.asList(
                         new FormHttpMessageConverter(),

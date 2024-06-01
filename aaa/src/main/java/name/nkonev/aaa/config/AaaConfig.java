@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.utils.ResourceUtils;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import jakarta.annotation.PostConstruct;
@@ -17,7 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-@EnableConfigurationProperties({AaaProperties.class, LdapAuthProperties.class, LdapPasswordEncodingProperties.class, HttpClientProperties.class})
+@EnableConfigurationProperties(AaaProperties.class)
 @Configuration
 public class AaaConfig {
 
@@ -26,9 +27,6 @@ public class AaaConfig {
 
     @Value("classpath:/static/git.json")
     private Resource resource;
-
-    @Autowired
-    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaConfig.class);
 

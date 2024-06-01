@@ -1,6 +1,6 @@
 package name.nkonev.aaa.services;
 
-import name.nkonev.aaa.config.CustomConfig;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.EditUserDTO;
 import name.nkonev.aaa.dto.Language;
@@ -14,14 +14,12 @@ import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,14 +40,8 @@ public class RegistrationService {
     @Autowired
     private AsyncEmailService asyncEmailService;
 
-    @Value("${custom.confirmation.registration.token.ttl}")
-    private Duration userConfirmationTokenTtl;
-
     @Autowired
     private CheckService userService;
-
-    @Autowired
-    private CustomConfig customConfig;
 
     @Autowired
     private LoginListener loginListener;
@@ -59,6 +51,9 @@ public class RegistrationService {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
@@ -101,18 +96,18 @@ public class RegistrationService {
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
             LOGGER.info("For uuid {}, confirm user token is not found", uuid);
-            return customConfig.getRegistrationConfirmExitTokenNotFoundUrl();
+            return aaaProperties.registrationConfirmExitTokenNotFoundUrl();
         }
         UserConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
         Optional<UserAccount> userAccountOptional = userAccountRepository.findById(userConfirmationToken.userId());
         if (!userAccountOptional.isPresent()) {
             LOGGER.info("For uuid {}, user account is not found", uuid);
-            return customConfig.getRegistrationConfirmExitUserNotFoundUrl();
+            return aaaProperties.registrationConfirmExitUserNotFoundUrl();
         }
         UserAccount userAccount = userAccountOptional.get();
         if (userAccount.confirmed()) {
             LOGGER.warn("Somebody attempts secondary confirm already confirmed user account with email='{}'", userAccount);
-            return customConfig.getRegistrationConfirmExitSuccessUrl();
+            return aaaProperties.registrationConfirmExitSuccessUrl();
         }
 
         userAccount = userAccount.withConfirmed(true);
@@ -125,7 +120,7 @@ public class RegistrationService {
         loginListener.onApplicationEvent(auth);
         eventService.notifyProfileUpdated(userAccount);
 
-        return customConfig.getRegistrationConfirmExitSuccessUrl();
+        return aaaProperties.registrationConfirmExitSuccessUrl();
     }
 
     @Transactional
@@ -149,7 +144,7 @@ public class RegistrationService {
     private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
         Assert.isTrue(!userAccount.confirmed(), "user account mustn't be confirmed");
 
-        long seconds = userConfirmationTokenTtl.getSeconds(); // Redis requires seconds
+        long seconds = aaaProperties.confirmation().registration().token().ttl().getSeconds(); // Redis requires seconds
 
         UUID tokenUuid = UUID.randomUUID();
         UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid, userAccount.id(), seconds);

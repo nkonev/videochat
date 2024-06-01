@@ -603,7 +603,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getConfirmChangeEmailExitSuccessUrl()))
+                .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.confirmChangeEmailExitSuccessUrl()))
             ;
             Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
 
@@ -664,7 +664,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string(HttpHeaders.LOCATION, customConfig.getConfirmChangeEmailExitSuccessUrl()))
+                .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.confirmChangeEmailExitSuccessUrl()))
             ;
             Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
 
