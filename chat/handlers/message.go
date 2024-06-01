@@ -579,7 +579,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, tx)
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)

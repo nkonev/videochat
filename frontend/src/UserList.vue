@@ -111,7 +111,7 @@
                 </template>
                 <template v-slot:append v-if="!isMobile()">
                     <v-list-item-action>
-                        <v-btn v-if="isNotMyself(item)" variant="flat" icon @click.stop.prevent="tetATet(item)" :title="$vuetify.locale.t('$vuetify.user_open_chat')"><v-icon size="large">mdi-message-text-outline</v-icon></v-btn>
+                        <v-btn variant="flat" icon @click.stop.prevent="tetATet(item)" :title="$vuetify.locale.t('$vuetify.user_open_chat')"><v-icon size="large">mdi-message-text-outline</v-icon></v-btn>
                     </v-list-item-action>
                 </template>
 
@@ -209,9 +209,6 @@ export default {
 
   methods: {
     getLoginColoredStyle,
-    isNotMyself(user) {
-          return this.chatStore.currentUser && this.chatStore.currentUser.id != user.id
-    },
     getUserNameOverride(item) {
       if (item.additionalData && (!item.additionalData.confirmed || item.additionalData.locked)) {
         return "<s>" + this.getUserName(item) + "</s>"

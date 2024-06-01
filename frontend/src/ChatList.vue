@@ -417,22 +417,43 @@ export default {
           return [];
       }
       const tmps = deepCopy(items);
-      return tmps.filter((item) => item.tetATet).map((item) => item.participantIds.filter((pId) => pId != this.chatStore.currentUser?.id)[0]);
+      const tetATets = tmps.filter((item) => item.tetATet).flatMap((item) => item.participantIds);
+      const uniq = [...new Set(tetATets)];
+      const sorted = uniq.sort();
+      return sorted
     },
     getUserIdsSubscribeTo() {
       return this.tetAtetParticipants
+    },
+    isNormalTetAtTet(item) {
+        return item.participantIds.length == 2
+    },
+    withMyselfTetATet(item) {
+        return item.participantIds.length == 1
+    },
+    filterOutMe(item) {
+        return item.participants.filter((p) => p.id != this.chatStore.currentUser?.id)
     },
     onUserStatusChanged(dtos) {
           if (dtos) {
               this.items.forEach(item => {
                 if (item.tetATet) {
                   dtos.forEach(dtoItem => {
-                    if (dtoItem.online !== null && item.participants.filter((p) => p.id == dtoItem.userId).length) {
-                      item.online = dtoItem.online;
-                    }
-                    if (dtoItem.isInVideo !== null && item.participants.filter((p)=> p.id == dtoItem.userId).length) {
-                      item.isInVideo = dtoItem.isInVideo;
-                    }
+                      if (this.isNormalTetAtTet(item)) { // normal tet-a-tet
+                          if (dtoItem.online !== null && this.filterOutMe(item).filter((p) => p.id == dtoItem.userId).length) {
+                              item.online = dtoItem.online;
+                          }
+                          if (dtoItem.isInVideo !== null && this.filterOutMe(item).filter((p)=> p.id == dtoItem.userId).length) {
+                              item.isInVideo = dtoItem.isInVideo;
+                          }
+                      } else if (this.withMyselfTetATet(item)) { // tet-a-tet chat with user himself
+                          if (dtoItem.online !== null && item.participants.filter((p) => p.id == dtoItem.userId).length) {
+                              item.online = dtoItem.online;
+                          }
+                          if (dtoItem.isInVideo !== null && item.participants.filter((p)=> p.id == dtoItem.userId).length) {
+                              item.isInVideo = dtoItem.isInVideo;
+                          }
+                      }
                   })
                 }
               })
@@ -498,8 +519,11 @@ export default {
     changeItem(dto) {
           console.log("Replacing item", dto);
           this.transformItem(dto);
-          if (this.hasItem(dto)) {
-              replaceInArray(this.items, dto);
+
+          let idxOf = findIndex(this.items, dto);
+          if (idxOf !== -1) { // hasItem()
+              const changedDto = this.applyState(this.items[idxOf], dto);
+              replaceInArray(this.items, changedDto);
           } else {
               this.items.unshift(dto); // used to/along with redraw a public chat when user leaves from it
           }
@@ -528,11 +552,22 @@ export default {
     onUserProfileChanged(user) {
       this.items.forEach(item => {
         replaceInArray(item.participants, user); // replaces participants of "normal" chat
-        if (item.tetATet && this.getTetATetParticipantIds([item]).includes(user.id)) { // replaces content of tet-a-tet. It's better to move it to chat
-          item.avatar = user.avatar;
-          item.name = user.login;
-          item.shortInfo = user.shortInfo;
-          item.loginColor = user.loginColor;
+        if (item.tetATet) {
+            if (this.isNormalTetAtTet(item)) { // replace for counterpart
+                if (this.filterOutMe(item).map(p => p.id).includes(user.id)) { // replaces content of tet-a-tet. It's better to move it to chat
+                    item.avatar = user.avatar;
+                    item.name = user.login;
+                    item.shortInfo = user.shortInfo;
+                    item.loginColor = user.loginColor;
+                }
+            } else if (this.withMyselfTetATet(item)) { // replace for with himself tet-a-tet
+                if (item.participants.map(p => p.id).includes(user.id)) {
+                    item.avatar = user.avatar;
+                    item.name = user.login;
+                    item.shortInfo = user.shortInfo;
+                    item.loginColor = user.loginColor;
+                }
+            }
         }
       });
     },

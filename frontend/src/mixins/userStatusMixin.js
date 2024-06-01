@@ -1,5 +1,5 @@
 import {graphQlClient} from "@/graphql/graphql";
-import {hasLength} from "@/utils";
+import {deepCopy, hasLength} from "@/utils";
 
 // requires getUserIdsSubscribeTo(), onUserStatusChanged()
 export default (nameForLog) => {
@@ -25,6 +25,12 @@ export default (nameForLog) => {
             transformItem(item) {
                 item.online = false;
                 item.isInVideo = false;
+            },
+            applyState(existing, newItem) {
+                const copiedNewItem = deepCopy(newItem);
+                copiedNewItem.online = existing.online;
+                copiedNewItem.isInVideo = existing.isInVideo;
+                return copiedNewItem
             },
             getUserBadgeColor(item) {
                 return item.isInVideo ? 'red accent-4' : 'success accent-4'

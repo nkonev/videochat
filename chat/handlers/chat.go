@@ -194,7 +194,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 				user := users[participantId]
 				if user != nil {
 					chatDto.Participants = append(chatDto.Participants, user)
-					utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId)
+					utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId, len(chatDto.ParticipantIds) == 1)
 				}
 			}
 		}
@@ -418,7 +418,7 @@ func getChat(
 
 	// indeed it's possible to do w/o loop
 	for _, participant := range users {
-		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId)
+		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId, len(cc.ParticipantsIds) == 1)
 	}
 
 	return chatDto, nil
@@ -570,7 +570,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, tx)
+		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, len(responseDto.ParticipantIds) == 1, tx)
 		return c.JSON(http.StatusCreated, responseDto)
 	})
 	if errOuter != nil {
@@ -607,8 +607,13 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 		}
-		err := tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			ch.notificator.NotifyAboutDeleteChat(c, chatId, participantIds, tx)
+		count, err := tx.GetParticipantsCount(chatId)
+		if err != nil {
+			return err
+		}
+
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+			ch.notificator.NotifyAboutDeleteChat(c, chatId, participantIds, count == 1, tx)
 			return nil
 		})
 		if err != nil {
@@ -680,7 +685,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		}
 
 		err = tx.IterateOverChatParticipantIds(bindTo.Id, func(participantIds []int64) error {
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(responseDto.ParticipantIds) == 1, tx)
 			return nil
 		})
 		if err != nil {
@@ -726,17 +731,17 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 
 			err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 				ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{userPrincipalDto.UserId})
-				ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+				ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(responseDto.ParticipantIds) == 1, tx)
 				return nil
 			})
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, tx)
+			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, len(responseDto.ParticipantIds) == 1, tx)
 
 			// send duplicated event to the former user to re-draw chat on their search results
-			ch.notificator.NotifyAboutRedrawLeftChat(c, copiedChat, userPrincipalDto.UserId, tx)
+			ch.notificator.NotifyAboutRedrawLeftChat(c, copiedChat, userPrincipalDto.UserId, len(responseDto.ParticipantIds) == 1, tx)
 
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
@@ -804,7 +809,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 					Admin: isAdmin,
 				},
 			})
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(responseDto.ParticipantIds) == 1, tx)
 			return nil
 		})
 		if err != nil {
@@ -887,7 +892,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{interestingUserId}, tx)
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{interestingUserId}, len(tmpDto.ParticipantIds) == 1, tx)
 
 		return c.JSON(http.StatusAccepted, newUsersWithAdmin)
 	})
@@ -934,7 +939,7 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{userPrincipalDto.UserId}, tx)
+		ch.notificator.NotifyAboutChangeChat(c, copiedChat, []int64{userPrincipalDto.UserId}, len(tmpDto.ParticipantIds) == 1, tx)
 
 		return c.JSON(http.StatusOK, copiedChat)
 	})
@@ -989,7 +994,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		}
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutDeleteParticipants(c, participantIds, chatId, []int64{interestingUserId})
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(tmpDto.ParticipantIds) == 1, tx)
 			return nil
 		})
 		if err != nil {
@@ -997,7 +1002,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			return err
 		}
 
-		ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, tx)
+		ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, len(tmpDto.ParticipantIds) == 1, tx)
 		return nil
 	})
 	if errOuter != nil {
@@ -1115,7 +1120,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		}
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutNewParticipants(c, participantIds, chatId, newUsersWithAdmin)
-			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, tx)
+			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(tmpDto.ParticipantIds) == 1, tx)
 			return nil
 		})
 		if err != nil {
@@ -1548,8 +1553,10 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId2, true); err != nil {
 			return err
 		}
-		if err := tx.AddParticipant(toParticipantId, chatId2, true); err != nil {
-			return err
+		if userPrincipalDto.UserId != toParticipantId {
+			if err := tx.AddParticipant(toParticipantId, chatId2, true); err != nil {
+				return err
+			}
 		}
 
 		responseDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, 0, 0)
@@ -1561,7 +1568,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, tx)
+		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, len(responseDto.ParticipantIds) == 1, tx)
 
 		return c.JSON(http.StatusCreated, TetATetResponse{Id: chatId2})
 	})
@@ -1685,6 +1692,12 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 		return err
 	}
 
+	ret := []dto.ChatName{}
+
+	if chat == nil {
+		return c.JSON(http.StatusOK, ret)
+	}
+
 	behalfUsers, err := ch.restClient.GetUsers([]int64{behalfUserId}, c.Request().Context())
 	if err != nil {
 		return err
@@ -1700,7 +1713,10 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 		return err
 	}
 
-	ret := []dto.ChatName{}
+	count, err := ch.db.GetParticipantsCount(chatId)
+	if err != nil {
+		return err
+	}
 
 	for _, user := range users {
 		meAsUser := dto.User{Id: behalfUserId, Login: behalfUserLogin}
@@ -1714,6 +1730,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 			sch,
 			&meAsUser,
 			user.Id,
+			count == 1,
 		)
 		ret = append(ret, dto.ChatName{Name: sch.GetName(), Avatar: sch.GetAvatar(), UserId: user.Id})
 	}
