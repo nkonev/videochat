@@ -531,8 +531,9 @@ func (dbR *DB) SetFileItemUuidTo(ownerId, chatId, messageId int64, fileItemUuid 
 
 func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
 	var count int64
-	row := co.QueryRow("SELECT * FROM UNREAD_MESSAGES($1, $2)", chatId, userId)
-	err := row.Scan(&count)
+	var unusedChatId int64
+	row := co.QueryRow(getCountUnreadMessages(chatId, userId))
+	err := row.Scan(&unusedChatId, &count)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -548,6 +549,10 @@ func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) 
 	return getUnreadMessagesCountCommon(tx, chatId, userId)
 }
 
+func getCountUnreadMessages(chatId, userId int64) string {
+	return fmt.Sprintf("SELECT %v, COUNT(*) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)", chatId, chatId, userId, chatId)
+}
+
 func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
 	res := map[int64]int64{}
 
@@ -561,7 +566,7 @@ func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, use
 		if !first {
 			builder += " union "
 		}
-		builder += fmt.Sprintf("(SELECT %v, * FROM UNREAD_MESSAGES(%v, %v))", chatId, chatId, userId)
+		builder += getCountUnreadMessages(chatId, userId)
 
 		first = false
 	}
