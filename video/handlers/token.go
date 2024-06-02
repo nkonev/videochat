@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/labstack/echo/v4"
 	lkauth "github.com/livekit/protocol/auth"
-	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
@@ -78,7 +77,7 @@ func (h *TokenHandler) getJoinToken(apiKey, apiSecret, room string, authResult *
 		return "", err
 	}
 
-	validFor := viper.GetDuration("videoTokenValidTime")
+	validFor := h.config.VideoTokenValidTime
 	at.AddGrant(grant).
 		SetIdentity(aId).SetValidFor(validFor).SetMetadata(mds)
 

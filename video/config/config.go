@@ -134,6 +134,10 @@ type RedisConfig struct {
 	MaxRetries int    `mapstructure:"maxRetries"`
 }
 
+type OtlpConfig struct {
+	Endpoint    string `mapstructure:"endpoint"`
+}
+
 type ExtendedConfig struct {
 	FrontendConfig                        FrontendConfig   `mapstructure:"frontend"`
 	RestClientConfig                      RestClientConfig `mapstructure:"http"`
@@ -147,5 +151,7 @@ type ExtendedConfig struct {
 	RabbitMqConfig                        RabbitMqConfig   `mapstructure:"rabbitmq"`
 	OnlyRoleAdminRecording                bool             `mapstructure:"onlyRoleAdminRecording"`
 	RecordPreset                          string           `mapstructure:"recordPreset"`
+	VideoTokenValidTime                   time.Duration    `mapstructure:"videoTokenValidTime"`
 	RedisConfig                           RedisConfig      `mapstructure:"redis"`
+	OtlpConfig                            OtlpConfig       `mapstructure:"otlp"`
 }
