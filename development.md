@@ -204,6 +204,7 @@ docker run --rm -e LIVEKIT_KEYS="APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjM
 * [Clear pending track resolver on track unpublish](https://github.com/livekit/client-sdk-js/pull/363)
 * [Interrupts and reconnects with Firefox participants](https://github.com/livekit/livekit/issues/1143)
 * [Debugging Intermittent timeout errors](https://github.com/livekit/livekit/issues/1070)
+* [to avoid using the default Google STUN|TURN servers, you'll need to provide one of the following](https://github.com/livekit/livekit/issues/1299#issuecomment-1413208559)
 
 
 ## Monitoring
