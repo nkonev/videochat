@@ -270,23 +270,31 @@ export default {
           //  and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
           //  and prosemirror-view/src/clipboard.ts parseFromClipboard()
           transformPastedHTML(html) {
+            const normalize = (input) => {
+                return domParser.parseFromString(input, 'text/html').documentElement.getElementsByTagName('body')[0].innerHTML
+            }
+
             if (!getStoredMessageEditNormalizeText()) {
                 return html
             }
 
             if (isFireFox()) {
-              const str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "</p><p>");
+              const str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "<p>");
               const str2 = str.replace(/(\r\n|\r|\n)/g, " ");
-              const withP = str2.replace(/<br[^>]*>/g, "</p><p>");
+              const fixedSpaces = str2.replace(/&#32;/g, "&nbsp;");
+              const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
               const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-              console.debug("modern firefox html=", html, ", str=", str, ", str2=", str2, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
-              return rmDuplicatedP;
+              const normalized = normalize(rmDuplicatedP)
+              console.debug("modern firefox html=", html, ", str=", str, ", str2=", str2, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
+              return normalized;
             } else {
-              const str = html.replace(/(\r\n|\r|\n)/g, "</p><p>");
-              const withP = str.replace(/<br[^>]*>/g, "</p><p>");
+              const str = html.replace(/(\r\n|\r|\n)/g, "<p>");
+              const fixedSpaces = str.replace(/&#32;/g, "&nbsp;");
+              const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
               const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-              console.debug("chrome html=", html, ", str=", str, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP)
-              return rmDuplicatedP;
+              const normalized = normalize(rmDuplicatedP)
+              console.debug("chrome html=", html, ", str=", str, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
+              return normalized;
             }
           },
       },
