@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"github.com/rotisserie/eris"
 	"nkonev.name/chat/logger"
@@ -63,33 +62,35 @@ func getParticipantIdsBatchCommon(qq CommonOperations, chatIds []int64, particip
 		return res, nil
 	}
 
-	var builder = ""
-	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += ", "
-		}
-		builder += utils.Int64ToString(chatId)
-		first = false
-	}
-	if rows, err := qq.Query(fmt.Sprintf("SELECT chat_id, jsonb_agg(user_id) FROM chat_participant WHERE chat_id in (%v) group by chat_id;", builder)); err != nil {
+	if rows, err := qq.Query(`
+		select ch.chat_id, usr.user_id from 
+		   ( select distinct(cp.chat_id) from chat_participant cp where cp.chat_id = any($2) ) ch
+		   join lateral ( select cpi.user_id from chat_participant cpi where cpi.chat_id = ch.chat_id order by create_date_time desc limit $1 ) usr on true 
+		   order by chat_id;
+	`, participantsSize, chatIds); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
+		prevChatId := int64(-1)
+		var aParticipantIds *ParticipantIds
 		for rows.Next() {
-			var pi = new(ParticipantIds)
-			var arr string
-			if err := rows.Scan(&pi.ChatId, &arr); err != nil {
+			var userId, chatId int64
+			if err := rows.Scan(&chatId, &userId); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
-				err := json.Unmarshal([]byte(arr), &pi.ParticipantIds)
-				if err != nil {
-					return nil, eris.Wrap(err, "error during interacting with db")
+				if chatId != prevChatId {
+					if aParticipantIds != nil {
+						res = append(res, aParticipantIds)
+					}
+					prevChatId = chatId
+					aParticipantIds = new(ParticipantIds)
+					aParticipantIds.ChatId = chatId
 				}
-
-				pi.ParticipantIds = pi.ParticipantIds[:utils.Min(len(pi.ParticipantIds), int(participantsSize))]
-				res = append(res, pi)
+				aParticipantIds.ParticipantIds = append(aParticipantIds.ParticipantIds, userId)
 			}
+		}
+		if aParticipantIds != nil {
+			res = append(res, aParticipantIds)
 		}
 		return res, nil
 	}
