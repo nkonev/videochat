@@ -25,7 +25,7 @@
                           <div style="position:absolute;">
                               <div v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
                           </div>
-                          <video class="video-custom-class" playsinline></video>
+                          <video style="max-width: 100%" playsinline></video>
                       </v-card-text>
                   </v-window-item>
 
