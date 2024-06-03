@@ -277,5 +277,6 @@ export default {
     stop_recording: "Stop recording",
     make_a_recording: "Make a recording",
     add_to_message: "Add",
-    seconds: "sec"
+    seconds: "sec",
+    waiting_for_devices: "Waiting for device"
 }

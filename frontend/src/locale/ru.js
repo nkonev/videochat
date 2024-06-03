@@ -277,5 +277,6 @@ export default {
     stop_recording: "Остановить запись",
     make_a_recording: "Записать...",
     add_to_message: "Добавить",
-    seconds: "сек."
+    seconds: "сек.",
+    waiting_for_devices: "Ожидание устройства"
 }

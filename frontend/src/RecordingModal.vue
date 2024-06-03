@@ -24,6 +24,7 @@
                       <v-card-text class="d-flex justify-start pb-0 pt-2 px-2 recording-wrapper">
                           <div style="position:absolute;">
                               <div v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
+                              <span v-if="!mediaDevicesGotten">{{ $vuetify.locale.t('$vuetify.waiting_for_devices') }}</span>
                           </div>
                           <video style="max-width: 100%" playsinline></video>
                       </v-card-text>
@@ -32,6 +33,7 @@
                   <v-window-item value="audio">
                       <v-card-text class="d-flex justify-start pb-0 pt-2 px-2 recording-wrapper">
                           <div v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
+                          <span v-if="!mediaDevicesGotten">{{ $vuetify.locale.t('$vuetify.waiting_for_devices') }}</span>
                           <audio class="audio-custom-class" playsinline></audio>
                       </v-card-text>
                   </v-window-item>
