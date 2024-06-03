@@ -465,33 +465,6 @@ func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 	return setAdminCommon(db, userId, chatId, newAdmin)
 }
 
-func getChatsWithMeCommon(qq CommonOperations, userId int64) ([]int64, error) {
-	if rows, err := qq.Query("SELECT DISTINCT chat_id FROM chat_participant WHERE user_id = $1", userId); err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	} else {
-		defer rows.Close()
-		list := make([]int64, 0)
-		for rows.Next() {
-			var chatId int64
-			if err := rows.Scan(&chatId); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				list = append(list, chatId)
-			}
-		}
-		return list, nil
-	}
-
-}
-
-func (db *DB) GetChatsWithMe(userId int64) ([]int64, error) {
-	return getChatsWithMeCommon(db, userId)
-}
-
-func (tx *Tx) GetChatsWithMe(userId int64) ([]int64, error) {
-	return getChatsWithMeCommon(tx, userId)
-}
-
 func (tx *Tx) HasParticipants(chatId int64) (bool, error) {
 	var exists bool = false
 	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE chat_id = $1 LIMIT 1)`, chatId)
@@ -499,5 +472,26 @@ func (tx *Tx) HasParticipants(chatId int64) (bool, error) {
 		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return exists, nil
+	}
+}
+
+func (tx *Tx) GetAmIParticipantBatch(chatIds []int64, userId int64) (map[int64]bool, error) {
+	if rows, err := tx.Query("SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = ANY ($2)", userId, chatIds); err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		result := map[int64]bool{}
+		for _, chatId := range chatIds {
+			result[chatId] = false
+		}
+		for rows.Next() {
+			var chatId int64
+			if err := rows.Scan(&chatId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				result[chatId] = true
+			}
+		}
+		return result, nil
 	}
 }

@@ -157,12 +157,6 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			return err
 		}
 
-		chatsWithMe, err := tx.GetChatsWithMe(userPrincipalDto.UserId) // need to setting isResultFromSearch correctly
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
-			return err
-		}
-
 		var chatIds []int64 = make([]int64, 0)
 		for _, cc := range dbChats {
 			chatIds = append(chatIds, cc.Id)
@@ -172,10 +166,16 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			return err
 		}
 
+		membership, err := tx.GetAmIParticipantBatch(chatIds, userPrincipalDto.UserId) // need to setting isResultFromSearch correctly
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
+			return err
+		}
+
 		chatDtos := make([]*dto.ChatDto, 0)
 		for _, cc := range dbChats {
 			messages := unreadMessageBatch[cc.Id]
-			isParticipant := utils.Contains(chatsWithMe, cc.Id)
+			isParticipant := membership[cc.Id]
 
 			cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
 

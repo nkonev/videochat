@@ -66,7 +66,6 @@ type CommonOperations interface {
 	GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
 	GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error)
 	GetChatsWithParticipants(participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
-	GetChatsWithMe(userId int64) ([]int64, error)
 	CountChatsPerUser(userId int64) (int64, error)
 	FlipReaction(userId int64, chatId int64, messageId int64, reaction string) (bool, error)
 	GetChatIds(chatsSize, chatsOffset int) ([]int64, error)
