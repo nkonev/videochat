@@ -504,9 +504,20 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
 
+	// set participant order as in c.ParticipantsIds
+	orderedParticipants := make([]*dto.User, 0)
+	for _, participantId := range c.ParticipantsIds {
+		for _, u := range users {
+			if u.Id == participantId {
+				orderedParticipants = append(orderedParticipants, u)
+				break
+			}
+		}
+	}
+
 	return &dto.ChatDto{
 		BaseChatDto:  b,
-		Participants: users,
+		Participants: orderedParticipants,
 	}
 }
 
