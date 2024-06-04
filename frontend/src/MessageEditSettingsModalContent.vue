@@ -12,6 +12,16 @@
           @update:modelValue="changeNormalizeText"
       ></v-switch>
 
+      <v-switch
+          :label="$vuetify.locale.t('$vuetify.treat_newlines_as_in_html')"
+          density="comfortable"
+          color="primary"
+          hide-details
+          class="ma-0 pt-0 ml-4 mr-4 mb-2"
+          v-model="treatNewlinesAsInHtml"
+          @update:modelValue="changeTreatNewlinesAsInHtml"
+      ></v-switch>
+
       <v-divider/>
 
       <v-radio-group class="mt-4"
@@ -37,8 +47,8 @@
     import {useChatStore} from "@/store/chatStore";
     import {
         getStoredMessageEditNormalizeText,
-        getStoredMessageEditSendButtonsType,
-        setStoredMessageEditNormalizeText, setStoredMessageEditSendButtonsType
+        getStoredMessageEditSendButtonsType, getTreatNewlinesAsInHtml,
+        setStoredMessageEditNormalizeText, setStoredMessageEditSendButtonsType, setTreatNewlinesAsInHtml
     } from "@/store/localStore.js";
     import bus, {ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED} from "@/bus/bus.js";
 
@@ -46,6 +56,7 @@
         data () {
             return {
                 normalizeText: null,
+                treatNewlinesAsInHtml: null,
                 sendButtonsType: null,
             }
         },
@@ -55,10 +66,14 @@
         methods: {
             showModal() {
                 this.normalizeText = getStoredMessageEditNormalizeText();
+                this.treatNewlinesAsInHtml = getTreatNewlinesAsInHtml();
                 this.sendButtonsType = getStoredMessageEditSendButtonsType('auto');
             },
             changeNormalizeText(v) {
                 setStoredMessageEditNormalizeText(v);
+            },
+            changeTreatNewlinesAsInHtml(v) {
+                setTreatNewlinesAsInHtml(v)
             },
             changeSendButtonsType(v) {
                 setStoredMessageEditSendButtonsType(v);

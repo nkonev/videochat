@@ -278,5 +278,6 @@ export default {
     make_a_recording: "Make a recording",
     add_to_message: "Add",
     seconds: "sec",
-    waiting_for_devices: "Waiting for device"
+    waiting_for_devices: "Waiting for device",
+    treat_newlines_as_in_html: "Treat newlines as in HTML (e. g. swallow) (Firefox)"
 }

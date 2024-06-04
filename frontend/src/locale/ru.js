@@ -278,5 +278,6 @@ export default {
     make_a_recording: "Записать...",
     add_to_message: "Добавить",
     seconds: "сек.",
-    waiting_for_devices: "Ожидание устройства"
+    waiting_for_devices: "Ожидание устройства",
+    treat_newlines_as_in_html: "Обрабатывать переносы строк как в HTML (т. е. игнорировать) (Firefox)"
 }

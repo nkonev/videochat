@@ -266,6 +266,21 @@ export const setStoredMessageEditNormalizeText = (v) => {
     localStorage.setItem(KEY_MESSAGE_EDIT_NORMALIZE_TEXT, JSON.stringify(v));
 }
 
+export const KEY_TREAT_NEWLINES_AS_IN_HTML = 'treatNewlinesAsInHtml';
+
+export const getTreatNewlinesAsInHtml = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_TREAT_NEWLINES_AS_IN_HTML));
+    if (v === null) {
+        console.log("Resetting treatNewlinesAsInHtml to default");
+        setTreatNewlinesAsInHtml(true);
+        v = JSON.parse(localStorage.getItem(KEY_TREAT_NEWLINES_AS_IN_HTML));
+    }
+    return v;
+}
+
+export const setTreatNewlinesAsInHtml = (v) => {
+    localStorage.setItem(KEY_TREAT_NEWLINES_AS_IN_HTML, JSON.stringify(v));
+}
 
 export const KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE = 'messageEditSendButtonsType';
 

@@ -43,7 +43,7 @@ import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
-import {getStoredMessageEditNormalizeText} from "@/store/localStore.js";
+import {getStoredMessageEditNormalizeText, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 
@@ -279,8 +279,15 @@ export default {
             }
 
             if (isFireFox()) {
-              const str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "<p>");
-              const str2 = str.replace(/(\r\n|\r|\n)/g, " ");
+              let str;
+              let str2;
+              if (getTreatNewlinesAsInHtml()) {
+                  str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "<p>");
+                  str2 = str.replace(/(\r\n|\r|\n)/g, " ");
+              } else {
+                  str = html.replace(/(\r\n\r\n|\r\r|\n\n|\r\n|\r|\n)/g, "<p>");
+                  str2 = str;
+              }
               const fixedSpaces = str2.replace(/&#32;/g, "&nbsp;");
               const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
               const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
