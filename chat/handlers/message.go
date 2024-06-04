@@ -533,7 +533,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return 0, err
 		}
-		_, err = tx.AddMessageRead(messageId, userPrincipalDto.UserId, chatId)
+		_, err = tx.AddMessageRead(messageId, userPrincipalDto.UserId, chatId) // not to send to myself (1/2)
 		if err != nil {
 			return 0, err
 		}
@@ -580,6 +580,11 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, tx)
+			for _, participantId := range participantIds {
+				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
+					mc.notificator.NotifyAboutHasNewMessagesChanged(c, participantId, true)
+				}
+			}
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
@@ -949,6 +954,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 			ChatId: chatId,
 		}
 		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
+
 		return nil
 	})
 	if err != nil {
@@ -1000,6 +1006,12 @@ func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, c echo.Context, cha
 		return err
 	}
 	mc.notificator.ChatNotifyMessageCount([]int64{userId}, c, chatId, tx)
+
+	has, err := tx.HasUnreadMessages(userId)
+	if err != nil {
+		return err
+	}
+	mc.notificator.NotifyAboutHasNewMessagesChanged(c, userId, has)
 
 	return nil
 }

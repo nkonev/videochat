@@ -216,6 +216,10 @@ type ForceLogoutEvent {
     reasonType: String!
 }
 
+type HasUnreadMessagesChangedEvent {
+    hasUnreadMessages: Boolean!
+}
+
 type GlobalEvent {
     eventType:                String!
     chatEvent: ChatDto
@@ -230,6 +234,7 @@ type GlobalEvent {
     notificationEvent: WrapperNotificationDto
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
     forceLogout: ForceLogoutEvent
+    hasUnreadMessagesChanged: HasUnreadMessagesChangedEvent
 }
 
 type UserStatusEvent {

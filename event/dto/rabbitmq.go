@@ -67,6 +67,10 @@ type WrapperNotificationDto struct {
 	TotalCount      int64             `json:"totalCount"`
 }
 
+type HasUnreadMessagesChanged struct {
+	HasUnreadMessages bool `json:"hasUnreadMessages"`
+}
+
 type GlobalUserEvent struct {
 	EventType                     string                        `json:"eventType"`
 	UserId                        int64                         `json:"userId"`
@@ -81,6 +85,7 @@ type GlobalUserEvent struct {
 	VideoCallRecordingEvent       *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
 	UserNotificationEvent         *WrapperNotificationDto       `json:"userNotificationEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
+	HasUnreadMessagesChanged      *HasUnreadMessagesChanged `json:"hasUnreadMessagesChanged"`
 }
 
 func (GlobalUserEvent) Name() eventbus.EventName {

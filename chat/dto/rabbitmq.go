@@ -23,6 +23,10 @@ type ChatEvent struct {
 	ReactionChangedEvent         *ReactionChangedEvent         `json:"reactionChangedEvent"`
 }
 
+type HasUnreadMessagesChanged struct {
+	HasUnreadMessages bool `json:"hasUnreadMessages"`
+}
+
 type GlobalUserEvent struct {
 	EventType                     string                    `json:"eventType"`
 	UserId                        int64                     `json:"userId"`
@@ -31,6 +35,7 @@ type GlobalUserEvent struct {
 	CoChattedParticipantNotification       *User            `json:"coChattedParticipantNotification"`
 	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
 	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`
+	HasUnreadMessagesChanged      *HasUnreadMessagesChanged `json:"hasUnreadMessagesChanged"`
 }
 
 type MentionNotification struct {

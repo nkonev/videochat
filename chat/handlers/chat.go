@@ -230,6 +230,22 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	})
 }
 
+func (ch *ChatHandler) HasNewMessages(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	return db.Transact(ch.db, func(tx *db.Tx) error {
+		has, err := tx.HasUnreadMessages(userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, &utils.H{"hasUnreadMessages": has})
+	})
+}
+
 type ChatFilterDto struct {
 	SearchString string `json:"searchString"`
 	ChatId int64 `json:"chatId"`

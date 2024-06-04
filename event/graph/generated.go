@@ -169,6 +169,7 @@ type ComplexityRoot struct {
 		CoChattedParticipantEvent      func(childComplexity int) int
 		EventType                      func(childComplexity int) int
 		ForceLogout                    func(childComplexity int) int
+		HasUnreadMessagesChanged       func(childComplexity int) int
 		NotificationEvent              func(childComplexity int) int
 		UnreadMessagesNotification     func(childComplexity int) int
 		VideoCallInvitation            func(childComplexity int) int
@@ -176,6 +177,10 @@ type ComplexityRoot struct {
 		VideoParticipantDialEvent      func(childComplexity int) int
 		VideoRecordingChangedEvent     func(childComplexity int) int
 		VideoUserCountChangedEvent     func(childComplexity int) int
+	}
+
+	HasUnreadMessagesChangedEvent struct {
+		HasUnreadMessages func(childComplexity int) int
 	}
 
 	MessageBroadcastNotification struct {
@@ -1001,6 +1006,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.ForceLogout(childComplexity), true
 
+	case "GlobalEvent.hasUnreadMessagesChanged":
+		if e.complexity.GlobalEvent.HasUnreadMessagesChanged == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.HasUnreadMessagesChanged(childComplexity), true
+
 	case "GlobalEvent.notificationEvent":
 		if e.complexity.GlobalEvent.NotificationEvent == nil {
 			break
@@ -1049,6 +1061,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalEvent.VideoUserCountChangedEvent(childComplexity), true
+
+	case "HasUnreadMessagesChangedEvent.hasUnreadMessages":
+		if e.complexity.HasUnreadMessagesChangedEvent.HasUnreadMessages == nil {
+			break
+		}
+
+		return e.complexity.HasUnreadMessagesChangedEvent.HasUnreadMessages(childComplexity), true
 
 	case "MessageBroadcastNotification.login":
 		if e.complexity.MessageBroadcastNotification.Login == nil {
@@ -6304,6 +6323,95 @@ func (ec *executionContext) fieldContext_GlobalEvent_forceLogout(_ context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_hasUnreadMessagesChanged(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_hasUnreadMessagesChanged(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasUnreadMessagesChanged, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.HasUnreadMessagesChangedEvent)
+	fc.Result = res
+	return ec.marshalOHasUnreadMessagesChangedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐHasUnreadMessagesChangedEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_hasUnreadMessagesChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasUnreadMessages":
+				return ec.fieldContext_HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type HasUnreadMessagesChangedEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx context.Context, field graphql.CollectedField, obj *model.HasUnreadMessagesChangedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasUnreadMessages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_HasUnreadMessagesChangedEvent_hasUnreadMessages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HasUnreadMessagesChangedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MessageBroadcastNotification_login(ctx context.Context, field graphql.CollectedField, obj *model.MessageBroadcastNotification) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageBroadcastNotification_login(ctx, field)
 	if err != nil {
@@ -8458,6 +8566,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(_ context.Con
 				return ec.fieldContext_GlobalEvent_videoCallScreenShareChangedDto(ctx, field)
 			case "forceLogout":
 				return ec.fieldContext_GlobalEvent_forceLogout(ctx, field)
+			case "hasUnreadMessagesChanged":
+				return ec.fieldContext_GlobalEvent_hasUnreadMessagesChanged(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -13198,6 +13308,47 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._GlobalEvent_videoCallScreenShareChangedDto(ctx, field, obj)
 		case "forceLogout":
 			out.Values[i] = ec._GlobalEvent_forceLogout(ctx, field, obj)
+		case "hasUnreadMessagesChanged":
+			out.Values[i] = ec._GlobalEvent_hasUnreadMessagesChanged(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var hasUnreadMessagesChangedEventImplementors = []string{"HasUnreadMessagesChangedEvent"}
+
+func (ec *executionContext) _HasUnreadMessagesChangedEvent(ctx context.Context, sel ast.SelectionSet, obj *model.HasUnreadMessagesChangedEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, hasUnreadMessagesChangedEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HasUnreadMessagesChangedEvent")
+		case "hasUnreadMessages":
+			out.Values[i] = ec._HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15617,6 +15768,13 @@ func (ec *executionContext) marshalOForceLogoutEvent2ᚖnkonevᚗnameᚋeventᚋ
 		return graphql.Null
 	}
 	return ec._ForceLogoutEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOHasUnreadMessagesChangedEvent2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐHasUnreadMessagesChangedEvent(ctx context.Context, sel ast.SelectionSet, v *model.HasUnreadMessagesChangedEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._HasUnreadMessagesChangedEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {

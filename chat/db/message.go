@@ -8,6 +8,7 @@ import (
 	"github.com/rotisserie/eris"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -600,6 +601,83 @@ func (db *DB) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[in
 
 func (tx *Tx) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[int64]int64, error) {
 	return getUnreadMessagesCountBatchCommon(tx, chatIds, userId)
+}
+
+
+func hasCountUnreadMessages(chatId, userId int64) string {
+	return fmt.Sprintf("SELECT %v, EXISTS (SELECT 1 FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn", chatId, chatId, userId, chatId)
+}
+
+func hasUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
+	res := map[int64]bool{}
+
+	if len(chatIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, chatId := range chatIds {
+		if !first {
+			builder += " union "
+		}
+		builder += hasCountUnreadMessages(chatId, userId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = co.Query(builder)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		for _, cid := range chatIds {
+			res[cid] = false
+		}
+		for rows.Next() {
+			var chatId int64
+			var exists bool
+			if err := rows.Scan(&chatId, &exists); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				res[chatId] = exists
+			}
+		}
+		return res, nil
+	}
+}
+
+func hasUnreadMessagesCommon(co CommonOperations, userId int64) (bool, error) {
+	shouldContinue := true
+	for i := 0; shouldContinue; i++ {
+		chatIds, err := getChatIdsByLimitOffsetCommon(co, userId, utils.DefaultSize, utils.DefaultSize*i)
+		if err != nil {
+			return false, err
+		}
+		if len(chatIds) < utils.DefaultSize {
+			shouldContinue = false
+		}
+		messageUnreads, err := hasUnreadMessagesCountBatchCommon(co, chatIds, userId)
+		if err != nil {
+			return false, err
+		}
+		for _, hasMessageUnread := range messageUnreads {
+			if hasMessageUnread {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func (db *DB) HasUnreadMessages(userId int64) (bool, error) {
+	return hasUnreadMessagesCommon(db, userId)
+}
+
+func (tx *Tx) HasUnreadMessages(userId int64) (bool, error) {
+	return hasUnreadMessagesCommon(tx, userId)
 }
 
 func (tx *Tx) HasPinnedMessages(chatId int64) (hasPinnedMessages bool, err error) {

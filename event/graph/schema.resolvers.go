@@ -763,6 +763,13 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 		}
 	}
 
+	hasUnreadMessagesChanged := e.HasUnreadMessagesChanged
+	if hasUnreadMessagesChanged != nil {
+		ret.HasUnreadMessagesChanged = &model.HasUnreadMessagesChangedEvent{
+			HasUnreadMessages: hasUnreadMessagesChanged.HasUnreadMessages,
+		}
+	}
+
 	return ret
 }
 func convertToUserSessionsKilledEvent(aDto *dto.UserSessionsKilledEvent) *model.GlobalEvent {

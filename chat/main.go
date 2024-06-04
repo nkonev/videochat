@@ -142,6 +142,7 @@ func configureEcho(
 	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.GET("/chat", ch.GetChats)
+	e.GET("/chat/has-new-messages", ch.HasNewMessages)
 	e.POST("/chat/filter", ch.Filter)
 	e.GET("/chat/:id", ch.GetChat)
 	e.POST("/chat", ch.CreateChat)

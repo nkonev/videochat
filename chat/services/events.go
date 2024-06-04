@@ -148,6 +148,19 @@ func (not *Events) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatI
 	}
 }
 
+func (not *Events) NotifyAboutHasNewMessagesChanged(c echo.Context, participantId int64, hasNewMessages bool) {
+	err := not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+		UserId:                     participantId,
+		EventType:                  "has_unread_messages_changed",
+		HasUnreadMessagesChanged:   &dto.HasUnreadMessagesChanged{
+			HasUnreadMessages:      hasNewMessages,
+		},
+	})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+	}
+}
+
 func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *Events, eventType string) {
 
 	for _, participantId := range userIds {

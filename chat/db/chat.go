@@ -141,6 +141,31 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderDirection, searchStrin
 	}
 }
 
+func getChatIdsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int) ([]int64, error) {
+	var rows *sql.Rows
+	var err error
+	rows, err = co.Query(`SELECT ch.id from chat ch
+		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) 
+		ORDER BY ch.id
+		LIMIT $2 OFFSET $3
+	`, participantId, limit, offset)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var chatId int64
+			if err := rows.Scan(&chatId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				list = append(list, chatId)
+			}
+		}
+		return list, nil
+	}
+}
+
 func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error

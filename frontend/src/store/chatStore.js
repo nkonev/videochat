@@ -49,6 +49,7 @@ export const useChatStore = defineStore('chat', {
         isEditingBigText: false,
         fileUploadOverallProgress: 0,
         shouldShowSendMessageButtons: true,
+        hasNewMessages: false,
     }
   },
   actions: {
@@ -72,9 +73,12 @@ export const useChatStore = defineStore('chat', {
               this.availableOAuth2Providers = data;
           });
     },
+    updateRedDot() {
+        setIcon(this.notificationsCount > 0 || this.hasNewMessages);
+    },
     setNotificationCount(count){
       this.notificationsCount = count;
-      setIcon(count > 0);
+      this.updateRedDot();
     },
     fetchNotificationsCount() {
       axios.get(`/api/notification/count`).then(( {data} ) => {
@@ -82,8 +86,19 @@ export const useChatStore = defineStore('chat', {
         this.setNotificationCount(data.totalCount);
       });
     },
-    unsetNotifications() {
+    fetchHasNewMessages() {
+      axios.get(`/api/chat/has-new-messages`).then(( {data} ) => {
+          console.debug("fetched has-new-messages =", data);
+          this.setHasNewMessages(data.hasUnreadMessages);
+      });
+    },
+    setHasNewMessages(value){
+      this.hasNewMessages = value;
+      this.updateRedDot();
+    },
+    unsetNotificationsAndHasNewMessages() {
       this.notificationsCount = 0;
+      this.hasNewMessages = false;
       setIcon(false);
     },
     switchSearchType() {

@@ -137,6 +137,11 @@ type GlobalEvent struct {
 	NotificationEvent              *WrapperNotificationDto         `json:"notificationEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 	ForceLogout                    *ForceLogoutEvent               `json:"forceLogout"`
+	HasUnreadMessagesChanged       *HasUnreadMessagesChangedEvent  `json:"hasUnreadMessagesChanged"`
+}
+
+type HasUnreadMessagesChangedEvent struct {
+	HasUnreadMessages bool `json:"hasUnreadMessages"`
 }
 
 type MessageBroadcastNotification struct {

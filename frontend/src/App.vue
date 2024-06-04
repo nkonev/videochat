@@ -351,6 +351,7 @@ export default {
 
         onProfileSet(){
             this.chatStore.fetchNotificationsCount();
+            this.chatStore.fetchHasNewMessages();
             this.graphQlSubscribe();
         },
         onLoggedOut() {
@@ -359,7 +360,7 @@ export default {
         },
         resetVariables() {
             this.resetVideoInvitation()
-            this.chatStore.unsetNotifications();
+            this.chatStore.unsetNotificationsAndHasNewMessages();
         },
         canSwitchSearchType() {
             return this.isInChat() || this.$route.name == chat_list_name
@@ -479,6 +480,9 @@ export default {
                       forceLogout {
                         reasonType
                       }
+                      hasUnreadMessagesChanged {
+                        hasUnreadMessages
+                      }
                     }
                   }
               `
@@ -526,6 +530,9 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'notification_clear_all') {
               const d = getGlobalEventsData(e).notificationEvent;
               bus.emit(NOTIFICATION_CLEAR_ALL, d);
+          } else if (getGlobalEventsData(e).eventType === 'has_unread_messages_changed') {
+              const d = getGlobalEventsData(e).hasUnreadMessagesChanged;
+              this.chatStore.setHasNewMessages(d.hasUnreadMessages);
           } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
             const d = getGlobalEventsData(e).forceLogout;
             console.log("Killed sessions, reason:", d.reasonType)
@@ -550,6 +557,7 @@ export default {
             // console.log("Focus", e);
             if (this.chatStore.currentUser) {
                 this.chatStore.fetchNotificationsCount();
+                this.chatStore.fetchHasNewMessages();
                 this.refreshInvitationCall();
             }
             bus.emit(FOCUS);
