@@ -279,5 +279,5 @@ export default {
     add_to_message: "Add",
     seconds: "sec",
     waiting_for_devices: "Waiting for device",
-    treat_newlines_as_in_html: "Treat newlines as in HTML (e. g. swallow) (Firefox)"
+    treat_newlines_as_in_html: "During pasting treat newlines as in HTML (e. g. swallow)"
 }

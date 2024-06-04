@@ -279,5 +279,5 @@ export default {
     add_to_message: "Добавить",
     seconds: "сек.",
     waiting_for_devices: "Ожидание устройства",
-    treat_newlines_as_in_html: "Обрабатывать переносы строк как в HTML (т. е. игнорировать) (Firefox)"
+    treat_newlines_as_in_html: "Во время вставки обрабатывать переносы строк как в HTML (т. е. игнорировать)"
 }

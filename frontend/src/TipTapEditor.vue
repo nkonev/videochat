@@ -31,7 +31,7 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {hasLength, isFireFox, media_audio, media_image, media_video} from "@/utils";
+import {hasLength, media_audio, media_image, media_video} from "@/utils";
 import bus, {
     FILE_UPLOAD_MODAL_START_UPLOADING,
     PREVIEW_CREATED,
@@ -278,31 +278,19 @@ export default {
                 return html
             }
 
-            if (isFireFox()) {
-              let str;
-              let str2;
-              if (getTreatNewlinesAsInHtml()) {
-                  str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "<p>");
-                  str2 = str.replace(/(\r\n|\r|\n)/g, " ");
-              } else {
-                  str = html.replace(/(\r\n\r\n|\r\r|\n\n|\r\n|\r|\n)/g, "<p>");
-                  str2 = str;
-              }
-              const fixedSpaces = str2.replace(/&#32;/g, "&nbsp;");
-              const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
-              const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-              const normalized = normalize(rmDuplicatedP)
-              console.debug("modern firefox html=", html, ", str=", str, ", str2=", str2, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
-              return normalized;
+            let str;
+            if (getTreatNewlinesAsInHtml()) {
+              str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "<p>");
+              str = str.replace(/(\r\n|\r|\n)/g, " ");
             } else {
-              const str = html.replace(/(\r\n|\r|\n)/g, "<p>");
-              const fixedSpaces = str.replace(/&#32;/g, "&nbsp;");
-              const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
-              const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-              const normalized = normalize(rmDuplicatedP)
-              console.debug("chrome html=", html, ", str=", str, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
-              return normalized;
+              str = html.replace(/(\r\n|\r|\n)/g, "<p>");
             }
+            const fixedSpaces = str.replace(/&#32;/g, "&nbsp;");
+            const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
+            const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
+            const normalized = normalize(rmDuplicatedP)
+            console.debug("html=", html, ", str=", str, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
+            return normalized;
           },
       },
       content: empty,
