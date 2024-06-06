@@ -551,7 +551,13 @@ func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) 
 }
 
 func getCountUnreadMessages(chatId, userId int64) string {
-	return fmt.Sprintf("SELECT %v, COUNT(*) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)", chatId, chatId, userId, chatId)
+	return fmt.Sprintf(`SELECT 
+									%v, 
+									CASE 
+									WHEN (%v) THEN (SELECT COUNT(1) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0))
+									ELSE 0
+									END		
+	`, chatId, getShouldConsiderMessagesAsUnread(chatId, userId), chatId, userId, chatId)
 }
 
 func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
@@ -605,7 +611,15 @@ func (tx *Tx) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[in
 
 
 func hasCountUnreadMessages(chatId, userId int64) string {
-	return fmt.Sprintf("SELECT %v, EXISTS (SELECT 1 FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn", chatId, chatId, userId, chatId)
+	return fmt.Sprintf(`SELECT 
+									%v, 
+									EXISTS (
+										SELECT 1 
+											FROM message_chat_%v 
+											WHERE ( %v ) 
+											AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)
+									) inn`, chatId, chatId, getShouldConsiderMessagesAsUnread(chatId, userId), userId, chatId,
+	)
 }
 
 func hasUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
@@ -678,6 +692,48 @@ func (db *DB) HasUnreadMessages(userId int64) (bool, error) {
 
 func (tx *Tx) HasUnreadMessages(userId int64) (bool, error) {
 	return hasUnreadMessagesCommon(tx, userId)
+}
+
+func getShouldConsiderMessagesAsUnread(chatId, userId int64) string {
+	return fmt.Sprintf(`SELECT COALESCE((SELECT consider_messages_as_unread FROM chat_participant_notification WHERE chat_id = %v AND user_id = %v), true)`, chatId, userId)
+}
+
+func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(chatId int64, userIds []int64) (map[int64]bool, error) {
+	res := map[int64]bool{}
+
+	if len(userIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, userId := range userIds {
+		if !first {
+			builder += " union "
+		}
+		builder += fmt.Sprintf(`SELECT %v, (%v)`, userId, getShouldConsiderMessagesAsUnread(chatId, userId))
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = tx.Query(builder)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var userId int64
+			var should bool
+			if err := rows.Scan(&userId, &should); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				res[userId] = should
+			}
+		}
+		return res, nil
+	}
 }
 
 func (tx *Tx) HasPinnedMessages(chatId int64) (hasPinnedMessages bool, err error) {

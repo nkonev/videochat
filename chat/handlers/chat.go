@@ -1605,6 +1605,62 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 	return errOuter
 }
 
+type UserChatNotificationSettings struct {
+	ConsiderMessagesOfThisChatAsUnread null.Bool `json:"considerMessagesOfThisChatAsUnread"`
+}
+
+func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	bindTo := new(UserChatNotificationSettings)
+	err = c.Bind(bindTo)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
+		return err
+	}
+
+	err = ch.db.InitUserChatNotificationSettings(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
+		return err
+	}
+
+	err = ch.db.PutUserChatNotificationSettings(bindTo.ConsiderMessagesOfThisChatAsUnread.Ptr(), userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, bindTo)
+}
+
+func (ch *ChatHandler) GetUserChatNotificationSettings(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	consider, err := ch.db.GetUserChatNotificationSettings(userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, UserChatNotificationSettings{ConsiderMessagesOfThisChatAsUnread: null.BoolFromPtr(consider)})
+}
+
 type CleanHtmlTagsRequestDto struct {
 	Text  string `json:"text"`
 	Login string `json:"login"`

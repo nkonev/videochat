@@ -114,6 +114,18 @@
               <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
           </v-radio-group>
 
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.consider_messages_of_this_chat_as_unread')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="considerMessagesOfThisChatAsUnread"
+                         @update:modelValue="putConsiderMessagesOfThisChatAsUnread()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
       </v-card>
   </v-card-text>
 
@@ -130,7 +142,8 @@
             return {
                 loading: false,
                 notificationsSettings: {},
-                notificationsChatSettings: {}
+                notificationsChatSettings: {},
+                considerMessagesOfThisChatAsUnread: null,
             }
         },
         computed: {
@@ -156,6 +169,14 @@
                     this.loading = false;
                 })
             },
+            putConsiderMessagesOfThisChatAsUnread() {
+                this.loading = true;
+                axios.put(`/api/chat/${this.chatId}/notification`, {considerMessagesOfThisChatAsUnread: this.considerMessagesOfThisChatAsUnread}).then(({data}) => {
+                    this.considerMessagesOfThisChatAsUnread = data.considerMessagesOfThisChatAsUnread;
+                }).finally(()=>{
+                    this.loading = false;
+                })
+            },
             isInChat() {
                 return this.$route.name == chat_name || this.$route.name == videochat_name
             },
@@ -171,6 +192,15 @@
                     return axios.get(`/api/notification/settings/${this.chatId}/chat`).then(({data}) => {
                         this.notificationsChatSettings = data;
                         console.debug("Loaded notificationsChatSetting", this.notificationsChatSettings)
+                    });
+                } else {
+                    return Promise.resolve()
+                }
+            }).then(()=>{
+                if (this.isInChat()) {
+                    return axios.get(`/api/chat/${this.chatId}/notification`).then(({data}) => {
+                        this.considerMessagesOfThisChatAsUnread = data.considerMessagesOfThisChatAsUnread;
+                        console.debug("Loaded considerMessagesOfThisChatAsUnread", this.considerMessagesOfThisChatAsUnread)
                     });
                 } else {
                     return Promise.resolve()

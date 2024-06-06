@@ -279,5 +279,6 @@ export default {
     add_to_message: "Добавить",
     seconds: "сек.",
     waiting_for_devices: "Ожидание устройства",
-    treat_newlines_as_in_html: "Во время вставки обрабатывать переносы строк как в HTML (т. е. игнорировать)"
+    treat_newlines_as_in_html: "Во время вставки обрабатывать переносы строк как в HTML (т. е. игнорировать)",
+    consider_messages_of_this_chat_as_unread: "Считать сообщения из этого чата непрочитанными"
 }

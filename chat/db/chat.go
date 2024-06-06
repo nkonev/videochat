@@ -998,6 +998,34 @@ func (db *DB) GetBlobPostModifiedDates(chatIds []int64) (map[int64]time.Time, er
 	return res, nil
 }
 
+func (db *DB) InitUserChatNotificationSettings(userId, chatId int64) error {
+	if _, err := db.Exec(`insert into chat_participant_notification(user_id, chat_id) values($1, $2) on conflict(user_id, chat_id) do nothing`, userId, chatId); err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	return nil
+}
+
+func (db *DB) PutUserChatNotificationSettings(considerMessagesOfThisChatAsUnread *bool, userId, chatId int64) error {
+	_, err := db.Exec("update chat_participant_notification set consider_messages_as_unread = $1 where user_id = $2 and chat_id = $3", considerMessagesOfThisChatAsUnread, userId, chatId)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	return nil
+}
+
+func (db *DB) GetUserChatNotificationSettings(userId, chatId int64) (*bool, error) {
+	res := db.QueryRow(`SELECT consider_messages_as_unread FROM chat_participant_notification where user_id = $1 and chat_id = $2`, userId, chatId)
+	var consider *bool
+	if err := res.Scan(&consider); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// if there is no rows then return default
+			return nil, nil
+		}
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	return consider, nil
+}
+
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin

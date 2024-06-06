@@ -580,9 +580,13 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, tx)
-			for _, participantId := range participantIds {
+			shouldSendHasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatchCommon(chatId, participantIds)
+			if err != nil {
+				return err
+			}
+			for participantId, should := range shouldSendHasUnreadMessagesMap {
 				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
-					mc.notificator.NotifyAboutHasNewMessagesChanged(c, participantId, true)
+					mc.notificator.NotifyAboutHasNewMessagesChanged(c, participantId, should)
 				}
 			}
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)

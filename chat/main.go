@@ -171,6 +171,9 @@ func configureEcho(
 	e.GET("/internal/name-for-invite", ch.GetNameForInvite)
 	e.GET("/internal/basic/:id", ch.GetBasicInfo)
 
+	e.PUT("/chat/:id/notification", ch.PutUserChatNotificationSettings)
+	e.GET("/chat/:id/notification", ch.GetUserChatNotificationSettings)
+
 	e.GET("/chat/:id/message", mc.GetMessages)
 	e.GET("/chat/:id/message/:messageId", mc.GetMessage)
 	e.PUT("/chat/:id/message/:messageId/reaction", mc.ReactionMessage)

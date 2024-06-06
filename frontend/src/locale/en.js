@@ -279,5 +279,6 @@ export default {
     add_to_message: "Add",
     seconds: "sec",
     waiting_for_devices: "Waiting for device",
-    treat_newlines_as_in_html: "During pasting treat newlines as in HTML (e. g. swallow)"
+    treat_newlines_as_in_html: "During pasting treat newlines as in HTML (e. g. swallow)",
+    consider_messages_of_this_chat_as_unread: "Consider messages of this chat as unread"
 }
