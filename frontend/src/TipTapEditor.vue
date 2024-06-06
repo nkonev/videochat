@@ -246,7 +246,7 @@ export default {
           Underline,
           Link.configure({
               openOnClick: false,
-              linkOnPaste: false
+              linkOnPaste: true
           }),
           TextStyle,
           Color,
