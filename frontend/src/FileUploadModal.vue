@@ -207,6 +207,7 @@ export default {
                     shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage,
                     chunkSize: response.data.chunkSize,
                 })
+                this.$data.fileItemUuid = response.data.fileItemUuid;
             }
             this.$data.fileItemUuid = null;
             this.showFileInput = false;
