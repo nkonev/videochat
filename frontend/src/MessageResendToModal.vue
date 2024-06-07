@@ -4,7 +4,7 @@
             <v-card>
                 <v-card-title class="d-flex align-center ml-2">
                     <template v-if="showSearchButton">
-                        {{ $vuetify.locale.t('$vuetify.share_to') }}
+                        {{ $vuetify.locale.t('$vuetify.resend_to') }}
                     </template>
                     <v-spacer/>
                     <CollapsedSearch :provider="{
@@ -27,7 +27,7 @@
                                         <template v-slot:prepend v-if="hasLength(item.avatar)">
                                             <v-avatar :image="item.avatar"></v-avatar>
                                         </template>
-                                        <v-list-item-title class="chat-name">{{ getChatName(item)}}</v-list-item-title>
+                                        <v-list-item-title class="chat-name" v-html="getChatName(item)"></v-list-item-title>
                                         <v-list-item-subtitle :class="!isHovering ? 'white-colored' : ''">{{ isHovering ? $vuetify.locale.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
                                     </v-list-item>
 

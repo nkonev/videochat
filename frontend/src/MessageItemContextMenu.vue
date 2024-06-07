@@ -101,7 +101,7 @@ export default {
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.reply'), icon: 'mdi-reply', action: () => this.$emit('replyOnMessage', this.menuableItem) });
                 if (this.canResend) {
-                    ret.push({title: this.$vuetify.locale.t('$vuetify.share'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.resend'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_message'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
                 if (!this.menuableItem.blogPost && this.isBlog && this.menuableItem.owner.id == this.chatStore.currentUser.id) {
