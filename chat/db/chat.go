@@ -699,22 +699,33 @@ func (tx *Tx) PinChat(chatId int64, userId int64, pin bool) error {
 	return pinChatCommon(tx, chatId, userId, pin)
 }
 
-func (tx *Tx) IsChatPinned(chatId int64, behalfUserId int64) (bool, error) {
-	var res bool
-	row := tx.QueryRow(`SELECT 
-    	cp.user_id IS NOT NULL as pinned 
-		FROM chat ch 
-		    LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1) WHERE ch.id = $2`,
-		behalfUserId,
-		chatId,
-	)
-	if row.Err() != nil {
-		return false, eris.Wrap(row.Err(), "error during interacting with db")
+func (tx *Tx) IsChatPinnedBatch(userIds []int64, chatId int64) (map[int64]bool, error) {
+	res := map[int64]bool{}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = tx.Query(`
+		SELECT 
+			cp.user_id
+			FROM chat_pinned cp WHERE cp.user_id = ANY($1) AND cp.chat_id = $2
+	`, userIds, chatId)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		for _, uid := range userIds {
+			res[uid] = false // init map
+		}
+		for rows.Next() {
+			var userId int64
+			if err := rows.Scan(&userId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				res[userId] = true
+			}
+		}
+		return res, nil
 	}
-	if err := row.Scan(&res); err != nil {
-		return false, eris.Wrap(err, "error during interacting with db")
-	}
-	return res, nil
 }
 
 func (tx *Tx) DeleteChatsPinned(userId int64) error {

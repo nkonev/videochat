@@ -533,7 +533,7 @@ func (dbR *DB) SetFileItemUuidTo(ownerId, chatId, messageId int64, fileItemUuid 
 func getUnreadMessagesCountCommon(co CommonOperations, chatId int64, userId int64) (int64, error) {
 	var count int64
 	var unusedChatId int64
-	row := co.QueryRow(getCountUnreadMessages(chatId, userId))
+	row := co.QueryRow(getCountUnreadMessages(chatId, chatId, userId))
 	err := row.Scan(&unusedChatId, &count)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -550,14 +550,14 @@ func (tx *Tx) GetUnreadMessagesCount(chatId int64, userId int64) (int64, error) 
 	return getUnreadMessagesCountCommon(tx, chatId, userId)
 }
 
-func getCountUnreadMessages(chatId, userId int64) string {
+func getCountUnreadMessages(marker, chatId, userId int64) string {
 	return fmt.Sprintf(`SELECT 
 									%v, 
 									CASE 
 									WHEN (%v) THEN (SELECT COUNT(1) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0))
 									ELSE 0
 									END		
-	`, chatId, getShouldConsiderMessagesAsUnread(chatId, userId), chatId, userId, chatId)
+	`, marker, getShouldConsiderMessagesAsUnread(chatId, userId), chatId, userId, chatId)
 }
 
 func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
@@ -573,7 +573,7 @@ func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, use
 		if !first {
 			builder += " union "
 		}
-		builder += getCountUnreadMessages(chatId, userId)
+		builder += getCountUnreadMessages(chatId, chatId, userId)
 
 		first = false
 	}
@@ -609,6 +609,54 @@ func (tx *Tx) GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[in
 	return getUnreadMessagesCountBatchCommon(tx, chatIds, userId)
 }
 
+func getUnreadMessagesCountBatchByParticipantsCommon(co CommonOperations, userIds []int64, chatId int64) (map[int64]int64, error) {
+	res := map[int64]int64{}
+
+	if len(userIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, userId := range userIds {
+		if !first {
+			builder += " union "
+		}
+		builder += getCountUnreadMessages(userId, chatId, userId)
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = co.Query(builder)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		for _, uid := range userIds {
+			res[uid] = 0
+		}
+		for rows.Next() {
+			var userId int64
+			var count int64
+			if err := rows.Scan(&userId, &count); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				res[userId] = count
+			}
+		}
+		return res, nil
+	}
+}
+
+func (db *DB) GetUnreadMessagesCountBatchByParticipants(userIds []int64, chatId int64) (map[int64]int64, error) {
+	return getUnreadMessagesCountBatchByParticipantsCommon(db, userIds, chatId)
+}
+
+func (tx *Tx) GetUnreadMessagesCountBatchByParticipants(userIds []int64, chatId int64) (map[int64]int64, error) {
+	return getUnreadMessagesCountBatchByParticipantsCommon(tx, userIds, chatId)
+}
 
 func hasCountUnreadMessages(chatId, userId int64) string {
 	return fmt.Sprintf(`SELECT 

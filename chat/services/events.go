@@ -55,8 +55,8 @@ func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds [
 func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
 	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
-	for _, participantId := range userIds {
-		if eventType == "chat_deleted" {
+	if eventType == "chat_deleted" {
+		for _, participantId := range userIds {
 			err := not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
 				UserId:         participantId,
 				EventType:      eventType,
@@ -65,36 +65,41 @@ func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 			}
+		}
+	} else {
+		areAdmins, err := tx.IsAdminBatchByParticipants(userIds, newChatDto.Id)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during checking is admin: %v", err)
+			return
+		}
+		areAdminsMap := map[int64]bool{}
+		for _, isAdmin := range areAdmins {
+			areAdminsMap[isAdmin.UserId] = isAdmin.Admin
+		}
 
-		} else {
+		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, newChatDto.Id)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during get unread messages: %v", err)
+			return
+		}
+
+		isChatPinnedMap, err := tx.IsChatPinnedBatch(userIds, newChatDto.Id)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during get pinned: %v", err)
+			return
+		}
+
+		for _, participantId := range userIds {
 			var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 			if err := deepcopy.Copy(copied, newChatDto); err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
-			admin, err := tx.IsAdmin(participantId, newChatDto.Id)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during checking is admin for userId=%v: %s", participantId, err)
-				continue
-			}
-
-			unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
-				continue
-			}
-
 			// see also handlers/chat.go:199 convertToDto()
-			copied.SetPersonalizedFields(admin, unreadMessages, overrideIsParticipant)
+			copied.SetPersonalizedFields(areAdminsMap[participantId], unreadMessages[participantId], overrideIsParticipant)
 
-			pinned, err := tx.IsChatPinned(newChatDto.Id, participantId)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during get pinned for userId=%v: %s", participantId, err)
-				continue
-			}
-
-			copied.Pinned = pinned
+			copied.Pinned = isChatPinnedMap[participantId]
 
 			for _, participant := range copied.Participants {
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId, isSingleParticipant)
