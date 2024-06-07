@@ -533,6 +533,8 @@ export default {
     redrawItem(dto) {
       if (this.searchString == publicallyAvailableForSearchChatsQuery) {
           this.changeItem(dto)
+      } else {
+          this.removeItem(dto)
       }
     },
     removeItem(dto) {
