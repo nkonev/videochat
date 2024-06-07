@@ -765,11 +765,12 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, len(responseDto.ParticipantIds) == 1, false, tx)
-
-			// send duplicated event to the former user to re-draw chat on their search results
-			ch.notificator.NotifyAboutRedrawLeftChat(c, copiedChat, userPrincipalDto.UserId, len(responseDto.ParticipantIds) == 1, false, tx)
-
+			if copiedChat.AvailableToSearch {
+				// send duplicated event to the former user to re-draw chat on their search results
+				ch.notificator.NotifyAboutRedrawLeftChat(c, copiedChat, userPrincipalDto.UserId, len(responseDto.ParticipantIds) == 1, false, tx)
+			} else {
+				ch.notificator.NotifyAboutDeleteChat(c, copiedChat.Id, []int64{userPrincipalDto.UserId}, len(responseDto.ParticipantIds) == 1, false, tx)
+			}
 			return c.JSON(http.StatusAccepted, responseDto)
 		}
 	})
@@ -1029,7 +1030,12 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			return err
 		}
 
-		ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, len(tmpDto.ParticipantIds) == 1, false, tx)
+		if copiedChat.AvailableToSearch {
+			// send duplicated event to the former user to re-draw chat on their search results
+			ch.notificator.NotifyAboutRedrawLeftChat(c, copiedChat, interestingUserId, len(tmpDto.ParticipantIds) == 1, false, tx)
+		} else {
+			ch.notificator.NotifyAboutDeleteChat(c, chatId, []int64{interestingUserId}, len(tmpDto.ParticipantIds) == 1, false, tx)
+		}
 		return nil
 	})
 	if errOuter != nil {
