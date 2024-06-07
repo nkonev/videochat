@@ -145,7 +145,10 @@ export default {
       window.location.href = blog
     },
     openUsers() {
-      this.$router.push({name: profile_list_name} )
+      this.chatStore.incrementProgressCount();
+      this.$router.push({name: profile_list_name} ).finally(()=>{
+        this.chatStore.decrementProgressCount();
+      })
     },
     canShowFiles() {
       return this.chatStore.currentUser && hasLength(this.chatId);
