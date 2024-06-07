@@ -110,11 +110,11 @@
               <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
-        <template v-else>
+        <template v-else-if="this.$refs.tipTapRef">
             <bubble-menu
                 class="bubble-menu"
                 :tippy-options="{ duration: 0 }"
-                :editor="this.$refs.tipTapRef.$data.editor"
+                :editor="this.$refs.tipTapRef?.$data.editor"
             >
                 <button @click="boldClick" :class="{ 'is-active': boldValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
@@ -130,7 +130,7 @@
             <floating-menu
                 class="floating-menu"
                 :tippy-options="{ duration: 0, zIndex: 200, interactive: true }"
-                :editor="this.$refs.tipTapRef.$data.editor"
+                :editor="this.$refs.tipTapRef?.$data.editor"
             >
                 <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
