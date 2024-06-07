@@ -579,7 +579,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
 
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, tx)
+			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, true, tx)
 			shouldSendHasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatchCommon(chatId, participantIds)
 			if err != nil {
 				return err

@@ -31,28 +31,28 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *Events) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, tx *db.Tx) {
-	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", isSingleParticipant, tx)
+func (not *Events) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
+	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx)
 }
 
-func (not *Events) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, tx *db.Tx) {
-	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", isSingleParticipant, tx)
+func (not *Events) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
+	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, tx *db.Tx) {
-	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", isSingleParticipant, tx)
+func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
+	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx)
 }
 
-func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, isSingleParticipant bool, tx *db.Tx) {
+func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
 	chatDto := dto.ChatDtoWithAdmin{
 		BaseChatDto: dto.BaseChatDto{
 			Id: chatId,
 		},
 	}
-	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", isSingleParticipant, tx)
+	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", isSingleParticipant, overrideIsParticipant, tx)
 }
 
-func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
 	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	for _, participantId := range userIds {
@@ -79,12 +79,6 @@ func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *
 				continue
 			}
 
-			isParticipant, err := tx.IsParticipant(participantId, newChatDto.Id)
-			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during checking is participant for userId=%v: %s", participantId, err)
-				continue
-			}
-
 			unreadMessages, err := tx.GetUnreadMessagesCount(newChatDto.Id, participantId)
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
@@ -92,7 +86,7 @@ func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *
 			}
 
 			// see also handlers/chat.go:199 convertToDto()
-			copied.SetPersonalizedFields(admin, unreadMessages, isParticipant)
+			copied.SetPersonalizedFields(admin, unreadMessages, overrideIsParticipant)
 
 			pinned, err := tx.IsChatPinned(newChatDto.Id, participantId)
 			if err != nil {
