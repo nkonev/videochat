@@ -194,6 +194,9 @@ func configureEcho(
 	e.GET("/chat/:id/message/pin/promoted", mc.GetPinnedPromotedMessage)
 	e.PUT("/chat/:id/message/:messageId/pin", mc.PinMessage)
 	e.PUT("/chat/:id/pin", ch.PinChat)
+	e.PUT("/chat/:id/message/:messageId/publish", mc.PublishMessage)
+	e.GET("/chat/:id/message/publish", mc.GetPublishedMessages)
+	e.GET("/chat/public/:id/message/:messageId", mc.GetPublishedMessage)
 
 	e.PUT("/chat/:id/message/:messageId/blog-post", mc.MakeBlogPost)
 	e.GET("/blog", bh.GetBlogPosts)

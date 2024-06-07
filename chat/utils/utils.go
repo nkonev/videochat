@@ -237,3 +237,11 @@ func NullableToBoolean(pt *bool) bool {
 		return false
 	}
 }
+
+func UrlEncode(input string) string {
+	params := url.Values{}
+	params.Add("prefix", input)
+	tmp := params.Encode()
+	after, _ := strings.CutPrefix(tmp, "prefix=")
+	return after
+}

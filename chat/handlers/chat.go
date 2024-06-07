@@ -63,13 +63,14 @@ type EditChatDto struct {
 }
 
 type CreateChatDto struct {
-	Name              string      `json:"name"`
-	ParticipantIds    *[]int64    `json:"participantIds"`
-	Avatar            null.String `json:"avatar"`
-	AvatarBig         null.String `json:"avatarBig"`
-	CanResend         bool        `json:"canResend"`
-	AvailableToSearch bool        `json:"availableToSearch"`
-	Blog              *bool        `json:"blog"`
+	Name                                string      `json:"name"`
+	ParticipantIds                      *[]int64    `json:"participantIds"`
+	Avatar                              null.String `json:"avatar"`
+	AvatarBig                           null.String `json:"avatarBig"`
+	CanResend                           bool        `json:"canResend"`
+	AvailableToSearch                   bool        `json:"availableToSearch"`
+	Blog                                *bool       `json:"blog"`
+	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
 }
 
 type ChatHandler struct {
@@ -513,9 +514,10 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		Pinned:            c.Pinned,
 		// see also services/events.go:75 chatNotifyCommon()
 
-		ParticipantsCount:  c.ParticipantsCount,
-		LastUpdateDateTime: c.LastUpdateDateTime,
-		Blog:               c.Blog,
+		ParticipantsCount:                   c.ParticipantsCount,
+		LastUpdateDateTime:                  c.LastUpdateDateTime,
+		Blog:                                c.Blog,
+		RegularParticipantCanPublishMessage: c.RegularParticipantCanPublishMessage,
 	}
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
@@ -609,10 +611,11 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) *db.Chat {
 	isBlog := utils.NullableToBoolean(d.Blog)
 	return &db.Chat{
-		Title:             TrimAmdSanitize(policy, d.Name),
-		CanResend:         d.CanResend,
-		AvailableToSearch: d.AvailableToSearch,
-		Blog:              isBlog,
+		Title:                               TrimAmdSanitize(policy, d.Name),
+		CanResend:                           d.CanResend,
+		AvailableToSearch:                   d.AvailableToSearch,
+		Blog:                                isBlog,
+		RegularParticipantCanPublishMessage: d.RegularParticipantCanPublishMessage,
 	}
 }
 
@@ -696,6 +699,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			bindTo.CanResend,
 			bindTo.AvailableToSearch,
 			bindTo.Blog,
+			bindTo.RegularParticipantCanPublishMessage,
 		)
 		if err != nil {
 			return err
@@ -1500,9 +1504,21 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	if chat == nil {
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	// blogs are public
-	if chat.IsBlog {
-		return c.NoContent(http.StatusOK)
+
+	messageId, _ := GetQueryParamAsInt64(c, "messageId")
+	if messageId > 0 {
+		text, _, published, err := ch.db.GetMessageBasic(chatId, messageId)
+		if err != nil {
+			return err
+		}
+		fileItemId := c.QueryParam("fileId")
+		if text != nil && (chat.IsBlog || (published != nil && *published)) {
+			encodedFileItemId := utils.UrlEncode(fileItemId)
+			if strings.Contains(*text, fileItemId) || strings.Contains(*text, encodedFileItemId) {
+				return c.NoContent(http.StatusOK)
+			}
+		}
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	userId, err := GetQueryParamAsInt64(c, "userId")

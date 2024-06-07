@@ -315,7 +315,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return err
 		}
 
-		_, messageOwnerId, err := tx.GetMessageBasic(chatId, messageId)
+		_, messageOwnerId, _, err := tx.GetMessageBasic(chatId, messageId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
 			return err
@@ -377,6 +377,7 @@ func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats
 		FileItemUuid:   dbMessage.FileItemUuid,
 		Pinned:         dbMessage.Pinned,
 		BlogPost:       dbMessage.BlogPost,
+		Published:      dbMessage.Published,
 	}
 	ret.Text = patchStorageUrlToPreventCachingVideo(ret.Text)
 
@@ -653,7 +654,7 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 			if !chat.CanResend {
 				return errors.New("Resending is forbidden for this chat")
 			}
-			messageText, messageOwnerId, err := tx.GetMessageBasic(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
+			messageText, messageOwnerId, _, err := tx.GetMessageBasic(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
 			if err != nil {
 				return err
 			}
@@ -863,7 +864,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return err
 	}
 
-	_, ownerId, err := mc.db.GetMessageBasic(chatId, bindTo.MessageId)
+	_, ownerId, _, err := mc.db.GetMessageBasic(chatId, bindTo.MessageId)
 	if err != nil {
 		return err
 	}
@@ -1060,7 +1061,7 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 		return err
 	}
 
-	message, ownerId, err := mc.db.GetMessageBasic(chatId, messageId)
+	message, ownerId, _, err := mc.db.GetMessageBasic(chatId, messageId)
 	if err != nil {
 		return err
 	}
@@ -1340,6 +1341,92 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func (mc *MessageHandler) PublishMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	messageId, err := GetPathParamAsInt64(c, "messageId")
+	if err != nil {
+		return err
+	}
+
+	publish, err := GetQueryParamAsBoolean(c, "publish")
+	if err != nil {
+		return err
+	}
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !isParticipant {
+			msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not belongs to chat " + utils.Int64ToString(chatId)
+			GetLogEntry(c.Request().Context()).Warnf(msg)
+			return c.JSON(http.StatusUnauthorized, &utils.H{"message": msg})
+		}
+
+		chatBasic, err := tx.GetChatBasic(chatId)
+		if err != nil {
+			return err
+		}
+
+		isAdmin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+
+		if !dto.CanPublishMessage(isAdmin, chatBasic.RegularParticipantCanPublishMessage) {
+			return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You cannot publish messages in this chat"})
+		}
+
+		err = tx.PublishMessage(chatId, messageId, publish)
+		if err != nil {
+			return err
+		}
+
+		res, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+
+		count0, err := tx.GetPublishedMessagesCount(chatId)
+		if err != nil {
+			return err
+		}
+
+		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res)
+
+			var copiedMsg = &dto.DisplayMessageDto{}
+
+			err = deepcopy.Copy(copiedMsg, res)
+			if err != nil {
+				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy message: %s", err)
+				return err
+			}
+
+			patchForView(mc.stripAllTags, copiedMsg)
+
+			mc.notificator.NotifyAboutPublishedMessage(c, chatId, &dto.PublishedMessageEvent{
+				Message:    *copiedMsg,
+				TotalCount: count0,
+			}, publish, participantIds)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusOK)
+	})
+}
+
 func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -1358,7 +1445,7 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 	}
 
 	return db.Transact(mc.db, func(tx *db.Tx) error {
-		_, ownerId, err := tx.GetMessageBasic(chatId, messageId)
+		_, ownerId, _, err := tx.GetMessageBasic(chatId, messageId)
 		if err != nil {
 			return err
 		}
@@ -1458,10 +1545,10 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		messageDtos := make([]*dto.DisplayMessageDto, 0)
-		for _, c := range messages {
-			converted := convertToMessageDto(c, owners, chatsSet, userPrincipalDto.UserId)
+		for _, message := range messages {
+			converted := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
 
-			patchForView(mc.stripAllTags, converted, c.PinPromoted)
+			patchForViewAndSetPromoted(mc.stripAllTags, converted, message.PinPromoted)
 			messageDtos = append(messageDtos, converted)
 		}
 
@@ -1519,17 +1606,140 @@ func (mc *MessageHandler) GetPinnedPromotedMessage(c echo.Context) error {
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		res := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
-		patchForView(mc.stripAllTags, res, true)
+		patchForViewAndSetPromoted(mc.stripAllTags, res, true)
 
 		return c.JSON(http.StatusOK, res)
 	})
 }
 
-func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.DisplayMessageDto, promote bool) {
+type PublishedMessagesWrapper struct {
+	Data  []*dto.DisplayMessageDto `json:"items"`
+	Count int64                    `json:"count"` // total pinned messages number
+}
+
+func (mc *MessageHandler) GetPublishedMessages(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	page := utils.FixPageString(c.QueryParam("page"))
+	size := utils.FixSizeString(c.QueryParam("size"))
+	offset := utils.GetOffset(page, size)
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+		isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !isParticipant {
+			msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not belongs to chat " + utils.Int64ToString(chatId)
+			GetLogEntry(c.Request().Context()).Warnf(msg)
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		messages, err := tx.GetPublishedMessages(chatId, size, offset)
+		if err != nil {
+			return err
+		}
+
+		var ownersSet = map[int64]bool{}
+		var chatsPreSet = map[int64]bool{}
+		for _, message := range messages {
+			populateSets(message, ownersSet, chatsPreSet, false)
+		}
+		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+		messageDtos := make([]*dto.DisplayMessageDto, 0)
+		for _, message := range messages {
+			converted := convertToMessageDto(message, owners, chatsSet, userPrincipalDto.UserId)
+
+			patchForView(mc.stripAllTags, converted)
+			messageDtos = append(messageDtos, converted)
+		}
+
+		count, err := tx.GetPublishedMessagesCount(chatId)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, PublishedMessagesWrapper{
+			Data:  messageDtos,
+			Count: count,
+		})
+	})
+}
+
+type PublishedMessageWrapper struct {
+	Message *dto.DisplayMessageDto `json:"message"`
+	Title string `json:"title"`
+}
+
+func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
+	chatId, err := utils.ParseInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	messageId, err := utils.ParseInt64(c.Param("messageId"))
+	if err != nil {
+		return err
+	}
+
+	return db.Transact(mc.db, func(tx *db.Tx) error {
+
+		chatBasic, err := tx.GetChatBasic(chatId)
+		if err != nil {
+			return err
+		}
+		if chatBasic == nil {
+			return c.NoContent(http.StatusNoContent)
+		}
+
+		message, err := tx.GetMessagePublic(chatId, messageId)
+		if err != nil {
+			return err
+		}
+		if message == nil {
+			return c.NoContent(http.StatusNoContent)
+		}
+
+		var ownersSet = map[int64]bool{}
+		var chatsPreSet = map[int64]bool{}
+		populateSets(message, ownersSet, chatsPreSet, true)
+		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, NonExistentUser)
+		if err != nil {
+			return err
+		}
+
+		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
+
+		convertedMessage := convertToMessageDto(message, owners, chatsSet, NonExistentUser)
+
+		convertedMessage.Text = PatchStorageUrlToPublic(convertedMessage.Text, convertedMessage.Id)
+
+		return c.JSON(http.StatusOK, PublishedMessageWrapper{convertedMessage, chatBasic.Title})
+	})
+}
+
+func patchForView(cleanTagsPolicy *services.StripTagsPolicy, message *dto.DisplayMessageDto) {
 	if message.EmbedMessage != nil && message.EmbedMessage.EmbedType == dto.EmbedMessageTypeResend {
 		message.Text = message.EmbedMessage.Text
 	}
 	message.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, message.Text)
+}
+
+func patchForViewAndSetPromoted(cleanTagsPolicy *services.StripTagsPolicy, message *dto.DisplayMessageDto, promote bool) {
+	patchForView(cleanTagsPolicy, message)
 	message.PinnedPromoted = &promote
 }
 
@@ -1542,7 +1752,7 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, displayM
 		return err
 	}
 
-	patchForView(mc.stripAllTags, copiedMsg, promote)
+	patchForViewAndSetPromoted(mc.stripAllTags, copiedMsg, promote)
 
 	// notify about promote to the pinned
 	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, &dto.PinnedMessageEvent{

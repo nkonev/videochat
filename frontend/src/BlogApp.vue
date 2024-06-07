@@ -142,6 +142,11 @@ html {
     text-decoration none
 }
 
+.gray-link {
+    color: $grayColor;
+    text-decoration none
+}
+
 .nodecorated-link {
     text-decoration none
 }

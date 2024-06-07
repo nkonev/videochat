@@ -62,6 +62,11 @@ export const getBlogLink = (chatId) => {
     return blog_post + "/" + chatId;
 }
 
+export const getPublicMessageLink = (chatId, messageId) => {
+    // see also public_message in routes.js
+    return getUrlPrefix() + chat + '/' + chatId + '/public/' + messageId;
+}
+
 export const getHumanReadableDate = (timestamp) => {
     const parsedDate = parseISO(timestamp);
     let formatString = 'HH:mm:ss';

@@ -28,6 +28,7 @@
       <v-list-item v-if="shouldDisplayCopyCallLinkDesktop()" @click.prevent="copyCallLink()" prepend-icon="mdi-content-copy" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')"></v-list-item>
       <v-list-item v-if="canShowFiles()" @click.prevent="openFiles()" prepend-icon="mdi-file-download" :title="$vuetify.locale.t('$vuetify.files')"></v-list-item>
       <v-list-item @click="openPinnedMessages()" v-if="shouldPinnedMessages()" prepend-icon="mdi-pin" :title="$vuetify.locale.t('$vuetify.pinned_messages')"></v-list-item>
+      <v-list-item @click="openPublishedMessages()" v-if="shouldPublishedMessages()" prepend-icon="mdi-export" :title="$vuetify.locale.t('$vuetify.published_messages')"></v-list-item>
       <v-list-item @click.prevent="onNotificationsClicked()" v-if="shouldDisplayNotifications()">
         <template v-slot:prepend>
             <v-badge
@@ -69,7 +70,7 @@ import bus, {
     ADD_VIDEO_SOURCE_DIALOG,
     LOGGED_OUT, OPEN_CHAT_EDIT,
     OPEN_NOTIFICATIONS_DIALOG,
-    OPEN_PINNED_MESSAGES_MODAL,
+    OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
     OPEN_SETTINGS,
     OPEN_VIEW_FILES_DIALOG
 } from "@/bus/bus";
@@ -179,7 +180,13 @@ export default {
     openPinnedMessages() {
       bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.$route.params.id});
     },
+    openPublishedMessages() {
+        bus.emit(OPEN_PUBLISHED_MESSAGES_MODAL, {chatId: this.$route.params.id});
+    },
     shouldPinnedMessages() {
+      return this.chatStore.currentUser && hasLength(this.chatId);
+    },
+    shouldPublishedMessages() {
       return this.chatStore.currentUser && hasLength(this.chatId);
     },
     shouldDisplayNotifications() {

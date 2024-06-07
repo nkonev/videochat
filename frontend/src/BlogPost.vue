@@ -7,10 +7,10 @@
     <div class="pr-1 mr-1 pl-1 mt-0 ml-3 message-item-root" >
       <div class="message-item-with-buttons-wrapper">
         <v-list-item class="pl-2 pt-0" v-if="blogDto?.owner">
-          <template v-slot:prepend v-if="hasLength(blogDto.owner.avatar)">
+          <template v-slot:prepend v-if="hasLength(blogDto.owner?.avatar)">
             <div class="item-avatar pr-0 mr-3">
               <a :href="getProfileLink(blogDto.owner)" class="user-link">
-                  <img :src="blogDto.owner.avatar">
+                  <img :src="blogDto.owner?.avatar">
               </a>
             </div>
 
@@ -19,7 +19,7 @@
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
               <div class="author-and-date" v-if="blogDto.owner">
-                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(blogDto.owner, true)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
+                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(blogDto.owner, true)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner?.login}}</a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">

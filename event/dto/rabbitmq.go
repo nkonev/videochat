@@ -26,6 +26,11 @@ type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 }
 
+type PublishedMessageEvent struct {
+	Message    DisplayMessageDto `json:"message"`
+	TotalCount int64             `json:"totalCount"`
+}
+
 type ReactionChangedEvent struct {
 	MessageId             int64                 `json:"messageId"`
 	Reaction              Reaction              `json:"reaction"`
@@ -43,6 +48,7 @@ type ChatEvent struct {
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
 	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
 	FileEvent                    *WrappedFileInfoDto           `json:"fileEvent"`
+	PublishedMessageNotification *PublishedMessageEvent        `json:"publishedMessageEvent"`
 	ReactionChangedEvent         *ReactionChangedEvent         `json:"reactionChangedEvent"`
 }
 

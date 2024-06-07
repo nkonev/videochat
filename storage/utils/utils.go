@@ -15,6 +15,8 @@ const USER_PRINCIPAL_DTO = "userPrincipalDto"
 
 type H map[string]interface{}
 
+const MessageIdNonExistent = -1
+
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
 	for i, str := range strings {

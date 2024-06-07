@@ -1,7 +1,7 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" scrollable>
-            <v-card :title="$vuetify.locale.t('$vuetify.pinned_messages_full')">
+            <v-card :title="$vuetify.locale.t('$vuetify.published_messages')">
                 <v-card-text class="ma-0 pa-0">
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="itemsDto.count > 0">
@@ -12,20 +12,23 @@
                                     </template>
 
                                     <v-list-item-subtitle style="opacity: 1">
-                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><router-link class="gray-link" :to="getPinnedRouteObject(item)">{{getDate(item)}}</router-link>
+                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><router-link class="gray-link" :to="getPublishedRouteObject(item)">{{getDate(item)}}</router-link>
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
-                                        <router-link :to="getPinnedRouteObject(item)" :class="getItemClass(item)">
+                                        <router-link :to="getPublishedRouteObject(item)" :class="getItemClass(item)">
                                             <div v-html="item.text"></div>
                                         </router-link>
                                     </v-list-item-title>
 
                                     <template v-slot:append>
-                                        <v-btn variant="flat" icon @click="promotePinMessage(item)">
-                                            <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.pin_message')">mdi-pin</v-icon>
+                                        <v-btn variant="flat" icon @click="openPublishedMessage(item)">
+                                            <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.open_published_message')">mdi-eye</v-icon>
                                         </v-btn>
-                                        <v-btn variant="flat" icon @click="unpinMessage(item)">
-                                            <v-icon color="red" dark :title="$vuetify.locale.t('$vuetify.remove_from_pinned')">mdi-delete</v-icon>
+                                        <v-btn variant="flat" icon @click="copyLinkToPublishedMessage(item)">
+                                            <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.copy_public_link_to_message')">mdi-link</v-icon>
+                                        </v-btn>
+                                        <v-btn variant="flat" icon @click="unpublishMessage(item)">
+                                            <v-icon color="red" dark :title="$vuetify.locale.t('$vuetify.remove_from_public')">mdi-delete</v-icon>
                                         </v-btn>
                                     </template>
                                 </v-list-item>
@@ -33,7 +36,7 @@
                             </template>
                         </template>
                         <template v-else>
-                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_pin_messages') }}</v-card-text>
+                            <v-card-text>{{ $vuetify.locale.t('$vuetify.no_published_messages') }}</v-card-text>
                         </template>
                     </v-list>
                     <v-progress-circular
@@ -81,10 +84,11 @@
 
 import bus, {
     LOGGED_OUT,
-    OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
+    OPEN_PUBLISHED_MESSAGES_MODAL,
+    PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_REMOVE,
 } from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, hasLength} from "./utils";
+import {getHumanReadableDate, getPublicMessageLink, hasLength} from "./utils";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 
@@ -106,7 +110,7 @@ export default {
             this.chatId = chatId;
         },
         initiateRequest() {
-            return axios.get(`/api/chat/${this.chatId}/message/pin`, {
+            return axios.get(`/api/chat/${this.chatId}/message/publish`, {
                 params: {
                     page: this.translatePage(),
                     size: pageSize,
@@ -139,20 +143,21 @@ export default {
             this.chatId = null;
         },
 
-        unpinMessage(dto) {
-            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
+        unpublishMessage(dto) {
+            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
                 params: {
-                    pin: false
+                    publish: false
                 },
             });
-
         },
-        promotePinMessage(dto) {
-            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
-                params: {
-                    pin: true
-                },
-            });
+        copyLinkToPublishedMessage(dto) {
+            const link = getPublicMessageLink(this.chatId, dto.id)
+            navigator.clipboard.writeText(link);
+        },
+        openPublishedMessage(dto) {
+            const link = getPublicMessageLink(this.chatId, dto.id);
+            // window.location.href = link
+            window.open(link, '_blank').focus();
         },
         getDate(item) {
             return getHumanReadableDate(item.createDateTime)
@@ -160,10 +165,10 @@ export default {
         getOwner(owner) {
             return owner.login
         },
-        onPinnedMessageUnpromoted(dto) {
+        onPublishedMessageRemove(dto) {
             this.onItemRemovedEvent(dto);
         },
-        onPinnedMessagePromoted(dto) {
+        onPublishedMessageAdd(dto) {
             if (this.dataLoaded) {
                 // reset previously promoted
                 this.itemsDto.items.forEach((item)=>{
@@ -176,7 +181,7 @@ export default {
         isVideoRoute() {
             return this.$route.name == videochat_name
         },
-        getPinnedRouteObject(item) {
+        getPublishedRouteObject(item) {
             const routeName = this.isVideoRoute() ? videochat_name : chat_name;
             return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
         },
@@ -184,7 +189,6 @@ export default {
             return {
                 "text-primary": true,
                 "pinned-text": true,
-                'pinned-bold': !!item.pinnedPromoted,
             }
         },
         resetOnRouteIdChange() {
@@ -195,15 +199,15 @@ export default {
         },
     },
     mounted() {
-        bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
-        bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-        bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+        bus.on(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
+        bus.on(PUBLISHED_MESSAGE_ADD, this.onPublishedMessageAdd);
+        bus.on(PUBLISHED_MESSAGE_REMOVE, this.onPublishedMessageRemove);
         bus.on(LOGGED_OUT, this.onLogout);
     },
     beforeUnmount() {
-        bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
-        bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
-        bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+        bus.off(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
+        bus.off(PUBLISHED_MESSAGE_ADD, this.onPublishedMessageAdd);
+        bus.off(PUBLISHED_MESSAGE_REMOVE, this.onPublishedMessageRemove);
         bus.off(LOGGED_OUT, this.onLogout);
     },
 }

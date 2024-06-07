@@ -81,6 +81,9 @@ export const FILE_CREATED = "fileCreated";
 export const FILE_REMOVED = "fileRemoved";
 export const FILE_UPDATED = "fileUpdated";
 
+export const PUBLISHED_MESSAGE_ADD = "publishedMessageAdd";
+export const PUBLISHED_MESSAGE_REMOVE = "publishedMessageRemove";
+
 export const REACTION_CHANGED = "reactionChanged";
 
 export const REACTION_REMOVED = "reactionRemoved";
@@ -95,6 +98,7 @@ export const OPEN_MESSAGE_READ_USERS_DIALOG = "openMessageReadUsersDialog";
 export const FOCUS = "focus";
 
 export const OPEN_PINNED_MESSAGES_MODAL = "openPinnedMessagesModal";
+export const OPEN_PUBLISHED_MESSAGES_MODAL = "openPublishdMessagesModal";
 
 export const OPEN_RESEND_TO_MODAL = "openSendTo";
 

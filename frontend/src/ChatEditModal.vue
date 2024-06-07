@@ -70,6 +70,14 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            v-model="editDto.regularParticipantCanPublishMessage"
+                            :label="$vuetify.locale.t('$vuetify.regular_participant_can_publish')"
+                            hide-details
+                            density="compact"
+                            color="primary"
+                        ></v-checkbox>
+
+                        <v-checkbox
                             v-if="canCreateBlog"
                             v-model="editDto.blog"
                             :label="$vuetify.locale.t('$vuetify.blog')"
@@ -211,6 +219,7 @@
                 canResend: chatDto.canResend,
                 availableToSearch: chatDto.availableToSearch,
                 blog: chatDto.blog,
+                regularParticipantCanPublishMessage: chatDto.regularParticipantCanPublishMessage,
               }
             },
             loadData(editChatId) {
@@ -272,16 +281,8 @@
             saveChat() {
                 const valid = this.validate();
                 if (valid) {
-                    const dtoToPost = {
-                        id: this.editDto.id,
-                        name: this.editDto.name,
-                        participantIds: this.isNew ? this.editDto.participantIds : null,
-                        avatar: this.editDto.avatar,
-                        avatarBig: this.editDto.avatarBig,
-                        canResend: this.editDto.canResend,
-                        availableToSearch: this.editDto.availableToSearch,
-                        blog: this.editDto.blog,
-                    };
+                    const dtoToPost = this.extractNecessaryFields(this.editDto);
+                    dtoToPost.participantIds = this.isNew ? this.editDto.participantIds : null
 
                     this.loading = true;
                     if (this.isNew) {

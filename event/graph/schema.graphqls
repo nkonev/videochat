@@ -42,6 +42,7 @@ type DisplayMessageDto {
     blogPost:       Boolean!
     pinnedPromoted: Boolean
     reactions:      [Reaction!]!
+    published:      Boolean!
 }
 
 type MessageDeletedDto {
@@ -83,6 +84,8 @@ type ChatDto {
     pinned:              Boolean!
     blog:                Boolean!
     loginColor:          String
+    regularParticipantCanPublishMessage: Boolean!,
+    canPublishMessage: Boolean!,
 }
 
 type ChatDeletedDto {
@@ -106,6 +109,11 @@ type PreviewCreatedEvent {
     previewUrl: String
     aType: String
     correlationId: String
+}
+
+type PublishedMessageEvent {
+    message: DisplayMessageDto!
+    count: Int64!
 }
 
 type PinnedMessageEvent {
@@ -151,6 +159,7 @@ type ChatEvent {
     participantsEvent: [ParticipantWithAdmin!]
     promoteMessageEvent: PinnedMessageEvent
     fileEvent: WrappedFileInfoDto
+    publishedMessageEvent: PublishedMessageEvent
     reactionChangedEvent: ReactionChangedEvent
 }
 

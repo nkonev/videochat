@@ -8,20 +8,31 @@ import {
     confirmation_pending,
     confirmation_pending_name,
     forgot_password,
-    forgot_password_name, check_email,
-    check_email_name, password_restore_enter_new, password_restore_enter_new_name,
+    forgot_password_name,
+    check_email,
+    check_email_name,
+    password_restore_enter_new,
+    password_restore_enter_new_name,
     prefix,
     profile,
     profile_list_name,
     profile_name,
     profiles,
     registration,
-    registration_name, registration_resend_email, registration_resend_email_name, root,
-    root_name, video_suffix, videochat_name,
+    registration_name,
+    registration_resend_email,
+    registration_resend_email_name,
+    root,
+    root_name,
+    video_suffix,
+    videochat_name,
     wrong_confirmation_token,
     wrong_confirmation_token_name,
     wrong_user,
-    wrong_user_name, wrong_change_email_confirmation_token, wrong_change_email_confirmation_token_name
+    wrong_user_name,
+    wrong_change_email_confirmation_token,
+    wrong_change_email_confirmation_token_name,
+    public_message_name, public_message
 } from "@/router/routes";
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
@@ -103,7 +114,11 @@ const routes = [
         path: wrong_change_email_confirmation_token,
         component: () => import('@/UserChangeEmailWrongConfirmationToken.vue'),
     },
-
+    {
+        name: public_message_name,
+        path: public_message,
+        component: () => import('@/MessagePublicView.vue'),
+    },
 ]
 
 const router = createRouter({

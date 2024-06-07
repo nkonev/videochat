@@ -280,5 +280,12 @@ export default {
     seconds: "sec",
     waiting_for_devices: "Waiting for device",
     treat_newlines_as_in_html: "During pasting treat newlines as in HTML (e. g. swallow)",
-    consider_messages_of_this_chat_as_unread: "Unread messages"
+    consider_messages_of_this_chat_as_unread: "Unread messages",
+    remove_from_public: "Remove public",
+    publish_message: "Publish",
+    published_messages: "Public messages",
+    copy_public_link_to_message: "Copy public link",
+    regular_participant_can_publish: "Regular participant can publish messages",
+    open_published_message: "Open published message",
+    no_published_messages: "No published messages"
 }

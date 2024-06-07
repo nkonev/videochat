@@ -62,11 +62,31 @@ func NewChatAccessClient() *RestClient {
 }
 
 func (h *RestClient) CheckAccess(userId *int64, chatId int64, c context.Context) (bool, error) {
-	builder := fmt.Sprintf("%v%v?chatId=%v&considerCanResend=true", h.baseUrl, h.accessPath, chatId)
-	if userId != nil {
-		builder += "&userId=" + utils.Int64ToString(*userId)
+	return h.CheckAccessExtended(userId, chatId, utils.MessageIdNonExistent, "", c)
+}
+
+func (h *RestClient) CheckAccessExtended(userId *int64, chatId int64, messageId int64, fileId string, c context.Context) (bool, error) {
+	var url0 string
+
+	parsed, err := url.Parse(fmt.Sprintf("%v%v", h.baseUrl, h.accessPath))
+	if err != nil {
+		return false, err
 	}
-	url0 := builder
+	query := parsed.Query()
+
+	if messageId != utils.MessageIdNonExistent {
+		query.Set("chatId", utils.Int64ToString(chatId))
+		query.Set("messageId", utils.Int64ToString(messageId))
+		query.Set("fileId", fileId)
+	} else {
+		query.Set("chatId", utils.Int64ToString(chatId))
+		if userId != nil {
+			query.Set("userId", utils.Int64ToString(*userId))
+		}
+		query.Set("considerCanResend", utils.BooleanToString(true))
+	}
+	parsed.RawQuery = query.Encode()
+	url0 = parsed.String()
 
 	req, err := http.NewRequest("GET", url0, nil)
 	if err != nil {

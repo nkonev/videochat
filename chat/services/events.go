@@ -453,6 +453,45 @@ func (not *Events) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64,
 	}
 }
 
+func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg *dto.PublishedMessageEvent, publish bool, participantIds []int64) {
+
+	var eventType = ""
+	if publish {
+		eventType = "published_message_add"
+	} else {
+		eventType = "published_message_remove"
+	}
+
+	for _, participantId := range participantIds {
+		var copiedMsg = &dto.DisplayMessageDto{}
+		err := deepcopy.Copy(copiedMsg, msg.Message)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy message: %s", err)
+			return
+		}
+
+		copiedMsg.SetPersonalizedFields(participantId)
+
+		var copiedPublishedEvent = &dto.PublishedMessageEvent{}
+		err = deepcopy.Copy(copiedPublishedEvent, msg)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy pinned event: %s", err)
+			return
+		}
+
+		copiedPublishedEvent.Message = *copiedMsg
+
+		err = not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			EventType:                    eventType,
+			PublishedMessageNotification: copiedPublishedEvent,
+			UserId:                       participantId,
+			ChatId:                       chatId,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+}
 
 func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int) {
 	var eventType string

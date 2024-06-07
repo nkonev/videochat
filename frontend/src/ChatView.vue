@@ -31,7 +31,7 @@
                 </v-alert>
               </div>
 
-              <MessageList :canResend="chatDto.canResend" :blog="chatDto.blog"/>
+              <MessageList :canResend="chatDto.canResend" :blog="chatDto.blog" :canPublishMessage="chatDto.canPublishMessage"/>
 
               <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               <v-btn v-if="!isMobile() && chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" class="new-fab" @click="scrollDown()"></v-btn>
@@ -62,20 +62,32 @@ import {hasLength, isCalling, isChatRoute, new_message, setTitle} from "@/utils"
 import bus, {
     CHAT_DELETED,
     CHAT_EDITED,
-    FILE_CREATED, FILE_REMOVED, FILE_UPDATED, FOCUS, LOGGED_OUT,
+    FILE_CREATED,
+    FILE_REMOVED,
+    FILE_UPDATED,
+    FOCUS,
+    LOGGED_OUT,
     MESSAGE_ADD,
     MESSAGE_BROADCAST,
     MESSAGE_DELETED,
-    MESSAGE_EDITED, OPEN_EDIT_MESSAGE,
+    MESSAGE_EDITED,
+    OPEN_EDIT_MESSAGE,
     PARTICIPANT_ADDED,
     PARTICIPANT_DELETED,
     PARTICIPANT_EDITED,
     PINNED_MESSAGE_PROMOTED,
     PINNED_MESSAGE_UNPROMOTED,
     PREVIEW_CREATED,
-    PROFILE_SET, REACTION_CHANGED, REACTION_REMOVED, REFRESH_ON_WEBSOCKET_RESTORED, SCROLL_DOWN,
+    PROFILE_SET,
+    PUBLISHED_MESSAGE_ADD,
+    PUBLISHED_MESSAGE_REMOVE,
+    REACTION_CHANGED,
+    REACTION_REMOVED,
+    REFRESH_ON_WEBSOCKET_RESTORED,
+    SCROLL_DOWN,
     USER_TYPING,
-    VIDEO_CALL_USER_COUNT_CHANGED, VIDEO_DIAL_STATUS_CHANGED
+    VIDEO_CALL_USER_COUNT_CHANGED,
+    VIDEO_DIAL_STATUS_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -263,6 +275,7 @@ export default {
                                     }
                                     reaction
                                   }
+                                  published
                                 }
 
                                 subscription{
@@ -300,6 +313,12 @@ export default {
                                       loginColor
                                     }
                                     promoteMessageEvent {
+                                      count
+                                      message {
+                                        ...DisplayMessageDtoFragment
+                                      }
+                                    }
+                                    publishedMessageEvent {
                                       count
                                       message {
                                         ...DisplayMessageDtoFragment
@@ -381,6 +400,12 @@ export default {
       } else if (getChatEventsData(e).eventType === "pinned_message_unpromote") {
         const d = getChatEventsData(e).promoteMessageEvent;
         bus.emit(PINNED_MESSAGE_UNPROMOTED, d);
+      } else if (getChatEventsData(e).eventType === "published_message_add") {
+          const d = getChatEventsData(e).publishedMessageEvent;
+          bus.emit(PUBLISHED_MESSAGE_ADD, d);
+      } else if (getChatEventsData(e).eventType === "published_message_remove") {
+          const d = getChatEventsData(e).publishedMessageEvent;
+          bus.emit(PUBLISHED_MESSAGE_REMOVE, d);
       } else if (getChatEventsData(e).eventType === "file_created") {
         const d = getChatEventsData(e).fileEvent;
         bus.emit(FILE_CREATED, d);

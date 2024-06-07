@@ -19,30 +19,32 @@ type ChatDeletedDto struct {
 }
 
 type ChatDto struct {
-	ID                  int64                   `json:"id"`
-	Name                string                  `json:"name"`
-	Avatar              *string                 `json:"avatar"`
-	AvatarBig           *string                 `json:"avatarBig"`
-	ShortInfo           *string                 `json:"shortInfo"`
-	LastUpdateDateTime  time.Time               `json:"lastUpdateDateTime"`
-	ParticipantIds      []int64                 `json:"participantIds"`
-	CanEdit             *bool                   `json:"canEdit"`
-	CanDelete           *bool                   `json:"canDelete"`
-	CanLeave            *bool                   `json:"canLeave"`
-	UnreadMessages      int64                   `json:"unreadMessages"`
-	CanBroadcast        bool                    `json:"canBroadcast"`
-	CanVideoKick        bool                    `json:"canVideoKick"`
-	CanChangeChatAdmins bool                    `json:"canChangeChatAdmins"`
-	TetATet             bool                    `json:"tetATet"`
-	CanAudioMute        bool                    `json:"canAudioMute"`
-	Participants        []*ParticipantWithAdmin `json:"participants"`
-	ParticipantsCount   int                     `json:"participantsCount"`
-	CanResend           bool                    `json:"canResend"`
-	AvailableToSearch   bool                    `json:"availableToSearch"`
-	IsResultFromSearch  *bool                   `json:"isResultFromSearch"`
-	Pinned              bool                    `json:"pinned"`
-	Blog                bool                    `json:"blog"`
-	LoginColor          *string                 `json:"loginColor"`
+	ID                                  int64                   `json:"id"`
+	Name                                string                  `json:"name"`
+	Avatar                              *string                 `json:"avatar"`
+	AvatarBig                           *string                 `json:"avatarBig"`
+	ShortInfo                           *string                 `json:"shortInfo"`
+	LastUpdateDateTime                  time.Time               `json:"lastUpdateDateTime"`
+	ParticipantIds                      []int64                 `json:"participantIds"`
+	CanEdit                             *bool                   `json:"canEdit"`
+	CanDelete                           *bool                   `json:"canDelete"`
+	CanLeave                            *bool                   `json:"canLeave"`
+	UnreadMessages                      int64                   `json:"unreadMessages"`
+	CanBroadcast                        bool                    `json:"canBroadcast"`
+	CanVideoKick                        bool                    `json:"canVideoKick"`
+	CanChangeChatAdmins                 bool                    `json:"canChangeChatAdmins"`
+	TetATet                             bool                    `json:"tetATet"`
+	CanAudioMute                        bool                    `json:"canAudioMute"`
+	Participants                        []*ParticipantWithAdmin `json:"participants"`
+	ParticipantsCount                   int                     `json:"participantsCount"`
+	CanResend                           bool                    `json:"canResend"`
+	AvailableToSearch                   bool                    `json:"availableToSearch"`
+	IsResultFromSearch                  *bool                   `json:"isResultFromSearch"`
+	Pinned                              bool                    `json:"pinned"`
+	Blog                                bool                    `json:"blog"`
+	LoginColor                          *string                 `json:"loginColor"`
+	RegularParticipantCanPublishMessage bool                    `json:"regularParticipantCanPublishMessage"`
+	CanPublishMessage                   bool                    `json:"canPublishMessage"`
 }
 
 type ChatEvent struct {
@@ -55,6 +57,7 @@ type ChatEvent struct {
 	ParticipantsEvent     []*ParticipantWithAdmin       `json:"participantsEvent"`
 	PromoteMessageEvent   *PinnedMessageEvent           `json:"promoteMessageEvent"`
 	FileEvent             *WrappedFileInfoDto           `json:"fileEvent"`
+	PublishedMessageEvent *PublishedMessageEvent        `json:"publishedMessageEvent"`
 	ReactionChangedEvent  *ReactionChangedEvent         `json:"reactionChangedEvent"`
 }
 
@@ -88,6 +91,7 @@ type DisplayMessageDto struct {
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
 	Reactions      []*Reaction           `json:"reactions"`
+	Published      bool                  `json:"published"`
 }
 
 type EmbedMessageResponse struct {
@@ -202,6 +206,11 @@ type PreviewCreatedEvent struct {
 	PreviewURL    *string `json:"previewUrl"`
 	AType         *string `json:"aType"`
 	CorrelationID *string `json:"correlationId"`
+}
+
+type PublishedMessageEvent struct {
+	Message *DisplayMessageDto `json:"message"`
+	Count   int64              `json:"count"`
 }
 
 type Query struct {

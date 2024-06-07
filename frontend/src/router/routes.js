@@ -29,6 +29,8 @@ export const password_restore_enter_new = `${prefix}/password-restore/enter-new`
 
 export const registration_resend_email = `${prefix}/registration/resend-email`;
 
+// see also getPublicMessageLink in utils.js
+export const public_message = `${prefix}/chat/:id/public/:messageId`;
 
 
 export const root_name = 'root';
@@ -62,3 +64,5 @@ export const password_restore_enter_new_name = "password_restore_enter_new";
 export const registration_resend_email_name = "registration_resend_email";
 
 export const wrong_change_email_confirmation_token_name = "wrong_email_confirmation_token";
+
+export const public_message_name = `publicMessage`;

@@ -546,6 +546,11 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		result.PromoteMessageEvent = convertPinnedMessageEvent(promotePinnedMessageEvent)
 	}
 
+	publishedPinnedMessageEvent := e.PublishedMessageNotification
+	if publishedPinnedMessageEvent != nil {
+		result.PublishedMessageEvent = convertPublishedMessageEvent(publishedPinnedMessageEvent)
+	}
+
 	fileEvent := e.FileEvent
 	if fileEvent != nil {
 		result.FileEvent = &model.WrappedFileInfoDto{
@@ -595,6 +600,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		Pinned:         messageDto.Pinned,
 		BlogPost:       messageDto.BlogPost,
 		PinnedPromoted: messageDto.PinnedPromoted,
+		Published:      messageDto.Published,
 	}
 	embedMessageDto := messageDto.EmbedMessage
 	if embedMessageDto != nil {
@@ -635,6 +641,14 @@ func convertPinnedMessageEvent(e *dto.PinnedMessageEvent) *model.PinnedMessageEv
 		Count:   e.TotalCount,
 	}
 }
+
+func convertPublishedMessageEvent(e *dto.PublishedMessageEvent) *model.PublishedMessageEvent {
+	return &model.PublishedMessageEvent{
+		Message: convertDisplayMessageDto(&e.Message),
+		Count:   e.TotalCount,
+	}
+}
+
 func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
 	var ret = &model.GlobalEvent{
@@ -643,30 +657,32 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	chatDtoWithAdmin := e.ChatNotification
 	if chatDtoWithAdmin != nil {
 		ret.ChatEvent = &model.ChatDto{ // dto.ChatDtoWithAdmin
-			ID:                  chatDtoWithAdmin.Id,
-			Name:                chatDtoWithAdmin.Name,
-			Avatar:              chatDtoWithAdmin.Avatar.Ptr(),
-			AvatarBig:           chatDtoWithAdmin.AvatarBig.Ptr(),
-			ShortInfo:           chatDtoWithAdmin.ShortInfo.Ptr(),
-			LastUpdateDateTime:  chatDtoWithAdmin.LastUpdateDateTime,
-			ParticipantIds:      chatDtoWithAdmin.ParticipantIds,
-			CanEdit:             chatDtoWithAdmin.CanEdit.Ptr(),
-			CanDelete:           chatDtoWithAdmin.CanDelete.Ptr(),
-			CanLeave:            chatDtoWithAdmin.CanLeave.Ptr(),
-			UnreadMessages:      chatDtoWithAdmin.UnreadMessages,
-			CanBroadcast:        chatDtoWithAdmin.CanBroadcast,
-			CanVideoKick:        chatDtoWithAdmin.CanVideoKick,
-			CanAudioMute:        chatDtoWithAdmin.CanAudioMute,
-			CanChangeChatAdmins: chatDtoWithAdmin.CanChangeChatAdmins,
-			TetATet:             chatDtoWithAdmin.IsTetATet,
-			ParticipantsCount:   chatDtoWithAdmin.ParticipantsCount,
-			Participants:        convertParticipantsWithAdmin(chatDtoWithAdmin.Participants),
-			CanResend:           chatDtoWithAdmin.CanResend,
-			AvailableToSearch:   chatDtoWithAdmin.AvailableToSearch,
-			IsResultFromSearch:  chatDtoWithAdmin.IsResultFromSearch.Ptr(),
-			Pinned:              chatDtoWithAdmin.Pinned,
-			Blog:                chatDtoWithAdmin.Blog,
-			LoginColor:          chatDtoWithAdmin.LoginColor.Ptr(),
+			ID:                                  chatDtoWithAdmin.Id,
+			Name:                                chatDtoWithAdmin.Name,
+			Avatar:                              chatDtoWithAdmin.Avatar.Ptr(),
+			AvatarBig:                           chatDtoWithAdmin.AvatarBig.Ptr(),
+			ShortInfo:                           chatDtoWithAdmin.ShortInfo.Ptr(),
+			LastUpdateDateTime:                  chatDtoWithAdmin.LastUpdateDateTime,
+			ParticipantIds:                      chatDtoWithAdmin.ParticipantIds,
+			CanEdit:                             chatDtoWithAdmin.CanEdit.Ptr(),
+			CanDelete:                           chatDtoWithAdmin.CanDelete.Ptr(),
+			CanLeave:                            chatDtoWithAdmin.CanLeave.Ptr(),
+			UnreadMessages:                      chatDtoWithAdmin.UnreadMessages,
+			CanBroadcast:                        chatDtoWithAdmin.CanBroadcast,
+			CanVideoKick:                        chatDtoWithAdmin.CanVideoKick,
+			CanAudioMute:                        chatDtoWithAdmin.CanAudioMute,
+			CanChangeChatAdmins:                 chatDtoWithAdmin.CanChangeChatAdmins,
+			TetATet:                             chatDtoWithAdmin.IsTetATet,
+			ParticipantsCount:                   chatDtoWithAdmin.ParticipantsCount,
+			Participants:                        convertParticipantsWithAdmin(chatDtoWithAdmin.Participants),
+			CanResend:                           chatDtoWithAdmin.CanResend,
+			AvailableToSearch:                   chatDtoWithAdmin.AvailableToSearch,
+			IsResultFromSearch:                  chatDtoWithAdmin.IsResultFromSearch.Ptr(),
+			Pinned:                              chatDtoWithAdmin.Pinned,
+			Blog:                                chatDtoWithAdmin.Blog,
+			LoginColor:                          chatDtoWithAdmin.LoginColor.Ptr(),
+			RegularParticipantCanPublishMessage: chatDtoWithAdmin.RegularParticipantCanPublishMessage,
+			CanPublishMessage:                   chatDtoWithAdmin.CanPublishMessage,
 		}
 	}
 

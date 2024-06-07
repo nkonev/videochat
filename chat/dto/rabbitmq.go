@@ -5,6 +5,11 @@ type PinnedMessageEvent struct {
 	TotalCount int64             `json:"totalCount"`
 }
 
+type PublishedMessageEvent struct {
+	Message    DisplayMessageDto `json:"message"`
+	TotalCount int64             `json:"totalCount"`
+}
+
 type ReactionChangedEvent struct {
 	MessageId             int64                 `json:"messageId"`
 	Reaction              Reaction              `json:"reaction"`
@@ -20,6 +25,7 @@ type ChatEvent struct {
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
 	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
+	PublishedMessageNotification *PublishedMessageEvent        `json:"publishedMessageEvent"`
 	ReactionChangedEvent         *ReactionChangedEvent         `json:"reactionChangedEvent"`
 }
 

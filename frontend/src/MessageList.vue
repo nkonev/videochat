@@ -24,6 +24,7 @@
             ref="contextMenuRef"
             :canResend="canResend"
             :isBlog="blog"
+            :canPublishMessage="canPublishMessage"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
             @replyOnMessage="this.replyOnMessage"
@@ -35,6 +36,8 @@
             @makeBlogPost="makeBlogPost"
             @goToBlog="goToBlog"
             @addReaction="addReaction"
+            @publishMessage="publishMessage"
+            @removePublic="removePublic"
           />
         </div>
 
@@ -60,13 +63,13 @@
       SET_EDIT_MESSAGE, CO_CHATTED_PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
     } from "@/bus/bus";
     import {
-      deepCopy, edit_message, embed_message_reply,
-      findIndex, getBlogLink,
-      hasLength, haveEmbed, isChatRoute,
-      replaceInArray,
-      replaceOrAppend,
-      replaceOrPrepend, reply_message,
-      setAnswerPreviewFields
+        deepCopy, edit_message, embed_message_reply,
+        findIndex, getBlogLink, getPublicMessageLink,
+        hasLength, haveEmbed, isChatRoute,
+        replaceInArray,
+        replaceOrAppend,
+        replaceOrPrepend, reply_message,
+        setAnswerPreviewFields
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -89,7 +92,7 @@
         hashMixin(),
         searchString(SEARCH_MODE_MESSAGES),
       ],
-      props: ['canResend', 'blog'],
+      props: ['canResend', 'blog', 'canPublishMessage'],
       data() {
         return {
           markInstance: null,
@@ -484,7 +487,7 @@
         },
         onUserProfileChanged(user) {
           this.items.forEach(item => {
-            if (item.owner.id == user.id) {
+            if (item.owner?.id == user.id) {
               item.owner = user;
             }
           });
@@ -518,6 +521,23 @@
           if (foundMessage) {
             foundMessage.reactions = foundMessage.reactions.filter(reaction => reaction.reaction != dto.reaction.reaction);
           }
+        },
+        publishMessage(dto) {
+            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
+                params: {
+                    publish: true
+                },
+            }).then(()=>{
+                const link = getPublicMessageLink(this.chatId, dto.id);
+                navigator.clipboard.writeText(link);
+            })
+        },
+        removePublic(dto) {
+            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
+                params: {
+                    publish: false
+                },
+            });
         },
       },
       created() {

@@ -14,6 +14,7 @@
           ></v-progress-linear>
 
           <v-badge
+              v-if="shouldShowNavigationDrawer"
               :content="notificationsCount"
               :model-value="showNotificationBadge"
               color="red"
@@ -84,6 +85,7 @@
               {{ getSubtitle() }}
             </div>
           </div>
+          <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click="onGoToChat()">{{$vuetify.locale.t('$vuetify.go_to_chat')}}</v-btn>
         </template>
 
         <template v-if="chatStore.isShowSearch">
@@ -178,9 +180,10 @@
         <MessageEditModal/>
         <ChooseSmileyModal/>
         <ChooseColorModal/>
+        <PublishedMessagesModal/>
       </v-main>
 
-    <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
+    <v-navigation-drawer v-if="shouldShowNavigationDrawer" :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
         <RightPanelActions/>
     </v-navigation-drawer>
   </v-app>
@@ -195,7 +198,7 @@ import {
     confirmation_pending_name,
     forgot_password_name, check_email_name, password_restore_enter_new_name,
     registration_name,
-    videochat_name, registration_resend_email_name
+    videochat_name, registration_resend_email_name, public_message_name, messageIdHashPrefix
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
@@ -259,6 +262,7 @@ import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
 import {getStoredLanguage} from "@/store/localStore";
 import ChooseColorModal from "@/ChooseColorModal.vue";
+import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -306,6 +310,9 @@ export default {
         },
         shouldShowFileUpload() {
             return !!this.chatStore.fileUploadingQueue.length
+        },
+        shouldShowNavigationDrawer() {
+            return this.$route.name != public_message_name
         },
     },
     methods: {
@@ -418,6 +425,8 @@ export default {
                         pinned
                         blog
                         loginColor
+                        regularParticipantCanPublishMessage
+                        canPublishMessage
                       }
                       chatDeletedEvent {
                         id
@@ -580,7 +589,7 @@ export default {
         },
         fetchProfileIfNeed() {
             if (!this.chatStore.currentUser) {
-                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == check_email_name || this.$route.name == confirmation_pending_name || this.$route.name == registration_resend_email_name) {
+                if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == check_email_name || this.$route.name == confirmation_pending_name || this.$route.name == registration_resend_email_name || this.$route.name == public_message_name) {
                     return
                 }
                 this.chatStore.fetchUserProfile().then(()=>{
@@ -701,6 +710,20 @@ export default {
         onWindowResized() {
             bus.emit(ON_WINDOW_RESIZED)
         },
+        shouldShowGoToChatButton() {
+            return this.$route.name == public_message_name
+        },
+        onGoToChat() {
+            const messageId = this.$route.params.messageId;
+            const routeObj = {
+                name: chat_name,
+                params: {
+                    id: this.chatId
+                },
+                hash: messageIdHashPrefix + messageId,
+            };
+            this.$router.push(routeObj);
+        },
     },
     components: {
         ChooseColorModal,
@@ -725,6 +748,7 @@ export default {
         MessageEditModal,
         CollapsedSearch,
         ChooseSmileyModal,
+        PublishedMessagesModal,
     },
     created() {
         createGraphQlClient();
@@ -846,6 +870,11 @@ html {
 
 .colored-link {
     color: $linkColor;
+    text-decoration none
+}
+
+.gray-link {
+    color: $grayColor;
     text-decoration none
 }
 

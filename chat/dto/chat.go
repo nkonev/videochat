@@ -6,29 +6,35 @@ import (
 )
 
 type BaseChatDto struct {
-	Id                  int64       `json:"id"`
-	Name                string      `json:"name"`
-	Avatar              null.String `json:"avatar"`
-	AvatarBig           null.String `json:"avatarBig"`
-	ShortInfo           null.String `json:"shortInfo"`
-	LastUpdateDateTime  time.Time   `json:"lastUpdateDateTime"`
-	ParticipantIds      []int64     `json:"participantIds"`
-	CanEdit             null.Bool   `json:"canEdit"`
-	CanDelete           null.Bool   `json:"canDelete"`
-	CanLeave            null.Bool   `json:"canLeave"`
-	UnreadMessages      int64       `json:"unreadMessages"`
-	CanBroadcast        bool        `json:"canBroadcast"`
-	CanVideoKick        bool        `json:"canVideoKick"`
-	CanChangeChatAdmins bool        `json:"canChangeChatAdmins"`
-	IsTetATet           bool        `json:"tetATet"`
-	CanAudioMute        bool        `json:"canAudioMute"`
-	ParticipantsCount   int         `json:"participantsCount"`
-	CanResend           bool        `json:"canResend"`
-	AvailableToSearch   bool        `json:"availableToSearch"`
-	IsResultFromSearch  null.Bool   `json:"isResultFromSearch"`
-	Pinned              bool        `json:"pinned"`
-	Blog                bool        `json:"blog"`
-	LoginColor          null.String `json:"loginColor"`
+	Id                           int64       `json:"id"`
+	Name                         string      `json:"name"`
+	Avatar                       null.String `json:"avatar"`
+	AvatarBig                    null.String `json:"avatarBig"`
+	ShortInfo                    null.String `json:"shortInfo"`
+	LastUpdateDateTime           time.Time   `json:"lastUpdateDateTime"`
+	ParticipantIds               []int64     `json:"participantIds"`
+	CanEdit                      null.Bool   `json:"canEdit"`
+	CanDelete                    null.Bool   `json:"canDelete"`
+	CanLeave                     null.Bool   `json:"canLeave"`
+	UnreadMessages               int64       `json:"unreadMessages"`
+	CanBroadcast                 bool        `json:"canBroadcast"`
+	CanVideoKick                 bool        `json:"canVideoKick"`
+	CanChangeChatAdmins          bool        `json:"canChangeChatAdmins"`
+	IsTetATet                    bool        `json:"tetATet"`
+	CanAudioMute                 bool        `json:"canAudioMute"`
+	ParticipantsCount            int         `json:"participantsCount"`
+	CanResend                    bool        `json:"canResend"`
+	AvailableToSearch            bool        `json:"availableToSearch"`
+	IsResultFromSearch           null.Bool   `json:"isResultFromSearch"`
+	Pinned                       bool        `json:"pinned"`
+	Blog                         bool        `json:"blog"`
+	LoginColor                          null.String `json:"loginColor"`
+	RegularParticipantCanPublishMessage bool `json:"regularParticipantCanPublishMessage"`
+	CanPublishMessage                   bool `json:"canPublishMessage"`
+}
+
+func CanPublishMessage(isAdmin, regularParticipantCanPublishMessage bool) bool {
+	return isAdmin || regularParticipantCanPublishMessage
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -40,6 +46,7 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 	copied.CanAudioMute = admin
 	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
 	copied.CanBroadcast = admin
+	copied.CanPublishMessage = CanPublishMessage(admin, copied.RegularParticipantCanPublishMessage)
 
 	if !participant {
 		copied.IsResultFromSearch = null.BoolFrom(true)

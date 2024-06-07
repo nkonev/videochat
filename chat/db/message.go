@@ -47,7 +47,7 @@ type Message struct {
 	Pinned      bool
 	PinPromoted bool
 	BlogPost    bool
-
+	Published   bool
 	Reactions []Reaction
 }
 
@@ -68,7 +68,8 @@ func selectMessageClause(chatId int64) string {
 			m.embed_owner_id as embedded_message_resend_owner_id,
 			m.pinned,
 			m.pin_promoted,
-			m.blog_post
+			m.blog_post,
+			m.published
 		FROM message_chat_%v m 
 		LEFT JOIN message_chat_%v me 
 			ON (m.embed_message_id = me.id AND m.embed_message_type = '%v')
@@ -93,6 +94,7 @@ func provideScanToMessage(message *Message) []any {
 		&message.Pinned,
 		&message.PinPromoted,
 		&message.BlogPost,
+		&message.Published,
 	}
 }
 
@@ -339,6 +341,39 @@ func (tx *Tx) GetMessage(chatId int64, userId int64, messageId int64) (*Message,
 	return getMessageCommon(tx, chatId, userId, messageId)
 }
 
+func getMessagePublicCommon(co CommonOperations, chatId int64, messageId int64) (*Message, error) {
+	row := co.QueryRow(fmt.Sprintf(`%v
+	WHERE 
+	    m.id = $1 
+		AND m.published = true`, selectMessageClause(chatId)),
+		messageId)
+	message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
+	err := row.Scan(provideScanToMessage(&message)[:]...)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+
+	reactions, err := getMessageReactionsCommon(co, chatId, messageId)
+	if err != nil {
+		return nil, err
+	}
+	message.Reactions = reactions
+
+	return &message, nil
+}
+
+func (db *DB) GetMessagePublic(chatId int64, messageId int64) (*Message, error) {
+	return getMessagePublicCommon(db, chatId, messageId)
+}
+
+func (tx *Tx) GetMessagePublic(chatId int64, messageId int64) (*Message, error) {
+	return getMessagePublicCommon(tx, chatId, messageId)
+}
+
 func (tx *Tx) SetBlogPost(chatId int64, messageId int64) error {
 	_, err := tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET blog_post = false", chatId))
 	if err != nil {
@@ -352,10 +387,11 @@ func (tx *Tx) SetBlogPost(chatId int64, messageId int64) error {
 	return nil
 }
 
-func getMessageBasicCommon(co CommonOperations, chatId int64, messageId int64) (*string, *int64, error) {
+func getMessageBasicCommon(co CommonOperations, chatId int64, messageId int64) (*string, *int64, *bool, error) {
 	row := co.QueryRow(fmt.Sprintf(`SELECT 
     	m.text,
-    	m.owner_id
+    	m.owner_id,
+    	m.published
 	FROM message_chat_%v m 
 	WHERE 
 	    m.id = $1 
@@ -363,23 +399,24 @@ func getMessageBasicCommon(co CommonOperations, chatId int64, messageId int64) (
 		messageId)
 	var result string
 	var owner int64
-	err := row.Scan(&result, &owner)
+	var published bool
+	err := row.Scan(&result, &owner, &published)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	if err != nil {
-		return nil, nil, eris.Wrap(err, "error during interacting with db")
+		return nil, nil, nil, eris.Wrap(err, "error during interacting with db")
 	} else {
-		return &result, &owner, nil
+		return &result, &owner, &published, nil
 	}
 }
 
-func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
+func (tx *Tx) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, *bool, error) {
 	return getMessageBasicCommon(tx, chatId, messageId)
 }
 
-func (db *DB) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, error) {
+func (db *DB) GetMessageBasic(chatId int64, messageId int64) (*string, *int64, *bool, error) {
 	return getMessageBasicCommon(db, chatId, messageId)
 }
 
@@ -784,10 +821,12 @@ func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(chatId int64, userIds 
 	}
 }
 
-func (tx *Tx) HasPinnedMessages(chatId int64) (hasPinnedMessages bool, err error) {
-	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_chat_%v WHERE pinned IS TRUE)", chatId))
-	err = eris.Wrap(row.Scan(&hasPinnedMessages), "error during interacting with db")
-	return
+func (tx *Tx) PublishMessage(chatId, messageId int64, shouldPublish bool) error {
+	_, err := tx.Exec(fmt.Sprintf("UPDATE message_chat_%v SET published = $1 WHERE id = $2", chatId), shouldPublish, messageId)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	return nil
 }
 
 func (tx *Tx) PinMessage(chatId, messageId int64, shouldPin bool) error {
@@ -822,8 +861,45 @@ func (tx *Tx) GetPinnedMessages(chatId int64, limit, offset int) ([]*Message, er
 	return list, nil
 }
 
+func (tx *Tx) GetPublishedMessages(chatId int64, limit, offset int) ([]*Message, error) {
+	rows, err := tx.Query(fmt.Sprintf(`%v
+			WHERE 
+			    m.published IS TRUE
+			ORDER BY m.id DESC
+			LIMIT $1 OFFSET $2`, selectMessageClause(chatId)),
+		limit, offset)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+
+	defer rows.Close()
+	list := make([]*Message, 0)
+	for rows.Next() {
+		message := Message{ChatId: chatId}
+		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			list = append(list, &message)
+		}
+	}
+	return list, nil
+}
+
 func (tx *Tx) GetPinnedMessagesCount(chatId int64) (int64, error) {
 	row := tx.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE pinned IS TRUE`, chatId))
+	if row.Err() != nil {
+		return 0, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+	var res int64
+	err := row.Scan(&res)
+	if err != nil {
+		return 0, eris.Wrap(err, "error during interacting with db")
+	}
+	return res, nil
+}
+
+func (tx *Tx) GetPublishedMessagesCount(chatId int64) (int64, error) {
+	row := tx.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE published IS TRUE`, chatId))
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}

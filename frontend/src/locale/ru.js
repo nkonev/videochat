@@ -280,5 +280,12 @@ export default {
     seconds: "сек.",
     waiting_for_devices: "Ожидание устройства",
     treat_newlines_as_in_html: "Во время вставки обрабатывать переносы строк как в HTML (т. е. игнорировать)",
-    consider_messages_of_this_chat_as_unread: "Непрочитанные сообщения"
+    consider_messages_of_this_chat_as_unread: "Непрочитанные сообщения",
+    remove_from_public: "Отменить публикацию",
+    publish_message: "Опубликовать",
+    published_messages: "Опубликованные сообщения",
+    copy_public_link_to_message: "Скопировать публичную ссылку",
+    regular_participant_can_publish: "Участники могут публиковать сообщения",
+    open_published_message: "Открыть опубликованное сообщение",
+    no_published_messages: "Нет опубликованных сообщений"
 }

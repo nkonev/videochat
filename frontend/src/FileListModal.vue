@@ -40,7 +40,7 @@
                                         </v-card-title>
                                         <v-card-subtitle class="text-white pb-2 no-opacity text-wrap">
                                             {{ formattedSize(item.size) }}
-                                            <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner.login}}</span>
+                                            <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner?.login}}</span>
                                             <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                             <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="colored-link">
                                                 {{ $vuetify.locale.t('$vuetify.files_public_url') }}

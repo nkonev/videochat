@@ -456,7 +456,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
-		patchedText := h.patchStorageUrlToPublic(post.Text)
+		patchedText := PatchStorageUrlToPublic(post.Text, post.MessageId)
 		response.Text = &patchedText
 
 		var participantIdSet = map[int64]bool{}
@@ -540,7 +540,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	var users = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
 	for _, cc := range messages {
 		msg := convertToMessageDto(cc, users, chatsSet, NonExistentUser)
-		msg.Text = h.patchStorageUrlToPublic(msg.Text)
+		msg.Text = PatchStorageUrlToPublic(msg.Text, msg.Id)
 		messageDtos = append(messageDtos, msg)
 	}
 
@@ -548,7 +548,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, messageDtos)
 }
 
-func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
+func PatchStorageUrlToPublic(text string, messageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
@@ -563,7 +563,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		if maybeImage != nil {
 			src, srcExists := maybeImage.Attr("src")
 			if srcExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := h.makeUrlPublic(src, "", false)
+				newurl, err := makeUrlPublic(src, "", false, messageId)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -578,7 +578,7 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
 			if srcExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := h.makeUrlPublic(src, "", true)
+				newurl, err := makeUrlPublic(src, "", true, messageId)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -588,12 +588,27 @@ func (h *BlogHandler) patchStorageUrlToPublic(text string) string {
 
 			poster, posterExists := maybeVideo.Attr("poster")
 			if posterExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := h.makeUrlPublic(poster, "/embed/preview", false)
+				newurl, err := makeUrlPublic(poster, "/embed/preview", false, messageId)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("poster", newurl)
+			}
+		}
+	})
+
+	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
+		maybeVideo := s.First()
+		if maybeVideo != nil {
+			src, srcExists := maybeVideo.Attr("src")
+			if srcExists && utils.ContainsUrl(wlArr, src) {
+				newurl, err := makeUrlPublic(src, "", true, messageId)
+				if err != nil {
+					Logger.Warnf("Unagle to change url: %v", err)
+					return
+				}
+				maybeVideo.SetAttr("src", newurl)
 			}
 		}
 	})
@@ -615,7 +630,8 @@ func (h *BlogHandler) getFileParam(src string) (string, error) {
 	return fileParam, nil
 }
 
-func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string, addTime bool) (string, error) {
+func makeUrlPublic(src string, additionalSegment string, addTime bool, messageId int64) (string, error) {
+	// we add time in order not to cache the video itself
 	parsed, err := url.Parse(src)
 	if err != nil {
 		return "", err
@@ -623,11 +639,15 @@ func (h *BlogHandler) makeUrlPublic(src string, additionalSegment string, addTim
 
 	parsed.Path = "/api" + utils.UrlStoragePublicGetFile + additionalSegment
 
+	query := parsed.Query()
+
 	if addTime {
-		query := parsed.Query()
 		query.Set("time", utils.Int64ToString(time.Now().Unix()))
-		parsed.RawQuery = query.Encode()
 	}
+
+	query.Set("messageId", utils.Int64ToString(messageId))
+
+	parsed.RawQuery = query.Encode()
 
 	newurl := parsed.String()
 	return newurl, nil

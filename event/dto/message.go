@@ -37,6 +37,7 @@ type DisplayMessageDto struct {
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
 	Reactions []Reaction				 `json:"reactions"`
+	Published      bool                  `json:"published"`
 }
 
 type MessageDeletedDto struct {

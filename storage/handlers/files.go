@@ -1122,7 +1122,9 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccess(nil, chatId, c.Request().Context())
+	messageId := getMessageIdPublic(c)
+
+	belongs, err := h.restClient.CheckAccessExtended(nil, chatId, messageId, fileId, c.Request().Context())
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1200,6 +1202,14 @@ func (h *FilesHandler) previewCacheableResponse(c echo.Context) {
 	cacheableResponse(c, viper.GetDuration("response.cache.preview"))
 }
 
+func getMessageIdPublic(c echo.Context) int64 {
+	parseInt64, err := utils.ParseInt64(c.QueryParam("messageId"))
+	if err != nil {
+		return utils.MessageIdNonExistent
+	}
+	return parseInt64
+}
+
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	bucketName := h.minioConfig.Files
 
@@ -1232,7 +1242,9 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		belongs, err := h.restClient.CheckAccess(nil, chatId, c.Request().Context())
+		messageId := getMessageIdPublic(c)
+
+		belongs, err := h.restClient.CheckAccessExtended(nil, chatId, messageId, fileId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 			return c.NoContent(http.StatusInternalServerError)
