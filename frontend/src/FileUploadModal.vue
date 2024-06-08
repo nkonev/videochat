@@ -139,8 +139,8 @@ export default {
             }
             return throttle(progressFunction, 200)
         },
-        checkLimits(totalSize) {
-            return axios.get(`/api/storage/${this.chatId}/file`, { params: {
+        checkLimits(totalSize, chatId) {
+            return axios.get(`/api/storage/${chatId}/file`, { params: {
                     desiredSize: totalSize,
                 }}).then(value => {
                 if (value.data.status != "ok") {
@@ -153,6 +153,8 @@ export default {
             });
         },
         async upload() {
+            const chatId = this.chatId; // use local variable (cache) to have an ability to switch chat during file uploading
+
             this.$data.isLoadingPresignedLinks = true;
             this.checkingLimitsStep = true;
 
@@ -162,7 +164,7 @@ export default {
             }
 
             try {
-                await this.checkLimits(totalSize)
+                await this.checkLimits(totalSize, chatId)
             } catch (errMsg) {
                 this.$data.isLoadingPresignedLinks = false;
                 this.checkingLimitsStep = false;
@@ -181,7 +183,7 @@ export default {
                 // (it seems there is a timeout inside, because on local machine it works fine)
 
                 // [1/3] init s3's multipart upload
-                const response = await axios.put(`/api/storage/${this.chatId}/upload/init`, {
+                const response = await axios.put(`/api/storage/${chatId}/upload/init`, {
                     fileItemUuid: this.fileItemUuid, // nullable
                     fileSize: file.size,
                     fileName: file.name,
@@ -319,7 +321,7 @@ export default {
                 totalSize += file.size;
             }
             if (totalSize > 0) {
-                this.checkLimits(totalSize);
+                this.checkLimits(totalSize, this.chatId);
             }
         },
         formattedProgress(progressReceiver) {
