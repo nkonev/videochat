@@ -22,7 +22,7 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 
 	return func(msg *amqp.Delivery) error {
 		ctx := rabbitmq.ExtractAMQPHeaders(context.Background(), msg.Headers)
-		ctx, span := tr.Start(ctx, "aaa.listener.consume")
+		ctx, span := tr.Start(ctx, "aaa.listener")
 		defer span.End()
 
 		bytesData := msg.Body
