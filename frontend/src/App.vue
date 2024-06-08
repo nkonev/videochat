@@ -870,8 +870,7 @@ html {
 }
 
 div .stop-scrolling {
-    height: 100%;
-    overflow-y: hidden !important;
+    overflow: hidden !important;
 }
 
 </style>
