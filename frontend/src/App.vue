@@ -178,7 +178,6 @@
         <MessageEditModal/>
         <ChooseSmileyModal/>
         <ChooseColorModal/>
-        <RecordingModal/>
       </v-main>
 
     <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
@@ -260,7 +259,6 @@ import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
 import {getStoredLanguage} from "@/store/localStore";
 import ChooseColorModal from "@/ChooseColorModal.vue";
-import RecordingModal from "@/RecordingModal.vue";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -727,7 +725,6 @@ export default {
         MessageEditModal,
         CollapsedSearch,
         ChooseSmileyModal,
-        RecordingModal,
     },
     created() {
         createGraphQlClient();

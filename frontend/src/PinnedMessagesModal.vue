@@ -16,7 +16,7 @@
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
                                         <router-link :to="getPinnedRouteObject(item)" :class="getItemClass(item)">
-                                            {{ item.text }}
+                                            <div v-html="item.text"></div>
                                         </router-link>
                                     </v-list-item-title>
 

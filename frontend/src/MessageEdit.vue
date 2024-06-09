@@ -156,6 +156,7 @@
       <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
       <MessageEditLinkModal/>
       <MessageEditMediaModal/>
+      <RecordingModal/>
     </v-container>
 </template>
 
@@ -206,12 +207,12 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
-    import {v4 as uuidv4} from "uuid";
     import {
         BubbleMenu,
         FloatingMenu,
     } from '@tiptap/vue-3';
     import chroma from "chroma-js/chroma-light.js";
+    import RecordingModal from "@/RecordingModal.vue";
 
     export default {
         props:['chatId'],
@@ -708,6 +709,7 @@
             MessageEditMediaModal,
             BubbleMenu,
             FloatingMenu,
+            RecordingModal,
         }
     }
 </script>
