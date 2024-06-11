@@ -73,17 +73,27 @@ func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, 
 			if post.ChatId == blog.Id {
 				mbImage := h.tryGetFirstImage(post.Text)
 				if mbImage != nil {
-					tmpVar, err := h.getFileParam(*mbImage)
+					fileParam, err := h.getFileParam(*mbImage)
 					if err != nil {
 						Logger.Warnf("Unagle to get file key: %v", err)
 						break
 					}
-					tmp2Var := h.getPreviewUrl(tmpVar)
+					previewUrl := h.getPreviewUrl(fileParam)
 
-					blogPost.ImageUrl = tmp2Var
-				} else {
+					if previewUrl != nil {
+						publicPreviewUrl, err := makeUrlPublic(*previewUrl, "/embed/preview", false, post.MessageId)
+						if err != nil {
+							Logger.Warnf("Unagle to change url: %v", err)
+							break
+						}
+						blogPost.ImageUrl = &publicPreviewUrl
+					}
+				}
+
+				if blogPost.ImageUrl == nil {
 					blogPost.ImageUrl = blog.Avatar.Ptr()
 				}
+
 				t := post.Text
 				blogPost.Text = &t
 				blogPost.Preview = h.cutText(post.Text)

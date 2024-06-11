@@ -230,6 +230,16 @@ func SetExtension(fileName string, newExtension string) string {
 	}
 }
 
+func RemoveExtension(fileName string) string {
+	idx := strings.LastIndex(fileName, ".")
+	if idx > 0 {
+		firstPart := fileName[0:idx]
+		return firstPart
+	} else {
+		return fileName
+	}
+}
+
 func NullableToBoolean(pt *bool) bool {
 	if pt != nil && *pt {
 		return true

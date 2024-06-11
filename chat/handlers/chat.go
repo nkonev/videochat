@@ -1507,14 +1507,15 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 
 	messageId, _ := GetQueryParamAsInt64(c, "messageId")
 	if messageId > 0 {
-		text, _, published, err := ch.db.GetMessageBasic(chatId, messageId)
+		text, _, isBlogPostMessage,  published, err := ch.db.GetMessageBasic(chatId, messageId)
 		if err != nil {
 			return err
 		}
 		fileItemId := c.QueryParam("fileId")
-		if text != nil && (chat.IsBlog || (published != nil && *published)) {
+		if text != nil && (chat.IsBlog || (published != nil && *published) || (isBlogPostMessage != nil && *isBlogPostMessage)) {
 			encodedFileItemId := utils.UrlEncode(fileItemId)
-			if strings.Contains(*text, fileItemId) || strings.Contains(*text, encodedFileItemId) {
+			if strings.Contains(*text, encodedFileItemId) ||
+				(isBlogPostMessage != nil && *isBlogPostMessage && strings.Contains(*text, utils.RemoveExtension(encodedFileItemId))) {
 				return c.NoContent(http.StatusOK)
 			}
 		}

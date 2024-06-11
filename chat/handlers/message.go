@@ -315,7 +315,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return err
 		}
 
-		_, messageOwnerId, _, err := tx.GetMessageBasic(chatId, messageId)
+		_, messageOwnerId, _, _, err := tx.GetMessageBasic(chatId, messageId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
 			return err
@@ -654,7 +654,7 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 			if !chat.CanResend {
 				return errors.New("Resending is forbidden for this chat")
 			}
-			messageText, messageOwnerId, _, err := tx.GetMessageBasic(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
+			messageText, messageOwnerId, _, _, err := tx.GetMessageBasic(input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
 			if err != nil {
 				return err
 			}
@@ -864,7 +864,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return err
 	}
 
-	_, ownerId, _, err := mc.db.GetMessageBasic(chatId, bindTo.MessageId)
+	_, ownerId, _, _, err := mc.db.GetMessageBasic(chatId, bindTo.MessageId)
 	if err != nil {
 		return err
 	}
@@ -1061,7 +1061,7 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 		return err
 	}
 
-	message, ownerId, _, err := mc.db.GetMessageBasic(chatId, messageId)
+	message, ownerId, _, _, err := mc.db.GetMessageBasic(chatId, messageId)
 	if err != nil {
 		return err
 	}
@@ -1445,7 +1445,7 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 	}
 
 	return db.Transact(mc.db, func(tx *db.Tx) error {
-		_, ownerId, _, err := tx.GetMessageBasic(chatId, messageId)
+		_, ownerId, _, _, err := tx.GetMessageBasic(chatId, messageId)
 		if err != nil {
 			return err
 		}
