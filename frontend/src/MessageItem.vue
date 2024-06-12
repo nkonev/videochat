@@ -140,7 +140,7 @@
             canRenderLinkToSource(item) {
                 if (item.embedMessage.embedType == embed_message_reply) {
                     return true
-                } else if (item.embedMessage.embedType == embed_message_resend) {
+                } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
                     if (item.embedMessage.chatName) {
                         return true
                     }
