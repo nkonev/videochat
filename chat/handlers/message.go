@@ -1084,7 +1084,7 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 		if utils.Contains(userIds, us.Id) {
 			usersToReturn = append(usersToReturn, us)
 		}
-		if us.Id == userPrincipalDto.UserId {
+		if us.Id == *ownerId {
 			anOwnerLogin = us.Login
 		}
 	}

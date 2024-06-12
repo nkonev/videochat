@@ -1,10 +1,12 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="480" scrollable>
-            <v-card :title="$vuetify.locale.t('$vuetify.users_read')">
+        <v-dialog v-model="show" max-width="520" scrollable>
+            <v-card :title="$vuetify.locale.t('$vuetify.users_read') + ' #' + this.messageDto?.messageId">
                 <v-card-text class="ma-0 pa-0">
-                    <v-container class="px-6 pt-0" v-html="participantsDto.text"></v-container>
-                    <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0">
+                    <div :class="messageWrapperClass()">
+                        <v-container :class="messageClass()" v-html="participantsDto.text"></v-container>
+                    </div>
+                    <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0" class="pb-0">
                         <template v-for="(item, index) in participantsDto.participants">
                             <v-list-item @click.prevent="onParticipantClick(item)" :href="getLink(item)">
                                 <template v-slot:prepend v-if="hasLength(item.avatar)">
@@ -70,6 +72,7 @@ import {profile, profile_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {hasLength} from "@/utils";
+import "./messageWrapper.styl";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -112,7 +115,7 @@ export default {
             }
             this.loading = true;
 
-            return axios.get('/api/chat/'+this.messageDto.chatId+'/message/read/'+this.messageDto.messageId, {
+            return axios.get(`/api/chat/${this.chatId}/message/read/${this.messageDto.messageId}`, {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,
@@ -147,6 +150,21 @@ export default {
                 return 1
             }
         },
+        messageClass() {
+            let classes = ['message-item-text'];
+            if (this.isMobile()) {
+                classes.push('message-item-text-mobile');
+            }
+
+            return classes
+        },
+        messageWrapperClass() {
+            let classes = ['pa-0', 'mb-0', 'mt-2', 'mx-4', 'message-item-wrapper'];
+            if (this.messageDto?.ownerId && this.messageDto?.ownerId == this.chatStore.currentUser?.id) {
+                classes.push('my');
+            }
+            return classes
+        }
     },
     computed: {
         ...mapStores(useChatStore),

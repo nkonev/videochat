@@ -426,7 +426,7 @@
           return item.owner?.id === this.chatStore.currentUser?.id;
         },
         showReadUsers(dto) {
-          bus.emit(OPEN_MESSAGE_READ_USERS_DIALOG, {chatId: dto.chatId, messageId: dto.id})
+          bus.emit(OPEN_MESSAGE_READ_USERS_DIALOG, {chatId: dto.chatId, messageId: dto.id, ownerId: dto.owner?.id})
         },
         pinMessage(dto) {
           axios.put(`/api/chat/${this.chatId}/message/${dto.id}/pin`, null, {
