@@ -560,8 +560,14 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		bindTo.Blog = nil
 	}
 
+	creatableChat := convertToCreatableChat(bindTo, ch.stripTagsPolicy)
+	if err := lateValidateChatTitle(creatableChat.Title); err != nil {
+		GetLogEntry(c.Request().Context()).Infof("Failed late validation: %v", err.Error())
+		return c.JSON(http.StatusBadRequest, &utils.H{"error": err.Error()})
+	}
+
 	chatId, errOuter := db.TransactWithResult(ch.db, func(tx *db.Tx) (int64, error) {
-		id, _, err := tx.CreateChat(convertToCreatableChat(bindTo, ch.policy))
+		id, _, err := tx.CreateChat(creatableChat)
 		if err != nil {
 			return 0, err
 		}
@@ -608,10 +614,17 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	return errOuter
 }
 
-func convertToCreatableChat(d *CreateChatDto, policy *services.SanitizerPolicy) *db.Chat {
+func lateValidateChatTitle(title string) error {
+	if len(title) == 0 {
+		return fmt.Errorf("empty chat title")
+	}
+	return nil
+}
+
+func convertToCreatableChat(d *CreateChatDto, policy *services.StripTagsPolicy) *db.Chat {
 	isBlog := utils.NullableToBoolean(d.Blog)
 	return &db.Chat{
-		Title:                               TrimAmdSanitize(policy, d.Name),
+		Title:                               TrimAmdSanitizeChatTitle(policy, d.Name),
 		CanResend:                           d.CanResend,
 		AvailableToSearch:                   d.AvailableToSearch,
 		Blog:                                isBlog,
@@ -684,6 +697,12 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		bindTo.Blog = nil
 	}
 
+	chatTitle := TrimAmdSanitizeChatTitle(ch.stripTagsPolicy, bindTo.Name)
+	if err := lateValidateChatTitle(chatTitle); err != nil {
+		GetLogEntry(c.Request().Context()).Infof("Failed late validation: %v", err.Error())
+		return c.JSON(http.StatusBadRequest, &utils.H{"error": err.Error()})
+	}
+
 	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
 		if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
 			return err
@@ -693,7 +712,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 		_, err := tx.EditChat(
 			bindTo.Id,
-			TrimAmdSanitize(ch.policy, bindTo.Name),
+			chatTitle,
 			TrimAmdSanitizeAvatar(ch.policy, bindTo.Avatar),
 			TrimAmdSanitizeAvatar(ch.policy, bindTo.AvatarBig),
 			bindTo.CanResend,

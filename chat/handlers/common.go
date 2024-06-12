@@ -186,6 +186,13 @@ func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }
 
+func TrimAmdSanitizeChatTitle(policy *services.StripTagsPolicy, title string) string {
+	t := Trim(policy.Sanitize(title))
+	t = strings.ReplaceAll(t, "&#39;", "'")
+	t = strings.ReplaceAll(t, "&#34;", "\"")
+	return t
+}
+
 type MediaUrlErr struct {
 	url   string
 	where string
