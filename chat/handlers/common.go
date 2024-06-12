@@ -271,11 +271,8 @@ func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, er
 }
 
 func createMessagePreview(cleanTagsPolicy *services.StripTagsPolicy, text, login string) string {
-	tmp := cleanTagsPolicy.Sanitize(loginPrefix(login) + text)
-	runes := []rune(tmp)
-	size := utils.Min(len(runes), viper.GetInt("previewMaxTextSize"))
-	ret := string(runes[:size])
-	return ret
+	input := loginPrefix(login) + text
+	return createMessagePreviewWithoutLogin(cleanTagsPolicy, input)
 }
 
 func loginPrefix(login string) string {
@@ -283,9 +280,17 @@ func loginPrefix(login string) string {
 }
 
 func createMessagePreviewWithoutLogin(cleanTagsPolicy *services.StripTagsPolicy, text string) string {
+	return stripTagsAndCut(cleanTagsPolicy, viper.GetInt("previewMaxTextSize"), text)
+}
+
+func stripTagsAndCut(cleanTagsPolicy *services.StripTagsPolicy, sizeToCut int, text string) string {
 	tmp := cleanTagsPolicy.Sanitize(text)
 	runes := []rune(tmp)
-	size := utils.Min(len(runes), viper.GetInt("previewMaxTextSize"))
+	textLen := len(runes)
+	size := utils.Min(sizeToCut, textLen)
 	ret := string(runes[:size])
+	if textLen > sizeToCut {
+		ret += "..."
+	}
 	return ret
 }

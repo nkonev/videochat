@@ -3,7 +3,7 @@
         <v-dialog v-model="show" max-width="520" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.users_read') + ' #' + this.messageDto?.messageId">
                 <v-card-text class="ma-0 pa-0">
-                    <div :class="messageWrapperClass()">
+                    <div v-if="shouldShowMessageText()" :class="messageWrapperClass()">
                         <v-container :class="messageClass()" v-html="participantsDto.text"></v-container>
                     </div>
                     <v-list v-if="participantsDto.participants && participantsDto.participants.length > 0" class="pb-0">
@@ -164,7 +164,10 @@ export default {
                 classes.push('my');
             }
             return classes
-        }
+        },
+        shouldShowMessageText() {
+            return hasLength(this.participantsDto.text)
+        },
     },
     computed: {
         ...mapStores(useChatStore),
