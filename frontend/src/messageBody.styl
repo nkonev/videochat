@@ -60,14 +60,6 @@
   }
 }
 
-.message-item-wrapper code, .editorContent code {
-  border-radius: 3px;
-  font-size: 85%;
-  font-weight: normal;
-  padding: 0.2em 0.4em;
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
 .message-item-wrapper a, .editorContent a {
   color: $linkColor;
 }
@@ -77,4 +69,29 @@
 .editorContent ul,
 .editorContent ol {
   padding: 0 1rem;
+}
+
+.message-item-wrapper code, .editorContent code {
+  border-radius: 3px;
+  font-size: 85%;
+  font-weight: normal;
+  padding: 0.2em 0.4em;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.message-item-wrapper pre, .editorContent pre {
+  background: #0D0D0D;
+  color: #FFF;
+  font-family: 'JetBrainsMono', monospace;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  width: fit-content;
+
+  code {
+    color: inherit;
+    padding: 0;
+    background: none;
+    font-size: 0.8rem;
+  }
+
 }

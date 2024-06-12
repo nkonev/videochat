@@ -26,6 +26,7 @@ import Color from '@tiptap/extension-color';
 import Highlight from "@tiptap/extension-highlight";
 import Mention from '@tiptap/extension-mention';
 import Code from '@tiptap/extension-code';
+import CodeBlock from '@tiptap/extension-code-block';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
@@ -258,6 +259,7 @@ export default {
               suggestion: suggestion(this),
           }),
           Code,
+          CodeBlock,
           Iframe,
           ListItem,
           BulletList,

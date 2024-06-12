@@ -36,6 +36,10 @@
                   <v-icon :size="getIconSize()">mdi-code-braces</v-icon>
               </v-btn>
 
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeBlockValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeBlockValue()" @click="codeBlockClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_code_block')">
+                  <v-icon :size="getIconSize()">mdi-code-tags</v-icon>
+              </v-btn>
+
               <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
                   <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
               </v-btn>
@@ -435,11 +439,17 @@
             codeValue() {
                 return this.$refs.tipTapRef?.$data.editor.isActive('code')
             },
+            codeBlockValue() {
+                return this.$refs.tipTapRef?.$data.editor.isActive('codeBlock')
+            },
             strikeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
             },
             codeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleCode().run()
+            },
+            codeBlockClick() {
+                this.$refs.tipTapRef.$data.editor.chain().focus().toggleCodeBlock().run()
             },
             linkClick() {
                 const previousUrl = this.$refs.tipTapRef.$data.editor.getAttributes('link').href;
@@ -595,7 +605,8 @@
             emitExpandEventIfNeed() {
               if (hasLength(this.editMessageDto?.text)) {
                 const numRows = this.editMessageDto.text.split("<p>").length - 1;
-                if (numRows > 1) {
+                const numCodes = this.editMessageDto.text.split("<code>").length - 1;
+                if (numRows > 1 || numCodes >= 1) {
                   this.chatStore.isEditingBigText = true;
                 }
               }

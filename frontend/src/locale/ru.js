@@ -127,6 +127,7 @@ export default {
     message_edit_underline: "Подчёкрнутый (Ctrl+U)",
     message_edit_strike: "Зачёркрутый",
     message_edit_code: "Код",
+    message_edit_code_block: "Блок кода",
     message_edit_link: "Добавить ссылку",
     message_edit_image: "Добавить картинку",
     message_edit_file: "Добавить файл",

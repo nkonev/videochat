@@ -127,6 +127,7 @@ export default {
     message_edit_underline: "Underline (Ctrl+U)",
     message_edit_strike: "Strike",
     message_edit_code: "Code",
+    message_edit_code_block: "Code block",
     message_edit_link: "Add a link",
     message_edit_image: "Add an image",
     message_edit_file: "Add a file",
