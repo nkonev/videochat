@@ -39,16 +39,7 @@ export const buildImageHandler = (uploadFunction) => {
                                 if (!coordinates) return false;
 
                                 images.forEach(async (image) => {
-
-                                    const anUrl = await uploadFunction(image);
-
-                                    if (hasLength(anUrl)) {
-                                        const node = schema.nodes.image.create({
-                                          src: anUrl,
-                                        });
-                                        const transaction = view.state.tr.insert(coordinates.pos, node);
-                                        view.dispatch(transaction);
-                                    }
+                                    await uploadFunction(image);
                                 });
 
                                 return true;
