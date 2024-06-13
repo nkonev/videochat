@@ -1,11 +1,11 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" width="fit-content" max-width="100%" scrollable>
+        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" max-width="fit-content" scrollable>
             <v-card :title="getTitle()">
                 <v-card-text class="d-flex justify-center pb-0 px-2">
-                    <video class="video-custom-class" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
-                    <img class="image-custom-class" v-if="dto?.canShowAsImage" :src="dto.url"/>
-                    <audio class="audio-custom-class" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+                    <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
+                    <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
+                    <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
                 </v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
@@ -67,5 +67,16 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "messageBody.styl"
+
+.image-custom-class-view {
+}
+
+.video-custom-class-view {
+}
+
+.audio-custom-class-view {
+    min-width: 600px
+    max-width: 100% !important
+}
+
 </style>
