@@ -897,13 +897,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 }
 
 func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []int64 {
-	var result = []int64{}
-	for _, userId := range mentionedUserIds {
-		if principalDto != nil && userId != principalDto.UserId {
-			result = append(result, userId)
-		}
-	}
-	return result
+	return utils.Remove(mentionedUserIds, principalDto.UserId)
 }
 
 func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {

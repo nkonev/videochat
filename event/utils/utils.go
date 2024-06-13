@@ -145,17 +145,13 @@ func ContainsString(ids []string, elem string) bool {
 }
 
 func Remove(ids []int64, elem int64) []int64 {
-	if !Contains(ids, elem) {
-		return ids
-	} else {
-		var newArr = []int64{}
-		for _, id := range ids {
-			if id != elem {
-				newArr = append(newArr, id)
-			}
+	var newArr = []int64{}
+	for _, id := range ids {
+		if id != elem {
+			newArr = append(newArr, id)
 		}
-		return newArr
 	}
+	return newArr
 }
 
 func SecondsToStringMilliseconds(seconds int64) string {

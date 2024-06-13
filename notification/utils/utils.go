@@ -8,7 +8,6 @@ import (
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
-const PersonalChannelPrefix = "#"
 
 type H map[string]interface{}
 
@@ -110,7 +109,6 @@ func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
 
-const CHANNEL_PREFIX_CHAT_MESSAGES = "chatMessages"
 
 func SetToArray(set map[int64]bool) []int64 {
 	var ownerIds []int64
@@ -134,17 +132,13 @@ func Contains(ids []int64, elem int64) bool {
 }
 
 func Remove(ids []int64, elem int64) []int64 {
-	if !Contains(ids, elem) {
-		return ids
-	} else {
-		var newArr = []int64{}
-		for _, id := range ids {
-			if id != elem {
-				newArr = append(newArr, id)
-			}
+	var newArr = []int64{}
+	for _, id := range ids {
+		if id != elem {
+			newArr = append(newArr, id)
 		}
-		return newArr
 	}
+	return newArr
 }
 
 func SecondsToStringMilliseconds(seconds int64) string {
