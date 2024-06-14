@@ -67,11 +67,18 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+@import "constants.styl"
 
-.image-custom-class-view {
-}
+@media screen and (max-width: $mobileWidth) {
+    .image-custom-class-view {
+        max-width: 100% !important
+        height: 360px !important
+    }
 
-.video-custom-class-view {
+    .video-custom-class-view {
+        max-width: 100% !important
+        height: 360px !important
+    }
 }
 
 .audio-custom-class-view {
