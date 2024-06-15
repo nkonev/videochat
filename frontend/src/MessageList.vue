@@ -82,7 +82,7 @@
     import MessageItem from "@/MessageItem.vue";
     import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
     import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
-    import {getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition} from "@/store/localStore";
+    import { getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition } from "@/store/localStore";
     import Mark from "mark.js";
     import hashMixin from "@/mixins/hashMixin";
 

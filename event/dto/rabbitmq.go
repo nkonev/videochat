@@ -65,6 +65,7 @@ type NotificationDto struct {
 	CreateDateTime   time.Time `json:"createDateTime"`
 	ByUserId         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
+	ByAvatar         *string   `json:"byAvatar"`
 	ChatTitle        string    `json:"chatTitle"`
 }
 
@@ -75,6 +76,16 @@ type WrapperNotificationDto struct {
 
 type HasUnreadMessagesChanged struct {
 	HasUnreadMessages bool `json:"hasUnreadMessages"`
+}
+
+type BrowserNotification struct {
+	ChatId int64 `json:"chatId"`
+	ChatName string `json:"chatName"`
+	ChatAvatar *string `json:"chatAvatar"`
+	MessageId int64 `json:"messageId"`
+	MessageText string `json:"messageText"`
+	OwnerId int64 `json:"ownerId"`
+	OwnerLogin string `json:"ownerLogin"`
 }
 
 type GlobalUserEvent struct {
@@ -92,6 +103,7 @@ type GlobalUserEvent struct {
 	UserNotificationEvent         *WrapperNotificationDto       `json:"userNotificationEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 	HasUnreadMessagesChanged      *HasUnreadMessagesChanged `json:"hasUnreadMessagesChanged"`
+	BrowserNotification           *BrowserNotification         `json:"browserNotification"`
 }
 
 func (GlobalUserEvent) Name() eventbus.EventName {

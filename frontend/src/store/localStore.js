@@ -313,3 +313,35 @@ export const getStoreRecordingTab = (defaultValue) => {
 export const setStoreRecordingTab = (v) => {
     localStorage.setItem(KEY_RECORDING_TAB, JSON.stringify(v));
 }
+
+
+const KEY_NOTIFICATION_PREFIX = 'notification';
+
+export const getBrowserNotification = (chatId, defaultValue, notificationType) => {
+    let v = JSON.parse(localStorage.getItem(KEY_NOTIFICATION_PREFIX + "_" + chatId + "_" + notificationType));
+    if (v === null && defaultValue !== null) {
+        setBrowserNotification(chatId, notificationType, defaultValue);
+        v = JSON.parse(localStorage.getItem(KEY_NOTIFICATION_PREFIX + "_" + chatId + "_" + notificationType));
+    }
+    return v;
+}
+
+export const setBrowserNotification = (chatId, notificationType, v) => {
+    localStorage.setItem(KEY_NOTIFICATION_PREFIX + "_" + chatId + "_" + notificationType, JSON.stringify(v));
+}
+
+const global = 'global';
+export const getGlobalBrowserNotification = (notificationType) => {
+    return getBrowserNotification(global, false, notificationType)
+}
+
+export const setGlobalBrowserNotification = (notificationType, v) => {
+    setBrowserNotification(global, notificationType, v)
+}
+
+export const NOTIFICATION_TYPE_MENTIONS = 'mentions';
+export const NOTIFICATION_TYPE_MISSED_CALLS = 'missedCalls';
+export const NOTIFICATION_TYPE_ANSWERS = 'answers';
+export const NOTIFICATION_TYPE_REACTIONS = 'reactions';
+export const NOTIFICATION_TYPE_NEW_MESSAGES = 'newMessages';
+export const NOTIFICATION_TYPE_CALL = 'call';

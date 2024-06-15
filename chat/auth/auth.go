@@ -5,6 +5,7 @@ type AuthResult struct {
 	UserLogin string
 	ExpiresAt int64 // in GMT. in seconds for centrifuge
 	Roles     []string
+	Avatar    *string
 }
 
 func (r *AuthResult) HasRole(roleToCheck string) bool {

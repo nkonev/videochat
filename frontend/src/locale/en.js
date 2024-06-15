@@ -108,6 +108,7 @@ export default {
     audio_autoplay_permissions_title: "Browser permissions",
     audio_autoplay_permissions_text: "Please enable audio auto-play permissions for this site in your browser preferences.",
     you_called: "You are called into chat #{0} '{1}', press phone to join",
+    you_called_short: "You are called into chat #{0}",
     loading: "Loading...",
     time_at: " at ",
     codec: "Codec",
@@ -287,5 +288,11 @@ export default {
     copy_public_link_to_message: "Copy public link",
     regular_participant_can_publish: "Regular participant can publish messages",
     open_published_message: "Open published message",
-    no_published_messages: "No published messages"
+    no_published_messages: "No published messages",
+    request_notifications_in_browser: "Request notifications in browser",
+    notifications_title: "Example chat",
+    notifications_were_permitted: "Browser notifications were permitted",
+    notifications_in_browser: "in-browser",
+    new_message_notifications_in_browser: "New message notification in-browser",
+    call_notifications_in_browser: "Call notification in-browser"
 }

@@ -53,6 +53,16 @@ type ComplexityRoot struct {
 		AllUnreadMessages func(childComplexity int) int
 	}
 
+	BrowserNotification struct {
+		ChatAvatar  func(childComplexity int) int
+		ChatID      func(childComplexity int) int
+		ChatName    func(childComplexity int) int
+		MessageID   func(childComplexity int) int
+		MessageText func(childComplexity int) int
+		OwnerID     func(childComplexity int) int
+		OwnerLogin  func(childComplexity int) int
+	}
+
 	ChatDeletedDto struct {
 		ID func(childComplexity int) int
 	}
@@ -168,6 +178,7 @@ type ComplexityRoot struct {
 
 	GlobalEvent struct {
 		AllUnreadMessagesNotification  func(childComplexity int) int
+		BrowserNotification            func(childComplexity int) int
 		ChatDeletedEvent               func(childComplexity int) int
 		ChatEvent                      func(childComplexity int) int
 		CoChattedParticipantEvent      func(childComplexity int) int
@@ -199,6 +210,7 @@ type ComplexityRoot struct {
 	}
 
 	NotificationDto struct {
+		ByAvatar         func(childComplexity int) int
 		ByLogin          func(childComplexity int) int
 		ByUserID         func(childComplexity int) int
 		ChatID           func(childComplexity int) int
@@ -343,6 +355,7 @@ type ComplexityRoot struct {
 	}
 
 	VideoCallInvitationDto struct {
+		Avatar   func(childComplexity int) int
 		ChatID   func(childComplexity int) int
 		ChatName func(childComplexity int) int
 		Status   func(childComplexity int) int
@@ -418,6 +431,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AllUnreadMessages.AllUnreadMessages(childComplexity), true
+
+	case "BrowserNotification.chatAvatar":
+		if e.complexity.BrowserNotification.ChatAvatar == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.ChatAvatar(childComplexity), true
+
+	case "BrowserNotification.chatId":
+		if e.complexity.BrowserNotification.ChatID == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.ChatID(childComplexity), true
+
+	case "BrowserNotification.chatName":
+		if e.complexity.BrowserNotification.ChatName == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.ChatName(childComplexity), true
+
+	case "BrowserNotification.messageId":
+		if e.complexity.BrowserNotification.MessageID == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.MessageID(childComplexity), true
+
+	case "BrowserNotification.messageText":
+		if e.complexity.BrowserNotification.MessageText == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.MessageText(childComplexity), true
+
+	case "BrowserNotification.ownerId":
+		if e.complexity.BrowserNotification.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.OwnerID(childComplexity), true
+
+	case "BrowserNotification.ownerLogin":
+		if e.complexity.BrowserNotification.OwnerLogin == nil {
+			break
+		}
+
+		return e.complexity.BrowserNotification.OwnerLogin(childComplexity), true
 
 	case "ChatDeletedDto.id":
 		if e.complexity.ChatDeletedDto.ID == nil {
@@ -1028,6 +1090,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalEvent.AllUnreadMessagesNotification(childComplexity), true
 
+	case "GlobalEvent.browserNotification":
+		if e.complexity.GlobalEvent.BrowserNotification == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.BrowserNotification(childComplexity), true
+
 	case "GlobalEvent.chatDeletedEvent":
 		if e.complexity.GlobalEvent.ChatDeletedEvent == nil {
 			break
@@ -1160,6 +1229,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MessageDeletedDto.ID(childComplexity), true
+
+	case "NotificationDto.byAvatar":
+		if e.complexity.NotificationDto.ByAvatar == nil {
+			break
+		}
+
+		return e.complexity.NotificationDto.ByAvatar(childComplexity), true
 
 	case "NotificationDto.byLogin":
 		if e.complexity.NotificationDto.ByLogin == nil {
@@ -1780,6 +1856,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserTypingDto.ParticipantID(childComplexity), true
 
+	case "VideoCallInvitationDto.avatar":
+		if e.complexity.VideoCallInvitationDto.Avatar == nil {
+			break
+		}
+
+		return e.complexity.VideoCallInvitationDto.Avatar(childComplexity), true
+
 	case "VideoCallInvitationDto.chatId":
 		if e.complexity.VideoCallInvitationDto.ChatID == nil {
 			break
@@ -2139,6 +2222,311 @@ func (ec *executionContext) fieldContext_AllUnreadMessages_allUnreadMessages(_ c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_chatId(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_chatId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_chatName(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_chatName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_chatName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_chatAvatar(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_chatAvatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatAvatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_chatAvatar(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_messageId(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_messageId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessageID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_messageId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_messageText(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_messageText(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessageText, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_messageText(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_ownerId(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_ownerId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_ownerId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrowserNotification_ownerLogin(ctx context.Context, field graphql.CollectedField, obj *model.BrowserNotification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BrowserNotification_ownerLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerLogin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BrowserNotification_ownerLogin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrowserNotification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6390,6 +6778,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_videoCallInvitation(_ conte
 				return ec.fieldContext_VideoCallInvitationDto_chatName(ctx, field)
 			case "status":
 				return ec.fieldContext_VideoCallInvitationDto_status(ctx, field)
+			case "avatar":
+				return ec.fieldContext_VideoCallInvitationDto_avatar(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VideoCallInvitationDto", field.Name)
 		},
@@ -6717,6 +7107,63 @@ func (ec *executionContext) fieldContext_GlobalEvent_hasUnreadMessagesChanged(_ 
 				return ec.fieldContext_HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type HasUnreadMessagesChangedEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalEvent_browserNotification(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_browserNotification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BrowserNotification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.BrowserNotification)
+	fc.Result = res
+	return ec.marshalOBrowserNotification2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐBrowserNotification(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_browserNotification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "chatId":
+				return ec.fieldContext_BrowserNotification_chatId(ctx, field)
+			case "chatName":
+				return ec.fieldContext_BrowserNotification_chatName(ctx, field)
+			case "chatAvatar":
+				return ec.fieldContext_BrowserNotification_chatAvatar(ctx, field)
+			case "messageId":
+				return ec.fieldContext_BrowserNotification_messageId(ctx, field)
+			case "messageText":
+				return ec.fieldContext_BrowserNotification_messageText(ctx, field)
+			case "ownerId":
+				return ec.fieldContext_BrowserNotification_ownerId(ctx, field)
+			case "ownerLogin":
+				return ec.fieldContext_BrowserNotification_ownerLogin(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BrowserNotification", field.Name)
 		},
 	}
 	return fc, nil
@@ -7323,6 +7770,47 @@ func (ec *executionContext) _NotificationDto_byLogin(ctx context.Context, field 
 }
 
 func (ec *executionContext) fieldContext_NotificationDto_byLogin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NotificationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NotificationDto_byAvatar(ctx context.Context, field graphql.CollectedField, obj *model.NotificationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NotificationDto_byAvatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ByAvatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NotificationDto_byAvatar(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NotificationDto",
 		Field:      field,
@@ -9646,6 +10134,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(_ context.Con
 				return ec.fieldContext_GlobalEvent_forceLogout(ctx, field)
 			case "hasUnreadMessagesChanged":
 				return ec.fieldContext_GlobalEvent_hasUnreadMessagesChanged(ctx, field)
+			case "browserNotification":
+				return ec.fieldContext_GlobalEvent_browserNotification(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -11235,6 +11725,47 @@ func (ec *executionContext) fieldContext_VideoCallInvitationDto_status(_ context
 	return fc, nil
 }
 
+func (ec *executionContext) _VideoCallInvitationDto_avatar(ctx context.Context, field graphql.CollectedField, obj *model.VideoCallInvitationDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VideoCallInvitationDto_avatar(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Avatar, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VideoCallInvitationDto_avatar(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VideoCallInvitationDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _VideoCallScreenShareChangedDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.VideoCallScreenShareChangedDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_VideoCallScreenShareChangedDto_chatId(ctx, field)
 	if err != nil {
@@ -11855,6 +12386,8 @@ func (ec *executionContext) fieldContext_WrapperNotificationDto_notificationDto(
 				return ec.fieldContext_NotificationDto_byUserId(ctx, field)
 			case "byLogin":
 				return ec.fieldContext_NotificationDto_byLogin(ctx, field)
+			case "byAvatar":
+				return ec.fieldContext_NotificationDto_byAvatar(ctx, field)
 			case "chatTitle":
 				return ec.fieldContext_NotificationDto_chatTitle(ctx, field)
 			}
@@ -13714,6 +14247,72 @@ func (ec *executionContext) _AllUnreadMessages(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var browserNotificationImplementors = []string{"BrowserNotification"}
+
+func (ec *executionContext) _BrowserNotification(ctx context.Context, sel ast.SelectionSet, obj *model.BrowserNotification) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, browserNotificationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BrowserNotification")
+		case "chatId":
+			out.Values[i] = ec._BrowserNotification_chatId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chatName":
+			out.Values[i] = ec._BrowserNotification_chatName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chatAvatar":
+			out.Values[i] = ec._BrowserNotification_chatAvatar(ctx, field, obj)
+		case "messageId":
+			out.Values[i] = ec._BrowserNotification_messageId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "messageText":
+			out.Values[i] = ec._BrowserNotification_messageText(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ownerId":
+			out.Values[i] = ec._BrowserNotification_ownerId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ownerLogin":
+			out.Values[i] = ec._BrowserNotification_ownerLogin(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var chatDeletedDtoImplementors = []string{"ChatDeletedDto"}
 
 func (ec *executionContext) _ChatDeletedDto(ctx context.Context, sel ast.SelectionSet, obj *model.ChatDeletedDto) graphql.Marshaler {
@@ -14405,6 +15004,8 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._GlobalEvent_forceLogout(ctx, field, obj)
 		case "hasUnreadMessagesChanged":
 			out.Values[i] = ec._GlobalEvent_hasUnreadMessagesChanged(ctx, field, obj)
+		case "browserNotification":
+			out.Values[i] = ec._GlobalEvent_browserNotification(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14608,6 +15209,8 @@ func (ec *executionContext) _NotificationDto(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "byAvatar":
+			out.Values[i] = ec._NotificationDto_byAvatar(ctx, field, obj)
 		case "chatTitle":
 			out.Values[i] = ec._NotificationDto_chatTitle(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -15576,6 +16179,8 @@ func (ec *executionContext) _VideoCallInvitationDto(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "avatar":
+			out.Values[i] = ec._VideoCallInvitationDto_avatar(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17000,6 +17605,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOBrowserNotification2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐBrowserNotification(ctx context.Context, sel ast.SelectionSet, v *model.BrowserNotification) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BrowserNotification(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOChatDeletedDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐChatDeletedDto(ctx context.Context, sel ast.SelectionSet, v *model.ChatDeletedDto) graphql.Marshaler {

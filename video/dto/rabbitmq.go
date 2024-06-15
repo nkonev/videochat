@@ -20,6 +20,7 @@ type NotificationEvent struct {
 	UserId                 int64                   `json:"userId"`
 	ByUserId               int64                   `json:"byUserId"`
 	ByLogin                string                  `json:"byLogin"`
+	ByAvatar               *string                 `json:"byAvatar"`
 	MissedCallNotification *MissedCallNotification `json:"missedCallNotification"`
 }
 

@@ -107,7 +107,7 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 		return err
 	}
 
-	err = mc.db.DeleteNotification(notificationId, userPrincipalDto.UserId)
+	deletedNotificationType, err := mc.db.DeleteNotification(notificationId, userPrincipalDto.UserId)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 		return err
 	}
 
-	err = mc.rabbitEventsPublisher.Publish(userPrincipalDto.UserId, dto.NewWrapperNotificationDeleteDto(notificationId, count), services.NotificationDelete, c.Request().Context())
+	err = mc.rabbitEventsPublisher.Publish(userPrincipalDto.UserId, dto.NewWrapperNotificationDeleteDto(notificationId, count, deletedNotificationType), services.NotificationDelete, c.Request().Context())
 	if err != nil {
 		Logger.Errorf("Unable to send notification delete %v", err)
 	}

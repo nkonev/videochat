@@ -31,6 +31,7 @@ type NotificationEvent struct {
 	ReplyNotification      *ReplyDto               `json:"replyNotification"`
 	ByUserId               int64                   `json:"byUserId"`
 	ByLogin                string                  `json:"byLogin"`
+	ByAvatar               *string                 `json:"byAvatar"`
 	ChatTitle              string                  `json:"chatTitle"`
 	ReactionEvent          *ReactionEvent		   `json:"reactionEvent"`
 }

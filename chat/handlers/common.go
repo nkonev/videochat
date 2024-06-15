@@ -109,11 +109,18 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 
 	roles := request.Header.Values("X-Auth-Role")
 
+	anAvatar := request.Header.Get("X-Auth-Avatar")
+	var theAvatar *string = nil
+	if len(anAvatar) > 0 {
+		theAvatar = &anAvatar
+	}
+
 	return &auth.AuthResult{
 		UserId:    i,
 		UserLogin: string(decodedString),
 		ExpiresAt: t.Unix(),
 		Roles:     roles,
+		Avatar:    theAvatar,
 	}, nil
 }
 

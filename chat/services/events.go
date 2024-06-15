@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/getlantern/deepcopy"
+	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
@@ -288,7 +289,7 @@ func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId in
 
 }
 
-func (not *Events) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
 	for _, participantId := range userIds {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType: "mention_added",
@@ -300,6 +301,7 @@ func (not *Events) NotifyAddMention(c echo.Context, userIds []int64, chatId, mes
 			},
 			ByUserId:  behalfUserId,
 			ByLogin:   behalfLogin,
+			ByAvatar:  behalfAvatar,
 			ChatTitle: chatTitle,
 		})
 		if err != nil {
@@ -325,7 +327,7 @@ func (not *Events) NotifyRemoveMention(c echo.Context, userIds []int64, chatId i
 	}
 }
 
-func (not *Events) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
 	if userId != nil && *userId != behalfUserId {
 		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 			EventType:         "reply_added",
@@ -334,6 +336,7 @@ func (not *Events) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *i
 			ReplyNotification: reply,
 			ByUserId:          behalfUserId,
 			ByLogin:           behalfLogin,
+			ByAvatar:          behalfAvatar,
 			ChatTitle:         chatTitle,
 		})
 		if err != nil {
@@ -498,7 +501,7 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 	}
 }
 
-func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId, messageOwnerId int64, reaction string, behalfUserId int64, behalfLogin string, chatTitle string) {
+func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId, messageOwnerId int64, reaction string, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
 	var eventType string
 	if wasAdded {
 		eventType = "reaction_notification_added"
@@ -522,6 +525,7 @@ func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chat
 		ChatId:                     chatId,
 		ByUserId:          behalfUserId,
 		ByLogin:           behalfLogin,
+		ByAvatar:          behalfAvatar,
 		ChatTitle:         chatTitle,
 	})
 	if err != nil {
@@ -540,6 +544,30 @@ func (not *Events) NotifyMessagesReloadCommand(c echo.Context, chatId int64, par
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 		}
+	}
+
+}
+
+func (not *Events) NotifyNewMessageBrowserNotification(c echo.Context, add bool, participantId int64, chatId int64, chatName string, chatAvatar null.String, messageId int64, messageText string, ownerId int64, ownerLogin string) {
+	eventType := "browser_notification_add_message"
+	if !add {
+		eventType = "browser_notification_remove_message"
+	}
+	err := not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+		UserId:           participantId,
+		EventType:        eventType,
+		BrowserNotification: &dto.BrowserNotification{
+			ChatId:      chatId,
+			ChatName:    chatName,
+			ChatAvatar:  chatAvatar.Ptr(),
+			MessageId:   messageId,
+			MessageText: messageText,
+			OwnerId:     ownerId,
+			OwnerLogin:  ownerLogin,
+		},
+	})
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 
 }

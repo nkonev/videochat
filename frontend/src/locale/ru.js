@@ -108,6 +108,7 @@ export default {
     audio_autoplay_permissions_title: "Разрешения",
     audio_autoplay_permissions_text: "Пожалуйста разрешите автовоспроизведение аудио в настройках Вашего браузера.",
     you_called: "Вас позвали на звонок в #{0} '{1}', нажмите трубку для входа",
+    you_called_short: "Вас позвали на звонок в чат #{0}",
     loading: "Загрузка...",
     time_at: " в ",
     codec: "Кодек",
@@ -287,5 +288,11 @@ export default {
     copy_public_link_to_message: "Скопировать публичную ссылку",
     regular_participant_can_publish: "Участники могут публиковать сообщения",
     open_published_message: "Открыть опубликованное сообщение",
-    no_published_messages: "Нет опубликованных сообщений"
+    no_published_messages: "Нет опубликованных сообщений",
+    request_notifications_in_browser: "Запросить нотификации в браузере",
+    notifications_title: "Пример чата",
+    notifications_were_permitted: "Нотификации браузера разрешены",
+    notifications_in_browser: "в браузере",
+    new_message_notifications_in_browser: "Нотификация о новом сообщении в браузере",
+    call_notifications_in_browser: "Нотификация о звонке в браузере"
 }

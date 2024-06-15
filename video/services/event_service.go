@@ -132,7 +132,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 }
 
 // sends invitations "smb called you to chat x"
-func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string) {
+func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string, ownerAvatar string, tetATet bool) {
 	if len(statuses) == 0 {
 		return
 	}
@@ -158,9 +158,19 @@ func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Conte
 			Status:   status,
 		}
 
+		invitation.Avatar = GetAvatar(ownerAvatar, tetATet)
+
 		err = h.rabbitMqInvitePublisher.Publish(&invitation, chatInviteName.UserId)
 		if err != nil {
 			GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
 		}
+	}
+}
+
+func GetAvatar(ownerAvatar string, tetATet bool) *string {
+	if tetATet {
+		return &ownerAvatar
+	} else {
+		return nil
 	}
 }

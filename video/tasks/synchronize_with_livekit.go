@@ -58,7 +58,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 	// move orphaned users in "inCall" status to "cancelling"
 	for _, userId := range userIds {
 
-		userCallState, chatId, _, markedForChangeStatusAttempt, ownerId, err := srv.redisService.GetUserCallState(ctx, userId)
+		userCallState, chatId, _, markedForChangeStatusAttempt, ownerId, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
 
@@ -142,7 +142,7 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 
 		// if no such users
 		for _, videoUserId := range videoParticipants {
-			userCallState, _, _, _, _, err := srv.redisService.GetUserCallState(ctx, videoUserId)
+			userCallState, _, _, _, _, _, _, err := srv.redisService.GetUserCallState(ctx, videoUserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
 				continue
@@ -152,7 +152,8 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 			if userCallState == services.CallStatusNotFound {
 				if !utils.Contains(userIds, videoUserId) {
 					GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
-					err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall)
+
+					err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, services.NoAvatar, false) // dummy set NoAvatar
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
 						continue

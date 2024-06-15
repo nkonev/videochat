@@ -73,7 +73,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 	}
 
 	for _, userId := range userIdsToDial {
-		status, chatId, userCallMarkedForRemoveAt, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
+		status, chatId, userCallMarkedForRemoveAt, _, _, ownerAvatar, tetATet, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", userId, err)
 			continue
@@ -88,7 +88,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 
 		GetLogEntry(ctx).Infof("Sending userCallStatus for userIds %v from ownerId %v", userIdsToDial, ownerId)
 		// send invitations to callees
-		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status})
+		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status}, ownerAvatar, tetATet)
 		// send state changes to owner (ownerId) of call
 		srv.dialStatusPublisher.Publish(chatId, map[int64]string{userId: status}, ownerId)
 	}

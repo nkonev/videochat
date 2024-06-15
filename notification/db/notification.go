@@ -4,24 +4,21 @@ import (
 	"database/sql"
 	"github.com/rotisserie/eris"
 	"nkonev.name/notification/dto"
-	. "nkonev.name/notification/logger"
 	"time"
 )
 
-func (db *DB) DeleteNotification(id int64, userId int64) error {
-	if res, err := db.Exec(`delete from notification where id = $1 and user_id = $2`, id, userId); err != nil {
-		Logger.Errorf("Error during deleting notification id %v", err)
-		return err
-	} else {
-		affected, err := res.RowsAffected()
-		if err != nil {
-			return eris.Wrap(err, "error during interacting with db")
-		}
-		if affected == 0 {
-			Logger.Infof("No rows affected")
-		}
+func (db *DB) DeleteNotification(id int64, userId int64) (string, error) {
+	res := db.QueryRow(`delete from notification where id = $1 and user_id = $2 returning notification_type`, id, userId)
+	if res.Err() != nil {
+		return "", eris.Wrap(res.Err(), "error during interacting with db")
 	}
-	return nil
+	var notificationType string
+	err := res.Scan(&notificationType)
+	if err != nil {
+		return "", eris.Wrap(err, "error during interacting with db")
+	}
+
+	return notificationType, nil
 }
 
 func (db *DB) DeleteNotificationByMessageId(messageId int64, notificationType string, userId int64, messageSubId *string) (int64, error) {

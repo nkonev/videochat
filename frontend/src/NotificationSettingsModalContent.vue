@@ -14,45 +14,122 @@
           rounded
           border
           class="notification-global mb-1"
-          :title="$vuetify.locale.t('$vuetify.notifications_settings_global')"
           :disabled="loading"
       >
+          <v-card-title class="d-flex align-center">
+              <span>{{ $vuetify.locale.t('$vuetify.notifications_settings_global') }}</span>
+              <v-spacer/>
+              <v-btn v-if="!isMobile()" variant="outlined" @click="onEnableNotification">{{ $vuetify.locale.t('$vuetify.request_notifications_in_browser') }}</v-btn>
+          </v-card-title>
+
+          <span class="d-flex align-center">
+              <v-switch
+                  :label="$vuetify.locale.t('$vuetify.notify_about_mentions')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 pb-1"
+                  v-model="notificationsSettings.mentionsEnabled"
+                  @update:modelValue="putGlobalNotificationsSettings()"
+              ></v-switch>
+              <v-switch
+                  v-if="!isMobile()"
+                  :label="$vuetify.locale.t('$vuetify.notifications_in_browser')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 pb-1"
+                  v-model="browserNotificationSettings.mentionsEnabled"
+                  @update:modelValue="putGlobalNotificationBrowserSettings()"
+              ></v-switch>
+          </span>
+
+          <span class="d-flex align-center">
+              <v-switch
+                  :label="$vuetify.locale.t('$vuetify.notify_about_missed_calls')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 py-1"
+                  v-model="notificationsSettings.missedCallsEnabled"
+                  @update:modelValue="putGlobalNotificationsSettings()"
+              ></v-switch>
+              <v-switch
+                  v-if="!isMobile()"
+                  :label="$vuetify.locale.t('$vuetify.notifications_in_browser')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 pb-1"
+                  v-model="browserNotificationSettings.missedCallsEnabled"
+                  @update:modelValue="putGlobalNotificationBrowserSettings()"
+              ></v-switch>
+          </span>
+
+          <span class="d-flex align-center">
+              <v-switch
+                  :label="$vuetify.locale.t('$vuetify.notify_about_replies')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 py-1"
+                  v-model="notificationsSettings.answersEnabled"
+                  @update:modelValue="putGlobalNotificationsSettings()"
+              ></v-switch>
+              <v-switch
+                  v-if="!isMobile()"
+                  :label="$vuetify.locale.t('$vuetify.notifications_in_browser')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 pb-1"
+                  v-model="browserNotificationSettings.answersEnabled"
+                  @update:modelValue="putGlobalNotificationBrowserSettings()"
+              ></v-switch>
+          </span>
+
+          <span class="d-flex align-center">
+              <v-switch
+                  :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 py-1"
+                  v-model="notificationsSettings.reactionsEnabled"
+                  @update:modelValue="putGlobalNotificationsSettings()"
+              ></v-switch>
+              <v-switch
+                  v-if="!isMobile()"
+                  :label="$vuetify.locale.t('$vuetify.notifications_in_browser')"
+                  density="compact"
+                  color="primary"
+                  hide-details
+                  class="ml-4 mr-4 pb-1"
+                  v-model="browserNotificationSettings.reactionsEnabled"
+                  @update:modelValue="putGlobalNotificationBrowserSettings()"
+              ></v-switch>
+          </span>
           <v-switch
-              :label="$vuetify.locale.t('$vuetify.notify_about_mentions')"
+              v-if="!isMobile()"
+              :label="$vuetify.locale.t('$vuetify.new_message_notifications_in_browser')"
               density="compact"
               color="primary"
               hide-details
               class="ml-4 mr-4 pb-1"
-              v-model="notificationsSettings.mentionsEnabled"
-              @update:modelValue="putGlobalNotificationsSettings()"
+              v-model="browserNotificationSettings.newMessagesEnabled"
+              @update:modelValue="putGlobalNotificationBrowserSettings()"
           ></v-switch>
           <v-switch
-              :label="$vuetify.locale.t('$vuetify.notify_about_missed_calls')"
+              v-if="!isMobile()"
+              :label="$vuetify.locale.t('$vuetify.call_notifications_in_browser')"
               density="compact"
               color="primary"
               hide-details
-              class="ml-4 mr-4 py-1"
-              v-model="notificationsSettings.missedCallsEnabled"
-              @update:modelValue="putGlobalNotificationsSettings()"
+              class="ml-4 mr-4 pb-1"
+              v-model="browserNotificationSettings.callEnabled"
+              @update:modelValue="putGlobalNotificationBrowserSettings()"
           ></v-switch>
-          <v-switch
-              :label="$vuetify.locale.t('$vuetify.notify_about_replies')"
-              density="compact"
-              color="primary"
-              hide-details
-              class="ml-4 mr-4 py-1"
-              v-model="notificationsSettings.answersEnabled"
-              @update:modelValue="putGlobalNotificationsSettings()"
-          ></v-switch>
-        <v-switch
-              :label="$vuetify.locale.t('$vuetify.notify_about_reactions')"
-              density="compact"
-              color="primary"
-              hide-details
-              class="ml-4 mr-4 py-1"
-              v-model="notificationsSettings.reactionsEnabled"
-              @update:modelValue="putGlobalNotificationsSettings()"
-        ></v-switch>
+
       </v-card>
 
       <v-card
@@ -126,6 +203,32 @@
               <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
               <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
           </v-radio-group>
+
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.new_message_notifications_in_browser')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="browserNotificationChatSettings.newMessagesEnabled"
+                         @update:modelValue="putChatNotificationBrowserSettings()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
+
+          <v-radio-group inline
+                         :label="$vuetify.locale.t('$vuetify.call_notifications_in_browser')"
+                         color="primary"
+                         hide-details
+                         class="mb-2"
+                         v-model="browserNotificationChatSettings.callEnabled"
+                         @update:modelValue="putChatNotificationBrowserSettings()"
+          >
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+          </v-radio-group>
       </v-card>
   </v-card-text>
 
@@ -136,6 +239,17 @@
     import {useChatStore} from "@/store/chatStore";
     import axios from "axios";
     import {chat_name, videochat_name} from "@/router/routes.js";
+    import {createNotification} from "@/notifications.js";
+    import {
+        getBrowserNotification,
+        getGlobalBrowserNotification,
+        NOTIFICATION_TYPE_ANSWERS, NOTIFICATION_TYPE_CALL,
+        NOTIFICATION_TYPE_MENTIONS,
+        NOTIFICATION_TYPE_MISSED_CALLS, NOTIFICATION_TYPE_NEW_MESSAGES,
+        NOTIFICATION_TYPE_REACTIONS,
+        setBrowserNotification,
+        setGlobalBrowserNotification
+    } from "@/store/localStore.js";
 
     export default {
         data () {
@@ -144,6 +258,8 @@
                 notificationsSettings: {},
                 notificationsChatSettings: {},
                 considerMessagesOfThisChatAsUnread: null,
+                browserNotificationSettings: {},
+                browserNotificationChatSettings: {},
             }
         },
         computed: {
@@ -180,6 +296,77 @@
             isInChat() {
                 return this.$route.name == chat_name || this.$route.name == videochat_name
             },
+            onEnableNotification() {
+                Notification.requestPermission().then((result) => {
+                    createNotification(this.$vuetify.locale.t('$vuetify.notifications_title'), this.$vuetify.locale.t('$vuetify.notifications_were_permitted'), "message")
+                })
+            },
+            setGlobalNotificationsToFalse() {
+                this.browserNotificationSettings.mentionsEnabled = false;
+                this.browserNotificationSettings.missedCallsEnabled = false;
+                this.browserNotificationSettings.answersEnabled = false;
+                this.browserNotificationSettings.reactionsEnabled = false;
+                this.browserNotificationSettings.newMessagesEnabled = false;
+                this.browserNotificationSettings.callEnabled = false;
+            },
+            writeGlobalNotificationsToLocalStore() {
+                setGlobalBrowserNotification(NOTIFICATION_TYPE_MENTIONS, this.browserNotificationSettings.mentionsEnabled);
+                setGlobalBrowserNotification(NOTIFICATION_TYPE_MISSED_CALLS, this.browserNotificationSettings.missedCallsEnabled);
+                setGlobalBrowserNotification(NOTIFICATION_TYPE_ANSWERS, this.browserNotificationSettings.answersEnabled);
+                setGlobalBrowserNotification(NOTIFICATION_TYPE_REACTIONS, this.browserNotificationSettings.reactionsEnabled);
+                setGlobalBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES, this.browserNotificationSettings.newMessagesEnabled);
+                setGlobalBrowserNotification(NOTIFICATION_TYPE_CALL, this.browserNotificationSettings.callEnabled);
+            },
+            readGlobalNotificationsFromLocalStore() {
+                this.browserNotificationSettings.mentionsEnabled = getGlobalBrowserNotification(NOTIFICATION_TYPE_MENTIONS)
+                this.browserNotificationSettings.missedCallsEnabled = getGlobalBrowserNotification(NOTIFICATION_TYPE_MISSED_CALLS)
+                this.browserNotificationSettings.answersEnabled = getGlobalBrowserNotification(NOTIFICATION_TYPE_ANSWERS)
+                this.browserNotificationSettings.reactionsEnabled = getGlobalBrowserNotification(NOTIFICATION_TYPE_REACTIONS)
+                this.browserNotificationSettings.newMessagesEnabled = getGlobalBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES)
+                this.browserNotificationSettings.callEnabled = getGlobalBrowserNotification(NOTIFICATION_TYPE_CALL)
+            },
+
+            setChatNotificationsToFalse() {
+                this.browserNotificationChatSettings.mentionsEnabled = false;
+                this.browserNotificationChatSettings.missedCallsEnabled = false;
+                this.browserNotificationChatSettings.answersEnabled = false;
+                this.browserNotificationChatSettings.reactionsEnabled = false;
+                this.browserNotificationChatSettings.newMessagesEnabled = false;
+                this.browserNotificationChatSettings.callEnabled = false;
+            },
+            writeChatNotificationsToLocalStore() {
+                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_MENTIONS, this.browserNotificationChatSettings.mentionsEnabled);
+                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_MISSED_CALLS, this.browserNotificationChatSettings.missedCallsEnabled);
+                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_ANSWERS, this.browserNotificationChatSettings.answersEnabled);
+                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_REACTIONS, this.browserNotificationChatSettings.reactionsEnabled);
+                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_NEW_MESSAGES, this.browserNotificationChatSettings.newMessagesEnabled);
+                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_CALL, this.browserNotificationChatSettings.callEnabled);
+            },
+            readChatNotificationsFromLocalStore() {
+                this.browserNotificationChatSettings.mentionsEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_MENTIONS)
+                this.browserNotificationChatSettings.missedCallsEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_MISSED_CALLS)
+                this.browserNotificationChatSettings.answersEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_ANSWERS)
+                this.browserNotificationChatSettings.reactionsEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_REACTIONS)
+                this.browserNotificationChatSettings.newMessagesEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_NEW_MESSAGES)
+                this.browserNotificationChatSettings.callEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_CALL)
+            },
+
+            putGlobalNotificationBrowserSettings() {
+                Notification.requestPermission().then((permission) => {
+                    if (permission !== "granted") {
+                        this.setGlobalNotificationsToFalse();
+                    }
+                    this.writeGlobalNotificationsToLocalStore();
+                })
+            },
+            putChatNotificationBrowserSettings() {
+                Notification.requestPermission().then((permission) => {
+                    if (permission !== "granted") {
+                        this.setChatNotificationsToFalse();
+                    }
+                    this.writeChatNotificationsToLocalStore();
+                })
+            },
         },
         mounted() {
             console.debug("Initially set loading true")
@@ -188,6 +375,13 @@
                 this.notificationsSettings = data;
                 console.debug("Loaded notificationsGlobalSetting", this.notificationsSettings)
             }).then(()=>{
+                if (Notification?.permission !== "granted") {
+                    this.setGlobalNotificationsToFalse();
+                    this.writeGlobalNotificationsToLocalStore();
+                } else {
+                    this.readGlobalNotificationsFromLocalStore();
+                }
+
                 if (this.isInChat()) {
                     return axios.get(`/api/notification/settings/${this.chatId}/chat`).then(({data}) => {
                         this.notificationsChatSettings = data;
@@ -200,7 +394,15 @@
                 if (this.isInChat()) {
                     return axios.get(`/api/chat/${this.chatId}/notification`).then(({data}) => {
                         this.considerMessagesOfThisChatAsUnread = data.considerMessagesOfThisChatAsUnread;
-                        console.debug("Loaded considerMessagesOfThisChatAsUnread", this.considerMessagesOfThisChatAsUnread)
+                        console.debug("Loaded considerMessagesOfThisChatAsUnread", this.considerMessagesOfThisChatAsUnread);
+
+                        if (Notification?.permission !== "granted") {
+                            this.setChatNotificationsToFalse();
+                            this.writeChatNotificationsToLocalStore();
+                        } else {
+                            this.readChatNotificationsFromLocalStore();
+                        }
+
                     });
                 } else {
                     return Promise.resolve()

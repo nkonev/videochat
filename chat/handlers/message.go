@@ -357,7 +357,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 		}
 
 		// sends notification to the notification microservice
-		mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+		mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
 		return c.NoContent(http.StatusOK)
@@ -667,7 +667,9 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
-		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+
+		messageTextWithoutTags := createMessagePreview(mc.stripAllTags, message.Text, userPrincipalDto.UserLogin)
 
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
@@ -683,13 +685,28 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			for participantId, should := range shouldSendHasUnreadMessagesMap {
 				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
 					mc.notificator.NotifyAboutHasNewMessagesChanged(c, participantId, should)
+
+					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: null.StringFromPtr(userPrincipalDto.Avatar)}
+					var sch dto.ChatDtoWithTetATet = &simpleChat{
+						Id:        copiedChat.Id,
+						Name:      copiedChat.Name,
+						IsTetATet: copiedChat.IsTetATet,
+						Avatar:    copiedChat.Avatar,
+					}
+					utils.ReplaceChatNameToLoginForTetATet(
+						sch,
+						&meAsUser,
+						participantId,
+						false,
+					)
+					mc.notificator.NotifyNewMessageBrowserNotification(c, true, participantId, chatId, sch.GetName(), sch.GetAvatar(), message.Id, messageTextWithoutTags, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 				}
 			}
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
 			var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
-			mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+			mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 			mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message, copiedChat.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
@@ -844,7 +861,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		}
 
 		var replyAdded, userToSendToAdded = mc.wasReplyAdded(oldMessage, message, chatId)
-		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
 		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
 
@@ -873,7 +890,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 
 			var reallyAddedMentions = excludeMyself(userIdsToNotifyAboutMentionCreated, userPrincipalDto)
-			mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, chatNameForNotification)
+			mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 			mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
 			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
@@ -1070,6 +1087,9 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 			ChatId: chatId,
 		}
 		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
+		for _, participantId := range participantIds {
+			mc.notificator.NotifyNewMessageBrowserNotification(c, false, participantId, chatId, "", null.StringFromPtr(nil), messageId, "", userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+		}
 
 		return nil
 	})
@@ -1112,6 +1132,9 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 			MessageId: messageId,
 			ChatId:    chatId,
 		}, &userPrincipalDto.UserId)
+
+		mc.notificator.NotifyNewMessageBrowserNotification(c, false, userPrincipalDto.UserId, chatId, "", null.StringFromPtr(nil), messageId, "", NonExistentUser, "")
+
 		return c.NoContent(http.StatusAccepted)
 	})
 }

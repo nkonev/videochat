@@ -14,6 +14,16 @@ type AllUnreadMessages struct {
 	AllUnreadMessages int64 `json:"allUnreadMessages"`
 }
 
+type BrowserNotification struct {
+	ChatID      int64   `json:"chatId"`
+	ChatName    string  `json:"chatName"`
+	ChatAvatar  *string `json:"chatAvatar"`
+	MessageID   int64   `json:"messageId"`
+	MessageText string  `json:"messageText"`
+	OwnerID     int64   `json:"ownerId"`
+	OwnerLogin  string  `json:"ownerLogin"`
+}
+
 type ChatDeletedDto struct {
 	ID int64 `json:"id"`
 }
@@ -142,6 +152,7 @@ type GlobalEvent struct {
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 	ForceLogout                    *ForceLogoutEvent               `json:"forceLogout"`
 	HasUnreadMessagesChanged       *HasUnreadMessagesChangedEvent  `json:"hasUnreadMessagesChanged"`
+	BrowserNotification            *BrowserNotification            `json:"browserNotification"`
 }
 
 type HasUnreadMessagesChangedEvent struct {
@@ -168,6 +179,7 @@ type NotificationDto struct {
 	CreateDateTime   time.Time `json:"createDateTime"`
 	ByUserID         int64     `json:"byUserId"`
 	ByLogin          string    `json:"byLogin"`
+	ByAvatar         *string   `json:"byAvatar"`
 	ChatTitle        string    `json:"chatTitle"`
 }
 
@@ -305,9 +317,10 @@ type UserTypingDto struct {
 }
 
 type VideoCallInvitationDto struct {
-	ChatID   int64  `json:"chatId"`
-	ChatName string `json:"chatName"`
-	Status   string `json:"status"`
+	ChatID   int64   `json:"chatId"`
+	ChatName string  `json:"chatName"`
+	Status   string  `json:"status"`
+	Avatar   *string `json:"avatar"`
 }
 
 type VideoCallScreenShareChangedDto struct {

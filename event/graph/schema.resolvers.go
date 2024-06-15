@@ -650,12 +650,12 @@ func convertPublishedMessageEvent(e *dto.PublishedMessageEvent) *model.Published
 }
 func convertPublishedMessageDto(e *dto.PublishedMessageDto) *model.PublishedMessageDto {
 	return &model.PublishedMessageDto{
-		ID:         e.Id,
-		Text:       e.Text,
-		ChatID:     e.ChatId,
-		OwnerID:    e.OwnerId,
-		Owner:      convertParticipant(e.Owner),
-		CanPublish: e.CanPublish,
+		ID:             e.Id,
+		Text:           e.Text,
+		ChatID:         e.ChatId,
+		OwnerID:        e.OwnerId,
+		Owner:          convertParticipant(e.Owner),
+		CanPublish:     e.CanPublish,
 		CreateDateTime: e.CreateDateTime,
 	}
 }
@@ -754,6 +754,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			ChatID:   videoChatInvite.ChatId,
 			ChatName: videoChatInvite.ChatName,
 			Status:   videoChatInvite.Status,
+			Avatar:   videoChatInvite.Avatar,
 		}
 	}
 
@@ -794,6 +795,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 				CreateDateTime:   userNotification.NotificationDto.CreateDateTime,
 				ByUserID:         userNotification.NotificationDto.ByUserId,
 				ByLogin:          userNotification.NotificationDto.ByLogin,
+				ByAvatar:         userNotification.NotificationDto.ByAvatar,
 				ChatTitle:        userNotification.NotificationDto.ChatTitle,
 			},
 		}
@@ -803,6 +805,19 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	if hasUnreadMessagesChanged != nil {
 		ret.HasUnreadMessagesChanged = &model.HasUnreadMessagesChangedEvent{
 			HasUnreadMessages: hasUnreadMessagesChanged.HasUnreadMessages,
+		}
+	}
+
+	browserNotification := e.BrowserNotification
+	if browserNotification != nil {
+		ret.BrowserNotification = &model.BrowserNotification{
+			ChatID:      browserNotification.ChatId,
+			ChatName:    browserNotification.ChatName,
+			ChatAvatar:  browserNotification.ChatAvatar,
+			MessageID:   browserNotification.MessageId,
+			MessageText: browserNotification.MessageText,
+			OwnerID:     browserNotification.OwnerId,
+			OwnerLogin:  browserNotification.OwnerLogin,
 		}
 	}
 

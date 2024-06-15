@@ -202,6 +202,7 @@ type VideoCallInvitationDto {
     chatId: Int64!
     chatName: String!
     status: String!
+    avatar: String
 }
 
 type VideoDialChanged {
@@ -238,6 +239,7 @@ type NotificationDto {
     createDateTime: Time!
     byUserId: Int64!
     byLogin:  String!
+    byAvatar: String
     chatTitle: String!
 }
 
@@ -247,6 +249,16 @@ type ForceLogoutEvent {
 
 type HasUnreadMessagesChangedEvent {
     hasUnreadMessages: Boolean!
+}
+
+type BrowserNotification {
+    chatId: Int64!
+    chatName: String!
+    chatAvatar: String
+    messageId: Int64!
+    messageText: String!
+    ownerId: Int64!
+    ownerLogin: String!
 }
 
 type GlobalEvent {
@@ -264,6 +276,7 @@ type GlobalEvent {
     videoCallScreenShareChangedDto: VideoCallScreenShareChangedDto
     forceLogout: ForceLogoutEvent
     hasUnreadMessagesChanged: HasUnreadMessagesChangedEvent
+    browserNotification: BrowserNotification
 }
 
 type UserStatusEvent {

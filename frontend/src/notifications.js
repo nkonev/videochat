@@ -1,0 +1,53 @@
+import {getBrowserNotification, getGlobalBrowserNotification} from "@/store/localStore.js";
+import {chat_name, messageIdHashPrefix} from "@/router/routes.js";
+import {hasLength} from "@/utils.js";
+
+export const createNotification = (title, body, type) => {
+    new Notification(title, { body: body, icon: "/favicon_new.svg", tag: type });
+}
+
+// TODO заюзать имеющиеся события
+//  для упоминаний
+//  для пропущенный звонков
+//  для звонков
+//  для ответов
+//  для реакций
+
+const notifications = {}
+
+export const createNotificationIfPermitted = (router, chatId, chatName, chatAvatar, messageId, messageText, type) => {
+    const shouldGlobalBrowserNotification = getGlobalBrowserNotification(type);
+    const shouldChatBrowserNotification = getBrowserNotification(chatId, null, type);
+    let decision = shouldGlobalBrowserNotification;
+    if (shouldChatBrowserNotification !== null) {
+        decision = shouldChatBrowserNotification;
+    }
+    if (Notification?.permission === "granted" && decision) {
+        const notificationObject = { icon: hasLength(chatAvatar) ? chatAvatar : "/favicon_new.svg", tag: type };
+        if (hasLength(chatName)) {
+            notificationObject.body = chatName
+        }
+        const notification = new Notification(
+            messageText,
+            notificationObject,
+        );
+        notification.onclick = () => {
+            const routeObj = {
+                name: chat_name,
+                params: {
+                    id: chatId
+                },
+            };
+            if (hasLength(messageId)) {
+                routeObj.hash = messageIdHashPrefix + messageId;
+            }
+            router.push(routeObj);
+        }
+        notifications[type] = notification;
+    }
+}
+
+export const removeNotification = (type) => {
+    notifications[type]?.close()
+    notifications[type] = null;
+}

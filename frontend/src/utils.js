@@ -306,3 +306,32 @@ export const getLoginColoredStyle = (item, defaultLinkColor) => {
     const defaultColor = defaultLinkColor ? linkColor : null;
     return color ? {'color': color} : {'color': defaultColor}
 }
+
+export const getNotificationSubtitle = (vuetify, item) => {
+    switch (item.notificationType) {
+        case "missed_call":
+            return vuetify.locale.t('$vuetify.notification_missed_call', item.byLogin)
+        case "mention":
+            let builder1 = vuetify.locale.t('$vuetify.notification_mention', item.byLogin)
+            if (hasLength(item.chatTitle)) {
+                builder1 += (vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'");
+            }
+            return builder1
+        case "reply":
+            let builder2 = vuetify.locale.t('$vuetify.notification_reply', item.byLogin)
+            if (hasLength(item.chatTitle)) {
+                builder2 += (vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
+            }
+            return builder2
+        case "reaction":
+            let builder3 = vuetify.locale.t('$vuetify.notification_reaction', item.byLogin)
+            if (hasLength(item.chatTitle)) {
+                builder3 += (vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
+            }
+            return builder3
+    }
+}
+
+export const getNotificationTitle = (item) => {
+    return item.description
+}

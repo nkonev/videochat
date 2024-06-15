@@ -191,7 +191,7 @@
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
 import {
     getBlogLink,
-    getMessageLink,
+    getMessageLink, getNotificationSubtitle, getNotificationTitle,
     gotoMessageLink,
     hasLength,
     isCalling,
@@ -266,9 +266,15 @@ import MessageEdit from "@/MessageEdit.vue";
 import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
-import {getStoredLanguage} from "@/store/localStore";
+import {
+    getStoredLanguage, NOTIFICATION_TYPE_ANSWERS,
+    NOTIFICATION_TYPE_CALL,
+    NOTIFICATION_TYPE_MENTIONS, NOTIFICATION_TYPE_MISSED_CALLS,
+    NOTIFICATION_TYPE_NEW_MESSAGES, NOTIFICATION_TYPE_REACTIONS
+} from "@/store/localStore";
 import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
+import {createNotificationIfPermitted, removeNotification} from "@/notifications.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -456,6 +462,7 @@ export default {
                         chatId
                         chatName
                         status
+                        avatar
                       }
                       videoParticipantDialEvent {
                         chatId
@@ -482,6 +489,7 @@ export default {
                           createDateTime
                           byUserId
                           byLogin
+                          byAvatar
                           chatTitle
                         }
                         count
@@ -491,6 +499,15 @@ export default {
                       }
                       hasUnreadMessagesChanged {
                         hasUnreadMessages
+                      }
+                      browserNotification {
+                        chatId
+                        chatName
+                        chatAvatar
+                        messageId
+                        messageText
+                        ownerId
+                        ownerLogin
                       }
                     }
                   }
@@ -533,15 +550,22 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'notification_add') {
             const d = getGlobalEventsData(e).notificationEvent;
             bus.emit(NOTIFICATION_ADD, d);
+            this.processNotificationAsInBrowser(d.notificationDto, true);
           } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
               const d = getGlobalEventsData(e).notificationEvent;
               bus.emit(NOTIFICATION_DELETE, d);
+              this.processNotificationAsInBrowser(d.notificationDto, false);
           } else if (getGlobalEventsData(e).eventType === 'notification_clear_all') {
               const d = getGlobalEventsData(e).notificationEvent;
               bus.emit(NOTIFICATION_CLEAR_ALL, d);
           } else if (getGlobalEventsData(e).eventType === 'has_unread_messages_changed') {
               const d = getGlobalEventsData(e).hasUnreadMessagesChanged;
               this.chatStore.setHasNewMessages(d.hasUnreadMessages);
+          } else if (getGlobalEventsData(e).eventType === 'browser_notification_add_message') {
+              const d = getGlobalEventsData(e).browserNotification;
+              createNotificationIfPermitted(this.$router, d.chatId, d.chatName, d.chatAvatar, d.messageId, d.messageText, NOTIFICATION_TYPE_NEW_MESSAGES);
+          } else if (getGlobalEventsData(e).eventType === 'browser_notification_remove_message') {
+              removeNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
           } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
             const d = getGlobalEventsData(e).forceLogout;
             console.log("Killed sessions, reason:", d.reasonType)
@@ -622,6 +646,7 @@ export default {
               this.invitedVideoChatAlert = false;
               this.invitedVideoChatId = 0;
               this.invitedVideoChatName = null;
+              removeNotification(NOTIFICATION_TYPE_CALL);
             })
         },
         onVideoCallInvited(data) {
@@ -632,6 +657,7 @@ export default {
                 this.invitedVideoChatName = data.chatName;
                 this.invitedVideoChatState = true;
               }).then(()=>{
+                  createNotificationIfPermitted(this.$router, data.chatId, data.chatName, data.avatar, null, this.$vuetify.locale.t('$vuetify.you_called_short', this.invitedVideoChatId), NOTIFICATION_TYPE_CALL);
                   audio.play().catch(error => {
                       console.warn("Unable to play sound", error);
                       bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
@@ -711,6 +737,33 @@ export default {
         },
         onWindowResized() {
             bus.emit(ON_WINDOW_RESIZED)
+        },
+        processNotificationAsInBrowser(item, add) {
+
+            const title = getNotificationTitle(item);
+            const subtitle = getNotificationSubtitle(this.$vuetify, item);
+
+            let type;
+            switch(item.notificationType) {
+                case "missed_call":
+                    type = NOTIFICATION_TYPE_MISSED_CALLS;
+                    break
+                case "mention":
+                    type = NOTIFICATION_TYPE_MENTIONS;
+                    break
+                case "reply":
+                    type = NOTIFICATION_TYPE_ANSWERS;
+                    break
+                case "reaction":
+                    type = NOTIFICATION_TYPE_REACTIONS;
+                    break
+            }
+
+            if (add) {
+                createNotificationIfPermitted(this.$router, item.chatId, title, item.byAvatar, item.id, subtitle, type);
+            } else {
+                removeNotification(type);
+            }
         },
     },
     components: {

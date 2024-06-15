@@ -80,7 +80,7 @@ import bus, {
     NOTIFICATION_ADD, NOTIFICATION_CLEAR_ALL, NOTIFICATION_DELETE,
     OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
-import {hasLength} from "./utils";
+import {getNotificationSubtitle, getNotificationTitle, hasLength} from "./utils";
 import { getHumanReadableDate } from "@/date.js";
 import axios from "axios";
 import {chat, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
@@ -166,31 +166,10 @@ export default {
             }
         },
         getNotificationSubtitle(item) {
-            switch (item.notificationType) {
-                case "missed_call":
-                    return this.$vuetify.locale.t('$vuetify.notification_missed_call', item.byLogin)
-                case "mention":
-                    let builder1 = this.$vuetify.locale.t('$vuetify.notification_mention', item.byLogin)
-                    if (hasLength(item.chatTitle)) {
-                        builder1 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'");
-                    }
-                    return builder1
-                case "reply":
-                    let builder2 = this.$vuetify.locale.t('$vuetify.notification_reply', item.byLogin)
-                    if (hasLength(item.chatTitle)) {
-                        builder2 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
-                    }
-                    return builder2
-                case "reaction":
-                    let builder3 = this.$vuetify.locale.t('$vuetify.notification_reaction', item.byLogin)
-                    if (hasLength(item.chatTitle)) {
-                      builder3 += (this.$vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
-                    }
-                    return builder3
-            }
+            return getNotificationSubtitle(this.$vuetify, item);
         },
         getNotificationTitle(item) {
-            return item.description
+            return getNotificationTitle(item)
         },
         getNotificationDate(item) {
             return getHumanReadableDate(item.createDateTime)
