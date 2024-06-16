@@ -96,13 +96,15 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 			}
 			hasMoreChats = len(chatIds) == utils.DefaultSize
 
+			hasParticipantsMap, err := tx.HasParticipants(chatIds)
+			if err != nil {
+				logger.GetLogEntry(c).Errorf("Got error HasParticipants %v", err)
+				return nil
+			}
+
 			for _, chatId := range chatIds {
 				// if chat has 0 participants - then remove chat
-				hasParticipants, err := tx.HasParticipants(chatId)
-				if err != nil {
-					logger.GetLogEntry(c).Errorf("Got error HasParticipants %v", err)
-					continue
-				}
+				hasParticipants := hasParticipantsMap[chatId]
 				if !hasParticipants {
 					logger.GetLogEntry(c).Infof("Deleteing chat %v because it does not have participants", chatId)
 					err = tx.DeleteChat(chatId)

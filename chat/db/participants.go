@@ -466,13 +466,25 @@ func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
 	return setAdminCommon(db, userId, chatId, newAdmin)
 }
 
-func (tx *Tx) HasParticipants(chatId int64) (bool, error) {
-	var exists bool = false
-	row := tx.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE chat_id = $1 LIMIT 1)`, chatId)
-	if err := row.Scan(&exists); err != nil {
-		return false, eris.Wrap(err, "error during interacting with db")
+func (tx *Tx) HasParticipants(chatIds []int64) (map[int64]bool, error) {
+	response := map[int64]bool{}
+	for _, chatId := range chatIds {
+		response[chatId] = false
+	}
+	if rows, err := tx.Query("SELECT DISTINCT(chat_id) FROM chat_participant WHERE chat_id = ANY ($1)", chatIds); err != nil {
+		return nil, err
 	} else {
-		return exists, nil
+		defer rows.Close()
+
+		for rows.Next() {
+			var chatId int64
+			if err := rows.Scan(&chatId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				response[chatId] = true
+			}
+		}
+		return response, nil
 	}
 }
 
