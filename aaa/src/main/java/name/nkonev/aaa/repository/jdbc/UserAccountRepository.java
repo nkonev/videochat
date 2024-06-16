@@ -54,7 +54,7 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
 
     // here we intentionally set that deleted user exists
-    @Query("select id from user_account u where u.id in (:userIds)")
+    @Query("select u.id from user_account u where u.id in (:userIds)")
     Set<Long> findUserIds(List<Long> userIds);
 
     @Query("select u.* from user_account u order by u.id limit :pageSize offset :offset")
