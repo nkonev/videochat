@@ -37,12 +37,12 @@ public class UserOnlineTask {
     public void scheduledTask() {
         final int pageSize = aaaProperties.schedulers().userOnline().batchSize();
         LOGGER.debug("User online task start, userOnlineBatchSize={}", pageSize);
-        var count = userAccountRepository.count();
-        var pages = (count / pageSize) + ((count > pageSize && count % pageSize > 0) ? 1 : 0) + 1;
 
-        for (int i = 0; i < pages; i++) {
-            var chunk = userAccountRepository.findAll(PageRequest.of(i, pageSize));
-            var usersOnline = aaaUserDetailsService.getUsersOnlineByUsers(chunk.getContent());
+        var shouldContinue = true;
+        for (int i = 0; shouldContinue; i++) {
+            var chunk = userAccountRepository.findPage(pageSize, i * pageSize);
+            shouldContinue = chunk.size() == pageSize;
+            var usersOnline = aaaUserDetailsService.getUsersOnlineByUsers(chunk);
             eventService.notifyOnlineChanged(usersOnline);
         }
         LOGGER.debug("User online task finish");

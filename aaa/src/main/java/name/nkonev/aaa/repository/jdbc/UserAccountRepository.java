@@ -57,4 +57,6 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     @Query("select id from user_account u where id in (:userIds)")
     Set<Long> findUserIds(List<Long> userIds);
 
+    @Query("select u.* from user_account u order by id limit :pageSize offset :offset")
+    List<UserAccount> findPage(int pageSize, int offset);
 }
