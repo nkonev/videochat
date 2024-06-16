@@ -124,18 +124,18 @@ func (not *Events) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatI
 		return
 	}
 
+	unreadMessagesByUserId, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, chatId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("error during get GetUnreadMessagesCountBatchByParticipants for chat=%v: %v", chatId, err)
+		return
+	}
+
 	for _, participantId := range userIds {
 		GetLogEntry(c.Request().Context()).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
 
-		unreadMessages, err := tx.GetUnreadMessagesCount(chatId, participantId)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during get unread messages for userId=%v: %s", participantId, err)
-			continue
-		}
-
 		payload := &dto.ChatUnreadMessageChanged{
 			ChatId:             chatId,
-			UnreadMessages:     unreadMessages,
+			UnreadMessages:     unreadMessagesByUserId[participantId],
 			LastUpdateDateTime: lastUpdated,
 		}
 
