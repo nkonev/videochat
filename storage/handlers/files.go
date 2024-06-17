@@ -214,12 +214,12 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 			return err
 		}
 
-		err = services.ChangeMinioUrl(u)
+		stringUrl, err :=  services.ChangeMinioUrl(u)
 		if err != nil {
 			return err
 		}
 
-		presignedUrls = append(presignedUrls, PresignedUrl{u.String(), i})
+		presignedUrls = append(presignedUrls, PresignedUrl{stringUrl, i})
 	}
 	existingCount := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
 

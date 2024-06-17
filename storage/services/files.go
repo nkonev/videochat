@@ -189,12 +189,11 @@ func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, time.Durati
 		return "", time.Second, err
 	}
 
-	err = ChangeMinioUrl(u)
+	downloadUrl, err := ChangeMinioUrl(u)
 	if err != nil {
 		return "", time.Second, err
 	}
 
-	downloadUrl := fmt.Sprintf("%v", u)
 	return downloadUrl, ttl, nil
 }
 
@@ -212,17 +211,20 @@ func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
 	return downloadUrlStr, nil
 }
 
-func ChangeMinioUrl(url *url.URL) error {
-	publicUrlPrefix := viper.GetString("minio.publicUrl")
+func ChangeMinioUrl(url *url.URL) (string, error) {
+	publicUrlPrefix := viper.GetString("minio.publicUrlPrefix")
 	parsed, err := url.Parse(publicUrlPrefix)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	url.Path = parsed.Path + url.Path
-	url.Host = parsed.Host
-	url.Scheme = parsed.Scheme
-	return nil
+	url.Host = ""
+	url.Scheme = ""
+
+	stringV := url.String()
+
+	return stringV, nil
 }
 
 func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, error) {
