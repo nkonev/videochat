@@ -22,8 +22,8 @@
               <v-window v-model="tab">
                   <v-window-item value="video">
                       <v-card-text class="d-flex justify-start pb-0 pt-2 px-2 recording-wrapper">
-                          <div style="position:absolute;">
-                              <div v-if="isRecording"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
+                          <div class="recording-container-element">
+                              <div v-if="isRecording" class="recording-caption"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
                               <span v-if="!mediaDevicesGotten">{{ $vuetify.locale.t('$vuetify.waiting_for_devices') }}</span>
                           </div>
                           <video style="max-width: 100%" playsinline></video>
@@ -258,3 +258,28 @@ export default {
   }
 }
 </script>
+
+<style lang="stylus" scoped>
+.recording-container-element {
+    position relative
+    display flex
+    flex-direction column
+    align-items: center;
+}
+
+.recording-caption {
+    z-index 2
+    display inherit
+    margin: 0;
+    left 0.4em
+    bottom 0.4em
+    position: absolute
+    background rgba(255, 255, 255, 0.6)
+    padding-left 0.3em
+    padding-right 0.3em
+    border-radius 4px
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+</style>

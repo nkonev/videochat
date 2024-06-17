@@ -9,7 +9,7 @@
         <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.locale.t('$vuetify.video_is_not_shown') }}</span>
         <img v-show="avatarIsSet && videoMute" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :id="id" autoPlay playsInline ref="videoRef"/>
-        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon><v-icon v-if="!audioMute && speaking">mdi-microphone</v-icon></p>
+        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', errored ? 'video-container-element-caption-errored' : '', 'video-container-element-caption']">{{ userName }} <v-icon :style="getStyle()" v-if="!speaking">mdi-microphone-off</v-icon><v-icon v-if="speaking">mdi-microphone</v-icon></p>
     </div>
 </template>
 
@@ -169,6 +169,11 @@ export default {
                 this.showControls = false;
             }
         },
+        getStyle() {
+            return {
+                opacity: this.audioMute ? 1 : 0
+            }
+        },
     },
     computed: {
         ...mapStores(useChatStore),
@@ -265,9 +270,11 @@ export default {
         margin: 0;
         left 0.4em
         bottom 0.4em
-        text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
         position: absolute
-        width: 90%;
+        background rgba(255, 255, 255, 0.65)
+        padding-left 0.3em
+        padding-right 0.3em
+        border-radius 4px
         //word-wrap: break-word;
         //overflow-wrap: break-all
         overflow: hidden;
