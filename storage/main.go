@@ -225,6 +225,7 @@ func configureAwsS3() *awsS3.S3 {
 	return svc
 }
 
+
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	Logger.Infof("Configuring Jaeger tracing")
 	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
