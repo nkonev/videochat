@@ -30,11 +30,6 @@ type BaseChatDto struct {
 	Blog                         bool        `json:"blog"`
 	LoginColor                          null.String `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool `json:"regularParticipantCanPublishMessage"`
-	CanPublishMessage                   bool `json:"canPublishMessage"`
-}
-
-func CanPublishMessage(isAdmin, regularParticipantCanPublishMessage bool) bool {
-	return isAdmin || regularParticipantCanPublishMessage
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -46,7 +41,6 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 	copied.CanAudioMute = admin
 	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
 	copied.CanBroadcast = admin
-	copied.CanPublishMessage = CanPublishMessage(admin, copied.RegularParticipantCanPublishMessage)
 
 	if !participant {
 		copied.IsResultFromSearch = null.BoolFrom(true)

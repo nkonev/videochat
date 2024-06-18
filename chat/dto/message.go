@@ -47,11 +47,17 @@ type DisplayMessageDto struct {
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
 	Reactions []Reaction				 `json:"reactions"`
 	Published      bool                  `json:"published"`
+	CanPublish     bool                  `json:"canPublish"`
 }
 
-func (copied *DisplayMessageDto) SetPersonalizedFields(participantId int64) {
+func CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, messageOwnerId, behalfUserId int64) bool {
+	return chatIsAdmin || (chatRegularParticipantCanPublishMessage && messageOwnerId == behalfUserId)
+}
+
+func (copied *DisplayMessageDto) SetPersonalizedFields(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, participantId int64) {
 	copied.CanEdit = ((copied.OwnerId == participantId) && (copied.EmbedMessage == nil || copied.EmbedMessage.EmbedType != EmbedMessageTypeResend))
 	copied.CanDelete = copied.OwnerId == participantId
+	copied.CanPublish = CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin, copied.OwnerId, participantId)
 }
 
 type MessageDeletedDto struct {

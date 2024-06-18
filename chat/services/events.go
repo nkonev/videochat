@@ -183,7 +183,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				continue
 			}
 
-			copied.SetPersonalizedFields(participantId)
+			copied.SetPersonalizedFields(participantId) // TODO
 
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:           eventType,
