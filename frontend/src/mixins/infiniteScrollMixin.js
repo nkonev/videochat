@@ -1,4 +1,5 @@
 import debounce from "lodash/debounce";
+import {isFireFox} from "@/utils.js";
 
 export const directionTop = 'top';
 export const directionBottom = 'bottom';
@@ -101,10 +102,14 @@ export default (name) => {
           this.preservedScroll = null;
       },
       setNoScroll() {
-          this.scrollerDiv.classList.add("stop-scrolling");
+          if (isFireFox()) { // This works well only on Firefox, in case Chrome it both doesn't needed and breaks pagination in a random manner
+              this.scrollerDiv.classList.add("stop-scrolling");
+          }
       },
       unsetNoScroll() {
-          this.scrollerDiv.classList.remove("stop-scrolling");
+          if (isFireFox()) {
+              this.scrollerDiv.classList.remove("stop-scrolling");
+          }
       },
       async initialLoad() {
         if (this.scrollerDiv == null) {
