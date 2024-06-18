@@ -896,8 +896,7 @@ html {
 }
 
 div .stop-scrolling {
-    height: 100%; // this is for Chrome, for Firefox just `overflow: hidden !important;` is enough
-    overflow-y: hidden !important;
+    overflow: hidden !important;
 }
 
 </style>
