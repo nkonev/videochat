@@ -1388,6 +1388,9 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 		}
 
 		res, err := getMessage(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
 
 		count0, err := tx.GetPublishedMessagesCount(chatId)
 		if err != nil {
