@@ -27,7 +27,7 @@
                                         <v-btn variant="flat" icon @click="copyLinkToPublishedMessage(item)">
                                             <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.copy_public_link_to_message')">mdi-link</v-icon>
                                         </v-btn>
-                                        <v-btn variant="flat" icon @click="unpublishMessage(item)">
+                                        <v-btn variant="flat" icon @click="unpublishMessage(item)" v-if="canUnpublish()">
                                             <v-icon color="red" dark :title="$vuetify.locale.t('$vuetify.remove_from_public')">mdi-delete</v-icon>
                                         </v-btn>
                                     </template>
@@ -92,6 +92,8 @@ import {getPublicMessageLink, hasLength} from "./utils";
 import { getHumanReadableDate } from "@/date.js";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore.js";
 
 export default {
     mixins: [
@@ -198,6 +200,12 @@ export default {
         shouldReactOnPageChange() {
             return this.show
         },
+        canUnpublish() {
+            return this.chatStore.chatDto.canPublishMessage
+        },
+    },
+    computed: {
+        ...mapStores(useChatStore),
     },
     mounted() {
         bus.on(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);

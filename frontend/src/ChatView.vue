@@ -31,7 +31,7 @@
                 </v-alert>
               </div>
 
-              <MessageList :canResend="chatDto.canResend" :blog="chatDto.blog" :canPublishMessage="chatDto.canPublishMessage"/>
+              <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog" :canPublishMessage="chatStore.chatDto.canPublishMessage"/>
 
               <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               <v-btn v-if="!isMobile() && chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" class="new-fab" @click="scrollDown()"></v-btn>
@@ -43,7 +43,7 @@
         </splitpanes>
       </pane>
       <pane v-if="showRightPane()" min-size="15" :size="rightPaneSize()">
-        <ChatVideo :chatDto="chatDto" :videoIsOnTop="videoIsOnTop()"/>
+        <ChatVideo :chatDto="chatStore.chatDto" :videoIsOnTop="videoIsOnTop()"/>
       </pane>
 
     </splitpanes>
@@ -94,12 +94,6 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 
-const chatDtoFactory = () => {
-    return {
-        participantIds:[],
-        participants:[],
-    }
-}
 
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
@@ -127,7 +121,6 @@ export default {
   ],
   data() {
     return {
-      chatDto: chatDtoFactory(),
       pinnedPromoted: null,
       pinnedPromotedKey: +new Date(),
       writingUsers: [],
@@ -171,7 +164,7 @@ export default {
           console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
           this.commonChatEdit(data);
           this.chatStore.tetATet = data.tetATet;
-          this.chatDto = data;
+          this.chatStore.setChatDto(data);
           return Promise.resolve();
         }
       })
@@ -472,7 +465,7 @@ export default {
     onChatChange(data) {
         if (data.id == this.chatId) {
             this.commonChatEdit(data);
-            this.chatDto = data;
+            this.chatStore.setChatDto(data);
         }
     },
     onChatDelete(dto) {
@@ -481,7 +474,7 @@ export default {
       }
     },
     isAllowedVideo() {
-      return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatDto?.participantIds?.length
+      return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatStore.chatDto?.participantIds?.length
     },
     isAllowedChatList() {
       return this.chatStore.currentUser
@@ -495,7 +488,7 @@ export default {
       this.getInfo()
     },
     partialReset() {
-      this.chatDto = chatDtoFactory();
+      this.chatStore.resetChatDto();
 
       this.chatStore.videoChatUsersCount=0;
       this.chatStore.canMakeRecord=false;
@@ -515,7 +508,7 @@ export default {
       this.chatStore.showCallManagement = false;
     },
     onChatDialStatusChange(dto) {
-      if (this.chatDto?.tetATet && dto.chatId == this.chatId) {
+      if (this.chatStore.chatDto?.tetATet && dto.chatId == this.chatId) {
         for (const videoDialChanged of dto.dials) {
           if (this.chatStore.currentUser.id != videoDialChanged.userId) {
             this.chatStore.shouldPhoneBlink = isCalling(videoDialChanged.status);

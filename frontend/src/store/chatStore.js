@@ -8,6 +8,13 @@ import {setStoredLanguage} from "@/store/localStore";
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
 
+const chatDtoFactory = () => {
+    return {
+        participantIds:[],
+        participants:[],
+    }
+}
+
 export const useChatStore = defineStore('chat', {
   state: () => {
     return {
@@ -50,6 +57,7 @@ export const useChatStore = defineStore('chat', {
         fileUploadOverallProgress: 0,
         shouldShowSendMessageButtons: true,
         hasNewMessages: false,
+        chatDto: chatDtoFactory(),
     }
   },
   actions: {
@@ -138,6 +146,12 @@ export const useChatStore = defineStore('chat', {
     },
     setCallStateInCall() {
       this.callState = callStateInCall
+    },
+    resetChatDto() {
+      this.chatDto = chatDtoFactory();
+    },
+    setChatDto(d) {
+       this.chatDto = d;
     },
   },
 

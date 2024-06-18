@@ -144,8 +144,9 @@
     import bus, {OPEN_CHAT_EDIT} from "./bus/bus";
     import {chat_name} from "@/router/routes";
     import {hasLength} from "@/utils";
-    import {v4 as uuidv4} from "uuid";
     import {isNumber, isObject, isString} from "lodash";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore.js";
 
     const dtoFactory = ()=>{
         return {
@@ -173,6 +174,7 @@
             }
         },
         computed: {
+            ...mapStores(useChatStore),
             chatNameRules() {
                 return [
                     v => !!v || this.$vuetify.locale.t('$vuetify.chat_name_required'),
@@ -199,9 +201,10 @@
                 this.$data.show = true;
 
                 if (isNumber(input) || isString(input)) {
-                  this.loadData(input).then((data) => {
-                    this.editDto = this.extractNecessaryFields(data);
-                  })
+                  if (input != this.chatStore.chatDto.id) {
+                      throw "Unexpected case"
+                  }
+                  this.editDto = this.extractNecessaryFields(this.chatStore.chatDto)
                 } else if (isObject(input)) {
                   this.editDto = this.extractNecessaryFields(input);
                 } else {
