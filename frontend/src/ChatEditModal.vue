@@ -225,17 +225,6 @@
                 regularParticipantCanPublishMessage: chatDto.regularParticipantCanPublishMessage,
               }
             },
-            loadData(editChatId) {
-              console.log("Getting info about chat id", editChatId);
-              this.loading = true;
-              return axios.get('/api/chat/'+editChatId)
-                .then((response) => {
-                  return response.data
-                }).finally(()=>{
-                  this.loading = false;
-                })
-            },
-
             loadCanCreateBlog() {
                 axios.get("/api/chat/can-create-blog")
                     .then((response) => {
