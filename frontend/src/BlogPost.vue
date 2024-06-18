@@ -60,13 +60,13 @@
 import axios from "axios";
 import MessageItem from "@/MessageItem";
 import {
-    getHumanReadableDate,
     getLoginColoredStyle,
     hasLength,
     replaceOrAppend,
     replaceOrPrepend,
     setTitle
 } from "@/utils";
+import { getHumanReadableDate } from "@/date.js";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile, profile_name} from "@/router/routes";
 import {mapStores} from "pinia";
 import {useBlogStore} from "@/store/blogStore";

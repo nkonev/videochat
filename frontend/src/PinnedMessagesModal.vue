@@ -84,7 +84,8 @@ import bus, {
     OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, hasLength} from "./utils";
+import { hasLength } from "./utils";
+import { getHumanReadableDate } from "@/date.js";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 

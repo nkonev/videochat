@@ -1,4 +1,3 @@
-import { format, parseISO, differenceInDays } from 'date-fns';
 import {blog_post, chat, chat_name, prefix, video_suffix, videochat_name} from "@/router/routes";
 
 export const isMobileBrowser = () => {
@@ -65,15 +64,6 @@ export const getBlogLink = (chatId) => {
 export const getPublicMessageLink = (chatId, messageId) => {
     // see also public_message in routes.js
     return getUrlPrefix() + chat + '/' + chatId + '/public/' + messageId;
-}
-
-export const getHumanReadableDate = (timestamp) => {
-    const parsedDate = parseISO(timestamp);
-    let formatString = 'HH:mm:ss';
-    if (differenceInDays(new Date(), parsedDate) >= 1) {
-        formatString = formatString + ', d MMM yyyy';
-    }
-    return `${format(parsedDate, formatString)}`
 }
 
 export const media_image = "image";

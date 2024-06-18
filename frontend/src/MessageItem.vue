@@ -46,8 +46,9 @@
     import {
         embed_message_reply,
         embed_message_resend, getBlogLink,
-        getHumanReadableDate, getLoginColoredStyle, hasLength,
+        getLoginColoredStyle, hasLength,
     } from "@/utils";
+    import { getHumanReadableDate } from "@/date.js";
     import "./messageBody.styl";
     import "./messageWrapper.styl";
     import "./itemAvatar.styl";

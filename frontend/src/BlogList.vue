@@ -62,13 +62,13 @@
 
 <script>
 import {
-    getHumanReadableDate,
     getLoginColoredStyle,
     hasLength,
     replaceOrAppend,
     replaceOrPrepend,
     setTitle
 } from "@/utils";
+import { getHumanReadableDate } from "@/date.js";
 import axios from "axios";
 import debounce from "lodash/debounce";
 import Mark from "mark.js";

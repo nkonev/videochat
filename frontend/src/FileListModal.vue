@@ -128,10 +128,10 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 import {
-  getHumanReadableDate,
   formatSize,
   hasLength,
 } from "./utils";
+import { getHumanReadableDate } from "@/date.js";
 import debounce from "lodash/debounce";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";

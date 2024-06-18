@@ -88,7 +88,8 @@ import bus, {
     PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_REMOVE,
 } from "./bus/bus";
 import axios from "axios";
-import {getHumanReadableDate, getPublicMessageLink, hasLength} from "./utils";
+import {getPublicMessageLink, hasLength} from "./utils";
+import { getHumanReadableDate } from "@/date.js";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 

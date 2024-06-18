@@ -80,7 +80,8 @@ import bus, {
     NOTIFICATION_ADD, NOTIFICATION_CLEAR_ALL, NOTIFICATION_DELETE,
     OPEN_NOTIFICATIONS_DIALOG, OPEN_SETTINGS,
 } from "./bus/bus";
-import {getHumanReadableDate, hasLength} from "./utils";
+import {hasLength} from "./utils";
+import { getHumanReadableDate } from "@/date.js";
 import axios from "axios";
 import {chat, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import {mapStores} from "pinia";
