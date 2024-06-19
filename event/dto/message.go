@@ -22,6 +22,7 @@ type PublishedMessageDto struct {
 	OwnerId        int64                 `json:"ownerId"`
 	Owner          *User                 `json:"owner"`
 	CanPublish     bool                  `json:"canPublish"`
+	CreateDateTime time.Time             `json:"createDateTime"`
 }
 
 type PinnedMessageDto struct {

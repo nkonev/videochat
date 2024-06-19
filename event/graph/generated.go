@@ -258,12 +258,13 @@ type ComplexityRoot struct {
 	}
 
 	PublishedMessageDto struct {
-		CanPublish func(childComplexity int) int
-		ChatID     func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Owner      func(childComplexity int) int
-		OwnerID    func(childComplexity int) int
-		Text       func(childComplexity int) int
+		CanPublish     func(childComplexity int) int
+		ChatID         func(childComplexity int) int
+		CreateDateTime func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Owner          func(childComplexity int) int
+		OwnerID        func(childComplexity int) int
+		Text           func(childComplexity int) int
 	}
 
 	PublishedMessageEvent struct {
@@ -1439,6 +1440,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PublishedMessageDto.ChatID(childComplexity), true
+
+	case "PublishedMessageDto.createDateTime":
+		if e.complexity.PublishedMessageDto.CreateDateTime == nil {
+			break
+		}
+
+		return e.complexity.PublishedMessageDto.CreateDateTime(childComplexity), true
 
 	case "PublishedMessageDto.id":
 		if e.complexity.PublishedMessageDto.ID == nil {
@@ -8906,6 +8914,50 @@ func (ec *executionContext) fieldContext_PublishedMessageDto_canPublish(_ contex
 	return fc, nil
 }
 
+func (ec *executionContext) _PublishedMessageDto_createDateTime(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublishedMessageDto_createDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublishedMessageDto_createDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PublishedMessageEvent_message(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublishedMessageEvent_message(ctx, field)
 	if err != nil {
@@ -8957,6 +9009,8 @@ func (ec *executionContext) fieldContext_PublishedMessageEvent_message(_ context
 				return ec.fieldContext_PublishedMessageDto_owner(ctx, field)
 			case "canPublish":
 				return ec.fieldContext_PublishedMessageDto_canPublish(ctx, field)
+			case "createDateTime":
+				return ec.fieldContext_PublishedMessageDto_createDateTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublishedMessageDto", field.Name)
 		},
@@ -14924,6 +14978,11 @@ func (ec *executionContext) _PublishedMessageDto(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._PublishedMessageDto_owner(ctx, field, obj)
 		case "canPublish":
 			out.Values[i] = ec._PublishedMessageDto_canPublish(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createDateTime":
+			out.Values[i] = ec._PublishedMessageDto_createDateTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

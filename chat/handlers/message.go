@@ -478,6 +478,7 @@ func convertToPublishedMessageDto(cleanTagsPolicy *services.StripTagsPolicy, dbM
 		ChatId:         dbMessage.ChatId,
 		OwnerId:        dbMessage.OwnerId,
 		Owner:          user,
+		CreateDateTime: dbMessage.CreateDateTime,
 	}
 
 	ret.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, ret.Text)

@@ -123,6 +123,7 @@ type PublishedMessageDto {
     ownerId:        Int64!
     owner:          Participant
     canPublish:     Boolean!
+    createDateTime: Time!
 }
 
 type PinnedMessageDto {

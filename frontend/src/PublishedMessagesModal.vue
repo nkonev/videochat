@@ -27,7 +27,7 @@
                                         <v-btn variant="flat" icon @click="copyLinkToPublishedMessage(item)">
                                             <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.copy_public_link_to_message')">mdi-link</v-icon>
                                         </v-btn>
-                                        <v-btn variant="flat" icon @click="unpublishMessage(item)" v-if="canUnpublish()">
+                                        <v-btn variant="flat" icon @click="unpublishMessage(item)" v-if="canUnpublish(item)">
                                             <v-icon color="red" dark :title="$vuetify.locale.t('$vuetify.remove_from_public')">mdi-delete</v-icon>
                                         </v-btn>
                                     </template>

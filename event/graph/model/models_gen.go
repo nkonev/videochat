@@ -219,12 +219,13 @@ type PreviewCreatedEvent struct {
 }
 
 type PublishedMessageDto struct {
-	ID         int64        `json:"id"`
-	Text       string       `json:"text"`
-	ChatID     int64        `json:"chatId"`
-	OwnerID    int64        `json:"ownerId"`
-	Owner      *Participant `json:"owner"`
-	CanPublish bool         `json:"canPublish"`
+	ID             int64        `json:"id"`
+	Text           string       `json:"text"`
+	ChatID         int64        `json:"chatId"`
+	OwnerID        int64        `json:"ownerId"`
+	Owner          *Participant `json:"owner"`
+	CanPublish     bool         `json:"canPublish"`
+	CreateDateTime time.Time    `json:"createDateTime"`
 }
 
 type PublishedMessageEvent struct {

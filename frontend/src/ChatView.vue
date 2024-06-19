@@ -338,6 +338,8 @@ export default {
                                           shortInfo
                                           loginColor
                                         }
+                                        createDateTime
+                                        canPublish
                                       }
                                     }
                                     fileEvent {

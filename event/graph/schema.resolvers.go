@@ -546,9 +546,9 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		result.PromoteMessageEvent = convertPinnedMessageEvent(promotePinnedMessageEvent)
 	}
 
-	publishedPinnedMessageEvent := e.PublishedMessageNotification
-	if publishedPinnedMessageEvent != nil {
-		result.PublishedMessageEvent = convertPublishedMessageEvent(publishedPinnedMessageEvent)
+	publishedMessageEvent := e.PublishedMessageNotification
+	if publishedMessageEvent != nil {
+		result.PublishedMessageEvent = convertPublishedMessageEvent(publishedMessageEvent)
 	}
 
 	fileEvent := e.FileEvent
@@ -656,6 +656,7 @@ func convertPublishedMessageDto(e *dto.PublishedMessageDto) *model.PublishedMess
 		OwnerID:    e.OwnerId,
 		Owner:      convertParticipant(e.Owner),
 		CanPublish: e.CanPublish,
+		CreateDateTime: e.CreateDateTime,
 	}
 }
 func convertPinnedMessageDto(e *dto.PinnedMessageDto) *model.PinnedMessageDto {
