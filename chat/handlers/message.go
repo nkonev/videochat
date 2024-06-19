@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/getlantern/deepcopy"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
@@ -1565,14 +1564,14 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 
 			var copiedMsg = convertToPublishedMessageDto(mc.stripAllTags, message, users)
 
 			mc.notificator.NotifyAboutPublishedMessage(c, chatId, &dto.PublishedMessageEvent{
 				Message:    *copiedMsg,
 				TotalCount: count0,
-			}, publish, participantIds)
+			}, publish, participantIds, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1809,7 +1808,17 @@ func (mc *MessageHandler) GetPublishedMessages(c echo.Context) error {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
+		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+
 		messages, err := tx.GetPublishedMessages(chatId, size, offset)
+		if err != nil {
+			return err
+		}
+
+		chatBasic, err := tx.GetChatBasic(chatId)
 		if err != nil {
 			return err
 		}
@@ -1824,6 +1833,7 @@ func (mc *MessageHandler) GetPublishedMessages(c echo.Context) error {
 		for _, message := range messages {
 
 			converted := convertToPublishedMessageDto(mc.stripAllTags, message, owners) // the actual personal values don't needed here
+			converted.CanPublish = dto.CanPublishMessage(chatBasic.RegularParticipantCanPublishMessage, admin, message.OwnerId, userPrincipalDto.UserId)
 
 			messageDtos = append(messageDtos, converted)
 		}

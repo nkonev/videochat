@@ -601,6 +601,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		BlogPost:       messageDto.BlogPost,
 		PinnedPromoted: messageDto.PinnedPromoted,
 		Published:      messageDto.Published,
+		CanPublish:     messageDto.CanPublish,
 	}
 	embedMessageDto := messageDto.EmbedMessage
 	if embedMessageDto != nil {
@@ -654,15 +655,16 @@ func convertPublishedMessageDto(e *dto.PublishedMessageDto) *model.PublishedMess
 		ChatID:  e.ChatId,
 		OwnerID: e.OwnerId,
 		Owner:   convertParticipant(e.Owner),
+		CanPublish: e.CanPublish,
 	}
 }
 func convertPinnedMessageDto(e *dto.PinnedMessageDto) *model.PinnedMessageDto {
-	return &model.PinnedMessageDto {
-		ID:      e.Id,
-		Text:    e.Text,
-		ChatID:  e.ChatId,
-		OwnerID: e.OwnerId,
-		Owner:   convertParticipant(e.Owner),
+	return &model.PinnedMessageDto{
+		ID:             e.Id,
+		Text:           e.Text,
+		ChatID:         e.ChatId,
+		OwnerID:        e.OwnerId,
+		Owner:          convertParticipant(e.Owner),
 		PinnedPromoted: e.PinnedPromoted,
 	}
 }
@@ -699,7 +701,6 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			Blog:                                chatDtoWithAdmin.Blog,
 			LoginColor:                          chatDtoWithAdmin.LoginColor.Ptr(),
 			RegularParticipantCanPublishMessage: chatDtoWithAdmin.RegularParticipantCanPublishMessage,
-			CanPublishMessage:                   chatDtoWithAdmin.CanPublishMessage,
 		}
 	}
 

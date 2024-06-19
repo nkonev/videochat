@@ -193,8 +193,8 @@ export default {
         shouldReactOnPageChange() {
             return this.show
         },
-        canUnpublish() {
-            return this.chatStore.chatDto.canPublishMessage
+        canUnpublish(item) {
+            return item.canPublish
         },
     },
     computed: {

@@ -31,7 +31,7 @@
                 </v-alert>
               </div>
 
-              <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog" :canPublishMessage="chatStore.chatDto.canPublishMessage"/>
+              <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog"/>
 
               <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
               <v-btn v-if="!isMobile() && chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" class="new-fab" @click="scrollDown()"></v-btn>
@@ -269,6 +269,7 @@ export default {
                                     reaction
                                   }
                                   published
+                                  canPublish
                                 }
 
                                 subscription{

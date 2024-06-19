@@ -21,6 +21,7 @@ type PublishedMessageDto struct {
 	ChatId         int64                 `json:"chatId"`
 	OwnerId        int64                 `json:"ownerId"`
 	Owner          *User                 `json:"owner"`
+	CanPublish     bool                  `json:"canPublish"`
 }
 
 type PinnedMessageDto struct {
@@ -55,6 +56,7 @@ type DisplayMessageDto struct {
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
 	Reactions []Reaction				 `json:"reactions"`
 	Published      bool                  `json:"published"`
+	CanPublish     bool                  `json:"canPublish"`
 }
 
 type MessageDeletedDto struct {

@@ -24,7 +24,6 @@
             ref="contextMenuRef"
             :canResend="canResend"
             :isBlog="blog"
-            :canPublishMessage="canPublishMessage"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
             @replyOnMessage="this.replyOnMessage"
@@ -92,7 +91,7 @@
         hashMixin(),
         searchString(SEARCH_MODE_MESSAGES),
       ],
-      props: ['canResend', 'blog', 'canPublishMessage'],
+      props: ['canResend', 'blog'],
       data() {
         return {
           markInstance: null,

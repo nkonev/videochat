@@ -427,7 +427,7 @@ func (not *Events) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64,
 	}
 }
 
-func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg *dto.PublishedMessageEvent, publish bool, participantIds []int64) {
+func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg *dto.PublishedMessageEvent, publish bool, participantIds []int64, regularParticipantCanPublishMessage bool, areAdmins map[int64]bool) {
 
 	var eventType = ""
 	if publish {
@@ -438,9 +438,17 @@ func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg
 
 	for _, participantId := range participantIds {
 
+		var copied *dto.PublishedMessageEvent = &dto.PublishedMessageEvent{}
+		if err := deepcopy.Copy(copied, msg); err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+			continue
+		}
+
+		copied.Message.CanPublish = dto.CanPublishMessage(regularParticipantCanPublishMessage, areAdmins[participantId], copied.Message.OwnerId, participantId)
+
 		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:                    eventType,
-			PublishedMessageNotification: msg,
+			PublishedMessageNotification: copied,
 			UserId:                       participantId,
 			ChatId:                       chatId,
 		})

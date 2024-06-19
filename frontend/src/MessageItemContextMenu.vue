@@ -42,7 +42,7 @@ export default {
       searchString(SEARCH_MODE_MESSAGES),
       contextMenuMixin(),
     ],
-    props: ['canResend', 'isBlog', 'canPublishMessage'],
+    props: ['canResend', 'isBlog'],
     data(){
       return {
         selection: null,
@@ -111,7 +111,7 @@ export default {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('goToBlog', this.menuableItem)});
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message'), icon: 'mdi-emoticon-outline', action: () => this.$emit('addReaction', this.menuableItem)});
-                if (this.canPublishMessage) {
+                if (this.menuableItem.canPublish) {
                     if (this.menuableItem.published) {
                         ret.push({
                             title: this.$vuetify.locale.t('$vuetify.copy_public_link_to_message'),

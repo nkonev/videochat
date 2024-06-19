@@ -43,6 +43,7 @@ type DisplayMessageDto {
     pinnedPromoted: Boolean
     reactions:      [Reaction!]!
     published:      Boolean!
+    canPublish:     Boolean!
 }
 
 type MessageDeletedDto {
@@ -84,8 +85,7 @@ type ChatDto {
     pinned:              Boolean!
     blog:                Boolean!
     loginColor:          String
-    regularParticipantCanPublishMessage: Boolean!,
-    canPublishMessage: Boolean!,
+    regularParticipantCanPublishMessage: Boolean!
 }
 
 type ChatDeletedDto {
@@ -122,6 +122,7 @@ type PublishedMessageDto {
     chatId:         Int64!
     ownerId:        Int64!
     owner:          Participant
+    canPublish:     Boolean!
 }
 
 type PinnedMessageDto {

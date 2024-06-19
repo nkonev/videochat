@@ -44,7 +44,6 @@ type ChatDto struct {
 	Blog                                bool                    `json:"blog"`
 	LoginColor                          *string                 `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool                    `json:"regularParticipantCanPublishMessage"`
-	CanPublishMessage                   bool                    `json:"canPublishMessage"`
 }
 
 type ChatEvent struct {
@@ -92,6 +91,7 @@ type DisplayMessageDto struct {
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
 	Reactions      []*Reaction           `json:"reactions"`
 	Published      bool                  `json:"published"`
+	CanPublish     bool                  `json:"canPublish"`
 }
 
 type EmbedMessageResponse struct {
@@ -218,11 +218,12 @@ type PreviewCreatedEvent struct {
 }
 
 type PublishedMessageDto struct {
-	ID      int64        `json:"id"`
-	Text    string       `json:"text"`
-	ChatID  int64        `json:"chatId"`
-	OwnerID int64        `json:"ownerId"`
-	Owner   *Participant `json:"owner"`
+	ID         int64        `json:"id"`
+	Text       string       `json:"text"`
+	ChatID     int64        `json:"chatId"`
+	OwnerID    int64        `json:"ownerId"`
+	Owner      *Participant `json:"owner"`
+	CanPublish bool         `json:"canPublish"`
 }
 
 type PublishedMessageEvent struct {

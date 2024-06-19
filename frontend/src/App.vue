@@ -426,7 +426,6 @@ export default {
                         blog
                         loginColor
                         regularParticipantCanPublishMessage
-                        canPublishMessage
                       }
                       chatDeletedEvent {
                         id
