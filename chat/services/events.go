@@ -13,14 +13,12 @@ import (
 type Events struct {
 	rabbitEventPublisher        *producer.RabbitEventsPublisher
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
-	db                          *db.DB
 }
 
-func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, db *db.DB) *Events {
+func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher) *Events {
 	return &Events{
 		rabbitEventPublisher:        rabbitEventPublisher,
 		rabbitNotificationPublisher: rabbitNotificationPublisher,
-		db:                          db,
 	}
 }
 
@@ -204,7 +202,7 @@ func (not *Events) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatI
 	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited", chatRegularParticipantCanPublishMessage, chatAdmins)
 }
 
-func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
+func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User, co db.CommonOperations) {
 	if user == nil {
 		GetLogEntry(c.Request().Context()).Errorf("user cannot be null")
 		return
@@ -215,7 +213,7 @@ func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *
 		ParticipantId: user.Id,
 	}
 
-	err := not.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err := co.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			if participantId == user.Id {
 				continue
@@ -239,13 +237,13 @@ func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *
 	}
 }
 
-func (not *Events) NotifyAboutProfileChanged(user *dto.User) {
+func (not *Events) NotifyAboutProfileChanged(user *dto.User, co db.CommonOperations) {
 	if user == nil {
 		Logger.Errorf("user cannot be null")
 		return
 	}
 
-	err := not.db.IterateOverCoChattedParticipantIds(user.Id, func(participantIds []int64) error {
+	err := co.IterateOverCoChattedParticipantIds(user.Id, func(participantIds []int64) error {
 		var internalErr error
 		for _, participantId := range participantIds {
 			internalErr = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
@@ -261,14 +259,14 @@ func (not *Events) NotifyAboutProfileChanged(user *dto.User) {
 	}
 }
 
-func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string) {
+func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string, co db.CommonOperations) {
 	ut := dto.MessageBroadcastNotification{
 		Login:  login,
 		UserId: userId,
 		Text:   text,
 	}
 
-	err := not.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err := co.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:                    "user_broadcast",
@@ -461,7 +459,7 @@ func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg
 	}
 }
 
-func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int) {
+func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int, tx *db.Tx) {
 	var eventType string
 	if wasChanged {
 		eventType = "reaction_changed"
@@ -480,7 +478,7 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 		Reaction:  aReaction,
 	}
 
-	err := not.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err := tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:                  eventType,
@@ -528,6 +526,20 @@ func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chat
 	})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+	}
+
+}
+
+func (not *Events) NotifyMessagesReloadCommand(c echo.Context, chatId int64, participantIds []int64) {
+	for _, participantId := range participantIds {
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			EventType:                  "messages_reload",
+			UserId:                     participantId,
+			ChatId:                     chatId,
+		})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		}
 	}
 
 }

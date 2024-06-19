@@ -47,19 +47,25 @@
     import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
-      CLOSE_SIMPLE_MODAL,
-      LOGGED_OUT,
-      MESSAGE_ADD,
-      MESSAGE_DELETED,
-      MESSAGE_EDITED,
-      OPEN_EDIT_MESSAGE,
-      OPEN_MESSAGE_READ_USERS_DIALOG,
-      OPEN_RESEND_TO_MODAL,
-      OPEN_SIMPLE_MODAL,
-      OPEN_VIEW_FILES_DIALOG,
-      PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
-      SCROLL_DOWN,
-      SET_EDIT_MESSAGE, CO_CHATTED_PARTICIPANT_CHANGED, OPEN_MESSAGE_EDIT_SMILEY, REACTION_CHANGED, REACTION_REMOVED
+        CLOSE_SIMPLE_MODAL,
+        LOGGED_OUT,
+        MESSAGE_ADD,
+        MESSAGE_DELETED,
+        MESSAGE_EDITED,
+        OPEN_EDIT_MESSAGE,
+        OPEN_MESSAGE_READ_USERS_DIALOG,
+        OPEN_RESEND_TO_MODAL,
+        OPEN_SIMPLE_MODAL,
+        OPEN_VIEW_FILES_DIALOG,
+        PROFILE_SET,
+        REFRESH_ON_WEBSOCKET_RESTORED,
+        SCROLL_DOWN,
+        SET_EDIT_MESSAGE,
+        CO_CHATTED_PARTICIPANT_CHANGED,
+        OPEN_MESSAGE_EDIT_SMILEY,
+        REACTION_CHANGED,
+        REACTION_REMOVED,
+        MESSAGES_RELOAD
     } from "@/bus/bus";
     import {
         deepCopy, edit_message, embed_message_reply,
@@ -314,6 +320,10 @@
         async onScrollDownButton() {
           this.clearRouteHash();
           await this.reloadItems();
+        },
+
+        onMessagesReload() {
+            this.reloadItems();
         },
 
         onScrollCallback() {
@@ -609,6 +619,7 @@
         bus.on(REACTION_REMOVED, this.onReactionRemoved);
         bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+        bus.on(MESSAGES_RELOAD, this.onMessagesReload);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
@@ -629,6 +640,7 @@
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
         bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+        bus.off(MESSAGES_RELOAD, this.onMessagesReload);
       }
     }
 </script>

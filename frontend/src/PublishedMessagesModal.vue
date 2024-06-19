@@ -83,7 +83,7 @@
 <script>
 
 import bus, {
-    LOGGED_OUT,
+    LOGGED_OUT, MESSAGES_RELOAD,
     OPEN_PUBLISHED_MESSAGES_MODAL,
     PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_REMOVE,
 } from "./bus/bus";
@@ -196,6 +196,10 @@ export default {
         canUnpublish(item) {
             return item.canPublish
         },
+        onMessagesReload() {
+            this.reset();
+            this.closeModal();
+        },
     },
     computed: {
         ...mapStores(useChatStore),
@@ -205,12 +209,14 @@ export default {
         bus.on(PUBLISHED_MESSAGE_ADD, this.onPublishedMessageAdd);
         bus.on(PUBLISHED_MESSAGE_REMOVE, this.onPublishedMessageRemove);
         bus.on(LOGGED_OUT, this.onLogout);
+        bus.on(MESSAGES_RELOAD, this.onMessagesReload);
     },
     beforeUnmount() {
         bus.off(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
         bus.off(PUBLISHED_MESSAGE_ADD, this.onPublishedMessageAdd);
         bus.off(PUBLISHED_MESSAGE_REMOVE, this.onPublishedMessageRemove);
         bus.off(LOGGED_OUT, this.onLogout);
+        bus.off(MESSAGES_RELOAD, this.onMessagesReload);
     },
 }
 </script>

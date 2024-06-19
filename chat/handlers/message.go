@@ -342,7 +342,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			}
 		}
 
-		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, reactionUsers, count)
+		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, reactionUsers, count, tx)
 
 
 		chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
@@ -1237,7 +1237,7 @@ func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 	typingUser := owners[userPrincipalDto.UserId]
 
-	mc.notificator.NotifyAboutMessageTyping(c, chatId, typingUser)
+	mc.notificator.NotifyAboutMessageTyping(c, chatId, typingUser, mc.db)
 	return c.NoContent(http.StatusAccepted)
 }
 
@@ -1276,7 +1276,7 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		preview = ""
 	}
 
-	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, preview)
+	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, preview, mc.db)
 	return c.NoContent(http.StatusAccepted)
 }
 

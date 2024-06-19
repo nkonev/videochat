@@ -70,7 +70,7 @@ import bus, {
     MESSAGE_ADD,
     MESSAGE_BROADCAST,
     MESSAGE_DELETED,
-    MESSAGE_EDITED,
+    MESSAGE_EDITED, MESSAGES_RELOAD,
     OPEN_EDIT_MESSAGE,
     PARTICIPANT_ADDED,
     PARTICIPANT_DELETED,
@@ -439,6 +439,8 @@ export default {
       } else if (getChatEventsData(e).eventType === "reaction_removed") {
         const d = getChatEventsData(e).reactionChangedEvent;
         bus.emit(REACTION_REMOVED, d);
+      } else if (getChatEventsData(e).eventType === "messages_reload") {
+          bus.emit(MESSAGES_RELOAD);
       }
     },
     getPinnedRouteObject(item) {

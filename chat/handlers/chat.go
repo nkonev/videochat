@@ -717,7 +717,12 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
 
-		_, err := tx.EditChat(
+		chatBasicBefore, err := tx.GetChatBasic(bindTo.Id)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.EditChat(
 			bindTo.Id,
 			chatTitle,
 			TrimAmdSanitizeAvatar(ch.policy, bindTo.Avatar),
@@ -748,6 +753,17 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			}
 
 			ch.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(responseDto.ParticipantIds) == 1, true, tx, areAdmins)
+
+			if chatBasicBefore.RegularParticipantCanPublishMessage != bindTo.RegularParticipantCanPublishMessage {
+				regularParticipants := make([]int64, 0)
+				for userId, isAdmin := range areAdmins {
+					if !isAdmin {
+						regularParticipants = append(regularParticipants, userId)
+					}
+				}
+
+				ch.notificator.NotifyMessagesReloadCommand(c, bindTo.Id, regularParticipants)
+			}
 			return nil
 		})
 		if err != nil {

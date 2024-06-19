@@ -387,8 +387,8 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 	}
 }
 
-func (db *DB) GetCoChattedParticipantIdsCommon(participantId int64, limit, offset int) ([]int64, error) {
-	if rows, err := db.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id LIMIT $2 OFFSET $3", participantId, limit, offset); err != nil {
+func getCoChattedParticipantIdsCommon(co CommonOperations, participantId int64, limit, offset int) ([]int64, error) {
+	if rows, err := co.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id LIMIT $2 OFFSET $3", participantId, limit, offset); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -424,12 +424,12 @@ func (db *DB) ParticipantsExistence(chatId int64, participantIds []int64) ([]int
 	}
 }
 
-func (db *DB) IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error {
+func iterateOverCoChattedParticipantIdsCommon(co CommonOperations, participantId int64, consumer func(participantIds []int64) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
-		participantIds, err := db.GetCoChattedParticipantIdsCommon(participantId, utils.DefaultSize, offset)
+		participantIds, err := getCoChattedParticipantIdsCommon(co, participantId, utils.DefaultSize, offset)
 		if err != nil {
 			logger.Logger.Errorf("Got error during getting portion %v", err)
 			lastError = err
@@ -449,6 +449,14 @@ func (db *DB) IterateOverCoChattedParticipantIds(participantId int64, consumer f
 		}
 	}
 	return lastError
+}
+
+func (db *DB) IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error {
+	return iterateOverCoChattedParticipantIdsCommon(db, participantId, consumer)
+}
+
+func (tx *Tx) IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error {
+	return iterateOverCoChattedParticipantIdsCommon(tx, participantId, consumer)
 }
 
 func setAdminCommon(qq CommonOperations, userId int64, chatId int64, newAdmin bool) error {

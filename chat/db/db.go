@@ -45,6 +45,7 @@ type CommonOperations interface {
 	GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error)
 	IterateOverChatParticipantIds(chatId int64, consumer func(participantIds []int64) error) error
 	IterateOverAllParticipantIds(consumer func(participantIds []int64) error) error
+	IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error
 	GetParticipantsCount(chatId int64) (int, error)
 	IsAdmin(userId int64, chatId int64) (bool, error)
 	IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error)
