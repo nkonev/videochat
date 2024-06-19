@@ -313,7 +313,13 @@ export default {
                                         text
                                         chatId
                                         ownerId
-                                        owner
+                                        owner {
+                                          id
+                                          login
+                                          avatar
+                                          shortInfo
+                                          loginColor
+                                        }
                                         pinnedPromoted
                                       }
                                     }
@@ -324,7 +330,13 @@ export default {
                                         text
                                         chatId
                                         ownerId
-                                        owner
+                                        owner {
+                                          id
+                                          login
+                                          avatar
+                                          shortInfo
+                                          loginColor
+                                        }
                                       }
                                     }
                                     fileEvent {
