@@ -495,6 +495,10 @@ func (tx *Tx) DeleteAllMessageRead(userId int64) error {
 	return deleteAllMessageReadCommon(tx, userId)
 }
 
+func (tx *Tx) DeleteAllChatParticipantNotification(userId int64) error {
+	_, err := tx.Exec(`DELETE FROM chat_participant_notification WHERE user_id = $1`, userId)
+	return eris.Wrap(err, "error during interacting with db")
+}
 
 func (tx *Tx) EditMessage(m *Message) error {
 	if m == nil {

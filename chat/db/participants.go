@@ -25,7 +25,7 @@ func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
 	return eris.Wrap(err, "error during interacting with db")
 }
 
-func (tx *Tx) DeleteUserAsAParticipant(userId int64) error {
+func (tx *Tx) DeleteUserAsAParticipantFromAllChats(userId int64) error {
 	_, err := tx.Exec(`DELETE FROM chat_participant WHERE user_id = $1`, userId)
 	return eris.Wrap(err, "error during interacting with db")
 }
