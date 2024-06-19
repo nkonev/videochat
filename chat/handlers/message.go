@@ -173,7 +173,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	})
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, isAdminInChat bool) (*dto.DisplayMessageDto, error) {
+func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, behalfUserIsAdminInChat bool) (*dto.DisplayMessageDto, error) {
 	message, chatsSet, users, err := prepareDataForMessage(c, co, restClient, chatId, messageId, behalfUserId)
 
 	if err != nil {
@@ -185,7 +185,7 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		return nil, nil
 	}
 
-	return convertToMessageDto(message, users, chatsSet, behalfUserId, isAdminInChat), nil
+	return convertToMessageDto(message, users, chatsSet, behalfUserId, behalfUserIsAdminInChat), nil
 }
 
 func prepareDataForMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*db.Message,  map[int64]*db.BasicChatDtoExtended, map[int64]*dto.User, error) {
