@@ -164,7 +164,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 
 			messageDtos := make([]*dto.DisplayMessageDto, 0)
 			for _, mm := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[mm.OwnerId]))
+				messageDtos = append(messageDtos, convertToMessageDto(mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[userPrincipalDto.UserId]))
 			}
 
 			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -401,7 +401,7 @@ func getDeletedUser(id int64) *dto.User {
 	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
 }
 
-func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, isAdminInChat bool) *dto.DisplayMessageDto {
+func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool) *dto.DisplayMessageDto {
 
 	ret := convertToMessageDtoWithoutPersonalized(dbMessage, users, chats)
 
@@ -409,7 +409,7 @@ func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats
 	if !ok {
 		Logger.Errorf("Unable to get message's chat for message id = %v, chat id = %v", dbMessage.Id, dbMessage.ChatId)
 	}
-	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, isAdminInChat, behalfUserId)
+	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, behalfUserIsAdminInChat, behalfUserId)
 
 	return ret
 }
