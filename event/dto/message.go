@@ -30,7 +30,8 @@ type PinnedMessageDto struct {
 	ChatId         int64                 `json:"chatId"`
 	OwnerId        int64                 `json:"ownerId"`
 	Owner          *User                 `json:"owner"`
-	PinnedPromoted bool                 `json:"pinnedPromoted"`
+	PinnedPromoted bool                  `json:"pinnedPromoted"`
+	CreateDateTime time.Time             `json:"createDateTime"`
 }
 
 type Reaction struct {

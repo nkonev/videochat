@@ -202,6 +202,7 @@ type PinnedMessageDto struct {
 	OwnerID        int64        `json:"ownerId"`
 	Owner          *Participant `json:"owner"`
 	PinnedPromoted bool         `json:"pinnedPromoted"`
+	CreateDateTime time.Time    `json:"createDateTime"`
 }
 
 type PinnedMessageEvent struct {

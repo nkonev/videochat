@@ -650,11 +650,11 @@ func convertPublishedMessageEvent(e *dto.PublishedMessageEvent) *model.Published
 }
 func convertPublishedMessageDto(e *dto.PublishedMessageDto) *model.PublishedMessageDto {
 	return &model.PublishedMessageDto{
-		ID:      e.Id,
-		Text:    e.Text,
-		ChatID:  e.ChatId,
-		OwnerID: e.OwnerId,
-		Owner:   convertParticipant(e.Owner),
+		ID:         e.Id,
+		Text:       e.Text,
+		ChatID:     e.ChatId,
+		OwnerID:    e.OwnerId,
+		Owner:      convertParticipant(e.Owner),
 		CanPublish: e.CanPublish,
 	}
 }
@@ -666,6 +666,7 @@ func convertPinnedMessageDto(e *dto.PinnedMessageDto) *model.PinnedMessageDto {
 		OwnerID:        e.OwnerId,
 		Owner:          convertParticipant(e.Owner),
 		PinnedPromoted: e.PinnedPromoted,
+		CreateDateTime: e.CreateDateTime,
 	}
 }
 func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {

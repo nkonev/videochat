@@ -65,7 +65,8 @@ type PinnedMessageDto struct {
 	ChatId         int64                 `json:"chatId"`
 	OwnerId        int64                 `json:"ownerId"`
 	Owner          *User                 `json:"owner"`
-	PinnedPromoted bool                 `json:"pinnedPromoted"`
+	PinnedPromoted bool                  `json:"pinnedPromoted"`
+	CreateDateTime time.Time             `json:"createDateTime"`
 }
 
 func CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, messageOwnerId, behalfUserId int64) bool {

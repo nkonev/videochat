@@ -321,6 +321,7 @@ export default {
                                           loginColor
                                         }
                                         pinnedPromoted
+                                        createDateTime
                                       }
                                     }
                                     publishedMessageEvent {

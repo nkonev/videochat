@@ -132,6 +132,7 @@ type PinnedMessageDto {
     ownerId:        Int64!
     owner:          Participant
     pinnedPromoted: Boolean!
+    createDateTime: Time!
 }
 
 type PinnedMessageEvent {

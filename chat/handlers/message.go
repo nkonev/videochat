@@ -497,6 +497,7 @@ func convertToPinnedMessageDto(cleanTagsPolicy *services.StripTagsPolicy, dbMess
 		OwnerId:        dbMessage.OwnerId,
 		Owner:          user,
 		PinnedPromoted: dbMessage.PinPromoted,
+		CreateDateTime: dbMessage.CreateDateTime,
 	}
 
 	ret.Text = createMessagePreviewWithoutLogin(cleanTagsPolicy, ret.Text)
@@ -1662,7 +1663,7 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 }
 
 type PinnedMessagesWrapper struct {
-	Data  []*dto.DisplayMessageDto `json:"items"`
+	Data  []*dto.PinnedMessageDto `json:"items"`
 	Count int64                    `json:"count"` // total pinned messages number
 }
 
@@ -1703,16 +1704,12 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 		for _, message := range messages {
 			populateSets(message, ownersSet, chatsPreSet, false)
 		}
-		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, userPrincipalDto.UserId)
-		if err != nil {
-			return err
-		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-		messageDtos := make([]*dto.DisplayMessageDto, 0)
+		messageDtos := make([]*dto.PinnedMessageDto, 0)
 		for _, message := range messages {
-			converted := convertToMessageDtoWithoutPersonalized(message, owners, chatsSet) // the actual personal values don't needed here
 
-			patchForViewAndSetPromoted(mc.stripAllTags, converted, message.PinPromoted)
+			converted := convertToPinnedMessageDto(mc.stripAllTags, message, owners)
+
 			messageDtos = append(messageDtos, converted)
 		}
 

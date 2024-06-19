@@ -236,6 +236,7 @@ type ComplexityRoot struct {
 
 	PinnedMessageDto struct {
 		ChatID         func(childComplexity int) int
+		CreateDateTime func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Owner          func(childComplexity int) int
 		OwnerID        func(childComplexity int) int
@@ -1333,6 +1334,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PinnedMessageDto.ChatID(childComplexity), true
+
+	case "PinnedMessageDto.createDateTime":
+		if e.complexity.PinnedMessageDto.CreateDateTime == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.CreateDateTime(childComplexity), true
 
 	case "PinnedMessageDto.id":
 		if e.complexity.PinnedMessageDto.ID == nil {
@@ -8266,6 +8274,50 @@ func (ec *executionContext) fieldContext_PinnedMessageDto_pinnedPromoted(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PinnedMessageDto_createDateTime(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_createDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_createDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PinnedMessageEvent_message(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PinnedMessageEvent_message(ctx, field)
 	if err != nil {
@@ -8317,6 +8369,8 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_message(_ context.Co
 				return ec.fieldContext_PinnedMessageDto_owner(ctx, field)
 			case "pinnedPromoted":
 				return ec.fieldContext_PinnedMessageDto_pinnedPromoted(ctx, field)
+			case "createDateTime":
+				return ec.fieldContext_PinnedMessageDto_createDateTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PinnedMessageDto", field.Name)
 		},
@@ -14710,6 +14764,11 @@ func (ec *executionContext) _PinnedMessageDto(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._PinnedMessageDto_owner(ctx, field, obj)
 		case "pinnedPromoted":
 			out.Values[i] = ec._PinnedMessageDto_pinnedPromoted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createDateTime":
+			out.Values[i] = ec._PinnedMessageDto_createDateTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
