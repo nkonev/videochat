@@ -43,15 +43,18 @@ func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDt
 	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
+func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx) {
 	chatDto := dto.ChatDtoWithAdmin{
 		BaseChatDto: dto.BaseChatDto{
 			Id: chatId,
 		},
 	}
-	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", isSingleParticipant, overrideIsParticipant, tx, nil)
+	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", false, false, tx, nil)
 }
 
+/**
+ * isSingleParticipant should be taken from responseDto or count. using len(participants) where participants are a portion from Iterate...() is incorrect because we can get only one user in the last iteration
+ */
 func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
