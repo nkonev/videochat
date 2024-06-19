@@ -112,12 +112,29 @@ type PreviewCreatedEvent {
 }
 
 type PublishedMessageEvent {
-    message: DisplayMessageDto!
+    message: PublishedMessageDto!
     count: Int64!
 }
 
+type PublishedMessageDto {
+    id:             Int64!
+    text:           String!
+    chatId:         Int64!
+    ownerId:        Int64!
+    owner:          Participant
+}
+
+type PinnedMessageDto {
+    id:             Int64!
+    text:           String!
+    chatId:         Int64!
+    ownerId:        Int64!
+    owner:          Participant
+    pinnedPromoted: Boolean!
+}
+
 type PinnedMessageEvent {
-    message: DisplayMessageDto!
+    message: PinnedMessageDto!
     count: Int64!
 }
 

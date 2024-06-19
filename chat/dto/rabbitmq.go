@@ -1,12 +1,12 @@
 package dto
 
 type PinnedMessageEvent struct {
-	Message    DisplayMessageDto `json:"message"`
+	Message    PinnedMessageDto `json:"message"`
 	TotalCount int64             `json:"totalCount"`
 }
 
 type PublishedMessageEvent struct {
-	Message    DisplayMessageDto `json:"message"`
+	Message    PublishedMessageDto `json:"message"`
 	TotalCount int64             `json:"totalCount"`
 }
 

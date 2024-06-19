@@ -31,16 +31,16 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *Events) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
-	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx)
+func (not *Events) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
-	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx)
+func (not *Events) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
-	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx)
+func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
 func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
@@ -49,10 +49,10 @@ func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds [
 			Id: chatId,
 		},
 	}
-	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", isSingleParticipant, overrideIsParticipant, tx)
+	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", isSingleParticipant, overrideIsParticipant, tx, nil)
 }
 
-func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx) {
+func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	if eventType == "chat_deleted" {
@@ -67,15 +67,6 @@ func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *
 			}
 		}
 	} else {
-		areAdmins, err := tx.IsAdminBatchByParticipants(userIds, newChatDto.Id)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during checking is admin: %v", err)
-			return
-		}
-		areAdminsMap := map[int64]bool{}
-		for _, isAdmin := range areAdmins {
-			areAdminsMap[isAdmin.UserId] = isAdmin.Admin
-		}
 
 		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, newChatDto.Id)
 		if err != nil {
@@ -160,7 +151,7 @@ func (not *Events) NotifyAboutHasNewMessagesChanged(c echo.Context, participantI
 	}
 }
 
-func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *Events, eventType string) {
+func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *Events, eventType string, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
 
 	for _, participantId := range userIds {
 		if eventType == "message_deleted" {
@@ -183,7 +174,7 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				continue
 			}
 
-			copied.SetPersonalizedFields(participantId) // TODO
+			copied.SetPersonalizedFields(chatRegularParticipantCanPublishMessage, chatAdmins[participantId], participantId)
 
 			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 				EventType:           eventType,
@@ -198,16 +189,16 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 	}
 }
 
-func (not *Events) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
-	messageNotifyCommon(c, userIds, chatId, message, not, "message_created")
+func (not *Events) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_created", chatRegularParticipantCanPublishMessage, chatAdmins)
 }
 
 func (not *Events) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
-	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted")
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted", false, nil)
 }
 
-func (not *Events) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
-	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited")
+func (not *Events) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited", chatRegularParticipantCanPublishMessage, chatAdmins)
 }
 
 func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User) {
@@ -423,27 +414,10 @@ func (not *Events) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64,
 	}
 
 	for _, participantId := range participantIds {
-		var copiedMsg = &dto.DisplayMessageDto{}
-		err := deepcopy.Copy(copiedMsg, msg.Message)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy message: %s", err)
-			return
-		}
 
-		copiedMsg.SetPersonalizedFields(participantId)
-
-		var copiedPinnedEvent = &dto.PinnedMessageEvent{}
-		err = deepcopy.Copy(copiedPinnedEvent, msg)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy pinned event: %s", err)
-			return
-		}
-
-		copiedPinnedEvent.Message = *copiedMsg
-
-		err = not.rabbitEventPublisher.Publish(dto.ChatEvent{
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:                  eventType,
-			PromoteMessageNotification: copiedPinnedEvent,
+			PromoteMessageNotification: msg,
 			UserId:                     participantId,
 			ChatId:                     chatId,
 		})
@@ -463,27 +437,10 @@ func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg
 	}
 
 	for _, participantId := range participantIds {
-		var copiedMsg = &dto.DisplayMessageDto{}
-		err := deepcopy.Copy(copiedMsg, msg.Message)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy message: %s", err)
-			return
-		}
 
-		copiedMsg.SetPersonalizedFields(participantId)
-
-		var copiedPublishedEvent = &dto.PublishedMessageEvent{}
-		err = deepcopy.Copy(copiedPublishedEvent, msg)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy pinned event: %s", err)
-			return
-		}
-
-		copiedPublishedEvent.Message = *copiedMsg
-
-		err = not.rabbitEventPublisher.Publish(dto.ChatEvent{
+		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
 			EventType:                    eventType,
-			PublishedMessageNotification: copiedPublishedEvent,
+			PublishedMessageNotification: msg,
 			UserId:                       participantId,
 			ChatId:                       chatId,
 		})

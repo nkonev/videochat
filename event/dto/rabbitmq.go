@@ -18,7 +18,7 @@ const AAA_DELETE = "events.aaa.delete"
 const AAA_KILL_SESSIONS = "events.aaa.kill.sessions"
 
 type PinnedMessageEvent struct {
-	Message    DisplayMessageDto `json:"message"`
+	Message    PinnedMessageDto `json:"message"`
 	TotalCount int64             `json:"totalCount"`
 }
 
@@ -27,7 +27,7 @@ type WrappedFileInfoDto struct {
 }
 
 type PublishedMessageEvent struct {
-	Message    DisplayMessageDto `json:"message"`
+	Message    PublishedMessageDto `json:"message"`
 	TotalCount int64             `json:"totalCount"`
 }
 

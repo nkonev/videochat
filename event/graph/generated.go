@@ -234,6 +234,15 @@ type ComplexityRoot struct {
 		ShortInfo  func(childComplexity int) int
 	}
 
+	PinnedMessageDto struct {
+		ChatID         func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Owner          func(childComplexity int) int
+		OwnerID        func(childComplexity int) int
+		PinnedPromoted func(childComplexity int) int
+		Text           func(childComplexity int) int
+	}
+
 	PinnedMessageEvent struct {
 		Count   func(childComplexity int) int
 		Message func(childComplexity int) int
@@ -245,6 +254,14 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		PreviewURL    func(childComplexity int) int
 		URL           func(childComplexity int) int
+	}
+
+	PublishedMessageDto struct {
+		ChatID  func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Owner   func(childComplexity int) int
+		OwnerID func(childComplexity int) int
+		Text    func(childComplexity int) int
 	}
 
 	PublishedMessageEvent struct {
@@ -1309,6 +1326,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ParticipantWithAdmin.ShortInfo(childComplexity), true
 
+	case "PinnedMessageDto.chatId":
+		if e.complexity.PinnedMessageDto.ChatID == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.ChatID(childComplexity), true
+
+	case "PinnedMessageDto.id":
+		if e.complexity.PinnedMessageDto.ID == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.ID(childComplexity), true
+
+	case "PinnedMessageDto.owner":
+		if e.complexity.PinnedMessageDto.Owner == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.Owner(childComplexity), true
+
+	case "PinnedMessageDto.ownerId":
+		if e.complexity.PinnedMessageDto.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.OwnerID(childComplexity), true
+
+	case "PinnedMessageDto.pinnedPromoted":
+		if e.complexity.PinnedMessageDto.PinnedPromoted == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.PinnedPromoted(childComplexity), true
+
+	case "PinnedMessageDto.text":
+		if e.complexity.PinnedMessageDto.Text == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.Text(childComplexity), true
+
 	case "PinnedMessageEvent.count":
 		if e.complexity.PinnedMessageEvent.Count == nil {
 			break
@@ -1357,6 +1416,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PreviewCreatedEvent.URL(childComplexity), true
+
+	case "PublishedMessageDto.chatId":
+		if e.complexity.PublishedMessageDto.ChatID == nil {
+			break
+		}
+
+		return e.complexity.PublishedMessageDto.ChatID(childComplexity), true
+
+	case "PublishedMessageDto.id":
+		if e.complexity.PublishedMessageDto.ID == nil {
+			break
+		}
+
+		return e.complexity.PublishedMessageDto.ID(childComplexity), true
+
+	case "PublishedMessageDto.owner":
+		if e.complexity.PublishedMessageDto.Owner == nil {
+			break
+		}
+
+		return e.complexity.PublishedMessageDto.Owner(childComplexity), true
+
+	case "PublishedMessageDto.ownerId":
+		if e.complexity.PublishedMessageDto.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.PublishedMessageDto.OwnerID(childComplexity), true
+
+	case "PublishedMessageDto.text":
+		if e.complexity.PublishedMessageDto.Text == nil {
+			break
+		}
+
+		return e.complexity.PublishedMessageDto.Text(childComplexity), true
 
 	case "PublishedMessageEvent.count":
 		if e.complexity.PublishedMessageEvent.Count == nil {
@@ -7891,6 +7985,279 @@ func (ec *executionContext) fieldContext_ParticipantWithAdmin_loginColor(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PinnedMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PinnedMessageDto_text(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_text(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PinnedMessageDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_chatId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PinnedMessageDto_ownerId(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_ownerId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_ownerId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PinnedMessageDto_owner(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Participant)
+	fc.Result = res
+	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Participant_id(ctx, field)
+			case "login":
+				return ec.fieldContext_Participant_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_Participant_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PinnedMessageDto_pinnedPromoted(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_pinnedPromoted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PinnedPromoted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_pinnedPromoted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PinnedMessageEvent_message(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PinnedMessageEvent_message(ctx, field)
 	if err != nil {
@@ -7917,9 +8284,9 @@ func (ec *executionContext) _PinnedMessageEvent_message(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.DisplayMessageDto)
+	res := resTmp.(*model.PinnedMessageDto)
 	fc.Result = res
-	return ec.marshalNDisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
+	return ec.marshalNPinnedMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPinnedMessageDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PinnedMessageEvent_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7931,39 +8298,19 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_message(_ context.Co
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_DisplayMessageDto_id(ctx, field)
+				return ec.fieldContext_PinnedMessageDto_id(ctx, field)
 			case "text":
-				return ec.fieldContext_DisplayMessageDto_text(ctx, field)
+				return ec.fieldContext_PinnedMessageDto_text(ctx, field)
 			case "chatId":
-				return ec.fieldContext_DisplayMessageDto_chatId(ctx, field)
+				return ec.fieldContext_PinnedMessageDto_chatId(ctx, field)
 			case "ownerId":
-				return ec.fieldContext_DisplayMessageDto_ownerId(ctx, field)
-			case "createDateTime":
-				return ec.fieldContext_DisplayMessageDto_createDateTime(ctx, field)
-			case "editDateTime":
-				return ec.fieldContext_DisplayMessageDto_editDateTime(ctx, field)
+				return ec.fieldContext_PinnedMessageDto_ownerId(ctx, field)
 			case "owner":
-				return ec.fieldContext_DisplayMessageDto_owner(ctx, field)
-			case "canEdit":
-				return ec.fieldContext_DisplayMessageDto_canEdit(ctx, field)
-			case "canDelete":
-				return ec.fieldContext_DisplayMessageDto_canDelete(ctx, field)
-			case "fileItemUuid":
-				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
-			case "embedMessage":
-				return ec.fieldContext_DisplayMessageDto_embedMessage(ctx, field)
-			case "pinned":
-				return ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
-			case "blogPost":
-				return ec.fieldContext_DisplayMessageDto_blogPost(ctx, field)
+				return ec.fieldContext_PinnedMessageDto_owner(ctx, field)
 			case "pinnedPromoted":
-				return ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
-			case "reactions":
-				return ec.fieldContext_DisplayMessageDto_reactions(ctx, field)
-			case "published":
-				return ec.fieldContext_DisplayMessageDto_published(ctx, field)
+				return ec.fieldContext_PinnedMessageDto_pinnedPromoted(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PinnedMessageDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -8224,6 +8571,235 @@ func (ec *executionContext) fieldContext_PreviewCreatedEvent_correlationId(_ con
 	return fc, nil
 }
 
+func (ec *executionContext) _PublishedMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublishedMessageDto_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublishedMessageDto_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishedMessageDto_text(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublishedMessageDto_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublishedMessageDto_text(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishedMessageDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublishedMessageDto_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublishedMessageDto_chatId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishedMessageDto_ownerId(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublishedMessageDto_ownerId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublishedMessageDto_ownerId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishedMessageDto_owner(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublishedMessageDto_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Participant)
+	fc.Result = res
+	return ec.marshalOParticipant2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐParticipant(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublishedMessageDto_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Participant_id(ctx, field)
+			case "login":
+				return ec.fieldContext_Participant_login(ctx, field)
+			case "avatar":
+				return ec.fieldContext_Participant_avatar(ctx, field)
+			case "shortInfo":
+				return ec.fieldContext_Participant_shortInfo(ctx, field)
+			case "loginColor":
+				return ec.fieldContext_Participant_loginColor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PublishedMessageEvent_message(ctx context.Context, field graphql.CollectedField, obj *model.PublishedMessageEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublishedMessageEvent_message(ctx, field)
 	if err != nil {
@@ -8250,9 +8826,9 @@ func (ec *executionContext) _PublishedMessageEvent_message(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.DisplayMessageDto)
+	res := resTmp.(*model.PublishedMessageDto)
 	fc.Result = res
-	return ec.marshalNDisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx, field.Selections, res)
+	return ec.marshalNPublishedMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPublishedMessageDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublishedMessageEvent_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8264,39 +8840,17 @@ func (ec *executionContext) fieldContext_PublishedMessageEvent_message(_ context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_DisplayMessageDto_id(ctx, field)
+				return ec.fieldContext_PublishedMessageDto_id(ctx, field)
 			case "text":
-				return ec.fieldContext_DisplayMessageDto_text(ctx, field)
+				return ec.fieldContext_PublishedMessageDto_text(ctx, field)
 			case "chatId":
-				return ec.fieldContext_DisplayMessageDto_chatId(ctx, field)
+				return ec.fieldContext_PublishedMessageDto_chatId(ctx, field)
 			case "ownerId":
-				return ec.fieldContext_DisplayMessageDto_ownerId(ctx, field)
-			case "createDateTime":
-				return ec.fieldContext_DisplayMessageDto_createDateTime(ctx, field)
-			case "editDateTime":
-				return ec.fieldContext_DisplayMessageDto_editDateTime(ctx, field)
+				return ec.fieldContext_PublishedMessageDto_ownerId(ctx, field)
 			case "owner":
-				return ec.fieldContext_DisplayMessageDto_owner(ctx, field)
-			case "canEdit":
-				return ec.fieldContext_DisplayMessageDto_canEdit(ctx, field)
-			case "canDelete":
-				return ec.fieldContext_DisplayMessageDto_canDelete(ctx, field)
-			case "fileItemUuid":
-				return ec.fieldContext_DisplayMessageDto_fileItemUuid(ctx, field)
-			case "embedMessage":
-				return ec.fieldContext_DisplayMessageDto_embedMessage(ctx, field)
-			case "pinned":
-				return ec.fieldContext_DisplayMessageDto_pinned(ctx, field)
-			case "blogPost":
-				return ec.fieldContext_DisplayMessageDto_blogPost(ctx, field)
-			case "pinnedPromoted":
-				return ec.fieldContext_DisplayMessageDto_pinnedPromoted(ctx, field)
-			case "reactions":
-				return ec.fieldContext_DisplayMessageDto_reactions(ctx, field)
-			case "published":
-				return ec.fieldContext_DisplayMessageDto_published(ctx, field)
+				return ec.fieldContext_PublishedMessageDto_owner(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PublishedMessageDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -14067,6 +14621,67 @@ func (ec *executionContext) _ParticipantWithAdmin(ctx context.Context, sel ast.S
 	return out
 }
 
+var pinnedMessageDtoImplementors = []string{"PinnedMessageDto"}
+
+func (ec *executionContext) _PinnedMessageDto(ctx context.Context, sel ast.SelectionSet, obj *model.PinnedMessageDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pinnedMessageDtoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PinnedMessageDto")
+		case "id":
+			out.Values[i] = ec._PinnedMessageDto_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "text":
+			out.Values[i] = ec._PinnedMessageDto_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chatId":
+			out.Values[i] = ec._PinnedMessageDto_chatId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ownerId":
+			out.Values[i] = ec._PinnedMessageDto_ownerId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "owner":
+			out.Values[i] = ec._PinnedMessageDto_owner(ctx, field, obj)
+		case "pinnedPromoted":
+			out.Values[i] = ec._PinnedMessageDto_pinnedPromoted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var pinnedMessageEventImplementors = []string{"PinnedMessageEvent"}
 
 func (ec *executionContext) _PinnedMessageEvent(ctx context.Context, sel ast.SelectionSet, obj *model.PinnedMessageEvent) graphql.Marshaler {
@@ -14138,6 +14753,62 @@ func (ec *executionContext) _PreviewCreatedEvent(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._PreviewCreatedEvent_aType(ctx, field, obj)
 		case "correlationId":
 			out.Values[i] = ec._PreviewCreatedEvent_correlationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var publishedMessageDtoImplementors = []string{"PublishedMessageDto"}
+
+func (ec *executionContext) _PublishedMessageDto(ctx context.Context, sel ast.SelectionSet, obj *model.PublishedMessageDto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, publishedMessageDtoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PublishedMessageDto")
+		case "id":
+			out.Values[i] = ec._PublishedMessageDto_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "text":
+			out.Values[i] = ec._PublishedMessageDto_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chatId":
+			out.Values[i] = ec._PublishedMessageDto_chatId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ownerId":
+			out.Values[i] = ec._PublishedMessageDto_ownerId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "owner":
+			out.Values[i] = ec._PublishedMessageDto_owner(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15416,16 +16087,6 @@ func (ec *executionContext) marshalNDataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋm
 	return ec._DataDTO(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DisplayMessageDto(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNGlobalEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐGlobalEvent(ctx context.Context, sel ast.SelectionSet, v model.GlobalEvent) graphql.Marshaler {
 	return ec._GlobalEvent(ctx, sel, &v)
 }
@@ -15618,6 +16279,26 @@ func (ec *executionContext) marshalNParticipantWithAdmin2ᚖnkonevᚗnameᚋeven
 		return graphql.Null
 	}
 	return ec._ParticipantWithAdmin(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPinnedMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPinnedMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.PinnedMessageDto) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PinnedMessageDto(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPublishedMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐPublishedMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.PublishedMessageDto) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PublishedMessageDto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNReaction2ᚕᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐReactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Reaction) graphql.Marshaler {

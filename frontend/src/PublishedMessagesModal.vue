@@ -172,13 +172,6 @@ export default {
             this.onItemRemovedEvent(dto);
         },
         onPublishedMessageAdd(dto) {
-            if (this.dataLoaded) {
-                // reset previously promoted
-                this.itemsDto.items.forEach((item)=>{
-                    item.pinnedPromoted = false;
-                })
-            }
-
             this.onItemCreatedEvent(dto);
         },
         isVideoRoute() {

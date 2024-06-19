@@ -308,13 +308,22 @@ export default {
                                     promoteMessageEvent {
                                       count
                                       message {
-                                        ...DisplayMessageDtoFragment
+                                        id
+                                        text
+                                        chatId
+                                        ownerId
+                                        owner
+                                        pinnedPromoted
                                       }
                                     }
                                     publishedMessageEvent {
                                       count
                                       message {
-                                        ...DisplayMessageDtoFragment
+                                        id
+                                        text
+                                        chatId
+                                        ownerId
+                                        owner
                                       }
                                     }
                                     fileEvent {

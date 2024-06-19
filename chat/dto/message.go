@@ -50,6 +50,23 @@ type DisplayMessageDto struct {
 	CanPublish     bool                  `json:"canPublish"`
 }
 
+type PublishedMessageDto struct {
+	Id             int64                 `json:"id"`
+	Text           string                `json:"text"`
+	ChatId         int64                 `json:"chatId"`
+	OwnerId        int64                 `json:"ownerId"`
+	Owner          *User                 `json:"owner"`
+}
+
+type PinnedMessageDto struct {
+	Id             int64                 `json:"id"`
+	Text           string                `json:"text"`
+	ChatId         int64                 `json:"chatId"`
+	OwnerId        int64                 `json:"ownerId"`
+	Owner          *User                 `json:"owner"`
+	PinnedPromoted bool                 `json:"pinnedPromoted"`
+}
+
 func CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, messageOwnerId, behalfUserId int64) bool {
 	return chatIsAdmin || (chatRegularParticipantCanPublishMessage && messageOwnerId == behalfUserId)
 }

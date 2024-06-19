@@ -195,9 +195,18 @@ type ParticipantWithAdmin struct {
 	LoginColor *string `json:"loginColor"`
 }
 
+type PinnedMessageDto struct {
+	ID             int64        `json:"id"`
+	Text           string       `json:"text"`
+	ChatID         int64        `json:"chatId"`
+	OwnerID        int64        `json:"ownerId"`
+	Owner          *Participant `json:"owner"`
+	PinnedPromoted bool         `json:"pinnedPromoted"`
+}
+
 type PinnedMessageEvent struct {
-	Message *DisplayMessageDto `json:"message"`
-	Count   int64              `json:"count"`
+	Message *PinnedMessageDto `json:"message"`
+	Count   int64             `json:"count"`
 }
 
 type PreviewCreatedEvent struct {
@@ -208,9 +217,17 @@ type PreviewCreatedEvent struct {
 	CorrelationID *string `json:"correlationId"`
 }
 
+type PublishedMessageDto struct {
+	ID      int64        `json:"id"`
+	Text    string       `json:"text"`
+	ChatID  int64        `json:"chatId"`
+	OwnerID int64        `json:"ownerId"`
+	Owner   *Participant `json:"owner"`
+}
+
 type PublishedMessageEvent struct {
-	Message *DisplayMessageDto `json:"message"`
-	Count   int64              `json:"count"`
+	Message *PublishedMessageDto `json:"message"`
+	Count   int64                `json:"count"`
 }
 
 type Query struct {

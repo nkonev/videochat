@@ -605,6 +605,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		// TODO это не правильно, нуэно вызывать для всех participantIds, а не только для responseDto.ParticipantIds
 		ch.notificator.NotifyAboutNewChat(c, copiedChat, responseDto.ParticipantIds, len(responseDto.ParticipantIds) == 1, true, tx)
 		return c.JSON(http.StatusCreated, responseDto)
 	})
