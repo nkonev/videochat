@@ -85,7 +85,7 @@
               {{ getSubtitle() }}
             </div>
           </div>
-          <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click="onGoToChat()">{{$vuetify.locale.t('$vuetify.go_to_chat')}}</v-btn>
+          <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="getGoToChatHref()">{{$vuetify.locale.t('$vuetify.go_to_chat')}}</v-btn>
         </template>
 
         <template v-if="chatStore.isShowSearch">
@@ -198,7 +198,7 @@ import {
     confirmation_pending_name,
     forgot_password_name, check_email_name, password_restore_enter_new_name,
     registration_name,
-    videochat_name, registration_resend_email_name, public_message_name, messageIdHashPrefix
+    videochat_name, registration_resend_email_name, public_message_name, messageIdHashPrefix, chat, messageIdPrefix
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
@@ -296,10 +296,10 @@ export default {
         },
         // it differs from original
         chatId() {
-          if (!this.isInChat()) {
-            return null
+          if (this.isInChat() || this.$route.name == public_message_name) {
+              return this.$route.params.id
           } else {
-            return this.$route.params.id
+              return null
           }
         },
         notificationsCount() {
@@ -722,6 +722,10 @@ export default {
                 hash: messageIdHashPrefix + messageId,
             };
             this.$router.push(routeObj);
+        },
+        getGoToChatHref() {
+            const messageId = this.$route.params.messageId;
+            return chat + "/" + this.chatId + messageIdHashPrefix + messageId
         },
     },
     components: {
