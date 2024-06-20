@@ -296,7 +296,7 @@ export default {
         },
         // it differs from original
         chatId() {
-          if (this.isInChat() || this.$route.name == public_message_name) {
+          if (this.isInChat()) {
               return this.$route.params.id
           } else {
               return null
@@ -714,10 +714,11 @@ export default {
         },
         onGoToChat() {
             const messageId = this.$route.params.messageId;
+            const chatId = this.$route.params.id;
             const routeObj = {
                 name: chat_name,
                 params: {
-                    id: this.chatId
+                    id: chatId
                 },
                 hash: messageIdHashPrefix + messageId,
             };
@@ -725,7 +726,8 @@ export default {
         },
         getGoToChatHref() {
             const messageId = this.$route.params.messageId;
-            return chat + "/" + this.chatId + messageIdHashPrefix + messageId
+            const chatId = this.$route.params.id;
+            return chat + "/" + chatId + messageIdHashPrefix + messageId
         },
     },
     components: {
