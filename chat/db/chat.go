@@ -930,7 +930,7 @@ func getBlogPostsByChatIdsCommon(co CommonOperations, ids []int64) ([]*BlogPost,
 	var first = true
 	for _, chatId := range ids {
 		if !first {
-			builder += " union "
+			builder += " UNION ALL "
 		}
 		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
 
@@ -989,7 +989,7 @@ func (db *DB) GetBlobPostModifiedDates(chatIds []int64) (map[int64]time.Time, er
 	var first = true
 	for _, chatId := range chatIds {
 		if !first {
-			builder += " union "
+			builder += " UNION ALL "
 		}
 		builder += fmt.Sprintf("(select %v, coalesce(edit_date_time, create_date_time) from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
 

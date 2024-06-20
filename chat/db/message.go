@@ -614,7 +614,7 @@ func getUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, use
 	var first = true
 	for _, chatId := range chatIds {
 		if !first {
-			builder += " union "
+			builder += " UNION ALL "
 		}
 		builder += getCountUnreadMessages(chatId, chatId, userId)
 
@@ -663,7 +663,7 @@ func getUnreadMessagesCountBatchByParticipantsCommon(co CommonOperations, userId
 	var first = true
 	for _, userId := range userIds {
 		if !first {
-			builder += " union "
+			builder += " UNION ALL "
 		}
 		builder += getCountUnreadMessages(userId, chatId, userId)
 
@@ -724,7 +724,7 @@ func hasUnreadMessagesBatchCommon(co CommonOperations, chatIds []int64, userId i
 	var first = true
 	for _, chatId := range chatIds {
 		if !first {
-			builder += " UNION "
+			builder += " UNION ALL "
 		}
 		builder += hasUnreadMessages(chatId, userId)
 
@@ -800,7 +800,7 @@ func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(chatId int64, userIds 
 	var first = true
 	for _, userId := range userIds {
 		if !first {
-			builder += " UNION "
+			builder += " UNION ALL "
 		}
 		builder += fmt.Sprintf(`SELECT %v, (%v)`, userId, getShouldConsiderMessagesAsUnread(chatId, userId))
 
