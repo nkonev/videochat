@@ -7,6 +7,7 @@
                  :item="messageItemDto"
                  :chatId="chatId"
                  :isInBlog="true"
+                 @onreactionclick="onReactionClick"
             ></MessageItem>
         </div>
     </v-container>
@@ -18,6 +19,7 @@ import {setTitle} from "@/utils.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import heightMixin from "@/mixins/heightMixin.js";
+import {chat, chat_name, messageIdHashPrefix} from "@/router/routes.js";
 
 export default {
     mixins: [
@@ -50,7 +52,19 @@ export default {
                 this.chatStore.decrementProgressCount();
             });
 
-        }
+        },
+        onReactionClick() {
+            const messageId = this.$route.params.messageId;
+            const chatId = this.$route.params.id;
+            const routeObj = {
+                name: chat_name,
+                params: {
+                    id: chatId
+                },
+                hash: messageIdHashPrefix + messageId,
+            };
+            this.$router.push(routeObj);
+        },
     },
     computed: {
         ...mapStores(useChatStore),
