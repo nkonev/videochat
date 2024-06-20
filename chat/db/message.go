@@ -701,7 +701,7 @@ func (tx *Tx) GetUnreadMessagesCountBatchByParticipants(userIds []int64, chatId 
 	return getUnreadMessagesCountBatchByParticipantsCommon(tx, userIds, chatId)
 }
 
-func hasCountUnreadMessages(chatId, userId int64) string {
+func hasUnreadMessages(chatId, userId int64) string {
 	return fmt.Sprintf(`SELECT 
 									%v, 
 									EXISTS (
@@ -713,7 +713,7 @@ func hasCountUnreadMessages(chatId, userId int64) string {
 	)
 }
 
-func hasUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
+func hasUnreadMessagesBatchCommon(co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
 	res := map[int64]bool{}
 
 	if len(chatIds) == 0 {
@@ -724,9 +724,9 @@ func hasUnreadMessagesCountBatchCommon(co CommonOperations, chatIds []int64, use
 	var first = true
 	for _, chatId := range chatIds {
 		if !first {
-			builder += " union "
+			builder += " UNION "
 		}
-		builder += hasCountUnreadMessages(chatId, userId)
+		builder += hasUnreadMessages(chatId, userId)
 
 		first = false
 	}
@@ -764,7 +764,7 @@ func hasUnreadMessagesCommon(co CommonOperations, userId int64) (bool, error) {
 		if len(chatIds) < utils.DefaultSize {
 			shouldContinue = false
 		}
-		messageUnreads, err := hasUnreadMessagesCountBatchCommon(co, chatIds, userId)
+		messageUnreads, err := hasUnreadMessagesBatchCommon(co, chatIds, userId)
 		if err != nil {
 			return false, err
 		}
