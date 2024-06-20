@@ -223,7 +223,7 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 	var first = true
 	for _, chatId := range chatIds {
 		if !first {
-			builder += " union "
+			builder += " UNION ALL "
 		}
 		builder += fmt.Sprintf("(SELECT %v, count(*) FROM chat_participant WHERE chat_id = %v)", chatId, chatId)
 
