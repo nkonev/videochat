@@ -800,7 +800,7 @@ func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(chatId int64, userIds 
 	var first = true
 	for _, userId := range userIds {
 		if !first {
-			builder += " union "
+			builder += " UNION "
 		}
 		builder += fmt.Sprintf(`SELECT %v, (%v)`, userId, getShouldConsiderMessagesAsUnread(chatId, userId))
 
