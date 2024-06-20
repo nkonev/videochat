@@ -1,4 +1,4 @@
-import {blog_post, chat, chat_name, prefix, video_suffix, videochat_name} from "@/router/routes";
+import {blog_post, chat, chat_name, messageIdHashPrefix, prefix, video_suffix, videochat_name} from "@/router/routes";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -64,6 +64,25 @@ export const getBlogLink = (chatId) => {
 export const getPublicMessageLink = (chatId, messageId) => {
     // see also public_message in routes.js
     return getUrlPrefix() + chat + '/' + chatId + '/public/' + messageId;
+}
+
+export const getMessageLinkRouteObject = (chatId, messageId) => {
+    return {
+        name: chat_name,
+        params: {
+            id: chatId
+        },
+        hash: messageIdHashPrefix + messageId,
+    };
+}
+
+export const gotoMessageLink = (router, chatId, messageId) => {
+    const routeObj = getMessageLinkRouteObject(chatId, messageId);
+    router.push(routeObj);
+}
+
+export const getMessageLink = (chatId, messageId) => {
+    return getUrlPrefix() + chat + "/" + chatId + messageIdHashPrefix + messageId
 }
 
 export const media_image = "image";

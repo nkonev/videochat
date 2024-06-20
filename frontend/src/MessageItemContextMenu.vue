@@ -31,7 +31,7 @@
 <script>
 
 import {chat, messageIdHashPrefix} from "./router/routes"
-import {getPublicMessageLink, getUrlPrefix, hasLength} from "@/utils";
+import {getMessageLink, getPublicMessageLink, getUrlPrefix, hasLength} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {SEARCH_MODE_MESSAGES, searchString} from "@/mixins/searchString";
@@ -135,7 +135,7 @@ export default {
             return ret;
         },
         copyLink(item) {
-            const link = getUrlPrefix() + chat + '/' + this.chatId + messageIdHashPrefix + item.id;
+            const link = getMessageLink(this.chatId, item.id)
             navigator.clipboard.writeText(link);
         },
         copyPublicLink(item) {

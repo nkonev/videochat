@@ -191,7 +191,15 @@
 
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
-import {getBlogLink, hasLength, isCalling, isChatRoute, setLanguageToVuetify} from "@/utils";
+import {
+    getBlogLink,
+    getMessageLink,
+    gotoMessageLink,
+    hasLength,
+    isCalling,
+    isChatRoute,
+    setLanguageToVuetify
+} from "@/utils";
 import {
     chat_list_name,
     chat_name,
@@ -715,19 +723,12 @@ export default {
         onGoToChat() {
             const messageId = this.$route.params.messageId;
             const chatId = this.$route.params.id;
-            const routeObj = {
-                name: chat_name,
-                params: {
-                    id: chatId
-                },
-                hash: messageIdHashPrefix + messageId,
-            };
-            this.$router.push(routeObj);
+            gotoMessageLink(this.$router, chatId, messageId);
         },
         getGoToChatHref() {
             const messageId = this.$route.params.messageId;
             const chatId = this.$route.params.id;
-            return chat + "/" + chatId + messageIdHashPrefix + messageId
+            return getMessageLink(chatId, messageId);
         },
     },
     components: {

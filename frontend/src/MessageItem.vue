@@ -46,7 +46,7 @@
     import {
         embed_message_reply,
         embed_message_resend, getBlogLink,
-        getLoginColoredStyle, hasLength,
+        getLoginColoredStyle, getMessageLinkRouteObject, hasLength,
     } from "@/utils";
     import { getHumanReadableDate } from "@/date.js";
     import "./messageBody.styl";
@@ -111,14 +111,10 @@
                 return getHumanReadableDate(item.createDateTime)
             },
             getMessageLink(item) {
-                return {
-                    name: this.$route.name,
-                    params: {
-                        id: this.chatId
-                    },
-                    hash: messageIdHashPrefix + item.id,
-                    query: this.$route.query
-                }
+                const routeObject = getMessageLinkRouteObject(this.chatId, item.id);
+                routeObject.name = this.$route.name;
+                routeObject.query = this.$route.query;
+                return routeObject
             },
             getEmbedLinkTo(item) {
                 let chatId;

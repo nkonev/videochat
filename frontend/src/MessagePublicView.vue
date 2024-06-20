@@ -15,11 +15,10 @@
 <script>
 import MessageItem from "@/MessageItem.vue";
 import axios from "axios";
-import {setTitle} from "@/utils.js";
+import {gotoMessageLink, setTitle} from "@/utils.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import heightMixin from "@/mixins/heightMixin.js";
-import {chat, chat_name, messageIdHashPrefix} from "@/router/routes.js";
 
 export default {
     mixins: [
@@ -54,16 +53,7 @@ export default {
 
         },
         onReactionClick() {
-            const messageId = this.$route.params.messageId;
-            const chatId = this.$route.params.id;
-            const routeObj = {
-                name: chat_name,
-                params: {
-                    id: chatId
-                },
-                hash: messageIdHashPrefix + messageId,
-            };
-            this.$router.push(routeObj);
+            gotoMessageLink(this.$router, this.chatId, this.messageId);
         },
     },
     computed: {
