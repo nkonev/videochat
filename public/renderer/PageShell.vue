@@ -35,7 +35,10 @@
         },
         methods: {
             getDensity() {
-                return "compact";
+                return this.isMobile() ? "comfortable" : "compact";
+            },
+            isMobile() {
+                return this.pageContext.isMobile
             },
             getBreadcrumbs() {
                 const ret = [
