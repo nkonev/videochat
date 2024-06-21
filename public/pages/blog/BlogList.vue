@@ -61,7 +61,6 @@
 <script>
 import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
 import {blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
-import {isMobileBrowser} from "#root/common/utils.js";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 import {path_prefix} from "../../common/router/routes.js";
 
@@ -81,7 +80,7 @@ export default {
     getLoginColoredStyle,
     hasLength,
     isMobile() {
-        return isMobileBrowser()
+        return this.pageContext.isMobile
     },
     getDate(item) {
       return getHumanReadableDate(item.createDateTime)

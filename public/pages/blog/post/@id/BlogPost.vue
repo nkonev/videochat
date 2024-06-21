@@ -55,7 +55,7 @@
 
 <script>
 import MessageItem from "#root/common/pages/MessageItem.vue";
-import {getHumanReadableDate, hasLength, isMobileBrowser, getLoginColoredStyle} from "#root/common/utils";
+import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
@@ -75,7 +75,7 @@ export default {
     getLoginColoredStyle,
     hasLength,
     isMobile() {
-       return isMobileBrowser()
+      return this.pageContext.isMobile
     },
     getProfileLink(user) {
       let url = profile + "/" + user.id;

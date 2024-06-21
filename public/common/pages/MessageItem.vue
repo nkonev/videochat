@@ -34,11 +34,11 @@
 </template>
 
 <script>
+    import {usePageContext} from "#root/renderer/usePageContext.js";
     import {
         embed_message_reply,
         embed_message_resend,
         getHumanReadableDate, getLoginColoredStyle, hasLength,
-        isMobileBrowser,
     } from "#root/common/utils";
     import "#root/common/styles/messageBody.styl";
     import "#root/common/styles/messageWrapper.styl";
@@ -47,12 +47,20 @@
     import {profile} from "#root/common/router/routes"
 
     export default {
+        setup() {
+            const pageContext = usePageContext();
+
+            // expose to template and other options API hooks
+            return {
+                pageContext
+            }
+        },
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'isInBlog'],
         methods: {
             getLoginColoredStyle,
             hasLength,
             isMobile() {
-                return isMobileBrowser()
+                return this.pageContext.isMobile
             },
             getOwnerLink(item) {
                 return profile + "/" + item.owner?.id;

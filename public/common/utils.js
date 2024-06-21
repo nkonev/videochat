@@ -2,11 +2,6 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import {chat, messageIdHashPrefix} from "./router/routes.js";
 import {getFrontendUrl} from "./config.js";
 
-export const isMobileBrowser = () => {
-    return navigator.userAgent.indexOf('Mobile') !== -1
-}
-
-
 export const getHumanReadableDate = (timestamp) => {
     const parsedDate = parseISO(timestamp);
     let formatString = 'HH:mm:ss';

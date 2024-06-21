@@ -34,7 +34,7 @@ async function startServer() {
   // Vite integration
   if (isProduction) {
     app.get('/*',function (req, res, next) {
-        if (req.url.startsWith(pathPrefixAndBlog)) { // patch by me
+        if (req.url.startsWith(pathPrefixAndBlog)) { // patched by me
             const newUrl = req.url.slice(pathPrefixAndBlog.length);
             req.url = newUrl;
         }
@@ -106,7 +106,8 @@ Sitemap: ${sitemapUrl}`);
   // catch-all middleware superseding any middleware placed after it).
   app.get('*', async (req, res, next) => {
     const pageContextInit = {
-      urlOriginal: req.originalUrl
+      urlOriginal: req.originalUrl,
+      userAgent: req.headers["user-agent"]
     }
     const pageContext = await renderPage(pageContextInit)
     if (pageContext.errorWhileRendering) {
