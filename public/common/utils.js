@@ -1,6 +1,5 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
 import {chat, messageIdHashPrefix} from "./router/routes.js";
-import {getFrontendUrl} from "./config.js";
 
 export const getHumanReadableDate = (timestamp) => {
     const parsedDate = parseISO(timestamp);
@@ -75,5 +74,5 @@ export const getLoginColoredStyle = (item, defaultLinkColor) => {
 }
 
 export const getMessageLink = (chatId, messageId) => {
-    return getFrontendUrl() + chat + "/" + chatId + messageIdHashPrefix + messageId
+    return chat + "/" + chatId + messageIdHashPrefix + messageId
 }
