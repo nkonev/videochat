@@ -15,7 +15,7 @@ import express from 'express'
 import compression from 'compression'
 import { renderPage } from 'vike/server'
 import { root } from './root.js'
-import { blog } from "../common/router/routes.js"
+import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
 import { getChatApiUrl, getFrontendUrl } from "../common/config.js";
 import axios from "axios";
@@ -23,6 +23,8 @@ import axios from "axios";
 const isProduction = process.env.NODE_ENV === 'production'
 
 startServer()
+
+const pathPrefixAndBlog = path_prefix + blog;
 
 async function startServer() {
   const app = express()
@@ -32,8 +34,8 @@ async function startServer() {
   // Vite integration
   if (isProduction) {
     app.get('/*',function (req, res, next) {
-        if (req.url.startsWith(blog)) {
-            const newUrl = req.url.slice(blog.length);
+        if (req.url.startsWith(pathPrefixAndBlog)) { // patch by me
+            const newUrl = req.url.slice(pathPrefixAndBlog.length);
             req.url = newUrl;
         }
         next();
@@ -64,7 +66,7 @@ async function startServer() {
         const smStream = new SitemapStream({ hostname: getFrontendUrl() });
 
         // index page
-        smStream.write({url: `/blog/`, lastmod: new Date()})
+        smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
 
         const apiHost = getChatApiUrl();
         const PAGE_SIZE = 40;
@@ -75,7 +77,7 @@ async function startServer() {
                 break
             }
             for (const item of data) {
-                smStream.write({url: `/blog/post/${item.chatId}`, lastmod: item.lastModified})
+                smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
             }
         }
 

@@ -122,9 +122,9 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "../../../common/styles/common.styl"
-@import "../../../common/styles/messageWrapper.styl"
-@import "../../../common/styles/itemAvatar.styl"
+@import "../../../../common/styles/common.styl"
+@import "../../../../common/styles/messageWrapper.styl"
+@import "../../../../common/styles/itemAvatar.styl"
 
 .my-messages-scroller {
   height 100%

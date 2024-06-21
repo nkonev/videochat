@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  seo:
+    image: nkonev/chat-seo:changing
+    networks:
+      backend:
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 20s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.public-service.loadbalancer.server.port=3100"
+
+        - "traefik.http.routers.public-router.rule=PathPrefix(`/public`)"
+        - "traefik.http.routers.public-router.entrypoints=http"
+        - "traefik.http.routers.public-router.middlewares=retry-middleware@file"
+
+        - "traefik.http.routers.public-router-robots.rule=Path(`/robots.txt`)"
+        - "traefik.http.routers.public-router-robots.entrypoints=http"
+        - "traefik.http.routers.public-router-robots.middlewares=retry-middleware@file"
+
+        - "traefik.http.routers.public-router-sitemap.rule=Path(`/sitemap.xml`)"
+        - "traefik.http.routers.public-router-sitemap.entrypoints=http"
+        - "traefik.http.routers.public-router-sitemap.middlewares=retry-middleware@file"
+
+        - "traefik.http.middlewares.public-stripprefix-middleware.stripprefix.prefixes=/public"
+        - "traefik.http.routers.public-version-router.rule=Path(`/public/git.json`)"
+        - "traefik.http.routers.public-version-router.entrypoints=http"
+        - "traefik.http.routers.public-version-router.middlewares=public-stripprefix-middleware"
+
+    environment:
+      - CHAT_API_URL=http://chat:1235
+      - FRONTEND_URL=http://api.site.local:8080
+
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-seo
+
+networks:
+  backend:
+    driver: overlay

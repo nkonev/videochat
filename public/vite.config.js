@@ -3,7 +3,7 @@ import vike from 'vike/plugin'
 import vuetify from 'vite-plugin-vuetify'
 
 export default {
-  base: '/blog/',
+  base: '/public/',
   plugins: [
       vue(),
       vike(),

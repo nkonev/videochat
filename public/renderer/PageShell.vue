@@ -16,7 +16,7 @@
 
 <script>
     import {hasLength} from "../common/utils.js";
-    import {blog, root, blog_post} from "../common/router/routes.js";
+    import {blog, path_prefix, blog_post, videochat} from "../common/router/routes.js";
     import {usePageContext} from "./usePageContext.js";
 
     export default {
@@ -41,13 +41,13 @@
                     {
                         title: 'Videochat',
                         disabled: false,
-                        href: root,
+                        href: videochat,
                     },
                     {
                         title: 'Blog',
                         disabled: false,
                         exactPath: true,
-                        href: blog +"/",
+                        href: path_prefix + blog + "/",
                     },
                 ];
                 const id = this.pageContext.routeParams?.id;
@@ -57,7 +57,7 @@
                         {
                             title: 'Post #' + id,
                             disabled: false,
-                            href: blog_post + "/" + id,
+                            href: path_prefix + blog_post + "/" + id,
                         },
                     )
                 }

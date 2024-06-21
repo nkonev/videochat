@@ -127,7 +127,7 @@
 </script>
 
 <style lang="stylus" scoped>
-  @import "../../../common/styles/common.styl"
+  @import "../../../../common/styles/common.styl"
 
   .list-item-head {
     text-decoration none

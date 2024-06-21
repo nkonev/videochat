@@ -3,10 +3,10 @@
 BUILDDIR := ./build
 DIST := ./dist
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-IMAGE := nkonev/chat-seo:changing
-IMAGE_TO_PUBLISH := nkonev/chat-seo:latest
+IMAGE := nkonev/chat-public:changing
+IMAGE_TO_PUBLISH := nkonev/chat-public:latest
 # should match to compose file from deploy dir
-SERVICE_NAME := seo
+SERVICE_NAME := public
 CI_TO_COPY_DIR := /tmp/to-copy
 SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
@@ -73,4 +73,4 @@ run-dev:
 
 # Using port 3000 we mimic to Vite's npm run dev in order to match traefik's dev config
 run-docker-image:
-	docker run --rm --network=host --name chat-seo -p 3100:3100 $(IMAGE)
+	docker run --rm --network=host --name chat-public -p 3100:3100 $(IMAGE)

@@ -8,7 +8,7 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:3000
-    seo-service:
+    public-service:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:3100
@@ -52,21 +52,21 @@ http:
       service: frontend-service
       middlewares:
         - "retry-middleware"
-    seo-router-blog-ssr:
-      rule: "PathPrefix(`/blog`) && HeadersRegexp(`User-Agent`, `(?i)(Go-|bot|yandex|google)`)"
-      service: seo-service
+    public-router:
+      rule: "PathPrefix(`/public`)"
+      service: public-service
       middlewares:
         - "retry-middleware"
 
-    seo-router-robots:
+    public-router-robots:
       rule: "Path(`/robots.txt`)"
-      service: seo-service
+      service: public-service
       middlewares:
         - "retry-middleware"
 
-    seo-router-sitemap:
+    public-router-sitemap:
       rule: "Path(`/sitemap.xml`)"
-      service: seo-service
+      service: public-service
       middlewares:
         - "retry-middleware"
 

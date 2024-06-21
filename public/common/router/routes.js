@@ -1,4 +1,6 @@
-export const root = '/';
+export const videochat = '/';
+
+export const path_prefix = '/public';
 export const blog = '/blog';
 
 export const blog_post_name = 'blogPost';

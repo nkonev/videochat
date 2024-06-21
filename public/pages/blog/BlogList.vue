@@ -63,6 +63,7 @@ import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/commo
 import {blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
 import {isMobileBrowser} from "#root/common/utils.js";
 import {usePageContext} from "#root/renderer/usePageContext.js";
+import {path_prefix} from "../../common/router/routes.js";
 
 export default {
   setup() {
@@ -90,7 +91,7 @@ export default {
       return url;
     },
     getLink(item) {
-        return blog_post + "/" + item.id
+        return path_prefix + blog_post + "/" + item.id
     },
     getItemId(id) {
       return blogIdPrefix + id
