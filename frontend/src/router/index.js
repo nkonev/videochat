@@ -117,7 +117,7 @@ const routes = [
     {
         name: public_message_name,
         path: public_message,
-        component: () => import('@/MessagePublicView.vue'),
+        component: () => import('@/MessagePublishedView.vue'),
     },
 ]
 
