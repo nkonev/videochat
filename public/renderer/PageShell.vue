@@ -68,10 +68,10 @@
                 return ret
             },
             shouldShowGoToChatButton() {
-                return hasLength(this.chatMessageHref)
+                return hasLength(this.$data.chatMessageHref)
             },
             onGoToChat() {
-                window.location.href = this.chatMessageHref
+                window.location.href = this.$data.chatMessageHref
             },
         },
         computed: {
