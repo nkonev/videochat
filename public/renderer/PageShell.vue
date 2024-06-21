@@ -5,7 +5,7 @@
                 :items="getBreadcrumbs()"
             />
             <v-spacer></v-spacer>
-            <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="goToChatMessageHref">Go to message</v-btn>
+            <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
 
         </v-app-bar>
 
@@ -71,7 +71,7 @@
                 return hasLength(this.messageId)
             },
             onGoToChat() {
-                window.location.href = this.goToChatMessageHref
+                window.location.href = this.chatMessageHref
             },
         },
         computed: {
