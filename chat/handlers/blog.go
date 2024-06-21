@@ -431,7 +431,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		return err
 	}
 	if chatBasic == nil {
-		return c.NoContent(http.StatusNotFound)
+		return c.NoContent(http.StatusNoContent)
 	}
 	if !chatBasic.IsBlog {
 		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)
@@ -498,7 +498,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return err
 	}
 	if chatBasic == nil {
-		return c.NoContent(http.StatusNotFound)
+		return c.NoContent(http.StatusNoContent)
 	}
 	if !chatBasic.IsBlog {
 		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)

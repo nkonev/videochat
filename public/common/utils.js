@@ -1,4 +1,6 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
+import {chat, messageIdHashPrefix} from "./router/routes.js";
+import {getFrontendUrl} from "./config.js";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -75,4 +77,8 @@ export const getLoginColoredStyle = (item, defaultLinkColor) => {
     const color = item?.loginColor;
     const defaultColor = defaultLinkColor ? linkColor : null;
     return color ? {'color': color} : {'color': defaultColor}
+}
+
+export const getMessageLink = (chatId, messageId) => {
+    return getFrontendUrl() + chat + "/" + chatId + messageIdHashPrefix + messageId
 }

@@ -2,7 +2,7 @@
     <div class="pr-1 mr-1 mt-4 message-item-root" :class="isMobile() ? ['pl-2'] : ['pl-4', 'pr-2']" :id="id">
         <div v-if="hasLength(item?.owner?.avatar)" class="item-avatar mt-2" :class="isMobile() ? 'mr-2' : 'mr-3'">
           <a :href="getOwnerLink(item)" class="user-link" >
-            <img :src="item.owner.avatar">
+            <img :src="item.owner?.avatar">
           </a>
         </div>
         <div class="message-item-with-buttons-wrapper">
@@ -14,7 +14,7 @@
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
-                        <a>{{getEmbedHead(item)}}</a>
+                        <a class="list-item-head">{{getEmbedHead(item)}}</a>
                     </template>
                     <template v-else>
                         <div class="list-item-head">
@@ -67,7 +67,7 @@
             canRenderLinkToSource(item) {
                 if (item.embedMessage.embedType == embed_message_reply) {
                     return true
-                } else if (item.embedMessage.embedType == embed_message_resend) {
+                } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
                     if (item.embedMessage.chatName) {
                         return true
                     }
@@ -127,7 +127,7 @@
 </script>
 
 <style lang="stylus" scoped>
-  @import "../../../../common/styles/common.styl"
+  @import "../styles/common.styl"
 
   .list-item-head {
     text-decoration none

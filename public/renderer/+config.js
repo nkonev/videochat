@@ -13,5 +13,8 @@ export default {
       env: { server: true }
     }
   },
-  hydrationCanBeAborted: true
+  hydrationCanBeAborted: true,
+  passToClient: [
+    'urlParsed'
+  ]
 }

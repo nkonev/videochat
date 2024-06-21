@@ -5,6 +5,7 @@
                 :items="getBreadcrumbs()"
             />
             <v-spacer></v-spacer>
+            <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="goToChatMessageHref">Go to message</v-btn>
 
         </v-app-bar>
 
@@ -15,8 +16,8 @@
 </template>
 
 <script>
-    import {hasLength} from "../common/utils.js";
-    import {blog, path_prefix, blog_post, videochat} from "../common/router/routes.js";
+    import {hasLength} from "#root/common/utils";
+    import {blog, path_prefix, blog_post, videochat} from "#root/common/router/routes.js";
     import {usePageContext} from "./usePageContext.js";
 
     export default {
@@ -43,31 +44,44 @@
                         disabled: false,
                         href: videochat,
                     },
-                    {
+                ];
+
+                if (this.pageContext.urlParsed && this.pageContext.urlParsed.pathname.startsWith(blog)) {
+
+                    ret.push({
                         title: 'Blog',
                         disabled: false,
                         exactPath: true,
                         href: path_prefix + blog + "/",
-                    },
-                ];
-                const id = this.pageContext.routeParams?.id;
+                    })
 
-                if (hasLength(id)) {
-                    ret.push(
-                        {
-                            title: 'Post #' + id,
-                            disabled: false,
-                            href: path_prefix + blog_post + "/" + id,
-                        },
-                    )
+                    if (hasLength(this.chatId)) {
+                        ret.push(
+                            {
+                                title: 'Post #' + this.chatId,
+                                disabled: false,
+                                href: path_prefix + blog_post + "/" + this.chatId,
+                            },
+                        )
+                    }
                 }
                 return ret
             },
+            shouldShowGoToChatButton() {
+                return hasLength(this.messageId)
+            },
+            onGoToChat() {
+                window.location.href = this.goToChatMessageHref
+            },
         },
-        mounted() {
+        computed: {
+            chatId() {
+                return this.pageContext.routeParams?.id
+            },
+            messageId() {
+                return this.pageContext.routeParams?.messageId
+            },
         },
-        created() {
-        }
     }
 
 </script>
