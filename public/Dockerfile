@@ -1,5 +1,5 @@
 FROM node:22.1.0-alpine
-ARG DEST=/opt/seo
+ARG DEST=/opt/public
 RUN mkdir -p $DEST
 WORKDIR $DEST
 ENV NODE_ENV=production
