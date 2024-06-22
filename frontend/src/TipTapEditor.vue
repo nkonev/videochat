@@ -47,6 +47,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {getStoredMessageEditNormalizeText, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
+import {mergeAttributes} from "@tiptap/core";
 
 const empty = "";
 
@@ -257,6 +258,21 @@ export default {
                   class: 'mention',
               },
               suggestion: suggestion(this),
+              renderHTML({ options, node }) {
+                  if (node.attrs.id > 0) { // real users have id > 0, all and here have < 0
+                      return [
+                          "a",
+                          mergeAttributes({ href: `/user/${node.attrs.id}` }, options.HTMLAttributes),
+                          `${options.suggestion.char}${node.attrs.label}`,
+                      ];
+                  } else {
+                      return [
+                          "span",
+                          options.HTMLAttributes,
+                          `${options.suggestion.char}${node.attrs.label}`,
+                      ];
+                  }
+              },
           }),
           Code,
           CodeBlock,

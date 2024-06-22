@@ -14,7 +14,7 @@ export default (tipTapEditorVue) => {
                     searchString: query,
                 },
             }).then(({data}) => {
-                return data.map(item => item.login)
+                return data.map((item) => {return {id: item.id, label: item.login}})
             })
         },
 
