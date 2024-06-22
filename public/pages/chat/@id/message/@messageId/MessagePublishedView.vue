@@ -13,7 +13,7 @@
     </v-container>
 </template>
 <script>
-import MessageItem from "#root/common/pages/MessageItem.vue";
+import MessageItem from "#root/common/components/MessageItem.vue";
 import {getMessageLink} from "#root/common/utils";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 

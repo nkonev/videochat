@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import MessageItem from "#root/common/pages/MessageItem.vue";
+import MessageItem from "#root/common/components/MessageItem.vue";
 import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
