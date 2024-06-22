@@ -32,7 +32,6 @@ import {
     wrong_user_name,
     wrong_change_email_confirmation_token,
     wrong_change_email_confirmation_token_name,
-    public_message_name, public_message
 } from "@/router/routes";
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
@@ -113,11 +112,6 @@ const routes = [
         name: wrong_change_email_confirmation_token_name,
         path: wrong_change_email_confirmation_token,
         component: () => import('@/UserChangeEmailWrongConfirmationToken.vue'),
-    },
-    {
-        name: public_message_name,
-        path: public_message,
-        component: () => import('@/MessagePublishedView.vue'),
     },
 ]
 

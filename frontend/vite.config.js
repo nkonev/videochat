@@ -1,7 +1,6 @@
 // Plugins
 import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
-import anotherEntrypointIndexHtmlPlugin from "./vite/another-entrypoint-index-html-plugin";
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -17,12 +16,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         appMain: resolve(__dirname, 'index.html'),
-        appBlog: resolve(__dirname, 'blog', 'index.html'),
       },
     },
   },
   plugins: [
-    anotherEntrypointIndexHtmlPlugin(null, "/blog"),
     vue({
       template: { transformAssetUrls }
     }),
