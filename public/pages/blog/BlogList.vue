@@ -53,7 +53,8 @@
         </v-card-actions>
       </v-card>
 
-      <v-pagination :length="20"></v-pagination>
+      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount">
+      </v-pagination>
     </div>
 
   </v-container>
@@ -61,7 +62,7 @@
 
 <script>
 import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
-import {path_prefix, blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
+import {path_prefix, blog_post, blogIdPrefix, profile, blog} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
 export default {
@@ -94,6 +95,10 @@ export default {
     },
     getItemId(id) {
       return blogIdPrefix + id
+    },
+    onClickPage(e) {
+      let actualPage = e--;
+      window.location.href = path_prefix + blog + "?page=" + actualPage
     },
   },
   computed: {

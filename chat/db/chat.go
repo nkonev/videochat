@@ -822,6 +822,15 @@ func (db *DB) GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]
 	return getBlogPostsByLimitOffsetCommon(db, reverse, limit, offset)
 }
 
+func (db *DB) CountBlogs() (int64, error) {
+	res := db.QueryRow("SELECT count(*) FROM chat ch WHERE ch.blog IS TRUE")
+	var count int64
+	if err := res.Scan(&count); err != nil {
+		return 0, eris.Wrap(err, "error during interacting with db")
+	}
+	return count, nil
+}
+
 type BlogPost struct {
 	ChatId    int64
 	MessageId int64

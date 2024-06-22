@@ -122,9 +122,16 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		isSearch = true
 	}
 
+	var count int64
+
 	if !isSearch {
 		portionOffset := utils.GetOffset(page, size)
 		blogs, err := h.db.GetBlogPostsByLimitOffset(false, size, portionOffset)
+		if err != nil {
+			return err
+		}
+
+		count, err = h.db.CountBlogs()
 		if err != nil {
 			return err
 		}
@@ -182,7 +189,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, utils.H{"items": response, "count": count})
 }
 
 type BlogSeoItem struct {
