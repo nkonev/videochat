@@ -61,6 +61,7 @@
 </template>
 
 <script>
+import Mark from "mark.js";
 import {getHumanReadableDate, hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE} from "#root/common/utils";
 import {path_prefix, blog_post, blogIdPrefix, profile, blog} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
@@ -120,6 +121,14 @@ export default {
     shouldShowPagination() {
         return this.count > PAGE_SIZE
     },
+    performMarking() {
+      this.$nextTick(() => {
+          if (hasLength(this.searchStringFacade)) {
+              this.markInstance.unmark();
+              this.markInstance.mark(this.searchStringFacade);
+          }
+      })
+    },
   },
   computed: {
   },
@@ -127,9 +136,13 @@ export default {
       this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
   },
   mounted() {
+      this.markInstance = new Mark("div#blog-post-list");
       bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+      this.performMarking();
   },
   beforeUnmount() {
+      this.markInstance.unmark();
+      this.markInstance = null;
       bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
   },
 }
