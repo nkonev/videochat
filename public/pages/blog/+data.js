@@ -14,8 +14,6 @@ async function data(pageContext) {
         actualPage = page - 1;
     }
 
-    console.log("acual page", actualPage);
-
     const searchString = pageContext.urlParsed.search[SEARCH_MODE_POSTS];
 
     const response = await axios.get(apiHost + '/blog', {
