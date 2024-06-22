@@ -53,6 +53,7 @@
         </v-card-actions>
       </v-card>
 
+      <v-pagination :length="20"></v-pagination>
     </div>
 
   </v-container>
@@ -60,9 +61,8 @@
 
 <script>
 import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
-import {blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
+import {path_prefix, blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
-import {path_prefix} from "../../common/router/routes.js";
 
 export default {
   setup() {

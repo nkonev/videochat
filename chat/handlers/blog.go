@@ -4,7 +4,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"math"
 	"net/http"
 	"net/url"
 	"nkonev.name/chat/client"
@@ -111,23 +110,10 @@ func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, 
 }
 
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
-	var err error
 
-	var startingFromItemId int64
-	startingFromItemIdString := c.QueryParam("startingFromItemId")
-	if startingFromItemIdString == "" {
-		startingFromItemId = math.MaxInt64
-	} else {
-		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
-		if err != nil {
-			return err
-		}
-		startingFromItemId = startingFromItemId2
-	}
 	size := utils.FixSizeString(c.QueryParam("size"))
-	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+	page := utils.FixPageString(c.QueryParam("page"))
 	searchString := c.QueryParam("searchString")
-	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
 
 	var response = make([]*BlogPostPreviewDto, 0)
 
@@ -136,131 +122,48 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		isSearch = true
 	}
 
-	if hasHash {
-		leftLimit := size / 2
-		rightLimit := size / 2
-
-		if leftLimit == 0 {
-			leftLimit = 1
-		}
-		if rightLimit == 0 {
-			rightLimit = 1
+	if !isSearch {
+		portionOffset := utils.GetOffset(page, size)
+		blogs, err := h.db.GetBlogPostsByLimitOffset(false, size, portionOffset)
+		if err != nil {
+			return err
 		}
 
-		var leftChatId, rightChatId int64
+		response, err = h.getPostsWoUsers(blogs)
+		if err != nil {
+			return err
+		}
+	} else { // search
+		var respCounter = 0
 
-		if !isSearch {
-			leftChatId, err = h.db.GetBlogPostLeftChatId(startingFromItemId, leftLimit)
+		shouldIterate := true
+		for portionPage := 0; shouldIterate; portionPage++ {
+			portionOffset := utils.GetOffset(portionPage, size)
+			// get chats where blog=true
+			blogs, err := h.db.GetBlogPostsByLimitOffset(false, size, portionOffset)
 			if err != nil {
 				return err
 			}
-			rightChatId, err = h.db.GetBlogPostRightChatId(startingFromItemId, rightLimit)
+
+			portion, err := h.getPostsWoUsers(blogs)
+			if err != nil {
+				return err
+			}
+			if len(portion) < size {
+				shouldIterate = false
+			}
+
+			searched, err := h.performSearch(searchString, portion)
 			if err != nil {
 				return err
 			}
 
-			blogs, err := h.db.GetBlogPostsBetweenItemIds(reverse, size, leftChatId, rightChatId)
-			if err != nil {
-				return err
-			}
-
-			response, err = h.getPostsWoUsers(blogs)
-			if err != nil {
-				return err
-			}
-		} else { // search
-			var respCounter = 0
-			leftHalf := true
-
-			shouldIterate := true
-			for portionPage := 0; shouldIterate; portionPage++ {
-				portionOffset := utils.GetOffset(portionPage, size)
-				// get chats where blog=true
-				blogs, err := h.db.GetBlogPostsByLimitOffset(reverse, size, portionOffset)
-				if err != nil {
-					return err
-				}
-
-				portion, err := h.getPostsWoUsers(blogs)
-				if err != nil {
-					return err
-				}
-				if len(portion) < size {
+			for _, sp := range searched {
+				response = append(response, sp)
+				respCounter++
+				if respCounter >= size {
 					shouldIterate = false
-				}
-
-				searched, err := h.performSearch(searchString, portion)
-				if err != nil {
-					return err
-				}
-
-				for _, sp := range searched {
-					// until we meet startingFromItemId
-					if sp.Id == startingFromItemId {
-						leftHalf = false
-					}
-
-					// iterate and hold in the list leftLimit items
-					if leftHalf {
-						response, respCounter = appendKeepingN(response, sp, leftLimit)
-					} else { // then iterate to count up to rightLimit
-						response = append(response, sp)
-						respCounter++
-					}
-
-					if respCounter >= size {
-						shouldIterate = false
-						break
-					}
-				}
-				GetLogEntry(c.Request().Context()).Debugf("Portion end")
-			}
-		}
-	} else { // no hash
-		if !isSearch {
-			blogs, err := h.db.GetBlogPostsStartingFromItemId(reverse, size, startingFromItemId)
-			if err != nil {
-				return err
-			}
-
-			response, err = h.getPostsWoUsers(blogs)
-			if err != nil {
-				return err
-			}
-		} else { // search
-			var respCounter = 0
-
-			shouldIterate := true
-			for portionPage := 0; shouldIterate; portionPage++ {
-				portionOffset := utils.GetOffset(portionPage, size)
-				// get chats where blog=true
-				blogs, err := h.db.GetBlogPostsByLimitOffset(reverse, size, portionOffset)
-				if err != nil {
-					return err
-				}
-
-				portion, err := h.getPostsWoUsers(blogs)
-				if err != nil {
-					return err
-				}
-				if len(portion) < size {
-					shouldIterate = false
-				}
-
-				searched, err := h.performSearch(searchString, portion)
-				if err != nil {
-					return err
-				}
-
-				for _, sp := range searched {
-					if (reverse && sp.Id > startingFromItemId) || (!reverse && sp.Id < startingFromItemId) {
-						response = append(response, sp)
-						respCounter++
-						if respCounter >= size {
-							shouldIterate = false
-							break
-						}
-					}
+					break
 				}
 			}
 		}
