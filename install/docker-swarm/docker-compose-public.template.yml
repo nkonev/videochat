@@ -38,7 +38,7 @@ services:
     logging:
       driver: "journald"
       options:
-        tag: chat-seo
+        tag: chat-public
 
 networks:
   backend:
