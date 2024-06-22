@@ -7,6 +7,10 @@
             <v-spacer></v-spacer>
             <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
 
+            <template v-if="isShowSearch()">
+                <CollapsedSearch :provider="getProvider()"/>
+            </template>
+
         </v-app-bar>
 
         <v-main>
@@ -19,8 +23,10 @@
     import {hasLength} from "#root/common/utils";
     import {blog, path_prefix, blog_post, videochat} from "#root/common/router/routes.js";
     import {usePageContext} from "./usePageContext.js";
+    import CollapsedSearch from "#root/common/pages/CollapsedSearch.vue";
 
     export default {
+        components: {CollapsedSearch},
         // https://vuejs.org/api/composition-api-setup.html
         setup() {
             const pageContext = usePageContext();
@@ -75,6 +81,36 @@
             },
             onGoToChat() {
                 window.location.href = this.$data.chatMessageHref
+            },
+            isShowSearch() {
+                return !hasLength(this.chatId) && !hasLength(this.messageId)
+            },
+
+            getProvider() {
+                return {
+                    getModelValue: this.getModelValue,
+                    setModelValue: this.setModelValue,
+                    getShowSearchButton: this.getShowSearchButton,
+                    setShowSearchButton: this.setShowSearchButton,
+                    searchName: this.searchName,
+                    textFieldVariant: 'solo',
+                }
+            },
+
+            getModelValue() {
+                return this.searchStringFacade
+            },
+            setModelValue(v) {
+                this.searchStringFacade = v
+            },
+            getShowSearchButton() {
+                return this.$data.showSearchButton
+            },
+            setShowSearchButton(v) {
+                this.$data.showSearchButton = v
+            },
+            searchName() {
+                return "Search by blogs"
             },
         },
         computed: {

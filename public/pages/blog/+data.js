@@ -28,6 +28,7 @@ async function data(pageContext) {
         page,
         pagesCount,
         items: response.data.items,
+        showSearchButton: true,
         title: "Blog",
         description: "Various tech blog"
     }
