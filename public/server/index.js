@@ -60,38 +60,41 @@ async function startServer() {
     app.use(viteDevMiddleware)
   }
 
-  app.get('/sitemap.xml', async function(req, res) {
-    res.header('Content-Type', 'application/xml');
+  const sitemapHandler = async function(req, res) {
+      res.header('Content-Type', 'application/xml');
 
-    try {
-        const smStream = new SitemapStream({ hostname: getFrontendUrl() });
+      try {
+          const smStream = new SitemapStream({ hostname: getFrontendUrl() });
 
-        // index page
-        smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
+          // index page
+          smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
 
-        const apiHost = getChatApiUrl();
-        const PAGE_SIZE = 40;
-        for (let page = 0; ; page++) {
-            const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
-            const data = response.data;
-            if (data.length == 0) {
-                break
-            }
-            for (const item of data) {
-                smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
-            }
-        }
+          const apiHost = getChatApiUrl();
+          const PAGE_SIZE = 40;
+          for (let page = 0; ; page++) {
+              const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
+              const data = response.data;
+              if (data.length == 0) {
+                  break
+              }
+              for (const item of data) {
+                  smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
+              }
+          }
 
-        // stream write the response
-        smStream.pipe(res).on('error', (e) => {throw e})
+          // stream write the response
+          smStream.pipe(res).on('error', (e) => {throw e})
 
-        // make sure to attach a write stream such as streamToPromise before ending
-        smStream.end()
-    } catch (e) {
-        console.error(e)
-        res.status(500).end()
-    }
-  })
+          // make sure to attach a write stream such as streamToPromise before ending
+          smStream.end()
+      } catch (e) {
+          console.error(e)
+          res.status(500).end()
+      }
+  }
+
+  app.get('/sitemap.xml', sitemapHandler);
+  app.get('/blog/sitemap.xml', sitemapHandler); // for google, url like http://localhost:8081/public/blog/sitemap.xml
 
   app.get('/robots.txt', function (req, res) {
     res.type('text/plain');
