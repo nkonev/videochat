@@ -53,7 +53,7 @@
         </v-card-actions>
       </v-card>
 
-      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount">
+      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()">
       </v-pagination>
     </div>
 
@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import {getHumanReadableDate, hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM} from "#root/common/utils";
+import {getHumanReadableDate, hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE} from "#root/common/utils";
 import {path_prefix, blog_post, blogIdPrefix, profile, blog} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 import debounce from "lodash/debounce.js";
@@ -115,6 +115,10 @@ export default {
           url.searchParams.delete(SEARCH_MODE_POSTS);
       }
       window.location.href = url.toString();
+    },
+
+    shouldShowPagination() {
+        return this.count > PAGE_SIZE
     },
   },
   computed: {

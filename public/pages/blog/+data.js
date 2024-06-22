@@ -26,10 +26,12 @@ async function data(pageContext) {
     });
 
     const pagesCount = response.data.pagesCount;
+    const count = response.data.count;
 
     return {
         page,
         pagesCount,
+        count,
         items: response.data.items,
         showSearchButton: true,
         searchStringFacade: searchString,
