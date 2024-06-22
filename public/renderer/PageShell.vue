@@ -94,6 +94,7 @@
                     getShowSearchButton: this.getShowSearchButton,
                     setShowSearchButton: this.setShowSearchButton,
                     searchName: this.searchName,
+                    searchIcon: this.searchIcon,
                     textFieldVariant: 'solo',
                 }
             },
@@ -114,6 +115,9 @@
             },
             searchName() {
                 return "Search by blogs"
+            },
+            searchIcon() {
+                return "mdi-postage-stamp"
             },
         },
         computed: {
