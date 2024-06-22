@@ -11,7 +11,9 @@ async function data(pageContext) {
     let actualPage = undefined;
     if (page) {
         page = parseInt(page);
-        actualPage = page - 1;
+        if (page) {
+            actualPage = page - 1;
+        }
     }
 
     const searchString = pageContext.urlParsed.search[SEARCH_MODE_POSTS];
