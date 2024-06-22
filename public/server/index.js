@@ -34,8 +34,8 @@ async function startServer() {
   // Vite integration
   if (isProduction) {
     app.get('/*',function (req, res, next) {
-        if (req.url.startsWith(pathPrefixAndBlog)) { // patched by me for sitemap and resources. use production package (you can use docker image built by make)
-            const newUrl = req.url.slice(pathPrefixAndBlog.length);
+        if (req.url.startsWith(path_prefix)) { // patched by me for sitemap and resources. use production package (you can use docker image built by make)
+            const newUrl = req.url.slice(path_prefix.length);
             // console.log("Patching url from ", req.url, "to ", newUrl);
             req.url = newUrl;
         }
