@@ -196,7 +196,17 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 	pagesCount := count / int64(size)
 
-	return c.JSON(http.StatusOK, utils.H{"items": response, "count": count, "pagesCount": pagesCount})
+	return c.JSON(http.StatusOK, &BlogPostsDTO{
+		Items: response,
+		Count: count,
+		PagesCount: pagesCount,
+	})
+}
+
+type BlogPostsDTO struct {
+	Items []*BlogPostPreviewDto `json:"items"`
+	Count int64 `json:"count"`
+	PagesCount int64 `json:"pagesCount"`
 }
 
 type BlogSeoItem struct {
