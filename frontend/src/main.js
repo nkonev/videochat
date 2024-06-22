@@ -115,6 +115,9 @@ axios.interceptors.response.use((response) => {
         chatStore.unsetUser();
         bus.emit(LOGGED_OUT, null);
         return Promise.reject(error)
+    }  else if (error.code == 'ECONNABORTED') {
+        console.warn("Connection aborted")
+        return Promise.reject(error)
     } else {
         const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
         console.error(consoleErrorMessage);
