@@ -54,6 +54,7 @@ async function data(pageContext) {
         count,
         blogDto: blogResponse.data,
         items: commentResponse.data.items,
+        commentsLoading: false,
         // see getPageTitle.js
         title: blogResponse.data.title,
         description: blogResponse.data.preview,

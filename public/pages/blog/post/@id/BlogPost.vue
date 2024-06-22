@@ -40,7 +40,7 @@
 
     <template v-if="blogDto.messageId">
         <v-container class="ma-0 pa-0 mb-2" fluid>
-          <MessageItem v-for="(item, index) in items"
+          <MessageItem v-for="(item, index) in items" v-if="!commentsLoading"
             :id="getItemId(item.id)"
             :key="item.id"
             :item="item"
@@ -48,6 +48,12 @@
             :isInBlog="true"
           ></MessageItem>
 
+          <v-progress-linear
+            class="my-2"
+            v-else
+            color="primary"
+            indeterminate
+          ></v-progress-linear>
           <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
     </template>
@@ -56,10 +62,12 @@
 </template>
 
 <script>
+import axios from "axios";
 import MessageItem from "#root/common/components/MessageItem.vue";
 import {getHumanReadableDate, hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
+import { navigate } from 'vike/client/router';
 
 export default {
   setup() {
@@ -112,15 +120,35 @@ export default {
     },
 
     onClickPage(e) {
-      let actualPage = e--;
+      this.page = e;
+
+      let actualPage = e - 1;
 
       const url = new URL(window.location.href);
-      url.searchParams.set(PAGE_PARAM, actualPage);
-
-      window.location.href = url.toString();
+      url.searchParams.set(PAGE_PARAM, e);
+      navigate(url.pathname + url.search);
+      this.loadComments(actualPage)
     },
     shouldShowPagination() {
       return this.count > PAGE_SIZE
+    },
+
+    loadComments(page) {
+        this.commentsLoading = true;
+        axios.get(`/api/blog/${this.blogDto.chatId}/comment`, {
+            params: {
+                page: page,
+                size: PAGE_SIZE,
+                reverse: false,
+            },
+        }).then((res) => {
+            this.items = res.data.items;
+            // this.page = res.data.page;
+            this.pagesCount = res.data.pagesCount;
+            this.count = res.data.count;
+        }).finally(()=>{
+            this.commentsLoading = false;
+        })
     },
   },
   components: {
