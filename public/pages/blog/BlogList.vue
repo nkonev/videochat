@@ -53,8 +53,8 @@
         </v-card-actions>
       </v-card>
 
-      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()">
-      </v-pagination>
+      <v-divider/>
+      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
     </div>
 
   </v-container>
