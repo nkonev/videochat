@@ -1,10 +1,10 @@
 <template>
-    <v-container v-if="loaded" class="ma-0 pa-0 my-list-container" fluid>
+    <v-container class="ma-0 pa-0 my-list-container" fluid>
         <div class="my-message-scroller">
-            <h1 v-if="is404">404 Not found</h1>
+            <h1 v-if="messageDto.is404">404 Not found</h1>
             <MessageItem v-else
                  :id="messageId"
-                 :item="messageItemDto"
+                 :item="messageDto.messageItem"
                  :chatId="chatId"
                  :isInBlog="true"
                  @onreactionclick="onReactionClick"

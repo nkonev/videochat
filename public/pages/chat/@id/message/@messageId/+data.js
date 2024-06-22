@@ -16,20 +16,22 @@ async function data(pageContext) {
     if (publishedMessageResponse.status == 204) {
         pageContext.httpStatus = 404;
         return {
-            loaded: false,
-            messageItemDto: { },
-            is404: true,
+            messageDto: {
+                is404: true,
+                messageItem: { },
+            },
             title: "Page not found",
-            chatMessageHref: videochat,
+            chatMessageHref: null,
         }
     }
 
     const chatMessageHref = getMessageLink(chatId, messageId);
 
     return {
-        loaded: true,
-        messageItemDto: publishedMessageResponse.data.message,
-        is404: false,
+        messageDto: {
+            messageItem: publishedMessageResponse.data.message,
+            is404: false,
+        },
         title: publishedMessageResponse.data.title,
         chatMessageHref,
     }
