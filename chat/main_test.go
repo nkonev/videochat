@@ -817,7 +817,6 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 
 func TestGetBlogsPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		// get 2 page
 		httpFirstPage, bodyFirstPage, _ := request("GET", "/blog?page=2&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
@@ -840,7 +839,6 @@ func TestGetBlogsPaginated(t *testing.T) {
 
 func TestGetBlogsPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		// get 2 page
 		httpFirstPage, bodyFirstPage, _ := request("GET", "/blog?size=3&searchString=generated_chat994", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
