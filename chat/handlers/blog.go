@@ -141,7 +141,6 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			return err
 		}
 	} else { // search
-		var respCounter = 0
 
 		shouldIterate := true
 		for portionPage := 0; shouldIterate; portionPage++ {
@@ -165,11 +164,12 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 				return err
 			}
 
+			count += int64(len(searched))
+
 			for _, sp := range searched {
-				response = append(response, sp)
-				respCounter++
-				if respCounter >= size {
-					shouldIterate = false
+				if len(response) < size {
+					response = append(response, sp)
+				} else {
 					break
 				}
 			}
