@@ -142,6 +142,10 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		}
 	} else { // search
 
+		offset := page * size
+
+		var offsetCounter = 0
+
 		shouldIterate := true
 		for portionPage := 0; shouldIterate; portionPage++ {
 			portionOffset := utils.GetOffset(portionPage, size)
@@ -167,11 +171,12 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			count += int64(len(searched))
 
 			for _, sp := range searched {
-				if len(response) < size {
-					response = append(response, sp)
-				} else {
-					break
+				if offsetCounter >= offset {
+					if len(response) < size {
+						response = append(response, sp)
+					}
 				}
+				offsetCounter++
 			}
 		}
 	}
@@ -189,7 +194,9 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, utils.H{"items": response, "count": count})
+	pagesCount := count / int64(size)
+
+	return c.JSON(http.StatusOK, utils.H{"items": response, "count": count, "pagesCount": pagesCount})
 }
 
 type BlogSeoItem struct {

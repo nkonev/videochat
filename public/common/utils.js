@@ -62,6 +62,8 @@ export const PAGE_SIZE = 40;
 
 export const SEARCH_MODE_POSTS = "qp"
 
+export const PAGE_PARAM = "page"
+
 export const embed_message_reply = "reply";
 export const embed_message_resend = "resend";
 

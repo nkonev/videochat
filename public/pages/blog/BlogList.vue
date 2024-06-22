@@ -61,9 +61,11 @@
 </template>
 
 <script>
-import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
+import {getHumanReadableDate, hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM} from "#root/common/utils";
 import {path_prefix, blog_post, blogIdPrefix, profile, blog} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
+import debounce from "lodash/debounce.js";
+import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
 
 export default {
   setup() {
@@ -98,16 +100,33 @@ export default {
     },
     onClickPage(e) {
       let actualPage = e--;
-      window.location.href = path_prefix + blog + "?page=" + actualPage
+
+      const url = new URL(window.location.href);
+      url.searchParams.set(PAGE_PARAM, actualPage);
+
+      window.location.href = url.toString();
+    },
+    onSearchStringChanged(v) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete(PAGE_PARAM);
+      if (v) {
+          url.searchParams.set(SEARCH_MODE_POSTS, v);
+      } else {
+          url.searchParams.delete(SEARCH_MODE_POSTS);
+      }
+      window.location.href = url.toString();
     },
   },
   computed: {
   },
   created() {
+      this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
   },
-  async mounted() {
+  mounted() {
+      bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
   },
   beforeUnmount() {
+      bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
   },
 }
 </script>

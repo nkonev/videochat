@@ -13,22 +13,28 @@ async function data(pageContext) {
         page = parseInt(page);
         actualPage = page - 1;
     }
+
+    console.log("acual page", actualPage);
+
+    const searchString = pageContext.urlParsed.search[SEARCH_MODE_POSTS];
+
     const response = await axios.get(apiHost + '/blog', {
         params: {
             page: actualPage,
             size: PAGE_SIZE,
             reverse: false,
-            searchString: pageContext.urlParsed.search[SEARCH_MODE_POSTS],
+            searchString: searchString,
         },
     });
 
-    const pagesCount = response.data.count / PAGE_SIZE;
+    const pagesCount = response.data.pagesCount;
 
     return {
         page,
         pagesCount,
         items: response.data.items,
         showSearchButton: true,
+        searchStringFacade: searchString,
         title: "Blog",
         description: "Various tech blog"
     }

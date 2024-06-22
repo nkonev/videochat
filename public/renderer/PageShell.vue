@@ -22,6 +22,7 @@
 <script>
     import {hasLength} from "#root/common/utils";
     import {blog, path_prefix, blog_post, videochat} from "#root/common/router/routes.js";
+    import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "#root/common/pages/CollapsedSearch.vue";
 
@@ -102,6 +103,8 @@
             },
             setModelValue(v) {
                 this.searchStringFacade = v
+
+                bus.emit(SEARCH_STRING_CHANGED, v)
             },
             getShowSearchButton() {
                 return this.$data.showSearchButton
