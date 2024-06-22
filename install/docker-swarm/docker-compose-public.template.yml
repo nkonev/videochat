@@ -1,8 +1,8 @@
 version: '3.7'
 
 services:
-  seo:
-    image: nkonev/chat-seo:changing
+  public:
+    image: nkonev/chat-public:changing
     networks:
       backend:
     deploy:
