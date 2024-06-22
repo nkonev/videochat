@@ -115,7 +115,7 @@ axios.interceptors.response.use((response) => {
         chatStore.unsetUser();
         bus.emit(LOGGED_OUT, null);
         return Promise.reject(error)
-    }  else if (error.code == 'ECONNABORTED') {
+    }  else if (error.code == 'ECONNABORTED') { // removes error snackbar caused by cancelled message read request
         console.warn("Connection aborted")
         return Promise.reject(error)
     } else {
