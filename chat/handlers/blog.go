@@ -195,6 +195,9 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	}
 
 	pagesCount := count / int64(size)
+	if count % int64(size) > 0 {
+		pagesCount++
+	}
 
 	return c.JSON(http.StatusOK, &BlogPostsDTO{
 		Items: response,
@@ -432,27 +435,22 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	var startingFromItemId int64
-	startingFromItemIdString := c.QueryParam("startingFromItemId")
-	if startingFromItemIdString == "" {
-		return c.JSON(http.StatusOK, messageDtos)
-	} else {
-		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
-		if err != nil {
-			return err
-		}
-		startingFromItemId = startingFromItemId2
-	}
-
-
 	size := utils.FixSizeString(c.QueryParam("size"))
-	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+	page := utils.FixPageString(c.QueryParam("page"))
+	portionOffset := utils.GetOffset(page, size)
 
 	postMessageId, err := h.db.GetBlogPostMessageId(blogId)
 	if err != nil {
 		return err
 	}
-	messages, err := h.db.GetComments(blogId, postMessageId, size, startingFromItemId, reverse)
+
+	var count int64
+	count, err = h.db.CountComments(blogId, postMessageId)
+	if err != nil {
+		return err
+	}
+
+	messages, err := h.db.GetComments(blogId, postMessageId, size, portionOffset, false)
 	if err != nil {
 		return err
 	}
@@ -473,8 +471,13 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		messageDtos = append(messageDtos, msg)
 	}
 
+	pagesCount := count / int64(size)
+	if count % int64(size) > 0 {
+		pagesCount++
+	}
+
 	GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
-	return c.JSON(http.StatusOK, messageDtos)
+	return c.JSON(http.StatusOK, &utils.H{"items": messageDtos, "count": count, "pagesCount": pagesCount})
 }
 
 func PatchStorageUrlToPublic(text string, messageId int64) string {

@@ -19,10 +19,17 @@ async function data(pageContext) {
         }
     }
 
-    const startingFromItemId = blogResponse.data.messageId;
+    let page = pageContext.urlParsed.search.page;
+
+    let actualPage = undefined;
+    if (page) {
+        page = parseInt(page);
+        actualPage = page - 1;
+    }
+
     const commentResponse = await axios.get(apiHost + `/blog/${pageContext.routeParams.id}/comment`, {
         params: {
-            startingFromItemId: startingFromItemId,
+            page: actualPage,
             size: PAGE_SIZE,
             reverse: false,
         },
@@ -38,9 +45,15 @@ async function data(pageContext) {
         }
     }
 
+    const pagesCount = commentResponse.data.pagesCount;
+    const count = commentResponse.data.count;
+
     return {
+        page,
+        pagesCount,
+        count,
         blogDto: blogResponse.data,
-        items: commentResponse.data,
+        items: commentResponse.data.items,
         // see getPageTitle.js
         title: blogResponse.data.title,
         description: blogResponse.data.preview,

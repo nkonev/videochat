@@ -47,6 +47,8 @@
             :chatId="item.chatId"
             :isInBlog="true"
           ></MessageItem>
+
+          <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
     </template>
   </div>
@@ -55,7 +57,7 @@
 
 <script>
 import MessageItem from "#root/common/components/MessageItem.vue";
-import {getHumanReadableDate, hasLength, getLoginColoredStyle} from "#root/common/utils";
+import {getHumanReadableDate, hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
@@ -107,6 +109,18 @@ export default {
     },
     getReactedUsers(reactionObj) {
       return reactionObj.users?.map(u => u.login).join(", ")
+    },
+
+    onClickPage(e) {
+      let actualPage = e--;
+
+      const url = new URL(window.location.href);
+      url.searchParams.set(PAGE_PARAM, actualPage);
+
+      window.location.href = url.toString();
+    },
+    shouldShowPagination() {
+      return this.count > PAGE_SIZE
     },
   },
   components: {

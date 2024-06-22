@@ -1189,23 +1189,20 @@ func (tx *Tx) ChatFilter(searchString string, chatId int64) (bool, error) {
 	return found, nil
 }
 
-func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
+func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limit int, offset int, reverse bool) ([]*Message, error) {
 	order := "asc"
-	nonEquality := "m.id > $2"
 	if reverse {
 		order = "desc"
-		nonEquality = "m.id < $2"
 	}
 	var err error
 	var rows *sql.Rows
 	var preparedSql = fmt.Sprintf(`%v
 			WHERE
-				  %s 
-				  AND m.id > $3 
+				  m.id > $3 
 			ORDER BY m.id %s 
-			LIMIT $1`, selectMessageClause(chatId), nonEquality, order)
+			LIMIT $1 OFFSET $2`, selectMessageClause(chatId), order)
 	rows, err = co.Query(preparedSql,
-		limit, startingFromItemId, blogPostId)
+		limit, offset, blogPostId)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -1229,10 +1226,27 @@ func getCommentsCommon(co CommonOperations, chatId int64, blogPostId int64, limi
 	return list, nil
 }
 
-func (db *DB) GetComments(chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
-	return getCommentsCommon(db, chatId, blogPostId, limit, startingFromItemId, reverse)
+func (db *DB) GetComments(chatId int64, blogPostId int64, limit int, offset int, reverse bool) ([]*Message, error) {
+	return getCommentsCommon(db, chatId, blogPostId, limit, offset, reverse)
 }
 
-func (tx *Tx) GetComments(chatId int64, blogPostId int64, limit int, startingFromItemId int64, reverse bool) ([]*Message, error) {
-	return getCommentsCommon(tx, chatId, blogPostId, limit, startingFromItemId, reverse)
+func (tx *Tx) GetComments(chatId int64, blogPostId int64, limit int, offset int, reverse bool) ([]*Message, error) {
+	return getCommentsCommon(tx, chatId, blogPostId, limit, offset, reverse)
+}
+
+func countCommentsCommon(co CommonOperations, chatId int64, messageId int64) (int64, error) {
+	res := co.QueryRow(fmt.Sprintf("SELECT count(*) FROM message_chat_%v m WHERE m.id > $1", chatId), messageId)
+	var count int64
+	if err := res.Scan(&count); err != nil {
+		return 0, eris.Wrap(err, "error during interacting with db")
+	}
+	return count, nil
+}
+
+func (db *DB) CountComments(chatId int64, messageId int64) (int64, error) {
+	return countCommentsCommon(db, chatId, messageId)
+}
+
+func (tx *Tx) CountComments(chatId int64, messageId int64) (int64, error) {
+	return countCommentsCommon(tx, chatId, messageId)
 }
