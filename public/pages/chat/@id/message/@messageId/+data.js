@@ -33,6 +33,7 @@ async function data(pageContext) {
             is404: false,
         },
         title: publishedMessageResponse.data.title,
+        description: publishedMessageResponse.data.preview,
         chatMessageHref,
     }
 

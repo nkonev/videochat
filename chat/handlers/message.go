@@ -1874,6 +1874,7 @@ func getAreAdminsOfUserIds(co db.CommonOperations, userIds []int64, chatId int64
 type PublishedMessageWrapper struct {
 	Message *dto.DisplayMessageDto `json:"message"`
 	Title string `json:"title"`
+	Preview string `json:"preview"`
 }
 
 func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
@@ -1919,7 +1920,13 @@ func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
 
 		convertedMessage.Text = PatchStorageUrlToPublic(convertedMessage.Text, convertedMessage.Id)
 
-		return c.JSON(http.StatusOK, PublishedMessageWrapper{convertedMessage, chatBasic.Title})
+		preview := stripTagsAndCut(mc.stripAllTags, viper.GetInt("previewMaxTextSize"), convertedMessage.Text)
+
+		return c.JSON(http.StatusOK, PublishedMessageWrapper{
+			Message: convertedMessage,
+			Title: chatBasic.Title,
+			Preview: preview,
+		})
 	})
 }
 
