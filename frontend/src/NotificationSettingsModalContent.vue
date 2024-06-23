@@ -204,31 +204,33 @@
               <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
           </v-radio-group>
 
-          <v-radio-group inline
-                         :label="$vuetify.locale.t('$vuetify.new_message_notifications_in_browser')"
-                         color="primary"
-                         hide-details
-                         class="mb-2"
-                         v-model="browserNotificationChatSettings.newMessagesEnabled"
-                         @update:modelValue="putChatNotificationBrowserSettings()"
-          >
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
-          </v-radio-group>
+          <template v-if="!isMobile()">
+              <v-radio-group inline
+                             :label="$vuetify.locale.t('$vuetify.new_message_notifications_in_browser')"
+                             color="primary"
+                             hide-details
+                             class="mb-2"
+                             v-model="browserNotificationChatSettings.newMessagesEnabled"
+                             @update:modelValue="putChatNotificationBrowserSettings()"
+              >
+                  <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+                  <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+                  <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+              </v-radio-group>
 
-          <v-radio-group inline
-                         :label="$vuetify.locale.t('$vuetify.call_notifications_in_browser')"
-                         color="primary"
-                         hide-details
-                         class="mb-2"
-                         v-model="browserNotificationChatSettings.callEnabled"
-                         @update:modelValue="putChatNotificationBrowserSettings()"
-          >
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
-          </v-radio-group>
+              <v-radio-group inline
+                             :label="$vuetify.locale.t('$vuetify.call_notifications_in_browser')"
+                             color="primary"
+                             hide-details
+                             class="mb-2"
+                             v-model="browserNotificationChatSettings.callEnabled"
+                             @update:modelValue="putChatNotificationBrowserSettings()"
+              >
+                  <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
+                  <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
+                  <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
+              </v-radio-group>
+          </template>
       </v-card>
   </v-card-text>
 
