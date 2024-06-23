@@ -2,13 +2,13 @@ import {getBrowserNotification, getGlobalBrowserNotification} from "@/store/loca
 import {chat_name, messageIdHashPrefix} from "@/router/routes.js";
 import {hasLength} from "@/utils.js";
 
-export const createNotification = (title, body, type) => {
+export const createBrowserNotification = (title, body, type) => {
     new Notification(title, { body: body, icon: "/favicon_new.svg", tag: type });
 }
 
 const notifications = {}
 
-export const createNotificationIfPermitted = (router, chatId, chatName, chatAvatar, messageId, messageText, type) => {
+export const createBrowserNotificationIfPermitted = (router, chatId, chatName, chatAvatar, messageId, messageText, type) => {
     const shouldGlobalBrowserNotification = getGlobalBrowserNotification(type);
     const shouldChatBrowserNotification = getBrowserNotification(chatId, null, type);
     let decision = shouldGlobalBrowserNotification;
@@ -47,7 +47,7 @@ export const createNotificationIfPermitted = (router, chatId, chatName, chatAvat
     }
 }
 
-export const removeNotification = (type) => {
+export const removeBrowserNotification = (type) => {
     notifications[type]?.close()
     delete notifications[type]
 }

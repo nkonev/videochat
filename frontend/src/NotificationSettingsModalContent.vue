@@ -239,7 +239,7 @@
     import {useChatStore} from "@/store/chatStore";
     import axios from "axios";
     import {chat_name, videochat_name} from "@/router/routes.js";
-    import {createNotification} from "@/browserNotifications.js";
+    import {createBrowserNotification} from "@/browserNotifications.js";
     import {
         getBrowserNotification,
         getGlobalBrowserNotification,
@@ -298,7 +298,7 @@
             },
             onEnableNotification() {
                 Notification.requestPermission().then((result) => {
-                    createNotification(this.$vuetify.locale.t('$vuetify.notifications_title'), this.$vuetify.locale.t('$vuetify.notifications_were_permitted'), "message")
+                    createBrowserNotification(this.$vuetify.locale.t('$vuetify.notifications_title'), this.$vuetify.locale.t('$vuetify.notifications_were_permitted'), "message")
                 })
             },
             setGlobalNotificationsToFalse() {

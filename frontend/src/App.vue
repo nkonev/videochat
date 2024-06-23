@@ -274,7 +274,7 @@ import {
 } from "@/store/localStore";
 import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
-import {createNotificationIfPermitted, removeNotification} from "@/browserNotifications.js";
+import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@/browserNotifications.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -563,9 +563,9 @@ export default {
               this.chatStore.setHasNewMessages(d.hasUnreadMessages);
           } else if (getGlobalEventsData(e).eventType === 'browser_notification_add_message') {
               const d = getGlobalEventsData(e).browserNotification;
-              createNotificationIfPermitted(this.$router, d.chatId, d.chatName, d.chatAvatar, d.messageId, d.messageText, NOTIFICATION_TYPE_NEW_MESSAGES);
+              createBrowserNotificationIfPermitted(this.$router, d.chatId, d.chatName, d.chatAvatar, d.messageId, d.messageText, NOTIFICATION_TYPE_NEW_MESSAGES);
           } else if (getGlobalEventsData(e).eventType === 'browser_notification_remove_message') {
-              removeNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
+              removeBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
           } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
             const d = getGlobalEventsData(e).forceLogout;
             console.log("Killed sessions, reason:", d.reasonType)
@@ -646,7 +646,7 @@ export default {
               this.invitedVideoChatAlert = false;
               this.invitedVideoChatId = 0;
               this.invitedVideoChatName = null;
-              removeNotification(NOTIFICATION_TYPE_CALL);
+              removeBrowserNotification(NOTIFICATION_TYPE_CALL);
             })
         },
         onVideoCallInvited(data) {
@@ -657,7 +657,7 @@ export default {
                 this.invitedVideoChatName = data.chatName;
                 this.invitedVideoChatState = true;
               }).then(()=>{
-                  createNotificationIfPermitted(this.$router, data.chatId, data.chatName, data.avatar, null, this.$vuetify.locale.t('$vuetify.you_called_short', this.invitedVideoChatId), NOTIFICATION_TYPE_CALL);
+                  createBrowserNotificationIfPermitted(this.$router, data.chatId, data.chatName, data.avatar, null, this.$vuetify.locale.t('$vuetify.you_called_short', this.invitedVideoChatId), NOTIFICATION_TYPE_CALL);
                   audio.play().catch(error => {
                       console.warn("Unable to play sound", error);
                       bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
@@ -760,9 +760,9 @@ export default {
             }
 
             if (add) {
-                createNotificationIfPermitted(this.$router, item.chatId, title, item.byAvatar, item.messageId, subtitle, type);
+                createBrowserNotificationIfPermitted(this.$router, item.chatId, title, item.byAvatar, item.messageId, subtitle, type);
             } else {
-                removeNotification(type);
+                removeBrowserNotification(type);
             }
         },
     },
