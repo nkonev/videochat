@@ -274,7 +274,7 @@ import {
 } from "@/store/localStore";
 import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
-import {createNotificationIfPermitted, removeNotification} from "@/notifications.js";
+import {createNotificationIfPermitted, removeNotification} from "@/browserNotifications.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 

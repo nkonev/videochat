@@ -1,7 +1,6 @@
 import {getBrowserNotification, getGlobalBrowserNotification} from "@/store/localStore.js";
 import {chat_name, messageIdHashPrefix} from "@/router/routes.js";
 import {hasLength} from "@/utils.js";
-import {isInteger, isString} from "lodash";
 
 export const createNotification = (title, body, type) => {
     new Notification(title, { body: body, icon: "/favicon_new.svg", tag: type });
@@ -50,5 +49,5 @@ export const createNotificationIfPermitted = (router, chatId, chatName, chatAvat
 
 export const removeNotification = (type) => {
     notifications[type]?.close()
-    notifications[type] = null;
+    delete notifications[type]
 }

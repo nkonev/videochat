@@ -239,7 +239,7 @@
     import {useChatStore} from "@/store/chatStore";
     import axios from "axios";
     import {chat_name, videochat_name} from "@/router/routes.js";
-    import {createNotification} from "@/notifications.js";
+    import {createNotification} from "@/browserNotifications.js";
     import {
         getBrowserNotification,
         getGlobalBrowserNotification,
