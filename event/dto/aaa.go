@@ -33,7 +33,7 @@ type DataDTO struct {
 
 type UserAccountExtended struct {
 	UserAccount
-	AdditionalData DataDTO `json:"additionalData"`
+	AdditionalData *DataDTO `json:"additionalData"`
 	CanLock bool `json:"canLock"`
 	CanDelete bool `json:"canDelete"`
 	CanChangeRole bool `json:"canChangeRole"`

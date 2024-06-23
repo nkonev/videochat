@@ -324,7 +324,7 @@ type UserAccountExtendedDto {
     shortInfo: String
     lastLoginDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
-    additionalData: DataDTO!
+    additionalData: DataDTO
     canLock: Boolean!
     canDelete: Boolean!
     canChangeRole: Boolean!

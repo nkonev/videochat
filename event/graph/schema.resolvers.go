@@ -436,32 +436,38 @@ func convertUserAccountDeletedEvent(eventType string, userId int64) *model.UserA
 	ret.EventType = eventType
 	return &ret
 }
+func convertUserAccountExtended(aDto *dto.UserAccountExtended) *model.UserAccountExtendedDto {
+	userAccountEvent := &model.UserAccountExtendedDto{
+		ID:                aDto.Id,
+		Login:             aDto.Login,
+		Avatar:            aDto.Avatar,
+		AvatarBig:         aDto.AvatarBig,
+		ShortInfo:         aDto.ShortInfo,
+		LastLoginDateTime: aDto.LastLoginDateTime,
+		Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
+		CanLock:           aDto.CanLock,
+		CanDelete:         aDto.CanDelete,
+		CanChangeRole:     aDto.CanChangeRole,
+		CanConfirm:        aDto.CanConfirm,
+		LoginColor:        aDto.LoginColor,
+	}
+	if aDto.AdditionalData != nil {
+		userAccountEvent.AdditionalData = &model.DataDto{
+			Enabled:   aDto.AdditionalData.Enabled,
+			Expired:   aDto.AdditionalData.Expired,
+			Locked:    aDto.AdditionalData.Locked,
+			Confirmed: aDto.AdditionalData.Confirmed,
+			Roles:     aDto.AdditionalData.Roles,
+		}
+	}
+
+	return userAccountEvent
+}
 func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountEvent {
 	if aDto != nil {
 		ret := model.UserAccountEvent{}
 		ret.EventType = eventType
-
-		ret.UserAccountEvent = &model.UserAccountExtendedDto{
-			ID:                aDto.Id,
-			Login:             aDto.Login,
-			Avatar:            aDto.Avatar,
-			AvatarBig:         aDto.AvatarBig,
-			ShortInfo:         aDto.ShortInfo,
-			LastLoginDateTime: aDto.LastLoginDateTime,
-			Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
-			AdditionalData: &model.DataDto{
-				Enabled:   aDto.AdditionalData.Enabled,
-				Expired:   aDto.AdditionalData.Expired,
-				Locked:    aDto.AdditionalData.Locked,
-				Confirmed: aDto.AdditionalData.Confirmed,
-				Roles:     aDto.AdditionalData.Roles,
-			},
-			CanLock:       aDto.CanLock,
-			CanDelete:     aDto.CanDelete,
-			CanChangeRole: aDto.CanChangeRole,
-			CanConfirm:    aDto.CanConfirm,
-			LoginColor:    aDto.LoginColor,
-		}
+		ret.UserAccountEvent = convertUserAccountExtended(aDto)
 		return &ret
 	}
 	return nil

@@ -11039,14 +11039,11 @@ func (ec *executionContext) _UserAccountExtendedDto_additionalData(ctx context.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.DataDto)
 	fc.Result = res
-	return ec.marshalNDataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx, field.Selections, res)
+	return ec.marshalODataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserAccountExtendedDto_additionalData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15974,9 +15971,6 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			out.Values[i] = ec._UserAccountExtendedDto_oauth2Identifiers(ctx, field, obj)
 		case "additionalData":
 			out.Values[i] = ec._UserAccountExtendedDto_additionalData(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "canLock":
 			out.Values[i] = ec._UserAccountExtendedDto_canLock(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -16859,16 +16853,6 @@ func (ec *executionContext) marshalNChatEvent2ᚖnkonevᚗnameᚋeventᚋgraph�
 	return ec._ChatEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx context.Context, sel ast.SelectionSet, v *model.DataDto) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DataDTO(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNGlobalEvent2nkonevᚗnameᚋeventᚋgraphᚋmodelᚐGlobalEvent(ctx context.Context, sel ast.SelectionSet, v model.GlobalEvent) graphql.Marshaler {
 	return ec._GlobalEvent(ctx, sel, &v)
 }
@@ -17633,6 +17617,13 @@ func (ec *executionContext) marshalOChatUnreadMessageChanged2ᚖnkonevᚗnameᚋ
 		return graphql.Null
 	}
 	return ec._ChatUnreadMessageChanged(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx context.Context, sel ast.SelectionSet, v *model.DataDto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DataDTO(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {
