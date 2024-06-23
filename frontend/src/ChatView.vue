@@ -794,7 +794,8 @@ export default {
 
 .pinned-promoted {
   position: absolute
-  right 2em
+  left 0
+  margin-right 2em
   z-index: 4;
 }
 .message-pane {
@@ -813,7 +814,7 @@ export default {
 
 @media screen and (max-width: $mobileWidth) {
     .pinned-promoted {
-        right unset
+        margin-right unset
     }
 }
 </style>
