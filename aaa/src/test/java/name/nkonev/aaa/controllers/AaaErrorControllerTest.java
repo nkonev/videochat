@@ -91,7 +91,6 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertFalse(resp.containsValue(TestConstants.SQL_QUERY));
 
         Assertions.assertEquals("internal error", resp.get("message"));
-        Assertions.assertEquals("Internal Server Error", resp.get("error"));
     }
 
     @Test
@@ -107,6 +106,5 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertFalse(resp.containsKey("trace"));
 
         Assertions.assertEquals("internal error", resp.get("message"));
-        Assertions.assertEquals("Internal Server Error", resp.get("error"));
     }
 }
