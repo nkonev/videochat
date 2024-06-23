@@ -272,6 +272,7 @@ export default {
         bottom 0.4em
         position: absolute
         background rgba(255, 255, 255, 0.65)
+        max-width: calc(100% - 1em) // still needed for thin (vertical) video on mobile - it prevents bulging
         padding-left 0.3em
         padding-right 0.3em
         border-radius 4px
