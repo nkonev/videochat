@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
@@ -24,15 +25,17 @@ type SynchronizeWithLivekitService struct {
 	userService   			*services.UserService
 	tracer             		trace.Tracer
 	livekitRoomClient   	*lksdk.RoomServiceClient
+	restClient              *client.RestClient
 }
 
-func NewSynchronizeWithLivekitService(redisService *services.DialRedisRepository, userService *services.UserService, livekitRoomClient *lksdk.RoomServiceClient) *SynchronizeWithLivekitService {
+func NewSynchronizeWithLivekitService(redisService *services.DialRedisRepository, userService *services.UserService, livekitRoomClient *lksdk.RoomServiceClient, restClient *client.RestClient) *SynchronizeWithLivekitService {
 	trcr := otel.Tracer("scheduler/clean-redis-orphan-service")
 	return &SynchronizeWithLivekitService{
 		redisService: redisService,
 		userService:  userService,
 		tracer:       trcr,
 		livekitRoomClient: livekitRoomClient,
+		restClient: restClient,
 	}
 }
 
@@ -94,7 +97,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 			if !utils.Contains(videoParticipants, userId) {
 				newAttempt := markedForChangeStatusAttempt + 1
 				GetLogEntry(ctx).Infof("Setting attempt %v on userCallState %v of user %v because they aren't among video room participants", newAttempt, userCallState, userId)
-				err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, markedForChangeStatusAttempt + 1)
+				err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, newAttempt)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt userId %v", userId)
 					continue
@@ -153,7 +156,13 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 				if !utils.Contains(userIds, videoUserId) {
 					GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
 
-					err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, services.NoAvatar, false) // dummy set NoAvatar
+					chatInfo, err := srv.restClient.GetBasicChatInfo(chatId, videoUserId, ctx)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
+						continue
+					}
+
+					err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, services.NoAvatar, chatInfo.TetATet) // dummy set NoAvatar
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
 						continue

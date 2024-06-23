@@ -130,14 +130,15 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 
 func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) int {
 
-	status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), callee)
+	status, _, _, _, ownerId, ownerAvatar, tetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), callee)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return http.StatusInternalServerError
 	}
+
 	missedUsersMapWithPreviousStatus := getMapWithSameStatus([]int64{callee}, status)
 
-	code := vh.removeFromCallingList(c, chatId, []int64{callee}, services.CallStatusRemoving)
+	code := vh.removeFromCallingList(c, ownerId, ownerAvatar, tetATet, chatId, []int64{callee}, services.CallStatusRemoving)
 	if code != http.StatusOK {
 		return code
 	}
@@ -265,34 +266,34 @@ func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	return c.NoContent(vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusCancelling))
+	_, _, _, _, ownerId, ownerAvatar, tetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
+	if err != nil {
+		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.NoContent(vh.removeFromCallingList(c, ownerId, ownerAvatar, tetATet, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusCancelling))
 }
 
 // question: how not to overwhelm the system by iterating over all the users and all the chats ?
 // answer: using opened rooms and rooms are going to be closed - see livekit's room.empty_timeout
 
 
-func (vh *InviteHandler) removeFromCallingList(c echo.Context, chatId int64, usersOfDial []int64, callStatus string) int {
+func (vh *InviteHandler) removeFromCallingList(c echo.Context, ownerId int64, ownerAvatar string, tetATet bool, chatId int64, usersOfDial []int64, callStatus string) int {
 	var err error
 	// we remove callee by setting status
 	for _, userId := range usersOfDial {
-		_, _, _, _, maybeOwnerId, maybeOwnerAvatar, maybeTetATet, err1 := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userId)
-		if err1 != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err1)
-			err = err1
+
+		if ownerId == services.NoUser {
 			continue
 		}
 
-		if maybeOwnerId == services.NoUser {
-			continue
-		}
-
-		err = vh.setUserStatus(c.Request().Context(), userId, chatId, callStatus)
+		err = vh.setUserStatus(c.Request().Context(), userId, chatId, callStatus) // here
 		if err != nil {
 			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		}
 
-		vh.sendEvents(c, chatId, []int64{userId}, callStatus, maybeOwnerId, maybeOwnerAvatar, maybeTetATet)
+		vh.sendEvents(c, chatId, []int64{userId}, callStatus, ownerId, ownerAvatar, tetATet)
 	}
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
@@ -362,7 +363,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	_, _, _, _, ownerId, _, _, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
+	_, _, _, _, ownerId, ownerAvatar, tetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
 		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -416,7 +417,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 
 		missedUsersMapWithPreviousStatus := vh.getUsersWithStatuses(c, missedUsers)
 
-		vh.removeFromCallingList(c, chatId, toRemove, services.CallStatusRemoving)
+		vh.removeFromCallingList(c, ownerId, ownerAvatar, tetATet, chatId, toRemove, services.CallStatusRemoving)
 
 		// for all participants to dial - send EventMissedCall notification
 		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsersMapWithPreviousStatus)
@@ -425,7 +426,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		vh.dialRedisRepository.TransferOwnership(c.Request().Context(), inVideoUsers, userPrincipalDto.UserId, chatId)
 	} else {
 		// set myself to temporarily status
-		vh.removeFromCallingList(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
+		vh.removeFromCallingList(c, ownerId, ownerAvatar, tetATet, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 	}
 	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
 	return c.NoContent(http.StatusOK)

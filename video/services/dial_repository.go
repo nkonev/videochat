@@ -48,9 +48,11 @@ const UserCallMarkedForOrphanRemoveAttemptNotSet = 0
 
 const UserCallOwnerAvatarKey = "userCallOwnerAvatar"
 
-const UserCallChatTetATetKey = "userCallOwnerTetATet"
+const UserCallChatTetATetKey = "chatTetATet"
 
 const NoAvatar = ""
+
+const NoTetATet = false
 
 // aka Should be changed Automatically After Timeout
 func IsTemporary(userCallStatus string) bool {
@@ -261,14 +263,14 @@ func (s *DialRedisRepository) ResetOwner(ctx context.Context, userId int64) erro
 func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64) (string, int64, int64, int, int64, string, bool, error) {
 	status, err := s.redisClient.HGetAll(ctx, dialUserCallStateKey(userId)).Result()
 	if err == redisV8.Nil || len(status) == 0 {
-		return CallStatusNotFound, NoChat, -1, -1, -1, NoAvatar, false, nil
+		return CallStatusNotFound, NoChat, UserCallMarkedForRemoveAtNotSet, UserCallMarkedForOrphanRemoveAttemptNotSet, NoUser, NoAvatar, NoTetATet, nil
 	}
 
 	userCallStatus := status[UserCallStatusKey]
 
 	chatId, err := utils.ParseInt64(status[UserCallChatIdKey])
 	if err != nil {
-		return CallStatusNotFound, NoChat, -1, -1, -1, NoAvatar, false, err
+		return CallStatusNotFound, NoChat, UserCallMarkedForRemoveAtNotSet, UserCallMarkedForOrphanRemoveAttemptNotSet, NoUser, NoAvatar, NoTetATet, err
 	}
 
 	maybeUserCallMarkedForRemoveAt, ok := status[UserCallMarkedForRemoveAtKey]
@@ -276,16 +278,16 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	if ok {
 		userCallMarkedForRemoveAt, err = utils.ParseInt64(maybeUserCallMarkedForRemoveAt)
 		if err != nil {
-			return CallStatusNotFound, NoChat, -1, -1, -1, NoAvatar, false, err
+			return CallStatusNotFound, NoChat, UserCallMarkedForRemoveAtNotSet, UserCallMarkedForOrphanRemoveAttemptNotSet, NoUser, NoAvatar, NoTetATet, err
 		}
 	}
 
-	var markedForChangeStatusAttempt int64 = UserCallMarkedForOrphanRemoveAttemptNotSet
+	var markedForChangeStatusAttempt int = UserCallMarkedForOrphanRemoveAttemptNotSet
 	maybeMarkedForChangeStatusAttempt, ok := status[UserCallMarkedForOrphanRemoveAttemptKey]
 	if ok {
-		markedForChangeStatusAttempt, err = utils.ParseInt64(maybeMarkedForChangeStatusAttempt)
+		markedForChangeStatusAttempt, err = utils.ParseInt(maybeMarkedForChangeStatusAttempt)
 		if err != nil {
-			return CallStatusNotFound, NoChat, -1, -1, -1, NoAvatar, false, err
+			return CallStatusNotFound, NoChat, UserCallMarkedForRemoveAtNotSet, UserCallMarkedForOrphanRemoveAttemptNotSet, NoUser, NoAvatar, NoTetATet, err
 		}
 	}
 
@@ -294,7 +296,7 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	if ok {
 		userCallOwnerId, err = utils.ParseInt64(maybeUserCallOwnerId)
 		if err != nil {
-			return CallStatusNotFound, NoChat, -1, -1, -1, NoAvatar, false, err
+			return CallStatusNotFound, NoChat, UserCallMarkedForRemoveAtNotSet, UserCallMarkedForOrphanRemoveAttemptNotSet, NoUser, NoAvatar, NoTetATet, err
 		}
 	}
 
@@ -304,16 +306,16 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 		userCallOwnerAvatar = maybeUserCallOwnerAvatar
 	}
 
-	var userCallChatTetATet bool
+	var userCallChatTetATet bool // see services.GetAvatar()
 	maybeUserCallChatTetATet, ok := status[UserCallChatTetATetKey]
 	if ok {
 		userCallChatTetATet, err = utils.ParseBoolean(maybeUserCallChatTetATet)
 		if err != nil {
-			return CallStatusNotFound, NoChat, -1, -1, -1, NoAvatar, false, err
+			return CallStatusNotFound, NoChat, UserCallMarkedForRemoveAtNotSet, UserCallMarkedForOrphanRemoveAttemptNotSet, NoUser, NoAvatar, NoTetATet, err
 		}
 	}
 
-	return userCallStatus, chatId, userCallMarkedForRemoveAt, int(markedForChangeStatusAttempt), userCallOwnerId, userCallOwnerAvatar, userCallChatTetATet, nil
+	return userCallStatus, chatId, userCallMarkedForRemoveAt, markedForChangeStatusAttempt, userCallOwnerId, userCallOwnerAvatar, userCallChatTetATet, nil
 }
 
 func (s *DialRedisRepository) GetUserIds(ctx context.Context) ([]int64, error) {

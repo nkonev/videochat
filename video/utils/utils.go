@@ -99,6 +99,14 @@ func ParseInt64(s string) (int64, error) {
 	}
 }
 
+func ParseInt(s string) (int, error) {
+	if i, err := strconv.Atoi(s); err != nil {
+		return 0, err
+	} else {
+		return i, nil
+	}
+}
+
 func Int64ToString(i int64) string {
 	return fmt.Sprintf("%v", i)
 }
