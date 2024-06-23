@@ -760,7 +760,7 @@ export default {
             }
 
             if (add) {
-                createNotificationIfPermitted(this.$router, item.chatId, title, item.byAvatar, item.id, subtitle, type);
+                createNotificationIfPermitted(this.$router, item.chatId, title, item.byAvatar, item.messageId, subtitle, type);
             } else {
                 removeNotification(type);
             }

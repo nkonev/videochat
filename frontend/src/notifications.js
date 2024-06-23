@@ -1,17 +1,11 @@
 import {getBrowserNotification, getGlobalBrowserNotification} from "@/store/localStore.js";
 import {chat_name, messageIdHashPrefix} from "@/router/routes.js";
 import {hasLength} from "@/utils.js";
+import {isInteger, isString} from "lodash";
 
 export const createNotification = (title, body, type) => {
     new Notification(title, { body: body, icon: "/favicon_new.svg", tag: type });
 }
-
-// TODO заюзать имеющиеся события
-//  для упоминаний
-//  для пропущенный звонков
-//  для звонков
-//  для ответов
-//  для реакций
 
 const notifications = {}
 
@@ -22,6 +16,7 @@ export const createNotificationIfPermitted = (router, chatId, chatName, chatAvat
     if (shouldChatBrowserNotification !== null) {
         decision = shouldChatBrowserNotification;
     }
+
     if (Notification?.permission === "granted" && decision) {
         const notificationObject = { icon: hasLength(chatAvatar) ? chatAvatar : "/favicon_new.svg", tag: type };
         if (hasLength(chatName)) {
@@ -31,16 +26,22 @@ export const createNotificationIfPermitted = (router, chatId, chatName, chatAvat
             messageText,
             notificationObject,
         );
+
+        const shouldAddMessageId = hasLength(`${messageId}`);
+        let hash = undefined;
+        if (shouldAddMessageId) {
+            hash = messageIdHashPrefix + messageId;
+        }
+
         notification.onclick = () => {
             const routeObj = {
                 name: chat_name,
                 params: {
                     id: chatId
                 },
+                hash: hash,
             };
-            if (hasLength(messageId)) {
-                routeObj.hash = messageIdHashPrefix + messageId;
-            }
+
             router.push(routeObj);
         }
         notifications[type] = notification;
