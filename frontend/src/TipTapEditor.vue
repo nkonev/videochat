@@ -48,6 +48,7 @@ import {getStoredMessageEditNormalizeText, getTreatNewlinesAsInHtml} from "@/sto
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import {mergeAttributes} from "@tiptap/core";
+import {profile} from "@/router/routes.js";
 
 const empty = "";
 
@@ -262,7 +263,7 @@ export default {
                   if (node.attrs.id > 0) { // real users have id > 0, all and here have < 0
                       return [
                           "a",
-                          mergeAttributes({ href: `/user/${node.attrs.id}` }, options.HTMLAttributes),
+                          mergeAttributes({ href: `${profile}/${node.attrs.id}` }, options.HTMLAttributes),
                           `${options.suggestion.char}${node.attrs.label}`,
                       ];
                   } else {
