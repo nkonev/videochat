@@ -119,9 +119,11 @@
             getEmbedLinkTo(item) {
                 let chatId;
                 let name;
+                let query = undefined;
                 if (item.embedMessage.embedType == embed_message_reply) {
                     chatId = this.chatId;
                     name = this.$route.name;
+                    query = this.$route.query;
                 } else if (item.embedMessage.embedType == embed_message_resend && item.embedMessage.isParticipant) {
                     chatId = item.embedMessage.chatId;
                     name = chat_name;
@@ -131,7 +133,8 @@
                     params: {
                         id: chatId
                     },
-                    hash: messageIdHashPrefix + item.embedMessage.id
+                    query: query,
+                    hash: messageIdHashPrefix + item.embedMessage.id,
                 }
             },
             canRenderLinkToSource(item) {
