@@ -17,8 +17,10 @@ import { renderPage } from 'vike/server'
 import { root } from './root.js'
 import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
-import { getChatApiUrl, getFrontendUrl } from "../common/config.js";
+import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout} from "../common/config.js";
 import axios from "axios";
+
+axios.defaults.timeout = getHttpClientTimeout();
 
 const isProduction = process.env.NODE_ENV === 'production'
 
