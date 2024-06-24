@@ -1,6 +1,8 @@
 package name.nkonev.aaa.repository.spring.jdbc;
 
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 @Repository
 public class UserListViewRepository {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserListViewRepository.class);
 
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -36,7 +40,7 @@ public class UserListViewRepository {
                 rightLimit = 1;
             }
 
-            long leftMessageId, rightMessageId;
+            Long leftMessageId, rightMessageId;
             var searchStringPercents = "";
             if (StringUtils.hasLength(searchString)) {
                 searchStringPercents = "%" + searchString + "%";
@@ -51,7 +55,7 @@ public class UserListViewRepository {
                         "leftLimit", leftLimit,
                         "searchStringPercents", searchStringPercents
                     ),
-                    long.class
+                    Long.class
                 );
             } else {
                 leftMessageId = jdbcTemplate.queryForObject("""
@@ -61,7 +65,7 @@ public class UserListViewRepository {
                         "startingFromItemId", startingFromItemId,
                         "leftLimit", leftLimit
                     ),
-                    long.class
+                    Long.class
                 );
             }
 
@@ -74,7 +78,7 @@ public class UserListViewRepository {
                         "rightLimit", rightLimit,
                         "searchStringPercents", searchStringPercents
                     ),
-                    long.class
+                    Long.class
                 );
             } else {
                 rightMessageId = jdbcTemplate.queryForObject("""
@@ -84,8 +88,14 @@ public class UserListViewRepository {
                         "startingFromItemId", startingFromItemId,
                         "rightLimit", rightLimit
                     ),
-                    long.class
+                    Long.class
                 );
+            }
+
+            if (leftMessageId == null || rightMessageId == null) {
+                LOGGER.info("Got leftMessageId={}, rightMessageId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftMessageId, rightMessageId, startingFromItemId, reverse, searchString);
+                list = getUsersSimple(limit, 0, reverse, searchString);
+                return list;
             }
 
             var order = "asc";
@@ -133,15 +143,23 @@ public class UserListViewRepository {
             }
         } else {
             // otherwise, startingFromItemId is used as the top or the bottom limit of the portion
-            var order = "asc";
-            var nonEquality = "u.id > :startingFromItemId";
-            if (reverse) {
-                order = "desc";
-                nonEquality = "u.id < :startingFromItemId";
-            }
-            if (StringUtils.hasLength(searchString)) {
-                var searchStringPercents = "%" + searchString + "%";
-                list = jdbcTemplate.query("""
+            list = getUsersSimple(limit, startingFromItemId, reverse, searchString);
+        }
+
+        return list;
+    }
+
+    private List<UserAccount> getUsersSimple(int limit, long startingFromItemId, boolean reverse, String searchString) {
+        List<UserAccount> list;
+        var order = "asc";
+        var nonEquality = "u.id > :startingFromItemId";
+        if (reverse) {
+            order = "desc";
+            nonEquality = "u.id < :startingFromItemId";
+        }
+        if (StringUtils.hasLength(searchString)) {
+            var searchStringPercents = "%" + searchString + "%";
+            list = jdbcTemplate.query("""
                     SELECT u.* FROM user_account u
                     WHERE
                     u.id > 0 AND
@@ -150,15 +168,15 @@ public class UserListViewRepository {
                     ORDER BY u.id %s
                     LIMIT :limit
                     """.formatted(nonEquality, order),
-                    Map.of(
-                        "limit", limit,
-                        "startingFromItemId", startingFromItemId,
-                        "searchStringPercents", searchStringPercents
-                    ),
-                    rowMapper
-                );
-            } else {
-                list = jdbcTemplate.query("""
+                Map.of(
+                    "limit", limit,
+                    "startingFromItemId", startingFromItemId,
+                    "searchStringPercents", searchStringPercents
+                ),
+                rowMapper
+            );
+        } else {
+            list = jdbcTemplate.query("""
                     SELECT u.* FROM user_account u
                     WHERE
                     u.id > 0 AND
@@ -166,15 +184,13 @@ public class UserListViewRepository {
                     ORDER BY u.id %s
                     LIMIT :limit
                     """.formatted(nonEquality, order),
-                    Map.of(
-                        "limit", limit,
-                        "startingFromItemId", startingFromItemId
-                    ),
-                    rowMapper
-                );
-            }
+                Map.of(
+                    "limit", limit,
+                    "startingFromItemId", startingFromItemId
+                ),
+                rowMapper
+            );
         }
-
         return list;
     }
 }
