@@ -150,47 +150,47 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
-			return list, err
-		}
+		} else {
 
-		order := "asc"
-		if reverse {
-			order = "desc"
-		}
+			order := "asc"
+			if reverse {
+				order = "desc"
+			}
 
-		var rows *sql.Rows
-		if searchString != "" {
-			rows, err = co.Query(fmt.Sprintf(`%v
+			var rows *sql.Rows
+			if searchString != "" {
+				rows, err = co.Query(fmt.Sprintf(`%v
 					WHERE 
 							m.id >= $2 
 						AND m.id <= $3 
 						AND strip_tags(m.text) ILIKE $4
 					ORDER BY m.id %s 
 					LIMIT $1`, selectMessageClause(chatId), order),
-				limit, *leftMessageId, *rightMessageId, searchStringPercents)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-			defer rows.Close()
-		} else {
-			rows, err = co.Query(fmt.Sprintf(`%v
+					limit, *leftMessageId, *rightMessageId, searchStringPercents)
+				if err != nil {
+					return nil, eris.Wrap(err, "error during interacting with db")
+				}
+				defer rows.Close()
+			} else {
+				rows, err = co.Query(fmt.Sprintf(`%v
 					WHERE 
 							m.id >= $2 
 						AND m.id <= $3 
 					ORDER BY m.id %s 
 					LIMIT $1`, selectMessageClause(chatId), order),
-				limit, *leftMessageId, *rightMessageId)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
+					limit, *leftMessageId, *rightMessageId)
+				if err != nil {
+					return nil, eris.Wrap(err, "error during interacting with db")
+				}
+				defer rows.Close()
 			}
-			defer rows.Close()
-		}
-		for rows.Next() {
-			message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
-			if err = rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				list = append(list, &message)
+			for rows.Next() {
+				message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
+				if err = rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+					return nil, eris.Wrap(err, "error during interacting with db")
+				} else {
+					list = append(list, &message)
+				}
 			}
 		}
 	} else {

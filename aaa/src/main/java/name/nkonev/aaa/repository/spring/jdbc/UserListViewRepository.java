@@ -95,51 +95,51 @@ public class UserListViewRepository {
             if (leftMessageId == null || rightMessageId == null) {
                 LOGGER.info("Got leftMessageId={}, rightMessageId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftMessageId, rightMessageId, startingFromItemId, reverse, searchString);
                 list = getUsersSimple(limit, 0, reverse, searchString);
-                return list;
-            }
-
-            var order = "asc";
-            if (reverse) {
-                order = "desc";
-            }
-
-            if (StringUtils.hasLength(searchString)){
-                list = jdbcTemplate.query("""
-                        SELECT u.* FROM user_account u
-                        WHERE
-                        u.id > 0 AND
-                        u.id >= :leftMessageId
-                        AND u.id <= :rightMessageId
-                        AND u.username ILIKE :searchStringPercents
-                        ORDER BY u.id %s
-                        LIMIT :limit
-                    """.formatted(order),
-                    Map.of(
-                        "limit", limit,
-                        "leftMessageId", leftMessageId,
-                        "rightMessageId", rightMessageId,
-                        "searchStringPercents", searchStringPercents
-                    ),
-                    rowMapper
-                );
             } else {
-                list = jdbcTemplate.query(
-                    """
-                        SELECT u.* FROM user_account u
-                        WHERE
-                        u.id > 0 AND
-                        u.id >= :leftMessageId
-                        AND u.id <= :rightMessageId
-                        ORDER BY u.id %s
-                        LIMIT :limit
-                    """.formatted(order),
-                    Map.of(
-                        "limit", limit,
-                        "leftMessageId", leftMessageId,
-                        "rightMessageId", rightMessageId
-                    ),
-                    rowMapper
-                );
+
+                var order = "asc";
+                if (reverse) {
+                    order = "desc";
+                }
+
+                if (StringUtils.hasLength(searchString)) {
+                    list = jdbcTemplate.query("""
+                                SELECT u.* FROM user_account u
+                                WHERE
+                                u.id > 0 AND
+                                u.id >= :leftMessageId
+                                AND u.id <= :rightMessageId
+                                AND u.username ILIKE :searchStringPercents
+                                ORDER BY u.id %s
+                                LIMIT :limit
+                            """.formatted(order),
+                        Map.of(
+                            "limit", limit,
+                            "leftMessageId", leftMessageId,
+                            "rightMessageId", rightMessageId,
+                            "searchStringPercents", searchStringPercents
+                        ),
+                        rowMapper
+                    );
+                } else {
+                    list = jdbcTemplate.query(
+                        """
+                                SELECT u.* FROM user_account u
+                                WHERE
+                                u.id > 0 AND
+                                u.id >= :leftMessageId
+                                AND u.id <= :rightMessageId
+                                ORDER BY u.id %s
+                                LIMIT :limit
+                            """.formatted(order),
+                        Map.of(
+                            "limit", limit,
+                            "leftMessageId", leftMessageId,
+                            "rightMessageId", rightMessageId
+                        ),
+                        rowMapper
+                    );
+                }
             }
         } else {
             // otherwise, startingFromItemId is used as the top or the bottom limit of the portion
