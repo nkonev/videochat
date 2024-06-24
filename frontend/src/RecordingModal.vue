@@ -26,7 +26,7 @@
                               <div v-if="isRecording" class="recording-caption"><v-icon color="red">mdi-record</v-icon>{{recordingLabel}}</div>
                               <span v-if="!mediaDevicesGotten">{{ $vuetify.locale.t('$vuetify.waiting_for_devices') }}</span>
                           </div>
-                          <video style="max-width: 100%" playsinline></video>
+                          <video style="max-width: 100%; max-height: 100%" playsinline></video>
                       </v-card-text>
                   </v-window-item>
 
