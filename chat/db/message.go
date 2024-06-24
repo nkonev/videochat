@@ -101,6 +101,7 @@ func provideScanToMessage(message *Message) []any {
 // see also its copy in aaa::UserListViewRepository
 func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	list := make([]*Message, 0)
+	var err error
 	if hasHash {
 		// has hash means that frontend's page has message hash
 		// it means we need to calculate page/2 to the top and to the bottom
@@ -115,7 +116,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			rightLimit = 1
 		}
 
-		var leftMessageId, rightMessageId int64
+		var leftMessageId, rightMessageId *int64
 		var searchStringPercents = ""
 		if searchString != "" {
 			searchStringPercents = "%" + searchString + "%"
@@ -127,7 +128,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		} else {
 			leftLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
 		}
-		err := leftLimitRes.Scan(&leftMessageId)
+		err = leftLimitRes.Scan(&leftMessageId)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
 		}
@@ -141,6 +142,15 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		err = rightLimitRes.Scan(&rightMessageId)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+
+		if leftMessageId == nil || rightMessageId == nil {
+			Logger.Infof("Got leftMessageId=%v, rightMessageId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftMessageId, rightMessageId, chatId, startingFromItemId, reverse, searchString)
+			list, err = getMessagesSimple(co, chatId, limit, 0, reverse, searchString)
+			if err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
+			return list, err
 		}
 
 		order := "asc"
@@ -157,7 +167,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 						AND strip_tags(m.text) ILIKE $4
 					ORDER BY m.id %s 
 					LIMIT $1`, selectMessageClause(chatId), order),
-				limit, leftMessageId, rightMessageId, searchStringPercents)
+				limit, *leftMessageId, *rightMessageId, searchStringPercents)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
@@ -169,7 +179,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 						AND m.id <= $3 
 					ORDER BY m.id %s 
 					LIMIT $1`, selectMessageClause(chatId), order),
-				limit, leftMessageId, rightMessageId)
+				limit, *leftMessageId, *rightMessageId)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
@@ -177,7 +187,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		}
 		for rows.Next() {
 			message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
-			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+			if err = rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, &message)
@@ -185,53 +195,64 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		}
 	} else {
 		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
-		order := "asc"
-		nonEquality := "m.id > $2"
-		if reverse {
-			order = "desc"
-			nonEquality = "m.id < $2"
+		list, err = getMessagesSimple(co, chatId, limit, startingFromItemId, reverse, searchString)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
 		}
-		var err error
-		var rows *sql.Rows
-		if searchString != "" {
-			searchStringPercents := "%" + searchString + "%"
-			rows, err = co.Query(fmt.Sprintf(`%v
+	}
+
+	err = enrichMessagesWithReactions(co, chatId, list)
+	if err != nil {
+		return nil, fmt.Errorf("Got error during enriching messages with reactions: %v", err)
+	}
+
+	return list, nil
+}
+
+func getMessagesSimple(co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse bool, searchString string) ([]*Message, error) {
+	list := make([]*Message, 0)
+
+	order := "asc"
+	nonEquality := "m.id > $2"
+	if reverse {
+		order = "desc"
+		nonEquality = "m.id < $2"
+	}
+	var err error
+	var rows *sql.Rows
+	if searchString != "" {
+		searchStringPercents := "%" + searchString + "%"
+		rows, err = co.Query(fmt.Sprintf(`%v
 			WHERE 
 		    	    %s 
 				AND strip_tags(m.text) ILIKE $3 
 			ORDER BY m.id %s 
 			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
-				limit, startingFromItemId, searchStringPercents)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-			defer rows.Close()
-		} else {
-			rows, err = co.Query(fmt.Sprintf(`%v
+			limit, startingFromItemId, searchStringPercents)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+		defer rows.Close()
+	} else {
+		rows, err = co.Query(fmt.Sprintf(`%v
 			WHERE 
 				  %s 
 			ORDER BY m.id %s 
 			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
-				limit, startingFromItemId)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-			defer rows.Close()
+			limit, startingFromItemId)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
 		}
-
-		for rows.Next() {
-			message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
-			if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				list = append(list, &message)
-			}
-		}
+		defer rows.Close()
 	}
 
-	err := enrichMessagesWithReactions(co, chatId, list)
-	if err != nil {
-		return nil, fmt.Errorf("Got error during enriching messages with reactions: %v", err)
+	for rows.Next() {
+		message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
+		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			list = append(list, &message)
+		}
 	}
 
 	return list, nil
