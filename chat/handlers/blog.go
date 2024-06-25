@@ -413,7 +413,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	}
 	if !chatBasic.IsBlog {
 		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)
-		return c.NoContent(http.StatusUnauthorized)
+		return c.NoContent(http.StatusNoContent)
 	}
 
 	size := utils.FixSizeString(c.QueryParam("size"))
