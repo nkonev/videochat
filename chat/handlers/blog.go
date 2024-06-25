@@ -77,10 +77,13 @@ func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, 
 						Logger.Warnf("Unagle to get file key: %v", err)
 						break
 					}
-					previewUrl := h.getPreviewUrl(fileParam)
+					if len(fileParam) > 0 {
+						dumbUrl := url.URL{}
+						query := dumbUrl.Query()
+						query.Set(utils.FileParam, utils.SetImagePreviewExtension(fileParam))
+						dumbUrl.RawQuery = query.Encode()
 
-					if previewUrl != nil {
-						publicPreviewUrl, err := makeUrlPublic(*previewUrl, "/embed/preview", false, post.MessageId)
+						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.MessageId)
 						if err != nil {
 							Logger.Warnf("Unagle to change url: %v", err)
 							break
@@ -268,28 +271,6 @@ func appendKeepingN(input []*BlogPostPreviewDto, post *BlogPostPreviewDto, sizeT
 	}
 	response = append(response, post)
 	return response, len(response)
-}
-
-func (h *BlogHandler) getPreviewUrl(aKey string) *string {
-	var previewUrl *string = nil
-
-	respUrl := url.URL{}
-	respUrl.Path = "/api/storage/public/download/embed/preview"
-	previewMinioKey := ""
-	previewMinioKey = utils.SetImagePreviewExtension(aKey)
-	if previewMinioKey != "" {
-		query := respUrl.Query()
-		query.Set(utils.FileParam, previewMinioKey)
-
-		respUrl.RawQuery = query.Encode()
-
-		tmp := respUrl.String()
-		previewUrl = &tmp
-	} else {
-		Logger.Errorf("Unable to make previewUrl for %v", previewMinioKey)
-	}
-
-	return previewUrl
 }
 
 func (h *BlogHandler) performSearch(searchString string, searchable []*BlogPostPreviewDto) ([]*BlogPostPreviewDto, error) {
@@ -510,7 +491,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
 			if srcExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := makeUrlPublic(src, "", true, messageId)
+				newurl, err := makeUrlPublic(src, "", true, messageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -520,7 +501,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 
 			poster, posterExists := maybeVideo.Attr("poster")
 			if posterExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := makeUrlPublic(poster, "/embed/preview", false, messageId)
+				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, messageId)
 				if err != nil {
 					Logger.Warnf("Unagle to change url: %v", err)
 					return
@@ -569,7 +550,7 @@ func makeUrlPublic(src string, additionalSegment string, addTime bool, messageId
 		return "", err
 	}
 
-	parsed.Path = "/api" + utils.UrlStoragePublicGetFile + additionalSegment
+	parsed.Path = utils.UrlApiPrefix + utils.UrlStoragePublicGetFile + additionalSegment
 
 	query := parsed.Query()
 
