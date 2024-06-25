@@ -346,7 +346,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	}
 	if !chatBasic.IsBlog {
 		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)
-		return c.NoContent(http.StatusUnauthorized)
+		return c.NoContent(http.StatusNoContent)
 	}
 
 	response := BlogPostResponse{
