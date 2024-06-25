@@ -1,7 +1,6 @@
 import axios from "axios";
 import { getChatApiUrl } from "#root/common/config";
 import {getMessageLink} from "#root/common/utils.js";
-import {videochat} from "#root/common/router/routes.js";
 
 export { data };
 
@@ -32,6 +31,7 @@ async function data(pageContext) {
             messageItem: publishedMessageResponse.data.message,
             is404: false,
         },
+        chatTitle: publishedMessageResponse.data.title,
         title: publishedMessageResponse.data.title,
         description: publishedMessageResponse.data.preview,
         chatMessageHref,

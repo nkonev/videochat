@@ -4,7 +4,9 @@
             <v-breadcrumbs
                 :items="getBreadcrumbs()"
             />
-            <v-spacer></v-spacer>
+            <v-spacer/>
+            <span v-if="shouldShowTitle()">{{chatTitle}}</span>
+            <v-spacer/>
             <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
 
             <template v-if="isShowSearch()">
@@ -118,6 +120,10 @@
             },
             searchIcon() {
                 return "mdi-postage-stamp"
+            },
+
+            shouldShowTitle() {
+                return hasLength(this.$data.chatTitle)
             },
         },
         computed: {
