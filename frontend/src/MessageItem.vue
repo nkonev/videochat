@@ -11,14 +11,14 @@
                 <span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
                 <router-link v-if="!isInBlog" class="gray-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')"><span class="mr-1">{{getDate(item)}}</span></router-link>
                 <span class="mr-1" v-else>{{getDate(item)}}</span>
-                <template v-if="!isMobile() && !isInBlog">
+                <span v-if="!isMobile() && !isInBlog" class="ma-0 pa-0 message-quick-buttons">
                     <v-icon class="mx-1" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                     <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
                     <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.add_reaction_on_message')" @click="reactionOnMessage(item)">mdi-emoticon-outline</v-icon>
                     <a v-if="item.blogPost" class="mx-1 colored-link" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon size="small">mdi-postage-stamp</v-icon></a>
-                </template>
+                </span>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick($event, item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
@@ -255,6 +255,14 @@
 
   @keyframes anothercolor {
       0% { background: yellow }
+  }
+
+  .message-quick-buttons {
+      opacity: 0.35;
+  }
+
+  .message-quick-buttons:hover {
+      opacity: 1;
   }
 
 </style>
