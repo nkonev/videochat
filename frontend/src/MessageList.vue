@@ -13,6 +13,7 @@
             @editMessage="editMessage"
             @replyOnMessage="replyOnMessage"
             @onFilesClicked="onFilesClicked"
+            @addReaction="addReaction"
             @onreactionclick="onExistingReactionClick"
           ></MessageItem>
           <template v-if="items.length == 0 && !showProgress">
