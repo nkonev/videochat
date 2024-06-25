@@ -357,7 +357,9 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 		}
 
 		// sends notification to the notification microservice
-		mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+		if *messageOwnerId != userPrincipalDto.UserId {
+			mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+		}
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
 		return c.NoContent(http.StatusOK)
@@ -1134,6 +1136,27 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 		}, &userPrincipalDto.UserId)
 
 		mc.notificator.NotifyNewMessageBrowserNotification(c, false, userPrincipalDto.UserId, chatId, "", null.StringFromPtr(nil), messageId, "", NonExistentUser, "")
+
+		_, messageOwnerId, _, _, err := tx.GetMessageBasic(chatId, messageId)
+		if err != nil {
+			return err
+		}
+
+		if *messageOwnerId == userPrincipalDto.UserId {
+			chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
+			if err != nil {
+				return err
+			}
+
+			reactions, err := tx.GetReactionsOnMessage(chatId, messageId)
+			if err != nil {
+				return err
+			}
+
+			for _, reaction := range reactions {
+				mc.notificator.SendReactionOnYourMessage(c, false, chatId, messageId, *messageOwnerId, reaction.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+			}
+		}
 
 		return c.NoContent(http.StatusAccepted)
 	})

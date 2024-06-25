@@ -515,9 +515,6 @@ func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chat
 		MessageId: messageId,
 	}
 
-	if messageOwnerId == behalfUserId {
-		return
-	}
 	err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
 		EventType:                  eventType,
 		ReactionEvent: 				&event,
