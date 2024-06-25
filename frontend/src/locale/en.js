@@ -285,6 +285,7 @@ export default {
     remove_from_public: "Remove public",
     publish_message: "Publish",
     published_messages: "Public messages",
+    published_messages_full: "Public messages",
     copy_public_link_to_message: "Copy public link",
     regular_participant_can_publish: "Regular participant can publish messages",
     open_published_message: "Open published message",
