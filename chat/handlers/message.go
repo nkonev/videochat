@@ -1142,6 +1142,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 			return err
 		}
 
+		// remove notifications about reactions on my message on mousemove
 		if *messageOwnerId == userPrincipalDto.UserId {
 			chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
 			if err != nil {
