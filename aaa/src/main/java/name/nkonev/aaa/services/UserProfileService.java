@@ -225,7 +225,7 @@ public class UserProfileService {
             checkService.checkLoginIsFree(userAccountDTO.login());
         }
 
-        var resp = UserAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+        var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
         exists = resp.userAccount();
         exists = userAccountRepository.save(exists);
 

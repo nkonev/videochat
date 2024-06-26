@@ -1,12 +1,13 @@
 package name.nkonev.aaa.converter;
 
 import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.entity.jdbc.CreationType;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.security.*;
-import name.nkonev.aaa.utils.NullEncode;
+import name.nkonev.aaa.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,6 +26,9 @@ public class UserAccountConverter {
 
     @Autowired
     private AaaPermissionService aaaSecurityService;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static UserRole getDefaultUserRole(){
         return UserRole.ROLE_USER;
@@ -423,7 +427,7 @@ public class UserAccountConverter {
     }
 
     // EditUserDTO userAccountDTO is already filtered through normalize()
-    public static UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+    public UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
         var wasEmailSet = false;
         if (StringUtils.hasLength(userAccountDTO.login())) {
             userAccount = userAccount.withUsername(userAccountDTO.login());
@@ -437,8 +441,8 @@ public class UserAccountConverter {
             userAccount = userAccount.withAvatar(null);
             userAccount = userAccount.withAvatarBig(null);
         } else if (StringUtils.hasLength(userAccountDTO.avatar())) {
-            userAccount = userAccount.withAvatar(userAccountDTO.avatar());
-            userAccount = userAccount.withAvatarBig(userAccountDTO.avatarBig());
+            userAccount = userAccount.withAvatar(filterAvatar(userAccountDTO.avatar()));
+            userAccount = userAccount.withAvatarBig(filterAvatar(userAccountDTO.avatarBig()));
         }
         if (StringUtils.hasLength(userAccountDTO.email())) {
             if (!userAccountDTO.email().equals(userAccount.email())) {
@@ -458,6 +462,15 @@ public class UserAccountConverter {
         }
 
         return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
+    }
+
+    private String filterAvatar(String input) {
+        var allowedUrls = aaaProperties.getAllowedAvatarUrlsList();
+        if (UrlUtils.containsUrl(allowedUrls, input)) {
+            return input;
+        } else {
+            return null;
+        }
     }
 
     public static name.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {

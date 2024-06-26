@@ -155,3 +155,5 @@ custom.ldap:
 custom.http-client:
   connect-timeout: 3s
   read-timeout: 30s
+
+custom.allowed-avatar-urls: ""
