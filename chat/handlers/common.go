@@ -236,6 +236,9 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			}
 		}
 	})
+	if retErr != nil {
+		return "", retErr
+	}
 
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()
@@ -253,6 +256,10 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			}
 		}
 	})
+	if retErr != nil {
+		return "", retErr
+	}
+
 	doc.Find("iframe").Each(func(i int, s *goquery.Selection) {
 		maybeIframe := s.First()
 		if maybeIframe != nil {
@@ -263,6 +270,23 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 			}
 		}
 	})
+	if retErr != nil {
+		return "", retErr
+	}
+
+	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
+		maybeImage := s.First()
+		if maybeImage != nil {
+			src, exists := maybeImage.Attr("src")
+			if exists && !utils.ContainsUrl(wlArr, src) {
+				Logger.Infof("Filtered not allowed url in audio src %v", src)
+				retErr = &MediaUrlErr{src, "audio src"}
+			}
+		}
+	})
+	if retErr != nil {
+		return "", retErr
+	}
 
 	return sanitizedHtml, retErr
 }

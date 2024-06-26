@@ -461,6 +461,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"items": messageDtos, "count": count, "pagesCount": pagesCount})
 }
 
+// see also message.go :: patchStorageUrlToPreventCachingVideo
 func PatchStorageUrlToPublic(text string, messageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
@@ -555,7 +556,7 @@ func makeUrlPublic(src string, additionalSegment string, addTime bool, messageId
 	query := parsed.Query()
 
 	if addTime {
-		query.Set("time", utils.Int64ToString(time.Now().Unix()))
+		addTimeToUrlValues(&query)
 	}
 
 	query.Set("messageId", utils.Int64ToString(messageId))

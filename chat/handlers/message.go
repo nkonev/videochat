@@ -2059,7 +2059,8 @@ func (mc *MessageHandler) wasReplyRemoved(oldMessage *db.Message, messageRendere
 	}
 }
 
-// in order to be able to see video in chrome after minio link's ttl expiration
+// in order to be able to see video in Chrome after minio link's ttl expiration
+// see also blog.go :: PatchStorageUrlToPublic
 func patchStorageUrlToPreventCachingVideo(text string) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
@@ -2100,9 +2101,13 @@ func addTimeToUrl(src string) (string, error) {
 	}
 
 	query := parsed.Query()
-	query.Set("time", utils.Int64ToString(time.Now().Unix()))
+	addTimeToUrlValues(&query)
 	parsed.RawQuery = query.Encode()
 
 	newurl := parsed.String()
 	return newurl, nil
+}
+
+func addTimeToUrlValues(query *url.Values) {
+	query.Set("time", utils.Int64ToString(time.Now().Unix()))
 }
