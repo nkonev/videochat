@@ -51,6 +51,9 @@ message:
   allowedMediaUrls: ""
   allowedIframeUrls: ""
 
+chat:
+  allowedAvatarUrls: ""
+
 onlyAdminCanCreateBlog: false
 
 redis:

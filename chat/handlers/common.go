@@ -296,7 +296,22 @@ func TrimAmdSanitizeAvatar(policy *services.SanitizerPolicy, input null.String) 
 		return input
 	}
 
-	sanitizedHtml := Trim(SanitizeMessage(policy, input.String))
+	trimmed := Trim(input.String)
+
+	if len(trimmed) == 0 {
+		return null.StringFromPtr(nil)
+	}
+
+	sanitizedHtml := SanitizeMessage(policy, trimmed)
+
+	whitelist := viper.GetString("chat.allowedAvatarUrls")
+	wlArr := strings.Split(whitelist, ",")
+
+	if !utils.ContainsUrl(wlArr, sanitizedHtml) {
+		Logger.Infof("Filtered chat avatar not allowed url in chat avatar src %v", sanitizedHtml)
+		return null.StringFromPtr(nil)
+	}
+
 	return null.StringFrom(sanitizedHtml)
 }
 
