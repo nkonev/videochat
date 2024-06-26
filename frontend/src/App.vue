@@ -558,6 +558,7 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'notification_clear_all') {
               const d = getGlobalEventsData(e).notificationEvent;
               bus.emit(NOTIFICATION_CLEAR_ALL, d);
+              this.processClearAllNotifications(d);
           } else if (getGlobalEventsData(e).eventType === 'has_unread_messages_changed') {
               const d = getGlobalEventsData(e).hasUnreadMessagesChanged;
               this.chatStore.setHasNewMessages(d.hasUnreadMessages);
@@ -764,6 +765,14 @@ export default {
             } else {
                 removeBrowserNotification(type);
             }
+        },
+        processClearAllNotifications(dto) {
+            removeBrowserNotification(NOTIFICATION_TYPE_MENTIONS);
+            removeBrowserNotification(NOTIFICATION_TYPE_MISSED_CALLS);
+            removeBrowserNotification(NOTIFICATION_TYPE_ANSWERS);
+            removeBrowserNotification(NOTIFICATION_TYPE_REACTIONS);
+            removeBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
+            removeBrowserNotification(NOTIFICATION_TYPE_CALL);
         },
     },
     components: {
