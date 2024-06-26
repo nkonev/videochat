@@ -5,6 +5,8 @@ import name.nkonev.aaa.dto.SettingsDTO;
 import name.nkonev.aaa.entity.jdbc.UserSettings;
 import name.nkonev.aaa.repository.jdbc.UserSettingsRepository;
 import org.owasp.encoder.Encode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +15,12 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import static name.nkonev.aaa.Constants.MAX_SMILEYS_LENGTH;
+import static name.nkonev.aaa.Constants.USERS_ONLINE_LENGTH;
 
 @Service
 public class UserSettingsService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserSettingsService.class);
 
     @Autowired
     private UserSettingsRepository userSettingsRepository;
@@ -39,12 +44,16 @@ public class UserSettingsService {
 
     @Transactional
     public String[] setSmileys(long userId, String[] smileys) {
+        String[] smileysReal;
         if (smileys.length > MAX_SMILEYS_LENGTH) {
-            smileys = Arrays.copyOf(smileys, MAX_SMILEYS_LENGTH);
+            smileysReal = Arrays.copyOf(smileys, MAX_SMILEYS_LENGTH);
+            LOGGER.info("Cutting {} userIds to {}", smileys.length, MAX_SMILEYS_LENGTH);
+        } else {
+             smileysReal = smileys;
         }
-        smileys = Arrays.stream(smileys).map(Encode::forHtml).toList().toArray(new String[0]);
+        smileysReal = Arrays.stream(smileysReal).map(Encode::forHtml).toList().toArray(new String[0]);
 
-        userSettingsRepository.updateSmileys(userId, smileys);
+        userSettingsRepository.updateSmileys(userId, smileysReal);
         return userSettingsRepository.findById(userId).get().smileys();
     }
 

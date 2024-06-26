@@ -82,20 +82,20 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-  CHAT_ADD,
-  CHAT_DELETED,
-  CHAT_EDITED, CHAT_REDRAW,
-  CLOSE_SIMPLE_MODAL,
-  LOGGED_OUT,
-  OPEN_CHAT_EDIT,
-  OPEN_SIMPLE_MODAL,
-  PROFILE_SET,
-  REFRESH_ON_WEBSOCKET_RESTORED,
-  SEARCH_STRING_CHANGED,
-  UNREAD_MESSAGES_CHANGED,
-  CO_CHATTED_PARTICIPANT_CHANGED,
-  VIDEO_CALL_SCREEN_SHARE_CHANGED,
-  VIDEO_CALL_USER_COUNT_CHANGED
+    CHAT_ADD,
+    CHAT_DELETED,
+    CHAT_EDITED, CHAT_REDRAW,
+    CLOSE_SIMPLE_MODAL,
+    LOGGED_OUT,
+    OPEN_CHAT_EDIT,
+    OPEN_SIMPLE_MODAL,
+    PROFILE_SET,
+    REFRESH_ON_WEBSOCKET_RESTORED,
+    SEARCH_STRING_CHANGED,
+    UNREAD_MESSAGES_CHANGED,
+    CO_CHATTED_PARTICIPANT_CHANGED,
+    VIDEO_CALL_SCREEN_SHARE_CHANGED,
+    VIDEO_CALL_USER_COUNT_CHANGED, FOCUS
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -597,6 +597,19 @@ export default {
         }
         return obj;
     },
+
+    onFocus() {
+      if (this.chatStore.currentUser) {
+          const list = this.items.filter(item => item.tetATet).flatMap(item => item.participantIds);
+          const uniqueUserIds = [...new Set(list)];
+          const joined = uniqueUserIds.join(",");
+          axios.put(`/api/aaa/user/request-for-online`, null, {
+              params: {
+                  userId: joined
+              },
+          });
+      }
+    },
   },
   components: {
     ChatListContextMenu
@@ -642,6 +655,7 @@ export default {
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
+    bus.on(FOCUS, this.onFocus);
 
     if (this.routeName == chat_list_name) {
       this.setTopTitle();
@@ -666,7 +680,7 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
-
+    bus.off(FOCUS, this.onFocus);
 
     if (this.routeName == chat_list_name) {
       setTitle(null);

@@ -25,12 +25,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
+import static name.nkonev.aaa.Constants.*;
 import static name.nkonev.aaa.Constants.Headers.*;
-import static name.nkonev.aaa.Constants.MAX_USERS_RESPONSE_LENGTH;
 import static name.nkonev.aaa.converter.UserAccountConverter.*;
 
 @Service
@@ -155,7 +154,15 @@ public class UserProfileService {
 
     @Transactional
     public void requestUserOnline(List<Long> userIds) {
-        List<UserOnlineResponse> usersOnline = aaaUserDetailsService.getUsersOnline(userIds);
+        List<Long> userIdsReal;
+        if (userIds.size() > USERS_ONLINE_LENGTH) {
+            userIdsReal = userIds.stream().limit(USERS_ONLINE_LENGTH).toList();
+            LOGGER.info("Cutting {} userIds to {}", userIds.size(), USERS_ONLINE_LENGTH);
+        } else {
+            userIdsReal = userIds;
+        }
+
+        List<UserOnlineResponse> usersOnline = aaaUserDetailsService.getUsersOnline(userIdsReal);
         List<UserOnlineResponse> userOnlineResponses = usersOnline.stream().map(uo -> new UserOnlineResponse(uo.userId(), uo.online())).toList();
         notifier.notifyOnlineChanged(userOnlineResponses);
     }

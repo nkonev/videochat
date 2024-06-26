@@ -80,7 +80,10 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PutMapping(Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE)
+    @PutMapping({
+        Constants.Urls.PUBLIC_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
+        Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
+    })
     public void requestUserOnline(@RequestParam(value = "userId") List<Long> userIds) {
         userProfileService.requestUserOnline(userIds);
     }

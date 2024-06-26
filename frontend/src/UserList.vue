@@ -148,7 +148,7 @@ import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
     CHANGE_ROLE_DIALOG,
-    CLOSE_SIMPLE_MODAL,
+    CLOSE_SIMPLE_MODAL, FOCUS,
     LOGGED_OUT, OPEN_SIMPLE_MODAL,
     PROFILE_SET,
     SEARCH_STRING_CHANGED
@@ -615,6 +615,18 @@ export default {
     changeRole(user) {
         bus.emit(CHANGE_ROLE_DIALOG, user)
     },
+
+    onFocus() {
+      if (this.chatStore.currentUser) {
+          const list = this.items.map(item => item.id);
+          const joined = list.join(",");
+          axios.put(`/api/aaa/user/request-for-online`, null, {
+              params: {
+                  userId: joined
+              },
+          });
+      }
+    },
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
@@ -661,7 +673,7 @@ export default {
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
-
+    bus.on(FOCUS, this.onFocus);
   },
 
   beforeUnmount() {
@@ -680,6 +692,7 @@ export default {
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
+    bus.off(FOCUS, this.onFocus);
 
     setTitle(null);
     this.chatStore.title = null;
