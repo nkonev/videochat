@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
@@ -238,7 +239,7 @@ func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *
 	}
 }
 
-func (not *Events) NotifyAboutProfileChanged(user *dto.User, co db.CommonOperations) {
+func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User, co db.CommonOperations) {
 	if user == nil {
 		Logger.Errorf("user cannot be null")
 		return

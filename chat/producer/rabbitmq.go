@@ -30,6 +30,7 @@ func (rp *RabbitEventsPublisher) Publish(aDto interface{}) error {
 		Type:         aType,
 	}
 
+	// TODO use amqp-go
 	if err := rp.channel.Publish(EventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing dto")
 		return err

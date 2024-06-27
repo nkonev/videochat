@@ -1,13 +1,16 @@
 package listener
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/type_registry"
 )
@@ -15,7 +18,13 @@ import (
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
 func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type_registry.TypeRegistryInstance, db *db.DB) AaaUserProfileUpdateListener {
+	tr := otel.Tracer("amqp/listener")
+
 	return func(msg *amqp.Delivery) error {
+		ctx := rabbitmq.ExtractAMQPHeaders(context.Background(), msg.Headers)
+		ctx, span := tr.Start(ctx, "aaa.listener.consume")
+		defer span.End()
+
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
@@ -37,7 +46,7 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 				return err
 			}
 			if bindTo.EventType == "user_account_changed" {
-				not.NotifyAboutProfileChanged(bindTo.ForRoleUser, db)
+				not.NotifyAboutProfileChanged(ctx, bindTo.ForRoleUser, db)
 			}
 
 		default:
