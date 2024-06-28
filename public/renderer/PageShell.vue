@@ -5,7 +5,7 @@
                 :items="getBreadcrumbs()"
             />
             <v-spacer/>
-            <span v-if="shouldShowTitle()">{{chatTitle}}</span>
+            <span v-if="shouldShowTitle()" class="app-title-text">{{chatTitle}}</span>
             <v-spacer/>
             <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
 
@@ -179,6 +179,18 @@ html {
     height: calc(100dvh - 48px)
     top: 48px
     position: absolute
+}
+
+</style>
+
+<style lang="stylus" scoped>
+.app-title-text {
+    font-size: .875rem;
+    font-weight: 500;
+    letter-spacing: .09em;
+    height: 1.6em;
+    white-space: break-spaces;
+    overflow: hidden;
 }
 
 </style>
