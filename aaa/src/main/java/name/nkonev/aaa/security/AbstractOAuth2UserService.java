@@ -36,6 +36,9 @@ public abstract class AbstractOAuth2UserService {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private UserAccountConverter userAccountConverter;
+
     private boolean isAlreadyAuthenticated(){
         return SecurityContextHolder.getContext().getAuthentication()!=null && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserAccountDetailsDTO;
     }
@@ -128,7 +131,7 @@ public abstract class AbstractOAuth2UserService {
             userAccount = userAccountOpt.get();
         }
 
-        return new CreateOrGetExistsUserResponse(UserAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccount, created);
+        return new CreateOrGetExistsUserResponse(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccount, created);
     }
 
     abstract protected String getLogin(Map<String, Object> map);

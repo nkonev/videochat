@@ -6,6 +6,7 @@ import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.entity.jdbc.CreationType;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.exception.BadRequestException;
+import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.security.*;
 import name.nkonev.aaa.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public class UserAccountConverter {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
+
     private static UserRole getDefaultUserRole(){
         return UserRole.ROLE_USER;
     }
@@ -53,8 +57,13 @@ public class UserAccountConverter {
         return new OAuth2IdentifiersDTO(oAuth2Identifiers.facebookId(), oAuth2Identifiers.vkontakteId(), oAuth2Identifiers.googleId(), oAuth2Identifiers.keycloakId());
     }
 
-    public static UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
+    private boolean awaitingForConfirmEmailChange(long userId) {
+        return changeEmailConfirmationTokenRepository.findById(userId).map(t -> StringUtils.hasLength(t.newEmail())).orElse(false);
+    }
+
+    public UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
+        var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new UserAccountDetailsDTO(
                 userAccount.id(),
                 userAccount.username(),
@@ -68,7 +77,7 @@ public class UserAccountConverter {
                 userAccount.confirmed(),
                 Collections.singletonList(convertRole(userAccount.role())),
                 userAccount.email(),
-                StringUtils.hasLength(userAccount.newEmail()),
+                awaitingForConfirmEmailChange,
                 userAccount.lastLoginDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor()
@@ -133,7 +142,7 @@ public class UserAccountConverter {
         } else {
             dataDTO = null;
         }
-        var awaitingForConfirmEmailChange = StringUtils.hasLength(userAccount.newEmail());
+        var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new UserAccountDTOExtended(
                 userAccount.id(),
                 userAccount.username(),
@@ -190,7 +199,6 @@ public class UserAccountConverter {
                 confirmed,
                 newUserRole,
                 userAccountDTO.email(),
-                null,
                 null,
                 null,
                 null,
@@ -263,7 +271,6 @@ public class UserAccountConverter {
                 newUserRole,
                 null,
                 null,
-                null,
                 facebookId,
                 null,
                 null,
@@ -294,7 +301,6 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 newUserRole,
-                null,
                 null,
                 null,
                 null,
@@ -331,7 +337,6 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
-                null,
                 googleId,
                 null,
                 null,
@@ -360,7 +365,6 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 newUserRole,
-                null,
                 null,
                 null,
                 null,
@@ -399,7 +403,6 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
-                null,
                 ldapId,
                 null
         );
@@ -412,8 +415,15 @@ public class UserAccountConverter {
 
     public record UpdateUserAccountEntityNotEmptyResponse(
         UserAccount userAccount,
-        boolean wasEmailSet
-    ){}
+        String newEmail,
+        Action action
+    ){
+        public enum Action {
+            NO_ACTION,
+            NEW_EMAIL_WAS_SET,
+            SHOULD_REMOVE_NEW_EMAIL
+        }
+    }
 
     private static String trimToNull(String input) {
         if (input == null) {
@@ -428,7 +438,8 @@ public class UserAccountConverter {
 
     // EditUserDTO userAccountDTO is already filtered through normalize()
     public UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
-        var wasEmailSet = false;
+        var emailAction = UpdateUserAccountEntityNotEmptyResponse.Action.NO_ACTION;
+        String newEmail = null;
         if (StringUtils.hasLength(userAccountDTO.login())) {
             userAccount = userAccount.withUsername(userAccountDTO.login());
         }
@@ -446,10 +457,10 @@ public class UserAccountConverter {
         }
         if (StringUtils.hasLength(userAccountDTO.email())) {
             if (!userAccountDTO.email().equals(userAccount.email())) {
-                userAccount = userAccount.withNewEmail(userAccountDTO.email());
-                wasEmailSet = true;
+                newEmail = userAccountDTO.email();
+                emailAction = UpdateUserAccountEntityNotEmptyResponse.Action.NEW_EMAIL_WAS_SET;
             } else {
-                userAccount = userAccount.withNewEmail(null);
+                emailAction = UpdateUserAccountEntityNotEmptyResponse.Action.SHOULD_REMOVE_NEW_EMAIL;
             }
         }
         if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
@@ -461,7 +472,7 @@ public class UserAccountConverter {
             userAccount = userAccount.withLoginColor(userAccountDTO.loginColor());
         }
 
-        return new UpdateUserAccountEntityNotEmptyResponse(userAccount, wasEmailSet);
+        return new UpdateUserAccountEntityNotEmptyResponse(userAccount, newEmail, emailAction);
     }
 
     private String filterAvatar(String input) {

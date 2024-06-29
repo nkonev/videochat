@@ -53,6 +53,9 @@ public class RegistrationService {
     private TransactionTemplate transactionTemplate;
 
     @Autowired
+    private UserAccountConverter userAccountConverter;
+
+    @Autowired
     private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
@@ -115,7 +118,7 @@ public class RegistrationService {
 
         userConfirmationTokenRepository.deleteById(uuid);
 
-        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        var auth = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         SecurityUtils.setToContext(httpSession, auth);
         loginListener.onApplicationEvent(auth);
         eventService.notifyProfileUpdated(userAccount);

@@ -9,9 +9,11 @@ import java.util.UUID;
 @RedisHash
 public record ChangeEmailConfirmationToken(
     @Id
+    Long userId,
+
     UUID uuid,
 
-    Long userId,
+    String newEmail,
 
     @TimeToLive
     long ttlSeconds

@@ -35,7 +35,6 @@ public class AsyncEmailService {
     ) {}
 
     record ChangeEmailConfirmationDTO(
-        String newEmail,
         ChangeEmailConfirmationToken changeEmailConfirmationToken,
         String login,
         Language language
@@ -55,8 +54,8 @@ public class AsyncEmailService {
         rabbitTemplate.convertAndSend(QUEUE_PASSWORD_RESET_EMAILS_NAME, new PasswordResetEmailDTO(email, passwordResetToken, login, language));
     }
 
-    public void sendChangeEmailConfirmationToken(String newEmail, ChangeEmailConfirmationToken changeEmailConfirmationToken, String login, Language language) {
-        rabbitTemplate.convertAndSend(QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME, new ChangeEmailConfirmationDTO(newEmail, changeEmailConfirmationToken, login, language));
+    public void sendChangeEmailConfirmationToken(ChangeEmailConfirmationToken changeEmailConfirmationToken, String login, Language language) {
+        rabbitTemplate.convertAndSend(QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME, new ChangeEmailConfirmationDTO(changeEmailConfirmationToken, login, language));
     }
 
     public void sendArbitraryEmail(ArbitraryEmailDto dto) {
@@ -75,7 +74,7 @@ public class AsyncEmailService {
 
     @RabbitListener(queues = QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME)
     public void handleChangeEmailConfirmationToken(ChangeEmailConfirmationDTO dto) {
-        emailService.changeEmailConfirmationToken(dto.newEmail(), dto.changeEmailConfirmationToken(), dto.login(), dto.language());
+        emailService.changeEmailConfirmationToken(dto.changeEmailConfirmationToken(), dto.login(), dto.language());
     }
 
     @RabbitListener(queues = QUEUE_ARBITRARY_EMAILS_NAME)

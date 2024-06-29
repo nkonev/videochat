@@ -42,6 +42,9 @@ public class AaaUserDetailsService implements UserDetailsService {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private UserAccountConverter userAccountConverter;
+
     /**
      * load UserAccountDetailsDTO from database, or throws UsernameNotFoundException
      * @param username
@@ -52,7 +55,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
         return userAccountRepository
                 .findByUsername(username)
-                .map(UserAccountConverter::convertToUserAccountDetailsDTO)
+                .map(userAccountConverter::convertToUserAccountDetailsDTO)
                 .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
     }
 

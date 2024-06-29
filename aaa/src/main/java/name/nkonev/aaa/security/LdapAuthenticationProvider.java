@@ -41,6 +41,9 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private UserAccountConverter userAccountConverter;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapAuthenticationProvider.class);
 
     @Override
@@ -69,7 +72,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                         });
                     return byUsername;
                 });
-                UserAccountDetailsDTO userDetails = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+                UserAccountDetailsDTO userDetails = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
 
                 if (created.get()) {
                     eventService.notifyProfileCreated(userAccount);

@@ -20,9 +20,9 @@ public abstract class SecurityUtils {
      * When spring mvc finishes request processing, UserDetails will be stored in Session and effectively appears in Redis
      * @param userAccount
      */
-    public static void convertAndSetToContext(HttpSession httpSession, UserAccount userAccount) {
+    public static void convertAndSetToContext(UserAccountConverter userAccountConverter, HttpSession httpSession, UserAccount userAccount) {
         Assert.notNull(userAccount, "userAccount cannot be null");
-        UserAccountDetailsDTO newUserDetails = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        UserAccountDetailsDTO newUserDetails = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         setToContext(httpSession, newUserDetails);
     }
 

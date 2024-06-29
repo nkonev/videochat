@@ -92,7 +92,7 @@ public class EmailService {
         }
     }
 
-    public void changeEmailConfirmationToken(String newEmail, ChangeEmailConfirmationToken changeEmailConfirmationToken, String login, Language language) {
+    public void changeEmailConfirmationToken(ChangeEmailConfirmationToken changeEmailConfirmationToken, String login, Language language) {
         try {
             var mimeMessage = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(mimeMessage, "UTF-8");
@@ -100,12 +100,12 @@ public class EmailService {
             helper.setFrom(aaaProperties.email().from());
             final var subj = renderTemplate("confirm_change_email_subject_%s.ftlh".formatted(language), Map.of());
             helper.setSubject(subj);
-            helper.setTo(newEmail);
+            helper.setTo(changeEmailConfirmationToken.newEmail());
 
-            final var confirmLink = aaaProperties.apiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
+            final var confirmLink = aaaProperties.apiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid() + "&" + Constants.PathVariables.USER_ID + "=" + changeEmailConfirmationToken.userId();
             final var text = renderTemplate("confirm_change_email_body_%s.ftlh".formatted(language),
                 Map.of(CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER, confirmLink, LOGIN_PLACEHOLDER, login));
-            LOGGER.trace("For password reset '{}' generated email text '{}'", newEmail, text);
+            LOGGER.trace("For password reset '{}' generated email text '{}'", changeEmailConfirmationToken.newEmail(), text);
             helper.setText(text, true);
 
             mailSender.send(mimeMessage);

@@ -43,6 +43,9 @@ public class PasswordResetService {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private UserAccountConverter userAccountConverter;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetService.class);
 
     /**
@@ -95,7 +98,7 @@ public class PasswordResetService {
         userAccount = userAccount.withPassword(passwordEncoder.encode(passwordResetDto.newPassword()));
         userAccount = userAccountRepository.save(userAccount);
 
-        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        var auth = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         SecurityUtils.setToContext(httpSession, auth);
         loginListener.onApplicationEvent(auth);
     }

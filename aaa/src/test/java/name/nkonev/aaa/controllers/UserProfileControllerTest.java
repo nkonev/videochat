@@ -9,7 +9,9 @@ import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.entity.jdbc.CreationType;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.services.EventReceiver;
 import name.nkonev.aaa.util.UrlParser;
@@ -61,6 +63,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @Autowired
     private EventReceiver receiver;
+
+    @Autowired
+    private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
     @BeforeAll
     public static void ba() {
@@ -492,7 +497,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 login, null, null, null, null,false, false, true, true,
-                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null, null, null, null);
+                UserRole.ROLE_USER, login+"@example.com", null, null, null, null, null, null, null);
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccount.id();
@@ -586,7 +591,8 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         var user = userAccountRepository.findByUsername(username).get();
         Assertions.assertEquals(oldEmail, user.email());
-        Assertions.assertEquals(email, user.newEmail());
+
+        Assertions.assertEquals(email, getTokenNewEmail(user.id()));
 
         // confirm
         // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html
@@ -597,21 +603,23 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
             String parsedUrl = UrlParser.parseUrlFromMessage(content);
 
-            var tokenUuid = UUID.fromString(UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0));
-            Assertions.assertTrue(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+            Assertions.assertTrue(changeEmailConfirmationTokenRepository.existsById(user.id()));
 
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.confirmChangeEmailExitSuccessUrl()))
             ;
-            Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+            Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(user.id()));
 
             var userAfterConfirm = userAccountRepository.findByUsername(username).get();
             Assertions.assertEquals(email, userAfterConfirm.email());
-            Assertions.assertNull( userAfterConfirm.newEmail());
         }
 
+    }
+
+    private String getTokenNewEmail(long userId) {
+        return changeEmailConfirmationTokenRepository.findById(userId).map(ChangeEmailConfirmationToken::newEmail).orElse("");
     }
 
     final String userForChangeEmail1 = "generated_user_21";
@@ -636,7 +644,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
         var user = userAccountRepository.findByUsername(username).get();
         Assertions.assertEquals(oldEmail, user.email());
-        Assertions.assertEquals(email, user.newEmail());
+        Assertions.assertEquals(email, getTokenNewEmail(user.id()));
 
         // user lost email and reissues token
         {
@@ -646,6 +654,9 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
+
+            // TODO broken
+            // await().ignoreExceptions().until(() -> tokenCountBeforeResend+1 == changeEmailConfirmationTokenRepository.count());
             Assertions.assertEquals(tokenCountBeforeResend+1, changeEmailConfirmationTokenRepository.count());
         }
 
@@ -658,19 +669,17 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
             String parsedUrl = UrlParser.parseUrlFromMessage(content);
 
-            var tokenUuid = UUID.fromString(UriComponentsBuilder.fromUri(new URI(parsedUrl)).build().getQueryParams().get(Constants.Urls.UUID).get(0));
-            Assertions.assertTrue(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+            Assertions.assertTrue(changeEmailConfirmationTokenRepository.existsById(user.id()));
 
             // perform confirm
             mockMvc.perform(get(parsedUrl))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string(HttpHeaders.LOCATION, aaaProperties.confirmChangeEmailExitSuccessUrl()))
             ;
-            Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(tokenUuid));
+            Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(user.id()));
 
             var userAfterConfirm = userAccountRepository.findByUsername(username).get();
             Assertions.assertEquals(email, userAfterConfirm.email());
-            Assertions.assertNull( userAfterConfirm.newEmail());
         }
 
     }

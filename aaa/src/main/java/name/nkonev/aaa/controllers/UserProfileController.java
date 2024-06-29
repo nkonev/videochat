@@ -119,8 +119,8 @@ public class UserProfileController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.CHANGE_EMAIL_CONFIRM)
-    public String changeEmailConfirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
-        return "redirect:" + userProfileService.changeEmailConfirm(uuid, httpSession);
+    public String changeEmailConfirm(@RequestParam(Constants.PathVariables.USER_ID) long userId, @RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
+        return "redirect:" + userProfileService.changeEmailConfirm(userId, uuid, httpSession);
     }
 
     @PreAuthorize("isAuthenticated()")

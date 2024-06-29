@@ -217,7 +217,7 @@ public class UserProfileService {
         if (userAccountDTO.email() != null && exists.email() != null && !exists.email().equals(userAccountDTO.email()) && !checkService.checkEmailIsFree(userAccountDTO.email())) {
             LOGGER.info("User {} tries to take an email {} which is already busy", userAccount.getId(), userAccountDTO.email());
             // we care for email leak...
-            return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
+            return UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
         }
 
         // check login already present
@@ -229,51 +229,59 @@ public class UserProfileService {
         exists = resp.userAccount();
         exists = userAccountRepository.save(exists);
 
-        if (resp.wasEmailSet()) {
-            var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id());
-            asyncEmailService.sendChangeEmailConfirmationToken(exists.newEmail(), changeEmailConfirmationToken, exists.username(), language);
+        switch (resp.action()) {
+            case NEW_EMAIL_WAS_SET -> {
+                var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id(), resp.newEmail());
+                asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, exists.username(), language);
+            }
+            case SHOULD_REMOVE_NEW_EMAIL -> changeEmailConfirmationTokenRepository.deleteById(userAccount.getId());
         }
 
-        SecurityUtils.convertAndSetToContext(httpSession, exists);
+        SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, exists);
 
         notifier.notifyProfileUpdated(exists);
 
-        return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
+        return UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
     }
 
-    private ChangeEmailConfirmationToken createChangeEmailConfirmationToken(long userId) {
+    private ChangeEmailConfirmationToken createChangeEmailConfirmationToken(long userId, String newEmail) {
         var uuid = UUID.randomUUID();
-        ChangeEmailConfirmationToken changeEmailConfirmationToken = new ChangeEmailConfirmationToken(uuid, userId, aaaProperties.confirmation().changeEmail().token().ttl().getSeconds());
+        ChangeEmailConfirmationToken changeEmailConfirmationToken = new ChangeEmailConfirmationToken(userId, uuid, newEmail, aaaProperties.confirmation().changeEmail().token().ttl().getSeconds());
         return changeEmailConfirmationTokenRepository.save(changeEmailConfirmationToken);
     }
 
     @Transactional
-    public String changeEmailConfirm(UUID uuid, HttpSession httpSession) {
-        Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(uuid);
-        if (!userConfirmationTokenOptional.isPresent()) {
+    public String changeEmailConfirm(long userId, UUID uuid, HttpSession httpSession) {
+        Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(userId);
+        if (userConfirmationTokenOptional.isEmpty()) {
             LOGGER.info("For uuid {}, change email token is not found", uuid);
             return aaaProperties.confirmChangeEmailExitTokenNotFoundUrl();
         }
         ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
-        UserAccount userAccount = userAccountRepository.findById(userConfirmationToken.userId()).orElseThrow();
-        if (!StringUtils.hasLength(userAccount.newEmail())) {
-            LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
+        if (!userConfirmationToken.uuid().equals(uuid)) {
+            LOGGER.info("For uuid {}, change email token has the different uuid, exiting", uuid);
+            return aaaProperties.confirmChangeEmailExitTokenNotFoundUrl();
+        }
+
+        UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
+        var newEmail = userConfirmationToken.newEmail();
+        if (!StringUtils.hasLength(newEmail)) {
+            LOGGER.warn("Token has no email userId {}", userAccount.id());
             return aaaProperties.confirmChangeEmailExitSuccessUrl();
         }
 
         // check email already present
-        if (!checkService.checkEmailIsFree(userAccount.newEmail())) {
-            LOGGER.info("Somebody has already taken this email {}", userAccount.newEmail());
+        if (!checkService.checkEmailIsFree(newEmail)) {
+            LOGGER.info("Somebody has already taken this email {}", newEmail);
             return aaaProperties.confirmChangeEmailExitSuccessUrl();
         }
 
-        userAccount = userAccount.withEmail(userAccount.newEmail());
-        userAccount = userAccount.withNewEmail(null);
+        userAccount = userAccount.withEmail(newEmail);
         userAccount = userAccountRepository.save(userAccount);
 
-        changeEmailConfirmationTokenRepository.deleteById(uuid);
+        changeEmailConfirmationTokenRepository.deleteById(userId);
 
-        var auth = UserAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+        var auth = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         SecurityUtils.setToContext(httpSession, auth);
 
         notifier.notifyProfileUpdated(userAccount);
@@ -284,13 +292,21 @@ public class UserProfileService {
     @Transactional
     public void resendConfirmationChangeEmailToken(UserAccountDetailsDTO userAccount, Language language) {
         UserAccount theUserAccount = userAccountRepository.findById(userAccount.getId()).orElseThrow();
-        if (!StringUtils.hasLength(theUserAccount.newEmail())) {
+        Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(userAccount.getId());
+
+        if (userConfirmationTokenOptional.isEmpty()) {
             LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
             return;
         }
 
-        var changeEmailConfirmationToken = createChangeEmailConfirmationToken(theUserAccount.id());
-        asyncEmailService.sendChangeEmailConfirmationToken(theUserAccount.newEmail(), changeEmailConfirmationToken, theUserAccount.username(), language);
+        var previousToken = userConfirmationTokenOptional.get();
+        if (!StringUtils.hasLength(previousToken.newEmail())) {
+            LOGGER.info("Somebody attempts confirm again changing the email of {}, but there is no new email", userAccount);
+            return;
+        }
+
+        var changeEmailConfirmationToken = createChangeEmailConfirmationToken(theUserAccount.id(), previousToken.newEmail());
+        asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, theUserAccount.username(), language);
     }
 
     @Transactional
@@ -387,11 +403,11 @@ public class UserProfileService {
         };
         userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
         userAccount = userAccountRepository.save(userAccount);
-        SecurityUtils.convertAndSetToContext(httpSession, userAccount);
+        SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, userAccount);
 
         notifier.notifyProfileUpdated(userAccount);
 
-        return UserAccountConverter.getUserSelfProfile(UserAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastLoginDateTime(), getExpiresAt(httpSession));
+        return UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastLoginDateTime(), getExpiresAt(httpSession));
     }
 
     @Transactional

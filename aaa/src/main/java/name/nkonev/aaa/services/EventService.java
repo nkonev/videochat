@@ -43,7 +43,7 @@ public class EventService {
         var data = new UserAccountEventGroupDTO(
             userAccount.id(),
             "user_account_changed",
-            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(UserAccountConverter.convertToUserAccountDetailsDTO(userAccount), userRoleService), userAccount),
+            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userRoleService), userAccount),
             userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.knownAdmin(), userAccount),
             UserAccountConverter.convertToUserAccountDTO(userAccount)
         );
