@@ -17,7 +17,7 @@ import { renderPage } from 'vike/server'
 import { root } from './root.js'
 import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
-import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout} from "../common/config.js";
+import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort} from "../common/config.js";
 import axios from "axios";
 
 axios.defaults.timeout = getHttpClientTimeout();
@@ -137,7 +137,7 @@ Sitemap: ${sitemapUrl}`);
     }
   })
 
-  const port = process.env.PORT || 3100
+  const port = getPort()
   app.listen(port)
   console.log(`Server running at http://localhost:${port}`)
 }
