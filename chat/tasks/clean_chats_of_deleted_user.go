@@ -44,7 +44,7 @@ func (srv *CleanChatsOfDeletedUserService) doJob() {
 }
 
 func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
-	logger.Logger.Infof("Starting cleaning chats of deleted user job")
+	logger.GetLogEntry(c).Infof("Starting cleaning chats of deleted user job")
 
 	err := db.Transact(srv.dbR, func(tx *db.Tx) error {
 		return tx.IterateOverAllParticipantIds(func(participantIds []int64) error {
