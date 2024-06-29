@@ -33,7 +33,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		return nil, errors.New("Unable to get auth context")
 	}
 
-	hasAccess, err := r.HttpClient.CheckAccess(authResult.UserId, chatID, ctx)
+	hasAccess, err := r.HttpClient.CheckAccess(ctx, authResult.UserId, chatID)
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during checking participant user %v, chat %v", authResult.UserId, chatID)
 		return nil, err
@@ -286,7 +286,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 		}
 	}()
 
-	r.HttpClient.AskForUserOnline(userIds, ctx)
+	r.HttpClient.AskForUserOnline(ctx, userIds)
 
 	return cam, nil
 }

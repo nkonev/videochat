@@ -82,7 +82,7 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(c.Request())
 			if err != nil {
-				Logger.Errorf("Error during authorize: %v", err)
+				GetLogEntry(c.Request().Context()).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)
@@ -121,7 +121,7 @@ func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
 func calcUserFilesConsumption(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string) (int64, error) {
 	var totalBucketConsumption int64
 
-	Logger.Debugf("Listing bucket '%v':", bucketName)
+	GetLogEntry(ctx).Debugf("Listing bucket '%v':", bucketName)
 	for objInfo := range minioClient.ListObjects(ctx, bucketName, minio.ListObjectsOptions{Recursive: true}) {
 		totalBucketConsumption += objInfo.Size
 	}
@@ -133,7 +133,7 @@ func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bu
 	// TODO take on account userId
 	consumption, err := calcUserFilesConsumption(ctx, minioClient, bucketName)
 	if err != nil {
-		Logger.Errorf("Error during getting consumption %v", err)
+		GetLogEntry(ctx).Errorf("Error during getting consumption %v", err)
 		return false, 0, 0, err
 	}
 
@@ -141,14 +141,14 @@ func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bu
 
 	maxAllowed, err := getMaxAllowedConsumption(isUnlimited)
 	if err != nil {
-		Logger.Errorf("Error during calculating max allowed %v", err)
+		GetLogEntry(ctx).Errorf("Error during calculating max allowed %v", err)
 		return false, 0, 0, err
 	}
 	available := maxAllowed - consumption
-	Logger.Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
+	GetLogEntry(ctx).Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
 
 	if desiredSize > available {
-		Logger.Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
+		GetLogEntry(ctx).Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
 		return false, consumption, available, nil
 	}
 	return true, consumption, available, nil

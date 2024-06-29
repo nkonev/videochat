@@ -45,7 +45,7 @@ func NewRestClient() *RestClient {
 	}
 }
 
-func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
+func (h *RestClient) CheckAccess(c context.Context, userId int64, chatId int64) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.chatBaseUrl, h.accessPath, userId, chatId)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -75,7 +75,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 	}
 }
 
-func (h *RestClient) AskForUserOnline(userIds []int64, c context.Context) {
+func (h *RestClient) AskForUserOnline(c context.Context, userIds []int64) {
 	var userIdsString []string
 	for _, userIdInt := range userIds {
 		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))

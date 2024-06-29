@@ -122,9 +122,9 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 	paginationToken := c.QueryParam("paginationToken")
 	if paginationToken == "" {
-		paginationToken = getPageToken(utils.DefaultPage, utils.DefaultPage)
+		paginationToken = getPageToken(c.Request().Context(), utils.DefaultPage, utils.DefaultPage)
 	}
-	pageBottom, pageTop, size := getFromPageToken(paginationToken)
+	pageBottom, pageTop, size := getFromPageToken(c.Request().Context(), paginationToken)
 
 	var page int
 	directionString := getDirection(c.QueryParam("direction"))
@@ -141,7 +141,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
 		searchString = TrimAmdSanitize(ch.policy, searchString)
 
-		users, _, err := ch.restClient.SearchGetUsers(searchString, true, []int64{}, 0, 0, c.Request().Context())
+		users, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), searchString, true, []int64{}, 0, 0)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 		}
@@ -303,9 +303,9 @@ func (ch *ChatHandler) RecreatePageToken(c echo.Context) error {
 
 	paginationToken := c.QueryParam("paginationToken")
 	if paginationToken == "" {
-		paginationToken = getPageToken(utils.DefaultPage, utils.DefaultPage)
+		paginationToken = getPageToken(c.Request().Context(), utils.DefaultPage, utils.DefaultPage)
 	}
-	pageBottom, pageTop, size := getFromPageToken(paginationToken)
+	pageBottom, pageTop, size := getFromPageToken(c.Request().Context(), paginationToken)
 
 	directionString := getDirection(c.QueryParam("direction"))
 	return db.Transact(ch.db, func(tx *db.Tx) error {
@@ -348,7 +348,7 @@ func getNextPageToken(ctx context.Context, tx *db.Tx, userId int64, size, nextPa
 			}
 			returnPageBottom = rowNumber / size
 		}
-		nextPaginationToken = getPageToken(returnPageBottom, nextPageTop)
+		nextPaginationToken = getPageToken(ctx, returnPageBottom, nextPageTop)
 	} else if directionString == directionBottom {
 		var returnPageTop = utils.DefaultPage
 		if topElementId != nil { // in advance, we create pageTop as well
@@ -359,14 +359,14 @@ func getNextPageToken(ctx context.Context, tx *db.Tx, userId int64, size, nextPa
 			}
 			returnPageTop = rowNumber / size
 		}
-		nextPaginationToken = getPageToken(nextPageBottom, returnPageTop)
+		nextPaginationToken = getPageToken(ctx, nextPageBottom, returnPageTop)
 	} else {
 		return "", errors.New("Direction is missing")
 	}
 	return nextPaginationToken, nil
 }
 
-func getPageToken(pageBottom, pageTop int) string {
+func getPageToken(ctx context.Context, pageBottom, pageTop int) string {
 	thePageToken := pageToken{
 		PageBottom: pageBottom,
 		PageTop:    pageTop,
@@ -374,22 +374,22 @@ func getPageToken(pageBottom, pageTop int) string {
 	}
 	data, err := json.Marshal(thePageToken)
 	if err != nil {
-		Logger.Errorf("Error during Marshal %v", err)
+		GetLogEntry(ctx).Errorf("Error during Marshal %v", err)
 		return ""
 	}
 	return base64.StdEncoding.EncodeToString(data)
 }
 
-func getFromPageToken(str string) (int, int, int) {
+func getFromPageToken(ctx context.Context, str string) (int, int, int) {
 	dst, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
-		Logger.Errorf("Error during decode %v", err)
+		GetLogEntry(ctx).Errorf("Error during decode %v", err)
 		return utils.DefaultPage, utils.DefaultPage, chatPageSize
 	}
 	thePageToken := new(pageToken)
 	err = json.Unmarshal(dst, thePageToken)
 	if err != nil {
-		Logger.Errorf("Error during Unmarshal %v", err)
+		GetLogEntry(ctx).Errorf("Error during Unmarshal %v", err)
 		return utils.DefaultPage, utils.DefaultPage, chatPageSize
 	}
 	return thePageToken.PageBottom, thePageToken.PageTop, thePageToken.Size
@@ -415,7 +415,7 @@ func getChat(
 		return nil, nil
 	}
 
-	users, err = restClient.GetUsers(cc.ParticipantsIds, c.Request().Context())
+	users, err = restClient.GetUsers(c.Request().Context(), cc.ParticipantsIds)
 	if err != nil {
 		users = []*dto.User{}
 		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
@@ -725,8 +725,8 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		_, err = tx.EditChat(
 			bindTo.Id,
 			chatTitle,
-			TrimAmdSanitizeAvatar(ch.policy, bindTo.Avatar),
-			TrimAmdSanitizeAvatar(ch.policy, bindTo.AvatarBig),
+			TrimAmdSanitizeAvatar(c.Request().Context(), ch.policy, bindTo.Avatar),
+			TrimAmdSanitizeAvatar(c.Request().Context(), ch.policy, bindTo.AvatarBig),
 			bindTo.CanResend,
 			bindTo.AvailableToSearch,
 			bindTo.Blog,
@@ -1117,7 +1117,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 }
 
 func (ch *ChatHandler) getParticipantsWithAdmin(cdo db.CommonOperations, participantIds []int64, chatId int64, ctx context.Context) ([]*dto.UserWithAdmin, error) {
-	newUsers, err := ch.restClient.GetUsers(participantIds, ctx)
+	newUsers, err := ch.restClient.GetUsers(ctx, participantIds)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting users %v", err)
 		return nil, err
@@ -1298,7 +1298,7 @@ func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string
 			break
 		}
 
-		usersPortion, _, err := ch.restClient.SearchGetUsers(searchString, true, participantIds, 0, pageSize, c.Request().Context())
+		usersPortion, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), searchString, true, participantIds, 0, pageSize)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 			break
@@ -1322,7 +1322,7 @@ func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString str
 	shouldContinueSearch := true
 	for page := 0; shouldContinueSearch; page++ {
 		ignoredInAaa := false
-		usersPortion, _, err := ch.restClient.SearchGetUsers(searchString, ignoredInAaa, []int64{}, page, pageSize, c.Request().Context())
+		usersPortion, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), searchString, ignoredInAaa, []int64{}, page, pageSize)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 		}
@@ -1501,7 +1501,7 @@ func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 			}
 		}
 		for _, aBatch := range batches { // we already know that requestedParticipantIds belong to this chat, so our sole task is to pass them through aaa filter
-			usersPortion, _, err := ch.restClient.SearchGetUsers(userSearchString, true, aBatch, 0, utils.DefaultSize, c.Request().Context())
+			usersPortion, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), userSearchString, true, aBatch, 0, utils.DefaultSize)
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 			} else {
@@ -1876,7 +1876,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 		return c.JSON(http.StatusOK, ret)
 	}
 
-	behalfUsers, err := ch.restClient.GetUsers([]int64{behalfUserId}, c.Request().Context())
+	behalfUsers, err := ch.restClient.GetUsers(c.Request().Context(), []int64{behalfUserId})
 	if err != nil {
 		return err
 	}
@@ -1886,7 +1886,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 	}
 	behalfUserLogin := behalfUsers[0].Login
 
-	users, err := ch.restClient.GetUsers(participantIds, c.Request().Context())
+	users, err := ch.restClient.GetUsers(c.Request().Context(), participantIds)
 	if err != nil {
 		return err
 	}

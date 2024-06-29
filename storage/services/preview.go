@@ -36,7 +36,7 @@ func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioCo
 }
 
 func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEvent) *PreviewResponse {
-	Logger.Debugf("Got %v", data)
+	GetLogEntry(ctx).Debugf("Got %v", data)
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
 	s.CreatePreview(ctx, normalizedKey)
 	return &PreviewResponse {
@@ -53,12 +53,12 @@ func (s *PreviewService) SendToParticipants(ctx context.Context, data *dto.Minio
 		for _, participantId := range participantIds {
 			err = s.rabbitFileUploadedPublisher.Publish(ctx, participantId, data.ChatId, pu)
 			if err != nil {
-				Logger.Errorf("Error during ending: %v", err)
+				GetLogEntry(ctx).Errorf("Error during ending: %v", err)
 				continue
 			}
 		}
 	} else {
-		Logger.Errorf("Error during constructing uploaded event %v for %v", err, response.normalizedKey)
+		GetLogEntry(ctx).Errorf("Error during constructing uploaded event %v for %v", err, response.normalizedKey)
 	}
 
 }
@@ -67,12 +67,12 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 	if utils.IsImage(normalizedKey) {
 		object, err := s.minio.GetObject(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectOptions{})
 		if err != nil {
-			Logger.Errorf("Error during getting image file %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during getting image file %v for %v", err, normalizedKey)
 			return
 		}
-		byteBuffer, err := s.resizeImageToJpg(object)
+		byteBuffer, err := s.resizeImageToJpg(ctx, object)
 		if err != nil {
-			Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)
 			return
 		}
 
@@ -81,14 +81,14 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 		var objectSize int64 = int64(byteBuffer.Len())
 		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
 		if err != nil {
-			Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
 			return
 		}
 	} else if utils.IsVideo(normalizedKey) {
 		d, _ := time.ParseDuration("10m")
 		presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
 		if err != nil {
-			Logger.Errorf("Error during getting presigned url for %v", normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
 			return
 		}
 		stringPresingedUrl := presignedUrl.String()
@@ -104,16 +104,16 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 		ffCmd.Stderr = &stderr
 		err = ffCmd.Run()
 		if err != nil {
-			Logger.Errorf("Error during creating thumbnail for key %v: %v: %v", normalizedKey, fmt.Sprint(err), stderr.String())
+			GetLogEntry(ctx).Errorf("Error during creating thumbnail for key %v: %v: %v", normalizedKey, fmt.Sprint(err), stderr.String())
 			return
 		}
 		newKey := utils.SetVideoPreviewExtension(normalizedKey)
 
 		reader := bytes.NewReader(out.Bytes())
 
-		byteBuffer, err := s.resizeImageToJpg(reader)
+		byteBuffer, err := s.resizeImageToJpg(ctx, reader)
 		if err != nil {
-			Logger.Errorf("Error during resizing image %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)
 			return
 		}
 
@@ -121,24 +121,24 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 
 		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
 		if err != nil {
-			Logger.Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
 			return
 		}
 	}
 	return
 }
 
-func (s *PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, error) {
+func (s *PreviewService) resizeImageToJpg(ctx context.Context, reader io.Reader) (*bytes.Buffer, error) {
 	srcImage, _, err := image.Decode(reader)
 	if err != nil {
-		Logger.Errorf("Error during decoding image: %v", err)
+		GetLogEntry(ctx).Errorf("Error during decoding image: %v", err)
 		return nil, err
 	}
 	dstImage := imaging.Resize(srcImage, 0, 360, imaging.Lanczos)
 	byteBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(byteBuffer, dstImage, nil)
 	if err != nil {
-		Logger.Errorf("Error during encoding image: %v", err)
+		GetLogEntry(ctx).Errorf("Error during encoding image: %v", err)
 		return nil, err
 	}
 	return byteBuffer, nil
@@ -150,7 +150,7 @@ func (s *PreviewService) getFileUploadedEvent(ctx context.Context, normalizedKey
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)
 		return nil, err
 	}
-	var previewUrl *string = s.filesService.GetPreviewUrlSmart(normalizedKey)
+	var previewUrl *string = s.filesService.GetPreviewUrlSmart(ctx, normalizedKey)
 	var aType = GetType(normalizedKey)
 
 	return &dto.PreviewCreatedEvent{

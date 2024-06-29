@@ -86,7 +86,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 
 func(srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatIds []int64) {
 	// check chat's existence
-	chatsExists, err := srv.chatClient.CheckIsChatExists(chatIds, c)
+	chatsExists, err := srv.chatClient.CheckIsChatExists(c, chatIds)
 	if err != nil {
 		GetLogEntry(c).Errorf("Unable to chech existence of chat id %v", chatIds)
 		return

@@ -61,7 +61,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 
 			usersCount := int64(event.Room.NumParticipants)
 
-			err = h.restClient.GetChatParticipantIds(chatId, c.Request().Context(), func(participantIds []int64) error {
+			err = h.restClient.GetChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
 				internalErr := h.notificationService.NotifyVideoUserCountChanged(c.Request().Context(), participantIds, chatId, usersCount)
 				if internalErr != nil {
 					Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, internalErr)

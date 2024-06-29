@@ -89,7 +89,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 			}
 
 			// changing attempt number
-			videoParticipants, err := srv.userService.GetVideoParticipants(chatId, ctx)
+			videoParticipants, err := srv.userService.GetVideoParticipants(ctx, chatId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to get video participants of %v", chatId)
 				continue
@@ -137,7 +137,7 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 			continue
 		}
 
-		videoParticipants, err := srv.userService.GetVideoParticipants(chatId, ctx)
+		videoParticipants, err := srv.userService.GetVideoParticipants(ctx, chatId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("got error during getting videoParticipants from roomName %v %v", room.Name, err)
 			continue
@@ -156,7 +156,7 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 				if !utils.Contains(userIds, videoUserId) {
 					GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
 
-					chatInfo, err := srv.restClient.GetBasicChatInfo(chatId, videoUserId, ctx)
+					chatInfo, err := srv.restClient.GetBasicChatInfo(ctx, chatId, videoUserId)
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
 						continue

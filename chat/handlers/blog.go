@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -47,7 +48,7 @@ type BlogPostPreviewDto struct {
 	ImageUrl       *string   `json:"imageUrl"`
 }
 
-func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, error) {
+func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]*BlogPostPreviewDto, error) {
 	var response = make([]*BlogPostPreviewDto, 0)
 
 	var blogIds []int64 = make([]int64, 0)
@@ -70,11 +71,11 @@ func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, 
 
 		for _, post := range posts {
 			if post.ChatId == blog.Id {
-				mbImage := h.tryGetFirstImage(post.Text)
+				mbImage := h.tryGetFirstImage(ctx, post.Text)
 				if mbImage != nil {
 					fileParam, err := h.getFileParam(*mbImage)
 					if err != nil {
-						Logger.Warnf("Unagle to get file key: %v", err)
+						GetLogEntry(ctx).Warnf("Unagle to get file key: %v", err)
 						break
 					}
 					if len(fileParam) > 0 {
@@ -85,7 +86,7 @@ func (h *BlogHandler) getPostsWoUsers(blogs []*db.Blog) ([]*BlogPostPreviewDto, 
 
 						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.MessageId)
 						if err != nil {
-							Logger.Warnf("Unagle to change url: %v", err)
+							GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
 							break
 						}
 						blogPost.ImageUrl = &publicPreviewUrl
@@ -139,7 +140,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			return err
 		}
 
-		response, err = h.getPostsWoUsers(blogs)
+		response, err = h.getPostsWoUsers(c.Request().Context(), blogs)
 		if err != nil {
 			return err
 		}
@@ -158,7 +159,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 				return err
 			}
 
-			portion, err := h.getPostsWoUsers(blogs)
+			portion, err := h.getPostsWoUsers(c.Request().Context(), blogs)
 			if err != nil {
 				return err
 			}
@@ -288,11 +289,11 @@ func (h *BlogHandler) performSearch(searchString string, searchable []*BlogPostP
 	return intermediateList, nil
 }
 
-func (h *BlogHandler) tryGetFirstImage(text string) *string {
+func (h *BlogHandler) tryGetFirstImage(ctx context.Context, text string) *string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		Logger.Warnf("Unagle to get image: %v", err)
+		GetLogEntry(ctx).Warnf("Unagle to get image: %v", err)
 		return nil
 	}
 
@@ -369,7 +370,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
-		patchedText := PatchStorageUrlToPublic(post.Text, post.MessageId)
+		patchedText := PatchStorageUrlToPublic(c.Request().Context(), post.Text, post.MessageId)
 		response.Text = &patchedText
 
 		var participantIdSet = map[int64]bool{}
@@ -447,8 +448,8 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	}
 	var users = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
 	for _, cc := range messages {
-		msg := convertToMessageDtoWithoutPersonalized(cc, users, chatsSet)
-		msg.Text = PatchStorageUrlToPublic(msg.Text, msg.Id)
+		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), cc, users, chatsSet)
+		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), msg.Text, msg.Id)
 		messageDtos = append(messageDtos, msg)
 	}
 
@@ -462,11 +463,11 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 }
 
 // see also message.go :: patchStorageUrlToPreventCachingVideo
-func PatchStorageUrlToPublic(text string, messageId int64) string {
+func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		Logger.Warnf("Unagle to read html: %v", err)
+		GetLogEntry(ctx).Warnf("Unagle to read html: %v", err)
 		return ""
 	}
 
@@ -479,7 +480,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 			if srcExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", false, messageId)
 				if err != nil {
-					Logger.Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeImage.SetAttr("src", newurl)
@@ -494,7 +495,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 			if srcExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", true, messageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
 				if err != nil {
-					Logger.Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
@@ -504,7 +505,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 			if posterExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, messageId)
 				if err != nil {
-					Logger.Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("poster", newurl)
@@ -519,7 +520,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 			if srcExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", true, messageId)
 				if err != nil {
-					Logger.Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
@@ -529,7 +530,7 @@ func PatchStorageUrlToPublic(text string, messageId int64) string {
 
 	ret, err := doc.Find("html").Find("body").Html()
 	if err != nil {
-		Logger.Warnf("Unagle to write html: %v", err)
+		GetLogEntry(ctx).Warnf("Unagle to write html: %v", err)
 		return ""
 	}
 	return ret

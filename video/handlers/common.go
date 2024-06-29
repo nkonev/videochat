@@ -79,7 +79,7 @@ func ConfigureAuthMiddleware(config *config.ExtendedConfig) AuthMiddleware {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(config, c.Request())
 			if err != nil {
-				Logger.Errorf("Error during authorize: %v", err)
+				GetLogEntry(c.Request().Context()).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)

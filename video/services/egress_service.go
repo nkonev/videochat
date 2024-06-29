@@ -20,7 +20,7 @@ func NewEgressService(egressClient *lksdk.EgressClient) *EgressService {
 	return &EgressService{egressClient: egressClient}
 }
 
-func (rh *EgressService) GetActiveEgresses(chatId int64, ctx context.Context) (map[string]int64, error) {
+func (rh *EgressService) GetActiveEgresses(ctx context.Context, chatId int64) (map[string]int64, error) {
 	aRoomId := utils.GetRoomNameFromId(chatId)
 
 	listRequest := livekit.ListEgressRequest{

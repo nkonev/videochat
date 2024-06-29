@@ -56,7 +56,7 @@ func (rh *RecordHandler) canRecord(ctx context.Context, chatId int64, userPrinci
 	if rh.conf.OnlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
 		return false, nil
 	}
-	if ok, err := rh.restClient.IsAdmin(userPrincipalDto.UserId, chatId, ctx); err != nil {
+	if ok, err := rh.restClient.IsAdmin(ctx, userPrincipalDto.UserId, chatId); err != nil {
 		return false, fmt.Errorf("Error during cheching is chat admin for userId %v, chatId %v", userPrincipalDto.UserId, chatId)
 	} else {
 		return ok, nil
@@ -85,7 +85,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 
 	roomName := utils.GetRoomNameFromId(chatId)
 	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().Format("20060102150405"))
-	s3, err := rh.restClient.GetS3(fileName, chatId, userPrincipalDto.UserId, c.Request().Context())
+	s3, err := rh.restClient.GetS3(c.Request().Context(), fileName, chatId, userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during gettting s3 %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -151,7 +151,7 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
+	egresses, err := rh.egressService.GetActiveEgresses(c.Request().Context(), chatId)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 		})
 	}
 
-	egresses, err := rh.egressService.GetActiveEgresses(chatId, c.Request().Context())
+	egresses, err := rh.egressService.GetActiveEgresses(c.Request().Context(), chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during get active egresses: %v", err)
 		return c.NoContent(http.StatusInternalServerError)

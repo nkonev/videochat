@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -164,7 +165,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 
 			messageDtos := make([]*dto.DisplayMessageDto, 0)
 			for _, mm := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[userPrincipalDto.UserId]))
+				messageDtos = append(messageDtos, convertToMessageDto(c.Request().Context(), mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[userPrincipalDto.UserId]))
 			}
 
 			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -185,7 +186,7 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		return nil, nil
 	}
 
-	return convertToMessageDto(message, users, chatsSet, behalfUserId, behalfUserIsAdminInChat), nil
+	return convertToMessageDto(c.Request().Context(), message, users, chatsSet, behalfUserId, behalfUserIsAdminInChat), nil
 }
 
 func prepareDataForMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*db.Message,  map[int64]*db.BasicChatDtoExtended, map[int64]*dto.User, error) {
@@ -222,7 +223,7 @@ func getMessageWithoutPersonalized(c echo.Context, co db.CommonOperations, restC
 		return nil, nil
 	}
 
-	return convertToMessageDtoWithoutPersonalized(message, users, chatsSet), nil
+	return convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet), nil
 }
 
 func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map[int64]bool, countReactions bool) {
@@ -403,20 +404,20 @@ func getDeletedUser(id int64) *dto.User {
 	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
 }
 
-func convertToMessageDto(dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool) *dto.DisplayMessageDto {
+func convertToMessageDto(ctx context.Context, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool) *dto.DisplayMessageDto {
 
-	ret := convertToMessageDtoWithoutPersonalized(dbMessage, users, chats)
+	ret := convertToMessageDtoWithoutPersonalized(ctx, dbMessage, users, chats)
 
 	messageChat, ok := chats[dbMessage.ChatId]
 	if !ok {
-		Logger.Errorf("Unable to get message's chat for message id = %v, chat id = %v", dbMessage.Id, dbMessage.ChatId)
+		GetLogEntry(ctx).Errorf("Unable to get message's chat for message id = %v, chat id = %v", dbMessage.Id, dbMessage.ChatId)
 	}
 	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, behalfUserIsAdminInChat, behalfUserId)
 
 	return ret
 }
 
-func convertToMessageDtoWithoutPersonalized(dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended) *dto.DisplayMessageDto {
+func convertToMessageDtoWithoutPersonalized(ctx context.Context, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended) *dto.DisplayMessageDto {
 	user := users[dbMessage.OwnerId]
 	if user == nil {
 		user = getDeletedUser(dbMessage.OwnerId)
@@ -434,7 +435,7 @@ func convertToMessageDtoWithoutPersonalized(dbMessage *db.Message, users map[int
 		BlogPost:       dbMessage.BlogPost,
 		Published:      dbMessage.Published,
 	}
-	ret.Text = patchStorageUrlToPreventCachingVideo(ret.Text)
+	ret.Text = patchStorageUrlToPreventCachingVideo(ctx, ret.Text)
 
 	if dbMessage.ResponseEmbeddedMessageReplyOwnerId != nil {
 		embeddedUser := users[*dbMessage.ResponseEmbeddedMessageReplyOwnerId]
@@ -598,7 +599,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		} else if !participant {
 			return 0, &notParticipantError{}
 		}
-		creatableMessage, err := convertToCreatableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		creatableMessage, err := convertToCreatableMessage(c.Request().Context(), bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
 			return 0, err
 		}
@@ -787,8 +788,8 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(tx *db.Tx, input
 	return nil
 }
 
-func convertToCreatableMessage(dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
-	trimmedAndSanitized, err := TrimAmdSanitizeMessage(policy, dto.Text)
+func convertToCreatableMessage(ctx context.Context, dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
+	trimmedAndSanitized, err := TrimAmdSanitizeMessage(ctx, policy, dto.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -823,7 +824,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(mc.db, func(tx *db.Tx) error {
-		editableMessage, err := convertToEditableMessage(bindTo, userPrincipalDto, chatId, mc.policy)
+		editableMessage, err := convertToEditableMessage(c.Request().Context(), bindTo, userPrincipalDto, chatId, mc.policy)
 		if err != nil {
 			return err
 		}
@@ -1036,8 +1037,8 @@ func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []in
 	return utils.Remove(mentionedUserIds, principalDto.UserId)
 }
 
-func convertToEditableMessage(dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
-	trimmedAndSanitized, err := TrimAmdSanitizeMessage(policy, dto.Text)
+func convertToEditableMessage(ctx context.Context, dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
+	trimmedAndSanitized, err := TrimAmdSanitizeMessage(ctx, policy, dto.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -1199,7 +1200,7 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	offset := utils.GetOffset(page, size)
 
-	Logger.Debugf("Processing GetReadMessageUsers user %v, chatId %v, messageId %v", userPrincipalDto.UserId, chatId, messageId)
+	GetLogEntry(c.Request().Context()).Debugf("Processing GetReadMessageUsers user %v, chatId %v, messageId %v", userPrincipalDto.UserId, chatId, messageId)
 
 	if participant, err := mc.db.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking participant")
@@ -1230,7 +1231,7 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 	}
 	usersToGet[*ownerId] = true
 
-	users, err := mc.restClient.GetUsers(utils.SetToArray(usersToGet), c.Request().Context())
+	users, err := mc.restClient.GetUsers(c.Request().Context(), utils.SetToArray(usersToGet))
 	if err != nil {
 		return err
 	}
@@ -1432,7 +1433,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 				return err
 			}
-			res := convertToMessageDtoWithoutPersonalized(message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 			count0, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
@@ -1469,7 +1470,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 				return err
 			}
-			res := convertToMessageDtoWithoutPersonalized(message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 			count1, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
@@ -1600,7 +1601,7 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 			return err
 		}
 
-		res := convertToMessageDtoWithoutPersonalized(message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+		res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 		count0, err := tx.GetPublishedMessagesCount(chatId)
 		if err != nil {
@@ -1814,7 +1815,7 @@ func (mc *MessageHandler) GetPinnedPromotedMessage(c echo.Context) error {
 		}
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-		res := convertToMessageDtoWithoutPersonalized(message, owners, chatsSet) // the actual personal values don't needed here
+		res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, owners, chatsSet) // the actual personal values don't needed here
 		patchForViewAndSetPromoted(mc.stripAllTags, res, true)
 
 		return c.JSON(http.StatusOK, res)
@@ -1963,9 +1964,9 @@ func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 
-		convertedMessage := convertToMessageDtoWithoutPersonalized(message, owners, chatsSet) // the actual personal values don't needed here
+		convertedMessage := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, owners, chatsSet) // the actual personal values don't needed here
 
-		convertedMessage.Text = PatchStorageUrlToPublic(convertedMessage.Text, convertedMessage.Id)
+		convertedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), convertedMessage.Text, convertedMessage.Id)
 
 		preview := stripTagsAndCut(mc.stripAllTags, viper.GetInt("previewMaxTextSize"), convertedMessage.Text)
 
@@ -2061,11 +2062,11 @@ func (mc *MessageHandler) wasReplyRemoved(oldMessage *db.Message, messageRendere
 
 // in order to be able to see video in Chrome after minio link's ttl expiration
 // see also blog.go :: PatchStorageUrlToPublic
-func patchStorageUrlToPreventCachingVideo(text string) string {
+func patchStorageUrlToPreventCachingVideo(ctx context.Context, text string) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		Logger.Warnf("Unagle to read html: %v", err)
+		GetLogEntry(ctx).Warnf("Unagle to read html: %v", err)
 		return ""
 	}
 
@@ -2078,7 +2079,7 @@ func patchStorageUrlToPreventCachingVideo(text string) string {
 			if srcExists && utils.ContainsUrl(wlArr, src) {
 				newurl, err := addTimeToUrl(src)
 				if err != nil {
-					Logger.Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
@@ -2088,7 +2089,7 @@ func patchStorageUrlToPreventCachingVideo(text string) string {
 
 	ret, err := doc.Find("html").Find("body").Html()
 	if err != nil {
-		Logger.Warnf("Unagle to write html: %v", err)
+		GetLogEntry(ctx).Warnf("Unagle to write html: %v", err)
 		return ""
 	}
 	return ret

@@ -32,38 +32,38 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		Logger.Error(err, "error during reading rooms %v", err)
+		GetLogEntry(ctx).Error(err, "error during reading rooms %v", err)
 		return
 	}
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
 		// Here room.NumParticipants are zeroed, so we need to invoke service
 		usersCount, hasScreenShares, err := h.userService.CountUsers(ctx, room.Name)
 		if err != nil {
-			Logger.Errorf("got error during counting users in scheduler, %v", err)
+			GetLogEntry(ctx).Errorf("got error during counting users in scheduler, %v", err)
 			continue
 		}
 
-		err = h.restClient.GetChatParticipantIds(chatId, ctx, func(participantIds []int64) error {
-			Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
+		err = h.restClient.GetChatParticipantIds(ctx, chatId, func(participantIds []int64) error {
+			GetLogEntry(ctx).Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
 			internalErr := h.notificationService.NotifyVideoUserCountChanged(ctx, participantIds, chatId, usersCount)
 			if internalErr != nil {
-				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", internalErr)
+				GetLogEntry(ctx).Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", internalErr)
 			}
 
 			internalErr = h.notificationService.NotifyVideoScreenShareChanged(ctx, participantIds, chatId, hasScreenShares)
 			if internalErr != nil {
-				Logger.Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", internalErr)
+				GetLogEntry(ctx).Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", internalErr)
 			}
 			return internalErr
 		})
 		if err != nil {
-			Logger.Error(err, "Failed during getting chat participantIds")
+			GetLogEntry(ctx).Error(err, "Failed during getting chat participantIds")
 			continue
 		}
 	}
@@ -74,7 +74,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx context.Context) {
 	userIds, err := h.redisService.GetUserIds(ctx)
 	if err != nil {
-		Logger.Error(err, "error during reading userIds %v", err)
+		GetLogEntry(ctx).Error(err, "error during reading userIds %v", err)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 	for _, userId := range userIds {
 		status, err := h.redisService.GetUserCallStatus(ctx, userId)
 		if err != nil {
-			Logger.Error(err, "error during reading userStatus, userId = %v", userId, err)
+			GetLogEntry(ctx).Error(err, "error during reading userStatus, userId = %v", userId, err)
 			continue
 		}
 		isInVideo := status == CallStatusInCall
@@ -91,7 +91,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 			IsInVideo:     	isInVideo,
 		})
 		if err != nil {
-			Logger.Errorf("Error during notifying about user is in video, userId=%v, error=%v", userId, err)
+			GetLogEntry(ctx).Errorf("Error during notifying about user is in video, userId=%v, error=%v", userId, err)
 			continue
 		}
 	}
@@ -102,19 +102,19 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		Logger.Error(err, "error during reading rooms %v", err)
+		GetLogEntry(ctx).Error(err, "error during reading rooms %v", err)
 		return
 	}
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
-		activeEgresses, err := h.egressService.GetActiveEgresses(chatId, ctx)
+		activeEgresses, err := h.egressService.GetActiveEgresses(ctx, chatId)
 		if err != nil {
-			Logger.Errorf("got error during counting active egresses in scheduler, %v", err)
+			GetLogEntry(ctx).Errorf("got error during counting active egresses in scheduler, %v", err)
 			continue
 		}
 
@@ -125,7 +125,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 
 		err = h.notificationService.NotifyRecordingChanged(ctx, chatId, recordInProgressByOwner)
 		if err != nil {
-			Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+			GetLogEntry(ctx).Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 		}
 
 	}
@@ -142,7 +142,7 @@ func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Conte
 		userIdsToDial = append(userIdsToDial, userId)
 	}
 
-	inviteNames, err := h.restClient.GetChatNameForInvite(chatId, ownerId, userIdsToDial, ctx)
+	inviteNames, err := h.restClient.GetChatNameForInvite(ctx, chatId, ownerId, userIdsToDial)
 	if err != nil {
 		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
 		return

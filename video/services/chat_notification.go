@@ -32,7 +32,7 @@ func NewNotificationService(
 // as a small handset in ChatList
 // and as a number of video users in badge near call button
 func (h *NotificationService) NotifyVideoUserCountChanged(ctx context.Context, participantIds []int64, chatId, usersCount int64) error {
-	Logger.Debugf("Notifying video call chat_id=%v", chatId)
+	GetLogEntry(ctx).Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallUserCountChangedDto{
 		UsersCount: usersCount,
@@ -43,7 +43,7 @@ func (h *NotificationService) NotifyVideoUserCountChanged(ctx context.Context, p
 }
 
 func (h *NotificationService) NotifyVideoScreenShareChanged(ctx context.Context, participantIds []int64, chatId int64, hasScreenShares bool) error {
-	Logger.Debugf("Notifying video call chat_id=%v", chatId)
+	GetLogEntry(ctx).Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallScreenShareChangedDto{
 		HasScreenShares: hasScreenShares,
@@ -55,7 +55,7 @@ func (h *NotificationService) NotifyVideoScreenShareChanged(ctx context.Context,
 
 
 func (h *NotificationService) NotifyRecordingChanged(ctx context.Context, chatId int64, recordInProgressByOwner map[int64]bool) error {
-	Logger.Debugf("Notifying video call chat_id=%v", chatId)
+	GetLogEntry(ctx).Debugf("Notifying video call chat_id=%v", chatId)
 
 	return h.rabbitMqRecordPublisher.Publish(ctx, recordInProgressByOwner, chatId)
 }

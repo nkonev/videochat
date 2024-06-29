@@ -15,7 +15,6 @@ import (
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/dto"
-	"nkonev.name/chat/logger"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
@@ -26,11 +25,11 @@ import (
 func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	Logger.Infof("Requested user length is %v", length)
+	GetLogEntry(c.Request().Context()).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}
-	users, err := restClient.GetUsers(userIds, c.Request().Context())
+	users, err := restClient.GetUsers(c.Request().Context(), userIds)
 	if err != nil {
 		return nil, err
 	}
@@ -44,11 +43,11 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c
 func getUserOnlinesRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.UserOnline, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	Logger.Infof("Requested user length is %v", length)
+	GetLogEntry(c.Request().Context()).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.UserOnline{}, nil
 	}
-	users, err := restClient.GetOnlines(userIds, c.Request().Context())
+	users, err := restClient.GetOnlines(c.Request().Context(), userIds)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +156,7 @@ func ConfigureAuthMiddleware() AuthMiddleware {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(c.Request())
 			if err != nil {
-				Logger.Errorf("Error during authorize: %v", err)
+				GetLogEntry(c.Request().Context()).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)
@@ -209,7 +208,7 @@ func (s *MediaUrlErr) Error() string {
 	return fmt.Sprintf("Media url is not allowed in %v: %v", s.where, s.url)
 }
 
-func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (string, error) {
+func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
 
 	whitelist := viper.GetString("message.allowedMediaUrls")
@@ -221,7 +220,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(sanitizedHtml))
 	if err != nil {
-		Logger.Warnf("Unable to read html: %v", err)
+		GetLogEntry(ctx).Warnf("Unable to read html: %v", err)
 		return "", errors.New("Unable to read html")
 	}
 
@@ -231,7 +230,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 		if maybeImage != nil {
 			src, exists := maybeImage.Attr("src")
 			if exists && !utils.ContainsUrl(wlArr, src) {
-				Logger.Infof("Filtered not allowed url in image src %v", src)
+				GetLogEntry(ctx).Infof("Filtered not allowed url in image src %v", src)
 				retErr = &MediaUrlErr{src, "image src"}
 			}
 		}
@@ -245,13 +244,13 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
 			if srcExists && !utils.ContainsUrl(wlArr, src) {
-				Logger.Infof("Filtered not allowed url in video src %v", src)
+				GetLogEntry(ctx).Infof("Filtered not allowed url in video src %v", src)
 				retErr = &MediaUrlErr{src, "video src"}
 			}
 
 			poster, posterExists := maybeVideo.Attr("poster")
 			if posterExists && !utils.ContainsUrl(wlArr, poster) {
-				Logger.Infof("Filtered not allowed url in video poster %v", poster)
+				GetLogEntry(ctx).Infof("Filtered not allowed url in video poster %v", poster)
 				retErr = &MediaUrlErr{src, "video poster"}
 			}
 		}
@@ -265,7 +264,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 		if maybeIframe != nil {
 			src, exists := maybeIframe.Attr("src")
 			if exists && !utils.ContainsUrl(iframeWlArr, src) {
-				Logger.Infof("Filtered not allowed url in iframe src %v", src)
+				GetLogEntry(ctx).Infof("Filtered not allowed url in iframe src %v", src)
 				retErr = &MediaUrlErr{src, "iframe src"}
 			}
 		}
@@ -279,7 +278,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 		if maybeImage != nil {
 			src, exists := maybeImage.Attr("src")
 			if exists && !utils.ContainsUrl(wlArr, src) {
-				Logger.Infof("Filtered not allowed url in audio src %v", src)
+				GetLogEntry(ctx).Infof("Filtered not allowed url in audio src %v", src)
 				retErr = &MediaUrlErr{src, "audio src"}
 			}
 		}
@@ -291,7 +290,7 @@ func TrimAmdSanitizeMessage(policy *services.SanitizerPolicy, input string) (str
 	return sanitizedHtml, retErr
 }
 
-func TrimAmdSanitizeAvatar(policy *services.SanitizerPolicy, input null.String) (null.String) {
+func TrimAmdSanitizeAvatar(ctx context.Context, policy *services.SanitizerPolicy, input null.String) (null.String) {
 	if input.IsZero() {
 		return input
 	}
@@ -308,7 +307,7 @@ func TrimAmdSanitizeAvatar(policy *services.SanitizerPolicy, input null.String) 
 	wlArr := strings.Split(whitelist, ",")
 
 	if !utils.ContainsUrl(wlArr, sanitizedHtml) {
-		Logger.Infof("Filtered chat avatar not allowed url in chat avatar src %v", sanitizedHtml)
+		GetLogEntry(ctx).Infof("Filtered chat avatar not allowed url in chat avatar src %v", sanitizedHtml)
 		return null.StringFromPtr(nil)
 	}
 
@@ -317,7 +316,7 @@ func TrimAmdSanitizeAvatar(policy *services.SanitizerPolicy, input null.String) 
 
 func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {
 	if err := v.Validate(); err != nil {
-		logger.GetLogEntry(c.Request().Context()).Debugf("Error during validation: %v", err)
+		GetLogEntry(c.Request().Context()).Debugf("Error during validation: %v", err)
 		return false, c.JSON(http.StatusBadRequest, err)
 	}
 	return true, nil

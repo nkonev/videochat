@@ -264,7 +264,7 @@ func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, u
 
 func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User, co db.CommonOperations) {
 	if user == nil {
-		Logger.Errorf("user cannot be null")
+		GetLogEntry(ctx).Errorf("user cannot be null")
 		return
 	}
 
@@ -284,7 +284,7 @@ func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User
 		return internalErr
 	})
 	if err != nil {
-		Logger.Errorf("Error during get co-chatters for %v, error: %v", user.Id, err)
+		GetLogEntry(ctx).Errorf("Error during get co-chatters for %v, error: %v", user.Id, err)
 	}
 }
 

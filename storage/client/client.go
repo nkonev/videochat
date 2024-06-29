@@ -61,11 +61,11 @@ func NewChatAccessClient() *RestClient {
 	}
 }
 
-func (h *RestClient) CheckAccess(userId *int64, chatId int64, c context.Context) (bool, error) {
-	return h.CheckAccessExtended(userId, chatId, utils.MessageIdNonExistent, "", c)
+func (h *RestClient) CheckAccess(c context.Context, userId *int64, chatId int64) (bool, error) {
+	return h.CheckAccessExtended(c, userId, chatId, utils.MessageIdNonExistent, "")
 }
 
-func (h *RestClient) CheckAccessExtended(userId *int64, chatId int64, messageId int64, fileId string, c context.Context) (bool, error) {
+func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatId int64, messageId int64, fileId string) (bool, error) {
 	var url0 string
 
 	parsed, err := url.Parse(fmt.Sprintf("%v%v", h.baseUrl, h.accessPath))
@@ -115,7 +115,7 @@ func (h *RestClient) CheckAccessExtended(userId *int64, chatId int64, messageId 
 	}
 }
 
-func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId int64, c context.Context) {
+func (h *RestClient) RemoveFileItem(c context.Context, chatId int64, fileItemUuid string, userId int64) {
 	fullUrl := fmt.Sprintf("%v%v?chatId=%v&fileItemUuid=%v&userId=%v", h.baseUrl, h.removeFileItemPath, chatId, fileItemUuid, userId)
 
 	parsedUrl, err := url.Parse(fullUrl)
@@ -148,7 +148,7 @@ func (h *RestClient) RemoveFileItem(chatId int64, fileItemUuid string, userId in
 
 }
 
-func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
+func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.aaaBaseUrl + h.aaaGetUsersUrl
 
@@ -211,7 +211,7 @@ type ChatExists struct {
 }
 
 
-func (h *RestClient) CheckIsChatExists(chatIds []int64, c context.Context) (*[]ChatExists, error) {
+func (h *RestClient) CheckIsChatExists(c context.Context, chatIds []int64) (*[]ChatExists, error) {
 
 	var chatIdsString []string
 	for _, chatIdInt := range chatIds {
@@ -265,7 +265,7 @@ func (h *RestClient) CheckIsChatExists(chatIds []int64, c context.Context) (*[]C
 	return resultMap, nil
 }
 
-func (h *RestClient) GetChatParticipantIdsByPage(chatId int64, c context.Context, page, size int) ([]int64, error) {
+func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64, page, size int) ([]int64, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.baseUrl + h.chatParticipantIdsPath
 
@@ -319,7 +319,7 @@ func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, cons
 	var lastError error
 	shouldContinue := true
 	for page := 0; shouldContinue; page++ {
-		portion, err := h.GetChatParticipantIdsByPage(chatId, c, page, utils.DefaultSize)
+		portion, err := h.GetChatParticipantIdsByPage(c, chatId, page, utils.DefaultSize)
 		if len(portion) < utils.DefaultSize {
 			shouldContinue = false
 		}

@@ -48,7 +48,7 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 
 	err := db.Transact(srv.dbR, func(tx *db.Tx) error {
 		return tx.IterateOverAllParticipantIds(func(participantIds []int64) error {
-			existResponse, err := srv.restClient.CheckAreUsersExists(participantIds, c)
+			existResponse, err := srv.restClient.CheckAreUsersExists(c, participantIds)
 			if err != nil {
 				logger.GetLogEntry(c).Errorf("Got error getting existResponse %v", err)
 				return nil

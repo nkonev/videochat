@@ -64,7 +64,7 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 	}
 }
 
-func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) (bool, error) {
+func (h *RestClient) CheckAccess(c context.Context, userId int64, chatId int64) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.chatBaseUrl, h.accessPath, userId, chatId)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -94,7 +94,7 @@ func (h *RestClient) CheckAccess(userId int64, chatId int64, c context.Context) 
 	}
 }
 
-func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (bool, error) {
+func (h *RestClient) IsAdmin(c context.Context, userId int64, chatId int64) (bool, error) {
 	url := fmt.Sprintf("%v%v?userId=%v&chatId=%v", h.chatBaseUrl, h.isAdminPath, userId, chatId)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -124,7 +124,7 @@ func (h *RestClient) IsAdmin(userId int64, chatId int64, c context.Context) (boo
 	}
 }
 
-func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
+func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.aaaBaseUrl + h.aaaGetUsersUrl
 
@@ -181,7 +181,7 @@ func (h *RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	return *users, nil
 }
 
-func (h *RestClient) DoesParticipantBelongToChat(chatId int64, userIds []int64, c context.Context) ([]*dto.ParticipantBelongsToChat, error) {
+func (h *RestClient) DoesParticipantBelongToChat(c context.Context, chatId int64, userIds []int64) ([]*dto.ParticipantBelongsToChat, error) {
 
 	if len(userIds) == 0 {
 		return make([]*dto.ParticipantBelongsToChat, 0), nil
@@ -243,7 +243,7 @@ func (h *RestClient) DoesParticipantBelongToChat(chatId int64, userIds []int64, 
 	return users.Users, nil
 }
 
-func (h *RestClient) GetChatParticipantIdsByPage(chatId int64, c context.Context, page, size int) ([]int64, error) {
+func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64, page, size int) ([]int64, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.chatBaseUrl + h.chatParticipantIdsPath
 
@@ -293,11 +293,11 @@ func (h *RestClient) GetChatParticipantIdsByPage(chatId int64, c context.Context
 	return *userIds, nil
 }
 
-func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context, consumer func(participantIds []int64) error) (error) {
+func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, consumer func(participantIds []int64) error) (error) {
 	var lastError error
 	shouldContinue := true
 	for page := 0; shouldContinue; page++ {
-		portion, err := h.GetChatParticipantIdsByPage(chatId, c, page, utils.DefaultSize)
+		portion, err := h.GetChatParticipantIdsByPage(c, chatId, page, utils.DefaultSize)
 		if len(portion) < utils.DefaultSize {
 			shouldContinue = false
 		}
@@ -316,7 +316,7 @@ func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context, cons
 	return lastError
 }
 
-func (h *RestClient) GetChatNameForInvite(chatId int64, behalfUserId int64, participantIds []int64, c context.Context) ([]*dto.ChatName, error) {
+func (h *RestClient) GetChatNameForInvite(c context.Context, chatId int64, behalfUserId int64, participantIds []int64) ([]*dto.ChatName, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.chatBaseUrl + h.chatInviteNamePath
 
@@ -379,7 +379,7 @@ type S3Request struct {
 	OwnerId  int64  `json:"ownerId"`
 }
 
-func (h *RestClient) GetS3(filename string, chatId int64, userId int64, c context.Context) (*dto.S3Response, error) {
+func (h *RestClient) GetS3(c context.Context, filename string, chatId int64, userId int64) (*dto.S3Response, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.storageBaseUrl + h.storageS3Path
 
@@ -446,7 +446,7 @@ func (h *RestClient) GetS3(filename string, chatId int64, userId int64, c contex
 	return ret, nil
 }
 
-func (h *RestClient) GetBasicChatInfo(chatId int64, userId int64, c context.Context) (*dto.BasicChatDto, error) {
+func (h *RestClient) GetBasicChatInfo(c context.Context, chatId int64, userId int64) (*dto.BasicChatDto, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := h.chatBaseUrl + h.chatBasicInfoPath + "/" + utils.Int64ToString(chatId) + "?userId=" + utils.Int64ToString(userId)
 

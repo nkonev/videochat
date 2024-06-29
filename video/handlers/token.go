@@ -35,7 +35,7 @@ func (h *TokenHandler) GetTokenHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)

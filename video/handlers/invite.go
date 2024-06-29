@@ -8,7 +8,6 @@ import (
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	"nkonev.name/video/dto"
-	"nkonev.name/video/logger"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
@@ -48,7 +47,7 @@ func NewInviteHandler(
 func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		Logger.Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -68,7 +67,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 	}
 
 	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := vh.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -79,7 +78,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 		return c.NoContent(code)
 	}
 
-	basicChatInfo, err := vh.chatClient.GetBasicChatInfo(chatId, userPrincipalDto.UserId, c.Request().Context()) // tet-a-tet
+	basicChatInfo, err := vh.chatClient.GetBasicChatInfo(c.Request().Context(), chatId, userPrincipalDto.UserId) // tet-a-tet
 	if err != nil {
 		return err
 	}
@@ -93,7 +92,7 @@ func (vh *InviteHandler) ProcessCallInvitation(c echo.Context) error {
 
 func (vh *InviteHandler) checkAccessOfAnotherUser(ctx context.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) (bool, int) {
 	// check participant's access to chat
-	if ok, err := vh.chatClient.CheckAccess(callee, chatId, ctx); err != nil {
+	if ok, err := vh.chatClient.CheckAccess(ctx, callee, chatId); err != nil {
 		return false, http.StatusInternalServerError
 	} else if !ok {
 		return false, http.StatusUnauthorized
@@ -105,7 +104,7 @@ func (vh *InviteHandler) checkAccessOfAnotherUser(ctx context.Context, callee in
 func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult, tetATet bool) int {
 	status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), callee)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -118,7 +117,7 @@ func (vh *InviteHandler) addToCalling(c echo.Context, callee int64, chatId int64
 
 	err = vh.dialRedisRepository.AddToDialList(c.Request().Context(), callee, chatId, userPrincipalDto.UserId, services.CallStatusInviting, userPrincipalDto.Avatar, tetATet)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -132,7 +131,7 @@ func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId 
 
 	status, _, _, _, ownerId, ownerAvatar, tetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), callee)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -153,7 +152,7 @@ func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId 
 func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		Logger.Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -163,7 +162,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	}
 
 	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := vh.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -172,7 +171,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	// during entering into dial. Returns status: true which means that frontend should (initially) draw the calling.
 	// Now it used only in tet-a-tet.
 	// If we are in the tet-a-tet
-	basicChatInfo, err := vh.chatClient.GetBasicChatInfo(chatId, userPrincipalDto.UserId, c.Request().Context()) // tet-a-tet
+	basicChatInfo, err := vh.chatClient.GetBasicChatInfo(c.Request().Context(), chatId, userPrincipalDto.UserId) // tet-a-tet
 	if err != nil {
 		return err
 	}
@@ -182,7 +181,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 
 	maybeStatus, _, _, _, maybeOwnerId, maybeOwnerAvatar, maybeTetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -201,15 +200,15 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		// in this block we start calling in case valid tet-a-tet
 		if basicChatInfo.TetATet && len(usersOfChat) == 2 {
 			if err != nil {
-				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+				GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 			var oppositeUser *int64 = utils.GetOppositeUser(usersOfChat, userPrincipalDto.UserId)
 
 			// uniq users by userId
-			usersOfVideo, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+			usersOfVideo, err := vh.userService.GetVideoParticipants(c.Request().Context(), chatId)
 			if err != nil {
-				logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+				GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
@@ -250,7 +249,7 @@ func (vh *InviteHandler) removePrevious(c echo.Context, userId int64, removeUser
 func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		Logger.Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -260,7 +259,7 @@ func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 	}
 
 	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := vh.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -268,7 +267,7 @@ func (vh *InviteHandler) ProcessCancelCall(c echo.Context) error {
 
 	_, _, _, _, ownerId, ownerAvatar, tetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -290,13 +289,13 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, ownerId int64, ow
 
 		err = vh.setUserStatus(c.Request().Context(), userId, chatId, callStatus) // here
 		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		}
 
 		vh.sendEvents(c, chatId, []int64{userId}, callStatus, ownerId, ownerAvatar, tetATet)
 	}
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -347,7 +346,7 @@ func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64,
 func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		Logger.Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -357,7 +356,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 	}
 
 	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := vh.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -365,7 +364,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 
 	_, _, _, _, ownerId, ownerAvatar, tetATet, err := vh.dialRedisRepository.GetUserCallState(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		logger.GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting ownerId: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -374,13 +373,13 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		// callees of me
 		redisUsersOfDial, err := vh.dialRedisRepository.GetUserCalls(c.Request().Context(), userPrincipalDto.UserId)
 		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		videoParticipants, err := vh.userService.GetVideoParticipants(chatId, c.Request().Context())
+		videoParticipants, err := vh.userService.GetVideoParticipants(c.Request().Context(), chatId)
 		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
@@ -437,7 +436,7 @@ func (vh *InviteHandler) getUsersWithStatuses(c echo.Context, missedUsers []int6
 	for _, mu := range missedUsers {
 		status, err := vh.dialRedisRepository.GetUserCallStatus(c.Request().Context(), mu)
 		if err != nil {
-			logger.GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error %v", err)
 			continue
 		}
 		missedUsersMap[mu] = status
@@ -452,8 +451,8 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 	}
 
 	if len(missedUsers) > 0 {
-		if chatNames, err := vh.chatClient.GetChatNameForInvite(chatId, userPrincipalDto.UserId, missedUsersList, ctx); err != nil {
-			logger.GetLogEntry(ctx).Errorf("Error %v", err)
+		if chatNames, err := vh.chatClient.GetChatNameForInvite(ctx, chatId, userPrincipalDto.UserId, missedUsersList); err != nil {
+			GetLogEntry(ctx).Errorf("Error %v", err)
 		} else {
 			for _, chatName := range chatNames {
 
@@ -473,7 +472,7 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 
 					err = vh.notificationPublisher.Publish(ctx, missedCall)
 					if err != nil {
-						logger.GetLogEntry(ctx).Errorf("Error %v", err)
+						GetLogEntry(ctx).Errorf("Error %v", err)
 					}
 				}
 			}
@@ -485,7 +484,7 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		Logger.Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -495,7 +494,7 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 	}
 
 	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := vh.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -509,7 +508,7 @@ func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error 
 func (vh *InviteHandler) GetInvitationStatus(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		Logger.Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -520,7 +519,7 @@ func (vh *InviteHandler) GetInvitationStatus(c echo.Context) error {
 
 	var inviteName string
 	if userCallState != services.CallStatusNotFound {
-		inviteNames, err := vh.chatClient.GetChatNameForInvite(chatId, userCallOwnerId, []int64{userPrincipalDto.UserId}, c.Request().Context())
+		inviteNames, err := vh.chatClient.GetChatNameForInvite(c.Request().Context(), chatId, userCallOwnerId, []int64{userPrincipalDto.UserId})
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Error(err, "Failed during getting chat invite names")
 			return c.NoContent(http.StatusInternalServerError)

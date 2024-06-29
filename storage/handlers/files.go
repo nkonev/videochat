@@ -127,7 +127,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -210,7 +210,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 		u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
 		if err != nil {
-			Logger.Errorf("Error during getting downlad url %v", err)
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
 			return err
 		}
 
@@ -221,7 +221,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 		presignedUrls = append(presignedUrls, PresignedUrl{stringUrl, i})
 	}
-	existingCount := h.getCountFilesInFileItem(bucketName, filenameChatPrefix)
+	existingCount := h.getCountFilesInFileItem(c.Request().Context(), bucketName, filenameChatPrefix)
 
 	return c.JSON(http.StatusOK, &utils.H{
 		"status": "ready",
@@ -256,7 +256,7 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -312,7 +312,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -366,7 +366,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *FilesHandler) getCountFilesInFileItem(bucketName string, filenameChatPrefix string) int {
+func (h *FilesHandler) getCountFilesInFileItem(ctx context.Context, bucketName string, filenameChatPrefix string) int {
 	var count = 0
 	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
@@ -374,7 +374,7 @@ func (h *FilesHandler) getCountFilesInFileItem(bucketName string, filenameChatPr
 	})
 	count = len(objectsNew)
 	for oi := range objectsNew {
-		Logger.Debugf("Processing %v", oi.Key)
+		GetLogEntry(ctx).Debugf("Processing %v", oi.Key)
 		count++
 	}
 	return count
@@ -395,7 +395,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -419,7 +419,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 
 	filter := h.getFilterFunction(searchString)
 
-	list, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -458,7 +458,7 @@ func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -472,7 +472,7 @@ func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 
 	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId)
 
-	list, count, err := h.filesService.GetListFilesItemUuids(bucketName, filenameChatPrefix, c.Request().Context(), filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesItemUuids(c.Request().Context(), bucketName, filenameChatPrefix, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -500,7 +500,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -516,7 +516,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	belongs, err := h.checkFileBelongsToUser(objectInfo, chatId, userPrincipalDto, false)
+	belongs, err := h.checkFileBelongsToUser(c.Request().Context(), objectInfo, chatId, userPrincipalDto, false)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking belong object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -547,7 +547,7 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 		Recursive:    true,
 	})
 	for objInfo := range objects {
-		b, err := h.checkFileBelongsToUser(objInfo, chatId, userPrincipalDto, true)
+		b, err := h.checkFileBelongsToUser(c.Request().Context(), objInfo, chatId, userPrincipalDto, true)
 		if err != nil {
 			return false, err
 		}
@@ -558,20 +558,20 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 	return true, nil
 }
 
-func (h *FilesHandler) checkFileBelongsToUser(objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
+func (h *FilesHandler) checkFileBelongsToUser(ctx context.Context, objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
 	gotChatId, gotOwnerId, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
 	if err != nil {
-		Logger.Errorf("Error deserializeMetadata: %v", err)
+		GetLogEntry(ctx).Errorf("Error deserializeMetadata: %v", err)
 		return false, err
 	}
 
 	if gotChatId != chatId {
-		Logger.Infof("Wrong chatId: expected %v but got %v", chatId, gotChatId)
+		GetLogEntry(ctx).Infof("Wrong chatId: expected %v but got %v", chatId, gotChatId)
 		return false, nil
 	}
 
 	if gotOwnerId != userPrincipalDto.UserId {
-		Logger.Infof("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
+		GetLogEntry(ctx).Infof("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
 		return false, nil
 	}
 	return true, nil
@@ -676,7 +676,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -752,7 +752,7 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 	}
 	fileId := bindTo.FileId
 
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -797,7 +797,7 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context()); err != nil {
+	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -894,7 +894,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -908,7 +908,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(requestedMediaType)
 
-	items, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -937,7 +937,7 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -951,7 +951,7 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(requestedMediaType)
 
-	_, count, err := h.filesService.GetListFilesInFileItem(userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, c.Request().Context(), filter, false, 10, 0)
+	_, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, 10, 0)
 	if err != nil {
 		return err
 	}
@@ -993,7 +993,7 @@ func (h *FilesHandler) FilterEmbed(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1077,7 +1077,7 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1124,7 +1124,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	messageId := getMessageIdPublic(c)
 
-	belongs, err := h.restClient.CheckAccessExtended(nil, chatId, messageId, fileId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1175,7 +1175,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccess(&userPrincipalDto.UserId, chatId, c.Request().Context())
+	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1244,7 +1244,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 
 		messageId := getMessageIdPublic(c)
 
-		belongs, err := h.restClient.CheckAccessExtended(nil, chatId, messageId, fileId, c.Request().Context())
+		belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 			return c.NoContent(http.StatusInternalServerError)

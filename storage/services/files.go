@@ -36,15 +36,15 @@ func NewFilesService(
 }
 
 func (h *FilesService) GetListFilesInFileItem(
+	c context.Context,
 	behalfUserId int64,
 	bucket, filenameChatPrefix string,
 	chatId int64,
-	c context.Context,
 	filter func(*minio.ObjectInfo) bool,
 	requestOwners bool,
 	size, offset int,
 ) ([]*dto.FileInfoDto, int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -110,11 +110,11 @@ type GroupedByFileItemUuid struct {
 }
 
 func (h *FilesService) GetListFilesItemUuids(
-	bucket, filenameChatPrefix string,
 	c context.Context,
+	bucket, filenameChatPrefix string,
 	size, offset int,
 ) ([]*GroupedByFileItemUuid, int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -168,7 +168,7 @@ func (h *FilesService) GetListFilesItemUuids(
 }
 
 func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) (int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), h.minioConfig.Files, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(ctx, h.minioConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
 	})
@@ -245,13 +245,13 @@ func (h *FilesService) getPublicUrl(public bool, fileName string) (*string, erro
 }
 
 func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
-	previewUrl := h.GetPreviewUrlSmart(objInfo.Key)
+	previewUrl := h.GetPreviewUrlSmart(c, objInfo.Key)
 
 	metadata := objInfo.UserMetadata
 
 	_, fileOwnerId, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
-		Logger.Errorf("Error get metadata: %v", err)
+		GetLogEntry(c).Errorf("Error get metadata: %v", err)
 		return nil, err
 	}
 
@@ -259,19 +259,19 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 
 	public, err := DeserializeTags(tagging)
 	if err != nil {
-		Logger.Errorf("Error get tags: %v", err)
+		GetLogEntry(c).Errorf("Error get tags: %v", err)
 		return nil, err
 	}
 
 	publicUrl, err := h.getPublicUrl(public, objInfo.Key)
 	if err != nil {
-		Logger.Errorf("Error get public url: %v", err)
+		GetLogEntry(c).Errorf("Error get public url: %v", err)
 		return nil, err
 	}
 
 	downloadUrl, err := h.GetConstantDownloadUrl(objInfo.Key)
 	if err != nil {
-		Logger.Errorf("Error during getting downlad url %v", err)
+		GetLogEntry(c).Errorf("Error during getting downlad url %v", err)
 		return nil, err
 	}
 
@@ -308,14 +308,14 @@ const Media_video = "video"
 
 const Media_audio = "audio"
 
-func (h *FilesService) GetPreviewUrlSmart(aKey string) *string {
+func (h *FilesService) GetPreviewUrlSmart(c context.Context, aKey string) *string {
 	recognizedType := ""
 	if utils.IsVideo(aKey) {
 		recognizedType = Media_video
-		return h.getPreviewUrl(aKey, recognizedType)
+		return h.getPreviewUrl(c, aKey, recognizedType)
 	} else if utils.IsImage(aKey) {
 		recognizedType = Media_image
-		return h.getPreviewUrl(aKey, recognizedType)
+		return h.getPreviewUrl(c, aKey, recognizedType)
 	}
 	return nil
 }
@@ -337,7 +337,7 @@ func GetType(itemUrl string) *string {
 	}
 }
 
-func (h *FilesService) getPreviewUrl(aKey string, requestedMediaType string) *string {
+func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMediaType string) *string {
 	var previewUrl *string = nil
 
 	respUrl := url.URL{}
@@ -352,7 +352,7 @@ func (h *FilesService) getPreviewUrl(aKey string, requestedMediaType string) *st
 		query := respUrl.Query()
 		query.Set(utils.FileParam, previewMinioKey)
 
-		obj, err := h.minio.StatObject(context.Background(), h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
+		obj, err := h.minio.StatObject(c, h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
 		if err == nil {
 			// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
 			query.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
@@ -363,7 +363,7 @@ func (h *FilesService) getPreviewUrl(aKey string, requestedMediaType string) *st
 		tmp := respUrl.String()
 		previewUrl = &tmp
 	} else {
-		Logger.Errorf("Unknown requested type %v", requestedMediaType)
+		GetLogEntry(c).Errorf("Unknown requested type %v", requestedMediaType)
 	}
 
 	return previewUrl
@@ -525,7 +525,7 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}
-	users, err := restClient.GetUsers(userIds, c)
+	users, err := restClient.GetUsers(c, userIds)
 	if err != nil {
 		return nil, err
 	}

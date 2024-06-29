@@ -57,7 +57,7 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 		_, fileOwnerId, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
 		if err != nil {
-			Logger.Errorf("Error get metadata: %v", err)
+			GetLogEntry(ctx).Errorf("Error get metadata: %v", err)
 			return nil, err
 		}
 

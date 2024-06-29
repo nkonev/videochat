@@ -40,7 +40,7 @@ func NewRestClient() *RestClient {
 	return &RestClient{client, trcr}
 }
 
-func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, error) {
+func (rc RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, error) {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.getUsers")
@@ -98,7 +98,7 @@ func (rc RestClient) GetUsers(userIds []int64, c context.Context) ([]*dto.User, 
 	return *users, nil
 }
 
-func (rc RestClient) GetOnlines(userIds []int64, c context.Context) ([]*dto.UserOnline, error) {
+func (rc RestClient) GetOnlines(c context.Context, userIds []int64) ([]*dto.UserOnline, error) {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.getOnlines")
@@ -169,7 +169,7 @@ type searchUsersResponseDto struct {
 	Count int         `json:"count"`
 }
 
-func (rc RestClient) SearchGetUsers(searchString string, including bool, ids []int64, page, size int, c context.Context) ([]*dto.User, int, error) {
+func (rc RestClient) SearchGetUsers(c context.Context, searchString string, including bool, ids []int64, page, size int) ([]*dto.User, int, error) {
 	contentType := "application/json;charset=UTF-8"
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.searchUsers")
@@ -245,7 +245,7 @@ type UserExists struct {
 }
 
 
-func (rc RestClient) CheckAreUsersExists(userIds []int64, c context.Context) (*[]UserExists, error) {
+func (rc RestClient) CheckAreUsersExists(c context.Context, userIds []int64) (*[]UserExists, error) {
 
 	var chatIdsString []string
 	for _, chatIdInt := range userIds {
