@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"nkonev.name/storage/logger"
+	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
@@ -23,7 +23,7 @@ func ActualizePreviewsScheduler(
 	service *ActualizePreviewsService,
 ) *ActualizePreviewsTask {
 	var interv = viper.GetDuration("schedulers.actualizePreviewsTask.interval")
-	logger.Logger.Infof("Created ActualizePreviewsScheduler with interval %v", interv)
+	Logger.Infof("Created ActualizePreviewsScheduler with interval %v", interv)
 	return &ActualizePreviewsTask{&gointerlock.GoInterval{
 		Name:           "actualizePreviewsTask",
 		Interval:       interv,
@@ -47,63 +47,63 @@ func (srv *ActualizePreviewsService) doJob() {
 }
 
 func (srv *ActualizePreviewsService) processFiles(c context.Context, filenameChatPrefix string) {
-	logger.Logger.Infof("Starting actualize previews job")
+	GetLogEntry(c).Infof("Starting actualize previews job")
 
 	// create preview for files if need
-	logger.Logger.Infof("Checking for missing previews")
+	GetLogEntry(c).Infof("Checking for missing previews")
 	var fileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
 	})
 	for fileOjInfo := range fileObjects {
 		// here in minio 'chat/108/'
-		logger.Logger.Debugf("Start processing minio key '%v'", fileOjInfo.Key)
+		GetLogEntry(c).Debugf("Start processing minio key '%v'", fileOjInfo.Key)
 		if utils.IsVideo(fileOjInfo.Key) {
 			previewToCheck := utils.SetVideoPreviewExtension(fileOjInfo.Key)
 			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
 			if err != nil {
-				logger.Logger.Infof("Create preview for missing %v", fileOjInfo.Key)
+				GetLogEntry(c).Infof("Create preview for missing %v", fileOjInfo.Key)
 				srv.previewService.CreatePreview(c, fileOjInfo.Key)
 			}
 		} else if utils.IsImage(fileOjInfo.Key) {
 			previewToCheck := utils.SetImagePreviewExtension(fileOjInfo.Key)
 			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
 			if err != nil {
-				logger.Logger.Infof("Create preview for missing %v", fileOjInfo.Key)
+				GetLogEntry(c).Infof("Create preview for missing %v", fileOjInfo.Key)
 				srv.previewService.CreatePreview(c, fileOjInfo.Key)
 			}
 		}
 
 	}
-	logger.Logger.Infof("Checking for missing previews finished")
+	GetLogEntry(c).Infof("Checking for missing previews finished")
 
 	// remove previews of removed files
-	logger.Logger.Infof("Checking for excess previews")
+	GetLogEntry(c).Infof("Checking for excess previews")
 	var previewObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.FilesPreview, minio.ListObjectsOptions{
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
 		WithMetadata: true,
 	})
 	for previewOjInfo := range previewObjects {
-		logger.Logger.Debugf("Start processing minio key '%v'", previewOjInfo.Key)
+		GetLogEntry(c).Debugf("Start processing minio key '%v'", previewOjInfo.Key)
 		originalKey, err := services.GetOriginalKeyFromMetadata(previewOjInfo.UserMetadata, true)
 		if err != nil {
-			logger.Logger.Errorf("Error during getting original key %v", err)
+			GetLogEntry(c).Errorf("Error during getting original key %v", err)
 			continue
 		}
 		_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, originalKey, minio.StatObjectOptions{})
 		if err != nil {
-			logger.Logger.Infof("Will remove preview for %v", originalKey)
+			GetLogEntry(c).Infof("Will remove preview for %v", originalKey)
 			err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.FilesPreview, previewOjInfo.Key, minio.RemoveObjectOptions{})
 			if err != nil {
-				logger.Logger.Errorf("Error during removing preview key %v", err)
+				GetLogEntry(c).Errorf("Error during removing preview key %v", err)
 				continue
 			}
 		}
 	}
-	logger.Logger.Infof("Checking for excess previews finished")
+	GetLogEntry(c).Infof("Checking for excess previews finished")
 
-	logger.Logger.Infof("End of actualize previews job")
+	GetLogEntry(c).Infof("End of actualize previews job")
 }
 
 func NewActualizePreviewsService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizePreviewsService {
