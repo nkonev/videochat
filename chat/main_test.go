@@ -115,7 +115,7 @@ func waitForAaaEmu() {
 	restClient := client.NewRestClient()
 	i := 0
 	for ; i <= 30; i++ {
-		_, err := restClient.GetUsers([]int64{0}, context.Background())
+		_, err := restClient.GetUsers(context.Background(), []int64{0})
 		if err != nil {
 			Logger.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
