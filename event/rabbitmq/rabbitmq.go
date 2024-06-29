@@ -92,7 +92,7 @@ func DeserializeValues(input string) context.Context {
 
 	err := json.Unmarshal([]byte(input), &carrier)
 	if err != nil {
-		Logger.Infof("Unable to marshall")
+		Logger.Infof("Unable to unmarshall")
 		return context.Background()
 	}
 
