@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
-	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
@@ -15,12 +17,16 @@ import (
 type Events struct {
 	rabbitEventPublisher        *producer.RabbitEventsPublisher
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
+	tr trace.Tracer
 }
 
 func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher) *Events {
+	tr := otel.Tracer("event")
+
 	return &Events{
 		rabbitEventPublisher:        rabbitEventPublisher,
 		rabbitNotificationPublisher: rabbitNotificationPublisher,
+		tr: tr,
 	}
 }
 
@@ -31,62 +37,65 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *Events) NotifyAboutNewChat(c echo.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	chatNotifyCommon(userIds, not, c, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutChangeChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	chatNotifyCommon(userIds, not, c, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(c echo.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	chatNotifyCommon([]int64{userId}, not, c, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutDeleteChat(c echo.Context, chatId int64, userIds []int64, tx *db.Tx) {
+func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, userIds []int64, tx *db.Tx) {
 	chatDto := dto.ChatDtoWithAdmin{
 		BaseChatDto: dto.BaseChatDto{
 			Id: chatId,
 		},
 	}
-	chatNotifyCommon(userIds, not, c, &chatDto, "chat_deleted", false, false, tx, nil)
+	not.chatNotifyCommon(ctx, userIds, &chatDto, "chat_deleted", false, false, tx, nil)
 }
 
 /**
  * isSingleParticipant should be taken from responseDto or count. using len(participants) where participants are a portion from Iterate...() is incorrect because we can get only one user in the last iteration
  */
-func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	GetLogEntry(c.Request().Context()).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
+func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	GetLogEntry(ctx).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
+
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
 
 	if eventType == "chat_deleted" {
 		for _, participantId := range userIds {
-			err := not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+			err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 				UserId:         participantId,
 				EventType:      eventType,
 				ChatDeletedDto: &dto.ChatDeletedDto{Id: newChatDto.Id},
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 	} else {
 
 		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, newChatDto.Id)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during get unread messages: %v", err)
+			GetLogEntry(ctx).Errorf("error during get unread messages: %v", err)
 			return
 		}
 
 		isChatPinnedMap, err := tx.IsChatPinnedBatch(userIds, newChatDto.Id)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during get pinned: %v", err)
+			GetLogEntry(ctx).Errorf("error during get pinned: %v", err)
 			return
 		}
 
 		for _, participantId := range userIds {
 			var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
 			if err := deepcopy.Copy(copied, newChatDto); err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+				GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
@@ -99,33 +108,37 @@ func chatNotifyCommon(userIds []int64, not *Events, c echo.Context, newChatDto *
 				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId, isSingleParticipant)
 			}
 
-			err = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+			err = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 				UserId:           participantId,
 				EventType:        eventType,
 				ChatNotification: copied,
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 	}
 }
 
-func (not *Events) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatId int64, tx *db.Tx) {
+func (not *Events) ChatNotifyMessageCount(ctx context.Context, userIds []int64, chatId int64, tx *db.Tx) {
+	eventType := "chat_unread_messages_changed"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
+	defer messageSpan.End()
+
 	lastUpdated, err := tx.GetChatLastDatetimeChat(chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
+		GetLogEntry(ctx).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
 		return
 	}
 
 	unreadMessagesByUserId, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("error during get GetUnreadMessagesCountBatchByParticipants for chat=%v: %v", chatId, err)
+		GetLogEntry(ctx).Errorf("error during get GetUnreadMessagesCountBatchByParticipants for chat=%v: %v", chatId, err)
 		return
 	}
 
 	for _, participantId := range userIds {
-		GetLogEntry(c.Request().Context()).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
+		GetLogEntry(ctx).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
 
 		payload := &dto.ChatUnreadMessageChanged{
 			ChatId:             chatId,
@@ -133,32 +146,38 @@ func (not *Events) ChatNotifyMessageCount(userIds []int64, c echo.Context, chatI
 			LastUpdateDateTime: lastUpdated,
 		}
 
-		err = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+		err = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 			UserId:                     participantId,
-			EventType:                  "chat_unread_messages_changed",
+			EventType:                  eventType,
 			UnreadMessagesNotification: payload,
 		})
 	}
 }
 
-func (not *Events) NotifyAboutHasNewMessagesChanged(c echo.Context, participantId int64, hasNewMessages bool) {
-	err := not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+func (not *Events) NotifyAboutHasNewMessagesChanged(ctx context.Context, participantId int64, hasNewMessages bool) {
+	eventType := "has_unread_messages_changed"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
+	defer messageSpan.End()
+
+	err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 		UserId:                     participantId,
-		EventType:                  "has_unread_messages_changed",
+		EventType:                  eventType,
 		HasUnreadMessagesChanged:   &dto.HasUnreadMessagesChanged{
 			HasUnreadMessages:      hasNewMessages,
 		},
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 }
 
-func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, not *Events, eventType string, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, eventType string, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("message.%s", eventType))
+	defer messageSpan.End()
 
 	for _, participantId := range userIds {
 		if eventType == "message_deleted" {
-			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 				EventType: eventType,
 				MessageDeletedNotification: &dto.MessageDeletedDto{
 					Id:     message.Id,
@@ -168,47 +187,51 @@ func messageNotifyCommon(c echo.Context, userIds []int64, chatId int64, message 
 				ChatId: chatId,
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		} else {
 			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
 			if err := deepcopy.Copy(copied, message); err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+				GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
 			copied.SetPersonalizedFields(chatRegularParticipantCanPublishMessage, chatAdmins[participantId], participantId)
 
-			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 				EventType:           eventType,
 				MessageNotification: copied,
 				UserId:              participantId,
 				ChatId:              chatId,
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 	}
 }
 
-func (not *Events) NotifyAboutNewMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
-	messageNotifyCommon(c, userIds, chatId, message, not, "message_created", chatRegularParticipantCanPublishMessage, chatAdmins)
+func (not *Events) NotifyAboutNewMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_created", chatRegularParticipantCanPublishMessage, chatAdmins)
 }
 
-func (not *Events) NotifyAboutDeleteMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
-	messageNotifyCommon(c, userIds, chatId, message, not, "message_deleted", false, nil)
+func (not *Events) NotifyAboutDeleteMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
+	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_deleted", false, nil)
 }
 
-func (not *Events) NotifyAboutEditMessage(c echo.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
-	messageNotifyCommon(c, userIds, chatId, message, not, "message_edited", chatRegularParticipantCanPublishMessage, chatAdmins)
+func (not *Events) NotifyAboutEditMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_edited", chatRegularParticipantCanPublishMessage, chatAdmins)
 }
 
-func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *dto.User, co db.CommonOperations) {
+func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, user *dto.User, co db.CommonOperations) {
 	if user == nil {
-		GetLogEntry(c.Request().Context()).Errorf("user cannot be null")
+		GetLogEntry(ctx).Errorf("user cannot be null")
 		return
 	}
+
+	eventType := "user_typing"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
 
 	ut := dto.UserTypingNotification{
 		Login:         user.Login,
@@ -221,20 +244,20 @@ func (not *Events) NotifyAboutMessageTyping(c echo.Context, chatId int64, user *
 				continue
 			}
 
-			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-				EventType:              "user_typing",
+			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+				EventType:              eventType,
 				UserTypingNotification: &ut,
 				UserId:                 participantId,
 				ChatId:                 chatId,
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		GetLogEntry(ctx).Errorf("Error during getting chat participants")
 		return
 	}
 }
@@ -245,12 +268,16 @@ func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User
 		return
 	}
 
+	eventType := "participant_changed"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
+	defer messageSpan.End()
+
 	err := co.IterateOverCoChattedParticipantIds(user.Id, func(participantIds []int64) error {
 		var internalErr error
 		for _, participantId := range participantIds {
-			internalErr = not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+			internalErr = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 				UserId:                  participantId,
-				EventType:               "participant_changed",
+				EventType:               eventType,
 				CoChattedParticipantNotification: user,
 			})
 		}
@@ -261,7 +288,11 @@ func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User
 	}
 }
 
-func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId int64, login, text string, co db.CommonOperations) {
+func (not *Events) NotifyAboutMessageBroadcast(ctx context.Context, chatId, userId int64, login, text string, co db.CommonOperations) {
+	eventType := "user_broadcast"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	ut := dto.MessageBroadcastNotification{
 		Login:  login,
 		UserId: userId,
@@ -270,30 +301,32 @@ func (not *Events) NotifyAboutMessageBroadcast(c echo.Context, chatId, userId in
 
 	err := co.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
-			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-				EventType:                    "user_broadcast",
+			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+				EventType:                    eventType,
 				MessageBroadcastNotification: &ut,
 				UserId:                       participantId,
 				ChatId:                       chatId,
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		GetLogEntry(ctx).Errorf("Error during getting chat participants")
 		return
 	}
-
-
 }
 
-func (not *Events) NotifyAddMention(c echo.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
+func (not *Events) NotifyAddMention(ctx context.Context, userIds []int64, chatId, messageId int64, message string, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
+	eventType := "mention_added"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range userIds {
-		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
-			EventType: "mention_added",
+		err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
+			EventType: eventType,
 			UserId:    participantId,
 			ChatId:    chatId,
 			MentionNotification: &dto.MentionNotification{
@@ -306,16 +339,20 @@ func (not *Events) NotifyAddMention(c echo.Context, userIds []int64, chatId, mes
 			ChatTitle: chatTitle,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 
 }
 
-func (not *Events) NotifyRemoveMention(c echo.Context, userIds []int64, chatId int64, messageId int64) {
+func (not *Events) NotifyRemoveMention(ctx context.Context, userIds []int64, chatId int64, messageId int64) {
+	eventType := "mention_deleted"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range userIds {
-		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
-			EventType: "mention_deleted",
+		err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
+			EventType: eventType,
 			UserId:    participantId,
 			ChatId:    chatId,
 			MentionNotification: &dto.MentionNotification{
@@ -323,15 +360,19 @@ func (not *Events) NotifyRemoveMention(c echo.Context, userIds []int64, chatId i
 			},
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
+func (not *Events) NotifyAddReply(ctx context.Context, reply *dto.ReplyDto, userId *int64, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
 	if userId != nil && *userId != behalfUserId {
-		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
-			EventType:         "reply_added",
+		eventType := "reply_added"
+		ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+		defer messageSpan.End()
+
+		err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
+			EventType:        eventType,
 			UserId:            *userId,
 			ChatId:            reply.ChatId,
 			ReplyNotification: reply,
@@ -341,40 +382,52 @@ func (not *Events) NotifyAddReply(c echo.Context, reply *dto.ReplyDto, userId *i
 			ChatTitle:         chatTitle,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyRemoveReply(c echo.Context, reply *dto.ReplyDto, userId *int64) {
+func (not *Events) NotifyRemoveReply(ctx context.Context, reply *dto.ReplyDto, userId *int64) {
 	if userId != nil {
-		err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
-			EventType:         "reply_deleted",
+		eventType := "reply_deleted"
+		ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+		defer messageSpan.End()
+
+		err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
+			EventType:         eventType,
 			UserId:            *userId,
 			ChatId:            reply.ChatId,
 			ReplyNotification: reply,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyAboutNewParticipants(c echo.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin) {
+func (not *Events) NotifyAboutNewParticipants(ctx context.Context, userIds []int64, chatId int64, users []*dto.UserWithAdmin) {
+	eventType := "participant_added"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range userIds {
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:    "participant_added",
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+			EventType:    eventType,
 			UserId:       participantId,
 			ChatId:       chatId,
 			Participants: &users,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyAboutDeleteParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToRemove []int64) {
+func (not *Events) NotifyAboutDeleteParticipants(ctx context.Context, userIds []int64, chatId int64, participantIdsToRemove []int64) {
+	eventType := "participant_deleted"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range userIds {
 
 		var pseudoUsers = []*dto.UserWithAdmin{}
@@ -383,33 +436,37 @@ func (not *Events) NotifyAboutDeleteParticipants(c echo.Context, userIds []int64
 				User: dto.User{Id: participantIdToRemove},
 			})
 		}
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:    "participant_deleted",
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+			EventType:    eventType,
 			UserId:       participantId,
 			ChatId:       chatId,
 			Participants: &pseudoUsers,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyAboutChangeParticipants(c echo.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin) {
+func (not *Events) NotifyAboutChangeParticipants(ctx context.Context, userIds []int64, chatId int64, participantIdsToChange []*dto.UserWithAdmin) {
+	eventType := "participant_edited"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range userIds {
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:    "participant_edited",
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+			EventType:    eventType,
 			UserId:       participantId,
 			ChatId:       chatId,
 			Participants: &participantIdsToChange,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
+func (not *Events) NotifyAboutPromotePinnedMessage(ctx context.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
 
 	var eventType = ""
 	if promote {
@@ -418,21 +475,24 @@ func (not *Events) NotifyAboutPromotePinnedMessage(c echo.Context, chatId int64,
 		eventType = "pinned_message_unpromote"
 	}
 
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range participantIds {
 
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 			EventType:                  eventType,
 			PromoteMessageNotification: msg,
 			UserId:                     participantId,
 			ChatId:                     chatId,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg *dto.PublishedMessageEvent, publish bool, participantIds []int64, regularParticipantCanPublishMessage bool, areAdmins map[int64]bool) {
+func (not *Events) NotifyAboutPublishedMessage(ctx context.Context, chatId int64, msg *dto.PublishedMessageEvent, publish bool, participantIds []int64, regularParticipantCanPublishMessage bool, areAdmins map[int64]bool) {
 
 	var eventType = ""
 	if publish {
@@ -441,35 +501,41 @@ func (not *Events) NotifyAboutPublishedMessage(c echo.Context, chatId int64, msg
 		eventType = "published_message_remove"
 	}
 
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range participantIds {
 
 		var copied *dto.PublishedMessageEvent = &dto.PublishedMessageEvent{}
 		if err := deepcopy.Copy(copied, msg); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy: %s", err)
+			GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
 			continue
 		}
 
 		copied.Message.CanPublish = dto.CanPublishMessage(regularParticipantCanPublishMessage, areAdmins[participantId], copied.Message.OwnerId, participantId)
 
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 			EventType:                    eventType,
 			PublishedMessageNotification: copied,
 			UserId:                       participantId,
 			ChatId:                       chatId,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
 
-func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int, tx *db.Tx) {
+func (not *Events) SendReactionEvent(ctx context.Context, wasChanged bool, chatId, messageId int64, reaction string, reactionUsers []*dto.User, count int, tx *db.Tx) {
 	var eventType string
 	if wasChanged {
 		eventType = "reaction_changed"
 	} else {
 		eventType = "reaction_removed"
 	}
+
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+	defer messageSpan.End()
 
 	aReaction := dto.Reaction{
 		Count:    int64(count),
@@ -484,25 +550,25 @@ func (not *Events) SendReactionEvent(c echo.Context, wasChanged bool, chatId, me
 
 	err := tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
-			err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
+			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 				EventType:                  eventType,
 				ReactionChangedEvent: 		&reactionChangedEvent,
 				UserId:                     participantId,
 				ChatId:                     chatId,
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
+		GetLogEntry(ctx).Errorf("Error during getting chat participants")
 		return
 	}
 }
 
-func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chatId, messageId, messageOwnerId int64, reaction string, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
+func (not *Events) SendReactionOnYourMessage(ctx context.Context, wasAdded bool, chatId, messageId, messageOwnerId int64, reaction string, behalfUserId int64, behalfLogin string, behalfAvatar *string, chatTitle string) {
 	var eventType string
 	if wasAdded {
 		eventType = "reaction_notification_added"
@@ -510,13 +576,16 @@ func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chat
 		eventType = "reaction_notification_removed"
 	}
 
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+	defer messageSpan.End()
+
 	event := dto.ReactionEvent{
 		UserId:   behalfUserId,
 		Reaction: reaction,
 		MessageId: messageId,
 	}
 
-	err := not.rabbitNotificationPublisher.Publish(dto.NotificationEvent{
+	err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
 		EventType:                  eventType,
 		ReactionEvent: 				&event,
 		UserId:                     messageOwnerId,
@@ -527,31 +596,39 @@ func (not *Events) SendReactionOnYourMessage(c echo.Context, wasAdded bool, chat
 		ChatTitle:         chatTitle,
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 
 }
 
-func (not *Events) NotifyMessagesReloadCommand(c echo.Context, chatId int64, participantIds []int64) {
+func (not *Events) NotifyMessagesReloadCommand(ctx context.Context, chatId int64, participantIds []int64) {
+	eventType := "messages_reload"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
 	for _, participantId := range participantIds {
-		err := not.rabbitEventPublisher.Publish(dto.ChatEvent{
-			EventType:                  "messages_reload",
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+			EventType:                  eventType,
 			UserId:                     participantId,
 			ChatId:                     chatId,
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 
 }
 
-func (not *Events) NotifyNewMessageBrowserNotification(c echo.Context, add bool, participantId int64, chatId int64, chatName string, chatAvatar null.String, messageId int64, messageText string, ownerId int64, ownerLogin string) {
+func (not *Events) NotifyNewMessageBrowserNotification(ctx context.Context, add bool, participantId int64, chatId int64, chatName string, chatAvatar null.String, messageId int64, messageText string, ownerId int64, ownerLogin string) {
 	eventType := "browser_notification_add_message"
 	if !add {
 		eventType = "browser_notification_remove_message"
 	}
-	err := not.rabbitEventPublisher.Publish(dto.GlobalUserEvent{
+
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("notification.%s", eventType))
+	defer messageSpan.End()
+
+	err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 		UserId:           participantId,
 		EventType:        eventType,
 		BrowserNotification: &dto.BrowserNotification{
@@ -565,7 +642,7 @@ func (not *Events) NotifyNewMessageBrowserNotification(c echo.Context, add bool,
 		},
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 
 }

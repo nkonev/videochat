@@ -342,7 +342,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			}
 		}
 
-		mc.notificator.SendReactionEvent(c, wasChanged, chatId, messageId, bindTo.Reaction, reactionUsers, count, tx)
+		mc.notificator.SendReactionEvent(c.Request().Context(), wasChanged, chatId, messageId, bindTo.Reaction, reactionUsers, count, tx)
 
 
 		chatNameForNotification, err := mc.getChatNameForNotification(tx, chatId)
@@ -358,7 +358,7 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 
 		// sends notification to the notification microservice
 		if *messageOwnerId != userPrincipalDto.UserId {
-			mc.notificator.SendReactionOnYourMessage(c, wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+			mc.notificator.SendReactionOnYourMessage(c.Request().Context(), wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 		}
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
@@ -669,7 +669,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 		var reply, userToSendTo = mc.wasReplyAdded(nil, message, chatId)
-		mc.notificator.NotifyAddReply(c, reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+		mc.notificator.NotifyAddReply(c.Request().Context(), reply, userToSendTo, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 
 		messageTextWithoutTags := createMessagePreview(mc.stripAllTags, message.Text, userPrincipalDto.UserLogin)
 
@@ -679,14 +679,14 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutChangeChat(c, copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, true, tx, areAdmins)
+			mc.notificator.NotifyAboutChangeChat(c.Request().Context(), copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, true, tx, areAdmins)
 			shouldSendHasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatchCommon(chatId, participantIds)
 			if err != nil {
 				return err
 			}
 			for participantId, should := range shouldSendHasUnreadMessagesMap {
 				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
-					mc.notificator.NotifyAboutHasNewMessagesChanged(c, participantId, should)
+					mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), participantId, should)
 
 					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: null.StringFromPtr(userPrincipalDto.Avatar)}
 					var sch dto.ChatDtoWithTetATet = &simpleChat{
@@ -701,15 +701,15 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 						participantId,
 						false,
 					)
-					mc.notificator.NotifyNewMessageBrowserNotification(c, true, participantId, chatId, sch.GetName(), sch.GetAvatar(), message.Id, messageTextWithoutTags, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+					mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), true, participantId, chatId, sch.GetName(), sch.GetAvatar(), message.Id, messageTextWithoutTags, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 				}
 			}
 			var users = getUsersRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 			var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
 			var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
-			mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
-			mc.notificator.NotifyAboutNewMessage(c, participantIds, chatId, message, copiedChat.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAddMention(c.Request().Context(), reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+			mc.notificator.NotifyAboutNewMessage(c.Request().Context(), participantIds, chatId, message, copiedChat.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -863,9 +863,9 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		}
 
 		var replyAdded, userToSendToAdded = mc.wasReplyAdded(oldMessage, message, chatId)
-		mc.notificator.NotifyAddReply(c, replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+		mc.notificator.NotifyAddReply(c.Request().Context(), replyAdded, userToSendToAdded, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 		var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, message, chatId)
-		mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
+		mc.notificator.NotifyRemoveReply(c.Request().Context(), replyRemoved, userToSendRemoved)
 
 		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
 			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
@@ -892,10 +892,10 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			}
 
 			var reallyAddedMentions = excludeMyself(userIdsToNotifyAboutMentionCreated, userPrincipalDto)
-			mc.notificator.NotifyAddMention(c, reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
-			mc.notificator.NotifyRemoveMention(c, userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
+			mc.notificator.NotifyAddMention(c.Request().Context(), reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+			mc.notificator.NotifyRemoveMention(c.Request().Context(), userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1022,7 +1022,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 			return err
 		}
 
-		mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+		mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 		return nil
 	})
 	if err != nil {
@@ -1082,15 +1082,15 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 		var userOnlines = getUserOnlinesRemotelyOrEmptyFromSlice(participantIds, mc.restClient, c)
 
 		var oldMentions, _ = mc.findMentions(oldMessage.Text, false, users, userOnlines)
-		mc.notificator.NotifyRemoveMention(c, oldMentions, chatId, messageId)
+		mc.notificator.NotifyRemoveMention(c.Request().Context(), oldMentions, chatId, messageId)
 
 		cd := &dto.DisplayMessageDto{
 			Id:     messageId,
 			ChatId: chatId,
 		}
-		mc.notificator.NotifyAboutDeleteMessage(c, participantIds, chatId, cd)
+		mc.notificator.NotifyAboutDeleteMessage(c.Request().Context(), participantIds, chatId, cd)
 		for _, participantId := range participantIds {
-			mc.notificator.NotifyNewMessageBrowserNotification(c, false, participantId, chatId, "", null.StringFromPtr(nil), messageId, "", userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+			mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, participantId, chatId, "", null.StringFromPtr(nil), messageId, "", userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 		}
 
 		return nil
@@ -1100,7 +1100,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	}
 
 	var replyRemoved, userToSendRemoved = mc.wasReplyRemoved(oldMessage, nil, chatId)
-	mc.notificator.NotifyRemoveReply(c, replyRemoved, userToSendRemoved)
+	mc.notificator.NotifyRemoveReply(c.Request().Context(), replyRemoved, userToSendRemoved)
 
 	return c.JSON(http.StatusAccepted, &utils.H{"id": messageId})
 }
@@ -1129,13 +1129,13 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		mc.notificator.NotifyRemoveMention(c, []int64{userPrincipalDto.UserId}, chatId, messageId)
-		mc.notificator.NotifyRemoveReply(c, &dto.ReplyDto{
+		mc.notificator.NotifyRemoveMention(c.Request().Context(), []int64{userPrincipalDto.UserId}, chatId, messageId)
+		mc.notificator.NotifyRemoveReply(c.Request().Context(), &dto.ReplyDto{
 			MessageId: messageId,
 			ChatId:    chatId,
 		}, &userPrincipalDto.UserId)
 
-		mc.notificator.NotifyNewMessageBrowserNotification(c, false, userPrincipalDto.UserId, chatId, "", null.StringFromPtr(nil), messageId, "", NonExistentUser, "")
+		mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, userPrincipalDto.UserId, chatId, "", null.StringFromPtr(nil), messageId, "", NonExistentUser, "")
 
 		_, messageOwnerId, _, _, err := tx.GetMessageBasic(chatId, messageId)
 		if err != nil {
@@ -1155,7 +1155,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 			}
 
 			for _, reaction := range reactions {
-				mc.notificator.SendReactionOnYourMessage(c, false, chatId, messageId, *messageOwnerId, reaction.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+				mc.notificator.SendReactionOnYourMessage(c.Request().Context(), false, chatId, messageId, *messageOwnerId, reaction.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 			}
 		}
 
@@ -1168,13 +1168,13 @@ func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, c echo.Context, cha
 	if err != nil {
 		return err
 	}
-	mc.notificator.ChatNotifyMessageCount([]int64{userId}, c, chatId, tx)
+	mc.notificator.ChatNotifyMessageCount(c.Request().Context(), []int64{userId}, chatId, tx)
 
 	has, err := tx.HasUnreadMessages(userId)
 	if err != nil {
 		return err
 	}
-	mc.notificator.NotifyAboutHasNewMessagesChanged(c, userId, has)
+	mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), userId, has)
 
 	return nil
 }
@@ -1284,7 +1284,7 @@ func (mc *MessageHandler) TypeMessage(c echo.Context) error {
 	var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 	typingUser := owners[userPrincipalDto.UserId]
 
-	mc.notificator.NotifyAboutMessageTyping(c, chatId, typingUser, mc.db)
+	mc.notificator.NotifyAboutMessageTyping(c.Request().Context(), chatId, typingUser, mc.db)
 	return c.NoContent(http.StatusAccepted)
 }
 
@@ -1323,7 +1323,7 @@ func (mc *MessageHandler) BroadcastMessage(c echo.Context) error {
 		preview = ""
 	}
 
-	mc.notificator.NotifyAboutMessageBroadcast(c, chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, preview, mc.db)
+	mc.notificator.NotifyAboutMessageBroadcast(c.Request().Context(), chatId, userPrincipalDto.UserId, userPrincipalDto.UserLogin, preview, mc.db)
 	return c.NoContent(http.StatusAccepted)
 }
 
@@ -1369,7 +1369,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1444,7 +1444,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				if err != nil {
 					return err
 				}
-				mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
+				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
 
 				// notify about newly promoted result (promoted can be different)
 				errInternal := mc.sendPromotePinnedMessageEvent(c, mc.stripAllTags, message, users, chatId, participantIds, userPrincipalDto.UserId, true, count0)
@@ -1482,7 +1482,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 					return err
 				}
 
-				mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
+				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
 
 				// actually instead of unpromote - remove is better
 				errInternal := mc.sendPromotePinnedMessageEvent(c, mc.stripAllTags, message, users, chatId, participantIds, userPrincipalDto.UserId, false, count1)
@@ -1613,11 +1613,11 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 
 			var copiedMsg = convertToPublishedMessageDto(mc.stripAllTags, message, users)
 
-			mc.notificator.NotifyAboutPublishedMessage(c, chatId, &dto.PublishedMessageEvent{
+			mc.notificator.NotifyAboutPublishedMessage(c.Request().Context(), chatId, &dto.PublishedMessageEvent{
 				Message:    *copiedMsg,
 				TotalCount: count0,
 			}, publish, participantIds, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
@@ -1697,9 +1697,9 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 				return err
 			}
 			if res0 != nil {
-				mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res0, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res0, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 			}
-			mc.notificator.NotifyAboutEditMessage(c, participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1994,7 +1994,7 @@ func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, cleanTag
 	messageDto := convertToPinnedMessageDto(cleanTagsPolicy, dbMessage, users)
 
 	// notify about promote to the pinned
-	mc.notificator.NotifyAboutPromotePinnedMessage(c, chatId, &dto.PinnedMessageEvent{
+	mc.notificator.NotifyAboutPromotePinnedMessage(c.Request().Context(), chatId, &dto.PinnedMessageEvent{
 		Message:    *messageDto,
 		TotalCount: count,
 	}, promote, participantIds)

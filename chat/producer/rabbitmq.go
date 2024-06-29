@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
@@ -13,7 +14,9 @@ import (
 const EventsFanoutExchange = "async-events-exchange"
 const NotificationsFanoutExchange = "notifications-exchange"
 
-func (rp *RabbitEventsPublisher) Publish(aDto interface{}) error {
+func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
 	aType := utils.GetType(aDto)
 
 	bytea, err := json.Marshal(aDto)
@@ -28,9 +31,9 @@ func (rp *RabbitEventsPublisher) Publish(aDto interface{}) error {
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         aType,
+		Headers:      headers,
 	}
 
-	// TODO use amqp-go
 	if err := rp.channel.Publish(EventsFanoutExchange, "", false, false, msg); err != nil {
 		Logger.Error(err, "Error during publishing dto")
 		return err
@@ -49,7 +52,9 @@ func NewRabbitEventsPublisher(connection *rabbitmq.Connection) *RabbitEventsPubl
 	}
 }
 
-func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
+func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interface{}) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal dto")
@@ -61,6 +66,7 @@ func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
 		Body:         bytea,
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
