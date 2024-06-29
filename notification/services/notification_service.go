@@ -27,7 +27,7 @@ const NotificationAdd = "notification_add"
 const NotificationDelete = "notification_delete"
 const NotificationClearAll = "notification_clear_all"
 
-func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEvent) {
+func (srv *NotificationService) HandleChatNotification(ctx context.Context, event *dto.NotificationEvent) {
 
 	settings, err := srv.getNotificationSettings(event)
 	if err != nil {
@@ -42,7 +42,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		notificationType := "mention"
 		switch event.EventType {
 		case "mention_added":
-			err := srv.removeExcessNotificationsIfNeed(event.UserId)
+			err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 			if err != nil {
 				Logger.Errorf("Unable to delete excess notifications %v", err)
 				return
@@ -61,6 +61,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(
+				ctx,
 				event.UserId,
 				&dto.WrapperNotificationDto{
 					NotificationDto: dto.NotificationDto{
@@ -78,7 +79,6 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 					TotalCount: count,
 				},
 				NotificationAdd,
-				context.Background(),
 			)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
@@ -101,7 +101,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			err = srv.rabbitEventsPublisher.Publish(event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete, context.Background())
+			err = srv.rabbitEventsPublisher.Publish(ctx, event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
 			}
@@ -109,7 +109,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			Logger.Errorf("Unexpected event type %v", event.EventType)
 		}
 	} else if event.MissedCallNotification != nil && settings.MissedCallsEnabled {
-		err := srv.removeExcessNotificationsIfNeed(event.UserId)
+		err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)
 			return
@@ -130,6 +130,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		}
 
 		err = srv.rabbitEventsPublisher.Publish(
+			ctx,
 			event.UserId,
 			&dto.WrapperNotificationDto{
 				NotificationDto: dto.NotificationDto{
@@ -147,13 +148,12 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				TotalCount:       count,
 			},
 			NotificationAdd,
-			context.Background(),
 		)
 		if err != nil {
 			Logger.Errorf("Unable to send notification delete %v", err)
 		}
 	} else if event.ReplyNotification != nil && settings.AnswersEnabled {
-		err := srv.removeExcessNotificationsIfNeed(event.UserId)
+		err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)
 			return
@@ -175,6 +175,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(
+				ctx,
 				event.UserId,
 				&dto.WrapperNotificationDto{
 					NotificationDto: dto.NotificationDto{
@@ -192,7 +193,6 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 					TotalCount:       count,
 				},
 				NotificationAdd,
-				context.Background(),
 			)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
@@ -214,7 +214,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			err = srv.rabbitEventsPublisher.Publish(event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete, context.Background())
+			err = srv.rabbitEventsPublisher.Publish(ctx, event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
 			}
@@ -223,7 +223,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 		}
 
 	} else if event.ReactionEvent != nil && settings.ReactionsEnabled {
-		err := srv.removeExcessNotificationsIfNeed(event.UserId)
+		err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 		if err != nil {
 			Logger.Errorf("Unable to delete excess notifications %v", err)
 			return
@@ -245,6 +245,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(
+				ctx,
 				event.UserId,
 				&dto.WrapperNotificationDto{
 					NotificationDto: dto.NotificationDto{
@@ -262,7 +263,6 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 					TotalCount:       count,
 				},
 				NotificationAdd,
-				context.Background(),
 			)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
@@ -284,7 +284,7 @@ func (srv *NotificationService) HandleChatNotification(event *dto.NotificationEv
 				return
 			}
 
-			err = srv.rabbitEventsPublisher.Publish(event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete, context.Background())
+			err = srv.rabbitEventsPublisher.Publish(ctx, event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
 			}
@@ -334,7 +334,7 @@ func (srv *NotificationService) getNotificationSettings(event *dto.NotificationE
 	return &result, nil
 }
 
-func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) error {
+func (srv *NotificationService) removeExcessNotificationsIfNeed(ctx context.Context, userId int64) error {
 	count, err := srv.dbs.GetNotificationCount(userId)
 	if err != nil {
 		Logger.Errorf("Unable to get notification count %v", err)
@@ -363,7 +363,7 @@ func (srv *NotificationService) removeExcessNotificationsIfNeed(userId int64) er
 				return err
 			}
 
-			err = srv.rabbitEventsPublisher.Publish(userId, dto.NewWrapperNotificationDeleteDto(id, count, deletedNotificationType), NotificationDelete, context.Background())
+			err = srv.rabbitEventsPublisher.Publish(ctx, userId, dto.NewWrapperNotificationDeleteDto(id, count, deletedNotificationType), NotificationDelete)
 			if err != nil {
 				Logger.Errorf("Unable to send notification delete %v", err)
 				return err

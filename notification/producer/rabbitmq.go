@@ -14,7 +14,8 @@ import (
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
 
-func (rp *RabbitEventPublisher) Publish(participantId int64, notifyDto *dto.WrapperNotificationDto, eventType string, ctx context.Context) error {
+func (rp *RabbitEventPublisher) Publish(ctx context.Context, participantId int64, notifyDto *dto.WrapperNotificationDto, eventType string) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	event := dto.GlobalUserEvent{
 		EventType:             eventType,
@@ -34,6 +35,7 @@ func (rp *RabbitEventPublisher) Publish(participantId int64, notifyDto *dto.Wrap
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
