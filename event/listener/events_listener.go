@@ -8,6 +8,7 @@ import (
 	"github.com/streadway/amqp"
 	"nkonev.name/event/dto"
 	. "nkonev.name/event/logger"
+	"nkonev.name/event/rabbitmq"
 	"nkonev.name/event/type_registry"
 )
 
@@ -15,6 +16,8 @@ type EventsListener func(*amqp.Delivery) error
 
 func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) EventsListener {
 	return func(msg *amqp.Delivery) error {
+		traceString := rabbitmq.ExtractJaegerString(msg.Headers)
+
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
@@ -35,6 +38,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -48,6 +52,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -62,7 +67,11 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				return err
 			}
 
-			var converted = dto.ArrayUserOnline(bindTo)
+			var converted = dto.ArrayUserOnline{
+				UserOnlines: bindTo,
+				TraceString: traceString,
+			}
+
 			err = bus.PublishAsync(converted)
 			if err != nil {
 				Logger.Errorf("Error during sending to bus : %v", err)
@@ -75,6 +84,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -87,6 +97,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -99,6 +110,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -111,6 +123,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -123,6 +136,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
+			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {

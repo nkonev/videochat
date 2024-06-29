@@ -37,6 +37,7 @@ type ReactionChangedEvent struct {
 }
 
 type ChatEvent struct {
+	TraceString                  string  `json:"-"`
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
 	UserId                       int64                         `json:"userId"`
@@ -89,6 +90,7 @@ type BrowserNotification struct {
 }
 
 type GlobalUserEvent struct {
+	TraceString                   string  `json:"-"`
 	EventType                     string                        `json:"eventType"`
 	UserId                        int64                         `json:"userId"`
 	ChatNotification              *ChatDtoWithAdmin             `json:"chatNotification"`
@@ -123,7 +125,10 @@ type UserOnline struct {
 	Online bool  `json:"online"`
 }
 
-type ArrayUserOnline []UserOnline
+type ArrayUserOnline struct {
+	UserOnlines  []UserOnline
+	TraceString  string  `json:"-"`
+}
 
 func (ArrayUserOnline) Name() eventbus.EventName {
 	return USER_ONLINE
@@ -149,6 +154,7 @@ type FileInfoDto struct {
 }
 
 type GeneralEvent struct {
+	TraceString  string  `json:"-"`
 	EventType string `json:"eventType"`
 	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
 }

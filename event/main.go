@@ -148,7 +148,8 @@ func configureEcho(
 }
 
 func configureGraphQlServer(bus *eventbus.Bus, httpClient *client.RestClient, tp *sdktrace.TracerProvider) *handler.Server {
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient}}))
+	tr := otel.Tracer("graphql")
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient, tr}}))
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,

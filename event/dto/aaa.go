@@ -41,6 +41,7 @@ type UserAccountExtended struct {
 }
 
 type UserAccountEventGroup struct {
+	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
 	EventType string `json:"eventType"`
 	ForMyself *UserAccountExtended `json:"forMyself"`
@@ -53,6 +54,7 @@ func (UserAccountEventGroup) Name() eventbus.EventName {
 }
 
 type UserAccountCreatedEventGroup struct {
+	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
 	EventType string `json:"eventType"`
 	ForRoleAdmin *UserAccountExtended `json:"forRoleAdmin"`
@@ -65,6 +67,7 @@ func (UserAccountCreatedEventGroup) Name() eventbus.EventName {
 
 
 type UserAccountDeletedEvent struct {
+	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
 	EventType string `json:"eventType"`
 }
@@ -74,6 +77,7 @@ func (UserAccountDeletedEvent) Name() eventbus.EventName {
 }
 
 type UserSessionsKilledEvent struct {
+	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
 	EventType string `json:"eventType"`
 	ReasonType string `json:"reasonType"`
