@@ -31,7 +31,7 @@ type EventService struct {
 	publisher    *producer.RabbitFileUploadedPublisher
 }
 
-func (s *EventService) HandleEvent(normalizedKey string, chatId int64, eventType utils.EventType, ctx context.Context) (*HandleEventResponse, error) {
+func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) (*HandleEventResponse, error) {
 	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
 	var err error
@@ -80,7 +80,7 @@ type HandleEventResponse struct {
 	fileOwnerId int64
 }
 
-func (s *EventService) SendToParticipants(normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, ctx context.Context) {
+func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse) {
 	// iterate over chat participants
 	for _, participantId := range participantIds {
 		var fileInfo *dto.FileInfoDto
@@ -103,9 +103,9 @@ func (s *EventService) SendToParticipants(normalizedKey string, chatId int64, ev
 				LastModified: time.Now(),
 			}
 		}
-		s.publisher.PublishFileEvent(participantId, chatId, &dto.WrappedFileInfoDto{
+		s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,
-		}, eventType, ctx)
+		}, eventType)
 	}
 
 }

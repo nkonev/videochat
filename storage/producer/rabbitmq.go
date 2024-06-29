@@ -15,7 +15,8 @@ import (
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
 
-func (rp *RabbitFileUploadedPublisher) Publish(userId, chatId int64, previewCreatedEvent *dto.PreviewCreatedEvent, ctx context.Context) error {
+func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chatId int64, previewCreatedEvent *dto.PreviewCreatedEvent) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	event := dto.ChatEvent{
 		EventType:           "preview_created",
@@ -36,6 +37,7 @@ func (rp *RabbitFileUploadedPublisher) Publish(userId, chatId int64, previewCrea
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
@@ -46,7 +48,9 @@ func (rp *RabbitFileUploadedPublisher) Publish(userId, chatId int64, previewCrea
 	return nil
 }
 
-func (rp *RabbitFileUploadedPublisher) PublishFileEvent(userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType utils.EventType, ctx context.Context) error {
+func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType utils.EventType) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
 	var outputEventType string
 	switch eventType {
 	case utils.FILE_CREATED:
@@ -79,6 +83,7 @@ func (rp *RabbitFileUploadedPublisher) PublishFileEvent(userId, chatId int64, fi
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {

@@ -315,7 +315,7 @@ func (h *RestClient) GetChatParticipantIdsByPage(chatId int64, c context.Context
 	return *userIds, nil
 }
 
-func (h *RestClient) GetChatParticipantIds(chatId int64, c context.Context, consumer func(participantIds []int64) error) (error) {
+func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, consumer func(participantIds []int64) error) (error) {
 	var lastError error
 	shouldContinue := true
 	for page := 0; shouldContinue; page++ {

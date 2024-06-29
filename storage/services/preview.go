@@ -35,10 +35,10 @@ func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioCo
 	}
 }
 
-func (s *PreviewService) HandleMinioEvent(data *dto.MinioEvent, ctx context.Context) *PreviewResponse {
+func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEvent) *PreviewResponse {
 	Logger.Debugf("Got %v", data)
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
-	s.CreatePreview(normalizedKey, ctx)
+	s.CreatePreview(ctx, normalizedKey)
 	return &PreviewResponse {
 		normalizedKey: normalizedKey,
 	}
@@ -48,10 +48,10 @@ type PreviewResponse struct {
 	normalizedKey string
 }
 
-func (s *PreviewService) SendToParticipants(data *dto.MinioEvent, participantIds []int64, response *PreviewResponse, ctx context.Context) {
-	if pu, err := s.getFileUploadedEvent(response.normalizedKey, data.ChatId, data.CorrelationId, ctx); err == nil {
+func (s *PreviewService) SendToParticipants(ctx context.Context, data *dto.MinioEvent, participantIds []int64, response *PreviewResponse) {
+	if pu, err := s.getFileUploadedEvent(ctx, response.normalizedKey, data.ChatId, data.CorrelationId); err == nil {
 		for _, participantId := range participantIds {
-			err = s.rabbitFileUploadedPublisher.Publish(participantId, data.ChatId, pu, ctx)
+			err = s.rabbitFileUploadedPublisher.Publish(ctx, participantId, data.ChatId, pu)
 			if err != nil {
 				Logger.Errorf("Error during ending: %v", err)
 				continue
@@ -63,7 +63,7 @@ func (s *PreviewService) SendToParticipants(data *dto.MinioEvent, participantIds
 
 }
 
-func (s *PreviewService) CreatePreview(normalizedKey string, ctx context.Context) {
+func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string) {
 	if utils.IsImage(normalizedKey) {
 		object, err := s.minio.GetObject(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectOptions{})
 		if err != nil {
@@ -144,7 +144,7 @@ func (s *PreviewService) resizeImageToJpg(reader io.Reader) (*bytes.Buffer, erro
 	return byteBuffer, nil
 }
 
-func (s *PreviewService) getFileUploadedEvent(normalizedKey string, chatId int64, correlationId *string, ctx context.Context) (*dto.PreviewCreatedEvent, error) {
+func (s *PreviewService) getFileUploadedEvent(ctx context.Context, normalizedKey string, chatId int64, correlationId *string) (*dto.PreviewCreatedEvent, error) {
 	downloadUrl, err := s.filesService.GetConstantDownloadUrl(normalizedKey)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting url: %v", err)

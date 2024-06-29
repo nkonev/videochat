@@ -43,10 +43,10 @@ func (srv *ActualizePreviewsService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ActualizePreviews")
 	defer span.End()
 	filenameChatPrefix := "chat/"
-	srv.processFiles(filenameChatPrefix, ctx)
+	srv.processFiles(ctx, filenameChatPrefix)
 }
 
-func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c context.Context) {
+func (srv *ActualizePreviewsService) processFiles(c context.Context, filenameChatPrefix string) {
 	logger.Logger.Infof("Starting actualize previews job")
 
 	// create preview for files if need
@@ -63,14 +63,14 @@ func (srv *ActualizePreviewsService) processFiles(filenameChatPrefix string, c c
 			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
 			if err != nil {
 				logger.Logger.Infof("Create preview for missing %v", fileOjInfo.Key)
-				srv.previewService.CreatePreview(fileOjInfo.Key, c)
+				srv.previewService.CreatePreview(c, fileOjInfo.Key)
 			}
 		} else if utils.IsImage(fileOjInfo.Key) {
 			previewToCheck := utils.SetImagePreviewExtension(fileOjInfo.Key)
 			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
 			if err != nil {
 				logger.Logger.Infof("Create preview for missing %v", fileOjInfo.Key)
-				srv.previewService.CreatePreview(fileOjInfo.Key, c)
+				srv.previewService.CreatePreview(c, fileOjInfo.Key)
 			}
 		}
 

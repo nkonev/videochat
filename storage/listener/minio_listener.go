@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
@@ -14,7 +15,12 @@ import (
 type MinioEventsListener func(*amqp.Delivery) error
 
 func CreateMinioEventsListener(previewService *services.PreviewService, eventService *services.EventService, client *client.RestClient, minioConfig *utils.MinioConfig) MinioEventsListener {
+	tr := otel.Tracer("amqp/listener")
+
 	return func(msg *amqp.Delivery) error {
+		ctx, span := tr.Start(context.Background(), "storage.minio.listener")
+		defer span.End()
+
 		bytesData := msg.Body
 		strData := string(bytesData)
 		Logger.Debugf("Received %v", strData)
@@ -37,7 +43,6 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			OwnerId:       ownerId,
 			CorrelationId: correlationId,
 		}
-		ctx := context.Background()
 
 		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
 		workingChatId, err := utils.ParseChatId(normalizedKey)
@@ -55,18 +60,18 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 		var previewServiceResponse *services.PreviewResponse
 		var errEventService error
 		if isEventForEventService(eventType) {
-			eventServiceResponse, errEventService = eventService.HandleEvent(normalizedKey, workingChatId, eventType, ctx)
+			eventServiceResponse, errEventService = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType,)
 		}
 		if isEventForPreviewService(eventType) {
-			previewServiceResponse = previewService.HandleMinioEvent(minioEvent, ctx)
+			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent)
 		}
 
-		err = client.GetChatParticipantIds(workingChatId, ctx, func(participantIds []int64) error {
+		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
 			if errEventService == nil && isEventForEventService(eventType) {
-				eventService.SendToParticipants(normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse, ctx)
+				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
 			}
 			if isEventForPreviewService(eventType) {
-				previewService.SendToParticipants(minioEvent, participantIds, previewServiceResponse, ctx)
+				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
 			}
 			return nil
 		})
