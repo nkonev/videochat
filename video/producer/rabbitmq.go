@@ -15,7 +15,8 @@ import (
 const AsyncEventsFanoutExchange = "async-events-exchange"
 const NotificationsFanoutExchange = "notifications-exchange"
 
-func (rp *RabbitUserCountPublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallUserCountChangedDto, ctx context.Context) error {
+func (rp *RabbitUserCountPublisher) Publish(ctx context.Context, participantIds []int64, chatNotifyDto *dto.VideoCallUserCountChangedDto) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	for _, participantId := range participantIds {
 		event := dto.GlobalUserEvent{
@@ -36,6 +37,7 @@ func (rp *RabbitUserCountPublisher) Publish(participantIds []int64, chatNotifyDt
 			ContentType:  "application/json",
 			Body:         bytea,
 			Type:         utils.GetType(event),
+			Headers:      headers,
 		}
 
 		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
@@ -64,7 +66,8 @@ func NewRabbitUserCountPublisher(connection *rabbitmq.Connection) *RabbitUserCou
 
 
 
-func (rp *RabbitUserIdsPublisher) Publish(videoCallUsersCallStatusChanged *dto.VideoCallUsersCallStatusChangedDto, ctx context.Context) error {
+func (rp *RabbitUserIdsPublisher) Publish(ctx context.Context, videoCallUsersCallStatusChanged *dto.VideoCallUsersCallStatusChangedDto) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	event := dto.GeneralEvent{
 		EventType:               "user_in_video_call_changed",
@@ -83,6 +86,7 @@ func (rp *RabbitUserIdsPublisher) Publish(videoCallUsersCallStatusChanged *dto.V
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
@@ -109,7 +113,9 @@ func NewRabbitUserIdsPublisher(connection *rabbitmq.Connection) *RabbitUserIdsPu
 
 
 
-func (rp *RabbitInvitePublisher) Publish(invitationDto *dto.VideoCallInvitation, toUserId int64) error {
+func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto.VideoCallInvitation, toUserId int64) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
 	event := dto.GlobalUserEvent{
 		EventType:           "video_call_invitation",
 		UserId:              toUserId,
@@ -128,6 +134,7 @@ func (rp *RabbitInvitePublisher) Publish(invitationDto *dto.VideoCallInvitation,
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
+		Headers: 	  headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
@@ -147,10 +154,13 @@ func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePubl
 }
 
 func (rp *RabbitDialStatusPublisher) Publish(
+	ctx context.Context,
 	chatId       int64,
 	userStatuses map[int64]string,
 	ownerId int64,
 ) {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
 	if len(userStatuses) == 0 {
 		return
 	}
@@ -183,6 +193,7 @@ func (rp *RabbitDialStatusPublisher) Publish(
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
@@ -200,7 +211,8 @@ func NewRabbitDialStatusPublisher(connection *rabbitmq.Connection) *RabbitDialSt
 	}
 }
 
-func (rp *RabbitRecordingPublisher) Publish(recordInProgressByOwner map[int64]bool, chatId int64, ctx context.Context) error {
+func (rp *RabbitRecordingPublisher) Publish(ctx context.Context, recordInProgressByOwner map[int64]bool, chatId int64) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	for participantId, recordInProgress := range recordInProgressByOwner {
 		var chatNotifyDto = dto.VideoCallRecordingChangedDto{
@@ -226,6 +238,7 @@ func (rp *RabbitRecordingPublisher) Publish(recordInProgressByOwner map[int64]bo
 			ContentType:  "application/json",
 			Body:         bytea,
 			Type:         utils.GetType(event),
+			Headers:      headers,
 		}
 
 		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
@@ -246,7 +259,9 @@ func NewRabbitRecordingPublisher(connection *rabbitmq.Connection) *RabbitRecordi
 	}
 }
 
-func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
+func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interface{}) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal dto")
@@ -258,6 +273,7 @@ func (rp *RabbitNotificationsPublisher) Publish(aDto interface{}) error {
 		Timestamp:    time.Now(),
 		ContentType:  "application/json",
 		Body:         bytea,
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
@@ -278,7 +294,8 @@ func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNot
 	}
 }
 
-func (rp *RabbitScreenSharePublisher) Publish(participantIds []int64, chatNotifyDto *dto.VideoCallScreenShareChangedDto, ctx context.Context) error {
+func (rp *RabbitScreenSharePublisher) Publish(ctx context.Context, participantIds []int64, chatNotifyDto *dto.VideoCallScreenShareChangedDto) error {
+	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	for _, participantId := range participantIds {
 		event := dto.GlobalUserEvent{
@@ -299,6 +316,7 @@ func (rp *RabbitScreenSharePublisher) Publish(participantIds []int64, chatNotify
 			ContentType:  "application/json",
 			Body:         bytea,
 			Type:         utils.GetType(event),
+			Headers:      headers,
 		}
 
 		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {

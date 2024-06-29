@@ -31,10 +31,10 @@ func (srv *VideoCallUsersCountNotifierService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.VideoCallUsersCountNotifier")
 	defer span.End()
 
-	Logger.Debugf("Invoked periodic ChatNotifier")
+	GetLogEntry(ctx).Debugf("Invoked periodic ChatNotifier")
 	srv.scheduleService.NotifyAllChatsAboutVideoCallUsersCount(ctx)
 
-	Logger.Debugf("End of ChatNotifier")
+	GetLogEntry(ctx).Debugf("End of ChatNotifier")
 }
 
 type VideoCallUsersCountNotifierTask struct {

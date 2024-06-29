@@ -4,17 +4,24 @@ import (
 	"context"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go/v2"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
 
 type UserService struct {
 	livekitRoomClient *lksdk.RoomServiceClient
+	tr trace.Tracer
 }
 
 func NewUserService(livekitRoomClient *lksdk.RoomServiceClient) *UserService {
+	tr := otel.Tracer("userService")
+
 	return &UserService{
 		livekitRoomClient: livekitRoomClient,
+		tr: tr,
 	}
 }
 
@@ -111,6 +118,9 @@ func (vh *UserService) KickUserHavingChatId(ctx context.Context, chatId, userId 
 }
 
 func (vh *UserService) KickUser(ctx context.Context, userId int64) {
+	ctx, span := vh.tr.Start(ctx, "user.kick")
+	defer span.End()
+	span.SetAttributes(attribute.Int64("userId", userId))
 
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := vh.livekitRoomClient.ListRooms(ctx, listRoomReq)

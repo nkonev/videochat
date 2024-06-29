@@ -144,7 +144,7 @@ func (vh *InviteHandler) removeFromCalling(c echo.Context, callee int64, chatId 
 	}
 
 	// if we remove user from call - send them EventMissedCall notification
-	vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsersMapWithPreviousStatus)
+	vh.sendMissedCallNotification(c.Request().Context(), chatId, userPrincipalDto, missedUsersMapWithPreviousStatus)
 
 	return http.StatusOK
 }
@@ -305,7 +305,7 @@ func (vh *InviteHandler) removeFromCallingList(c echo.Context, ownerId int64, ow
 
 func (vh *InviteHandler) sendEvents(c echo.Context, chatId int64, usersOfDial []int64, callStatus string, ownerId int64, ownerAvatar string, tetATet bool) {
 	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" or "start-" to the call's owner, depending on callStatus
-	vh.dialStatusPublisher.Publish(chatId, getMapWithSameStatus(usersOfDial, callStatus), ownerId)
+	vh.dialStatusPublisher.Publish(c.Request().Context(), chatId, getMapWithSameStatus(usersOfDial, callStatus), ownerId)
 
 	// send the new status immediately to user
 	vh.stateChangedEventService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMapWithSameStatus(usersOfDial, callStatus), ownerAvatar, tetATet)
@@ -420,7 +420,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		vh.removeFromCallingList(c, ownerId, ownerAvatar, tetATet, chatId, toRemove, services.CallStatusRemoving)
 
 		// for all participants to dial - send EventMissedCall notification
-		vh.sendMissedCallNotification(chatId, c.Request().Context(), userPrincipalDto, missedUsersMapWithPreviousStatus)
+		vh.sendMissedCallNotification(c.Request().Context(), chatId, userPrincipalDto, missedUsersMapWithPreviousStatus)
 
 		// delegate ownership to another user
 		vh.dialRedisRepository.TransferOwnership(c.Request().Context(), inVideoUsers, userPrincipalDto.UserId, chatId)
@@ -445,7 +445,7 @@ func (vh *InviteHandler) getUsersWithStatuses(c echo.Context, missedUsers []int6
 	return missedUsersMap
 }
 
-func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Context, userPrincipalDto *auth.AuthResult, missedUsers map[int64]string) {
+func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId int64, userPrincipalDto *auth.AuthResult, missedUsers map[int64]string) {
 	missedUsersList := make([]int64, 0)
 	for mu, _ := range missedUsers {
 		missedUsersList = append(missedUsersList, mu)
@@ -471,7 +471,7 @@ func (vh *InviteHandler) sendMissedCallNotification(chatId int64, ctx context.Co
 						missedCall.ByAvatar = &userPrincipalDto.Avatar
 					}
 
-					err = vh.notificationPublisher.Publish(missedCall)
+					err = vh.notificationPublisher.Publish(ctx, missedCall)
 					if err != nil {
 						logger.GetLogEntry(ctx).Errorf("Error %v", err)
 					}

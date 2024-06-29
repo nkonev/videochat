@@ -50,11 +50,11 @@ func (srv *ChatDialerService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ChatDialer")
 	defer span.End()
 
-	Logger.Debugf("Invoked periodic ChatDialer")
+	GetLogEntry(ctx).Debugf("Invoked periodic ChatDialer")
 
 	usersOwners, err := srv.redisService.GetUsersOwesCalls(ctx)
 	if err != nil {
-		Logger.Errorf("Error %v", err)
+		GetLogEntry(ctx).Errorf("Error %v", err)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (srv *ChatDialerService) doJob() {
 		srv.makeDial(ctx, ownerId)
 	}
 
-	Logger.Debugf("End of ChatNotifier")
+	GetLogEntry(ctx).Debugf("End of ChatNotifier")
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
@@ -90,7 +90,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 		// send invitations to callees
 		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status}, ownerAvatar, tetATet)
 		// send state changes to owner (ownerId) of call
-		srv.dialStatusPublisher.Publish(chatId, map[int64]string{userId: status}, ownerId)
+		srv.dialStatusPublisher.Publish(ctx, chatId, map[int64]string{userId: status}, ownerId)
 	}
 
 }

@@ -43,7 +43,7 @@ func (srv *SynchronizeWithLivekitService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ChatDialer")
 	defer span.End()
 
-	Logger.Debugf("Invoked periodic SynchronizeWithLivekit")
+	GetLogEntry(ctx).Debugf("Invoked periodic SynchronizeWithLivekit")
 
 	userIds, err := srv.redisService.GetUserIds(ctx)
 	if err != nil {
@@ -126,20 +126,20 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := srv.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		Logger.Error(err, "error during reading rooms %v", err)
+		GetLogEntry(ctx).Error(err, "error during reading rooms %v", err)
 		return
 	}
 
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			Logger.Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
 		videoParticipants, err := srv.userService.GetVideoParticipants(chatId, ctx)
 		if err != nil {
-			Logger.Errorf("got error during getting videoParticipants from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx).Errorf("got error during getting videoParticipants from roomName %v %v", room.Name, err)
 			continue
 		}
 

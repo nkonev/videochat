@@ -80,7 +80,7 @@ func main() {
 			tasks.NewSynchronizeWithLivekitService,
 			tasks.SynchronizeWithLivekitSheduler,
 
-			listener.CreateAaaUserProfileUpdateListener,
+			listener.CreateAaaUserSessionsKilledListener,
 			type_registry.NewTypeRegistryInstance,
 		),
 		fx.Invoke(

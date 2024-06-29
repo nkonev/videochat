@@ -62,7 +62,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			usersCount := int64(event.Room.NumParticipants)
 
 			err = h.restClient.GetChatParticipantIds(chatId, c.Request().Context(), func(participantIds []int64) error {
-				internalErr := h.notificationService.NotifyVideoUserCountChanged(participantIds, chatId, usersCount, c.Request().Context())
+				internalErr := h.notificationService.NotifyVideoUserCountChanged(c.Request().Context(), participantIds, chatId, usersCount)
 				if internalErr != nil {
 					Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, internalErr)
 					return nil
@@ -86,7 +86,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 							IsInVideo:     true,
 						},
 					}
-					err = h.rabbitUserIdsPublisher.Publish(&dto.VideoCallUsersCallStatusChangedDto{Users: dtos}, c.Request().Context())
+					err = h.rabbitUserIdsPublisher.Publish(c.Request().Context(), &dto.VideoCallUsersCallStatusChangedDto{Users: dtos})
 					if err != nil {
 						Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", metadata.UserId, chatId, err)
 					}
@@ -104,7 +104,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
 			}
-			err = h.notificationService.NotifyRecordingChanged(chatId, map[int64]bool{ownerId: true}, c.Request().Context())
+			err = h.notificationService.NotifyRecordingChanged(c.Request().Context(), chatId, map[int64]bool{ownerId: true})
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}
@@ -119,7 +119,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
 			}
-			err = h.notificationService.NotifyRecordingChanged(chatId, map[int64]bool{ownerId: false}, c.Request().Context())
+			err = h.notificationService.NotifyRecordingChanged(c.Request().Context(), chatId, map[int64]bool{ownerId: false})
 			if err != nil {
 				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}

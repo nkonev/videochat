@@ -31,7 +31,7 @@ func NewNotificationService(
 // sends notification about video users, which is showed
 // as a small handset in ChatList
 // and as a number of video users in badge near call button
-func (h *NotificationService) NotifyVideoUserCountChanged(participantIds []int64, chatId, usersCount int64, ctx context.Context) error {
+func (h *NotificationService) NotifyVideoUserCountChanged(ctx context.Context, participantIds []int64, chatId, usersCount int64) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallUserCountChangedDto{
@@ -39,10 +39,10 @@ func (h *NotificationService) NotifyVideoUserCountChanged(participantIds []int64
 		ChatId:     chatId,
 	}
 
-	return h.rabbitMqUserCountPublisher.Publish(participantIds, &chatNotifyDto, ctx)
+	return h.rabbitMqUserCountPublisher.Publish(ctx, participantIds, &chatNotifyDto)
 }
 
-func (h *NotificationService) NotifyVideoScreenShareChanged(participantIds []int64, chatId int64, hasScreenShares bool, ctx context.Context) error {
+func (h *NotificationService) NotifyVideoScreenShareChanged(ctx context.Context, participantIds []int64, chatId int64, hasScreenShares bool) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallScreenShareChangedDto{
@@ -50,12 +50,12 @@ func (h *NotificationService) NotifyVideoScreenShareChanged(participantIds []int
 		ChatId:     chatId,
 	}
 
-	return h.rabbitMqScreenSharePublisher.Publish(participantIds, &chatNotifyDto, ctx)
+	return h.rabbitMqScreenSharePublisher.Publish(ctx, participantIds, &chatNotifyDto)
 }
 
 
-func (h *NotificationService) NotifyRecordingChanged(chatId int64, recordInProgressByOwner map[int64]bool, ctx context.Context) error {
+func (h *NotificationService) NotifyRecordingChanged(ctx context.Context, chatId int64, recordInProgressByOwner map[int64]bool) error {
 	Logger.Debugf("Notifying video call chat_id=%v", chatId)
 
-	return h.rabbitMqRecordPublisher.Publish(recordInProgressByOwner, chatId, ctx)
+	return h.rabbitMqRecordPublisher.Publish(ctx, recordInProgressByOwner, chatId)
 }

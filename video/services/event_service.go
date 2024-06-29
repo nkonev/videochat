@@ -51,12 +51,12 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 
 		err = h.restClient.GetChatParticipantIds(chatId, ctx, func(participantIds []int64) error {
 			Logger.Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
-			internalErr := h.notificationService.NotifyVideoUserCountChanged(participantIds, chatId, usersCount, ctx)
+			internalErr := h.notificationService.NotifyVideoUserCountChanged(ctx, participantIds, chatId, usersCount)
 			if internalErr != nil {
 				Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", internalErr)
 			}
 
-			internalErr = h.notificationService.NotifyVideoScreenShareChanged(participantIds, chatId, hasScreenShares, ctx)
+			internalErr = h.notificationService.NotifyVideoScreenShareChanged(ctx, participantIds, chatId, hasScreenShares)
 			if internalErr != nil {
 				Logger.Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", internalErr)
 			}
@@ -95,7 +95,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 			continue
 		}
 	}
-	err = h.rabbitUserIdsPublisher.Publish(&dto.VideoCallUsersCallStatusChangedDto{Users: dtos}, ctx)
+	err = h.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: dtos})
 }
 
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
@@ -123,7 +123,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 			recordInProgressByOwner[ownerId] = true
 		}
 
-		err = h.notificationService.NotifyRecordingChanged(chatId, recordInProgressByOwner, ctx)
+		err = h.notificationService.NotifyRecordingChanged(ctx, chatId, recordInProgressByOwner)
 		if err != nil {
 			Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 		}
@@ -160,7 +160,7 @@ func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Conte
 
 		invitation.Avatar = GetAvatar(ownerAvatar, tetATet)
 
-		err = h.rabbitMqInvitePublisher.Publish(&invitation, chatInviteName.UserId)
+		err = h.rabbitMqInvitePublisher.Publish(ctx, &invitation, chatInviteName.UserId)
 		if err != nil {
 			GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
 		}

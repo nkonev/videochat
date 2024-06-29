@@ -6,16 +6,24 @@ import (
 	"errors"
 	"fmt"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/rabbitmq"
 	"nkonev.name/video/services"
 	"nkonev.name/video/type_registry"
 )
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
+func CreateAaaUserSessionsKilledListener(userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
+	tr := otel.Tracer("amqp/listener")
+
 	return func(msg *amqp.Delivery) error {
+		ctx := rabbitmq.ExtractAMQPHeaders(context.Background(), msg.Headers)
+		ctx, span := tr.Start(ctx, "aaa.listener")
+		defer span.End()
+
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
@@ -37,7 +45,7 @@ func CreateAaaUserProfileUpdateListener(userService *services.UserService, typeR
 				return err
 			}
 			if bindTo.EventType == "user_sessions_killed" {
-				userService.KickUser(context.Background(), bindTo.UserId)
+				userService.KickUser(ctx, bindTo.UserId)
 			}
 
 		default:
