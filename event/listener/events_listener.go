@@ -1,11 +1,13 @@
 package listener
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/montag451/go-eventbus"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
 	"nkonev.name/event/dto"
 	. "nkonev.name/event/logger"
 	"nkonev.name/event/rabbitmq"
@@ -15,8 +17,14 @@ import (
 type EventsListener func(*amqp.Delivery) error
 
 func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) EventsListener {
+	tr := otel.Tracer("amqp/listener")
+
 	return func(msg *amqp.Delivery) error {
-		traceString := rabbitmq.ExtractJaegerString(msg.Headers)
+		ctx := rabbitmq.ExtractAMQPHeaders(context.Background(), msg.Headers)
+		ctx, span := tr.Start(ctx, "event.listener")
+		defer span.End()
+
+		traceString := rabbitmq.SerializeValues(ctx)
 
 		bytesData := msg.Body
 		strData := string(bytesData)

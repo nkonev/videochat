@@ -2,10 +2,11 @@ package rabbitmq
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	. "nkonev.name/event/logger"
 )
 
@@ -73,23 +74,27 @@ func ExtractAMQPHeaders(ctx context.Context, headers map[string]interface{}) con
 	return otel.GetTextMapPropagator().Extract(ctx, AmqpHeadersCarrier(headers))
 }
 
-const jaegerHeader = "uber-trace-id"
-
-func BuildJaegerContext(input string) AmqpHeadersCarrier {
-	ret := AmqpHeadersCarrier{}
-	ret.Set(jaegerHeader, input)
-	return ret
-}
-
-func MakeContext(ctx context.Context, input string) context.Context {
-	return otel.GetTextMapPropagator().Extract(ctx, BuildJaegerContext(input))
-}
-
-func ExtractJaegerString(headers map[string]interface{}) string {
-	header, ok := headers[jaegerHeader]
-	if ok {
-		return fmt.Sprintf("%s", header)
-	} else {
+func SerializeValues(spanContext context.Context) string {
+	carrier := propagation.MapCarrier{}
+	propagator := otel.GetTextMapPropagator()
+	propagator.Inject(spanContext, carrier)
+	marshal, err := json.Marshal(carrier)
+	if err != nil {
+		Logger.Infof("Unable to marshall")
 		return ""
 	}
+	return string(marshal)
+}
+
+func DeserializeValues(input string) context.Context {
+	propagator := otel.GetTextMapPropagator()
+	carrier := propagation.MapCarrier{}
+
+	err := json.Unmarshal([]byte(input), &carrier)
+	if err != nil {
+		Logger.Infof("Unable to marshall")
+		return context.Background()
+	}
+
+	return propagator.Extract(context.Background(), carrier)
 }
