@@ -221,7 +221,7 @@ func getChatSearchClause(additionalFoundUserIds []int64) string {
 	if len(additionalFoundUserIds) > 0 {
 		additionalUserIdsClause = fmt.Sprintf(" OR ( ch.tet_a_tet IS true AND ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id IN (%s) ) ) ", additionalUserIds)
 	}
-	return fmt.Sprintf(" ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $2 %s ) ) OR ( ch.available_to_search IS TRUE AND $3 = '%s' ) )",
+	return fmt.Sprintf(" ( ( ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) AND ( ch.title ILIKE $2 %s ) ) OR ( (ch.available_to_search = TRUE OR ch.blog = TRUE) AND $3 = '%s' ) )",
 		additionalUserIdsClause, ReservedPublicallyAvailableForSearchChats,
 	)
 }

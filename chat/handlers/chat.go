@@ -855,7 +855,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if !chat.AvailableToSearch {
+		if !chat.AvailableToSearch && !chat.IsBlog {
 			GetLogEntry(c.Request().Context()).Infof("User %d isn't allowed to loin to this chat beacuse chat isn't avaliable for search", userPrincipalDto.UserId)
 			return c.NoContent(http.StatusUnauthorized)
 		}
