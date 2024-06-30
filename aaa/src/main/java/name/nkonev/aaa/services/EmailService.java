@@ -61,7 +61,7 @@ public class EmailService {
             final var text = renderTemplate("confirm_registration_body_%s.ftlh".formatted(language),
                 Map.of(REG_LINK_PLACEHOLDER, regLink, LOGIN_PLACEHOLDER, login));
 
-            LOGGER.trace("For registration confirmation '{}' generated email text '{}'", recipient, text);
+            LOGGER.trace("For registration confirmation of '{}' generated email text '{}'", recipient, text);
             helper.setText(text, true);
 
             mailSender.send(mimeMessage);
@@ -83,7 +83,7 @@ public class EmailService {
             final var passwordResetLink = aaaProperties.passwordResetEnterNewUrl() + "?"+ Constants.Urls.UUID +"=" + passwordResetToken.uuid() + "&login=" + URLEncoder.encode(login, StandardCharsets.UTF_8);
             final var text = renderTemplate("password_reset_body_%s.ftlh".formatted(language),
                     Map.of(PASSWORD_RESET_LINK_PLACEHOLDER, passwordResetLink, LOGIN_PLACEHOLDER, login));
-            LOGGER.trace("For password reset '{}' generated email text '{}'", recipient, text);
+            LOGGER.trace("For password reset of '{}' generated email text '{}'", recipient, text);
             helper.setText(text, true);
 
             mailSender.send(mimeMessage);
@@ -105,7 +105,7 @@ public class EmailService {
             final var confirmLink = aaaProperties.apiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
             final var text = renderTemplate("confirm_change_email_body_%s.ftlh".formatted(language),
                 Map.of(CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER, confirmLink, LOGIN_PLACEHOLDER, login));
-            LOGGER.trace("For password reset '{}' generated email text '{}'", changeEmailConfirmationToken.newEmail(), text);
+            LOGGER.trace("For changing email to '{}' generated email text '{}'", changeEmailConfirmationToken.newEmail(), text);
             helper.setText(text, true);
 
             mailSender.send(mimeMessage);
