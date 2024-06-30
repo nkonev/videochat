@@ -22,6 +22,8 @@
         <skipTests>false</skipTests>
         <shedlock.version>5.1.0</shedlock.version>
         <logback-access.version>1.4.14</logback-access.version>
+        <owasp.encoder.version>1.2.3</owasp.encoder.version>
+        <liquibase.session.lock.version>1.6.9</liquibase.session.lock.version>
     </properties>
 
     <repositories>
@@ -238,7 +240,7 @@
         <dependency>
             <groupId>com.github.blagerweij</groupId>
             <artifactId>liquibase-sessionlock</artifactId>
-            <version>1.6.9</version>
+            <version>${liquibase.session.lock.version}</version>
         </dependency>
 
         <dependency>
@@ -331,7 +333,7 @@
         <dependency>
             <groupId>org.owasp.encoder</groupId>
             <artifactId>encoder</artifactId>
-            <version>1.2.3</version>
+            <version>${owasp.encoder.version}</version>
         </dependency>
 
         <dependency>

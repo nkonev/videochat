@@ -115,7 +115,6 @@ spring.datasource:
 
 spring.liquibase:
   change-log: classpath:/db/changelog.yml
-  drop-first: false
 
 spring.data.redis.url: redis://127.0.0.1:36379/0
 
