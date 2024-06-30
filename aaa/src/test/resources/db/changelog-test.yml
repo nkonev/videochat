@@ -1,0 +1,19 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 0
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/demo/V0__drop.sql
+
+  - include:
+      file: /db/changelog.yml
+
+  - changeSet:
+      id: 32000
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/demo/V32000__demo.sql
+

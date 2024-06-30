@@ -1,0 +1,113 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 1
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V1__init.sql
+
+  - changeSet:
+      id: 2
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V2__google_column.sql
+
+  - changeSet:
+      id: 3
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V3__google_enum.sql
+
+  - changeSet:
+      id: 4
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V4__google_unique.sql
+
+  - changeSet:
+      id: 5
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V5__avatar_big.sql
+
+  - changeSet:
+      id: 6
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V6__keycloak_oauth2.sql
+
+  - changeSet:
+      id: 7
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V7__ldap.sql
+
+  - changeSet:
+      id: 8
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V8__update_avatar.sql
+
+  - changeSet:
+      id: 9
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V9__short_info.sql
+
+  - changeSet:
+      id: 10
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V10__singular.sql
+
+  - changeSet:
+      id: 11
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V11__confirmed.sql
+
+  - changeSet:
+      id: 12
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V12__user_settings.sql
+
+  - changeSet:
+      id: 13
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V13__user_created.sql
+
+  - changeSet:
+      id: 14
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V14__ldap_id.sql
+
+  - changeSet:
+      id: 15
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V15__language.sql
+
+  - changeSet:
+      id: 16
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V16__login_color.sql

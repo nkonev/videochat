@@ -229,8 +229,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
+        <!-- to remove DATABASECHANGELOGLOCK table - to use postgres advisory locks instead -->
+        <dependency>
+            <groupId>com.github.blagerweij</groupId>
+            <artifactId>liquibase-sessionlock</artifactId>
+            <version>1.6.9</version>
         </dependency>
 
         <dependency>

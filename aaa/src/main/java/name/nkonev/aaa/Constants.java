@@ -60,6 +60,7 @@ public class Constants {
     }
 
     public static final String DELETED = "deleted";
+    public static final long DELETED_ID = -1;
 
     public static final Long NonExistentUser = -65000L;
 

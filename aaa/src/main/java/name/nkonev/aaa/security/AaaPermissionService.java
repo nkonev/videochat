@@ -1,16 +1,16 @@
 package name.nkonev.aaa.security;
 
-import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.ConfirmDTO;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.LockDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+
+import static name.nkonev.aaa.Constants.DELETED_ID;
 
 /**
  * Central entrypoint for access decisions
@@ -23,13 +23,6 @@ public class AaaPermissionService {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-
-    private UserAccount deleted;
-
-    @PostConstruct
-    public void postConstruct() {
-        deleted = userAccountRepository.findByUsername(Constants.DELETED).orElseThrow();
-    }
 
     public boolean hasSessionManagementPermission(PrincipalToCheck userAccount) {
         if (userAccount==null){
@@ -114,7 +107,7 @@ public class AaaPermissionService {
         if (currentUser == null) {
             return false;
         }
-        if (deleted.id().equals(subjectUserAccountId)){
+        if (((Long)DELETED_ID).equals(subjectUserAccountId)){
             return false;
         }
         if (subjectUserAccountId.equals(currentUser.getId())){
