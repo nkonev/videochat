@@ -34,6 +34,7 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.util.UriBuilder;
 
 import java.net.HttpCookie;
 import java.net.URI;
@@ -650,6 +651,10 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         long tokenCountBeforeResend = changeEmailConfirmationTokenRepository.count();
         Assertions.assertEquals(tokenCountBeforeSend+1, tokenCountBeforeResend);
 
+        // just retrieve first email due to peculiarities of greenmail
+        try (Retriever r = new Retriever(greenMail.getImap())) {
+            await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 1);
+        }
 
         // user lost email and reissues token
         {
@@ -669,7 +674,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         // http://www.icegreen.com/greenmail/javadocs/com/icegreen/greenmail/util/Retriever.html
         try (Retriever r = new Retriever(greenMail.getImap())) {
             Message[] messages = await().ignoreExceptions().until(() -> r.getMessages(email), msgs -> msgs.length == 2); // backend should send two email: a) during the first attempt; b) during the second attempt
-            IMAPMessage imapMessage = (IMAPMessage)messages[1];
+            IMAPMessage imapMessage = (IMAPMessage)messages[1]; // get the second email
             String content = (String) imapMessage.getContent();
 
             String parsedUrl = UrlParser.parseUrlFromMessage(content);
