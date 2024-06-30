@@ -102,9 +102,7 @@ public class EmailService {
             helper.setSubject(subj);
             helper.setTo(changeEmailConfirmationToken.newEmail());
 
-            final var confirmLink = aaaProperties.apiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid() +
-                // TODO consider taking userId from the session
-                "&" + Constants.PathVariables.USER_ID + "=" + changeEmailConfirmationToken.userId();
+            final var confirmLink = aaaProperties.apiUrl() + Constants.Urls.CHANGE_EMAIL_CONFIRM + "?" + Constants.Urls.UUID + "=" + changeEmailConfirmationToken.uuid();
             final var text = renderTemplate("confirm_change_email_body_%s.ftlh".formatted(language),
                 Map.of(CHANGE_EMAIL_CONFIRMATION_LINK_PLACEHOLDER, confirmLink, LOGIN_PLACEHOLDER, login));
             LOGGER.trace("For password reset '{}' generated email text '{}'", changeEmailConfirmationToken.newEmail(), text);
