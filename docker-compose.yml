@@ -46,7 +46,7 @@ services:
         max-file: "1"
 
   redis:
-    image: redis:7.0.8-alpine3.17
+    image: valkey/valkey:7.2.5-bookworm
     hostname: redis
     restart: unless-stopped
     ports:
@@ -110,7 +110,7 @@ services:
         max-size: "50m"
 
   livekit:
-    image: livekit/livekit-server:v1.6.1
+    image: livekit/livekit-server:v1.7.0
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     network_mode: "host"
