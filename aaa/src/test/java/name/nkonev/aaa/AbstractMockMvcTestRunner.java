@@ -27,13 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc(printOnlyOnFailure = false, print = MockMvcPrint.LOG_DEBUG)
 @Transactional
-public abstract class AbstractUtTestRunner extends AbstractTestRunner {
+public abstract class AbstractMockMvcTestRunner extends AbstractTestRunner {
 
 
     @Autowired
     protected MockMvc mockMvc;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUtTestRunner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMockMvcTestRunner.class);
 
     /**
      * This method changes in runtime with ReflectionUtils Spring Security Csrf Filter .with(csrf()) so it ignores any CSRF token
@@ -42,7 +42,7 @@ public abstract class AbstractUtTestRunner extends AbstractTestRunner {
      * @return
      * @throws Exception
      */
-    protected String getSession(String username, String password) throws Exception {
+    protected String getMockMvcSession(String username, String password) throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                 post(SecurityConfig.API_LOGIN_URL)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)

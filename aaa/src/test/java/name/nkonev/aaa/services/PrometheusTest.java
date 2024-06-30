@@ -1,6 +1,6 @@
 package name.nkonev.aaa.services;
 
-import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.AbstractMockMvcTestRunner;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import java.net.URI;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @AutoConfigureObservability
-public class PrometheusTest extends AbstractUtTestRunner {
+public class PrometheusTest extends AbstractMockMvcTestRunner {
 
     @Value("${local.management.port}")
     protected int mgmtPort;

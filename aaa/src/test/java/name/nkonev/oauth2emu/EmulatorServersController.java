@@ -24,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.List;
 
-import static name.nkonev.aaa.it.OAuth2EmulatorTests.*;
+import static name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests.*;
 
 @Configuration
 @ComponentScan

@@ -1,4 +1,4 @@
-package name.nkonev.aaa.it;
+package name.nkonev.aaa.nomockmvc;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;

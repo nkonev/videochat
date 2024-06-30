@@ -2,7 +2,7 @@ package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.AbstractMockMvcTestRunner;
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.converter.UserAccountConverter;
@@ -34,14 +34,12 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import static name.nkonev.aaa.TestConstants.*;
 import static org.awaitility.Awaitility.await;
@@ -50,7 +48,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("User profile")
-public class UserProfileControllerTest extends AbstractUtTestRunner {
+public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -264,7 +262,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void userCanSeeTheirOwnEmail() throws Exception {
-        String session = getSession(TestConstants.USER_ADMIN, password);
+        String session = getMockMvcSession(TestConstants.USER_ADMIN, password);
         String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ADMIN);
@@ -318,7 +316,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void userCanSeeOnlyOwnProfileEmail() throws Exception {
-        String session = getSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
+        String session = getMockMvcSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
         String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
         UserAccount foreignUserAccount = getUserFromBd(USER_BOB);
@@ -333,7 +331,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void userCannotManageSessions() throws Exception {
-        String session = getSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
+        String session = getMockMvcSession(TestConstants.USER_ALICE, TestConstants.USER_ALICE_PASSWORD);
 
         String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
@@ -352,7 +350,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @org.junit.jupiter.api.Test
     public void adminCanManageSessions() throws Exception {
-        String session = getSession(username, password);
+        String session = getMockMvcSession(username, password);
 
         String headerValue = buildCookieHeader(new HttpCookie(TestConstants.HEADER_XSRF_TOKEN, XSRF_TOKEN_VALUE), new HttpCookie(getAuthCookieName(), session));
 
@@ -546,7 +544,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
 
     @Test
     public void testMySessions() throws Exception {
-        String session = getSession("admin", "admin");
+        String session = getMockMvcSession("admin", "admin");
 
         mockMvc.perform(
                         get(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS+"/my")
@@ -561,7 +559,7 @@ public class UserProfileControllerTest extends AbstractUtTestRunner {
     @Test
     public void ldapLoginTest() throws Exception {
         // https://spring.io/guides/gs/authenticating-ldap/
-        getSession(USER_BOB_LDAP, USER_BOB_LDAP_PASSWORD);
+        getMockMvcSession(USER_BOB_LDAP, USER_BOB_LDAP_PASSWORD);
         Optional<UserAccount> bob = userAccountRepository.findByUsername(USER_BOB_LDAP);
         Assertions.assertTrue(bob.isPresent());
         Assertions.assertEquals(USER_BOB_LDAP_ID, bob.get().ldapId());

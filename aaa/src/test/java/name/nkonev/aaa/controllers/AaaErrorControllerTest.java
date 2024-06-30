@@ -1,7 +1,7 @@
 package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.AbstractMockMvcTestRunner;
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.security.SecurityConfig;
@@ -19,7 +19,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class AaaErrorControllerTest extends AbstractUtTestRunner {
+public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorControllerTest.class);
 

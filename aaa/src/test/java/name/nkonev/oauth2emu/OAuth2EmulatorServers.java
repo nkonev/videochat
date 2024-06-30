@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import static name.nkonev.aaa.it.OAuth2EmulatorTests.*;
+import static name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests.*;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;

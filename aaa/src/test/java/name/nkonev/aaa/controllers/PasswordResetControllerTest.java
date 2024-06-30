@@ -1,6 +1,6 @@
 package name.nkonev.aaa.controllers;
 
-import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.AbstractMockMvcTestRunner;
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.PasswordResetDTO;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("Password reset")
-public class PasswordResetControllerTest extends AbstractUtTestRunner {
+public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
 
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;

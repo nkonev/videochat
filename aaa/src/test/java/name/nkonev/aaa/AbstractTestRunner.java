@@ -191,15 +191,10 @@ public abstract class AbstractTestRunner {
 
     }
 
-    public XsrfCookiesHolder getXsrf(boolean first, List<String> sessionCookies0) {
+    private XsrfCookiesHolder getXsrf() {
         var url = urlWithContextPath();
-        if (first) {
-            url += "/login.html";
-        }
+        url += "/login.html";
         var bldr = RequestEntity.get(url);
-        if (sessionCookies0 != null) {
-            bldr = bldr.header(HEADER_COOKIE, sessionCookies0.toArray(String[]::new));
-        }
         var reqEntity = bldr.build();
 
         ResponseEntity<String> getXsrfTokenResponse = testRestTemplate.exchange(reqEntity, String.class);
@@ -229,7 +224,7 @@ public abstract class AbstractTestRunner {
     ) {}
 
     protected RawLoginResponse rawLogin(String login, String password) throws URISyntaxException {
-        var xsrfHolder = getXsrf(true, null);
+        var xsrfHolder = getXsrf();
         String xsrfCookieHeaderValue = xsrfHolder.xsrfCookieHeaderValue;
         String xsrf = xsrfHolder.newXsrf;
 

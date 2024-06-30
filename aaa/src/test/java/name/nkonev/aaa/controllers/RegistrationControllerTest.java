@@ -1,6 +1,6 @@
 package name.nkonev.aaa.controllers;
 
-import name.nkonev.aaa.AbstractUtTestRunner;
+import name.nkonev.aaa.AbstractMockMvcTestRunner;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.dto.EditUserDTO;
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("Registration")
-public class RegistrationControllerTest extends AbstractUtTestRunner {
+public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
     @Autowired
     private UserAccountRepository userAccountRepository;

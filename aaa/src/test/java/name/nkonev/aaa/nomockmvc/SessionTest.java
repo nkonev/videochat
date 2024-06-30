@@ -1,4 +1,4 @@
-package name.nkonev.aaa.it;
+package name.nkonev.aaa.nomockmvc;
 
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.Constants;
