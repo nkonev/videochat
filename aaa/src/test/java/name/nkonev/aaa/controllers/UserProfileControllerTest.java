@@ -630,6 +630,8 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
         EditUserDTO createUserDTO = new EditUserDTO(username, null, null,  null, null, email);
 
+        long tokenCountBeforeSend = changeEmailConfirmationTokenRepository.count();
+
         // changeEmail
         mockMvc.perform(
                 MockMvcRequestBuilders.patch(Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE)
@@ -644,18 +646,23 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertEquals(oldEmail, user.email());
         Assertions.assertEquals(email, getTokenNewEmail(user.id()));
 
+        var firstToken = changeEmailConfirmationTokenRepository.findById(user.id());
+        long tokenCountBeforeResend = changeEmailConfirmationTokenRepository.count();
+        Assertions.assertEquals(tokenCountBeforeSend+1, tokenCountBeforeResend);
+
+
         // user lost email and reissues token
         {
-            long tokenCountBeforeResend = changeEmailConfirmationTokenRepository.count();
             mockMvc.perform(
                     post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM)
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
 
-            // TODO broken
-            // await().ignoreExceptions().until(() -> tokenCountBeforeResend+1 == changeEmailConfirmationTokenRepository.count());
-            Assertions.assertEquals(tokenCountBeforeResend+1, changeEmailConfirmationTokenRepository.count());
+            // we override old token so count is the same
+            Assertions.assertEquals(tokenCountBeforeResend, changeEmailConfirmationTokenRepository.count());
+            var secondToken = changeEmailConfirmationTokenRepository.findById(user.id());
+            Assertions.assertNotEquals(firstToken.get().uuid(), secondToken.get().uuid());
         }
 
         // confirm
