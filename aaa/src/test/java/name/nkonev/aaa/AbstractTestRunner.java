@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -44,6 +45,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.TestConstants.*;
+import static name.nkonev.aaa.config.RabbitMqConfig.*;
+import static name.nkonev.aaa.config.RabbitMqTestConfig.QUEUE_PROFILE_TEST;
 import static name.nkonev.aaa.security.SecurityConfig.*;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
@@ -114,6 +117,9 @@ public abstract class AbstractTestRunner {
     @Autowired
     private RedisServerCommands redisServerCommands;
 
+    @Autowired
+    protected RabbitAdmin rabbitAdmin;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractTestRunner.class);
 
     protected String buildCookieHeader(HttpCookie... cookies) {
@@ -124,6 +130,11 @@ public abstract class AbstractTestRunner {
     public void before() {
         redisServerCommands.flushDb();
         userConfirmationTokenRepository.deleteAll();
+        rabbitAdmin.purgeQueue(QUEUE_USER_CONFIRMATION_EMAILS_NAME, true);
+        rabbitAdmin.purgeQueue(QUEUE_PASSWORD_RESET_EMAILS_NAME, true);
+        rabbitAdmin.purgeQueue(QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME, true);
+        rabbitAdmin.purgeQueue(QUEUE_ARBITRARY_EMAILS_NAME, true);
+        rabbitAdmin.purgeQueue(QUEUE_PROFILE_TEST, true);
     }
 
     public static class SessionHolder {
