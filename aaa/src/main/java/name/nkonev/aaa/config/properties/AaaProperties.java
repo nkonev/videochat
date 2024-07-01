@@ -1,7 +1,6 @@
 package name.nkonev.aaa.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import name.nkonev.aaa.utils.UrlUtils;
 import java.time.Duration;
 import java.util.List;
 

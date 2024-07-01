@@ -12,7 +12,7 @@ logging:
     console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
 
 custom.api-url: "http://localhost:${server.port}/api/aaa"
-custom.frontend-url: "http://localhost:8081"
+custom.frontend-url: "http://localhost:9080"
 custom.template-engine-url-prefix: "http://localhost:${server.port}"
 custom.registration-confirm-exit-token-not-found-url: "${custom.frontend-url}/confirm/registration/token-not-found"
 custom.registration-confirm-exit-user-not-found-url: "${custom.frontend-url}/confirm/registration/user-not-found"

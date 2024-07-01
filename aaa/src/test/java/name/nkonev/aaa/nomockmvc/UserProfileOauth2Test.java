@@ -12,7 +12,10 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,9 +26,11 @@ import java.time.Duration;
 
 import static name.nkonev.aaa.TestConstants.*;
 import static name.nkonev.aaa.Constants.Urls.PUBLIC_API;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
+@ExtendWith(OutputCaptureExtension.class)
 public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
     @Autowired
@@ -115,11 +120,13 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
     }
 
     @Test
-    public void testFacebookLoginAndMergeVkontakte() throws InterruptedException, IOException {
+    public void testFacebookLoginAndMergeVkontakte(CapturedOutput output) throws InterruptedException, IOException {
 
         openOauth2TestPage();
 
         clickFacebook();
+
+        await().until(() -> output.getAll().contains("Storing referrer url http://localhost:9080/oauth2.html for still non-user with addr"));
 
         UserAccount userAccount = await().ignoreExceptions().until(() -> userAccountRepository.findByUsername(facebookLogin).orElseThrow(), o -> true);
         Long facebookLoggedId = userAccount.id();
@@ -129,6 +136,10 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         Assertions.assertNotNull(facebookId);
         Assertions.assertNull(userAccount.oauth2Identifiers().vkontakteId());
         long count = userAccountRepository.count();
+
+        // here we rely on redirect in WithRefererInStateOAuth2AuthorizationRequestResolver and OAuth2AuthenticationSuccessHandler
+        await().until(() -> output.getAll().contains("Redirecting user with id"));
+        assertThat(output).contains("to the restored referrer url http://localhost:9080/oauth2.html");
 
         clickVkontakte();
 
