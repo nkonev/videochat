@@ -23,7 +23,7 @@
                 <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
-                <v-btn variant="plain" rounded size="large" :href="getChatLink()"><v-icon size="large">mdi-forum</v-icon></v-btn>
+                <v-btn variant="plain" rounded size="large" :href="getChatLink()" title="Go to the message in chat"><v-icon size="large">mdi-forum</v-icon></v-btn>
               </div>
             </div>
           </template>
@@ -55,7 +55,7 @@
             indeterminate
           ></v-progress-linear>
 
-          <v-btn class="ma-2" variant="flat" color="primary" @click="writeComment()">Write a comment</v-btn>
+          <v-btn class="ma-2" variant="flat" color="primary" :href="getJustChatLink()">Write a comment</v-btn>
 
           <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
@@ -99,9 +99,6 @@ export default {
     },
     getJustChatLink() {
       return chat + '/' + this.blogDto.chatId;
-    },
-    writeComment() {
-      window.location.href = this.getJustChatLink()
     },
     getDate(date) {
       if (hasLength(date)) {
