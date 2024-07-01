@@ -44,7 +44,7 @@ public abstract class AbstractOAuth2UserService {
     }
 
     private UserAccountDetailsDTO getPrincipal() {
-        return (UserAccountDetailsDTO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return SecurityUtils.getPrincipal();
     }
 
     protected abstract Logger logger();

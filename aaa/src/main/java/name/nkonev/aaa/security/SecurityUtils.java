@@ -34,4 +34,9 @@ public abstract class SecurityUtils {
         httpSession.setAttribute(SPRING_SECURITY_CONTEXT_KEY, context);
         LOGGER.info("Successfully set updated SecurityContext to the session");
     }
+
+    // can throw an exception in case no context
+    public static UserAccountDetailsDTO getPrincipal() {
+        return (UserAccountDetailsDTO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
 }

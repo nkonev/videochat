@@ -1,6 +1,8 @@
 package name.nkonev.aaa.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -12,6 +14,8 @@ import static name.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WithRefererInStateOAuth2AuthorizationRequestResolver.class);
 
     public WithRefererInStateOAuth2AuthorizationRequestResolver(DefaultOAuth2AuthorizationRequestResolver delegate) {
         this.delegate = delegate;
@@ -42,6 +46,7 @@ class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2Auth
         if (currentHttpRequest!=null){
             String referer = currentHttpRequest.getHeader("Referer");
             if (StringUtils.hasLength(referer)){
+                LOGGER.info("Storing referrer url {} for still non-user with addr {}", referer, currentHttpRequest.getRemoteHost());
                 return OAuth2AuthenticationSuccessHandler.SEPARATOR+referer;
             }
         }
