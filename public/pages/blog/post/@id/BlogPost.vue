@@ -55,7 +55,7 @@
             indeterminate
           ></v-progress-linear>
 
-          <v-btn class="ma-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
+          <v-btn class="mt-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
 
           <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
