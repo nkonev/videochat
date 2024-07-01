@@ -33,9 +33,6 @@ public record AaaProperties(
         if (allowedAvatarUrls == null) {
             return List.of();
         }
-        if (allowedAvatarUrls.isEmpty()) {
-            return List.of("");
-        }
         return List.of(allowedAvatarUrls.split(","));
     }
 }
