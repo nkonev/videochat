@@ -158,19 +158,28 @@ export default {
     },
     fetchAndSetChat() {
       return axios.get(`/api/chat/${this.chatId}`).then((response) => {
-        if (response.status == 204) {
+        if (response.status == 205) {
+          return axios.put(`/api/chat/${this.chatId}/join`).then((response)=>{
+              return axios.get(`/api/chat/${this.chatId}`).then((response)=>{
+                  return this.processNormalInfoResponse(response)
+              })
+          })
+        } else if (response.status == 204) {
           this.goToChatList();
           this.setWarning(this.$vuetify.locale.t('$vuetify.chat_not_found'));
           return Promise.reject();
         } else {
-          const data = response.data;
-          console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
-          this.commonChatEdit(data);
-          this.chatStore.tetATet = data.tetATet;
-          this.chatStore.setChatDto(data);
-          return Promise.resolve();
+            return this.processNormalInfoResponse(response);
         }
       })
+    },
+    processNormalInfoResponse(response) {
+        const data = response.data;
+        console.log("Got info about chat in ChatView, chatId=", this.chatId, data);
+        this.commonChatEdit(data);
+        this.chatStore.tetATet = data.tetATet;
+        this.chatStore.setChatDto(data);
+        return Promise.resolve();
     },
     commonChatEdit(data) {
         this.chatStore.title = data.name;

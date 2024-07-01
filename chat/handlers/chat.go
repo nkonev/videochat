@@ -461,7 +461,15 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	} else {
 		if chat == nil {
-			return c.NoContent(http.StatusNoContent)
+			basic, err := ch.db.GetChatBasic(chatId)
+			if err != nil {
+				return err
+			}
+			if basic != nil && (basic.AvailableToSearch || basic.IsBlog) {
+				return c.NoContent(http.StatusResetContent)
+			} else {
+				return c.NoContent(http.StatusNoContent)
+			}
 		} else {
 			copiedChat, err := getChatWithAdminedUsers(c, chat, ch.db)
 			if err != nil {

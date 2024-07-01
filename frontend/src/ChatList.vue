@@ -320,16 +320,8 @@ export default {
         delete prev[SEARCH_MODE_MESSAGES]
       }
 
-      let promise;
-      if (this.isSearchResult(item)) {
-        promise = axios.put(`/api/chat/${item.id}/join`)
-      } else {
-        promise = Promise.resolve(true)
-      }
-      promise.then(() => {
-        this.$router.push({ name: chat_name, params: {id: item.id}, query: prev }).finally(()=>{
-          this.chatStore.decrementProgressCount();
-        })
+      this.$router.push({ name: chat_name, params: {id: item.id}, query: prev }).finally(()=>{
+        this.chatStore.decrementProgressCount();
       })
     },
     getLink(item) {
