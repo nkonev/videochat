@@ -37,7 +37,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             return DEFAULT;
         } else {
             var url = split[1];
-            LOGGER.info("Redirecting user with id {} with addr {} to the restored referrer url {}", SecurityUtils.getPrincipal().getId(), request.getRemoteHost(), url);
+            LOGGER.info("Redirecting user with id {} with addr {} to the restored referrer url {}", SecurityUtils.getPrincipal().getId(), request.getHeader("x-real-ip"), url);
             return url;
         }
     }

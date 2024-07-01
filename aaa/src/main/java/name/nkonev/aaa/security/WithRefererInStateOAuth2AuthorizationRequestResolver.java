@@ -46,7 +46,7 @@ class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2Auth
         if (currentHttpRequest!=null){
             String referer = currentHttpRequest.getHeader("Referer");
             if (StringUtils.hasLength(referer)){
-                LOGGER.info("Storing referrer url {} for still non-user with addr {}", referer, currentHttpRequest.getRemoteHost());
+                LOGGER.info("Storing referrer url {} for still non-user with addr {}", referer, currentHttpRequest.getHeader("x-real-ip"));
                 return OAuth2AuthenticationSuccessHandler.SEPARATOR+referer;
             }
         }
