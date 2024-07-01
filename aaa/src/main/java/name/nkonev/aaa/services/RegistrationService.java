@@ -61,7 +61,7 @@ public class RegistrationService {
     private AaaProperties aaaProperties;
 
     @Autowired
-    private RefererService referrerService;
+    private RefererService refererService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
@@ -128,10 +128,10 @@ public class RegistrationService {
         loginListener.onApplicationEvent(auth);
         eventService.notifyProfileUpdated(userAccount);
 
-        var referrer = userConfirmationToken.referrer();
-        if (StringUtils.hasLength(referrer)) {
-            LOGGER.info("Redirecting user with id {} with addr {} to the restored referrer url {}", SecurityUtils.getPrincipal().getId(), httpServletRequest.getHeader("x-real-ip"), referrer);
-            return referrer;
+        var referer = userConfirmationToken.referer();
+        if (StringUtils.hasLength(referer)) {
+            LOGGER.info("Redirecting user with id {} with addr {} to the restored referer url {}", SecurityUtils.getPrincipal().getId(), httpServletRequest.getHeader("x-real-ip"), referer);
+            return referer;
         } else {
             return aaaProperties.registrationConfirmExitSuccessUrl();
         }
@@ -159,9 +159,9 @@ public class RegistrationService {
         Assert.isTrue(!userAccount.confirmed(), "user account mustn't be confirmed");
 
         long seconds = aaaProperties.confirmation().registration().token().ttl().getSeconds(); // Redis requires seconds
-        var validReferer = referrerService.getRefererOrEmpty(referer);
+        var validReferer = refererService.getRefererOrEmpty(referer);
         if (StringUtils.hasLength(validReferer)) {
-            LOGGER.info("Storing referrer url {} for still non-user with addr {}", validReferer, currentHttpRequest.getHeader("x-real-ip"));
+            LOGGER.info("Storing referer url {} for still non-user with addr {}", validReferer, currentHttpRequest.getHeader("x-real-ip"));
         }
 
         UUID tokenUuid = UUID.randomUUID();

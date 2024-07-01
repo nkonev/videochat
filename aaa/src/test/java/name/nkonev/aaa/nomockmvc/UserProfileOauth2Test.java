@@ -126,7 +126,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         clickFacebook();
 
-        await().until(() -> output.getAll().contains("Storing referrer url http://localhost:9080/oauth2.html for still non-user with addr"));
+        await().until(() -> output.getAll().contains("Storing referer url http://localhost:9080/oauth2.html for still non-user with addr"));
 
         UserAccount userAccount = await().ignoreExceptions().until(() -> userAccountRepository.findByUsername(facebookLogin).orElseThrow(), o -> true);
         Long facebookLoggedId = userAccount.id();
@@ -139,7 +139,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
 
         // here we rely on redirect in WithRefererInStateOAuth2AuthorizationRequestResolver and OAuth2AuthenticationSuccessHandler
         await().until(() -> output.getAll().contains("Redirecting user with id"));
-        assertThat(output).contains("to the restored referrer url http://localhost:9080/oauth2.html");
+        assertThat(output).contains("to the restored referer url http://localhost:9080/oauth2.html");
 
         clickVkontakte();
 

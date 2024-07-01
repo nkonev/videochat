@@ -54,6 +54,9 @@
             color="primary"
             indeterminate
           ></v-progress-linear>
+
+          <v-btn class="ma-2" variant="flat" color="primary" @click="writeComment()">Write a comment</v-btn>
+
           <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
     </template>
@@ -93,6 +96,12 @@ export default {
     },
     getChatLink() {
       return chat + '/' + this.blogDto.chatId + messageIdHashPrefix + this.blogDto.messageId;
+    },
+    getJustChatLink() {
+      return chat + '/' + this.blogDto.chatId;
+    },
+    writeComment() {
+      window.location.href = this.getJustChatLink()
     },
     getDate(date) {
       if (hasLength(date)) {

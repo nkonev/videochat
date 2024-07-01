@@ -14,13 +14,13 @@ import static name.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
-    private final RefererService referrerService;
+    private final RefererService refererService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WithRefererInStateOAuth2AuthorizationRequestResolver.class);
 
-    public WithRefererInStateOAuth2AuthorizationRequestResolver(DefaultOAuth2AuthorizationRequestResolver delegate, RefererService referrerService) {
+    public WithRefererInStateOAuth2AuthorizationRequestResolver(DefaultOAuth2AuthorizationRequestResolver delegate, RefererService refererService) {
         this.delegate = delegate;
-        this.referrerService = referrerService;
+        this.refererService = refererService;
     }
 
     @Override
@@ -46,9 +46,9 @@ class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2Auth
     private String getSeparatorRefererOrEmpty() {
         HttpServletRequest currentHttpRequest = getCurrentHttpRequest();
 
-        String referer = referrerService.getRefererOrEmpty(currentHttpRequest);
+        String referer = refererService.getRefererOrEmpty(currentHttpRequest);
         if (StringUtils.hasLength(referer)){
-            LOGGER.info("Storing referrer url {} for still non-user with addr {}", referer, currentHttpRequest.getHeader("x-real-ip"));
+            LOGGER.info("Storing referer url {} for still non-user with addr {}", referer, currentHttpRequest.getHeader("x-real-ip"));
             return OAuth2AuthenticationSuccessHandler.SEPARATOR+referer;
         }
 
