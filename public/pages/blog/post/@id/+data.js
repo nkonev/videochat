@@ -10,6 +10,7 @@ async function data(pageContext) {
     const blogResponse = await axios.get(apiHost + `/blog/${pageContext.routeParams.id}`);
 
     if (blogResponse.status == 204) {
+        pageContext.httpStatus = 404;
         return {
             blogDto: {
                 is404: true
@@ -36,6 +37,7 @@ async function data(pageContext) {
     });
 
     if (commentResponse.status == 204) {
+        pageContext.httpStatus = 404;
         return {
             blogDto: {
                 is404: true
