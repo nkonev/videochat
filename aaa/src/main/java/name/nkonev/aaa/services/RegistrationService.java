@@ -1,5 +1,6 @@
 package name.nkonev.aaa.services;
 
+import jakarta.servlet.http.HttpServletRequest;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.EditUserDTO;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -58,9 +60,12 @@ public class RegistrationService {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private RefererService referrerService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
-    public void register(EditUserDTO editUserDTO, Language language) {
+    public void register(EditUserDTO editUserDTO, Language language, String referer, HttpServletRequest httpServletRequest) {
         var userAccountEditDTO = UserAccountConverter.normalize(editUserDTO, false);
         var login = validateLengthAndTrimLogin(userAccountEditDTO.login(), false);
         var userAccountDTO = userAccountEditDTO.withLogin(login);
@@ -76,7 +81,7 @@ public class RegistrationService {
             UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForInsert(userAccountDTO, passwordEncoder);
 
             userAccount = userAccountRepository.save(userAccount);
-            UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
+            UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount, referer, httpServletRequest);
             asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username(), language);
             return userAccount;
         });
@@ -95,7 +100,7 @@ public class RegistrationService {
      * @return
      */
     @Transactional
-    public String confirm(UUID uuid, HttpSession httpSession) {
+    public String confirm(UUID uuid, HttpSession httpSession, HttpServletRequest httpServletRequest) {
         Optional<UserConfirmationToken> userConfirmationTokenOptional = userConfirmationTokenRepository.findById(uuid);
         if (!userConfirmationTokenOptional.isPresent()) {
             LOGGER.info("For uuid {}, confirm user token is not found", uuid);
@@ -123,11 +128,17 @@ public class RegistrationService {
         loginListener.onApplicationEvent(auth);
         eventService.notifyProfileUpdated(userAccount);
 
-        return aaaProperties.registrationConfirmExitSuccessUrl();
+        var referrer = userConfirmationToken.referrer();
+        if (StringUtils.hasLength(referrer)) {
+            LOGGER.info("Redirecting user with id {} with addr {} to the restored referrer url {}", SecurityUtils.getPrincipal().getId(), httpServletRequest.getHeader("x-real-ip"), referrer);
+            return referrer;
+        } else {
+            return aaaProperties.registrationConfirmExitSuccessUrl();
+        }
     }
 
     @Transactional
-    public void resendConfirmationToken(String email, Language language) {
+    public void resendConfirmationToken(String email, Language language, String referer, HttpServletRequest httpServletRequest) {
         Optional<UserAccount> userAccountOptional = userAccountRepository.findByEmail(email);
         if(!userAccountOptional.isPresent()){
             LOGGER.warn("Skipping sent subsequent confirmation email '{}' because this email is not found", email);
@@ -140,17 +151,21 @@ public class RegistrationService {
             return; // we care for for email leak
         }
 
-        UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount);
+        UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount, referer, httpServletRequest);
         asyncEmailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username(), language);
     }
 
-    private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount) {
+    private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount, String referer, HttpServletRequest currentHttpRequest) {
         Assert.isTrue(!userAccount.confirmed(), "user account mustn't be confirmed");
 
         long seconds = aaaProperties.confirmation().registration().token().ttl().getSeconds(); // Redis requires seconds
+        var validReferer = referrerService.getRefererOrEmpty(referer);
+        if (StringUtils.hasLength(validReferer)) {
+            LOGGER.info("Storing referrer url {} for still non-user with addr {}", validReferer, currentHttpRequest.getHeader("x-real-ip"));
+        }
 
         UUID tokenUuid = UUID.randomUUID();
-        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid, userAccount.id(), seconds);
+        UserConfirmationToken userConfirmationToken = new UserConfirmationToken(tokenUuid, userAccount.id(), validReferer, seconds);
         return userConfirmationTokenRepository.save(userConfirmationToken);
     }
 }

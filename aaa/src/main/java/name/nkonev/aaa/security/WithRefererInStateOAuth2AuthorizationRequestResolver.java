@@ -1,8 +1,7 @@
 package name.nkonev.aaa.security;
 
 import jakarta.servlet.http.HttpServletRequest;
-import name.nkonev.aaa.config.properties.AaaProperties;
-import name.nkonev.aaa.utils.UrlUtils;
+import name.nkonev.aaa.services.RefererService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
@@ -10,21 +9,18 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.util.StringUtils;
 
-
-import java.util.List;
-
 import static name.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 
 class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
-    private final AaaProperties aaaProperties;
+    private final RefererService referrerService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WithRefererInStateOAuth2AuthorizationRequestResolver.class);
 
-    public WithRefererInStateOAuth2AuthorizationRequestResolver(DefaultOAuth2AuthorizationRequestResolver delegate, AaaProperties aaaProperties) {
+    public WithRefererInStateOAuth2AuthorizationRequestResolver(DefaultOAuth2AuthorizationRequestResolver delegate, RefererService referrerService) {
         this.delegate = delegate;
-        this.aaaProperties = aaaProperties;
+        this.referrerService = referrerService;
     }
 
     @Override
@@ -49,18 +45,14 @@ class WithRefererInStateOAuth2AuthorizationRequestResolver implements OAuth2Auth
 
     private String getSeparatorRefererOrEmpty() {
         HttpServletRequest currentHttpRequest = getCurrentHttpRequest();
-        if (currentHttpRequest!=null){
-            String referer = currentHttpRequest.getHeader("Referer");
-            if (StringUtils.hasLength(referer) && isValid(referer)){
-                LOGGER.info("Storing referrer url {} for still non-user with addr {}", referer, currentHttpRequest.getHeader("x-real-ip"));
-                return OAuth2AuthenticationSuccessHandler.SEPARATOR+referer;
-            }
+
+        String referer = referrerService.getRefererOrEmpty(currentHttpRequest);
+        if (StringUtils.hasLength(referer)){
+            LOGGER.info("Storing referrer url {} for still non-user with addr {}", referer, currentHttpRequest.getHeader("x-real-ip"));
+            return OAuth2AuthenticationSuccessHandler.SEPARATOR+referer;
         }
+
         return "";
     }
 
-    private boolean isValid(String referer) {
-        var allowedUrls = List.of("", aaaProperties.frontendUrl());
-        return UrlUtils.containsUrl(allowedUrls, referer);
-    }
 }

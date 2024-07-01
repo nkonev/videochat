@@ -246,7 +246,7 @@ import {getStoredLanguage} from "@/store/localStore";
             },
             onRegisterClick() {
               this.show = false;
-              this.$router.push({name: registration_name} )
+              this.$router.push({name: registration_name, query: { referer: window.location.href }} )
             },
             onForgotPasswordClick() {
               this.show = false;

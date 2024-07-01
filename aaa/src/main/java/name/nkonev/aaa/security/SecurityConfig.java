@@ -5,6 +5,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import name.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
+import name.nkonev.aaa.services.RefererService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -84,6 +85,9 @@ public class SecurityConfig {
 
     @Autowired
     private AaaProperties aaaProperties;
+
+    @Autowired
+    private RefererService referrerService;
 
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
@@ -174,7 +178,7 @@ public class SecurityConfig {
     @Bean
     OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver() {
         DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, API_LOGIN_OAUTH);
-        return new WithRefererInStateOAuth2AuthorizationRequestResolver(defaultOAuth2AuthorizationRequestResolver, aaaProperties);
+        return new WithRefererInStateOAuth2AuthorizationRequestResolver(defaultOAuth2AuthorizationRequestResolver, referrerService);
     }
 
     @Bean

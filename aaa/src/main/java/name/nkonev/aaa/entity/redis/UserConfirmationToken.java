@@ -13,6 +13,8 @@ public record UserConfirmationToken (
 
     Long userId,
 
+    String referrer,
+
     @TimeToLive
     long ttlSeconds
 

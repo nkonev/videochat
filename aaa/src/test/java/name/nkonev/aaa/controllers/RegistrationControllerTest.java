@@ -386,7 +386,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
     @Test
     public void testConfirmationUserNotFound() throws Exception {
         var tokenUuid = UUID.randomUUID(); // create random token
-        UserConfirmationToken token1 = new UserConfirmationToken(tokenUuid, -999L, 180);
+        UserConfirmationToken token1 = new UserConfirmationToken(tokenUuid, -999L, "", 180);
         userConfirmationTokenRepository.save(token1); // save it
 
         // create /confirm?uuid=<uuid>

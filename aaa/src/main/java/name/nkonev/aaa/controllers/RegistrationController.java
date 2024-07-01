@@ -1,5 +1,6 @@
 package name.nkonev.aaa.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.EditUserDTO;
 import name.nkonev.aaa.dto.Language;
@@ -20,18 +21,18 @@ public class RegistrationController {
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
     @ResponseBody
-    public void register(@RequestBody @Valid EditUserDTO editUserDTO, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
-        registrationService.register(editUserDTO, language);
+    public void register(@RequestBody @Valid EditUserDTO editUserDTO, @RequestParam(defaultValue = Language.DEFAULT) Language language, @RequestParam(required = false) String referer, HttpServletRequest httpServletRequest) {
+        registrationService.register(editUserDTO, language, referer, httpServletRequest);
     }
 
     @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER_CONFIRM)
-    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
-        return "redirect:" + registrationService.confirm(uuid, httpSession);
+    public String confirm(@RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession, HttpServletRequest httpServletRequest) {
+        return "redirect:" + registrationService.confirm(uuid, httpSession, httpServletRequest);
     }
 
     @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
     @ResponseBody
-    public void resendConfirmationToken(@RequestParam String email, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
-        registrationService.resendConfirmationToken(email, language);
+    public void resendConfirmationToken(@RequestParam String email, @RequestParam(defaultValue = Language.DEFAULT) Language language, HttpServletRequest httpServletRequest) {
+        registrationService.resendConfirmationToken(email, language, "", httpServletRequest);
     }
 }
