@@ -64,7 +64,7 @@
                         title: 'Blog',
                         disabled: false,
                         exactPath: true,
-                        href: path_prefix + blog + "/",
+                        href: path_prefix + blog,
                     })
 
                     if (hasLength(this.chatId)) {

@@ -4,7 +4,7 @@ export const root = "/";
 export const chat = `${prefix}/chat`;
 export const public_prefix = `/public`;
 export const chats = `${prefix}/chats`;
-export const blog = `${public_prefix}/blog/`;
+export const blog = `${public_prefix}/blog`;
 
 export const blog_post =  `${public_prefix}/blog/post`;
 
