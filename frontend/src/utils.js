@@ -335,3 +335,25 @@ export const getNotificationSubtitle = (vuetify, item) => {
 export const getNotificationTitle = (item) => {
     return item.description
 }
+
+export const checkUpByTree = (el, maxLevels, condition) => {
+    return checkUpByTreeObj(el, maxLevels, condition).found
+}
+
+export const checkUpByTreeObj = (el, maxLevels, condition) => {
+    let level = 0;
+    let underCheck = el;
+    do {
+        if (condition(underCheck)) {
+            return {
+                found: true,
+                el: underCheck
+            }
+        }
+        underCheck = underCheck.parentElement;
+        level++;
+    } while (level <= maxLevels);
+    return {
+        found: false
+    };
+}

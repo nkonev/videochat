@@ -1,5 +1,5 @@
 <template>
-        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll">
+        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll" @click="onClickTrap">
           <div class="message-first-element" style="min-height: 1px; background: white"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
@@ -66,9 +66,10 @@
         OPEN_MESSAGE_EDIT_SMILEY,
         REACTION_CHANGED,
         REACTION_REMOVED,
-        MESSAGES_RELOAD
+        MESSAGES_RELOAD, PLAYER_MODAL
     } from "@/bus/bus";
     import {
+        checkUpByTree, checkUpByTreeObj,
         deepCopy, edit_message, embed_message_reply,
         findIndex, getBlogLink, getPublicMessageLink,
         hasLength, haveEmbed, isChatRoute,
@@ -475,25 +476,14 @@
         onShowContextMenu(e, menuableItem){
           // console.log("onShowContextMenu", e, tag, tagParent);
           if (
-            !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img") &&
-            !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "video") &&
-            !this.checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
-            !this.checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions"))
+            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img") &&
+            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "video") &&
+            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "audio") &&
+            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
+            !checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions"))
           ) {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           }
-        },
-        checkUpByTree(el, maxLevels, condition) {
-          let level = 0;
-          let underCheck = el;
-          do {
-            if (condition(underCheck)) {
-              return true
-            }
-            underCheck = underCheck.parentElement;
-            level++;
-          } while (level <= maxLevels);
-          return false;
         },
         onUserProfileChanged(user) {
           this.items.forEach(item => {
@@ -548,6 +538,20 @@
                     publish: false
                 },
             });
+        },
+        onClickTrap(e) {
+            const foundElements = [
+                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
+            ].filter(r => r.found);
+            if (foundElements.length) {
+                const found = foundElements[foundElements.length - 1].el;
+                switch (found?.tagName?.toLowerCase()) {
+                    case "img": {
+                        bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: found.src})
+                        break;
+                    }
+                }
+            }
         },
       },
       created() {
