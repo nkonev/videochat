@@ -1,5 +1,5 @@
 <template>
-        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll" @click="onClickTrap">
+        <div class="ma-0 px-0 pt-0 pb-2 my-messages-scroller" @scroll.passive="onScroll">
           <div class="message-first-element" style="min-height: 1px; background: white"></div>
           <MessageItem v-for="item in items"
             :id="getItemId(item.id)"
@@ -15,6 +15,7 @@
             @onFilesClicked="onFilesClicked"
             @addReaction="addReaction"
             @onreactionclick="onExistingReactionClick"
+            @click="onClickTrap"
           ></MessageItem>
           <template v-if="items.length == 0 && !showProgress">
             <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.messages_not_found')}}</v-sheet>
