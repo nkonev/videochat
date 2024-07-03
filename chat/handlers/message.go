@@ -940,6 +940,8 @@ func (mc *MessageHandler) Filter(c echo.Context) error {
 		return err
 	}
 
+	searchString := TrimAmdSanitize(mc.policy, bindTo.SearchString)
+
 	return db.Transact(mc.db, func(tx *db.Tx) error {
 		participant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId)
 		if err != nil {
@@ -948,7 +950,7 @@ func (mc *MessageHandler) Filter(c echo.Context) error {
 		if !participant {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to search in this chat"})
 		}
-		found, err := tx.MessageFilter(chatId, bindTo.SearchString, bindTo.MessageId)
+		found, err := tx.MessageFilter(chatId, searchString, bindTo.MessageId)
 		if err != nil {
 			return err
 		}

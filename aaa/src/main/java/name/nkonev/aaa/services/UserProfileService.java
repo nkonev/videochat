@@ -120,7 +120,8 @@ public class UserProfileService {
 
     @Transactional
     public Map<String, Boolean> filter(FilterUserRequest filterUserRequest) {
-        var searchStringWithPercents = "%" + filterUserRequest.searchString() + "%";
+        var searchString = filterUserRequest.searchString() != null ? filterUserRequest.searchString().trim() : "";
+        var searchStringWithPercents = "%" + searchString + "%";
         var found = userAccountRepository.findByUsernameContainsIgnoreCaseAndIdIn(1, 0, searchStringWithPercents, List.of(filterUserRequest.userId()));
         return Map.of("found", !found.isEmpty());
     }

@@ -265,8 +265,10 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 		return err
 	}
 
+	searchString := strings.TrimSpace(bindTo.SearchString)
+
 	return db.Transact(ch.db, func(tx *db.Tx) error {
-		found, err := tx.ChatFilter(bindTo.SearchString, bindTo.ChatId)
+		found, err := tx.ChatFilter(searchString, bindTo.ChatId)
 		if err != nil {
 			return err
 		}

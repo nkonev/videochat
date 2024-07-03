@@ -956,6 +956,25 @@ func (db *DB) GetUserChatNotificationSettings(userId, chatId int64) (*bool, erro
 	return consider, nil
 }
 
+func (tx *Tx) ChatFilter(searchString string, chatId int64) (bool, error) {
+	searchStringWithPercents := "%" + searchString + "%"
+	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS (SELECT * FROM chat ch WHERE ch.id = $1 AND strip_tags(ch.title) ILIKE $2)"), chatId, searchStringWithPercents)
+	if row.Err() != nil {
+		Logger.Errorf("Error during get Search %v", row.Err())
+		return false, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+
+	var found bool
+	err := row.Scan(&found)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, eris.Wrap(err, "error during interacting with db")
+	}
+	return found, nil
+}
+
 func (db *DB) DeleteAllParticipants() error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin
