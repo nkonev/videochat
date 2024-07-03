@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" max-width="fit-content" scrollable>
+        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" scrollable height="fit-content" width="fit-content">
             <v-card :title="getTitle()">
                 <v-card-text class="d-flex justify-center pb-0 px-2">
                     <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
@@ -68,6 +68,16 @@ export default {
 
 <style lang="stylus" scoped>
 @import "constants.styl"
+
+.image-custom-class-view {
+    max-width: 100% !important
+    max-height: 100% !important
+}
+
+.video-custom-class-view {
+    max-width: 100% !important
+    max-height: 100% !important
+}
 
 @media screen and (max-width: $mobileWidth) {
     .image-custom-class-view {
