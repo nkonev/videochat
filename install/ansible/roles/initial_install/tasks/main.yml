@@ -80,3 +80,34 @@
   ansible.builtin.copy:
     src: files/egress.yaml
     dest: "{{ dir_prefix }}/egress/config.yaml"
+
+- name: Create Minio data directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-minio/data
+    state: directory
+
+- name: Set RW access on Minio data directory
+  ansible.builtin.file:
+    path: /mnt/chat-minio
+    state: directory
+    recurse: true
+    mode: a=rw
+
+- name: Create Storage tmp directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-storage-tmp
+    state: directory
+
+- name: Set RW access on Storage tmp directory
+  ansible.builtin.file:
+    path: /mnt/chat-storage-tmp
+    state: directory
+    recurse: true
+    mode: a=rw
+
+- name: Create PostgreSQL data directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-postgresql
+    state: directory
+    recurse: true
+    mode: a=rw

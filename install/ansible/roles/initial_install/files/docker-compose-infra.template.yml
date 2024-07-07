@@ -29,7 +29,7 @@ services:
     image: postgres:15.1-alpine3.17
     volumes:
       - ./postgresql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-      - postgres_data:/var/lib/postgresql/data
+      - /mnt/chat-postgresql:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
     networks:
