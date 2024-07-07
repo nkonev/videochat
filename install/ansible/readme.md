@@ -11,3 +11,8 @@ Dry-run
 ```bash
 ansible-playbook -i hosts.ini playbook.yaml --check
 ```
+
+Manual apply
+```bash
+docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
+```

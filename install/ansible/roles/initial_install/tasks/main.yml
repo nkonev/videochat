@@ -111,3 +111,8 @@
     state: directory
     recurse: true
     mode: a=rw
+
+- name: Create Docker Compose Infra
+  template:
+    src: templates/docker-compose-infra.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-infra.yml"

@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.9'
 
 services:
   traefik:
@@ -58,15 +58,17 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.services.minio-service.loadbalancer.server.port=9000"
-        - "traefik.http.routers.minio-router.rule=PathPrefix(`/api/s3`)"
-        - "traefik.http.routers.minio-router.entrypoints=http"
+        - "traefik.http.routers.minio-router.rule=PathPrefix(`/api/s3`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.minio-router.middlewares=minio-strip-prefix-middleware,retry-middleware@file,minio-fix-host-middleware"
+        - "traefik.http.routers.minio-router.entrypoints=https"
+        - "traefik.http.routers.minio-router.tls=true"
+        - "traefik.http.routers.minio-router.tls.certresolver=myresolver"
         - "traefik.http.middlewares.minio-strip-prefix-middleware.stripprefix.prefixes=/api/s3"
         - "traefik.http.middlewares.minio-fix-host-middleware.headers.customrequestheaders.Host=minio:9000"
 
     environment:
-      - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
-      - MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - MINIO_ROOT_USER={{ minio_user }}
+      - MINIO_ROOT_PASSWORD={{ minio_password }}
       - MINIO_NOTIFY_AMQP_ENABLE_primary=on
       - MINIO_NOTIFY_AMQP_URL_primary=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - MINIO_NOTIFY_AMQP_EXCHANGE_primary=minio-events
@@ -79,7 +81,7 @@ services:
       - BITNAMI_DEBUG=true
 
     volumes:
-      - /mnt/chat-minio/data:/bitnami/minio/data
+      - /mnt/chat-minio/data:/bitnami/minio/data:z
     networks:
       backend:
     logging:
@@ -113,8 +115,10 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.services.livekit-service.loadbalancer.server.port=7880"
-        - "traefik.http.routers.livekit-router.rule=PathPrefix(`/api/livekit`)"
-        - "traefik.http.routers.livekit-router.entrypoints=http"
+        - "traefik.http.routers.livekit-router.rule=PathPrefix(`/api/livekit`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.livekit-router.entrypoints=https"
+        - "traefik.http.routers.livekit-router.tls=true"
+        - "traefik.http.routers.livekit-router.tls.certresolver=myresolver"
         - "traefik.http.middlewares.livekit-stripprefix-middleware.stripprefix.prefixes=/api/livekit"
         - "traefik.http.routers.livekit-router.middlewares=auth-middleware@file,livekit-stripprefix-middleware,retry-middleware@file"
     ports:
@@ -173,15 +177,14 @@ services:
         limits:
 #          cpus: '0.40'
           memory: '2G'
+    command:
+      - --memory.max-traces=10000
     logging:
       driver: "journald"
       options:
         tag: chat-jaeger
-    command:
-      - --memory.max-traces=10000
 
 volumes:
-  postgres_data:
   redis_data_dir:
   rabbitmq_data_dir:
   egress_tmp:

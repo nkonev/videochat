@@ -1,3 +1,5 @@
 acme_email: "<>for_example_your.email@gmail.com<>"
 old_domain: "old.example.com" # optional
 domain: "example.com"
+minio_user: "AKIAIOSFODNN7EXAMPLE"
+minio_password: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
