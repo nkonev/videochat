@@ -70,3 +70,13 @@
   ansible.builtin.copy:
     src: files/init.sql
     dest: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d/init.sql"
+
+- name: Create Egress directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/egress"
+    state: directory
+
+- name: Create Egress config
+  ansible.builtin.copy:
+    src: files/egress.yaml
+    dest: "{{ dir_prefix }}/egress/config.yaml"
