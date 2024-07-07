@@ -86,12 +86,24 @@
     path: /mnt/chat-minio/data
     state: directory
 
-- name: Set RWX access on Minio data directory
+- name: Set owner and access on Minio data directory
   ansible.builtin.file:
     path: /mnt/chat-minio
     state: directory
     recurse: true
-    mode: a=rwx
+    mode: u=rw,g-rwx,o-rwx
+    # https://docs.bitnami.com/kubernetes/faq/configuration/use-non-root/
+    # https://github.com/bitnami/containers/blob/main/bitnami/minio/2024/debian-12/Dockerfile#L61C6-L61C10
+    owner: 1001
+    group: 1001
+
+- name: Set owner and RWX access on Minio data directory non-recursively
+  ansible.builtin.file:
+    path: /mnt/chat-minio/data
+    state: directory
+    mode: u=rwx
+    owner: 1001
+    group: 1001
 
 - name: Create Storage tmp directory if it does not exist
   ansible.builtin.file:
