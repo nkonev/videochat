@@ -1,0 +1,5 @@
+acme_email: "<for_example_your.email@gmail.com>"
+dir_prefix: "/opt/videochat"
+docker_repo: "https://download.docker.com/linux/centos/docker-ce.repo"
+old_domain: "old.example.com"
+domain: "example.com"
