@@ -19,6 +19,11 @@
     path: /opt/containerd
     state: absent
 
+- name: Install docker proxy
+  ansible.builtin.copy:
+    src: files/daemon.json
+    dest: /etc/docker/daemon.json
+
 - name: Start Docker service
   service:
     name: docker
@@ -30,7 +35,7 @@
     path: "{{ dir_prefix }}"
     state: directory
 
-- name: Create livekit directory if it does not exist
+- name: Create Livekit directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/livekit"
     state: directory
@@ -40,3 +45,13 @@
   template:
     src: templates/livekit.yaml.tpl
     dest: "{{ dir_prefix }}/livekit/livekit.yaml"
+
+#- name: Create Traefik directory if it does not exist
+#  ansible.builtin.file:
+#    path: "{{ dir_prefix }}/traefik"
+#    state: directory
+#
+#- name: Create Traefik config
+#  ansible.builtin.copy:
+#    src: files/traefik.yml
+#    dest: "{{ dir_prefix }}/traefik/traefik.yml"
