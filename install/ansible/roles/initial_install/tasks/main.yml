@@ -60,3 +60,13 @@
   template:
     src: templates/common_middlewares.yml.tpl
     dest: "{{ dir_prefix }}/traefik/dynamic/common_middlewares.yml"
+
+- name: Create PostgreSQL directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d"
+    state: directory
+
+- name: Create PostgreSQL init.sql
+  ansible.builtin.copy:
+    src: files/init.sql
+    dest: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d/init.sql"
