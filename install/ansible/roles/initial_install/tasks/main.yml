@@ -1,0 +1,42 @@
+# https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
+- name: Docker repo
+  get_url:
+    url: "{{ docker_repo }}"
+    dest: /etc/yum.repos.d/docker-ce.repo
+
+# https://docs.rockylinux.org/gemstones/containers/docker/
+- name: Install Docker
+  package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: latest
+
+- name: Remove empty dirs
+  ansible.builtin.file:
+    path: /opt/containerd
+    state: absent
+
+- name: Start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create root config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}"
+    state: directory
+
+- name: Create livekit directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/livekit"
+    state: directory
+
+# https://www.digitalocean.com/community/tutorials/how-to-create-and-use-templates-in-ansible-playbooks
+- name: Create Livekit config
+  template:
+    src: templates/livekit.yaml.tpl
+    dest: "{{ dir_prefix }}/livekit/livekit.yaml"

@@ -1,0 +1,2 @@
+[main]
+1.2.3.4  ansible_connection=ssh  ansible_user=anuser
