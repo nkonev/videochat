@@ -15,4 +15,5 @@ ansible-playbook -i hosts.ini playbook.yaml --check
 Manual apply
 ```bash
 docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
+journalctl -n 200 -f CONTAINER_TAG=chat-minio
 ```

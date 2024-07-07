@@ -86,12 +86,12 @@
     path: /mnt/chat-minio/data
     state: directory
 
-- name: Set RW access on Minio data directory
+- name: Set RWX access on Minio data directory
   ansible.builtin.file:
     path: /mnt/chat-minio
     state: directory
     recurse: true
-    mode: a=rw
+    mode: a=rwx
 
 - name: Create Storage tmp directory if it does not exist
   ansible.builtin.file:
