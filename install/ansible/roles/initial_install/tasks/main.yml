@@ -101,7 +101,6 @@
   ansible.builtin.file:
     path: /mnt/chat-postgresql
     state: directory
-    recurse: true
     mode: u=rwx,g-rwx,o-rwx
     owner: 70
     group: 70
