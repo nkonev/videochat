@@ -27,3 +27,11 @@ Manual apply
 docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
 journalctl -n 200 -f CONTAINER_TAG=chat-minio
 ```
+
+Generate password
+```bash
+python
+import passlib
+from passlib.hash import bcrypt
+bcrypt.using(rounds=10, salt="salt012345678901234567").hash("admin")
+```

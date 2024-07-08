@@ -148,6 +148,7 @@
 - debug:
     msg: "Swarm tokens are {{ swarm_facts.swarm_facts.JoinTokens }}"
 
+# https://docs.ansible.com/ansible/latest/collections/community/docker/index.html
 - name: Deploy stack for Infra
   community.docker.docker_stack:
     state: present
@@ -155,6 +156,7 @@
     compose:
       - "{{ dir_prefix }}/docker-compose-infra.yml"
 
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/password_hash_filter.html
 - name: Create Docker Compose AAA
   template:
     src: templates/docker-compose-aaa.yml.tpl
