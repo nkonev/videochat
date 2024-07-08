@@ -35,7 +35,7 @@
     path: "{{ dir_prefix }}"
     state: directory
 
-- name: Create Livekit directory if it does not exist
+- name: Create Livekit config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/livekit"
     state: directory
@@ -46,7 +46,7 @@
     src: templates/livekit.yaml.tpl
     dest: "{{ dir_prefix }}/livekit/livekit.yaml"
 
-- name: Create Traefik directory if it does not exist
+- name: Create Traefik config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/traefik/dynamic"
     state: directory
@@ -61,7 +61,7 @@
     src: templates/common_middlewares.yml.tpl
     dest: "{{ dir_prefix }}/traefik/dynamic/common_middlewares.yml"
 
-- name: Create PostgreSQL directory if it does not exist
+- name: Create PostgreSQL config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d"
     state: directory
@@ -71,7 +71,7 @@
     src: files/init.sql
     dest: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d/init.sql"
 
-- name: Create Egress directory if it does not exist
+- name: Create Egress config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/egress"
     state: directory
