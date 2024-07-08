@@ -1,5 +1,11 @@
 ```bash
-ansible-playbook -i hosts.ini playbook.yaml
+cd install/ansible
+mkdir ~/blog
+# copy then edit this both vars and inventory
+cp ./roles/initial_install/vars/main.yml.example ~/blog/vars.yml
+cp ./inventory.ini.example ~/blog/inventory.ini
+
+ansible-playbook -i ~/blog/inventory.ini -e vars_file=~/blog/vars.yml playbook.yaml
 ```
 
 Get [facts](https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks)

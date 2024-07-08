@@ -2,3 +2,5 @@
 - hosts: main
   roles:
     - initial_install
+  vars_files:
+    - "{{ vars_file }}"
