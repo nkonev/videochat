@@ -64,7 +64,7 @@ services:
       - server.servlet.session.cookie.secure=true
       - management.otlp.tracing.endpoint=http://jaeger:4318/v1/traces
       - spring.data.redis.url=redis://redis:6379/0
-      - CUSTOM_INITIAL_ADMIN_PASSWORD={{ initial_admin_password | password_hash(hashtype='bcrypt', salt=initial_admin_password_salt, rounds=10) }}
+      - CUSTOM_INITIAL_ADMIN_PASSWORD={{ initial_admin_password | password_hash(hashtype='bcrypt', salt=initial_admin_password_salt, rounds=10) | replace('$', '$$') }}
     logging:
       driver: "journald"
       options:
