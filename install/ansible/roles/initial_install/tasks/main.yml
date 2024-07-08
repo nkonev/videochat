@@ -1,3 +1,12 @@
+- name: Secure sshd
+  ansible.builtin.copy:
+    src: files/ssh-secure.conf
+    dest: /etc/ssh/sshd_config.d/00-secure.conf
+    owner: root
+    group: root
+    mode: 0600
+  notify: Reload SSH
+
 # https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
 - name: Docker repo
   get_url:
@@ -23,6 +32,7 @@
   ansible.builtin.copy:
     src: files/daemon.json
     dest: /etc/docker/daemon.json
+  notify: Reload docker
 
 - name: Start Docker service
   service:
