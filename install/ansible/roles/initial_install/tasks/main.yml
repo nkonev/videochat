@@ -7,6 +7,12 @@
     mode: 0600
   notify: Reload SSH
 
+- name: Start Firewall service
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
 # https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
 - name: Docker repo
   get_url:
