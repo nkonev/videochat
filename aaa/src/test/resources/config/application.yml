@@ -117,7 +117,7 @@ spring.liquibase:
   drop-first: true
   parameters:
     # bcrypt('admin', 10)
-    admin.password: "$2a$10$HsyFGy9IO//nJZxYc2xjDeV/kF7koiPrgIDzPOfgmngKVe9cOyOS2}"
+    admin.password: "$2a$10$HsyFGy9IO//nJZxYc2xjDeV/kF7koiPrgIDzPOfgmngKVe9cOyOS2"
 
 spring.data.redis.url: redis://127.0.0.1:36379/0
 
