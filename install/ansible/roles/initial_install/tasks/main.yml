@@ -145,3 +145,8 @@
 
 - debug:
     msg: "Swarm tokens are {{ swarm_facts.swarm_facts.JoinTokens }}"
+
+- name: Create Docker Compose AAA
+  template:
+    src: templates/docker-compose-aaa.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-aaa.yml"

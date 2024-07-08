@@ -1,5 +1,15 @@
-acme_email: "your_email_for_letsencrypt@gmail.com"
+acme_email: "your_email_for_letsencrypt@example.com"
 old_domain: "old.example.com" # optional
 domain: "example.com"
 minio_user: "AKIAIOSFODNN7EXAMPLE"
 minio_password: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+initial_admin_password: "admin"
+mail_host: "smtp.example.com"
+mail_from: "videochat@example.com"
+mail_username: "email_user"
+mail_password: "email_password"
+# OAuth 2.0 providers, both are optional
+vkontakte_client_id: "6805077"
+vkontakte_client_secret: "your-app-client-secret"
+google_client_id: "987654321-d12sja.apps.googleusercontent.com"
+google_client_secret: "your-app-client-secret"

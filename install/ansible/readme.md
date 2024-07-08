@@ -1,4 +1,5 @@
 ```bash
+pip3 install passlib
 sudo dnf install ansible
 cd install/ansible
 mkdir ~/blog
