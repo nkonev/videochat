@@ -30,6 +30,7 @@ journalctl -n 200 -f CONTAINER_TAG=chat-minio
 
 Generate password
 ```bash
+# https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt.html
 python
 import passlib
 from passlib.hash import bcrypt
