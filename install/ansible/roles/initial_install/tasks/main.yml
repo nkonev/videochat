@@ -110,7 +110,7 @@
     src: templates/docker-compose-infra.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-infra.yml"
 
-- name: Create docker prune cron
+- name: Create Docker prune cron
   ansible.builtin.copy:
     src: files/docker-prune.sh
     dest: "/etc/cron.daily/docker-prune.sh"
