@@ -1,10 +1,13 @@
 ```bash
+sudo dnf install ansible
 cd install/ansible
 mkdir ~/blog
 # copy then edit this both vars and inventory
 cp ./roles/initial_install/vars/main.yml.example ~/blog/vars.yml
 cp ./inventory.ini.example ~/blog/inventory.ini
-
+# check for community.docker
+ansible-galaxy collection list
+# run
 ansible-playbook -i ~/blog/inventory.ini -e vars_file=~/blog/vars.yml playbook.yaml
 ```
 

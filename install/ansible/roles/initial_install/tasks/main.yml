@@ -125,3 +125,23 @@
     src: files/docker-prune.sh
     dest: "/etc/cron.daily/docker-prune.sh"
     mode: a+x
+
+- name: Install python package
+  package:
+    name:
+      - python
+      - pip
+    state: latest
+
+- name: Install docker python package
+  ansible.builtin.pip:
+    name: docker
+
+# https://docs.ansible.com/ansible/latest/collections/community/docker/docker_swarm_module.html#ansible-collections-community-docker-docker-swarm-module
+- name: Init a new swarm with default parameters
+  community.docker.docker_swarm:
+    state: present
+  register: swarm_facts
+
+- debug:
+    msg: "Swarm tokens are {{ swarm_facts.swarm_facts.JoinTokens }}"
