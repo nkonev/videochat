@@ -1,29 +1,29 @@
 version: '3.9'
 
 services:
-  traefik:
-    image: traefik:v2.11.2
-    hostname: traefik
-    # The Static Configuration
-    command: --configFile=/etc/traefik/traefik.yml
-    ports:
-    - target: 80
-      published: 80
-      protocol: tcp
-      mode: host
-    - target: 443
-      published: 443
-      protocol: tcp
-      mode: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik:/etc/traefik
-    networks:
-      - backend
-    logging:
-      driver: "journald"
-      options:
-        tag: chat-traefik
+#  traefik:
+#    image: traefik:v2.11.2
+#    hostname: traefik
+#    # The Static Configuration
+#    command: --configFile=/etc/traefik/traefik.yml
+#    ports:
+#    - target: 80
+#      published: 80
+#      protocol: tcp
+#      mode: host
+#    - target: 443
+#      published: 443
+#      protocol: tcp
+#      mode: host
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      - ./traefik:/etc/traefik
+#    networks:
+#      - backend
+#    logging:
+#      driver: "journald"
+#      options:
+#        tag: chat-traefik
 
   postgresql:
     image: postgres:15.1-alpine3.17

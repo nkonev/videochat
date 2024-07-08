@@ -133,9 +133,11 @@
       - pip
     state: latest
 
-- name: Install docker python package
+- name: Install python packages to manipulate with docker swarm
   ansible.builtin.pip:
-    name: docker
+    name:
+      - docker
+      - jsondiff
 
 # https://docs.ansible.com/ansible/latest/collections/community/docker/docker_swarm_module.html#ansible-collections-community-docker-docker-swarm-module
 - name: Init a new swarm with default parameters
@@ -146,7 +148,21 @@
 - debug:
     msg: "Swarm tokens are {{ swarm_facts.swarm_facts.JoinTokens }}"
 
+- name: Deploy stack for Infra
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-infra.yml"
+
 - name: Create Docker Compose AAA
   template:
     src: templates/docker-compose-aaa.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
+
+- name: Deploy stack for AAA
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-aaa.yml"
