@@ -174,3 +174,15 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-aaa.yml"
+
+- name: Create Docker Compose Frontend
+  template:
+    src: templates/docker-compose-frontend.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
+
+- name: Deploy stack for Frontend
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-frontend.yml"
