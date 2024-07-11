@@ -9,7 +9,7 @@ cp ./inventory.ini.example ~/blog/inventory.ini
 # check for community.docker
 ansible-galaxy collection list
 # run
-ansible-playbook -i ~/blog/inventory.ini -e vars_file=~/blog/vars.yml playbook.yaml
+ansible-playbook -i ~/blog/inventory.ini --extra-vars "@~/blog/vars.yml" playbook.yaml
 ```
 
 Get [facts](https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks)
@@ -27,6 +27,10 @@ Manual apply
 docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
 journalctl -n 200 -f CONTAINER_TAG=chat-minio
 ```
+
+Variables
+
+https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
 
 Generate password
 ```bash
