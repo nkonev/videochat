@@ -198,3 +198,15 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-chat.yml"
+
+- name: Create Docker Compose Storage
+  template:
+    src: templates/docker-compose-storage.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-storage.yml"
+
+- name: Deploy stack for Storage
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-storage.yml"
