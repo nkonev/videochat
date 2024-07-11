@@ -246,3 +246,15 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-notification.yml"
+
+- name: Create Docker Compose Public
+  template:
+    src: templates/docker-compose-public.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-public.yml"
+
+- name: Deploy stack for Public
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-public.yml"

@@ -1,0 +1,55 @@
+version: '3.7'
+
+services:
+  public:
+    image: nkonev/chat-public:latest
+    networks:
+      backend:
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.public-service.loadbalancer.server.port=3100"
+
+        - "traefik.http.routers.public-router.rule=PathPrefix(`/public`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.public-router.entrypoints=https"
+        - "traefik.http.routers.public-router.middlewares=retry-middleware@file"
+        - "traefik.http.routers.public-router.tls=true"
+        - "traefik.http.routers.public-router.tls.certresolver=myresolver"
+
+        - "traefik.http.routers.public-router-robots.rule=Path(`/robots.txt`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.public-router-robots.entrypoints=https"
+        - "traefik.http.routers.public-router-robots.middlewares=retry-middleware@file"
+        - "traefik.http.routers.public-router-robots.tls=true"
+        - "traefik.http.routers.public-router-robots.tls.certresolver=myresolver"
+
+        - "traefik.http.routers.public-router-sitemap.rule=Path(`/sitemap.xml`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.public-router-sitemap.entrypoints=https"
+        - "traefik.http.routers.public-router-sitemap.middlewares=retry-middleware@file"
+        - "traefik.http.routers.public-router-sitemap.tls=true"
+        - "traefik.http.routers.public-router-sitemap.tls.certresolver=myresolver"
+
+        - "traefik.http.middlewares.public-stripprefix-middleware.stripprefix.prefixes=/public"
+        - "traefik.http.routers.public-version-router.rule=Path(`/public/git.json`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.public-version-router.entrypoints=https"
+        - "traefik.http.routers.public-version-router.tls=true"
+        - "traefik.http.routers.public-version-router.tls.certresolver=myresolver"
+        - "traefik.http.routers.public-version-router.middlewares=public-stripprefix-middleware"
+
+        - "traefik.http.routers.old-blog-redirect-router.rule=PathPrefix(`/`) && Host(`nkonev.name`)"
+        - "traefik.http.routers.old-blog-redirect-router.entrypoints=https"
+        - "traefik.http.routers.old-blog-redirect-router.middlewares=redirect-from-old-blog-to-public-blog-post@file"
+        - "traefik.http.routers.old-blog-redirect-router.tls=true"
+        - "traefik.http.routers.old-blog-redirect-router.tls.certresolver=myresolver"
+
+    environment:
+      - CHAT_API_URL=http://chat:1235
+      - FRONTEND_URL=https://{{ domain }}
+
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-public
+
+networks:
+  backend:
+    driver: overlay
