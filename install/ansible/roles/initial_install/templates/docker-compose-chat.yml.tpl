@@ -40,7 +40,7 @@ services:
 
     environment:
       - CHAT_POSTGRESQL.URL=postgres://chat:chatPazZw0rd@postgresql:5432/chat?sslmode=disable&application_name=chat-app
-      - CHAT_SERVER.BODY.LIMIT=100G
+      - CHAT_SERVER.BODY.LIMIT=2M
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - CHAT_REDIS.ADDRESS=redis:6379
