@@ -234,3 +234,15 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-event.yml"
+
+- name: Create Docker Compose Notification
+  template:
+    src: templates/docker-compose-notification.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-notification.yml"
+
+- name: Deploy stack for Notification
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-notification.yml"
