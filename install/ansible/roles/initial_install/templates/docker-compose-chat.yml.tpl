@@ -49,7 +49,7 @@ services:
       - CHAT_FRONTENDURL=https://{{ domain }}
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=https://{{ domain }},
       - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com,https://coub.com,https://vk.com,https://rutube.ru
-      - CHAT_ONLYADMINCANCREATEBLOG=true
+      - CHAT_ONLYADMINCANCREATEBLOG={{ chat_only_role_admin_can_create_blog }}
 
     logging:
       driver: "journald"

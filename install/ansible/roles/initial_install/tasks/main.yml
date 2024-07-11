@@ -210,3 +210,15 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-storage.yml"
+
+- name: Create Docker Compose Video
+  template:
+    src: templates/docker-compose-video.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-video.yml"
+
+- name: Deploy stack for Video
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-video.yml"

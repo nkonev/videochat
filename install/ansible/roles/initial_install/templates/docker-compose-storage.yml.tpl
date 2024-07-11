@@ -40,10 +40,11 @@ services:
         - STORAGE_MINIO.SECRETACCESSKEY={{ minio_password }}
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
-        - STORAGE_LIMITS.STAT.DIR=/data
         - STORAGE_REDIS.ADDRESS=redis:6379
         - STORAGE_REDIS.DB=3
-        - STORAGE_LIMITS.ENABLED=true
+        - STORAGE_LIMITS.ENABLED={{ storage_limits_enabled }}
+        - STORAGE_LIMITS.DEFAULT.ALL.USERS.LIMIT={{ storage_all_user_limit }}
+        - STORAGE_LIMITS.STAT.DIR={{ storage_limits_stats_dir }}
         - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
         - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
         - STORAGE_SCHEDULERS.ACTUALIZEPREVIEWSTASK.ENABLED=true
