@@ -784,3 +784,44 @@ It exists a resolved issue for that [FREEMARKER-218](https://issues.apache.org/j
 
 having this, [spring security taglibs](https://docs.spring.io/spring-security/reference/servlet/integrations/jsp-taglibs.html) were removed
 
+# Ansible
+* https://medium.com/@knoldus/how-to-install-docker-on-rhel-using-ansible-role-62728c098351
+* https://www.digitalocean.com/community/tutorials/how-to-create-and-use-templates-in-ansible-playbooks
+* https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
+
+Get [facts](https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks)
+```bash
+ansible all -i hosts.ini -m setup -a "filter=*ipv4*" -u root
+```
+
+Dry-run
+```bash
+ansible-playbook -i hosts.ini playbook.yaml --check
+```
+
+Manual apply
+```bash
+docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
+journalctl -n 200 -f CONTAINER_TAG=chat-minio
+```
+
+Variables
+
+https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
+
+Generate password
+```bash
+# https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt.html
+python
+import passlib
+from passlib.hash import bcrypt
+bcrypt.using(rounds=10, salt="salt012345678901234567").hash("admin")
+```
+
+check for community.docker
+```
+ansible-galaxy collection list
+```
+
+# Rsyslog
+https://unix.stackexchange.com/questions/599812/is-rsyslog-a-mandatory-requirement-in-linux-with-journald

@@ -55,7 +55,7 @@ services:
       options:
         tag: chat-storage
     volumes:
-      - /mnt/chat-minio/data:/data
+      - /mnt/chat-minio/data:{{ storage_limits_stats_dir }}
       # use temp dir for uploading large files
       - /mnt/chat-storage-tmp:/tmp
 

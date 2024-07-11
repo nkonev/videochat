@@ -7,11 +7,17 @@
     mode: 0600
   notify: Reload SSH
 
-- name: Start Firewall service
+- name: Ensure Firewall is running
   service:
     name: firewalld
     state: started
     enabled: yes
+
+- name: Ensure Rsyslog is not running
+  service:
+    name: rsyslog
+    state: stopped
+    enabled: no
 
 # https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
 - name: Docker repo
