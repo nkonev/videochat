@@ -34,6 +34,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=videoChat
       - SPRING_RABBITMQ_PASSWORD=videoChatPazZw0rd
       - SPRING_MAIL_HOST={{ mail_host }}
+      - SPRING_MAIL_PORT={{ mail_port }}
       - CUSTOM_EMAIL_FROM={{ mail_from }}
       - SPRING_MAIL_USERNAME={{ mail_username }}
       - SPRING_MAIL_PASSWORD={{ mail_password }}

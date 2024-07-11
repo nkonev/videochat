@@ -6,6 +6,7 @@ minio_password: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 initial_admin_password: "admin"
 initial_admin_password_salt: "salt012345678901234567" # should be 22-character, https://docs.ansible.com/ansible/latest/collections/ansible/builtin/password_hash_filter.html
 mail_host: "smtp.example.com"
+mail_port: "465"
 mail_from: "videochat@example.com"
 mail_username: "email_user"
 mail_password: "email_password"
