@@ -186,3 +186,15 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-frontend.yml"
+
+- name: Create Docker Compose Chat
+  template:
+    src: templates/docker-compose-chat.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-chat.yml"
+
+- name: Deploy stack for Chat
+  community.docker.docker_stack:
+    state: present
+    name: "{{ swarm_stack_name }}"
+    compose:
+      - "{{ dir_prefix }}/docker-compose-chat.yml"
