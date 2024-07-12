@@ -3,14 +3,14 @@
 BUILDDIR := ./build
 DIST := ./dist
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-IMAGE := nkonev/chat-public:changing
+IMAGE := nkonev/chat-public:latest
 IMAGE_TO_PUBLISH := nkonev/chat-public:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := public
 CI_TO_COPY_DIR := /tmp/to-copy
 SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
-SERVER_COMPOSE_DIR := ./videochat
+SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
 JSON_DIR := $(DIST)/client
 STATIC_JSON := $(JSON_DIR)/git.json
@@ -56,7 +56,7 @@ push-docker-image-to-server:
 	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker load -i $(SERVER_TO_COPY_DIR)/$(SERVICE_NAME).tar'
 
 deploy-docker-image:
-	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker stack deploy --compose-file $(SERVER_COMPOSE_DIR)/docker-compose-$(SERVICE_NAME).template.yml $(STACK_NAME)'
+	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker stack deploy --compose-file $(SERVER_COMPOSE_DIR)/docker-compose-$(SERVICE_NAME).yml $(STACK_NAME)'
 
 
 clean: clean-builddir clean-cache

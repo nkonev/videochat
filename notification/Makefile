@@ -2,14 +2,14 @@
 
 BUILDDIR := ./build
 EXECUTABLE := notification
-IMAGE := nkonev/chat-notification:changing
+IMAGE := nkonev/chat-notification:latest
 IMAGE_TO_PUBLISH := nkonev/chat-notification:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := notification
 CI_TO_COPY_DIR := /tmp/to-copy
 SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
-SERVER_COMPOSE_DIR := ./videochat
+SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
 
 download:
@@ -54,7 +54,7 @@ push-docker-image-to-server:
 	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker load -i $(SERVER_TO_COPY_DIR)/$(SERVICE_NAME).tar'
 
 deploy-docker-image:
-	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker stack deploy --compose-file $(SERVER_COMPOSE_DIR)/docker-compose-$(SERVICE_NAME).template.yml $(STACK_NAME)'
+	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker stack deploy --compose-file $(SERVER_COMPOSE_DIR)/docker-compose-$(SERVICE_NAME).yml $(STACK_NAME)'
 
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
