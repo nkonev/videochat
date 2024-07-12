@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -42,6 +43,8 @@ const GRAPHQL_PLAYGROUND = "/event/playground"
 
 func main() {
 	config.InitViper()
+
+	fmt.Printf("HELLO__ONE!!!!!!!!!!!!!")
 
 	app := fx.New(
 		fx.Logger(Logger),
