@@ -63,7 +63,4 @@ Click on image to open a screenshot gallery.
 Demo server [installation](https://chat.nkonev.name/)
 
 # Installation
-* Use docker-swarm [files](./install/docker-swarm)
-* Replace `api.site.local` with your actual hostname, remove 8080 if need
-* Configure ssl in `install/docker-swarm/traefik_conf/traefik.yml`
-* Open ports (if need) to Traefik and Livekit, described in `install/docker-swarm/docker-compose-infra.template.yml`
+Currently, Ansible installation is available. See instructions in `./install/ansible/readme.md`.
