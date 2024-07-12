@@ -2,7 +2,7 @@
 
 BUILDDIR := ./build
 EXECUTABLE := chat
-IMAGE := nkonev/chat:latest
+IMAGE := nkonev/chat:changing
 IMAGE_TO_PUBLISH := nkonev/chat:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := chat

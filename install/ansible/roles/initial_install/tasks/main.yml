@@ -19,6 +19,8 @@
     state: stopped
     enabled: no
 
+
+
 # https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
 - name: Docker repo
   get_url:
@@ -173,6 +175,8 @@
   template:
     src: templates/docker-compose-aaa.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for AAA
   community.docker.docker_stack:
@@ -185,6 +189,8 @@
   template:
     src: templates/docker-compose-frontend.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for Frontend
   community.docker.docker_stack:
@@ -197,6 +203,8 @@
   template:
     src: templates/docker-compose-chat.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for Chat
   community.docker.docker_stack:
@@ -209,6 +217,8 @@
   template:
     src: templates/docker-compose-storage.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for Storage
   community.docker.docker_stack:
@@ -221,6 +231,8 @@
   template:
     src: templates/docker-compose-video.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for Video
   community.docker.docker_stack:
@@ -234,7 +246,7 @@
     src: templates/docker-compose-event.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
-    image: nkonev/chat-event:latest
+    tag: latest
 
 - name: Deploy stack for Event
   community.docker.docker_stack:
@@ -247,6 +259,8 @@
   template:
     src: templates/docker-compose-notification.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for Notification
   community.docker.docker_stack:
@@ -259,6 +273,8 @@
   template:
     src: templates/docker-compose-public.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
+  vars:
+    tag: latest
 
 - name: Deploy stack for Public
   community.docker.docker_stack:
@@ -267,9 +283,60 @@
     compose:
       - "{{ dir_prefix }}/docker-compose-public.yml"
 
+
+# rest part is set non-deployed tag for deploying without docker hub
+- name: Change Docker Compose AAA
+  template:
+    src: templates/docker-compose-aaa.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
+  vars:
+    tag: changing
+
+- name: Change Docker Compose Frontend
+  template:
+    src: templates/docker-compose-frontend.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
+  vars:
+    tag: changing
+
+- name: Change Docker Compose Chat
+  template:
+    src: templates/docker-compose-chat.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-chat.yml"
+  vars:
+    tag: changing
+
+- name: Change Docker Compose Storage
+  template:
+    src: templates/docker-compose-storage.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-storage.yml"
+  vars:
+    tag: changing
+
+- name: Change Docker Compose Video
+  template:
+    src: templates/docker-compose-video.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-video.yml"
+  vars:
+    tag: changing
+
 - name: Change Docker Compose Event
   template:
     src: templates/docker-compose-event.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
-    image: nkonev/chat-event:changing
+    tag: changing
+
+- name: Change Docker Compose Notification
+  template:
+    src: templates/docker-compose-notification.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-notification.yml"
+  vars:
+    tag: changing
+
+- name: Change Docker Compose Public
+  template:
+    src: templates/docker-compose-public.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-public.yml"
+  vars:
+    tag: changing

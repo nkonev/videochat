@@ -2,7 +2,7 @@
 
 BUILDDIR := ./build
 EXECUTABLE := video
-IMAGE := nkonev/chat-video:latest
+IMAGE := nkonev/chat-video:changing
 IMAGE_TO_PUBLISH := nkonev/chat-video:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := video

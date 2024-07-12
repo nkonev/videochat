@@ -2,7 +2,7 @@
 
 BUILDDIR := ./build
 EXECUTABLE := storage
-IMAGE := nkonev/chat-storage:latest
+IMAGE := nkonev/chat-storage:changing
 IMAGE_TO_PUBLISH := nkonev/chat-storage:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := storage

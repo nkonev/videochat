@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   event:
-    image: {{ image }}
+    image: nkonev/chat-event:{{ tag }}
     networks:
       backend:
     deploy:

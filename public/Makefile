@@ -3,7 +3,7 @@
 BUILDDIR := ./build
 DIST := ./dist
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
-IMAGE := nkonev/chat-public:latest
+IMAGE := nkonev/chat-public:changing
 IMAGE_TO_PUBLISH := nkonev/chat-public:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := public

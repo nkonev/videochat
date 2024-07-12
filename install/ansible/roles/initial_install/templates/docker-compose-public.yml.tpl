@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   public:
-    image: nkonev/chat-public:latest
+    image: nkonev/chat-public:{{ tag }}
     networks:
       backend:
     deploy:

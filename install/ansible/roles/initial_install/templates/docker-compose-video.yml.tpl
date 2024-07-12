@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   video:
-    image: nkonev/chat-video:latest
+    image: nkonev/chat-video:{{ tag }}
     networks:
       backend:
     deploy:

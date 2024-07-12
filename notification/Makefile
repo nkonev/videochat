@@ -2,7 +2,7 @@
 
 BUILDDIR := ./build
 EXECUTABLE := notification
-IMAGE := nkonev/chat-notification:latest
+IMAGE := nkonev/chat-notification:changing
 IMAGE_TO_PUBLISH := nkonev/chat-notification:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := notification

@@ -1,7 +1,7 @@
 .PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2
 
 BUILDDIR := ./build
-IMAGE := nkonev/chat-aaa:latest
+IMAGE := nkonev/chat-aaa:changing
 IMAGE_TO_PUBLISH := nkonev/chat-aaa:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := aaa
