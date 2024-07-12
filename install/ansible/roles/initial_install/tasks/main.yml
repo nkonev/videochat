@@ -233,6 +233,8 @@
   template:
     src: templates/docker-compose-event.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
+  vars:
+    image: nkonev/chat-event:latest
 
 - name: Deploy stack for Event
   community.docker.docker_stack:
@@ -264,3 +266,10 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-public.yml"
+
+- name: Change Docker Compose Event
+  template:
+    src: templates/docker-compose-event.yml.tpl
+    dest: "{{ dir_prefix }}/docker-compose-event.yml"
+  vars:
+    image: nkonev/chat-event:changing

@@ -2,7 +2,7 @@
 
 BUILDDIR := ./build
 EXECUTABLE := event
-IMAGE := nkonev/chat-event:latest
+IMAGE := nkonev/chat-event:changing
 IMAGE_TO_PUBLISH := nkonev/chat-event:latest
 # should match to compose file from deploy dir
 SERVICE_NAME := event
