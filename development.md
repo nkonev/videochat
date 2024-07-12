@@ -825,3 +825,5 @@ ansible-galaxy collection list
 
 # Rsyslog
 https://unix.stackexchange.com/questions/599812/is-rsyslog-a-mandatory-requirement-in-linux-with-journald
+
+
