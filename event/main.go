@@ -44,7 +44,7 @@ const GRAPHQL_PLAYGROUND = "/event/playground"
 func main() {
 	config.InitViper()
 
-	fmt.Printf("HELLO!!!!!!!!!!!!!")
+	fmt.Printf("HELLO123!!!!!!!!!!!!!")
 
 	app := fx.New(
 		fx.Logger(Logger),
