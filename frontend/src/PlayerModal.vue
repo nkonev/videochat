@@ -70,6 +70,8 @@ export default {
 @import "constants.styl"
 
 .image-custom-class-view {
+    height fit-content
+    width fit-content
     max-width: 100% !important
     max-height: 100% !important
 }
