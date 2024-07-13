@@ -25,6 +25,8 @@ public class UserSettingsService {
     @Autowired
     private UserSettingsRepository userSettingsRepository;
 
+    // despite creating settings with language in RegistrationService.register() this method still exists for
+    // the case registration via OAuth, Ldap and so on
     @Transactional
     public SettingsDTO initSettings(long userId) {
         Optional<UserSettings> maybeSettings = userSettingsRepository.findById(userId);

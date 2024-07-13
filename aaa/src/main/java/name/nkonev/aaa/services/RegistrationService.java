@@ -8,6 +8,7 @@ import name.nkonev.aaa.dto.Language;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.UserConfirmationToken;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.repository.jdbc.UserSettingsRepository;
 import name.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import name.nkonev.aaa.security.LoginListener;
 import name.nkonev.aaa.security.SecurityUtils;
@@ -63,6 +64,9 @@ public class RegistrationService {
     @Autowired
     private RefererService refererService;
 
+    @Autowired
+    private UserSettingsRepository userSettingsRepository;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
     public void register(EditUserDTO editUserDTO, Language language, String referer, HttpServletRequest httpServletRequest) {
@@ -81,6 +85,8 @@ public class RegistrationService {
             UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForInsert(userAccountDTO, passwordEncoder);
 
             userAccount = userAccountRepository.save(userAccount);
+            userSettingsRepository.insertDefault(userAccount.id());
+            userSettingsRepository.updateLanguage(userAccount.id(), language);
             UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount, referer, httpServletRequest);
             asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username(), language);
             return userAccount;
