@@ -377,21 +377,21 @@
                 if (this.isMobile()) {
                     return '54px'
                 } else {
-                    return '44px'
+                    return '2.4em'
                 }
             },
             sendMessageBtnWidth() {
                 if (this.isMobile()) {
                     return '72px'
                 } else {
-                    return '64px'
+                    return '3.4em'
                 }
             },
             getBtnHeight() {
                 if (this.isMobile()) {
                     return '48px'
                 } else {
-                    return undefined
+                    return '2em'
                 }
             },
             getBtnSize() {
