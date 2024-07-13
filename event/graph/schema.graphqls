@@ -330,6 +330,7 @@ type UserAccountExtendedDto {
     canChangeRole: Boolean!
     canConfirm: Boolean!
     loginColor:  String
+    canRemoveSessions: Boolean!
 }
 
 union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto | UserDeletedDto

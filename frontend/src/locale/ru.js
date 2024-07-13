@@ -295,5 +295,6 @@ export default {
     notifications_were_permitted: "Нотификации браузера разрешены",
     notifications_in_browser: "в браузере",
     new_message_notifications_in_browser: "Нотификация о новом сообщении в браузере",
-    call_notifications_in_browser: "Нотификация о звонке в браузере"
+    call_notifications_in_browser: "Нотификация о звонке в браузере",
+    remove_sessions: "Удалить сессии"
 }

@@ -38,6 +38,7 @@ type UserAccountExtended struct {
 	CanDelete bool `json:"canDelete"`
 	CanChangeRole bool `json:"canChangeRole"`
 	CanConfirm bool `json:"canConfirm"`
+	CanRemoveSessions bool `json:"canRemoveSessions"`
 }
 
 type UserAccountEventGroup struct {

@@ -157,7 +157,8 @@ public class UserAccountConverter {
                 aaaSecurityService.canChangeRole(currentUser, userAccount),
                 aaaSecurityService.canConfirm(currentUser, userAccount),
                 awaitingForConfirmEmailChange,
-                userAccount.loginColor()
+                userAccount.loginColor(),
+                aaaSecurityService.canRemoveSessions(currentUser, userAccount.id())
         );
     }
 

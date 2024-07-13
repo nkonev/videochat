@@ -331,8 +331,8 @@ public class UserProfileService {
     }
 
     @Transactional
-    public void killSessions(UserAccountDetailsDTO userAccount, long userId){
-        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.force_logged_out);
+    public void killSessions(UserAccountDetailsDTO userAccount, long userId, HttpSession httpSession){
+        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.force_logged_out, httpSession.getId(), userAccount.getId());
     }
 
     @Transactional

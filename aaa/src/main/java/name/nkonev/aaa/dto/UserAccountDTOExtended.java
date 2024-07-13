@@ -20,7 +20,8 @@ public record UserAccountDTOExtended (
 
     boolean canChangeRole,
     boolean canConfirm,
-    boolean awaitingForConfirmEmailChange
+    boolean awaitingForConfirmEmailChange,
+    boolean canRemoveSessions
 ) {
 
     @JsonCreator
@@ -38,7 +39,8 @@ public record UserAccountDTOExtended (
         @JsonProperty("canChangeRole") boolean canChangeRole,
         @JsonProperty("canConfirm") boolean canConfirm,
         @JsonProperty("awaitingForConfirmEmailChange") boolean awaitingForConfirmEmailChange,
-        @JsonProperty("loginColor") String loginColor
+        @JsonProperty("loginColor") String loginColor,
+        @JsonProperty("canRemoveSessions") boolean canRemoveSessions
     ) {
         this(
             new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor),
@@ -47,7 +49,8 @@ public record UserAccountDTOExtended (
             canLock,
             canChangeRole,
             canConfirm,
-            awaitingForConfirmEmailChange
+            awaitingForConfirmEmailChange,
+            canRemoveSessions
         );
     }
 

@@ -95,6 +95,20 @@ public class AaaPermissionService {
         return lockAndDelete(currentUser, userAccount.id());
     }
 
+    public boolean canRemoveSessions(UserAccountDetailsDTO userAccount, Long subjectUserAccountId) {
+        return canRemoveSessions(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), subjectUserAccountId);
+    }
+
+    public boolean canRemoveSessions(PrincipalToCheck currentUser, Long subjectUserAccountId) {
+        if (subjectUserAccountId == null) {
+            return false;
+        }
+        if (subjectUserAccountId.equals(currentUser.getId())) {
+            return true;
+        }
+        return lockAndDelete(currentUser, subjectUserAccountId);
+    }
+
     private boolean lockAndDelete(PrincipalToCheck currentUser, Long subjectUserAccountId) {
         var maybeUserAccount = userAccountRepository.findById(subjectUserAccountId);
         if (maybeUserAccount.isEmpty()) {

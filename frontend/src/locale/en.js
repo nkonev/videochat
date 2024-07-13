@@ -295,5 +295,6 @@ export default {
     notifications_were_permitted: "Browser notifications were permitted",
     notifications_in_browser: "in-browser",
     new_message_notifications_in_browser: "New message notification in-browser",
-    call_notifications_in_browser: "Call notification in-browser"
+    call_notifications_in_browser: "Call notification in-browser",
+    remove_sessions: "Remove sessions"
 }

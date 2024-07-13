@@ -294,6 +294,7 @@ type UserAccountExtendedDto struct {
 	CanChangeRole     bool               `json:"canChangeRole"`
 	CanConfirm        bool               `json:"canConfirm"`
 	LoginColor        *string            `json:"loginColor"`
+	CanRemoveSessions bool               `json:"canRemoveSessions"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

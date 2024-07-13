@@ -130,6 +130,7 @@
           @confirmUser="this.confirmUser"
           @deleteUser="this.deleteUser"
           @changeRole="this.changeRole"
+          @removeSessions="this.removeSessions"
       >
       </UserListContextMenu>
       <UserRoleModal/>
@@ -478,6 +479,7 @@ export default {
                         canChangeRole
                         canConfirm
                         loginColor
+                        canRemoveSessions
                       }
                       ... on UserAccountDto {
                         id
@@ -615,7 +617,13 @@ export default {
     changeRole(user) {
         bus.emit(CHANGE_ROLE_DIALOG, user)
     },
-
+    removeSessions(user) {
+        axios.delete('/api/aaa/sessions', {
+            params: {
+                userId: user.id
+            }
+        });
+    },
     onFocus() {
       if (this.chatStore.currentUser) {
           const list = this.items.map(item => item.id);

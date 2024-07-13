@@ -99,12 +99,20 @@ public class AaaUserDetailsService implements UserDetailsService {
         return userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
     }
 
-    public void killSessions(long userId, ForceKillSessionsReasonType reasonType){
+    public void killSessions(long userId, ForceKillSessionsReasonType reasonType) {
+        killSessions(userId, reasonType, null, null);
+    }
+
+    public void killSessions(long userId, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
         String userName = getUserAccount(userId).username();
         Map<String, Session> sessionMap = getSessions(userName);
-        sessionMap.keySet().forEach(session -> redisOperationsSessionRepository.deleteById(session));
+        sessionMap.keySet().stream().filter(aSession -> filterOutSession != null ? !aSession.equals(filterOutSession) : true).forEach(session -> redisOperationsSessionRepository.deleteById(session));
 
-        eventService.notifySessionsKilled(userId, reasonType);
+        if (currentUserId != null && currentUserId.equals(userId)){
+            // nothing
+        } else {
+            eventService.notifySessionsKilled(userId, reasonType);
+        }
     }
 
     public Map<String, Session> getSessions(long userId) {

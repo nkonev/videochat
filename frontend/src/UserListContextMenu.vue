@@ -69,6 +69,9 @@ export default {
                         action: () => this.$emit('tetATet', this.menuableItem)
                     });
                 }
+                if (this.menuableItem.canRemoveSessions){
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.remove_sessions'), icon: 'mdi-logout', action: () => this.$emit('removeSessions', this.menuableItem) });
+                }
                 if (this.menuableItem.canLock){
                     if (this.menuableItem?.additionalData.locked) {
                         ret.push({title: this.$vuetify.locale.t('$vuetify.unlock_user'), icon: 'mdi-lock-open-outline', action: () => this.$emit('unlockUser', this.menuableItem) });

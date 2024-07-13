@@ -84,7 +84,10 @@ public class UserProfileController {
         Constants.Urls.PUBLIC_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
         Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
     })
-    public void requestUserOnline(@RequestParam(value = "userId") List<Long> userIds) {
+    public void requestUserOnline(@RequestParam(value = "userId", required = false) List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
         userProfileService.requestUserOnline(userIds);
     }
 
@@ -158,10 +161,10 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
+    @PreAuthorize("@aaaPermissionService.canRemoveSessions(#userAccount, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
-    public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
-        userProfileService.killSessions(userAccount, userId);
+    public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId, HttpSession httpSession){
+        userProfileService.killSessions(userAccount, userId, httpSession);
     }
 
     @ResponseBody

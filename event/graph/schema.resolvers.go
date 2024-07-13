@@ -8,15 +8,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/otel/attribute"
-	"nkonev.name/event/rabbitmq"
 	"time"
 
 	"github.com/montag451/go-eventbus"
+	"go.opentelemetry.io/otel/attribute"
 	"nkonev.name/event/auth"
 	"nkonev.name/event/dto"
 	"nkonev.name/event/graph/model"
 	"nkonev.name/event/logger"
+	"nkonev.name/event/rabbitmq"
 	"nkonev.name/event/utils"
 )
 
@@ -520,6 +520,7 @@ func convertUserAccountExtended(aDto *dto.UserAccountExtended) *model.UserAccoun
 		CanChangeRole:     aDto.CanChangeRole,
 		CanConfirm:        aDto.CanConfirm,
 		LoginColor:        aDto.LoginColor,
+		CanRemoveSessions: aDto.CanRemoveSessions,
 	}
 	if aDto.AdditionalData != nil {
 		userAccountEvent.AdditionalData = &model.DataDto{
