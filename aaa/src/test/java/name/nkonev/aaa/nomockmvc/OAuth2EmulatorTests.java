@@ -42,6 +42,7 @@ public abstract class OAuth2EmulatorTests extends AbstractTestRunner {
     public static final String keycloakPassword = "user_password2";
     public static final String keycloakId = "5e870f62-70dd-4e5f-a609-35920eb5a443";
 
+
     @BeforeEach
     public void clearOauthBindingsInDb() {
         userTestService.clearOauthBindingsInDb(List.of(facebookLogin, vkontakteLogin, googleLogin));
