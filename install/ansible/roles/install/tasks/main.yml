@@ -6,19 +6,24 @@
     group: root
     mode: 0600
   notify: Reload SSH
+  tags:
+    - services
 
 - name: Ensure Firewall is running
   service:
     name: firewalld
     state: started
     enabled: yes
+  tags:
+    - services
 
 - name: Ensure Rsyslog is not running
   service:
     name: rsyslog
     state: stopped
     enabled: no
-
+  tags:
+    - services
 
 
 # https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
@@ -26,6 +31,8 @@
   get_url:
     url: "{{ docker_repo }}"
     dest: /etc/yum.repos.d/docker-ce.repo
+  tags:
+    - videochat
 
 # https://docs.rockylinux.org/gemstones/containers/docker/
 - name: Install Docker
@@ -36,74 +43,102 @@
       - containerd.io
       - docker-compose-plugin
     state: latest
+  tags:
+    - videochat
 
 - name: Remove empty dirs
   ansible.builtin.file:
     path: /opt/containerd
     state: absent
+  tags:
+    - videochat
 
 - name: Install docker proxy
   ansible.builtin.copy:
     src: files/daemon.json
     dest: /etc/docker/daemon.json
   notify: Reload docker
+  tags:
+    - videochat
 
 - name: Start Docker service
   service:
     name: docker
     state: started
     enabled: yes
+  tags:
+    - videochat
 
 - name: Create root config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}"
     state: directory
+  tags:
+    - videochat
 
 - name: Create Livekit config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/livekit"
     state: directory
+  tags:
+    - videochat
 
 # https://www.digitalocean.com/community/tutorials/how-to-create-and-use-templates-in-ansible-playbooks
 - name: Create Livekit config
   template:
     src: templates/livekit.yaml.tpl
     dest: "{{ dir_prefix }}/livekit/livekit.yaml"
+  tags:
+    - videochat
 
 - name: Create Traefik config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/traefik/dynamic"
     state: directory
+  tags:
+    - videochat
 
 - name: Create Traefik static config
   template:
     src: templates/traefik.yml.tpl
     dest: "{{ dir_prefix }}/traefik/traefik.yml"
+  tags:
+    - videochat
 
 - name: Create Traefik dynamic config
   template:
     src: templates/common_middlewares.yml.tpl
     dest: "{{ dir_prefix }}/traefik/dynamic/common_middlewares.yml"
+  tags:
+    - videochat
 
 - name: Create PostgreSQL config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d"
     state: directory
+  tags:
+    - videochat
 
 - name: Create PostgreSQL init.sql
   ansible.builtin.copy:
     src: files/init.sql
     dest: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d/init.sql"
+  tags:
+    - videochat
 
 - name: Create Egress config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/egress"
     state: directory
+  tags:
+    - videochat
 
 - name: Create Egress config
   ansible.builtin.copy:
     src: files/egress.yaml
     dest: "{{ dir_prefix }}/egress/config.yaml"
+  tags:
+    - videochat
 
 - name: Create Minio data directory and set owner and access on Minio data directory non recursively
   ansible.builtin.file:
@@ -114,12 +149,16 @@
     # https://github.com/bitnami/containers/blob/main/bitnami/minio/2024/debian-12/Dockerfile#L61C6-L61C10
     owner: 1001
     group: 1001
+  tags:
+    - videochat
 
 - name: Create Storage tmp directory if it does not exist
   ansible.builtin.file:
     path: /mnt/chat-storage-tmp
     state: directory
     mode: a=rw
+  tags:
+    - videochat
 
 - name: Create PostgreSQL data directory if it does not exist
   ansible.builtin.file:
@@ -128,17 +167,23 @@
     mode: u=rwx,g-rwx,o-rwx
     owner: 70
     group: 70
+  tags:
+    - videochat
 
 - name: Create Docker Compose Infra
   template:
     src: templates/docker-compose-infra.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-infra.yml"
+  tags:
+    - videochat
 
 - name: Create Docker prune cron
   ansible.builtin.copy:
     src: files/docker-prune.sh
     dest: "/etc/cron.daily/docker-prune.sh"
     mode: a+x
+  tags:
+    - videochat
 
 - name: Install python package
   package:
@@ -146,21 +191,29 @@
       - python
       - pip
     state: latest
+  tags:
+    - videochat
 
 - name: Install python packages to manipulate with docker swarm
   ansible.builtin.pip:
     name:
       - docker
       - jsondiff
+  tags:
+    - videochat
 
 # https://docs.ansible.com/ansible/latest/collections/community/docker/docker_swarm_module.html#ansible-collections-community-docker-docker-swarm-module
 - name: Init a new swarm with default parameters
   community.docker.docker_swarm:
     state: present
   register: swarm_facts
+  tags:
+    - videochat
 
 - debug:
     msg: "Swarm tokens are {{ swarm_facts.swarm_facts.JoinTokens }}"
+  tags:
+    - videochat
 
 # https://docs.ansible.com/ansible/latest/collections/community/docker/index.html
 - name: Deploy stack for Infra
@@ -169,6 +222,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-infra.yml"
+  tags:
+    - videochat
 
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/password_hash_filter.html
 - name: Create Docker Compose AAA
@@ -177,6 +232,8 @@
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for AAA
   community.docker.docker_stack:
@@ -184,6 +241,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-aaa.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Frontend
   template:
@@ -191,6 +250,8 @@
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Frontend
   community.docker.docker_stack:
@@ -198,6 +259,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-frontend.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Chat
   template:
@@ -205,6 +268,8 @@
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Chat
   community.docker.docker_stack:
@@ -212,6 +277,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-chat.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Storage
   template:
@@ -219,6 +286,8 @@
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Storage
   community.docker.docker_stack:
@@ -226,6 +295,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-storage.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Video
   template:
@@ -233,6 +304,8 @@
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Video
   community.docker.docker_stack:
@@ -240,6 +313,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-video.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Event
   template:
@@ -247,6 +322,8 @@
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Event
   community.docker.docker_stack:
@@ -254,6 +331,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-event.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Notification
   template:
@@ -261,6 +340,8 @@
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Notification
   community.docker.docker_stack:
@@ -268,6 +349,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-notification.yml"
+  tags:
+    - videochat
 
 - name: Create Docker Compose Public
   template:
@@ -275,6 +358,8 @@
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
   vars:
     tag: latest
+  tags:
+    - videochat
 
 - name: Deploy stack for Public
   community.docker.docker_stack:
@@ -282,7 +367,8 @@
     name: "{{ swarm_stack_name }}"
     compose:
       - "{{ dir_prefix }}/docker-compose-public.yml"
-
+  tags:
+    - videochat
 
 # rest part is set non-deployed tag for deploying without docker hub
 - name: Change Docker Compose AAA
@@ -291,6 +377,8 @@
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Frontend
   template:
@@ -298,6 +386,8 @@
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Chat
   template:
@@ -305,6 +395,8 @@
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Storage
   template:
@@ -312,6 +404,8 @@
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Video
   template:
@@ -319,6 +413,8 @@
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Event
   template:
@@ -326,6 +422,8 @@
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Notification
   template:
@@ -333,6 +431,8 @@
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
   vars:
     tag: changing
+  tags:
+    - continuous
 
 - name: Change Docker Compose Public
   template:
@@ -340,3 +440,5 @@
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
   vars:
     tag: changing
+  tags:
+    - continuous

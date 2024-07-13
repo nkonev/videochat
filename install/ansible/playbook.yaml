@@ -1,4 +1,4 @@
 ---
 - hosts: main
   roles:
-    - initial_install
+    - install
