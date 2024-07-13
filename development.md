@@ -397,11 +397,28 @@ http://localhost:8484/ (keycloak_admin:admin_password)
 Open protected page
 http://localhost:8060/api2/user
 
-Configuring Keycloak - adding user:
-1. Login as admin
-2. Manage -> Users -> Add user
-3. User's -> Credentials -> Set password, disable temporal
-4. User's -> Role Mappings -> add 'USER' role
+### Configuring Keycloak:
+1. Login as admin `keycloak_admin`:`admin_password`
+2. Create realm `my_realm2`
+3. Create client `my_client2` with all defaults (Save) and then, after saving set
+Valid redirect URIs
+```
+http://localhost:8081/*
+http://localhost:8060/*
+http://localhost:9080/*
+```
+4. Realm `my_realm2` should be chosen
+5. Client scopes -> Create client scope `openid`
+6. Assign this scope onto client
+clients -> my_client2 -> client scopes -> Add client scope, choose `openid`, press Add, then default
+7. Manage -> Users -> Add user `user2`
+8. User's -> Credentials -> Set password `user_password2`, disable temporal
+9. Realm roles -> Create role `USER`
+10. User's -> Role Mappings -> add `USER` role
+
+### Links
+* https://habr.com/ru/amp/publications/552346/
+* https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
 
 ## Login as user1 (get 3 tokens)
 ```bash
@@ -416,7 +433,7 @@ from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e2892738
 ## 1. exporting (not always importable)
 ```bash
 docker-compose exec keycloak bash
-/opt/keycloak/bin/kc.sh export --file /tmp/realm-export.json --realm my_realm
+/opt/keycloak/bin/kc.sh export --file /tmp/realm-export.json --realm my_realm2
 # don't worry about the busy port
 exit
 ```
@@ -515,7 +532,7 @@ curl -i -X POST 'http://localhost:9080/recreate-oauth2-mocks'
 
 Or in the IDE
 ```
---spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/oauth2-keycloak.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml
+--spring.config.location=file:/home/nkonev/javaWorkspace/videochat/aaa/src/main/resources/config/application.yml,file:/home/nkonev/javaWorkspace/videochat/aaa/src/test/resources/config/oauth2-keycloak.yml,file:/home/nkonev/javaWorkspace/videochat/aaa/src/test/resources/config/user-test-controller.yml
 ```
 
 To interact with emulator, you need to use `http://localhost:8081`, not `http://127.0.0.1:8081`.

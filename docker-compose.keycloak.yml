@@ -4,9 +4,10 @@ version: '3.7'
 
 services:
   # https://habr.com/en/amp/post/552346/
+  # https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
   keycloak:
     # https://quay.io/repository/keycloak/keycloak
-    image: quay.io/keycloak/keycloak:19.0.1
+    image: quay.io/keycloak/keycloak:20.0.5-0
     restart: unless-stopped
     volumes:
       - ./docker/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro,z
@@ -17,5 +18,7 @@ services:
     ports:
       - "8484:8080"
     # https://www.keycloak.org/server/importExport
-    command: [ "start-dev", "--import-realm" ]
-    # command: [ "start-dev" ]
+    command: [
+      "start-dev",
+      "--import-realm"
+    ]

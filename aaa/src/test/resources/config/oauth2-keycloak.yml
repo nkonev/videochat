@@ -3,8 +3,8 @@ spring.security:
     client:
       registration:
         keycloak:
-          client-id: my_client
+          client-id: my_client2
           redirect-uri: "{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
       provider:
         keycloak:
-          issuer-uri: http://localhost:8484/realms/my_realm
+          issuer-uri: http://localhost:8484/realms/my_realm2
