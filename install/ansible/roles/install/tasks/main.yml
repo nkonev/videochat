@@ -370,6 +370,14 @@
   tags:
     - videochat
 
+- name: Set ssh pub key for Github Actions
+  ansible.posix.authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ github_actions_ssh_public_key }}"
+  tags:
+    - continuous
+
 # rest part is set non-deployed tag for deploying without docker hub
 - name: Change Docker Compose AAA
   template:
