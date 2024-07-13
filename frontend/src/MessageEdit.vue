@@ -111,7 +111,7 @@
               <v-btn icon rounded="0" variant="plain" :size="getBtnSize()" density="comfortable" @click="openMessageEditSettings()" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_settings')">
                   <v-icon :size="getIconSize()">mdi-cog</v-icon>
               </v-btn>
-              <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="isMobile() ? 72 : 64" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
+              <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="sendMessageBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
         <template v-else-if="this.$refs.tipTapRef">
@@ -378,6 +378,13 @@
                     return '54px'
                 } else {
                     return '44px'
+                }
+            },
+            sendMessageBtnWidth() {
+                if (this.isMobile()) {
+                    return '72px'
+                } else {
+                    return '64px'
                 }
             },
             getBtnHeight() {
