@@ -1,7 +1,7 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" scrollable height="fit-content" width="fit-content">
-            <v-card :title="getTitle()">
+            <v-card :title="getTitle()" color="black">
                 <v-card-text class="d-flex justify-center pb-0 px-2">
                     <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                     <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
