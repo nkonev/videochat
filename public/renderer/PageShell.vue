@@ -17,6 +17,8 @@
 
         <v-main>
             <slot />
+
+            <PlayerModal/>
         </v-main>
     </v-app>
 </template>
@@ -27,9 +29,10 @@
     import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "#root/common/components/CollapsedSearch.vue";
+    import PlayerModal from "#root/common/components/PlayerModal.vue";
 
     export default {
-        components: {CollapsedSearch},
+        components: {PlayerModal, CollapsedSearch},
         // https://vuejs.org/api/composition-api-setup.html
         setup() {
             const pageContext = usePageContext();

@@ -29,7 +29,7 @@
           </template>
         </v-list-item>
 
-        <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content">
+        <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content" @click="onClickTrap">
           <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
           <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(blogDto)">
             <v-btn v-for="(reaction, i) in blogDto.reactions" variant="tonal" size="small" height="32px" rounded :class="reactionClass(i)" :title="getReactedUsers(reaction)"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
@@ -46,6 +46,7 @@
             :item="item"
             :chatId="item.chatId"
             :isInBlog="true"
+            @click="onClickTrap"
           ></MessageItem>
 
           <v-progress-linear
@@ -67,10 +68,13 @@
 <script>
 import axios from "axios";
 import MessageItem from "#root/common/components/MessageItem.vue";
-import {getHumanReadableDate, hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM} from "#root/common/utils";
+import {getHumanReadableDate, hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM, checkUpByTreeObj} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 import { navigate } from 'vike/client/router';
+import bus, {
+    PLAYER_MODAL,
+} from "#root/common/bus";
 
 export default {
   setup() {
@@ -155,6 +159,21 @@ export default {
         }).finally(()=>{
             this.commentsLoading = false;
         })
+    },
+
+    onClickTrap(e) {
+      const foundElements = [
+          checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
+      ].filter(r => r.found);
+      if (foundElements.length) {
+          const found = foundElements[foundElements.length - 1].el;
+          switch (found?.tagName?.toLowerCase()) {
+              case "img": {
+                  bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: found.src})
+                  break;
+              }
+          }
+      }
     },
   },
   components: {

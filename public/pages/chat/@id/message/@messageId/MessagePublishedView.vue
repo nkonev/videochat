@@ -8,13 +8,17 @@
                  :chatId="chatId"
                  :isInBlog="true"
                  @onreactionclick="onReactionClick"
+                 @click="onClickTrap"
             ></MessageItem>
         </div>
     </v-container>
 </template>
 <script>
+import bus, {
+    PLAYER_MODAL,
+} from "#root/common/bus";
 import MessageItem from "#root/common/components/MessageItem.vue";
-import {getMessageLink} from "#root/common/utils";
+import {getMessageLink, checkUpByTreeObj} from "#root/common/utils";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
 export default {
@@ -35,6 +39,20 @@ export default {
     methods: {
         onReactionClick() {
             window.location.href = getMessageLink(this.chatId, this.messageId);
+        },
+        onClickTrap(e) {
+            const foundElements = [
+                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
+            ].filter(r => r.found);
+            if (foundElements.length) {
+                const found = foundElements[foundElements.length - 1].el;
+                switch (found?.tagName?.toLowerCase()) {
+                    case "img": {
+                        bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: found.src})
+                        break;
+                    }
+                }
+            }
         },
     },
     computed: {

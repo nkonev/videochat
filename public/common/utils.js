@@ -78,3 +78,21 @@ export const getLoginColoredStyle = (item, defaultLinkColor) => {
 export const getMessageLink = (chatId, messageId) => {
     return chat + "/" + chatId + messageIdHashPrefix + messageId
 }
+
+export const checkUpByTreeObj = (el, maxLevels, condition) => {
+    let level = 0;
+    let underCheck = el;
+    do {
+        if (condition(underCheck)) {
+            return {
+                found: true,
+                el: underCheck
+            }
+        }
+        underCheck = underCheck.parentElement;
+        level++;
+    } while (level <= maxLevels);
+    return {
+        found: false
+    };
+}
