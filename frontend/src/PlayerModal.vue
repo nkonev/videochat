@@ -1,20 +1,12 @@
 <template>
-    <v-row justify="center">
-        <v-dialog v-model="show" :persistent="dto?.canPlayAsVideo || dto?.canPlayAsAudio" scrollable height="fit-content" width="fit-content">
-            <v-card :title="getTitle()" color="black">
-                <v-card-text class="d-flex justify-center pb-0 px-2">
-                    <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
-                    <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
-                    <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
-                </v-card-text>
-
-                <v-card-actions class="d-flex flex-wrap flex-row">
-                    <v-spacer></v-spacer>
-                    <v-btn color="red" variant="flat" @click="hideModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-    </v-row>
+    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7">
+        <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
+            <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
+            <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
+            <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+        </span>
+        <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
+    </v-overlay>
 </template>
 
 <script>
@@ -68,6 +60,12 @@ export default {
 
 <style lang="stylus" scoped>
 @import "constants.styl"
+
+.close-button {
+    position absolute
+    top 0.2em
+    right 0.2em
+}
 
 .image-custom-class-view {
     max-width: 100% !important
