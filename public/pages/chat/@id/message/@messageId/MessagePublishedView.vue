@@ -42,13 +42,21 @@ export default {
         },
         onClickTrap(e) {
             const foundElements = [
-                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
+                checkUpByTreeObj(e?.target, 1, (el) => {
+                    return el?.tagName?.toLowerCase() == "img" ||
+                        Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))
+                })
             ].filter(r => r.found);
             if (foundElements.length) {
                 const found = foundElements[foundElements.length - 1].el;
                 switch (found?.tagName?.toLowerCase()) {
                     case "img": {
                         bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: found.src})
+                        break;
+                    }
+                    case "div": { // contains video
+                        const video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video");
+                        bus.emit(PLAYER_MODAL, {canPlayAsVideo: true, url: video.src, previewUrl: video.poster})
                         break;
                     }
                 }
