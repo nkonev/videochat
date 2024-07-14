@@ -1,6 +1,5 @@
 import {Image} from '@tiptap/extension-image';
 import {Plugin, PluginKey} from 'prosemirror-state';
-import {hasLength} from "@/utils";
 
 export const buildImageHandler = (uploadFunction) => {
     return Image.extend({
