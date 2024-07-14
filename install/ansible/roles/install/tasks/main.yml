@@ -231,7 +231,7 @@
     src: templates/docker-compose-aaa.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -249,7 +249,7 @@
     src: templates/docker-compose-frontend.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -267,7 +267,7 @@
     src: templates/docker-compose-chat.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -285,7 +285,7 @@
     src: templates/docker-compose-storage.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -303,7 +303,7 @@
     src: templates/docker-compose-video.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -321,7 +321,7 @@
     src: templates/docker-compose-event.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -339,7 +339,7 @@
     src: templates/docker-compose-notification.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -357,7 +357,7 @@
     src: templates/docker-compose-public.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
   vars:
-    tag: latest
+    tag: "{{ image_install_tag }}"
   tags:
     - videochat
 
@@ -384,7 +384,7 @@
     src: templates/docker-compose-aaa.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -393,7 +393,7 @@
     src: templates/docker-compose-frontend.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -402,7 +402,7 @@
     src: templates/docker-compose-chat.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -411,7 +411,7 @@
     src: templates/docker-compose-storage.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -420,7 +420,7 @@
     src: templates/docker-compose-video.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -429,7 +429,7 @@
     src: templates/docker-compose-event.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -438,7 +438,7 @@
     src: templates/docker-compose-notification.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous
 
@@ -447,6 +447,6 @@
     src: templates/docker-compose-public.yml.tpl
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
   vars:
-    tag: changing
+    tag: "{{ image_continuous_tag }}"
   tags:
     - continuous

@@ -1,3 +1,5 @@
 dir_prefix: "/opt/videochat"
 docker_repo: "https://download.docker.com/linux/centos/docker-ce.repo"
 swarm_stack_name: "VIDEOCHATSTACK"
+image_install_tag: "latest"
+image_continuous_tag: "changing"
