@@ -481,9 +481,12 @@
             !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "video") &&
             !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "audio") &&
             !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
-            !checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions"))
+            !checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions")) &&
+            !checkUpByTree(e?.target, 1, (el) => Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button")))
           ) {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+          } else if (this.isMobile()) {
+              this.onClickTrap(e)
           }
         },
         onUserProfileChanged(user) {
