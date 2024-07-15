@@ -71,22 +71,13 @@ public class AaaUserDetailsService implements UserDetailsService {
         return getSessions(userDetails.getUsername());
     }
 
-    private record UsernameWithId(String username, Long id){}
+    private record usernameWithId(String username, Long id){}
 
     public List<UserOnlineResponse> getUsersOnline(List<Long> userIds){
         if (userIds == null){
             throw new RuntimeException("userIds cannon be null");
         }
-        return userIds.stream().map(uid -> new UsernameWithId(UserAccountDetailsDTO.toUsername(uid), uid))
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
-                .toList();
-    }
-
-    public List<UserOnlineResponse> getUsersOnlineByUsers(List<UserAccount> users){
-        if (users == null){
-            throw new RuntimeException("users cannon be null");
-        }
-        return users.stream()
+        return userIds.stream().map(uid -> new usernameWithId(UserAccountDetailsDTO.toUsername(uid), uid))
                 .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
                 .toList();
     }

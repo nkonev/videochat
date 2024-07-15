@@ -1,6 +1,7 @@
 package name.nkonev.aaa.tasks;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.services.EventService;
@@ -42,7 +43,7 @@ public class UserOnlineTask {
         for (int i = 0; shouldContinue; i++) {
             var chunk = userAccountRepository.findPage(pageSize, i * pageSize);
             shouldContinue = chunk.size() == pageSize;
-            var usersOnline = aaaUserDetailsService.getUsersOnlineByUsers(chunk);
+            var usersOnline = aaaUserDetailsService.getUsersOnline(chunk.stream().map(UserAccount::id).toList());
             eventService.notifyOnlineChanged(usersOnline);
         }
         LOGGER.debug("User online task finish");
