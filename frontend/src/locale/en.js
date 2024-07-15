@@ -296,5 +296,7 @@ export default {
     notifications_in_browser: "in-browser",
     new_message_notifications_in_browser: "New message notification in-browser",
     call_notifications_in_browser: "Call notification in-browser",
-    remove_sessions: "Remove sessions"
+    remove_sessions: "Remove sessions",
+    video_position_changed_apply: "To take an effect you need to re-enter into the call",
+    video_successfully_reconnected: "Successfully reconnected to video server"
 }

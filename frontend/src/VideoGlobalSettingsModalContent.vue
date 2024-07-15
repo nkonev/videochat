@@ -238,7 +238,10 @@
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoPosition(v) {
-                setStoredVideoPosition(v)
+                setStoredVideoPosition(v);
+                if (this.$route.name == videochat_name) {
+                    this.setWarning(this.$vuetify.locale.t('$vuetify.video_position_changed_apply'));
+                }
             },
             changeCodec(v) {
                 setStoredCodec(v)

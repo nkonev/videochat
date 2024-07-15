@@ -329,7 +329,7 @@ export default {
           this.setWarning("Reconnecting to video server")
         })
         .on(RoomEvent.Reconnected, () => {
-          this.setOk("Successfully reconnected to video server")
+          this.setOk(this.$vuetify.locale.t('$vuetify.video_successfully_reconnected'))
         })
         .on(RoomEvent.Disconnected, this.handleDisconnect)
         .on(RoomEvent.SignalConnected, () => {
