@@ -140,7 +140,7 @@ func getUserOwesCalls() string {
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int64, removeUserState bool, ownerId int64) error {
 	// remove from "dials_of_user" members
-	err := s.removeFromSet(ctx, userId, ownerId)
+	err := s.removeUserFromOwnedSet(ctx, userId, ownerId)
 	if err != nil {
 		return err
 	}
@@ -154,25 +154,10 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int
 		}
 	}
 
-	cardinality, err := s.redisClient.SCard(ctx, userOwnedCallsKey(ownerId)).Result()
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during performing SCARD %v", err)
-		return err
-	}
-	// clean
-	if cardinality == 0 {
-		// remove "dials_of_user" on zero members
-		err = s.redisClient.Del(ctx, userOwnedCallsKey(ownerId)).Err()
-		if err != nil {
-			logger.GetLogEntry(ctx).Errorf("Error during deleting ChatMembers %v", err)
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (s *DialRedisRepository) removeFromSet(ctx context.Context, userId int64, ownerId int64) (error) {
+func (s *DialRedisRepository) removeUserFromOwnedSet(ctx context.Context, userId int64, ownerId int64) (error) {
 	_, err := s.redisClient.SRem(ctx, userOwnedCallsKey(ownerId), userId).Result()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during performing SREM %v", err)
@@ -383,7 +368,7 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 							}
 						}
 
-						err = s.removeFromSet(ctx, userId, leavingOwner)
+						err = s.removeUserFromOwnedSet(ctx, userId, leavingOwner)
 						if err != nil {
 							logger.GetLogEntry(ctx).Errorf("Error during removing user from previous dial list %v", err)
 							wasErrored = true
