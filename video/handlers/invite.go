@@ -323,16 +323,6 @@ func(vh *InviteHandler) setUserStatus(ctx context.Context, callee, chatId int64,
 	if err != nil {
 		return err
 	}
-	if services.ShouldProlong(callStatus) {
-		err = vh.dialRedisRepository.ResetExpiration(ctx, callee)
-		if err != nil {
-			return err
-		}
-		err = vh.dialRedisRepository.ResetOwner(ctx, callee)
-		if err != nil {
-			return err
-		}
-	}
 	if services.IsTemporary(callStatus) {
 		err = vh.dialRedisRepository.SetCurrentTimeForRemoving(ctx, callee)
 		if err != nil {
