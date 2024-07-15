@@ -46,16 +46,16 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     /**
      * load UserAccountDetailsDTO from database, or throws UsernameNotFoundException
-     * @param username
+     * @param login it is login, provided by login form
      * @return
      * @throws UsernameNotFoundException
      */
     @Override
-    public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserAccountDetailsDTO loadUserByUsername(String login) throws UsernameNotFoundException {
         return userAccountRepository
-                .findByUsername(username)
+                .findByUsername(login)
                 .map(userAccountConverter::convertToUserAccountDetailsDTO)
-                .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User with login '" + login + "' not found"));
     }
 
     // it is a string representation of userId to fit principal name of type String
