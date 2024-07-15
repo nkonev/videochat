@@ -73,7 +73,7 @@ public abstract class AbstractOAuth2UserService {
         if (isAlreadyAuthenticated()) {
             // we already authenticated - so it' s binding
             UserAccountDetailsDTO principal = getPrincipal();
-            logger().info("Will merge {}Id to exists user '{}', id={}", getOAuth2Name(), principal.getUsername(), principal.getId());
+            logger().info("Will merge {}Id to exists user '{}', id={}", getOAuth2Name(), principal.getLogin(), principal.getId());
 
             Optional<UserAccount> maybeUserAccount = findByOAuth2Id(oauthId);
             if (maybeUserAccount.isPresent() && !maybeUserAccount.get().id().equals(principal.getId())){
@@ -86,7 +86,7 @@ public abstract class AbstractOAuth2UserService {
 
             var userAccount = setOAuth2IdToEntity(principal.getId(), oauthId);
 
-            logger().info("{}Id successfully merged to exists user '{}', id={}", getOAuth2Name(), principal.getUsername(), principal.getId());
+            logger().info("{}Id successfully merged to exists user '{}', id={}", getOAuth2Name(), principal.getLogin(), principal.getId());
 
             boolean setToSession = false;
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

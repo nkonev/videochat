@@ -70,8 +70,17 @@ public record UserAccountDetailsDTO (
         return password;
     }
 
+    // return id to simplify interaction with sessions, for example find session by principal name
     @Override
     public String getUsername() {
+        return toUsername(this.userAccountDTO.id());
+    }
+
+    public static String toUsername(Long id) {
+        return id.toString();
+    }
+
+    public String getLogin() {
         return this.userAccountDTO.login();
     }
 

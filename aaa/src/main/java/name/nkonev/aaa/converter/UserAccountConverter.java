@@ -88,7 +88,7 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         return new name.nkonev.aaa.dto.UserSelfProfileDTO(
                 userAccount.getId(),
-                userAccount.getUsername(),
+                userAccount.getLogin(),
                 userAccount.getAvatar(),
                 userAccount.getAvatarBig(),
                 userAccount.userAccountDTO().shortInfo(),

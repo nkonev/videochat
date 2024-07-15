@@ -59,7 +59,7 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
         csrfTokenRepository.saveToken(csrfToken, request, response);
 
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO)authentication.getPrincipal();
-        LOGGER.info("User '{}' logged out", userDetails.getUsername());
+        LOGGER.info("User '{}' logged out", userDetails.getLogin());
 
         var usersOnline = aaaUserDetailsService.getUsersOnline(List.of(userDetails.getId()));
         eventService.notifyOnlineChanged(usersOnline);

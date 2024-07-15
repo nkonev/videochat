@@ -70,11 +70,13 @@ public class AaaUserDetailsService implements UserDetailsService {
         return getSessions(userDetails.getUsername());
     }
 
+    private record UsernameWithId(String username, Long id){}
+
     public List<UserOnlineResponse> getUsersOnline(List<Long> userIds){
         if (userIds == null){
             throw new RuntimeException("userIds cannon be null");
         }
-        return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
+        return userIds.stream().map(uid -> new UsernameWithId(UserAccountDetailsDTO.toUsername(uid), uid))
                 .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
                 .toList();
     }
