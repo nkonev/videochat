@@ -1959,6 +1959,13 @@ func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
 		var ownersSet = map[int64]bool{}
 		var chatsPreSet = map[int64]bool{}
 		populateSets(message, ownersSet, chatsPreSet, true)
+		participantIds, err := tx.GetParticipantIds(chatId, utils.DefaultSize, utils.DefaultOffset)
+		if err != nil {
+			return err
+		}
+		for _, participantId := range participantIds {
+			ownersSet[participantId] = true
+		}
 		chatsSet, err := mc.db.GetChatsBasic(chatsPreSet, NonExistentUser)
 		if err != nil {
 			return err
@@ -1972,9 +1979,23 @@ func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
 
 		preview := stripTagsAndCut(mc.stripAllTags, viper.GetInt("previewMaxTextSize"), convertedMessage.Text)
 
+		aTitle := chatBasic.Title
+		if chatBasic.IsTetATet {
+			first := true
+			aTitle = ""
+			for _, user := range owners {
+				if !first {
+					aTitle += ", "
+				}
+				aTitle += user.Login
+
+				first = false
+			}
+		}
+
 		return c.JSON(http.StatusOK, PublishedMessageWrapper{
 			Message: convertedMessage,
-			Title: chatBasic.Title,
+			Title: aTitle,
 			Preview: preview,
 		})
 	})
