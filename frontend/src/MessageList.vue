@@ -544,11 +544,10 @@
             });
         },
         onClickTrap(e) {
+            e.preventDefault()
             const foundElements = [
-                checkUpByTreeObj(e?.target, 1, (el) => {
-                    return el?.tagName?.toLowerCase() == "img" ||
-                        Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))
-                })
+                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
+                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "div" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
             ].filter(r => r.found);
             if (foundElements.length) {
                 const found = foundElements[foundElements.length - 1].el;
