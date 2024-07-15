@@ -111,6 +111,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             // nothing
         } else {
             eventService.notifySessionsKilled(userId, reasonType);
+            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userId, false)));
         }
     }
 
