@@ -58,8 +58,9 @@ public class AaaUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
     }
 
-    public Map<String, Session> getSessions(String userName){
-        Object o = redisOperationsSessionRepository.findByPrincipalName(userName);
+    // it is a string representation of userId to fit principal name of type String
+    public Map<String, Session> getSessions(String userId){
+        Object o = redisOperationsSessionRepository.findByPrincipalName(userId);
         return (Map<String, Session>)o;
     }
 
@@ -105,7 +106,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public void killSessions(long userId, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
-        String userName = getUserAccount(userId).username();
+        String userName = UserAccountDetailsDTO.toUsername(userId);
         Map<String, Session> sessionMap = getSessions(userName);
         sessionMap.keySet().stream().filter(aSession -> filterOutSession != null ? !aSession.equals(filterOutSession) : true).forEach(session -> redisOperationsSessionRepository.deleteById(session));
 
@@ -117,7 +118,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public Map<String, Session> getSessions(long userId) {
-        UserAccount userAccount = getUserAccount(userId);
-        return getSessions(userAccount.username());
+        String userName = UserAccountDetailsDTO.toUsername(userId);
+        return getSessions(userName);
     }
 }
