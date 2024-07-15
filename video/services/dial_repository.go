@@ -139,7 +139,7 @@ func getUserOwesCalls() string {
 }
 
 func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int64, removeUserState bool, ownerId int64) error {
-	// remove from "dialchat" members
+	// remove from "dials_of_user" members
 	err := s.removeFromSet(ctx, userId, ownerId)
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int
 	}
 	// clean
 	if cardinality == 0 {
-		// remove "dialchat" on zero members
+		// remove "dials_of_user" on zero members
 		err = s.redisClient.Del(ctx, userOwnedCallsKey(ownerId)).Err()
 		if err != nil {
 			logger.GetLogEntry(ctx).Errorf("Error during deleting ChatMembers %v", err)
