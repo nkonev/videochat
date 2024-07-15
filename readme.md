@@ -30,7 +30,7 @@ Click on image to open a screenshot gallery.
 [![Chat image](./.screenshots/14_most_of_features.png)](./screenshots.md)
 
 # Features:
-* Free HTTPS by Let's Encrypt
+* Free HTTPS by Let's Encrypt.
 * Calls from PC to Mobile and vise versa.
 * Well-integrated video calls into entire platform UI, no separated video rooms, text chats, etc...
 * No installation on client's machine - only modern browser with video camera or microphone required.
