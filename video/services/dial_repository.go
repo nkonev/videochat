@@ -69,7 +69,7 @@ func CanOverrideCallStatus(userCallStatus string) bool {
 
 func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId int64, ownerId int64, callStatus string, ownerAvatar string, tetATet bool) error {
 
-	err := s.addToSet(ctx, userId, ownerId)
+	err := s.addUserToOwnedSet(ctx, userId, ownerId)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (s *DialRedisRepository) AddToDialList(ctx context.Context, userId, chatId 
 	return nil
 }
 
-func (s *DialRedisRepository) addToSet(ctx context.Context, userId int64, ownerId int64) (error) {
+func (s *DialRedisRepository) addUserToOwnedSet(ctx context.Context, userId int64, ownerId int64) (error) {
 	err := s.redisClient.SAdd(ctx, userOwnedCallsKey(ownerId), userId).Err()
 	if err != nil {
 		logger.GetLogEntry(ctx).Errorf("Error during adding user to dial %v", err)
@@ -362,7 +362,7 @@ func (s *DialRedisRepository) TransferOwnership(ctx context.Context, inVideoUser
 				for _, userId := range inVideoUsers {
 					if userId != leavingOwner {
 
-						err := s.addToSet(ctx, userId, newOwner)
+						err := s.addUserToOwnedSet(ctx, userId, newOwner)
 						if err != nil {
 							logger.GetLogEntry(ctx).Errorf("Error during changing owner %v", err)
 							wasErrored = true
