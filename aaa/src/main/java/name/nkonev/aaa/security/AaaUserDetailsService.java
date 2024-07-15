@@ -88,10 +88,6 @@ public class AaaUserDetailsService implements UserDetailsService {
         });
     }
 
-    public UserAccount getUserAccount(long userId){
-        return userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-    }
-
     public void killSessions(long userId, ForceKillSessionsReasonType reasonType) {
         killSessions(userId, reasonType, null, null);
     }

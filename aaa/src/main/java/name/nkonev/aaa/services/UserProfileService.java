@@ -337,7 +337,7 @@ public class UserProfileService {
 
     @Transactional
     public UserAccountDTOExtended setLocked(UserAccountDetailsDTO userAccountDetailsDTO, LockDTO lockDTO){
-        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
+        UserAccount userAccount = userAccountRepository.findById(lockDTO.userId()).orElseThrow();
         if (lockDTO.lock()){
             aaaUserDetailsService.killSessions(lockDTO.userId(), ForceKillSessionsReasonType.user_locked);
         }
@@ -351,7 +351,7 @@ public class UserProfileService {
 
     @Transactional
     public UserAccountDTOExtended setConfirmed(UserAccountDetailsDTO userAccountDetailsDTO, ConfirmDTO confirmDTO){
-        UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
+        UserAccount userAccount = userAccountRepository.findById(confirmDTO.userId()).orElseThrow();
         if (!confirmDTO.confirm()){
             aaaUserDetailsService.killSessions(confirmDTO.userId(), ForceKillSessionsReasonType.user_unconfirmed);
         }
