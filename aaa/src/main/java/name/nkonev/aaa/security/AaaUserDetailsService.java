@@ -93,8 +93,8 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public void killSessions(long userId, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
-        String userName = UserAccountDetailsDTO.toUsername(userId);
-        Map<String, Session> sessionMap = getSessions(userName);
+        String userIdString = UserAccountDetailsDTO.toUsername(userId);
+        Map<String, Session> sessionMap = getSessions(userIdString);
         sessionMap.keySet().stream().filter(aSession -> filterOutSession != null ? !aSession.equals(filterOutSession) : true).forEach(session -> redisOperationsSessionRepository.deleteById(session));
 
         if (currentUserId != null && currentUserId.equals(userId)){
@@ -105,7 +105,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public Map<String, Session> getSessions(long userId) {
-        String userName = UserAccountDetailsDTO.toUsername(userId);
-        return getSessions(userName);
+        String userIdString = UserAccountDetailsDTO.toUsername(userId);
+        return getSessions(userIdString);
     }
 }
