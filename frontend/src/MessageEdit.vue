@@ -9,6 +9,7 @@
             @myinput="onInput"
             @keydown.ctrl.enter.native="sendMessageToChat"
             @keydown.esc.native="resetInput()"
+            @sendMessage="sendMessageToChat"
         />
 
         <div class="d-flex flex-wrap flex-row dashed-borders" v-if="chatStore.shouldShowSendMessageButtons">

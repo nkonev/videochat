@@ -298,5 +298,7 @@ export default {
     call_notifications_in_browser: "Call notification in-browser",
     remove_sessions: "Remove sessions",
     video_position_changed_apply: "To take an effect you need to re-enter into the call",
-    video_successfully_reconnected: "Successfully reconnected to video server"
+    video_successfully_reconnected: "Successfully reconnected to video server",
+    send_message_after_media_insert: "Send the message",
+    send_message_after_media_insert_description: "Send the message after media insert"
 }

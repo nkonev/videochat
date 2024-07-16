@@ -58,6 +58,7 @@ export const useChatStore = defineStore('chat', {
         shouldShowSendMessageButtons: true,
         hasNewMessages: false,
         chatDto: chatDtoFactory(),
+        sendMessageAfterMediaInsert: false,
     }
   },
   actions: {

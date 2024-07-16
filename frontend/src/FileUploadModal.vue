@@ -44,6 +44,15 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
+                    <v-checkbox
+                        class="mr-2"
+                        density="comfortable"
+                        color="primary"
+                        hide-details
+                        v-model="chatStore.sendMessageAfterMediaInsert"
+                        :label="$vuetify.locale.t('$vuetify.send_message_after_media_insert')"
+                        :title="$vuetify.locale.t('$vuetify.send_message_after_media_insert_description')"
+                    ></v-checkbox>
                     <v-btn variant="outlined" min-width="0" v-if="shouldShowAttachExistingFilesToMessage" @click="onAttachFilesToMessage()" :title="$vuetify.locale.t('$vuetify.attach_files_to_message')"><v-icon size="large">mdi-attachment-plus</v-icon></v-btn>
                     <template v-if="!limitError && fileInputQueueHasElements">
                         <v-btn color="primary" variant="flat" @click="upload()" :loading="checkingLimitsStep" :disabled="checkingLimitsStep">{{ $vuetify.locale.t('$vuetify.upload') }}</v-btn>

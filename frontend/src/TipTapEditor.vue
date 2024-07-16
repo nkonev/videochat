@@ -161,6 +161,10 @@ export default {
             } else if (dto.aType == media_audio) {
                 this.setAudio(dto.url)
             }
+            if (this.chatStore.sendMessageAfterMediaInsert) {
+                this.$emit("sendMessage");
+                this.chatStore.sendMessageAfterMediaInsert = false;
+            }
         }
     },
     onMediaLinkSet({link, mediaType}) {
