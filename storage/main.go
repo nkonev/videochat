@@ -171,6 +171,7 @@ func configureEcho(
 	e.GET(utils.UrlStoragePublicGetFile, fh.PublicDownloadHandler)
 	e.GET(utils.UrlStorageGetFile, fh.DownloadHandler)
 
+
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)
