@@ -133,5 +133,4 @@ axios.interceptors.response.use((response) => {
     }
 });
 
-
 app.mount('#app')
