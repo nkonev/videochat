@@ -6,6 +6,6 @@
   "scripts": {},
   "devDependencies":    {
     "axios": "^1.6.7",
-    "@playwright/test": "^1.41.2"
+    "@playwright/test": "1.45.2"
   }
 }
