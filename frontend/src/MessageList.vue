@@ -547,7 +547,7 @@
             e.preventDefault()
             const foundElements = [
                 checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
-                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "div" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
+                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
             ].filter(r => r.found);
             if (foundElements.length) {
                 const found = foundElements[foundElements.length - 1].el;
@@ -556,7 +556,7 @@
                         bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: found.src, canSwitch: true})
                         break;
                     }
-                    case "div": { // contains video
+                    case "span": { // contains video
                         const video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video");
                         bus.emit(PLAYER_MODAL, {canPlayAsVideo: true, url: video.src, previewUrl: video.poster, canSwitch: true})
                         break;
