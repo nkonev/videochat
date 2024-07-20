@@ -225,6 +225,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 	}
 
 	var retErr error
+	maxImagesCount := viper.GetInt("message.maxImages")
+	imagesCount := 0
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
 		if maybeImage != nil {
@@ -233,12 +235,18 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in image src %v", src)
 				retErr = &MediaUrlErr{src, "image src"}
 			}
+			imagesCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
+	if imagesCount > maxImagesCount {
+		return "", errors.New("Too many images")
+	}
 
+	maxVideosCount := viper.GetInt("message.maxVideos")
+	videosCount := 0
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()
 		if maybeVideo != nil {
@@ -253,12 +261,18 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in video poster %v", poster)
 				retErr = &MediaUrlErr{src, "video poster"}
 			}
+			videosCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
+	if videosCount > maxVideosCount {
+		return "", errors.New("Too many videos")
+	}
 
+	maxIframesCount := viper.GetInt("message.maxIframes")
+	iframesCount := 0
 	doc.Find("iframe").Each(func(i int, s *goquery.Selection) {
 		maybeIframe := s.First()
 		if maybeIframe != nil {
@@ -267,12 +281,18 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in iframe src %v", src)
 				retErr = &MediaUrlErr{src, "iframe src"}
 			}
+			iframesCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
+	if iframesCount > maxIframesCount {
+		return "", errors.New("Too many iframes")
+	}
 
+	maxAudiosCount := viper.GetInt("message.maxAudios")
+	audiosCount := 0
 	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
 		if maybeImage != nil {
@@ -281,10 +301,14 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in audio src %v", src)
 				retErr = &MediaUrlErr{src, "audio src"}
 			}
+			audiosCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
+	}
+	if audiosCount > maxAudiosCount {
+		return "", errors.New("Too many audios")
 	}
 
 	return sanitizedHtml, retErr

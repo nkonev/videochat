@@ -610,17 +610,20 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return 0, err
 		}
 
-		hasMessages, err := tx.HasMessages(chatId)
-		if err != nil {
-			return 0, err
-		}
 		chatBasic, err := tx.GetChatBasic(chatId)
 		if err != nil {
 			return 0, err
 		}
 
-		if !hasMessages && chatBasic.IsBlog {
-			creatableMessage.BlogPost = true
+		if chatBasic.IsBlog {
+			hasMessages, err := tx.HasMessages(chatId)
+			if err != nil {
+				return 0, err
+			}
+
+			if !hasMessages {
+				creatableMessage.BlogPost = true
+			}
 		}
 
 		messageId, _, _, err := tx.CreateMessage(creatableMessage)

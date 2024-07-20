@@ -243,6 +243,8 @@ const UrlStoragePublicGetFile = "/storage/public/download"
 const UrlStoragePublicPreviewFile = "/storage/public/download/embed/preview"
 const UrlStorageGetFile = "/storage/download"
 const UrlStorageGetFilePublicExternal = "/public/download"
+const UrlBasePreview = "/api/storage/embed/preview"
+const UrlBasePublicPreview = "/api/storage/public/download/embed/preview"
 
 // returns monotonically decreasing lexically sequence to use S3's lexical sorting
 func GetFileItemId() string {

@@ -427,6 +427,97 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": list, "count": count})
 }
 
+type ViewItem struct {
+	Url string `json:"url"`
+	PreviewUrl *string `json:"previewUrl"`
+	This bool `json:"this"`
+	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
+	CanShowAsImage bool      `json:"canShowAsImage"`
+}
+
+func (h *FilesHandler) ViewHandler(c echo.Context) error {
+	var userPrincipalDto, _ = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	chatId, err := utils.ParseInt64(c.Param("chatId"))
+	if err != nil {
+		return err
+	}
+
+	fileId := c.QueryParam(utils.FileParam)
+
+	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
+	if err != nil {
+		return err
+	}
+
+	messageId := getMessageIdPublic(c)
+
+	var userId *int64 = nil
+	var isAnonymous = false // public message or blog
+	if userPrincipalDto != nil {
+		userId = &userPrincipalDto.UserId
+	} else {
+		isAnonymous = true
+	}
+	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, messageId, fileItemUuid); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	bucketName := h.minioConfig.Files
+
+	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
+
+	var filter = func(objInfo *minio.ObjectInfo) bool {
+		return utils.IsVideo(objInfo.Key) || utils.IsImage(objInfo.Key)
+	}
+
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
+		WithMetadata: true,
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
+	})
+
+	var retList = []ViewItem{}
+	for objInfo := range objects {
+		if filter(&objInfo) {
+
+			var downloadUrl string
+			var previewUrl *string
+			if !isAnonymous {
+				downloadUrl, err = h.filesService.GetConstantDownloadUrl(objInfo.Key)
+				if err != nil {
+					GetLogEntry(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
+					continue
+				}
+				previewUrl = h.filesService.GetPreviewUrlSmart(c.Request().Context(), objInfo.Key)
+			} else {
+				downloadUrl, err = h.filesService.GetAnonymousUrl(objInfo.Key, messageId)
+				if err != nil {
+					GetLogEntry(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
+					continue
+				}
+
+				previewUrl, err = h.filesService.GetAnonymousPreviewUrl(c.Request().Context(), objInfo.Key, messageId)
+				if err != nil {
+					GetLogEntry(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
+					continue
+				}
+			}
+
+			retList = append(retList, ViewItem{
+				Url:            downloadUrl,
+				PreviewUrl:     previewUrl,
+				This: objInfo.Key == fileId,
+				CanPlayAsVideo: utils.IsVideo(objInfo.Key),
+				CanShowAsImage: utils.IsImage(objInfo.Key),
+			})
+		}
+	}
+
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+}
+
 func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {
 	var filenameChatPrefix string
 	if fileItemUuid == "" {
@@ -1124,7 +1215,13 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	messageId := getMessageIdPublic(c)
 
-	belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileId)
+	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting file item uuid %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileItemUuid)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1244,7 +1341,13 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 
 		messageId := getMessageIdPublic(c)
 
-		belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileId)
+		fileItemUuid, err := utils.ParseFileItemUuid(fileId)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during getting file item uuid %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileItemUuid)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
 			return c.NoContent(http.StatusInternalServerError)

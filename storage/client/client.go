@@ -65,7 +65,7 @@ func (h *RestClient) CheckAccess(c context.Context, userId *int64, chatId int64)
 	return h.CheckAccessExtended(c, userId, chatId, utils.MessageIdNonExistent, "")
 }
 
-func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatId int64, messageId int64, fileId string) (bool, error) {
+func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatId int64, messageId int64, fileItemUuid string) (bool, error) {
 	var url0 string
 
 	parsed, err := url.Parse(fmt.Sprintf("%v%v", h.baseUrl, h.accessPath))
@@ -77,7 +77,7 @@ func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatI
 	if messageId != utils.MessageIdNonExistent {
 		query.Set("chatId", utils.Int64ToString(chatId))
 		query.Set("messageId", utils.Int64ToString(messageId))
-		query.Set("fileId", fileId)
+		query.Set("fileItemUuid", fileItemUuid)
 	} else {
 		query.Set("chatId", utils.Int64ToString(chatId))
 		if userId != nil {

@@ -6,6 +6,10 @@
             <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
+        <template v-if="showArrows">
+            <v-btn v-if="canShowLeftArrow" class="arrow-left-button" variant="text" color="white" icon @click="arrowLeft"><v-icon size="x-large">mdi-arrow-left-bold</v-icon></v-btn>
+            <v-btn v-if="canShowRightArrow" class="arrow-right-button" variant="text" color="white" icon @click="arrowRight"><v-icon size="x-large">mdi-arrow-right-bold</v-icon></v-btn>
+        </template>
     </v-overlay>
 </template>
 
@@ -13,23 +17,82 @@
 import bus, {
     PLAYER_MODAL,
 } from "#root/common/bus";
+import axios from "axios";
 
 export default {
     data () {
         return {
             show: false,
             dto: null,
+            viewList: [],
+            thisIdx: 0,
         }
+    },
+    computed: {
+        showArrows() {
+            return this.viewList.length > 1
+        },
+        canShowLeftArrow() {
+            return this.thisIdx > 0
+        },
+        canShowRightArrow() {
+            return this.thisIdx < this.viewList.length - 1
+        },
     },
     methods: {
         showModal(dto) {
             this.$data.show = true;
             this.$data.dto = dto;
+            this.fetchMediaListView()
+        },
+        fetchMediaListView() {
+            const url = new URL(this.$data.dto.url);
+            const params = url.searchParams;
+            const fileId = params.get('file');
+            const chatId = fileId.split("/")[1];
+            const messageId = params.get('messageId');
+            axios.get(`/api/storage/public/${chatId}/view/list`, {
+                params: {
+                    file: fileId,
+                    messageId: messageId
+                }
+            }).then((res) => {
+                this.viewList = res.data.items;
+                for (let i = 0; i < this.viewList.length; ++i) {
+                    const el = this.viewList[i];
+                    if (el.this) {
+                        this.thisIdx = i;
+                        // console.debug("Setting thisIdx", this.thisIdx);
+                        break
+                    }
+                }
+            })
         },
         hideModal() {
             this.$data.show = false;
             this.$data.dto = null;
+            this.$data.viewList = [];
+            this.$data.thisIdx = 0;
         },
+        arrowLeft() {
+            if (this.canShowLeftArrow) {
+                this.thisIdx--;
+                this.setEl();
+            }
+        },
+        arrowRight() {
+            if (this.canShowRightArrow) {
+                this.thisIdx++;
+                this.setEl();
+            }
+        },
+        setEl() {
+            const el = this.viewList[this.thisIdx];
+            this.dto.url = el.url;
+            this.dto.previewUrl = el.previewUrl;
+            this.dto.canPlayAsVideo = el.canPlayAsVideo;
+            this.dto.canShowAsImage = el.canShowAsImage;
+        }
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
@@ -54,6 +117,22 @@ export default {
     position absolute
     top 0.2em
     right 0.2em
+}
+
+.arrow-left-button {
+    position absolute
+    left 0.2em
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+}
+
+.arrow-right-button {
+    position absolute
+    right 0.2em
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
 }
 
 .image-custom-class-view {

@@ -50,6 +50,10 @@ message:
   # the second (empty) element allows urls w/o (schema, host, port) from its site, such as "/api/storage/download?file=chat%2F34%2Fbd92b094-35aa-43ee-9dae-a8aeb5912843%2Fimage.jpg"
   allowedMediaUrls: ""
   allowedIframeUrls: ""
+  maxImages: 100
+  maxVideos: 100
+  maxAudios: 100
+  maxIframes: 100
 
 chat:
   allowedAvatarUrls: ""

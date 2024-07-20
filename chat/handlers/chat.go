@@ -1593,11 +1593,10 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		fileItemId := c.QueryParam("fileId")
+		fileItemUuid := c.QueryParam("fileItemUuid")
 		if text != nil && (chat.IsBlog || (published != nil && *published) || (isBlogPostMessage != nil && *isBlogPostMessage)) {
-			encodedFileItemId := utils.UrlEncode(fileItemId)
-			if strings.Contains(*text, encodedFileItemId) ||
-				(isBlogPostMessage != nil && *isBlogPostMessage && strings.Contains(*text, utils.RemoveExtension(encodedFileItemId))) {
+			encodedFileItemUuid := utils.UrlEncode(fileItemUuid)
+			if strings.Contains(*text, encodedFileItemUuid) {
 				return c.NoContent(http.StatusOK)
 			}
 		}
