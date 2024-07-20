@@ -43,7 +43,15 @@ export default {
         showModal(dto) {
             this.$data.show = true;
             this.$data.dto = dto;
-            this.fetchMediaListView()
+            this.fetchMediaListView();
+            window.addEventListener("keydown", this.onKeyPress);
+        },
+        hideModal() {
+            this.$data.show = false;
+            this.$data.dto = null;
+            this.$data.viewList = [];
+            this.$data.thisIdx = 0;
+            window.removeEventListener("keydown", this.onKeyPress);
         },
         fetchMediaListView() {
             const url = new URL(this.$data.dto.url);
@@ -68,11 +76,15 @@ export default {
                 }
             })
         },
-        hideModal() {
-            this.$data.show = false;
-            this.$data.dto = null;
-            this.$data.viewList = [];
-            this.$data.thisIdx = 0;
+        onKeyPress(event) {
+            switch (event.key) {
+                case "ArrowLeft":
+                    this.arrowLeft()
+                    break;
+                case "ArrowRight":
+                    this.arrowRight()
+                    break;
+            }
         },
         arrowLeft() {
             if (this.canShowLeftArrow) {
