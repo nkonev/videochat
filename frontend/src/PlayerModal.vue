@@ -46,15 +46,19 @@ export default {
         showModal(dto) {
             this.$data.show = true;
             this.$data.dto = dto;
-            this.fetchMediaListView();
-            window.addEventListener("keydown", this.onKeyPress);
+            if (this.$data.dto?.canSwitch) {
+                this.fetchMediaListView();
+                window.addEventListener("keydown", this.onKeyPress);
+            }
         },
         hideModal() {
             this.$data.show = false;
+            if (this.$data.dto?.canSwitch) {
+                window.removeEventListener("keydown", this.onKeyPress);
+            }
             this.$data.dto = null;
             this.$data.viewList = [];
             this.$data.thisIdx = 0;
-            window.removeEventListener("keydown", this.onKeyPress);
         },
         fetchMediaListView() {
             const url = new URL(this.$data.dto.url);
