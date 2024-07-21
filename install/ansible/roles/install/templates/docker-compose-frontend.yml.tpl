@@ -22,7 +22,7 @@ services:
         - "traefik.http.routers.https-redirect-router.rule=PathPrefix(`/`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.https-redirect-router.entrypoints=http"
         - "traefik.http.routers.https-redirect-router.middlewares=redirect-to-https@file"
-{% if old_domain != None %}
+{% if old_domain is defined %}
         - "traefik.http.routers.blog-https-redirect-router.rule=PathPrefix(`/`) && Host(`{{ old_domain }}`)"
         - "traefik.http.routers.blog-https-redirect-router.entrypoints=http"
         - "traefik.http.routers.blog-https-redirect-router.middlewares=redirect-to-https@file"

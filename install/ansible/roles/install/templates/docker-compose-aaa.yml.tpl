@@ -41,12 +41,12 @@ services:
       - CUSTOM_API-URL=https://{{ domain }}/api/aaa
       - CUSTOM_FRONTEND-URL=https://{{ domain }}
       - MANAGEMENT_HEALTH_MAIL_ENABLED=false
-{% if google_client_id != None %}
+{% if google_client_id is defined %}
       - spring.security.oauth2.client.registration.google.client-id={{ google_client_id }}
       - spring.security.oauth2.client.registration.google.client-secret={{ google_client_secret }}
       - spring.security.oauth2.client.registration.google.redirect-uri=https://{{ domain }}/api/aaa/login/oauth2/code/google
 {% endif %}
-{% if vkontakte_client_id != None %}
+{% if vkontakte_client_id is defined %}
       - spring.security.oauth2.client.registration.vkontakte.client-id={{ vkontakte_client_id }}
       - spring.security.oauth2.client.registration.vkontakte.client-secret={{ vkontakte_client_secret }}
       - spring.security.oauth2.client.registration.vkontakte.redirect-uri=https://{{ domain }}/api/aaa/login/oauth2/code/vkontakte
@@ -57,6 +57,12 @@ services:
       - spring.security.oauth2.client.provider.vkontakte.user-info-uri=https://api.vk.com/method/users.get?v=5.92
       - spring.security.oauth2.client.provider.vkontakte.user-info-authentication-method=form
       - spring.security.oauth2.client.provider.vkontakte.user-name-attribute=response
+{% endif %}
+{% if facebook_client_id is defined %}
+      - spring.security.oauth2.client.registration.facebook.client-id={{ facebook_client_id }}
+      - spring.security.oauth2.client.registration.facebook.client-secret={{ facebook_client_secret }}
+      - spring.security.oauth2.client.registration.facebook.redirect-uri=https://{{ domain }}/api/login/oauth2/code/facebook
+      - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
 {% endif %}
       - CUSTOM_CSRF_COOKIE_SECURE=true
       - CUSTOM_CSRF_COOKIE_SAME-SITE=Strict

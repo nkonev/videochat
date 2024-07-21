@@ -18,7 +18,7 @@ http:
       redirectScheme:
         scheme: https
 
-{% if old_domain != None %}
+{% if old_domain is defined %}
     redirect-from-old-blog-to-public-blog-post:
       redirectRegex:
         regex: "^http.*://{{ old_domain }}/(.*)"
