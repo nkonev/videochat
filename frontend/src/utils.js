@@ -267,6 +267,11 @@ export function dynamicSortMultiple() {
     }
 }
 
+export const getChatLink = (chatId) => {
+    const link = getUrlPrefix() + chat + '/' + chatId;
+    return link;
+}
+
 export const copyChatLink = (chatId) => {
   const link = getUrlPrefix() + chat + '/' + chatId;
   navigator.clipboard.writeText(link);

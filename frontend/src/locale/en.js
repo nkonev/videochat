@@ -300,5 +300,6 @@ export default {
     video_position_changed_apply: "To take an effect you need to re-enter into the call",
     video_successfully_reconnected: "Successfully reconnected to video server",
     send_message_after_media_insert: "Send the message",
-    send_message_after_media_insert_description: "Send the message after media insert"
+    send_message_after_media_insert_description: "Send the message after media insert",
+    open_in_new_tab: "Open in the new tab"
 }

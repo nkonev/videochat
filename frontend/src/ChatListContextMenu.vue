@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import {copyCallLink, copyChatLink, getBlogLink} from "@/utils";
+import {copyCallLink, copyChatLink, getBlogLink, getChatLink} from "@/utils";
 import contextMenuMixin from "@/mixins/contextMenuMixin";
 
 export default {
@@ -58,6 +58,13 @@ export default {
                         }
                     });
                 }
+                ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.open_in_new_tab'),
+                    icon: 'mdi-tab',
+                    action: () => {
+                        window.open(getChatLink(this.menuableItem.id), '_blank');
+                    }
+                });
                 if (!this.menuableItem.isResultFromSearch) {
                     if (this.menuableItem.pinned) {
                         ret.push({

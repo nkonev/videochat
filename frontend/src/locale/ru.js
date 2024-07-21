@@ -300,5 +300,6 @@ export default {
     video_position_changed_apply: "Чтобы это применилось, Вам нужно перезайти в звонок",
     video_successfully_reconnected: "Успешно передпоключились к серверу",
     send_message_after_media_insert: "Отправить сообщение",
-    send_message_after_media_insert_description: "Отправить сообщение после вставки медиа"
+    send_message_after_media_insert_description: "Отправить сообщение после вставки медиа",
+    open_in_new_tab: "Открыть в новой вкладке"
 }
