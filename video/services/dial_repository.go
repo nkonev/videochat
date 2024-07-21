@@ -157,6 +157,36 @@ func (s *DialRedisRepository) RemoveFromDialList(ctx context.Context, userId int
 	return nil
 }
 
+func (s *DialRedisRepository) RemoveOwn(ctx context.Context, ownerId int64) error {
+	// get owned members
+	ownedUserIds, err := s.GetUserCalls(ctx, ownerId)
+	if err != nil {
+		return err
+	}
+	for _, ouid := range ownedUserIds {
+		_, _, _, _, getOwnerId, _, _, err := s.GetUserCallState(ctx, ouid)
+		if err != nil {
+			logger.GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", ouid, err)
+			continue
+		}
+		if getOwnerId == ownerId {
+			err = s.redisClient.Del(ctx, dialUserCallStateKey(ouid)).Err()
+			if err != nil {
+				logger.GetLogEntry(ctx).Errorf("An error occured during removing the status for user %v: %v", ouid, err)
+				continue
+			}
+		}
+	}
+
+	// remove held "dials_of_user"
+	err = s.redisClient.Del(ctx, userOwnedCallsKey(ownerId)).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *DialRedisRepository) removeUserFromOwnedSet(ctx context.Context, userId int64, ownerId int64) (error) {
 	_, err := s.redisClient.SRem(ctx, userOwnedCallsKey(ownerId), userId).Result()
 	if err != nil {
@@ -206,27 +236,6 @@ func (s *DialRedisRepository) GetUsersOwesCalls(ctx context.Context) ([]int64, e
 		ret0 = append(ret0, id)
 	}
 	return ret0, nil
-}
-
-func (s *DialRedisRepository) GetUsersOfOwnersDial(ctx context.Context, ownerId int64) ([]int64, error) {
-	members, err := s.redisClient.SMembers(ctx, userOwnedCallsKey(ownerId)).Result()
-	if err == redisV8.Nil {
-		return []int64{}, nil
-	}
-	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during scanning users of chat %v", err)
-		return nil, err
-	}
-	var ret = []int64{}
-	for _, userIdString := range members {
-		parseInt64, err := utils.ParseInt64(userIdString)
-		if err != nil {
-			logger.GetLogEntry(ctx).Warnf("Error during parsing userId %v", err)
-			continue
-		}
-		ret = append(ret, parseInt64)
-	}
-	return ret, nil
 }
 
 func (s *DialRedisRepository) GetUserCallStatus(ctx context.Context, userId int64) (string, error) {

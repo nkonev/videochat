@@ -60,7 +60,6 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 
 	// move orphaned users in "inCall" status to "cancelling"
 	for _, userId := range userIds {
-
 		userCallState, chatId, _, markedForChangeStatusAttempt, ownerId, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
@@ -76,16 +75,24 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, user
 
 			continue
 		}
+
 		if services.ShouldProlong(userCallState) { // consider only users, hanged in "inCall" state in redis and not presented in livekit
 			// removing
 			if markedForChangeStatusAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
-				GetLogEntry(ctx).Warnf("Removing userCallState of user %v to %v because attempts were exhausted", userId, services.CallStatusRemoving)
+				// user is owner of call
+				GetLogEntry(ctx).Warnf("Removing owned call by user userId %v because attempts were exhausted", userId)
+				err = srv.redisService.RemoveOwn(ctx, userId)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to remove owned call by user userId %v, chatId %v, error %v", userId, chatId, err)
+				}
+
+				// user is own by somebody
+				GetLogEntry(ctx).Warnf("Removing userCallState of user %v, owned by ownerId %v because attempts were exhausted", userId, ownerId)
 				err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable user status chatId %v, userId %v", chatId, userId)
-					continue
+					GetLogEntry(ctx).Errorf("Unable to remove user userId %v owned by ownerId %v, chatId %v, error %v", userId, ownerId, chatId, err)
 				}
-				continue
+				continue // because we don't need increment an attempt
 			}
 
 			// changing attempt number

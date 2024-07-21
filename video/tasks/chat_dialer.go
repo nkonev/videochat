@@ -66,7 +66,7 @@ func (srv *ChatDialerService) doJob() {
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
-	userIdsToDial, err := srv.redisService.GetUsersOfOwnersDial(ctx, ownerId)
+	userIdsToDial, err := srv.redisService.GetUserCalls(ctx, ownerId)
 	if err != nil {
 		GetLogEntry(ctx).Warnf("Error %v", err)
 		return
@@ -86,7 +86,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 			continue
 		}
 
-		GetLogEntry(ctx).Infof("Sending userCallStatus for userIds %v from ownerId %v", userIdsToDial, ownerId)
+		GetLogEntry(ctx).Infof("Sending userCallStatus for userIds %v, particular userId %v, from ownerId %v", userIdsToDial, userId, ownerId)
 		// send invitations to callees
 		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status}, ownerAvatar, tetATet)
 		// send state changes to owner (ownerId) of call
