@@ -61,7 +61,7 @@ services:
 {% if facebook_client_id is defined %}
       - spring.security.oauth2.client.registration.facebook.client-id={{ facebook_client_id }}
       - spring.security.oauth2.client.registration.facebook.client-secret={{ facebook_client_secret }}
-      - spring.security.oauth2.client.registration.facebook.redirect-uri=https://{{ domain }}/api/login/oauth2/code/facebook
+      - spring.security.oauth2.client.registration.facebook.redirect-uri=https://{{ domain }}/api/aaa/login/oauth2/code/facebook
       - spring.security.oauth2.client.provider.facebook.user-info-uri=https://graph.facebook.com/me?fields=id,name,picture
 {% endif %}
       - CUSTOM_CSRF_COOKIE_SECURE=true
