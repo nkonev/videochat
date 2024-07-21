@@ -193,4 +193,90 @@ public class UserListViewRepository {
         }
         return list;
     }
+
+    private static final String PREFIX_COUNT = "select count(u.*) from user_account u where u.id > 0 ";
+
+    private static final String PREFIX = "select u.* from user_account u where u.id > 0 ";
+
+    private static final String PAGINATION_SUFFIX = " order by u.id limit :limit offset :offset";
+
+    public List<UserAccount> findPage(int pageSize, int offset) {
+        return jdbcTemplate.query(
+            PREFIX + PAGINATION_SUFFIX,
+            Map.of(
+                "limit", pageSize,
+                "offset", offset
+            ),
+            rowMapper);
+    }
+
+    private static final String AND_USERNAME_ILIKE = " and u.username ilike :userName ";
+
+    public List<UserAccount> findByUsernameContainsIgnoreCase(int pageSize, long offset, String searchString) {
+        return jdbcTemplate.query(
+            PREFIX + AND_USERNAME_ILIKE + PAGINATION_SUFFIX,
+            Map.of(
+                "userName", searchString,
+                "limit", pageSize,
+                "offset", offset
+            ),
+            rowMapper);
+    }
+
+    public long findByUsernameContainsIgnoreCaseCount(String searchString) {
+        return jdbcTemplate.queryForObject(
+            PREFIX_COUNT + AND_USERNAME_ILIKE,
+            Map.of(
+                "userName", searchString
+            ),
+            long.class);
+    }
+
+    private static final String AND_USERNAME_ILIKE_AND_ID_IN = " and u.username ilike :userName and u.id in (:userIds) ";
+
+    public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdIn(int pageSize, long offset, String searchString, List<Long> includingUserIds) {
+        return jdbcTemplate.query(
+            PREFIX + AND_USERNAME_ILIKE_AND_ID_IN + PAGINATION_SUFFIX,
+            Map.of(
+                "userName", searchString,
+                "userIds", includingUserIds,
+                "limit", pageSize,
+                "offset", offset
+            ),
+            rowMapper);
+    }
+
+    public long findByUsernameContainsIgnoreCaseAndIdInCount(String searchString, List<Long> includingUserIds) {
+        return jdbcTemplate.queryForObject(
+            PREFIX_COUNT + AND_USERNAME_ILIKE_AND_ID_IN,
+            Map.of(
+                "userName", searchString,
+                "userIds", includingUserIds
+            ),
+            long.class);
+    }
+
+    private static final String AND_USERNAME_ILIKE_AND_ID_NOT_IN = " and u.username ilike :userName and u.id not in (:userIds) ";
+
+    public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(int pageSize, long offset, String searchString, List<Long> excludingUserIds) {
+        return jdbcTemplate.query(
+            PREFIX + AND_USERNAME_ILIKE_AND_ID_NOT_IN + PAGINATION_SUFFIX,
+            Map.of(
+                "userName", searchString,
+                "userIds", excludingUserIds,
+                "limit", pageSize,
+                "offset", offset
+            ),
+            rowMapper);
+    }
+
+    public long findByUsernameContainsIgnoreCaseAndIdNotInCount(String searchString, List<Long> excludingUserIds) {
+        return jdbcTemplate.queryForObject(
+            PREFIX_COUNT + AND_USERNAME_ILIKE_AND_ID_NOT_IN,
+            Map.of(
+                "userName", searchString,
+                "userIds", excludingUserIds
+            ),
+            long.class);
+    }
 }

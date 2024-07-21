@@ -1,16 +1,14 @@
 package name.nkonev.aaa.tasks;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
-import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.services.EventService;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class UserOnlineTask {
 
     @Autowired
-    private UserAccountRepository userAccountRepository;
+    private UserListViewRepository userListViewRepository;
 
     @Autowired
     private AaaUserDetailsService aaaUserDetailsService;
@@ -40,7 +38,7 @@ public class UserOnlineTask {
 
         var shouldContinue = true;
         for (int i = 0; shouldContinue; i++) {
-            var chunk = userAccountRepository.findPage(pageSize, i * pageSize);
+            var chunk = userListViewRepository.findPage(pageSize, i * pageSize);
             shouldContinue = chunk.size() == pageSize;
             var usersOnline = aaaUserDetailsService.getUsersOnlineByUsers(chunk);
             eventService.notifyOnlineChanged(usersOnline);

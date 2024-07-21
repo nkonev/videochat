@@ -20,25 +20,6 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
 
     Optional<UserAccount> findByEmail(String email);
 
-    // https://jira.spring.io/projects/DATAJDBC/issues/DATAJDBC-101?filter=allopenissues
-    @Query("select * from user_account u where u.id > 0 and u.username ilike :userName order by id limit :limit offset :offset")
-    List<UserAccount> findByUsernameContainsIgnoreCase(@Param("limit") long limit, @Param("offset") long offset, @Param("userName") String login);
-
-    @Query("select count(id) from user_account u where u.id > 0 and u.username ilike :userName")
-    long findByUsernameContainsIgnoreCaseCount(@Param("userName") String searchString);
-
-    @Query("select * from user_account u where u.id > 0 and u.username ilike :userName and id not in (:excludingUserIds) order by id limit :limit offset :offset")
-    List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(@Param("limit") int pageSize, @Param("offset") long offset, @Param("userName") String forDbSearch, @Param("excludingUserIds") List<Long> userIds);
-
-    @Query("select count(id) from user_account u where u.id > 0 and u.username ilike :userName and id not in (:excludingUserIds)")
-    long findByUsernameContainsIgnoreCaseAndIdNotInCount(@Param("userName") String searchString, @Param("excludingUserIds") List<Long> userIds);
-
-    @Query("select * from user_account u where u.id > 0 and u.username ilike :userName and id in (:includingUserIds) order by id limit :limit offset :offset")
-    List<UserAccount> findByUsernameContainsIgnoreCaseAndIdIn(@Param("limit") int pageSize, @Param("offset") long offset, @Param("userName") String forDbSearch, @Param("includingUserIds") List<Long> userIds);
-
-    @Query("select count(id) from user_account u where u.id > 0 and u.username ilike :userName and id in (:includingUserIds)")
-    long findByUsernameContainsIgnoreCaseAndIdInCount(@Param("userName") String searchString, @Param("includingUserIds") List<Long> userIds);
-
     Optional<UserAccount> findByFacebookId(String facebookId);
 
     Optional<UserAccount> findByVkontakteId(String vkontakteId);
@@ -56,7 +37,4 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     // here we intentionally set that deleted user exists
     @Query("select u.id from user_account u where u.id in (:userIds)")
     Set<Long> findUserIds(List<Long> userIds);
-
-    @Query("select u.* from user_account u order by u.id limit :pageSize offset :offset")
-    List<UserAccount> findPage(int pageSize, int offset);
 }
