@@ -547,10 +547,10 @@ export default {
       this.chatStore.showCallManagement = false;
     },
     onChatDialStatusChange(dto) {
-      if (this.chatStore.chatDto?.tetATet && dto.chatId == this.chatId) {
+      if (this.chatStore.chatDto?.tetATet && dto.chatId == this.chatId) { // if tet-a-tet
         for (const videoDialChanged of dto.dials) {
-          if (this.chatStore.currentUser.id != videoDialChanged.userId) {
-            this.chatStore.shouldPhoneBlink = isCalling(videoDialChanged.status);
+          if (this.chatStore.currentUser.id != videoDialChanged.userId) { // if counterpart exists
+            this.chatStore.shouldPhoneBlink = isCalling(videoDialChanged.status); // and if their status is being calling - turn on blinking on my frontend
           }
         }
       }

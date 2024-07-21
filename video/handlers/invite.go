@@ -306,8 +306,14 @@ func (vh *InviteHandler) sendEvents(c echo.Context, chatId int64, usersOfDial []
 	// we send "stop-inviting-for-userPrincipalDto.UserId-signal" or "start-" to the call's owner, depending on callStatus
 	vh.dialStatusPublisher.Publish(c.Request().Context(), chatId, getMapWithSameStatus(usersOfDial, callStatus), ownerId)
 
-	// send the new status immediately to user
-	vh.stateChangedEventService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMapWithSameStatus(usersOfDial, callStatus), ownerAvatar, tetATet)
+	inviteNames, err := vh.chatClient.GetChatNameForInvite(c.Request().Context(), chatId, ownerId, usersOfDial)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Error(err, "Failed during getting chat invite names")
+		return
+	}
+
+	// send the new status immediately to users (callees)
+	vh.stateChangedEventService.SendInvitationsWithStatuses(c.Request().Context(), chatId, ownerId, getMapWithSameStatus(usersOfDial, callStatus), inviteNames, ownerAvatar, tetATet)
 }
 
 func getMapWithSameStatus(userIds []int64, status string) map[int64]string {

@@ -72,8 +72,20 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 		return
 	}
 
+	_, chatId, _, _, _, _, _, err := srv.redisService.GetUserCallState(ctx, ownerId)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", ownerId, err)
+		return
+	}
+
+	inviteNames, err := srv.chatClient.GetChatNameForInvite(ctx, chatId, ownerId, userIdsToDial)
+	if err != nil {
+		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
+		return
+	}
+
 	for _, userId := range userIdsToDial {
-		status, chatId, userCallMarkedForRemoveAt, _, _, ownerAvatar, tetATet, err := srv.redisService.GetUserCallState(ctx, userId)
+		status, _, userCallMarkedForRemoveAt, _, _, ownerAvatar, tetATet, err := srv.redisService.GetUserCallState(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", userId, err)
 			continue
@@ -86,9 +98,9 @@ func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
 			continue
 		}
 
-		GetLogEntry(ctx).Infof("Sending userCallStatus for userIds %v, particular userId %v, from ownerId %v", userIdsToDial, userId, ownerId)
+		GetLogEntry(ctx).Infof("Sending userCallStatus for userId %v, from ownerId %v", userId, ownerId)
 		// send invitations to callees
-		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status}, ownerAvatar, tetATet)
+		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status}, inviteNames, ownerAvatar, tetATet)
 		// send state changes to owner (ownerId) of call
 		srv.dialStatusPublisher.Publish(ctx, chatId, map[int64]string{userId: status}, ownerId)
 	}

@@ -132,37 +132,33 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 }
 
 // sends invitations "smb called you to chat x"
-func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string, ownerAvatar string, tetATet bool) {
+func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Context, chatId, ownerId int64, statuses map[int64]string, inviteNames []*dto.ChatName, ownerAvatar string, tetATet bool) {
 	if len(statuses) == 0 {
 		return
 	}
 
-	var userIdsToDial []int64 = make([]int64, 0)
-	for userId, _ := range statuses {
-		userIdsToDial = append(userIdsToDial, userId)
-	}
+	for anUserId, aStatus := range statuses {
+		// this is sending call invitations to all the ivitees
+		for _, chatInviteName := range inviteNames {
+			if ownerId == chatInviteName.UserId {
+				continue // not to send invitations to myself
+			}
 
-	inviteNames, err := h.restClient.GetChatNameForInvite(ctx, chatId, ownerId, userIdsToDial)
-	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
-		return
-	}
+			if anUserId == chatInviteName.UserId {
 
-	// this is sending call invitations to all the ivitees
-	for _, chatInviteName := range inviteNames {
-		status := statuses[chatInviteName.UserId]
+				invitation := dto.VideoCallInvitation{
+					ChatId:   chatId,
+					ChatName: chatInviteName.Name,
+					Status:   aStatus,
+				}
 
-		invitation := dto.VideoCallInvitation{
-			ChatId:   chatId,
-			ChatName: chatInviteName.Name,
-			Status:   status,
-		}
+				invitation.Avatar = GetAvatar(ownerAvatar, tetATet)
 
-		invitation.Avatar = GetAvatar(ownerAvatar, tetATet)
-
-		err = h.rabbitMqInvitePublisher.Publish(ctx, &invitation, chatInviteName.UserId)
-		if err != nil {
-			GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
+				err := h.rabbitMqInvitePublisher.Publish(ctx, &invitation, chatInviteName.UserId)
+				if err != nil {
+					GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
+				}
+			}
 		}
 	}
 }

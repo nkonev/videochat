@@ -153,6 +153,7 @@ func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePubl
 	}
 }
 
+// send info about user being invited, used in ChatParticipants (green tube) and ChatView (blinking it tet-a-tet)
 func (rp *RabbitDialStatusPublisher) Publish(
 	ctx context.Context,
 	chatId       int64,
