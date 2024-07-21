@@ -86,7 +86,7 @@
 # https://www.digitalocean.com/community/tutorials/how-to-create-and-use-templates-in-ansible-playbooks
 - name: Create Livekit config
   template:
-    src: templates/livekit.yaml.tpl
+    src: templates/livekit.yaml.j2
     dest: "{{ dir_prefix }}/livekit/livekit.yaml"
   tags:
     - videochat
@@ -100,14 +100,14 @@
 
 - name: Create Traefik static config
   template:
-    src: templates/traefik.yml.tpl
+    src: templates/traefik.yml.j2
     dest: "{{ dir_prefix }}/traefik/traefik.yml"
   tags:
     - videochat
 
 - name: Create Traefik dynamic config
   template:
-    src: templates/common_middlewares.yml.tpl
+    src: templates/common_middlewares.yml.j2
     dest: "{{ dir_prefix }}/traefik/dynamic/common_middlewares.yml"
   tags:
     - videochat
@@ -172,7 +172,7 @@
 
 - name: Create Docker Compose Infra
   template:
-    src: templates/docker-compose-infra.yml.tpl
+    src: templates/docker-compose-infra.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-infra.yml"
   tags:
     - videochat
@@ -228,7 +228,7 @@
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/password_hash_filter.html
 - name: Create Docker Compose AAA
   template:
-    src: templates/docker-compose-aaa.yml.tpl
+    src: templates/docker-compose-aaa.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -246,7 +246,7 @@
 
 - name: Create Docker Compose Frontend
   template:
-    src: templates/docker-compose-frontend.yml.tpl
+    src: templates/docker-compose-frontend.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -264,7 +264,7 @@
 
 - name: Create Docker Compose Chat
   template:
-    src: templates/docker-compose-chat.yml.tpl
+    src: templates/docker-compose-chat.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -282,7 +282,7 @@
 
 - name: Create Docker Compose Storage
   template:
-    src: templates/docker-compose-storage.yml.tpl
+    src: templates/docker-compose-storage.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -300,7 +300,7 @@
 
 - name: Create Docker Compose Video
   template:
-    src: templates/docker-compose-video.yml.tpl
+    src: templates/docker-compose-video.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -318,7 +318,7 @@
 
 - name: Create Docker Compose Event
   template:
-    src: templates/docker-compose-event.yml.tpl
+    src: templates/docker-compose-event.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -336,7 +336,7 @@
 
 - name: Create Docker Compose Notification
   template:
-    src: templates/docker-compose-notification.yml.tpl
+    src: templates/docker-compose-notification.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -354,7 +354,7 @@
 
 - name: Create Docker Compose Public
   template:
-    src: templates/docker-compose-public.yml.tpl
+    src: templates/docker-compose-public.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
   vars:
     tag: "{{ image_install_tag }}"
@@ -381,7 +381,7 @@
 # rest part is set non-deployed tag for deploying without docker hub
 - name: Change Docker Compose AAA
   template:
-    src: templates/docker-compose-aaa.yml.tpl
+    src: templates/docker-compose-aaa.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-aaa.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -390,7 +390,7 @@
 
 - name: Change Docker Compose Frontend
   template:
-    src: templates/docker-compose-frontend.yml.tpl
+    src: templates/docker-compose-frontend.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-frontend.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -399,7 +399,7 @@
 
 - name: Change Docker Compose Chat
   template:
-    src: templates/docker-compose-chat.yml.tpl
+    src: templates/docker-compose-chat.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-chat.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -408,7 +408,7 @@
 
 - name: Change Docker Compose Storage
   template:
-    src: templates/docker-compose-storage.yml.tpl
+    src: templates/docker-compose-storage.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-storage.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -417,7 +417,7 @@
 
 - name: Change Docker Compose Video
   template:
-    src: templates/docker-compose-video.yml.tpl
+    src: templates/docker-compose-video.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-video.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -426,7 +426,7 @@
 
 - name: Change Docker Compose Event
   template:
-    src: templates/docker-compose-event.yml.tpl
+    src: templates/docker-compose-event.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-event.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -435,7 +435,7 @@
 
 - name: Change Docker Compose Notification
   template:
-    src: templates/docker-compose-notification.yml.tpl
+    src: templates/docker-compose-notification.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-notification.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
@@ -444,7 +444,7 @@
 
 - name: Change Docker Compose Public
   template:
-    src: templates/docker-compose-public.yml.tpl
+    src: templates/docker-compose-public.yml.j2
     dest: "{{ dir_prefix }}/docker-compose-public.yml"
   vars:
     tag: "{{ image_continuous_tag }}"
