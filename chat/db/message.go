@@ -126,9 +126,9 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		if searchString != "" {
 			limitRes = co.QueryRow(fmt.Sprintf(`
 				select inner3.minid, inner3.maxid from (
-					select inner2.*, lag(id, $2) over() as minid, lead(id, $3) over() as maxid from (
+					select inner2.*, lag(id, $2, inner2.mmin) over() as minid, lead(id, $3, inner2.mmax) over() as maxid from (
 						select inn.*, id = $1 as central_element from (
-							select id, row_number() over () as rn from message_chat_%v m where strip_tags(m.text) ilike $4 order by id
+							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from message_chat_%v m where strip_tags(m.text) ilike $4 order by id
 					   	) inn
 				 	) inner2
 			  	) inner3 where central_element = true
@@ -136,9 +136,9 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 		} else {
 			limitRes = co.QueryRow(fmt.Sprintf(`
 				select inner3.minid, inner3.maxid from (
-					select inner2.*, lag(id, $2) over() as minid, lead(id, $3) over() as maxid from (
+					select inner2.*, lag(id, $2, inner2.mmin) over() as minid, lead(id, $3, inner2.mmax) over() as maxid from (
 						select inn.*, id = $1 as central_element from (
-							select id, row_number() over () as rn from message_chat_%v order by id
+							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from message_chat_%v order by id
 					   	) inn
 				 	) inner2
 			  	) inner3 where central_element = true

@@ -1,0 +1,23 @@
+# This is a combination of 2 commits.
+# This is the 1st commit message:
+
+aaa - use window function to get users
+
+# This is the commit message #2:
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Mon Jul 22 16:41:01 2024 +0400
+#
+# interactive rebase in progress; onto 24ccfe25
+# Last commands done (3 commands done):
+#    pick 56b7ebed aaa - use window function to get users
+#    squash 5ec15768 aaa - use window function to get users
+# No commands remaining.
+# You are currently rebasing branch 'master' on '24ccfe25'.
+#
+# Changes to be committed:
+#	modified:   aaa/src/main/java/name/nkonev/aaa/repository/spring/jdbc/UserListViewRepository.java
+#

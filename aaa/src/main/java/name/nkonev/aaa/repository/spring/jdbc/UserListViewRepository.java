@@ -61,9 +61,9 @@ public class UserListViewRepository {
                 MinMax mm = jdbcTemplate.queryForObject(
                     """
                     select inner3.minid, inner3.maxid from (
-                        select inner2.*, lag(id, :leftLimit) over() as minid, lead(id, :rightLimit) over() as maxid from (
+                        select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
                             select inn.*, id = :startingFromItemId as central_element from (
-                                select id, row_number() over () as rn from user_account u where u.id > 0 AND u.username ilike :searchStringPercents order by id
+                                select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from user_account u where u.id > 0 AND u.username ilike :searchStringPercents order by id
                             ) inn
                         ) inner2
                     ) inner3 where central_element = true
@@ -84,9 +84,9 @@ public class UserListViewRepository {
                 MinMax mm = jdbcTemplate.queryForObject(
                     """
                     select inner3.minid, inner3.maxid from (
-                        select inner2.*, lag(id, :leftLimit) over() as minid, lead(id, :rightLimit) over() as maxid from (
+                        select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
                             select inn.*, id = :startingFromItemId as central_element from (
-                                select id, row_number() over () as rn from user_account u where u.id > 0 order by id
+                                select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from user_account u where u.id > 0 order by id
                             ) inn
                         ) inner2
                     ) inner3 where central_element = true
