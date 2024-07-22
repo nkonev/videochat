@@ -104,6 +104,7 @@
       data() {
         return {
           markInstance: null,
+          storedChatId: null,
         }
       },
 
@@ -581,6 +582,9 @@
           '$route': {
             handler: async function (newValue, oldValue) {
               if (newValue.params.id != oldValue.params.id) {
+                if (newValue.params.id) {
+                    this.storedChatId = newValue.params.id;
+                }
                 // save the top message id always, including exiting case, e.g. to the Welcome page
                 console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
                 this.saveLastVisibleElement(oldValue.params.id);
@@ -625,6 +629,8 @@
 
         addEventListener("beforeunload", this.beforeUnload);
 
+        this.storedChatId = this.chatId;
+
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
@@ -644,6 +650,10 @@
         this.markInstance.unmark();
         this.markInstance = null;
         removeEventListener("beforeunload", this.beforeUnload);
+
+        this.saveLastVisibleElement(this.storedChatId);
+
+        this.storedChatId = null;
 
         this.uninstallScroller();
         bus.off(MESSAGE_ADD, this.onNewMessage);
