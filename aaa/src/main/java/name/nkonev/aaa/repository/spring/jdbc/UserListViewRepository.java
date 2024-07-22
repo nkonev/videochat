@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +24,14 @@ public class UserListViewRepository {
     private NamedParameterJdbcTemplate jdbcTemplate;
 
     private final RowMapper<UserAccount> rowMapper = DataClassRowMapper.newInstance(UserAccount.class);
+
+    private record MinMax(Long leftId, Long rightId) { }
+
+    private final RowMapper<MinMax> mmRowMapper = (rs, rowNum) -> {
+        long min = rs.getLong("minid");
+        long max = rs.getLong("maxid");
+        return new MinMax(min != 0 ? min : null, max != 0 ? max : null);
+    };
 
     // copy-paste from chat/db/message.go::getMessagesCommon
     public List<UserAccount> getUsers(int limit, long startingFromItemId, boolean reverse, boolean hasHash, String searchString) {
@@ -40,60 +50,62 @@ public class UserListViewRepository {
                 rightLimit = 1;
             }
 
-            Long leftMessageId, rightMessageId;
+            Long leftItemId = null;
+            Long rightItemId = null;
             var searchStringPercents = "";
             if (StringUtils.hasLength(searchString)) {
                 searchStringPercents = "%" + searchString + "%";
             }
 
             if (StringUtils.hasLength(searchString)) {
-                leftMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MIN(inn.id) FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id <= :startingFromItemId AND u.username ILIKE :searchStringPercents ORDER BY u.id DESC LIMIT :leftLimit) inn
+                MinMax mm = jdbcTemplate.queryForObject(
+                    """
+                    select inner3.minid, inner3.maxid from (
+                        select inner2.*, lag(id, :leftLimit) over() as minid, lead(id, :rightLimit) over() as maxid from (
+                            select inn.*, id = :startingFromItemId as central_element from (
+                                select id, row_number() over () as rn from user_account u where u.id > 0 AND u.username ilike :searchStringPercents order by id
+                            ) inn
+                        ) inner2
+                    ) inner3 where central_element = true
                     """,
                     Map.of(
                         "startingFromItemId", startingFromItemId,
                         "leftLimit", leftLimit,
-                        "searchStringPercents", searchStringPercents
-                    ),
-                    Long.class
-                );
-            } else {
-                leftMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MIN(inn.id) FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id <= :startingFromItemId ORDER BY u.id DESC LIMIT :leftLimit) inn
-                    """,
-                    Map.of(
-                        "startingFromItemId", startingFromItemId,
-                        "leftLimit", leftLimit
-                    ),
-                    Long.class
-                );
-            }
-
-            if (StringUtils.hasLength(searchString)) {
-                rightMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MAX(inn.id) + 1 FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id >= :startingFromItemId AND u.username ILIKE :searchStringPercents ORDER BY u.id ASC LIMIT :rightLimit) inn
-                    """,
-                    Map.of(
-                        "startingFromItemId", startingFromItemId,
                         "rightLimit", rightLimit,
                         "searchStringPercents", searchStringPercents
                     ),
-                    Long.class
+                    mmRowMapper
                 );
+                if (mm != null) {
+                    leftItemId = mm.leftId();
+                    rightItemId = mm.rightId();
+                }
             } else {
-                rightMessageId = jdbcTemplate.queryForObject("""
-                        SELECT MAX(inn.id) + 1 FROM (SELECT u.id FROM user_account u WHERE u.id > 0 AND u.id >= :startingFromItemId ORDER BY u.id ASC LIMIT :rightLimit) inn
+                MinMax mm = jdbcTemplate.queryForObject(
+                    """
+                    select inner3.minid, inner3.maxid from (
+                        select inner2.*, lag(id, :leftLimit) over() as minid, lead(id, :rightLimit) over() as maxid from (
+                            select inn.*, id = :startingFromItemId as central_element from (
+                                select id, row_number() over () as rn from user_account u where u.id > 0 order by id
+                            ) inn
+                        ) inner2
+                    ) inner3 where central_element = true
                     """,
                     Map.of(
                         "startingFromItemId", startingFromItemId,
+                        "leftLimit", leftLimit,
                         "rightLimit", rightLimit
                     ),
-                    Long.class
+                    mmRowMapper
                 );
+                if (mm != null) {
+                    leftItemId = mm.leftId();
+                    rightItemId = mm.rightId();
+                }
             }
 
-            if (leftMessageId == null || rightMessageId == null) {
-                LOGGER.info("Got leftMessageId={}, rightMessageId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftMessageId, rightMessageId, startingFromItemId, reverse, searchString);
+            if (leftItemId == null || rightItemId == null) {
+                LOGGER.info("Got leftItemId={}, rightItemId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString);
                 list = getUsersSimple(limit, 0, reverse, searchString);
             } else {
 
@@ -115,8 +127,8 @@ public class UserListViewRepository {
                             """.formatted(order),
                         Map.of(
                             "limit", limit,
-                            "leftMessageId", leftMessageId,
-                            "rightMessageId", rightMessageId,
+                            "leftMessageId", leftItemId,
+                            "rightMessageId", rightItemId,
                             "searchStringPercents", searchStringPercents
                         ),
                         rowMapper
@@ -134,8 +146,8 @@ public class UserListViewRepository {
                             """.formatted(order),
                         Map.of(
                             "limit", limit,
-                            "leftMessageId", leftMessageId,
-                            "rightMessageId", rightMessageId
+                            "leftMessageId", leftItemId,
+                            "rightMessageId", rightItemId
                         ),
                         rowMapper
                     );
