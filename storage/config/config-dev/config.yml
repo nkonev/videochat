@@ -76,8 +76,6 @@ aaa:
 
 limits:
   enabled: false
-  stat:
-    dir: "."
   default:
     # 512 megabytes
     all.users.limit: 536870912

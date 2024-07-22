@@ -44,7 +44,6 @@ services:
         - STORAGE_REDIS.DB=3
         - STORAGE_LIMITS.ENABLED={{ storage_limits_enabled }}
         - STORAGE_LIMITS.DEFAULT.ALL.USERS.LIMIT={{ storage_all_user_limit }}
-        - STORAGE_LIMITS.STAT.DIR={{ storage_limits_stats_dir }}
         - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
         - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
         - STORAGE_SCHEDULERS.ACTUALIZEPREVIEWSTASK.ENABLED=true
@@ -55,7 +54,6 @@ services:
       options:
         tag: chat-storage
     volumes:
-      - /mnt/chat-minio/data:{{ storage_limits_stats_dir }}
       # use temp dir for uploading large files
       - /mnt/chat-storage-tmp:/tmp
 

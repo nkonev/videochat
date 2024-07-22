@@ -82,6 +82,7 @@ services:
       - MINIO_NOTIFY_AMQP_NO_WAIT_primary=off
       - MINIO_NOTIFY_AMQP_AUTO_DELETED_primary=off
       - MINIO_NOTIFY_AMQP_DELIVERY_MODE_primary=2
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
     volumes:
       - minio_data:/bitnami/minio/data:z
     logging:

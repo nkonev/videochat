@@ -337,3 +337,94 @@ func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, cons
 	}
 	return lastError
 }
+
+func buildMinioPrefix() string {
+	var fullUrl = ""
+	if viper.GetBool("minio.secured") {
+		fullUrl += "https://"
+	} else {
+		fullUrl += "http://"
+	}
+	fullUrl += viper.GetString("minio.internalEndpoint")
+	return fullUrl
+}
+
+func (h *RestClient) GetMinioMetricsCluster(c context.Context) (string, error) {
+	contentType := "text/plain"
+
+	var fullUrl = buildMinioPrefix() + "/minio/v2/metrics/cluster"
+
+	requestHeaders := map[string][]string{
+		"Accept":          {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		return "", err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request get minio response:", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("minio response responded non-200 code: ", code)
+		return "", err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode minio response:", err)
+		return "", err
+	}
+
+	return string(bodyBytes), nil
+}
+
+func (h *RestClient) GetMinioMetricsBucket(c context.Context) (string, error) {
+	contentType := "text/plain"
+
+	var fullUrl = buildMinioPrefix() + "/minio/v2/metrics/bucket"
+
+	requestHeaders := map[string][]string{
+		"Accept":          {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		return "", err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		GetLogEntry(c).Warningln("Failed to request get minio response:", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		GetLogEntry(c).Warningln("minio response responded non-200 code: ", code)
+		return "", err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode minio response:", err)
+		return "", err
+	}
+
+	return string(bodyBytes), nil
+}

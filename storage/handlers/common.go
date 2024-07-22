@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
-	"github.com/minio/minio-go/v7"
+	"github.com/prometheus/common/expfmt"
 	"github.com/spf13/viper"
+	"math/big"
 	"net/http"
 	"nkonev.name/storage/auth"
+	"nkonev.name/storage/client"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"syscall"
+	"strings"
 	"time"
 )
 
@@ -103,35 +105,84 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func getMaxAllowedConsumption(isUnlimited bool) (int64, error) {
+func getMaxAllowedConsumption(ctx context.Context, restClient *client.RestClient, isUnlimited bool) (int64, error) {
 	if isUnlimited {
-		var stat syscall.Statfs_t
-		wd := viper.GetString("limits.stat.dir")
-		err := syscall.Statfs(wd, &stat)
-		if err != nil {
-			return 0, err
-		}
-		u := int64(stat.Blocks * uint64(stat.Bsize))
-		return u, nil
+		return calcTotalSize(ctx, restClient)
 	} else {
 		return viper.GetInt64("limits.default.all.users.limit"), nil
 	}
 }
 
-func calcUserFilesConsumption(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string) (int64, error) {
-	var totalBucketConsumption int64
+func calcTotalSize(ctx context.Context, restClient *client.RestClient) (int64, error) {
+	var totalClusterSize = big.NewFloat(0)
 
-	GetLogEntry(ctx).Debugf("Listing bucket '%v':", bucketName)
-	for objInfo := range minioClient.ListObjects(ctx, bucketName, minio.ListObjectsOptions{Recursive: true}) {
-		totalBucketConsumption += objInfo.Size
+	clusterMetrics, err := restClient.GetMinioMetricsCluster(ctx)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting bucket consumption %v", err)
+		return 0, err
 	}
-	return totalBucketConsumption, nil
+
+	var parser expfmt.TextParser
+
+	mf, err := parser.TextToMetricFamilies(strings.NewReader(clusterMetrics))
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during parsing bucket consumption %v", err)
+		return 0, err
+	}
+
+	mfi := mf["minio_cluster_capacity_usable_total_bytes"]
+
+	for _, me := range mfi.Metric {
+		if me != nil && me.Gauge != nil && me.Gauge.Value != nil {
+			addable := big.NewFloat(*me.Gauge.Value)
+			newV := big.NewFloat(0)
+			newV.Add(totalClusterSize, addable)
+			totalClusterSize = newV
+		}
+	}
+
+	resV, _ := totalClusterSize.Int64()
+
+	return resV, nil
 }
 
-func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64) (bool, int64, int64, error) {
+func calcBucketsConsumption(ctx context.Context, restClient *client.RestClient) (int64, error) {
+	var totalBucketConsumption = big.NewFloat(0)
+
+	bucketMetrics, err := restClient.GetMinioMetricsBucket(ctx)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting bucket consumption %v", err)
+		return 0, err
+	}
+
+	var parser expfmt.TextParser
+
+	mf, err := parser.TextToMetricFamilies(strings.NewReader(bucketMetrics))
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during parsing bucket consumption %v", err)
+		return 0, err
+	}
+
+	mfi := mf["minio_bucket_usage_total_bytes"]
+
+	for _, me := range mfi.Metric {
+		if me != nil && me.Gauge != nil && me.Gauge.Value != nil {
+			addable := big.NewFloat(*me.Gauge.Value)
+			newV := big.NewFloat(0)
+			newV.Add(totalBucketConsumption, addable)
+			totalBucketConsumption = newV
+		}
+	}
+
+	resV, _ := totalBucketConsumption.Int64()
+
+	return resV, nil
+}
+
+func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64, restClient *client.RestClient) (bool, int64, int64, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
-	// TODO take on account userId
-	consumption, err := calcUserFilesConsumption(ctx, minioClient, bucketName)
+	// TODO take into account userId
+	consumption, err := calcBucketsConsumption(ctx, restClient)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting consumption %v", err)
 		return false, 0, 0, err
@@ -139,7 +190,7 @@ func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bu
 
 	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")) || !limitsEnabled
 
-	maxAllowed, err := getMaxAllowedConsumption(isUnlimited)
+	maxAllowed, err := getMaxAllowedConsumption(ctx, restClient, isUnlimited)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during calculating max allowed %v", err)
 		return false, 0, 0, err

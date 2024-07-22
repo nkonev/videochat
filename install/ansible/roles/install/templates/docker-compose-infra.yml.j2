@@ -58,7 +58,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.services.minio-service.loadbalancer.server.port=9000"
-        - "traefik.http.routers.minio-router.rule=PathPrefix(`/api/s3`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.minio-router.rule=PathPrefix(`/api/s3`) && !PathPrefix(`/api/s3/minio`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.minio-router.middlewares=minio-strip-prefix-middleware,retry-middleware@file,minio-fix-host-middleware"
         - "traefik.http.routers.minio-router.entrypoints=https"
         - "traefik.http.routers.minio-router.tls=true"
@@ -79,6 +79,7 @@ services:
       - MINIO_NOTIFY_AMQP_AUTO_DELETED_primary=off
       - MINIO_NOTIFY_AMQP_DELIVERY_MODE_primary=2
       - BITNAMI_DEBUG=true
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
 
     volumes:
       - /mnt/chat-minio/data:/bitnami/minio/data:z
