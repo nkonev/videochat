@@ -162,12 +162,12 @@ export default {
     },
 
     onClickTrap(e) {
-        e.preventDefault()
         const foundElements = [
             checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
             checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
         ].filter(r => r.found);
         if (foundElements.length) {
+            e.preventDefault();
             const found = foundElements[foundElements.length - 1].el;
             switch (found?.tagName?.toLowerCase()) {
                 case "img": {
