@@ -116,36 +116,41 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 			rightLimit = 1
 		}
 
-		var leftMessageId, rightMessageId *int64
+		var leftItemId, rightItemId *int64
 		var searchStringPercents = ""
 		if searchString != "" {
 			searchStringPercents = "%" + searchString + "%"
 		}
 
-		var leftLimitRes *sql.Row
+		var limitRes *sql.Row
 		if searchString != "" {
-			leftLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 AND strip_tags(m.text) ILIKE $3 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit, searchStringPercents)
+			limitRes = co.QueryRow(fmt.Sprintf(`
+				select inner3.minid, inner3.maxid from (
+					select inner2.*, lag(id, $2) over() as minid, lead(id, $3) over() as maxid from (
+						select inn.*, id = $1 as central_element from (
+							select id, row_number() over () as rn from message_chat_%v m where strip_tags(m.text) ilike $4 order by id
+					   	) inn
+				 	) inner2
+			  	) inner3 where central_element = true
+			`, chatId), startingFromItemId, leftLimit, rightLimit, searchStringPercents)
 		} else {
-			leftLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MIN(inn.id) FROM (SELECT m.id FROM message_chat_%v m WHERE id <= $1 ORDER BY id DESC LIMIT $2) inn`, chatId), startingFromItemId, leftLimit)
+			limitRes = co.QueryRow(fmt.Sprintf(`
+				select inner3.minid, inner3.maxid from (
+					select inner2.*, lag(id, $2) over() as minid, lead(id, $3) over() as maxid from (
+						select inn.*, id = $1 as central_element from (
+							select id, row_number() over () as rn from message_chat_%v order by id
+					   	) inn
+				 	) inner2
+			  	) inner3 where central_element = true
+			`, chatId), startingFromItemId, leftLimit, rightLimit)
 		}
-		err = leftLimitRes.Scan(&leftMessageId)
+		err = limitRes.Scan(&leftItemId, &rightItemId)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
 		}
 
-		var rightLimitRes *sql.Row
-		if searchString != "" {
-			rightLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 AND strip_tags(m.text) ILIKE $3 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit, searchStringPercents)
-		} else {
-			rightLimitRes = co.QueryRow(fmt.Sprintf(`SELECT MAX(inn.id) + 1 FROM (SELECT m.id FROM message_chat_%v m WHERE id >= $1 ORDER BY id ASC LIMIT $2) inn`, chatId), startingFromItemId, rightLimit)
-		}
-		err = rightLimitRes.Scan(&rightMessageId)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		}
-
-		if leftMessageId == nil || rightMessageId == nil {
-			Logger.Infof("Got leftMessageId=%v, rightMessageId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftMessageId, rightMessageId, chatId, startingFromItemId, reverse, searchString)
+		if leftItemId == nil || rightItemId == nil {
+			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
 			list, err = getMessagesSimple(co, chatId, limit, 0, reverse, searchString)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
@@ -166,7 +171,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 						AND strip_tags(m.text) ILIKE $4
 					ORDER BY m.id %s 
 					LIMIT $1`, selectMessageClause(chatId), order),
-					limit, *leftMessageId, *rightMessageId, searchStringPercents)
+					limit, *leftItemId, *rightItemId, searchStringPercents)
 				if err != nil {
 					return nil, eris.Wrap(err, "error during interacting with db")
 				}
@@ -178,7 +183,7 @@ func getMessagesCommon(co CommonOperations, chatId int64, limit int, startingFro
 						AND m.id <= $3 
 					ORDER BY m.id %s 
 					LIMIT $1`, selectMessageClause(chatId), order),
-					limit, *leftMessageId, *rightMessageId)
+					limit, *leftItemId, *rightItemId)
 				if err != nil {
 					return nil, eris.Wrap(err, "error during interacting with db")
 				}
