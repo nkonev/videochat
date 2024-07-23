@@ -9,6 +9,11 @@ entryPoints:
     address: :80
   https:
     address: :443
+    transport:
+      # configured to be able to upload #GB+ files
+      respondingTimeouts:
+        readTimeout: 240s
+      keepAliveMaxTime: 240s
   traefik:
     address: :8080
 providers:
