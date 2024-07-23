@@ -147,7 +147,7 @@ export default {
   },
   methods: {
     onProfileSet() {
-      return this.getInfo().then(()=>{
+      return this.getInfo(this.chatId).then(()=>{
         this.chatStore.showCallManagement = true;
         this.graphQlSubscribe();
       })
@@ -156,11 +156,11 @@ export default {
       this.partialReset();
       this.graphQlUnsubscribe();
     },
-    fetchAndSetChat() {
-      return axios.get(`/api/chat/${this.chatId}`).then((response) => {
+    fetchAndSetChat(chatId) {
+      return axios.get(`/api/chat/${chatId}`).then((response) => {
         if (response.status == 205) {
-          return axios.put(`/api/chat/${this.chatId}/join`).then((response)=>{
-              return axios.get(`/api/chat/${this.chatId}`).then((response)=>{
+          return axios.put(`/api/chat/${chatId}/join`).then((response)=>{
+              return axios.get(`/api/chat/${chatId}`).then((response)=>{
                   return this.processNormalInfoResponse(response)
               })
           })
@@ -194,8 +194,8 @@ export default {
             this.chatStore.showGoToBlogButton = null;
         }
     },
-    fetchPromotedMessage() {
-      axios.get(`/api/chat/${this.chatId}/message/pin/promoted`).then((response) => {
+    fetchPromotedMessage(chatId) {
+      axios.get(`/api/chat/${chatId}/message/pin/promoted`).then((response) => {
         if (response.status != 204) {
           this.pinnedPromoted = response.data;
           this.pinnedPromotedKey++
@@ -204,11 +204,11 @@ export default {
         }
       });
     },
-    getInfo() {
-      return this.fetchAndSetChat().then(() => {
+    getInfo(chatId) {
+      return this.fetchAndSetChat(chatId).then(() => {
         // async call
-        this.fetchPromotedMessage();
-        axios.get(`/api/video/${this.chatId}/users`)
+        this.fetchPromotedMessage(chatId);
+        axios.get(`/api/video/${chatId}/users`)
           .then(response => response.data)
           .then(data => {
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
@@ -217,7 +217,7 @@ export default {
         return Promise.resolve();
       }).then(() => {
         // async call
-        axios.get(`/api/video/${this.chatId}/record/status`).then(({data}) => {
+        axios.get(`/api/video/${chatId}/record/status`).then(({data}) => {
           this.chatStore.canMakeRecord = data.canMakeRecord;
           if (data.canMakeRecord) {
             const record = data.recordInProcess;
@@ -469,8 +469,8 @@ export default {
       }
     },
     onFocus() {
-        if (this.chatStore.currentUser) {
-            this.getInfo();
+        if (this.chatStore.currentUser && this.chatId) {
+            this.getInfo(this.chatId);
         }
     },
     onUserTyping(data) {
@@ -524,7 +524,7 @@ export default {
       }
     },
     onWsRestoredRefresh() {
-      this.getInfo()
+      this.getInfo(this.chatId)
     },
     partialReset() {
       this.chatStore.resetChatDto();

@@ -591,7 +591,7 @@ export default {
     },
 
     onFocus() {
-      if (this.chatStore.currentUser) {
+      if (this.chatStore.currentUser && this.items) {
           const list = this.items.filter(item => item.tetATet).flatMap(item => item.participantIds);
           const uniqueUserIds = [...new Set(list)];
           const joined = uniqueUserIds.join(",");

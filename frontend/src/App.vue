@@ -275,6 +275,7 @@ import {
 import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
 import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@/browserNotifications.js";
+import debounce from "lodash/debounce.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -808,6 +809,8 @@ export default {
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+
+        this.onFocus = debounce(this.onFocus, 200, {leading:false, trailing:true});
 
         addEventListener("focus", this.onFocus);
         window.addEventListener("resize", this.onWindowResized);
