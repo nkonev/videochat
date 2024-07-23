@@ -4,11 +4,11 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.11.2
+    image: traefik:v2.11.6
     hostname: traefik
     restart: unless-stopped
     # The Static Configuration
-    command: --configFile=/traefik_conf/traefik.yml
+    command: --configFile=/etc/traefik/traefik.yml
     ports:
       - 0.0.0.0:8081:8081
     extra_hosts:
@@ -17,7 +17,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:z
-      - ./docker/traefik_conf:/traefik_conf:z
+      - ./docker/traefik:/etc/traefik:z
     logging:
       driver: "json-file"
       options:

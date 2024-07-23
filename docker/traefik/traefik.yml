@@ -16,7 +16,7 @@ providers:
     watch: true
     exposedByDefault: false
   file:
-    directory: /traefik_conf/dynamic
+    directory: /etc/traefik/dynamic
 api:
   insecure: true
   dashboard: false

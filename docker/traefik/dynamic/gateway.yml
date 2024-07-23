@@ -1,9 +1,5 @@
 http:
   services:
-    frontend-old-service:
-      loadBalancer:
-        servers:
-          - url: http://host.docker.internal:8082
     frontend-service:
       loadBalancer:
         servers:
