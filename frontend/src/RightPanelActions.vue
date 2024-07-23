@@ -57,7 +57,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {
     blog,
-    chat_list_name,
+    chat_list_name, chat_name,
     chats,
     profile_list_name,
     profiles,
@@ -147,8 +147,11 @@ export default {
         this.chatStore.decrementProgressCount();
       })
     },
+    isChatable() {
+        return this.$route.name == chat_name || this.$route.name == videochat_name
+    },
     canShowFiles() {
-      return this.chatStore.currentUser && hasLength(this.chatId);
+      return this.chatStore.currentUser && this.isChatable();
     },
     openSettings() {
       bus.emit(OPEN_SETTINGS)
@@ -180,10 +183,10 @@ export default {
         bus.emit(OPEN_PUBLISHED_MESSAGES_MODAL, {chatId: this.$route.params.id});
     },
     shouldPinnedMessages() {
-      return this.chatStore.currentUser && hasLength(this.chatId);
+      return this.chatStore.currentUser && this.isChatable();
     },
     shouldPublishedMessages() {
-      return this.chatStore.currentUser && hasLength(this.chatId);
+      return this.chatStore.currentUser && this.isChatable();
     },
     shouldDisplayNotifications() {
       return this.chatStore.currentUser
