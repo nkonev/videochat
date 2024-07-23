@@ -154,7 +154,7 @@ import bus, {
     PROFILE_SET,
     SEARCH_STRING_CHANGED
 } from "@/bus/bus";
-import {searchString, goToPreservingQuery, SEARCH_MODE_USERS} from "@/mixins/searchString";
+import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
     deepCopy, findIndex, getLoginColoredStyle,
@@ -385,7 +385,7 @@ export default {
       return !!this.chatStore.currentUser
     },
     openUser(item){
-          goToPreservingQuery(this.$route, this.$router, { name: profile_name, params: { id: item.id}})
+        this.$router.push({ name: profile_name, params: { id: item.id}})
     },
     getLink(item) {
           return profile + "/" + item.id
