@@ -111,3 +111,11 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: /db/migration/V16__login_color.sql
+
+  - changeSet:
+      id: 17
+      author: nkonev
+      changes:
+        - sqlFile:
+            splitStatements: false
+            path: /db/migration/V17__translate.sql

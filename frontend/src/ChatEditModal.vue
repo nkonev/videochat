@@ -35,6 +35,7 @@
                                 @update:search="onUpdateSearch"
                                 density="compact"
                                 variant="outlined"
+                                no-filter
                         >
                             <template v-slot:chip="{ props, item }">
                                 <v-chip

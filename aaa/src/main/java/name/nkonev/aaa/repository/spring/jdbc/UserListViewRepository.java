@@ -33,6 +33,13 @@ public class UserListViewRepository {
         return new MinMax(min != 0 ? min : null, max != 0 ? max : null);
     };
 
+    private static final String USERNAME_SEARCH = """ 
+        (
+            (u.username ilike :searchStringPercents)
+            or (cyrillic_transliterate(u.username) ilike '%' || cyrillic_transliterate(:searchStringPercents) || '%')
+        )
+    """;
+
     // copy-paste from chat/db/message.go::getMessagesCommon
     public List<UserAccount> getUsers(int limit, long startingFromItemId, boolean reverse, boolean hasHash, String searchString) {
         List<UserAccount> list;
@@ -63,11 +70,11 @@ public class UserListViewRepository {
                     select inner3.minid, inner3.maxid from (
                         select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
                             select inn.*, id = :startingFromItemId as central_element from (
-                                select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from user_account u where u.id > 0 AND u.username ilike :searchStringPercents order by id
+                                select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from user_account u where u.id > 0 AND %s order by id
                             ) inn
                         ) inner2
                     ) inner3 where central_element = true
-                    """,
+                    """.formatted(USERNAME_SEARCH),
                     Map.of(
                         "startingFromItemId", startingFromItemId,
                         "leftLimit", leftLimit,
@@ -121,10 +128,10 @@ public class UserListViewRepository {
                                 u.id > 0 AND
                                 u.id >= :leftMessageId
                                 AND u.id <= :rightMessageId
-                                AND u.username ILIKE :searchStringPercents
+                                AND %s
                                 ORDER BY u.id %s
                                 LIMIT :limit
-                            """.formatted(order),
+                            """.formatted(USERNAME_SEARCH, order),
                         Map.of(
                             "limit", limit,
                             "leftMessageId", leftItemId,
@@ -176,10 +183,10 @@ public class UserListViewRepository {
                     WHERE
                     u.id > 0 AND
                     %s
-                    AND u.username ILIKE :searchStringPercents
+                    AND %s
                     ORDER BY u.id %s
                     LIMIT :limit
-                    """.formatted(nonEquality, order),
+                    """.formatted(nonEquality, USERNAME_SEARCH, order),
                 Map.of(
                     "limit", limit,
                     "startingFromItemId", startingFromItemId,
@@ -222,13 +229,13 @@ public class UserListViewRepository {
             rowMapper);
     }
 
-    private static final String AND_USERNAME_ILIKE = " and u.username ilike :userName ";
+    private static final String AND_USERNAME_ILIKE = " and " + USERNAME_SEARCH;
 
     public List<UserAccount> findByUsernameContainsIgnoreCase(int pageSize, long offset, String searchString) {
         return jdbcTemplate.query(
             PREFIX + AND_USERNAME_ILIKE + PAGINATION_SUFFIX,
             Map.of(
-                "userName", searchString,
+                "searchStringPercents", searchString,
                 "limit", pageSize,
                 "offset", offset
             ),
@@ -239,18 +246,18 @@ public class UserListViewRepository {
         return jdbcTemplate.queryForObject(
             PREFIX_COUNT + AND_USERNAME_ILIKE,
             Map.of(
-                "userName", searchString
+                "searchStringPercents", searchString
             ),
             long.class);
     }
 
-    private static final String AND_USERNAME_ILIKE_AND_ID_IN = " and u.username ilike :userName and u.id in (:userIds) ";
+    private static final String AND_USERNAME_ILIKE_AND_ID_IN = " and " + USERNAME_SEARCH + " and u.id in (:userIds) ";
 
     public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdIn(int pageSize, long offset, String searchString, List<Long> includingUserIds) {
         return jdbcTemplate.query(
             PREFIX + AND_USERNAME_ILIKE_AND_ID_IN + PAGINATION_SUFFIX,
             Map.of(
-                "userName", searchString,
+                "searchStringPercents", searchString,
                 "userIds", includingUserIds,
                 "limit", pageSize,
                 "offset", offset
@@ -262,19 +269,19 @@ public class UserListViewRepository {
         return jdbcTemplate.queryForObject(
             PREFIX_COUNT + AND_USERNAME_ILIKE_AND_ID_IN,
             Map.of(
-                "userName", searchString,
+                "searchStringPercents", searchString,
                 "userIds", includingUserIds
             ),
             long.class);
     }
 
-    private static final String AND_USERNAME_ILIKE_AND_ID_NOT_IN = " and u.username ilike :userName and u.id not in (:userIds) ";
+    private static final String AND_USERNAME_ILIKE_AND_ID_NOT_IN = " and " + USERNAME_SEARCH + " and u.id not in (:userIds) ";
 
     public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(int pageSize, long offset, String searchString, List<Long> excludingUserIds) {
         return jdbcTemplate.query(
             PREFIX + AND_USERNAME_ILIKE_AND_ID_NOT_IN + PAGINATION_SUFFIX,
             Map.of(
-                "userName", searchString,
+                "searchStringPercents", searchString,
                 "userIds", excludingUserIds,
                 "limit", pageSize,
                 "offset", offset
@@ -286,7 +293,7 @@ public class UserListViewRepository {
         return jdbcTemplate.queryForObject(
             PREFIX_COUNT + AND_USERNAME_ILIKE_AND_ID_NOT_IN,
             Map.of(
-                "userName", searchString,
+                "searchStringPercents", searchString,
                 "userIds", excludingUserIds
             ),
             long.class);
