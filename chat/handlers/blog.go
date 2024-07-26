@@ -496,7 +496,7 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 					}
 					maybeImage.SetAttr("src", newurl)
 				}
-			} else { // we have only original
+			} else { // we have only original // legacy
 				src, srcExists := maybeImage.Attr("src") // original
 				if srcExists && utils.ContainsUrl(wlArr, src) {
 					newurl, err := makeUrlPublic(src, "", false, messageId)

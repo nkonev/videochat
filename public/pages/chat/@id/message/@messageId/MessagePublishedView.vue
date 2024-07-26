@@ -50,7 +50,7 @@ export default {
                 const found = foundElements[foundElements.length - 1].el;
                 switch (found?.tagName?.toLowerCase()) {
                     case "img": {
-                        const src = hasLength(found.getAttribute('data-original')) ? found.getAttribute('data-original') : found.src;
+                        const src = hasLength(found.getAttribute('data-original')) ? found.getAttribute('data-original') : found.src; // found.src is legacy
                         bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: src, canSwitch: true})
                         break;
                     }
