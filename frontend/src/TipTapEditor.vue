@@ -126,8 +126,8 @@ export default {
     addImage() {
         this.fileInput.click();
     },
-    setImage(src) {
-        this.editor.chain().focus().setImage({ src: src }).run()
+    setImage(src, previewUrl) {
+        this.editor.chain().focus().setImage({ src: previewUrl, original: src }).run()
     },
     addVideo() {
         this.fileInput.click();
@@ -157,7 +157,7 @@ export default {
             if (dto.aType == media_video) {
                 this.setVideo(dto.url, dto.previewUrl)
             } else if (dto.aType == media_image) {
-                this.setImage(dto.url)
+                this.setImage(dto.url, dto.previewUrl)
             } else if (dto.aType == media_audio) {
                 this.setAudio(dto.url)
             }

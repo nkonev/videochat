@@ -3,6 +3,31 @@ import {Plugin, PluginKey} from 'prosemirror-state';
 
 export const buildImageHandler = (uploadFunction) => {
     return Image.extend({
+        addAttributes() {
+            return {
+                src: {
+                    default: null,
+                },
+                alt: {
+                    default: null,
+                },
+                title: {
+                    default: null,
+                },
+                original: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-original'),
+                    renderHTML: attributes => {
+                        if (!attributes.original) {
+                            return {};
+                        }
+                        return {
+                            'data-original': attributes.original,
+                        };
+                    },
+                },
+            };
+        },
         addProseMirrorPlugins() {
             return [
                 new Plugin({

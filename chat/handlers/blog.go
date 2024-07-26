@@ -476,14 +476,36 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
 		if maybeImage != nil {
-			src, srcExists := maybeImage.Attr("src")
-			if srcExists && utils.ContainsUrl(wlArr, src) {
-				newurl, err := makeUrlPublic(src, "", false, messageId)
-				if err != nil {
-					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
-					return
+			original, originalExists := maybeImage.Attr("data-original")
+			if originalExists { // we have 2 tags - preview (small, tag attr) and original (data-original attr)
+				if utils.ContainsUrl(wlArr, original) { // original
+					newurl, err := makeUrlPublic(original, "", false, messageId)
+					if err != nil {
+						GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+						return
+					}
+					maybeImage.SetAttr("data-original", newurl)
 				}
-				maybeImage.SetAttr("src", newurl)
+
+				src, srcExists := maybeImage.Attr("src") // preview
+				if srcExists && utils.ContainsUrl(wlArr, src) {
+					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, false, messageId)
+					if err != nil {
+						GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+						return
+					}
+					maybeImage.SetAttr("src", newurl)
+				}
+			} else { // we have only original
+				src, srcExists := maybeImage.Attr("src") // original
+				if srcExists && utils.ContainsUrl(wlArr, src) {
+					newurl, err := makeUrlPublic(src, "", false, messageId)
+					if err != nil {
+						GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+						return
+					}
+					maybeImage.SetAttr("src", newurl)
+				}
 			}
 		}
 	})
