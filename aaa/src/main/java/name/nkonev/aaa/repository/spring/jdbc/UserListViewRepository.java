@@ -83,7 +83,7 @@ public class UserListViewRepository {
                     ),
                     mmRowMapper
                 );
-                if (mm.size() == 1) {
+                if (!mm.isEmpty()) {
                     leftItemId = mm.getFirst().leftId();
                     rightItemId = mm.getFirst().rightId();
                 }
@@ -105,7 +105,7 @@ public class UserListViewRepository {
                     ),
                     mmRowMapper
                 );
-                if (mm.size() == 1) {
+                if (!mm.isEmpty()) {
                     leftItemId = mm.getFirst().leftId();
                     rightItemId = mm.getFirst().rightId();
                 }
