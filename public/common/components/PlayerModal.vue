@@ -55,20 +55,8 @@ export default {
             window.removeEventListener("keydown", this.onKeyPress);
         },
         fetchMediaListView() {
-            let urlSrc = this.$data.dto.url;
-            if (!urlSrc.startsWith("http")) {
-                urlSrc = getUrlPrefix() + urlSrc;
-            }
-            const url = new URL(urlSrc);
-            const params = url.searchParams;
-            const fileId = params.get('file');
-            const chatId = fileId.split("/")[1];
-            const messageId = params.get('messageId');
-            axios.get(`/api/storage/public/${chatId}/view/list`, {
-                params: {
-                    file: fileId,
-                    messageId: messageId
-                }
+            axios.post(`/api/storage/public/view/list`, {
+                url: this.$data.dto.url
             }).then((res) => {
                 this.viewList = res.data.items;
                 for (let i = 0; i < this.viewList.length; ++i) {

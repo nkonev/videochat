@@ -435,21 +435,44 @@ type ViewItem struct {
 	CanShowAsImage bool      `json:"canShowAsImage"`
 }
 
+type ListViewRequest struct {
+	Url string `json:"url"`
+}
+
 func (h *FilesHandler) ViewHandler(c echo.Context) error {
 	var userPrincipalDto, _ = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	chatId, err := utils.ParseInt64(c.Param("chatId"))
+
+	reqDto := new(ListViewRequest)
+	err := c.Bind(reqDto)
 	if err != nil {
 		return err
 	}
 
-	fileId := c.QueryParam(utils.FileParam)
+	anUrl, err := url.Parse(reqDto.Url)
+	if err != nil {
+		return err
+	}
+
+	fileId := anUrl.Query().Get(utils.FileParam)
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 	if err != nil {
 		return err
 	}
 
-	messageId := getMessageIdPublic(c)
+	messageId := int64(utils.MessageIdNonExistent)
+	messageIdRaw := anUrl.Query().Get(utils.MessageIdParam)
+	if len(messageIdRaw) > 0 {
+		messageId, err = utils.ParseInt64(messageIdRaw)
+		if err != nil {
+			return err
+		}
+	}
+
+	chatId, err := utils.ParseChatId(fileId)
+	if err != nil {
+		return err
+	}
 
 	var userId *int64 = nil
 	var isAnonymous = false // public message or blog
@@ -1300,7 +1323,7 @@ func (h *FilesHandler) previewCacheableResponse(c echo.Context) {
 }
 
 func getMessageIdPublic(c echo.Context) int64 {
-	parseInt64, err := utils.ParseInt64(c.QueryParam("messageId"))
+	parseInt64, err := utils.ParseInt64(c.QueryParam(utils.MessageIdParam))
 	if err != nil {
 		return utils.MessageIdNonExistent
 	}
