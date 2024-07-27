@@ -18,6 +18,7 @@ import bus, {
     PLAYER_MODAL,
 } from "#root/common/bus";
 import axios from "axios";
+import {getUrlPrefix} from "#root/common/utils";
 
 export default {
     data () {
@@ -54,7 +55,11 @@ export default {
             window.removeEventListener("keydown", this.onKeyPress);
         },
         fetchMediaListView() {
-            const url = new URL(this.$data.dto.url);
+            let urlSrc = this.$data.dto.url;
+            if (!urlSrc.startsWith("http")) {
+                urlSrc = getUrlPrefix() + urlSrc;
+            }
+            const url = new URL(urlSrc);
             const params = url.searchParams;
             const fileId = params.get('file');
             const chatId = fileId.split("/")[1];

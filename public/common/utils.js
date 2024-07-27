@@ -1,5 +1,6 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
 import {chat, messageIdHashPrefix} from "./router/routes.js";
+import bus, {PLAYER_MODAL} from "./bus.js";
 
 export const getHumanReadableDate = (timestamp) => {
     const parsedDate = parseISO(timestamp);
@@ -95,4 +96,48 @@ export const checkUpByTreeObj = (el, maxLevels, condition) => {
     return {
         found: false
     };
+}
+
+export const onClickTrap = (e) => {
+    const foundElements = [
+        checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
+        checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
+    ].filter(r => r.found);
+    if (foundElements.length) {
+        e.preventDefault();
+        const found = foundElements[foundElements.length - 1].el;
+        switch (found?.tagName?.toLowerCase()) {
+            case "img": {
+                const src = hasLength(found.getAttribute('data-original')) ? found.getAttribute('data-original') : found.src; // found.src is legacy
+                bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: src, canSwitch: true})
+                break;
+            }
+            case "span": { // contains video
+                let video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                if (video) {
+                    bus.emit(PLAYER_MODAL, {
+                        canPlayAsVideo: true,
+                        url: video.getAttribute('data-original'),
+                        previewUrl: video.src,
+                        canSwitch: true
+                    })
+                } else {
+                    video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
+                    if (video) {
+                        bus.emit(PLAYER_MODAL, {
+                            canPlayAsVideo: true,
+                            url: video.src,
+                            previewUrl: video.poster,
+                            canSwitch: true
+                        })
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
+export const getUrlPrefix = () => {
+    return window.location.protocol + "//" + window.location.host
 }

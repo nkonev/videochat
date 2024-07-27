@@ -14,6 +14,9 @@ const Video = Node.create({
             {
                 tag: 'video',
             },
+            {
+                tag: 'img[class="video-custom-class"]',
+            },
         ]
     },
     addAttributes() {
@@ -21,15 +24,24 @@ const Video = Node.create({
             "src": {
                 default: null
             },
-            "poster": {
-                default: null
+            original: {
+                default: null,
+                parseHTML: element => element.getAttribute('data-original'),
+                renderHTML: attributes => {
+                    if (!attributes.original) {
+                        return {};
+                    }
+                    return {
+                        'data-original': attributes.original,
+                    };
+                },
             },
         }
     },
     renderHTML({ HTMLAttributes }) {
         return [
             'span', {"class": "video-in-message-wrapper"},
-            ['video', mergeAttributes({"class": "video-custom-class", "controls": true}, HTMLAttributes)],
+            ['img', mergeAttributes({"class": "video-custom-class", "controls": true}, HTMLAttributes)],
             ['span', {"class": "video-in-message-button mdi mdi-play-box-outline"}]
         ];
     },

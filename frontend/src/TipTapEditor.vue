@@ -136,7 +136,7 @@ export default {
         this.fileInput.click();
     },
     setVideo(src, previewUrl) {
-        this.editor.chain().focus().setVideo({ src: src, poster: previewUrl }).run();
+        this.editor.chain().focus().setVideo({ src: previewUrl, original: src }).run();
     },
     setAudio(src) {
         this.editor.chain().focus().setAudio({ src: src }).run();
@@ -244,8 +244,8 @@ export default {
               },
           }),
           Text,
-          imagePluginInstance,
           Video,
+          imagePluginInstance,
           Audio,
           Italic,
           Bold,

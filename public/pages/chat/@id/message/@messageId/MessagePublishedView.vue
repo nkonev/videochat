@@ -14,11 +14,8 @@
     </v-container>
 </template>
 <script>
-import bus, {
-    PLAYER_MODAL,
-} from "#root/common/bus";
 import MessageItem from "#root/common/components/MessageItem.vue";
-import {getMessageLink, checkUpByTreeObj, hasLength} from "#root/common/utils";
+import {getMessageLink, onClickTrap} from "#root/common/utils";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 
 export default {
@@ -41,26 +38,7 @@ export default {
             window.location.href = getMessageLink(this.chatId, this.messageId);
         },
         onClickTrap(e) {
-            const foundElements = [
-                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
-                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
-            ].filter(r => r.found);
-            if (foundElements.length) {
-                e.preventDefault();
-                const found = foundElements[foundElements.length - 1].el;
-                switch (found?.tagName?.toLowerCase()) {
-                    case "img": {
-                        const src = hasLength(found.getAttribute('data-original')) ? found.getAttribute('data-original') : found.src; // found.src is legacy
-                        bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: src, canSwitch: true})
-                        break;
-                    }
-                    case "span": { // contains video
-                        const video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video");
-                        bus.emit(PLAYER_MODAL, {canPlayAsVideo: true, url: video.src, previewUrl: video.poster})
-                        break;
-                    }
-                }
-            }
+            onClickTrap(e)
         },
     },
     computed: {

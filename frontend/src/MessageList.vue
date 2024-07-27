@@ -559,8 +559,25 @@
                         break;
                     }
                     case "span": { // contains video
-                        const video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video");
-                        bus.emit(PLAYER_MODAL, {canPlayAsVideo: true, url: video.src, previewUrl: video.poster, canSwitch: true})
+                        let video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                        if (video) {
+                            bus.emit(PLAYER_MODAL, {
+                                canPlayAsVideo: true,
+                                url: video.getAttribute('data-original'),
+                                previewUrl: video.src,
+                                canSwitch: true
+                            })
+                        } else {
+                            video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
+                            if (video) {
+                                bus.emit(PLAYER_MODAL, {
+                                    canPlayAsVideo: true,
+                                    url: video.src,
+                                    previewUrl: video.poster,
+                                    canSwitch: true
+                                })
+                            }
+                        }
                         break;
                     }
                 }
