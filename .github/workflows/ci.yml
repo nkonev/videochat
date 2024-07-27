@@ -22,16 +22,7 @@ jobs:
         with:
           distribution: liberica
           java-version: 21.0.2
-      - name: Cache local Maven repository
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: | 
-            ~/.m2/repository
-            ~/.m2/wrapper
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml', '**/.mvn/wrapper/maven-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          cache: 'maven'
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -76,13 +67,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.1.0
-      - name: Cache Node.js dependencies
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
+          cache: 'npm'
       - name: Build with npm run
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -117,13 +102,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.1.0
-      - name: Cache Node.js dependencies
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-public-cache-v2-${{ hashFiles('**/package-lock.json') }}
+          cache: 'npm'
       - name: Build with npm run
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -155,18 +134,9 @@ jobs:
         run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v4
-        if: env.SHOULD_RUN == 'true'
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-chat-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -210,18 +180,9 @@ jobs:
         run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v4
-        if: env.SHOULD_RUN == 'true'
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-event-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd event; make check-env clean download generate test package)
@@ -252,18 +213,9 @@ jobs:
         run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v4
-        if: env.SHOULD_RUN == 'true'
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-notification-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd notification; make check-env clean download generate test package)
@@ -294,18 +246,9 @@ jobs:
         run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v4
-        if: env.SHOULD_RUN == 'true'
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-storage-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd storage; make check-env clean download generate test package)
@@ -336,18 +279,9 @@ jobs:
         run: ./should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
-      - uses: actions/cache@v4
-        if: env.SHOULD_RUN == 'true'
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-video-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)
@@ -387,56 +321,29 @@ jobs:
         with:
           distribution: liberica
           java-version: 21.0.2
-      - name: Cache local Maven repository
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.m2/repository
-            ~/.m2/wrapper
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml', '**/.mvn/wrapper/maven-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          cache: 'maven'
 
       - uses: actions/setup-node@v4
         if: env.SHOULD_RUN == 'true'
         with:
           node-version: 22.1.0
+          cache: 'npm'
       - name: Cache Playwright browsers and Node.js dependencies
         if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v4
         with:
           path: |
-            **/node_modules
             ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-browsers-v0-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-playwright-browsers-v1-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Playwright Node.js dependencies and browsers
         if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; make check-env clean download)
-      - name: Cache frontend Node.js dependencies
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-frontend-cache-v2-${{ hashFiles('**/package-lock.json') }}
-
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
-      - name: Cache go modules
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-e2e-test-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Start and wait docker-compose
         if: env.SHOULD_RUN == 'true'
