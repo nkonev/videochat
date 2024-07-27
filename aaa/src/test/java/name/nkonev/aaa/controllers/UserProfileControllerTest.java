@@ -694,4 +694,26 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
     }
 
+    @org.junit.jupiter.api.Test
+    public void noErrorInCaseTooBigRequestedStartingFromItemId() throws Exception {
+        MvcResult getPostRequest = mockMvc.perform(
+                post(Constants.Urls.PUBLIC_API + Constants.Urls.USER + Constants.Urls.SEARCH)
+                    .content("""
+                        {
+                            "startingFromItemId":10000000,
+                            "size":40,
+                            "reverse":false,
+                            "hasHash":true
+                        }
+                        """)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.[0].login").value("admin"))
+            .andReturn();
+        String getStr = getPostRequest.getResponse().getContentAsString();
+        LOGGER.info(getStr);
+    }
 }

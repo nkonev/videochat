@@ -65,7 +65,7 @@ public class UserListViewRepository {
             }
 
             if (StringUtils.hasLength(searchString)) {
-                MinMax mm = jdbcTemplate.queryForObject(
+                List<MinMax> mm = jdbcTemplate.query(
                     """
                     select inner3.minid, inner3.maxid from (
                         select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
@@ -83,12 +83,12 @@ public class UserListViewRepository {
                     ),
                     mmRowMapper
                 );
-                if (mm != null) {
-                    leftItemId = mm.leftId();
-                    rightItemId = mm.rightId();
+                if (mm.size() == 1) {
+                    leftItemId = mm.get(0).leftId();
+                    rightItemId = mm.get(0).rightId();
                 }
             } else {
-                MinMax mm = jdbcTemplate.queryForObject(
+                List<MinMax> mm = jdbcTemplate.query(
                     """
                     select inner3.minid, inner3.maxid from (
                         select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
@@ -105,9 +105,9 @@ public class UserListViewRepository {
                     ),
                     mmRowMapper
                 );
-                if (mm != null) {
-                    leftItemId = mm.leftId();
-                    rightItemId = mm.rightId();
+                if (mm.size() == 1) {
+                    leftItemId = mm.get(0).leftId();
+                    rightItemId = mm.get(0).rightId();
                 }
             }
 
