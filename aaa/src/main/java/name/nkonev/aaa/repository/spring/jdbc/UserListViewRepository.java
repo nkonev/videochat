@@ -28,9 +28,9 @@ public class UserListViewRepository {
     private record MinMax(Long leftId, Long rightId) { }
 
     private final RowMapper<MinMax> mmRowMapper = (rs, rowNum) -> {
-        long min = rs.getLong("minid");
-        long max = rs.getLong("maxid");
-        return new MinMax(min != 0 ? min : null, max != 0 ? max : null);
+        Long min = (Long) rs.getObject("minid");
+        Long max = (Long) rs.getObject("maxid");
+        return new MinMax(min, max);
     };
 
     private static final String USERNAME_SEARCH = """ 
