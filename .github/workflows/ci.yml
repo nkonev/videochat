@@ -23,6 +23,7 @@ jobs:
           distribution: liberica
           java-version: 21.0.2
           cache: 'maven'
+          cache-dependency-path: 'aaa/pom.xml'
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -68,6 +69,7 @@ jobs:
         with:
           node-version: 22.1.0
           cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
       - name: Build with npm run
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -103,6 +105,7 @@ jobs:
         with:
           node-version: 22.1.0
           cache: 'npm'
+          cache-dependency-path: 'public/package-lock.json'
       - name: Build with npm run
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -137,6 +140,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
+          cache-dependency-path: 'chat/go.sum'
       - name: Install software
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -183,6 +187,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
+          cache-dependency-path: 'event/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd event; make check-env clean download generate test package)
@@ -216,6 +221,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
+          cache-dependency-path: 'notification/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd notification; make check-env clean download generate test package)
@@ -249,6 +255,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
+          cache-dependency-path: 'storage/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd storage; make check-env clean download generate test package)
@@ -282,6 +289,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
+          cache-dependency-path: 'video/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)
@@ -322,12 +330,16 @@ jobs:
           distribution: liberica
           java-version: 21.0.2
           cache: 'maven'
+          cache-dependency-path: 'aaa/pom.xml'
 
       - uses: actions/setup-node@v4
         if: env.SHOULD_RUN == 'true'
         with:
           node-version: 22.1.0
           cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e-test/package-lock.json
       - name: Cache Playwright browsers and Node.js dependencies
         if: env.SHOULD_RUN == 'true'
         uses: actions/cache@v4
@@ -344,6 +356,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
+          cache-dependency-path: |
+            chat/go.sum
+            event/go.sum
 
       - name: Start and wait docker-compose
         if: env.SHOULD_RUN == 'true'
