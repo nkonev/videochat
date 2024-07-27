@@ -18,7 +18,6 @@ import bus, {
     PLAYER_MODAL,
 } from "#root/common/bus";
 import axios from "axios";
-import {getUrlPrefix} from "#root/common/utils";
 
 export default {
     data () {
@@ -93,10 +92,14 @@ export default {
         },
         setEl() {
             const el = this.viewList[this.thisIdx];
-            this.dto.url = el.url;
-            this.dto.previewUrl = el.previewUrl;
-            this.dto.canPlayAsVideo = el.canPlayAsVideo;
-            this.dto.canShowAsImage = el.canShowAsImage;
+            this.$data.dto = null;
+            this.$nextTick(()=>{
+                this.$data.dto = {};
+                this.dto.url = el.url;
+                this.dto.previewUrl = el.previewUrl;
+                this.dto.canPlayAsVideo = el.canPlayAsVideo;
+                this.dto.canShowAsImage = el.canShowAsImage;
+            })
         }
     },
     mounted() {
