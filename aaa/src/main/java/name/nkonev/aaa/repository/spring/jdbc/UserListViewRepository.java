@@ -84,8 +84,8 @@ public class UserListViewRepository {
                     mmRowMapper
                 );
                 if (mm.size() == 1) {
-                    leftItemId = mm.get(0).leftId();
-                    rightItemId = mm.get(0).rightId();
+                    leftItemId = mm.getFirst().leftId();
+                    rightItemId = mm.getFirst().rightId();
                 }
             } else {
                 List<MinMax> mm = jdbcTemplate.query(
@@ -106,8 +106,8 @@ public class UserListViewRepository {
                     mmRowMapper
                 );
                 if (mm.size() == 1) {
-                    leftItemId = mm.get(0).leftId();
-                    rightItemId = mm.get(0).rightId();
+                    leftItemId = mm.getFirst().leftId();
+                    rightItemId = mm.getFirst().rightId();
                 }
             }
 
