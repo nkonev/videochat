@@ -67,4 +67,3 @@ clean:
 
 run:
 	./$(EXECUTABLE)
-

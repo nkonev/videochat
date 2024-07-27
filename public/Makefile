@@ -74,4 +74,3 @@ run-dev:
 # Using port 3000 we mimic to Vite's npm run dev in order to match traefik's dev config
 run-docker-image:
 	docker run --rm --network=host --name chat-public $(IMAGE)
-
