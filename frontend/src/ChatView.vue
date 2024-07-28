@@ -43,7 +43,12 @@
         </splitpanes>
       </pane>
       <pane v-if="showRightPane()" min-size="15" :size="rightPaneSize()">
-        <ChatVideo v-if="chatDtoIsReady" :chatDto="chatStore.chatDto" :videoIsOnTop="videoIsOnTop()"/>
+        <template v-if="shouldShowPlainVideos()">
+            <ChatVideo v-if="chatDtoIsReady" :chatDto="chatStore.chatDto" :videoIsOnTop="videoIsOnTop()"/>
+        </template>
+        <template v-else>
+            <ChatVideoPresenter/>
+        </template>
       </pane>
 
     </splitpanes>
@@ -92,6 +97,7 @@ import bus, {
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
+import ChatVideoPresenter from "@/ChatVideoPresenter.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 
 
@@ -135,6 +141,7 @@ export default {
     ChatList,
     MessageList,
     MessageEdit,
+    ChatVideoPresenter,
   },
   computed: {
     ...mapStores(useChatStore),
@@ -706,6 +713,9 @@ export default {
     scrollDown () {
       bus.emit(SCROLL_DOWN)
     },
+    shouldShowPlainVideos() {
+      return false // TODO
+    }
   },
   watch: {
     '$route': {
