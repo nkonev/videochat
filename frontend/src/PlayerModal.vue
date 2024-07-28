@@ -130,8 +130,8 @@ export default {
 
 .close-button {
     position absolute
-    top 0.2em
-    right 0.2em
+    top 0
+    right 0
 }
 
 .arrow-left-button {
