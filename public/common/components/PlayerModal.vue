@@ -133,6 +133,7 @@ export default {
     top: 0;
     bottom: 0;
     margin: auto 0;
+    text-shadow: 1px 1px 2px #000;
 }
 
 .arrow-right-button {
@@ -141,6 +142,7 @@ export default {
     top: 0;
     bottom: 0;
     margin: auto 0;
+    text-shadow: 1px 1px 2px #000;
 }
 
 .image-custom-class-view {
