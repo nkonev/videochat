@@ -26,8 +26,8 @@
 .iframe-custom-class {
   position: relative;
   overflow: hidden;
-  height: 480px;
-  width: 640px;
+  max-height: 100%;
+  max-width: 100%;
   &.ProseMirror-selectednode {
     outline: 3px solid #68CEF8;
   }
@@ -49,16 +49,6 @@
     max-height: 300px !important
   }
 
-  .iframe-custom-class {
-    height: 200px !important
-    width: 280px !important
-  }
-
-  .embedded-message {
-    .iframe-custom-class {
-      width: 260px !important
-    }
-  }
 }
 
 .message-item-wrapper a, .editorContent a {

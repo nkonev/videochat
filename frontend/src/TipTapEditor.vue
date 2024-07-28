@@ -141,9 +141,9 @@ export default {
     setAudio(src) {
         this.editor.chain().focus().setAudio({ src: src }).run();
     },
-    setIframe(url) {
-      if (url) {
-          this.editor.chain().focus().setIframe({ src: url }).run()
+    setIframe(obj) {
+      if (obj.src) {
+          this.editor.chain().focus().setIframe(obj).run()
       }
     },
     resetFileItemUuid() {
@@ -183,11 +183,13 @@ export default {
             const iframes = htmlDoc.getElementsByTagName('iframe');
             if (iframes.length == 1) {
                 const iframe = iframes[0];
-                link = iframe.src;
+
+                this.setIframe({src: iframe.src, width: iframe.width, height: iframe.height, allowfullscreen: iframe.getAttribute('allowfullscreen')});
+                return
             }
         }
 
-        this.setIframe(link);
+        this.setIframe({src: link});
     },
     addText(text) {
       this.editor.commands.insertContent(text)

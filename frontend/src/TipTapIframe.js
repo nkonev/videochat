@@ -13,6 +13,15 @@ export default Node.create({
             src: {
                 default: null,
             },
+            width: {
+                default: null,
+            },
+            height: {
+                default: null,
+            },
+            allowfullscreen: {
+                default: null,
+            },
         }
     },
 
