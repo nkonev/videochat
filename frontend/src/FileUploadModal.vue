@@ -45,6 +45,7 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-checkbox
+                        v-if="shouldShowSendMessageAfterMediaInsert()"
                         class="mr-2"
                         density="comfortable"
                         color="primary"
@@ -75,9 +76,9 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
-import {formatSize, renameFilePart} from "./utils";
+import {formatSize, hasLength, renameFilePart} from "./utils";
 import {mapStores} from "pinia";
-import {useChatStore} from "@/store/chatStore";
+import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
 import {retry} from "@lifeomic/attempt";
 const CancelToken = axios.CancelToken;
@@ -99,7 +100,7 @@ export default {
         }
     },
     methods: {
-        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename}) {
+        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType}) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.showFileInput = showFileInput;
@@ -110,7 +111,10 @@ export default {
             this.messageIdToAttachFiles = messageIdToAttachFiles;
             this.correlationId = correlationId;
             this.shouldAddDateToTheFilename = shouldAddDateToTheFilename;
-            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename);
+            if (!this.chatStore.fileUploadingQueue.length) { // there is no prev active uploading
+                this.chatStore.setFileUploadingSessionType(fileUploadingSessionType)
+            }
+            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType);
         },
         hideModal() {
             this.$data.show = false;
@@ -314,9 +318,13 @@ export default {
             if (this.chatStore.fileUploadingQueue.length == this.chatStore.fileUploadingQueue.filter((item) => item.finished).length) {
                 this.chatStore.fileUploadingQueue = [];
                 this.chatStore.fileUploadOverallProgress = 0;
+                this.chatStore.resetFileUploadingSessionType();
             }
             this.hideModal();
             return Promise.resolve();
+        },
+        shouldShowSendMessageAfterMediaInsert() {
+            return this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit
         },
         cancel(item) {
             item.cancelSource.cancel()

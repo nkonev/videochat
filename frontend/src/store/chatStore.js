@@ -7,6 +7,7 @@ import {setStoredLanguage} from "@/store/localStore";
 
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
+export const fileUploadingSessionTypeMessageEdit = "fromMessageEdit"
 
 const chatDtoFactory = () => {
     return {
@@ -45,6 +46,7 @@ export const useChatStore = defineStore('chat', {
         showRecordStopButton: false,
         progressCount: 0,
         fileUploadingQueue: [],
+        fileUploadingSessionType: null,
         moreImportantSubtitleInfo: null,
         initializingStaringVideoRecord: false,
         initializingStoppingVideoRecord: false,
@@ -154,6 +156,12 @@ export const useChatStore = defineStore('chat', {
     setChatDto(d) {
        this.chatDto = d;
     },
+    resetFileUploadingSessionType() {
+      this.fileUploadingSessionType = null;
+    },
+    setFileUploadingSessionType(v) {
+      this.fileUploadingSessionType = v;
+    }
   },
 
 })
