@@ -12,7 +12,7 @@
             @sendMessage="sendMessageToChat"
         />
 
-        <div class="d-flex flex-wrap flex-row dashed-borders" v-if="chatStore.shouldShowSendMessageButtons">
+        <div class="d-flex flex-wrap flex-row dashed-borders align-center" v-if="chatStore.shouldShowSendMessageButtons">
           <v-slide-group
               multiple
               show-arrows
