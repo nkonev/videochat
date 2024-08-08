@@ -54,8 +54,9 @@
     - videochat
 
 - name: Install docker proxy
+  when: docker_proxy is defined
   ansible.builtin.copy:
-    src: files/daemon.json
+    src: files/daemon.json.j2
     dest: /etc/docker/daemon.json
   notify: Reload docker
   tags:
