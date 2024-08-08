@@ -1,3 +1,4 @@
+# docker_proxy is optional
 docker_proxy: "socks5://proxy.huecker.io:443"
 acme_email: "your_email_for_letsencrypt@example.com"
 old_domain: "old.example.com" # optional
