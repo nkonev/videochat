@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/oklog/ulid/v2"
 	"github.com/spf13/viper"
+	"net/url"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
@@ -256,4 +257,24 @@ func GetFileItemId() string {
 	ms := ulid.Timestamp(initializingReverseTime)
 	id, _ := ulid.New(ms, ulid.DefaultEntropy())
 	return id.String()
+}
+
+func ContainsUrl(elems []string, elem string) bool {
+	parsedUrlToTest, err := url.Parse(elem)
+	if err != nil {
+		Logger.Infof("Unable to parse urlToTest %v", elem)
+		return false
+	}
+	for i := 0; i < len(elems); i++ {
+		parsedAllowedUrl, err := url.Parse(elems[i])
+		if err != nil {
+			Logger.Infof("Unable to parse allowedUrl %v", elems[i])
+			return false
+		}
+
+		if parsedUrlToTest.Host == parsedAllowedUrl.Host && parsedUrlToTest.Scheme == parsedAllowedUrl.Scheme {
+			return true
+		}
+	}
+	return false
 }

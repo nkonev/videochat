@@ -453,6 +453,14 @@ func (h *FilesHandler) ViewHandler(c echo.Context) error {
 		return err
 	}
 
+	selfUrls := strings.Split(viper.GetString("selfUrls"), ",")
+
+	var retList = []ViewItem{}
+
+	if !utils.ContainsUrl(selfUrls, reqDto.Url) {
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+	}
+
 	fileId := anUrl.Query().Get(utils.FileParam)
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
@@ -501,7 +509,6 @@ func (h *FilesHandler) ViewHandler(c echo.Context) error {
 		Recursive:    true,
 	})
 
-	var retList = []ViewItem{}
 	for objInfo := range objects {
 		if filter(&objInfo) {
 

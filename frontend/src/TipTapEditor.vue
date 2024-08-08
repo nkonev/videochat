@@ -127,7 +127,11 @@ export default {
         this.fileInput.click();
     },
     setImage(src, previewUrl) {
-        this.editor.chain().focus().setImage({ src: previewUrl, original: src }).run()
+        if (hasLength(src) && hasLength(previewUrl)) {
+            this.editor.chain().focus().setImage({ src: previewUrl, original: src }).run()
+        } else {
+            this.editor.chain().focus().setImage({ src: src }).run()
+        }
     },
     addVideo() {
         this.fileInput.click();
@@ -136,7 +140,11 @@ export default {
         this.fileInput.click();
     },
     setVideo(src, previewUrl) {
-        this.editor.chain().focus().setVideo({ src: previewUrl, original: src }).run();
+        if (hasLength(src) && hasLength(previewUrl)) {
+            this.editor.chain().focus().setVideo({src: previewUrl, original: src}).run()
+        } else {
+            this.editor.chain().focus().setVideo({src: src}).run()
+        }
     },
     setAudio(src) {
         this.editor.chain().focus().setAudio({ src: src }).run();
