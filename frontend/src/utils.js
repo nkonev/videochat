@@ -42,7 +42,11 @@ export const isSet = (str) => {
 }
 
 export const setTitle = (newTitle) => {
-  document.title = newTitle;
+    if (hasLength(newTitle)) {
+        document.title = newTitle;
+    } else {
+        document.title = "VideoChat"
+    }
 }
 
 export const setIcon = (newMessages) => {
