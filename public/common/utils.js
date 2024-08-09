@@ -37,10 +37,6 @@ export const replaceOrPrepend = (array, newArray) => {
     });
 };
 
-export const setTitle = (newTitle) => {
-    document.title = newTitle;
-}
-
 export const replaceInArray = (array, element) => {
     const foundIndex = findIndex(array, element);
     if (foundIndex === -1) {
