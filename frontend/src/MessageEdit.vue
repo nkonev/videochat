@@ -198,8 +198,7 @@
         link_dialog_type_add_link_to_text,
         link_dialog_type_add_media_embed, media_audio,
         media_image,
-        media_video, new_message, reply_message,
-        shouldShowSendMessageButtons
+        media_video, new_message, reply_message, isMobileWidth,
     } from "@/utils";
     import {
         getStoredChatEditMessageDto, getStoredChatEditMessageDtoOrNull, getStoredMessageEditSendButtonsType,
@@ -229,6 +228,8 @@
                 sending: false,
                 showAnswer: false,
                 answerOnPreview: null,
+                targetElement: null,
+                resizeObserver: null,
             }
         },
         methods: {
@@ -629,7 +630,8 @@
                 const type = getStoredMessageEditSendButtonsType('auto');
                 switch (type) { // see MessageEditSettingsModalContent
                     case 'auto':
-                        this.chatStore.shouldShowSendMessageButtons = shouldShowSendMessageButtons();
+                        const width = this.targetElement?.offsetWidth;
+                        this.chatStore.shouldShowSendMessageButtons = !isMobileWidth(width);
                         break;
                     case 'full':
                         this.chatStore.shouldShowSendMessageButtons = true;
@@ -638,7 +640,6 @@
                         this.chatStore.shouldShowSendMessageButtons = false;
                         break;
                 }
-
             },
             updateShouldShowSendMessageButtons() {
                 const oldValue = this.chatStore.shouldShowSendMessageButtons;
@@ -673,9 +674,16 @@
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
-            this.setShouldShowSendMessageButtons();
+
+            this.targetElement = document.getElementById('sendButtonContainer')
+            this.$nextTick(()=>{
+                this.setShouldShowSendMessageButtons();
+            })
             bus.on(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
             bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
+
+            this.resizeObserver = new ResizeObserver(this.updateShouldShowSendMessageButtons);
+            this.resizeObserver.observe(this.targetElement);
         },
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -687,10 +695,14 @@
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+            this.targetElement = null;
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
             this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
+            this.updateShouldShowSendMessageButtons = debounce(this.updateShouldShowSendMessageButtons, 100);
         },
         watch: {
             sendBroadcast: {

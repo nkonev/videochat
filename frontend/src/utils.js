@@ -21,12 +21,8 @@ export const isFireFox = () => {
   return navigator.userAgent.indexOf('Firefox') !== -1
 }
 
-export const isMobileWidth = () => {
-    return window.innerWidth < 800 // same as $mobileWidth in constants.styl
-}
-
-export const shouldShowSendMessageButtons = () => {
-    return !isMobileWidth() || isMobileBrowser()
+export const isMobileWidth = (width) => {
+    return width < 800 // same as $mobileWidth in constants.styl
 }
 
 export const hasLength = (str) => {
