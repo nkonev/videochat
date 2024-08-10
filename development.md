@@ -1,3 +1,16 @@
+# Start the development
+
+https://docs.docker.com/engine/install/fedora/#install-using-the-repository
+
+```bash
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
 # Admin's corner
 ## Troubleshooting
 * Poor quality of screen sharing - a) Disable [simulcast](https://github.com/livekit/livekit/issues/761), b) Increase its resolution
@@ -432,7 +445,7 @@ from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e2892738
 
 ## 1. exporting (not always importable)
 ```bash
-docker-compose exec keycloak bash
+docker compose exec keycloak bash
 /opt/keycloak/bin/kc.sh export --file /tmp/realm-export.json --realm my_realm2
 # don't worry about the busy port
 exit
@@ -457,7 +470,7 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484
 
 ## Start docker-compose
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 # Test in browser

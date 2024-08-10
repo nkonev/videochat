@@ -54,7 +54,7 @@ Click on image to open a screenshot gallery.
 * LDAP login integration.
 * Internationalization: English and Russian UI.
 * Firewall friendly: only two ports for WebRTC are needed (TURN, WebRTC).
-* Simple setup with docker swarm or docker-compose.
+* Simple setup with Ansible and Docker Swarm.
 * No vendor lock on cloud provider.
 * Familiar infrastructure - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX.
 * Self-contained frontend bundle without any CDN downloads - it can work in a closed network without internet access.

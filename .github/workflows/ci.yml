@@ -32,12 +32,12 @@ jobs:
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker-compose up -d postgresql redis rabbitmq jaeger
+          docker compose up -d postgresql redis rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
-          docker-compose -f docker-compose.keycloak.yml up -d keycloak
+          docker compose -f docker-compose.keycloak.yml up -d keycloak
           sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build and test with Maven
         if: env.SHOULD_RUN == 'true'
@@ -153,7 +153,7 @@ jobs:
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker-compose up -d postgresql redis rabbitmq jaeger
+          docker compose up -d postgresql redis rabbitmq jaeger
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
@@ -368,7 +368,7 @@ jobs:
       - name: Start and wait docker-compose
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker-compose up -d postgresql redis rabbitmq jaeger minio traefik
+          docker compose up -d postgresql redis rabbitmq jaeger minio traefik
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
