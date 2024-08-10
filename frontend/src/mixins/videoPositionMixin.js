@@ -7,7 +7,7 @@ export default () => {
             videoIsOnTop() {
               const stored = getStoredVideoPosition();
               if (stored == VIDEO_POSITION_AUTO) {
-                return this.isMobile()
+                return true // both mobile and desktop
               } else {
                 return getStoredVideoPosition() == VIDEO_POSITION_ON_THE_TOP;
               }
