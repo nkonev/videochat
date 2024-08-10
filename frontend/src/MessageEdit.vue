@@ -631,7 +631,7 @@
                 switch (type) { // see MessageEditSettingsModalContent
                     case 'auto':
                         const width = this.targetElement?.offsetWidth;
-                        this.chatStore.shouldShowSendMessageButtons = !isMobileWidth(width);
+                        this.chatStore.shouldShowSendMessageButtons = this.isMobile() ? true : !isMobileWidth(width);
                         break;
                     case 'full':
                         this.chatStore.shouldShowSendMessageButtons = true;
