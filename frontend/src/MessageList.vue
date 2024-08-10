@@ -149,6 +149,7 @@
           if (chatIdsAreEqual && isScrolledToBottom && emptySearchString) {
             this.addItem(dto);
             this.performMarking();
+            this.scrollDown();
           } else if (chatIdsAreEqual && isScrolledToBottom) { // not empty searchString
               axios.post(`/api/chat/${this.chatId}/message/filter`, {
                   searchString: this.searchString,
@@ -157,6 +158,7 @@
                   if (data.found) {
                       this.addItem(dto);
                       this.performMarking();
+                      this.scrollDown();
                   }
               })
           } else {
