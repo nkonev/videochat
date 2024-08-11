@@ -654,13 +654,9 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	}
 
 	errOuter = db.Transact(mc.db, func(tx *db.Tx) error {
-		responseDto, err := getChat(tx, mc.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(tx, mc.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
-		}
-		copiedChat, err := copyChatDto(c, responseDto)
-		if err != nil {
-			return c.NoContent(http.StatusInternalServerError)
 		}
 
 		message, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
@@ -683,7 +679,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutChangeChat(c.Request().Context(), copiedChat, participantIds, len(copiedChat.ParticipantIds) == 1, true, tx, areAdmins)
+			mc.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
 			shouldSendHasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatchCommon(chatId, participantIds)
 			if err != nil {
 				return err
@@ -694,10 +690,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 
 					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: null.StringFromPtr(userPrincipalDto.Avatar)}
 					var sch dto.ChatDtoWithTetATet = &simpleChat{
-						Id:        copiedChat.Id,
-						Name:      copiedChat.Name,
-						IsTetATet: copiedChat.IsTetATet,
-						Avatar:    copiedChat.Avatar,
+						Id:        chatDto.Id,
+						Name:      chatDto.Name,
+						IsTetATet: chatDto.IsTetATet,
+						Avatar:    chatDto.Avatar,
 					}
 					utils.ReplaceChatNameToLoginForTetATet(
 						sch,
@@ -713,7 +709,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
 			var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 			mc.notificator.NotifyAddMention(c.Request().Context(), reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
-			mc.notificator.NotifyAboutNewMessage(c.Request().Context(), participantIds, chatId, message, copiedChat.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutNewMessage(c.Request().Context(), participantIds, chatId, message, chatDto.RegularParticipantCanPublishMessage, areAdmins)
 			return nil
 		})
 		if err != nil {
