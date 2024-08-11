@@ -82,6 +82,7 @@ type ComplexityRoot struct {
 		CanVideoKick                        func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		IsResultFromSearch                  func(childComplexity int) int
+		LastLoginDateTime                   func(childComplexity int) int
 		LastUpdateDateTime                  func(childComplexity int) int
 		LoginColor                          func(childComplexity int) int
 		Name                                func(childComplexity int) int
@@ -586,6 +587,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDto.IsResultFromSearch(childComplexity), true
+
+	case "ChatDto.lastLoginDateTime":
+		if e.complexity.ChatDto.LastLoginDateTime == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.LastLoginDateTime(childComplexity), true
 
 	case "ChatDto.lastUpdateDateTime":
 		if e.complexity.ChatDto.LastUpdateDateTime == nil {
@@ -3672,6 +3680,47 @@ func (ec *executionContext) fieldContext_ChatDto_regularParticipantCanPublishMes
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_lastLoginDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastLoginDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_lastLoginDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
 	if err != nil {
@@ -6543,6 +6592,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(_ context.Context
 				return ec.fieldContext_ChatDto_loginColor(ctx, field)
 			case "regularParticipantCanPublishMessage":
 				return ec.fieldContext_ChatDto_regularParticipantCanPublishMessage(ctx, field)
+			case "lastLoginDateTime":
+				return ec.fieldContext_ChatDto_lastLoginDateTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -14511,6 +14562,8 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "lastLoginDateTime":
+			out.Values[i] = ec._ChatDto_lastLoginDateTime(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

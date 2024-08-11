@@ -276,6 +276,7 @@ import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
 import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@/browserNotifications.js";
 import debounce from "lodash/debounce.js";
+import {getHumanReadableDate} from "@/date.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -435,6 +436,7 @@ export default {
                         blog
                         loginColor
                         regularParticipantCanPublishMessage
+                        lastLoginDateTime
                       }
                       chatDeletedEvent {
                         id
@@ -604,12 +606,14 @@ export default {
         getSubtitle() {
             if (!!this.chatStore.moreImportantSubtitleInfo) {
                 return this.chatStore.moreImportantSubtitleInfo
+            } else if (this.chatStore.oppositeUserLastLoginDateTime) {
+                return "Last logged in at " + getHumanReadableDate(this.chatStore.oppositeUserLastLoginDateTime);
             } else {
                 return this.chatStore.chatUsersCount + " " + this.$vuetify.locale.t('$vuetify.participants')
             }
         },
         shouldShowSubtitle() {
-            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo
+            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo || this.chatStore.oppositeUserLastLoginDateTime
         },
         afterRouteInitialized() {
             return this.chatStore.fetchAvailableOauth2Providers()

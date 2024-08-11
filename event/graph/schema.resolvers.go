@@ -752,34 +752,35 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	var ret = &model.GlobalEvent{
 		EventType: e.EventType,
 	}
-	chatNotification := e.ChatNotification
-	if chatNotification != nil {
-		ret.ChatEvent = &model.ChatDto{ // dto.ChatDtoWithAdmin
-			ID:                                  chatNotification.Id,
-			Name:                                chatNotification.Name,
-			Avatar:                              chatNotification.Avatar.Ptr(),
-			AvatarBig:                           chatNotification.AvatarBig.Ptr(),
-			ShortInfo:                           chatNotification.ShortInfo.Ptr(),
-			LastUpdateDateTime:                  chatNotification.LastUpdateDateTime,
-			ParticipantIds:                      chatNotification.ParticipantIds,
-			CanEdit:                             chatNotification.CanEdit.Ptr(),
-			CanDelete:                           chatNotification.CanDelete.Ptr(),
-			CanLeave:                            chatNotification.CanLeave.Ptr(),
-			UnreadMessages:                      chatNotification.UnreadMessages,
-			CanBroadcast:                        chatNotification.CanBroadcast,
-			CanVideoKick:                        chatNotification.CanVideoKick,
-			CanAudioMute:                        chatNotification.CanAudioMute,
-			CanChangeChatAdmins:                 chatNotification.CanChangeChatAdmins,
-			TetATet:                             chatNotification.IsTetATet,
-			ParticipantsCount:                   chatNotification.ParticipantsCount,
-			Participants:                        convertParticipants(chatNotification.Participants),
-			CanResend:                           chatNotification.CanResend,
-			AvailableToSearch:                   chatNotification.AvailableToSearch,
-			IsResultFromSearch:                  chatNotification.IsResultFromSearch.Ptr(),
-			Pinned:                              chatNotification.Pinned,
-			Blog:                                chatNotification.Blog,
-			LoginColor:                          chatNotification.LoginColor.Ptr(),
-			RegularParticipantCanPublishMessage: chatNotification.RegularParticipantCanPublishMessage,
+	chatEvent := e.ChatNotification
+	if chatEvent != nil {
+		ret.ChatEvent = &model.ChatDto{
+			ID:                                  chatEvent.Id,
+			Name:                                chatEvent.Name,
+			Avatar:                              chatEvent.Avatar.Ptr(),
+			AvatarBig:                           chatEvent.AvatarBig.Ptr(),
+			ShortInfo:                           chatEvent.ShortInfo.Ptr(),
+			LastUpdateDateTime:                  chatEvent.LastUpdateDateTime,
+			ParticipantIds:                      chatEvent.ParticipantIds,
+			CanEdit:                             chatEvent.CanEdit.Ptr(),
+			CanDelete:                           chatEvent.CanDelete.Ptr(),
+			CanLeave:                            chatEvent.CanLeave.Ptr(),
+			UnreadMessages:                      chatEvent.UnreadMessages,
+			CanBroadcast:                        chatEvent.CanBroadcast,
+			CanVideoKick:                        chatEvent.CanVideoKick,
+			CanAudioMute:                        chatEvent.CanAudioMute,
+			CanChangeChatAdmins:                 chatEvent.CanChangeChatAdmins,
+			TetATet:                             chatEvent.IsTetATet,
+			ParticipantsCount:                   chatEvent.ParticipantsCount,
+			Participants:                        convertParticipants(chatEvent.Participants),
+			CanResend:                           chatEvent.CanResend,
+			AvailableToSearch:                   chatEvent.AvailableToSearch,
+			IsResultFromSearch:                  chatEvent.IsResultFromSearch.Ptr(),
+			Pinned:                              chatEvent.Pinned,
+			Blog:                                chatEvent.Blog,
+			LoginColor:                          chatEvent.LoginColor.Ptr(),
+			RegularParticipantCanPublishMessage: chatEvent.RegularParticipantCanPublishMessage,
+			LastLoginDateTime:                   chatEvent.LastLoginDateTime.Ptr(),
 		}
 	}
 

@@ -196,9 +196,6 @@ func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participan
 			chatDto.SetShortInfo(participant.ShortInfo)
 			chatDto.SetLoginColor(participant.LoginColor)
 		}
-		if participant.Id != behalfParticipantId && !isSingleParticipant {
-			chatDto.SetLastLoginDateTime(participant.LastLoginDateTime)
-		}
 	}
 }
 

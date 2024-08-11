@@ -54,6 +54,7 @@ type ChatDto struct {
 	Blog                                bool           `json:"blog"`
 	LoginColor                          *string        `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool           `json:"regularParticipantCanPublishMessage"`
+	LastLoginDateTime                   *time.Time     `json:"lastLoginDateTime"`
 }
 
 type ChatEvent struct {

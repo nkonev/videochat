@@ -434,9 +434,32 @@ func getChat(
 
 	chatDto := convertToDto(cc, users, unreadMessages, isParticipant)
 
-	// indeed it's possible to do w/o loop
-	for _, participant := range users {
-		utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId, len(cc.ParticipantsIds) == 1)
+	if chatDto.IsTetATet {
+		for _, participant := range users {
+
+			isSingleParticipant := len(cc.ParticipantsIds) == 1
+
+			utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId, isSingleParticipant)
+
+			// leave LastLoginDateTime not null only if the opposite user isn't online
+			if participant.Id != behalfParticipantId {
+				if participant.Id != behalfParticipantId && !isSingleParticipant {
+					chatDto.SetLastLoginDateTime(participant.LastLoginDateTime)
+				}
+
+				onlines, err := restClient.GetOnlines(c.Request().Context(), []int64{participant.Id}) // get online for opposite user
+				if err != nil {
+					GetLogEntry(c.Request().Context()).Errorf("Unable to get online for the opposite user %v: %v", participant.Id, err)
+					// nothing
+				} else {
+					if len(onlines) == 1 {
+						if onlines[0].Online { // if the opposite user is online we don't need to show last login
+							chatDto.SetLastLoginDateTime(null.TimeFromPtr(nil))
+						}
+					}
+				}
+			}
+		}
 	}
 
 	return chatDto, nil

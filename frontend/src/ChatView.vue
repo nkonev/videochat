@@ -193,6 +193,9 @@ export default {
         } else {
             this.chatStore.showGoToBlogButton = null;
         }
+        if (data.tetATet && data.participantsCount == 2) {
+            this.chatStore.oppositeUserLastLoginDateTime = data.lastLoginDateTime;
+        }
     },
     fetchPromotedMessage(chatId) {
       axios.get(`/api/chat/${chatId}/message/pin/promoted`).then((response) => {
@@ -543,6 +546,8 @@ export default {
       this.chatStore.showGoToBlogButton = null;
 
       this.chatStore.chatUsersCount = 0;
+
+      this.chatStore.oppositeUserLastLoginDateTime = null;
 
       this.chatStore.showCallManagement = false;
     },

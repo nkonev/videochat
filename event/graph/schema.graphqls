@@ -86,6 +86,7 @@ type ChatDto {
     blog:                Boolean!
     loginColor:          String
     regularParticipantCanPublishMessage: Boolean!
+    lastLoginDateTime: Time
 }
 
 type ChatDeletedDto {
