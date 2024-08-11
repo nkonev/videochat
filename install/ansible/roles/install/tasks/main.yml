@@ -55,7 +55,7 @@
 
 - name: Install docker proxy
   when: docker_proxy is defined
-  ansible.builtin.copy:
+  template:
     src: templates/daemon.json.j2
     dest: /etc/docker/daemon.json
   notify: Reload docker
@@ -135,8 +135,8 @@
     - videochat
 
 - name: Create Egress config
-  ansible.builtin.copy:
-    src: files/egress.yaml
+  template:
+    src: templates/egress.yaml.j2
     dest: "{{ dir_prefix }}/egress/config.yaml"
   tags:
     - videochat

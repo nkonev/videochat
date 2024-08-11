@@ -36,6 +36,8 @@ services:
       - VIDEO_REDIS.DB=4
       - VIDEO_ONLYROLEADMINRECORDING={{ video_only_role_admin_can_record }}
       - VIDEO_OTLP.ENDPOINT=jaeger:4317
+      - VIDEO_LIVEKIT.API.KEY={{ livekit_api_key }}
+      - VIDEO_LIVEKIT.API.SECRET={{ livekit_api_secret }}
 
     logging:
       driver: "journald"

@@ -23,7 +23,7 @@ room:
 #        - mime: video/h264
     # limit number of participants that can be in a room, 0 for no limit
     # here several connections behalf the same user are considered as the different participants from Livekit's POV, see GetTokenHandler
-    max_participants: {{ video_max_participants_per_room }}
+    max_participants: {{ livekit_max_participants_per_room }}
 
 turn:
     enabled: true
@@ -35,12 +35,12 @@ redis:
     password: ""
     db: 2
 keys:
-    APIznJxWShGW3Kt: KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA
+    {{ livekit_api_key }}: {{ livekit_api_secret }}
 logging:
   json: false
   level: info
 
 webhook:
-  api_key: 'APIznJxWShGW3Kt'
+  api_key: '{{ livekit_api_key }}'
   urls:
     - 'http://video:1237/internal/livekit-webhook'
