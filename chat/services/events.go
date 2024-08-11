@@ -37,20 +37,20 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatDtoWithAdmin, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatDto, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDtoWithAdmin, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDto, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDtoWithAdmin, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDto, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
 func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, userIds []int64, tx *db.Tx) {
-	chatDto := dto.ChatDtoWithAdmin{
+	chatDto := dto.ChatDto{
 		BaseChatDto: dto.BaseChatDto{
 			Id: chatId,
 		},
@@ -61,7 +61,7 @@ func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, user
 /**
  * isSingleParticipant should be taken from responseDto or count. using len(participants) where participants are a portion from Iterate...() is incorrect because we can get only one user in the last iteration
  */
-func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDtoWithAdmin, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDto, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	GetLogEntry(ctx).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
@@ -93,7 +93,7 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 		}
 
 		for _, participantId := range userIds {
-			var copied *dto.ChatDtoWithAdmin = &dto.ChatDtoWithAdmin{}
+			var copied *dto.ChatDto = &dto.ChatDto{}
 			if err := deepcopy.Copy(copied, newChatDto); err != nil {
 				GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
 				continue
@@ -105,7 +105,7 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 			copied.Pinned = isChatPinnedMap[participantId]
 
 			for _, participant := range copied.Participants {
-				utils.ReplaceChatNameToLoginForTetATet(copied, &participant.User, participantId, isSingleParticipant)
+				utils.ReplaceChatNameToLoginForTetATet(copied, participant, participantId, isSingleParticipant)
 			}
 
 			err = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{

@@ -658,7 +658,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := copyChatDto(c, responseDto)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -703,7 +703,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 						sch,
 						&meAsUser,
 						participantId,
-						false,
+						false, // because participantId != userPrincipalDto.UserId above
 					)
 					mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), true, participantId, chatId, sch.GetName(), sch.GetAvatar(), message.Id, messageTextWithoutTags, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 				}

@@ -425,7 +425,6 @@ export default {
                           id
                           login
                           avatar
-                          admin
                           shortInfo
                           loginColor
                         }

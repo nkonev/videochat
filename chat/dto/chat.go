@@ -30,6 +30,7 @@ type BaseChatDto struct {
 	Blog                         bool        `json:"blog"`
 	LoginColor                          null.String `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool `json:"regularParticipantCanPublishMessage"`
+	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -65,6 +66,7 @@ type ChatDtoWithTetATet interface {
 	SetAvatar(s null.String)
 	SetShortInfo(s null.String)
 	SetLoginColor(s null.String)
+	SetLastLoginDateTime(t null.Time)
 }
 
 func (r *ChatDto) GetId() int64 {
@@ -115,10 +117,8 @@ func (r *BaseChatDto) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-// copied view for GET /chat/:id
-type ChatDtoWithAdmin struct {
-	BaseChatDto
-	Participants []*UserWithAdmin `json:"participants"`
+func (r *BaseChatDto) SetLastLoginDateTime(t null.Time) {
+	r.LastLoginDateTime = t
 }
 
 type ChatName struct {

@@ -45,9 +45,9 @@ type BrowserNotification struct {
 
 type GlobalUserEvent struct {
 	EventType                     string                    `json:"eventType"`
-	UserId                        int64                     `json:"userId"`
-	ChatNotification              *ChatDtoWithAdmin         `json:"chatNotification"`
-	ChatDeletedDto                *ChatDeletedDto           `json:"chatDeletedNotification"`
+	UserId                        int64                    `json:"userId"`
+	ChatNotification              *ChatDto `json:"chatNotification"`
+	ChatDeletedDto                *ChatDeletedDto          `json:"chatDeletedNotification"`
 	CoChattedParticipantNotification       *User            `json:"coChattedParticipantNotification"`
 	UnreadMessagesNotification    *ChatUnreadMessageChanged `json:"unreadMessagesNotification"`
 	AllUnreadMessagesNotification *AllUnreadMessages        `json:"allUnreadMessagesNotification"`

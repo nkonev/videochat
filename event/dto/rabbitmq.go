@@ -93,7 +93,7 @@ type GlobalUserEvent struct {
 	TraceString                   string  `json:"-"`
 	EventType                     string                        `json:"eventType"`
 	UserId                        int64                         `json:"userId"`
-	ChatNotification              *ChatDtoWithAdmin             `json:"chatNotification"`
+	ChatNotification              *ChatDto                      `json:"chatNotification"`
 	ChatDeletedDto                *ChatDeletedDto               `json:"chatDeletedNotification"`
 	CoChattedParticipantNotification       *User                `json:"coChattedParticipantNotification"`
 	VideoCallUserCountEvent       *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`

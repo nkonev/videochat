@@ -84,14 +84,14 @@ public class UserProfileService {
      * @return current logged in profile
      */
     @Transactional
-    public UserSelfProfileDTO checkAuthenticated(UserAccountDetailsDTO userAccount, HttpSession session) {
+    public UserSelfProfileDTO getProfile(UserAccountDetailsDTO userAccount, HttpSession session) {
         return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastLoginDateTime(), getExpiresAt(session));
     }
 
     @Transactional
     public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session) {
         Long expiresAt = getExpiresAt(session);
-        var dto = checkAuthenticated(userAccount, session);
+        var dto = getProfile(userAccount, session);
         HttpHeaders headers = new HttpHeaders();
         headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
         headers.set(X_AUTH_USER_ID, ""+userAccount.getId());

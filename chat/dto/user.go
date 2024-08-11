@@ -8,6 +8,7 @@ type User struct {
 	Avatar     null.String `json:"avatar"`
 	ShortInfo  null.String `json:"shortInfo"`
 	LoginColor null.String `json:"loginColor"`
+	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
 }
 
 type UserAccountEventGroup struct {

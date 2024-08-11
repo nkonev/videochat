@@ -29,31 +29,31 @@ type ChatDeletedDto struct {
 }
 
 type ChatDto struct {
-	ID                                  int64                   `json:"id"`
-	Name                                string                  `json:"name"`
-	Avatar                              *string                 `json:"avatar"`
-	AvatarBig                           *string                 `json:"avatarBig"`
-	ShortInfo                           *string                 `json:"shortInfo"`
-	LastUpdateDateTime                  time.Time               `json:"lastUpdateDateTime"`
-	ParticipantIds                      []int64                 `json:"participantIds"`
-	CanEdit                             *bool                   `json:"canEdit"`
-	CanDelete                           *bool                   `json:"canDelete"`
-	CanLeave                            *bool                   `json:"canLeave"`
-	UnreadMessages                      int64                   `json:"unreadMessages"`
-	CanBroadcast                        bool                    `json:"canBroadcast"`
-	CanVideoKick                        bool                    `json:"canVideoKick"`
-	CanChangeChatAdmins                 bool                    `json:"canChangeChatAdmins"`
-	TetATet                             bool                    `json:"tetATet"`
-	CanAudioMute                        bool                    `json:"canAudioMute"`
-	Participants                        []*ParticipantWithAdmin `json:"participants"`
-	ParticipantsCount                   int                     `json:"participantsCount"`
-	CanResend                           bool                    `json:"canResend"`
-	AvailableToSearch                   bool                    `json:"availableToSearch"`
-	IsResultFromSearch                  *bool                   `json:"isResultFromSearch"`
-	Pinned                              bool                    `json:"pinned"`
-	Blog                                bool                    `json:"blog"`
-	LoginColor                          *string                 `json:"loginColor"`
-	RegularParticipantCanPublishMessage bool                    `json:"regularParticipantCanPublishMessage"`
+	ID                                  int64          `json:"id"`
+	Name                                string         `json:"name"`
+	Avatar                              *string        `json:"avatar"`
+	AvatarBig                           *string        `json:"avatarBig"`
+	ShortInfo                           *string        `json:"shortInfo"`
+	LastUpdateDateTime                  time.Time      `json:"lastUpdateDateTime"`
+	ParticipantIds                      []int64        `json:"participantIds"`
+	CanEdit                             *bool          `json:"canEdit"`
+	CanDelete                           *bool          `json:"canDelete"`
+	CanLeave                            *bool          `json:"canLeave"`
+	UnreadMessages                      int64          `json:"unreadMessages"`
+	CanBroadcast                        bool           `json:"canBroadcast"`
+	CanVideoKick                        bool           `json:"canVideoKick"`
+	CanChangeChatAdmins                 bool           `json:"canChangeChatAdmins"`
+	TetATet                             bool           `json:"tetATet"`
+	CanAudioMute                        bool           `json:"canAudioMute"`
+	Participants                        []*Participant `json:"participants"`
+	ParticipantsCount                   int            `json:"participantsCount"`
+	CanResend                           bool           `json:"canResend"`
+	AvailableToSearch                   bool           `json:"availableToSearch"`
+	IsResultFromSearch                  *bool          `json:"isResultFromSearch"`
+	Pinned                              bool           `json:"pinned"`
+	Blog                                bool           `json:"blog"`
+	LoginColor                          *string        `json:"loginColor"`
+	RegularParticipantCanPublishMessage bool           `json:"regularParticipantCanPublishMessage"`
 }
 
 type ChatEvent struct {

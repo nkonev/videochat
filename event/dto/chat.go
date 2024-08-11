@@ -41,12 +41,6 @@ type ChatDto struct {
 	Participants []*User `json:"participants"`
 }
 
-// copied view for GET /chat/:id
-type ChatDtoWithAdmin struct {
-	BaseChatDto
-	Participants []*UserWithAdmin `json:"participants"`
-}
-
 type ChatUnreadMessageChanged struct {
 	ChatId             int64     `json:"chatId"`
 	UnreadMessages     int64     `json:"unreadMessages"`

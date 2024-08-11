@@ -77,7 +77,7 @@ type ChatDto {
     canChangeChatAdmins: Boolean!
     tetATet:             Boolean!
     canAudioMute:        Boolean!
-    participants:             [ParticipantWithAdmin!]!
+    participants:             [Participant!]!
     participantsCount:        Int!
     canResend:           Boolean!
     availableToSearch:   Boolean!

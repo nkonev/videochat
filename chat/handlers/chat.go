@@ -450,8 +450,8 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	participantsPage := utils.FixPage(0)
-	participantsSize := utils.FixSize(0)
+	participantsPage := utils.DefaultPage
+	participantsSize := utils.DefaultSize
 	participantsOffset := utils.GetOffset(participantsPage, participantsSize)
 
 	chatId, err := GetPathParamAsInt64(c, "id")
@@ -473,7 +473,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 				return c.NoContent(http.StatusNoContent)
 			}
 		} else {
-			copiedChat, err := getChatWithAdminedUsers(c, chat, ch.db)
+			copiedChat, err := copyChatDto(c, chat)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
@@ -484,30 +484,14 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func getChatWithAdminedUsers(c echo.Context, chat *dto.ChatDto, commonDbOperations db.CommonOperations) (*dto.ChatDtoWithAdmin, error) {
-	var copiedChat = &dto.ChatDtoWithAdmin{}
+func copyChatDto(c echo.Context, chat *dto.ChatDto) (*dto.ChatDto, error) {
+	var copiedChat = &dto.ChatDto{}
 	err := deepcopy.Copy(copiedChat, chat)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy chat: %s", err)
 		return nil, err
 	}
 
-	var adminedUsers []*dto.UserWithAdmin
-	for _, participant := range copiedChat.Participants {
-		var copied = &dto.UserWithAdmin{}
-		if err := deepcopy.Copy(copied, participant); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("error during performing deep copy user: %s", err)
-		} else {
-			if admin, err := commonDbOperations.IsAdmin(participant.Id, copiedChat.Id); err != nil {
-				GetLogEntry(c.Request().Context()).Warnf("Unable to get IsAdmin for user %v in chat %v from db", participant.Id, copiedChat.Id)
-			} else {
-				copied.Admin = admin
-			}
-
-			adminedUsers = append(adminedUsers, copied)
-		}
-	}
-	copiedChat.Participants = adminedUsers
 	return copiedChat, nil
 }
 
@@ -610,7 +594,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := copyChatDto(c, responseDto)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -751,7 +735,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := copyChatDto(c, responseDto)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -812,7 +796,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 		if responseDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0); err != nil {
 			return err
 		} else {
-			copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+			copiedChat, err := copyChatDto(c, responseDto)
 			if err != nil {
 				return c.NoContent(http.StatusInternalServerError)
 			}
@@ -889,7 +873,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := copyChatDto(c, responseDto)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -987,7 +971,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := copyChatDto(c, tmpDto)
 		if err != nil {
 			return err
 		}
@@ -1039,7 +1023,7 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := copyChatDto(c, tmpDto)
 		if err != nil {
 			return err
 		}
@@ -1092,7 +1076,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := copyChatDto(c, tmpDto)
 		if err != nil {
 			return err
 		}
@@ -1228,7 +1212,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, tmpDto, tx)
+		copiedChat, err := copyChatDto(c, tmpDto)
 		if err != nil {
 			return err
 		}
@@ -1694,7 +1678,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		copiedChat, err := getChatWithAdminedUsers(c, responseDto, tx)
+		copiedChat, err := copyChatDto(c, responseDto)
 		if err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -1826,6 +1810,7 @@ type simpleChat struct {
 	Avatar    null.String
 	ShortInfo null.String
 	LoginColor null.String
+	LastLoginDateTime null.Time
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -1858,6 +1843,10 @@ func (r *simpleChat) SetLoginColor(s null.String) {
 
 func (r *simpleChat) GetIsTetATet() bool {
 	return r.IsTetATet
+}
+
+func (r *simpleChat) SetLastLoginDateTime(t null.Time) {
+	r.LastLoginDateTime = t
 }
 
 func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {

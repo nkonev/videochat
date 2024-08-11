@@ -41,9 +41,9 @@ public class UserProfileController {
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public name.nkonev.aaa.dto.UserSelfProfileDTO checkAuthenticated(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+    public name.nkonev.aaa.dto.UserSelfProfileDTO getProfile(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting external user profile");
-        return userProfileService.checkAuthenticated(userAccount, session);
+        return userProfileService.getProfile(userAccount, session);
     }
 
     @ResponseBody
