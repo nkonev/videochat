@@ -607,7 +607,7 @@ export default {
             if (!!this.chatStore.moreImportantSubtitleInfo) {
                 return this.chatStore.moreImportantSubtitleInfo
             } else if (this.chatStore.oppositeUserLastLoginDateTime) {
-                return "Last logged in at " + getHumanReadableDate(this.chatStore.oppositeUserLastLoginDateTime);
+                return this.$vuetify.locale.t('$vuetify.last_logged_in_at', getHumanReadableDate(this.chatStore.oppositeUserLastLoginDateTime));
             } else {
                 return this.chatStore.chatUsersCount + " " + this.$vuetify.locale.t('$vuetify.participants')
             }

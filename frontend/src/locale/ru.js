@@ -301,5 +301,6 @@ export default {
     video_successfully_reconnected: "Успешно передпоключились к серверу",
     send_message_after_media_insert: "Отправить сообщение",
     send_message_after_media_insert_description: "Отправить сообщение после вставки медиа",
-    open_in_new_tab: "Открыть в новой вкладке"
+    open_in_new_tab: "Открыть в новой вкладке",
+    last_logged_in_at: "Послений раз заходил в {0}"
 }

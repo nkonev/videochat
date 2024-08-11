@@ -301,5 +301,6 @@ export default {
     video_successfully_reconnected: "Successfully reconnected to video server",
     send_message_after_media_insert: "Send the message",
     send_message_after_media_insert_description: "Send the message after media insert",
-    open_in_new_tab: "Open in the new tab"
+    open_in_new_tab: "Open in the new tab",
+    last_logged_in_at: "Last logged in at {0}"
 }
