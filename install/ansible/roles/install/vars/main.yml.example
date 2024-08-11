@@ -25,3 +25,4 @@ storage_limits_enabled: "false"
 storage_all_user_limit: "536870912" # 512Mb
 video_only_role_admin_can_record: "false"
 github_actions_ssh_public_key: "ssh-rsa AAABBBCCC..."
+video_max_participants_per_room: "100"

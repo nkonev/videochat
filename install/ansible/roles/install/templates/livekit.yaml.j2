@@ -17,10 +17,13 @@ rtc:
         # in order to allow others to stream smoothly. You can disable this behavior here
         allow_pause: true
 
-#room:
+room:
 #    enabled_codecs:
 #        - mime: audio/opus
 #        - mime: video/h264
+    # limit number of participants that can be in a room, 0 for no limit
+    # here several connections behalf the same user are considered as the different participants from Livekit's POV, see GetTokenHandler
+    max_participants: {{ video_max_participants_per_room }}
 
 turn:
     enabled: true
