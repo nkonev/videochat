@@ -380,6 +380,15 @@ export default {
   line-height: $lineHeight;
 }
 
+
+@media screen and (max-width: $mobileWidth) {
+    .richText {
+        border-top-width 0
+        border-left-width 0
+        border-right-width 0
+    }
+}
+
 .richText__content {
   padding: 6px 6px;
   flex: 1 1 auto;
