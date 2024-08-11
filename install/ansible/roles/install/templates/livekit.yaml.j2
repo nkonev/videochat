@@ -11,6 +11,11 @@ rtc:
     #port_range_end: 35400
     #force_tcp: true
     allow_tcp_fallback: false
+    congestion_control:
+        enabled: true
+        # in the unlikely event of highly congested networks, SFU may choose to pause some tracks
+        # in order to allow others to stream smoothly. You can disable this behavior here
+        allow_pause: true
 
 #room:
 #    enabled_codecs:
