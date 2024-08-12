@@ -12,7 +12,7 @@
             @sendMessage="sendMessageToChat"
         />
 
-        <div class="d-flex flex-wrap flex-row dashed-borders align-center" v-if="chatStore.shouldShowSendMessageButtons">
+        <div class="d-flex flex-wrap flex-row align-center" v-if="chatStore.shouldShowSendMessageButtons">
           <v-slide-group
               multiple
               show-arrows
@@ -759,21 +759,6 @@
     background white
     min-height 25%
     height 100%
-}
-
-.dashed-borders {
-    border-top-width: 0
-    border-bottom-width 0
-    border-left-style dashed
-    border-right-style dashed
-    border-width 1px
-    border-color: $borderColor
-}
-
-@media screen and (max-width: $mobileWidth) {
-    .dashed-borders {
-        border-width: 0
-    }
 }
 
 .custom-toolbar-send {
