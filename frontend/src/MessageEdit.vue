@@ -1,6 +1,6 @@
 <template>
     <v-container class="ma-0 pa-0" style="height: 100%" fluid>
-      <v-container id="sendButtonContainer" :class="sendButtonContainerClass" fluid>
+      <v-container id="sendButtonContainer" class="py-0 px-0 d-flex flex-column" fluid>
         <div class="answer-wrapper" v-if="showAnswer">
             <div class="answer-text"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
         </div>
@@ -665,13 +665,6 @@
         },
         computed: {
           ...mapStores(useChatStore),
-          sendButtonContainerClass() {
-              let ret = ['py-0', 'px-0', 'd-flex', 'flex-column'];
-              if (!this.isMobile()) {
-                  ret.push('pr-1')
-              }
-              return ret
-          }
         },
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);

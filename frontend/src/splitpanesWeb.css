@@ -85,7 +85,10 @@
 .default-theme.splitpanes--vertical > .splitpanes__splitter, .default-theme .splitpanes--vertical > .splitpanes__splitter {
     width: 7px;
     border-left: 1px solid #eee;
-    margin-left: -1px
+    margin-left: -1px;
+    /* added */
+    border-right: 1px solid #eee;
+    margin-right: 1px;
 }
 
 .default-theme.splitpanes--vertical > .splitpanes__splitter:before, .default-theme.splitpanes--vertical > .splitpanes__splitter:after, .default-theme .splitpanes--vertical > .splitpanes__splitter:before, .default-theme .splitpanes--vertical > .splitpanes__splitter:after {
@@ -105,7 +108,9 @@
 .default-theme.splitpanes--horizontal > .splitpanes__splitter, .default-theme .splitpanes--horizontal > .splitpanes__splitter {
     height: 7px;
     border-top: 1px solid #eee;
-    margin-top: -1px
+    margin-top: -1px;
+    /* added */
+    border-bottom: 1px solid #eee;
 }
 
 .default-theme.splitpanes--horizontal > .splitpanes__splitter:before, .default-theme.splitpanes--horizontal > .splitpanes__splitter:after, .default-theme .splitpanes--horizontal > .splitpanes__splitter:before, .default-theme .splitpanes--horizontal > .splitpanes__splitter:after {

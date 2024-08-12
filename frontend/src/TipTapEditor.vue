@@ -373,20 +373,11 @@ export default {
   flex-direction: column;
   color: #0d0d0d;
   background-color: #fff;
-  border: 1px dashed #0D0D0D;
+  border-bottom: 1px solid;
   height: 100%;
   overflow-y: auto;
   border-color: $borderColor;
   line-height: $lineHeight;
-}
-
-
-@media screen and (max-width: $mobileWidth) {
-    .richText {
-        border-top-width 0
-        border-left-width 0
-        border-right-width 0
-    }
 }
 
 .richText__content {
