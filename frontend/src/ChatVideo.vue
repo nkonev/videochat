@@ -1,6 +1,12 @@
 <template>
-  <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'">
-  </v-col>
+    <splitpanes :dbl-click-splitter="false">
+        <pane size="80">
+            <div>With presenter</div>
+        </pane>
+        <pane>
+            <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'"></v-col>
+        </pane>
+    </splitpanes>
 </template>
 
 <script>
@@ -40,6 +46,7 @@ import {mapStores} from "pinia";
 import {goToPreservingQuery} from "@/mixins/searchString";
 import pinia from "@/store/index";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
+import { Splitpanes, Pane } from 'splitpanes';
 
 const first = 'first';
 const second = 'second';
@@ -524,6 +531,10 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
+  },
+  components: {
+      Splitpanes,
+      Pane,
   },
   async mounted() {
     this.chatStore.setCallStateInCall();
