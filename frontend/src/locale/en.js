@@ -52,6 +52,7 @@ export default {
     invalid_email: "Invalid email",
     participants: "participants",
     message_edit_placeholder: "Press Ctrl + Enter to send, Esc to clear. You also can drag and drop an image's file on this label. Also you can paste an image from the editor.",
+    message_edit_placeholder_short: "Write a message...",
     message_editing: "Editing message",
     message_creating: "New message",
     message_broadcast: "Broadcast",
@@ -153,7 +154,6 @@ export default {
     no_notifications: "You don't have notifications",
     search_in_chats: "Search by chats",
     search_in_messages: "Search by messages",
-    video_is_not_shown: "If you don't see the participant's a) try to reload tab b) use Firefox >= 115",
     link: "Link",
     participants_not_found: "Participants are not found",
     search_by_participants: "Search by participants",
@@ -184,9 +184,6 @@ export default {
     short_info: "Short info",
     change_short_info: "Change short info",
     video_position: "Video position",
-    video_position_on_the_top: "Top",
-    video_position_side: "Side",
-    video_position_auto: "Auto",
     copy_video_call_link: "Copy video call link",
     blog: "Blog",
     blogs: "Blogs",
@@ -299,7 +296,6 @@ export default {
     new_message_notifications_in_browser: "New message notification in-browser",
     call_notifications_in_browser: "Call notification in-browser",
     remove_sessions: "Remove sessions",
-    video_position_changed_apply: "To take an effect you need to re-enter into the call",
     video_successfully_reconnected: "Successfully reconnected to video server",
     send_message_after_media_insert: "Send the message",
     send_message_after_media_insert_description: "Send the message after media insert",
@@ -323,5 +319,8 @@ export default {
     object_storage: "S3 storage",
     queue_broker: "Queue broker",
     database: "Database",
-    set_password: "Set password"
+    set_password: "Set password",
+    video_presenter_enable: "Enable presenter",
+    close_video: "Close video",
+    video_presenter_disable: "Disable presenter"
 }

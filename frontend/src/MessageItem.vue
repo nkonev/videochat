@@ -7,11 +7,10 @@
         </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex list-item-head">
-                <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)">{{getOwner(item.owner)}}</a>
-                <span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
-                <router-link v-if="!isInBlog" class="gray-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')"><span class="mr-1">{{getDate(item)}}</span></router-link>
-                <span class="mr-1" v-else>{{getDate(item)}}</span>
-                <span v-if="!isMobile() && !isInBlog" class="ma-0 pa-0 message-quick-buttons">
+                <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)" :title="getDate(item)">{{getOwner(item.owner)}}</a>
+                <span class="with-space" v-if="!isCompact"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
+                <router-link v-if="!isCompact" class="gray-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')"><span class="mr-1">{{getDate(item)}}</span></router-link>
+                <span v-if="!isMobile() && !isCompact" class="ma-0 pa-0 message-quick-buttons">
                     <v-icon class="mx-1" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" :title="$vuetify.locale.t('$vuetify.attached_message_files')">mdi-file-download</v-icon>
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
@@ -57,7 +56,7 @@
     import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
 
     export default {
-        props: ['id', 'item', 'chatId', 'my', 'highlight', 'isInBlog'],
+        props: ['id', 'item', 'chatId', 'my', 'highlight', 'isCompact'],
         methods: {
             getLoginColoredStyle,
             hasLength,
@@ -68,12 +67,8 @@
                 return profile + "/" + item.owner?.id;
             },
             onProfileClick(item) {
-                if (this.isInBlog) {
-                    window.location.href = this.getOwnerLink(item);
-                } else {
-                    const route = this.getOwnerRoute(item);
-                    this.$router.push(route);
-                }
+                const route = this.getOwnerRoute(item);
+                this.$router.push(route);
             },
             onMessageClick(event, dto) {
                 if (this.isMobile()) {
@@ -87,9 +82,7 @@
             // we cannot move it from front to back because there are messages-over-websocket
             // and itsn't clear did user read them or not
             sendRead(dto) {
-              if (!this.isInBlog) {
-                axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
-              }
+              axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)
             },
             deleteMessage(dto){
                 this.$emit('deleteMessage', dto)

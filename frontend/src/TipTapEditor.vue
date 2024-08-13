@@ -262,7 +262,7 @@ export default {
                   if (this.chatStore.shouldShowSendMessageButtons) {
                       return this.$vuetify.locale.t('$vuetify.message_edit_placeholder')
                   } else {
-                      return null
+                    return this.$vuetify.locale.t('$vuetify.message_edit_placeholder_short')
                   }
               },
           }),

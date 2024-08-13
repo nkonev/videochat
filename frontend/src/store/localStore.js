@@ -171,17 +171,17 @@ export const removeStoredChatEditMessageDto = (chatId) => {
     localStorage.removeItem(KEY_CHAT_EDIT_MESSAGE_DTO + '_' + chatId);
 }
 
-export const VIDEO_POSITION_AUTO = 'auto';
-export const VIDEO_POSITION_TOP = 'top'; // as usual
-export const VIDEO_POSITION_SIDE = 'side'; // new
+export const VIDEO_POSITION_HORIZONTAL = 'horizontal'; // as usual
+export const VIDEO_POSITION_VERTICAL = 'vertical'; // new
+export const VIDEO_POSITION_GALLERY = 'gallery';
 
 export const KEY_VIDEO_POSITION = 'videoPosition';
 
 export const getStoredVideoPosition = () => {
     let v = JSON.parse(localStorage.getItem(KEY_VIDEO_POSITION));
     if (v === null) {
-        console.log("Resetting videoPosition to default");
-        setStoredVideoPosition(VIDEO_POSITION_AUTO);
+        console.log("Resetting videoPosition to default", VIDEO_POSITION_HORIZONTAL);
+        setStoredVideoPosition(VIDEO_POSITION_HORIZONTAL);
         v = JSON.parse(localStorage.getItem(KEY_VIDEO_POSITION));
     }
     return v;
@@ -190,6 +190,28 @@ export const getStoredVideoPosition = () => {
 export const setStoredVideoPosition = (v) => {
     localStorage.setItem(KEY_VIDEO_POSITION, JSON.stringify(v));
 }
+
+export const positionItems = () => {
+    return [VIDEO_POSITION_HORIZONTAL, VIDEO_POSITION_VERTICAL, VIDEO_POSITION_GALLERY]
+}
+
+
+export const KEY_PRESENTER = 'presenter';
+
+export const getStoredPresenter = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_PRESENTER));
+    if (v === null) {
+        console.log("Resetting presenter to default");
+        setStoredPresenter(true);
+        v = JSON.parse(localStorage.getItem(KEY_PRESENTER));
+    }
+    return v;
+}
+
+export const setStoredPresenter = (v) => {
+    localStorage.setItem(KEY_PRESENTER, JSON.stringify(v));
+}
+
 
 export const NULL_CODEC = 'null';
 
@@ -250,20 +272,6 @@ export const removeTopChatPosition = () => {
     localStorage.removeItem(KEY_TOP_CHAT);
 }
 
-
-const KEY_TOP_BLOG = "topBlog"
-
-export const setTopBlogPosition = (userId) => {
-    localStorage.setItem(KEY_TOP_BLOG, JSON.stringify(userId));
-}
-
-export const getTopBlogPosition = () => {
-    return JSON.parse(localStorage.getItem(KEY_TOP_BLOG));
-}
-
-export const removeTopBlogPosition = () => {
-    localStorage.removeItem(KEY_TOP_BLOG);
-}
 
 export const KEY_MESSAGE_EDIT_NORMALIZE_TEXT = 'messageEditNormalizeText';
 

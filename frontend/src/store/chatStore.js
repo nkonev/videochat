@@ -57,8 +57,9 @@ export const useChatStore = defineStore('chat', {
         initializingStaringVideoRecord: false,
         initializingStoppingVideoRecord: false,
         canShowMicrophoneButton: false,
-        showMicrophoneOnButton: false,
-        showMicrophoneOffButton: false,
+        localMicrophoneEnabled: false, // current state - enabled or not
+        canShowVideoButton: false,
+        localVideoEnabled: false, // current state - enabled or not
         leavingVideoAcceptableParam: false,
         initializingVideoCall: false,
         isEditingBigText: false,
@@ -70,6 +71,9 @@ export const useChatStore = defineStore('chat', {
         oppositeUserLastLoginDateTime: null,
         correlationId: null,
         videoTokenId: null,
+        compactMessages: false,
+        videoPosition: null,
+        presenterEnabled: false,
     }
   },
   actions: {

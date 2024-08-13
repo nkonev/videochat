@@ -52,6 +52,7 @@ export default {
     invalid_email: "Некорректный email",
     participants: "участника(ов)",
     message_edit_placeholder: "Нажмите Ctrl + Enter для отправки сообщения, Esc для очистки. Также можно перетащить файл картинки на эту надпись. Также можно вставить скопированное изображение из редактора.",
+    message_edit_placeholder_short: "Напишите сообщение...",
     message_editing: "Редактирование сообщения",
     message_creating: "Новое сообщение",
     message_broadcast: "Показать всем",
@@ -153,7 +154,6 @@ export default {
     no_notifications: "У вас нет уведомлений",
     search_in_chats: "Поиск по чатам",
     search_in_messages: "Поиск по сообщениям",
-    video_is_not_shown: "Если вы не видите видео участника a) попробуйте перезагрузить вкладку b) используйте Firefox >= 115",
     link: "Ссылка",
     participants_not_found: "Участники не найдены",
     search_by_participants: "Поиск по участникам",
@@ -184,9 +184,6 @@ export default {
     short_info: "Краткая информация",
     change_short_info: "Изменить краткую информацию",
     video_position: "Позиция видео",
-    video_position_on_the_top: "Наверху",
-    video_position_side: "На стороне",
-    video_position_auto: "Авто",
     copy_video_call_link: "Скопир. видео. ссылку",
     blog: "Блог",
     blogs: "Блоги",
@@ -299,7 +296,6 @@ export default {
     new_message_notifications_in_browser: "Нотификация о новом сообщении в браузере",
     call_notifications_in_browser: "Нотификация о звонке в браузере",
     remove_sessions: "Удалить сессии",
-    video_position_changed_apply: "Чтобы это применилось, Вам нужно перезайти в звонок",
     video_successfully_reconnected: "Успешно передпоключились к серверу",
     send_message_after_media_insert: "Отправить сообщение",
     send_message_after_media_insert_description: "Отправить сообщение после вставки медиа",
@@ -323,5 +319,8 @@ export default {
     object_storage: "S3-хранилище",
     queue_broker: "Брокер очередей",
     database: "База данных",
-    set_password: "Задать пароль"
+    set_password: "Задать пароль",
+    video_presenter_enable: "Включить презентатор",
+    close_video: "Закрыть видео",
+    video_presenter_disable: "Выключить презентатор"
 }

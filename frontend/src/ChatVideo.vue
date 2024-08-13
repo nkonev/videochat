@@ -1,6 +1,19 @@
 <template>
-  <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'">
-  </v-col>
+      <splitpanes ref="splVideo" class="default-theme" :dbl-click-splitter="false" :horizontal="splitpanesIsHorizontal" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+          <pane v-if="shouldShowPresenter" :size="presenterPaneSize()">
+              <div class="video-presenter-container-element">
+                  <video v-show="!presenterVideoMute || !presenterAvatarIsSet" @click.self="onClick()" class="video-presenter-element" ref="presenterRef"/>
+                  <img v-show="presenterAvatarIsSet && presenterVideoMute" @click.self="onClick()" class="video-presenter-element" :src="presenterData?.avatar"/>
+                  <p v-bind:class="[speaking ? 'presenter-element-caption-speaking' : '', 'presenter-element-caption', 'inline-caption-base']">{{ presenterData?.userName ? presenterData?.userName : getLoadingMessage() }} <v-icon v-if="presenterAudioMute">mdi-microphone-off</v-icon></p>
+
+                  <VideoButtons @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
+              </div>
+          </pane>
+          <pane :class="paneVideoContainerClass"  :size="miniaturesPaneSize()">
+              <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoContainerClass"  @click="onClickFromVideos()"></v-col>
+              <VideoButtons v-if="!shouldShowPresenter" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
+          </pane>
+      </splitpanes>
 </template>
 
 <script>
@@ -18,50 +31,68 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {
-    defaultAudioMute,
-    getWebsocketUrlPrefix, isMobileBrowser, PURPOSE_CALL
+  defaultAudioMute,
+  getWebsocketUrlPrefix, hasLength, isFullscreen, isMobileBrowser, loadingMessage, PURPOSE_CALL, goToPreservingQuery
 } from "@/utils";
 import {
-    getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
-    getStoredVideoDevicePresents,
-    NULL_CODEC,
-    NULL_SCREEN_RESOLUTION,
-    setStoredCallAudioDeviceId,
-    setStoredCallVideoDeviceId,
+  getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
+  getStoredVideoDevicePresents,
+  NULL_CODEC,
+  NULL_SCREEN_RESOLUTION,
+  setStoredCallAudioDeviceId,
+  setStoredCallVideoDeviceId,
 } from "@/store/localStore";
 import bus, {
     ADD_SCREEN_SOURCE,
     ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED,
+    REQUEST_CHANGE_VIDEO_PARAMETERS,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
 import {chat_name, videochat_name} from "@/router/routes";
 import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
-import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
-import {goToPreservingQuery} from "@/mixins/searchString";
 import pinia from "@/store/index";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
+import { Splitpanes, Pane } from 'splitpanes';
+import {largestRect} from "rect-scaler";
+import debounce from "lodash/debounce";
+import VideoButtons from "./VideoButtons.vue"
+import speakingMixin from "@/mixins/speakingMixin.js";
 
 const first = 'first';
 const second = 'second';
 const last = 'last';
 
+const classVideoComponentWrapperPositionHorizontal = 'video-component-wrapper-position-horizontal';
+const classVideoComponentWrapperPositionVertical = 'video-component-wrapper-position-vertical';
+const classVideoComponentWrapperPositionGallery = 'video-component-wrapper-position-gallery';
+
+const panelSizesKey = "videoPanelSizes";
+
+const emptyStoredPanes = () => {
+  return {
+    presenterPane: 80
+  }
+}
+
 export default {
   mixins: [
     videoServerSettingsMixin(),
-    refreshLocalMutedInAppBarMixin(),
     videoPositionMixin(),
+    speakingMixin(),
   ],
-  props: ['videoIsOnTopProperty'],
+  props: ['chatId'],
   data() {
     return {
       room: null,
       videoContainerDiv: null,
       userVideoComponents: new Map(),
       inRestarting: false,
-      chatId: null,
+      presenterData: null,
+      presenterVideoMute: false,
+      presenterAudioMute: true,
+      showControls: true,
     }
   },
   methods: {
@@ -69,11 +100,19 @@ export default {
       return uuidv4();
     },
 
+    setUserVideoWrapperClass(containerEl, videoIsHorizontal, videoIsGallery) {
+      if (videoIsHorizontal) { // see also watch chatStore.videoPosition
+        containerEl.className = classVideoComponentWrapperPositionHorizontal;
+      } else if (videoIsGallery) {
+        containerEl.className = classVideoComponentWrapperPositionGallery;
+      } else {
+        containerEl.className = classVideoComponentWrapperPositionVertical;
+      }
+    },
     createComponent(userIdentity, position, videoTagId, localVideoProperties) {
       const app = createApp(UserVideo, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
-        videoIsOnTop: this.videoIsOnTopProperty,
         initialShowControls: localVideoProperties != null && this.isMobile()
       });
       app.config.globalProperties.isMobile = () => {
@@ -82,11 +121,8 @@ export default {
       app.use(vuetify);
       app.use(pinia);
       const containerEl = document.createElement("div");
-      if (this.videoIsOnTopProperty) {
-        containerEl.className = 'video-component-wrapper-position-top';
-      } else {
-        containerEl.className = 'video-component-wrapper-position-side';
-      }
+
+      this.setUserVideoWrapperClass(containerEl, this.videoIsHorizontal(), this.videoIsGallery());
 
       if (position == first) {
         this.insertChildAtIndex(this.videoContainerDiv, containerEl, 0);
@@ -146,6 +182,12 @@ export default {
             candidateToAppendVideo.setUserName(md.login);
             candidateToAppendVideo.setAvatar(md.avatar);
             candidateToAppendVideo.setUserId(md.userId);
+
+            const data = this.getDataForPresenter(candidateToAppendVideo);
+
+            this.updatePresenterIfNeed(data, false);
+            this.recalculateLayout();
+
             return
           } else if (track.kind == 'audio') {
             console.debug("Processing audio track", track);
@@ -167,6 +209,9 @@ export default {
             candidateToAppendAudio.setUserName(md.login);
             candidateToAppendAudio.setAvatar(md.avatar);
             candidateToAppendAudio.setUserId(md.userId);
+
+            this.recalculateLayout();
+
             return
           }
         }
@@ -178,7 +223,84 @@ export default {
         }
       }
     },
-
+    getPresenterPriority(pub, isSpeaking) {
+      if (!pub) {
+        return -1
+      }
+      switch (pub.source) {
+        case "camera":
+          return isSpeaking ? 2 : 1;
+        case "screen_share":
+          return 3
+        default:
+            return 0
+      }
+    },
+    // TODO pin to presenter an element from UserVideo
+    // TODO think how to reuse the presenter mode with egress
+    detachPresenter() {
+      if (this.presenterData) {
+        this.presenterData.videoStream?.videoTrack?.detach(this.$refs.presenterRef);
+        this.presenterData = null;
+      }
+    },
+    updatePresenter(data) {
+      if (data?.videoStream) {
+        this.detachPresenter();
+        data.videoStream.videoTrack?.attach(this.$refs.presenterRef);
+        this.presenterData = data;
+        this.updatePresenterVideoMute();
+      }
+      if (data?.audioStream) {
+        this.updatePresenterAudioMute();
+      }
+    },
+    updatePresenterIfNeed(data, isSpeaking) {
+        if (this.chatStore.presenterEnabled && this.canUsePresenter()) {
+          if (this.presenterData?.videoStream?.trackSid !== data.videoStream.trackSid &&
+              this.getPresenterPriority(data.videoStream, isSpeaking) > this.getPresenterPriority(this.presenterData?.videoStream)
+          ) {
+            this.detachPresenter();
+            this.updatePresenter(data);
+          }
+          if (this.presenterData?.videoStream?.trackSid === data.videoStream.trackSid && isSpeaking) {
+            this.setSpeakingWithDefaultTimeout();
+          }
+        }
+    },
+    updatePresenterVideoMute() {
+      this.presenterVideoMute = this.getPresenterVideoMute();
+    },
+    getPresenterVideoMute() {
+      const p = this.presenterData?.videoStream;
+      if (p) {
+        const t = p.videoTrack;
+        if (t) {
+          return t.isMuted
+        }
+      }
+      return true
+    },
+    updatePresenterAudioMute() {
+      this.presenterAudioMute = this.getPresenterAudioMute();
+    },
+    getPresenterAudioMute() {
+      const p = this.presenterData?.audioStream;
+      if (p) {
+        const t = p.audioTrack;
+        if (t) {
+          return t.isMuted
+        }
+      }
+      return true
+    },
+    canUsePresenterPlain(v) {
+      return !this.videoIsGalleryPlain(v);
+    },
+    canUsePresenter() {
+      const v = this.chatStore.videoPosition;
+      return this.canUsePresenterPlain(v);
+    },
     handleTrackUnsubscribed(
       track,
       publication,
@@ -199,7 +321,23 @@ export default {
       track.detach();
       this.removeComponent(participant.identity, track);
 
-      this.refreshLocalMicrophoneAppBarButtons();
+      this.refreshLocalMuteAppBarButtons();
+      this.recalculateLayout();
+    },
+    electNewPresenterIfNeed() {
+      // about second: detachPresenterIfNeed() leaves presenterVideoPublication null
+      if (this.chatStore.presenterEnabled && !this.presenterData?.videoStream) {
+        const data = this.getAnyPrioritizedVideoData();
+        if (data) {
+          this.updatePresenterIfNeed(data, false);
+        }
+      }
+    },
+    electNewPresenter() {
+      const data = this.getAnyPrioritizedVideoData();
+      if (data) {
+        this.updatePresenter(data);
+      }
     },
     removeComponent(userIdentity, track) {
       for (const componentWrapper of this.getByUser(userIdentity)) {
@@ -216,8 +354,14 @@ export default {
             console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
           }
           this.removeComponentForUser(userIdentity, componentWrapper);
+
+          if (this.chatStore.presenterEnabled && this.presenterData?.videoStream && this.presenterData.videoStream.trackSid == component.getVideoStream()?.trackSid) {
+            this.detachPresenter();
+          }
         }
       }
+
+      this.electNewPresenterIfNeed();
     },
 
     handleActiveSpeakerChange(speakers) {
@@ -231,10 +375,21 @@ export default {
           const audioStreamId = component.getAudioStreamId();
           console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);
           if (tracksSids.includes(component.getAudioStreamId())) {
-            component.setSpeakingWithTimeout(1000);
+            component.setSpeakingWithDefaultTimeout();
+
+            const data = this.getDataForPresenter(component);
+            this.updatePresenterIfNeed(data, true);
           }
         }
       }
+    },
+    getDataForPresenter(component) {
+      const id = component.getUserId();
+      const userName = component.getUserName();
+      const videoPublication = component.getVideoStream();
+      const audioPublication = component.getAudioStream();
+      const avatar = component.getAvatar();
+      return {videoStream: videoPublication, audioStream: audioPublication, avatar: avatar, userId: id, userName: userName}
     },
 
     handleDisconnect() {
@@ -260,10 +415,16 @@ export default {
       const matchedVideoComponents = components.filter(e => trackPublication.trackSid == e.getVideoStreamId());
       const matchedAudioComponents = components.filter(e => trackPublication.trackSid == e.getAudioStreamId());
       for (const component of matchedVideoComponents) {
-        component.setVideoMute(trackPublication.isMuted);
+        component.setDisplayVideoMute(trackPublication.isMuted);
+        if (component.getVideoStreamId() && this.presenterData?.videoStream && component.getVideoStreamId() == this.presenterData.videoStream.trackSid) {
+          this.updatePresenterVideoMute();
+        }
       }
       for (const component of matchedAudioComponents) {
         component.setDisplayAudioMute(trackPublication.isMuted);
+        if (component.getAudioStreamId() && this.presenterData?.audioStream && component.getAudioStreamId() == this.presenterData.audioStream.trackSid) {
+          this.updatePresenterAudioMute();
+        }
       }
     },
 
@@ -320,7 +481,7 @@ export default {
             const participantTracks = this.room.localParticipant.getTrackPublications();
             this.drawNewComponentOrInsertIntoExisting(this.room.localParticipant, participantTracks, first, localVideoProperties);
 
-            this.refreshLocalMicrophoneAppBarButtons();
+            this.refreshLocalMuteAppBarButtons();
           } catch (e) {
             this.setError(e, "Error during reacting on local track published");
           }
@@ -381,32 +542,38 @@ export default {
       }
       return second
     },
-    refreshLocalMicrophoneAppBarButtons() {
-      const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity);
-      if (onlyOneLocalComponentWithAudio) {
+    refreshLocalMuteAppBarButtons() {
+      if (this.onlyOneLocalTrackWith(this.room.localParticipant.identity)) {
         this.chatStore.canShowMicrophoneButton = true;
       } else {
         this.chatStore.canShowMicrophoneButton = false;
       }
-    },
-    onlyOneLocalTrackWithMicrophone(userIdentity) {
-      const userComponents = this.getByUser(userIdentity).map(c => c.component);
-      const localComponentsWithAudio = userComponents.filter((component) => component.isComponentLocal() && component.getAudioStreamId() != null)
-      if (localComponentsWithAudio.length == 1) {
-        return localComponentsWithAudio[0]
+
+      if (this.onlyOneLocalTrackWith(this.room.localParticipant.identity, true)) {
+        this.chatStore.canShowVideoButton = true;
       } else {
-        return null
+        this.chatStore.canShowVideoButton = false;
       }
     },
-    onLocalMicrophoneMutedByAppBarButton(value) {
-      const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWithMicrophone(this.room.localParticipant.identity)
-      if (onlyOneLocalComponentWithAudio) {
-        onlyOneLocalComponentWithAudio.doMuteAudio(value);
-        const muted = onlyOneLocalComponentWithAudio.audioMute;
-        this.refreshLocalMutedInAppBar(muted);
+    onlyOneLocalTrackWith(userIdentity, video) {
+      const userComponents = this.getByUser(userIdentity).map(c => c.component);
+      const localComponentsWith = userComponents.filter((component) => {
+        if (component.isComponentLocal()) {
+          if (video) {
+            if (component.getVideoSource() === "screen_share") {
+              return false
+            }
+            return component.getVideoStreamId() != null
+          } else {
+            return component.getAudioStreamId() != null
+          }
+        }
+        return false
+      });
+      if (localComponentsWith.length == 1) {
+        return localComponentsWith[0]
       } else {
-        // just for case
-        this.chatStore.canShowMicrophoneButton = false;
+        return null
       }
     },
 
@@ -526,20 +693,261 @@ export default {
       }
       return existingList;
     },
+    getAnyPrioritizedVideoData() {
+      const tmp = [];
+      for (const [_, list] of this.userVideoComponents) {
+        for (const componentWrapper of list) {
+          const data = this.getDataForPresenter(componentWrapper.component);
+          if (data.videoStream && data.videoStream.kind == "video") {
+            tmp.push(data);
+          }
+        }
+      }
+
+      tmp.sort((a, b) => {
+        return this.getPresenterPriority(b.videoStream) - this.getPresenterPriority(a.videoStream);
+      });
+      
+      if (tmp.length) {
+        return tmp[0]
+      }
+
+      return null;
+    },
+    recalculateLayout() {
+      const gallery = document.getElementById("video-container");
+      if (gallery) {
+        const screenWidth = gallery.getBoundingClientRect().width;
+        const screenHeight = gallery.getBoundingClientRect().height;
+        const videoCount = gallery.getElementsByTagName("video").length;
+
+        if (!!screenWidth && !!screenHeight && !!videoCount) {
+          const rectWidth = 16;
+          const rectHeight = 9;
+          const r = largestRect(
+              screenWidth,
+              screenHeight,
+              videoCount,
+              rectWidth,
+              rectHeight
+          );
+
+          gallery.style.setProperty("--width", r.width + "px");
+          gallery.style.setProperty("--height", r.height + "px");
+          gallery.style.setProperty("--cols", r.cols + "");
+        }
+      }
+    },
+    onButtonsFullscreen() {
+      const elem = this.$refs.splVideo?.$el;
+
+      if (elem && isFullscreen()) {
+        document.exitFullscreen();
+      } else {
+        elem.requestFullscreen();
+      }
+    },
+    onMouseEnter() {
+      if (!this.isMobile()) {
+        this.showControls = true;
+      }
+    },
+    onMouseLeave() {
+      if (!this.isMobile()) {
+        this.showControls = false;
+      }
+    },
+    getLoadingMessage () {
+         return loadingMessage
+    },
+    onClick() {
+      this.showControls =! this.showControls
+    },
+    onClickFromVideos() {
+        if (this.shouldShowPresenter) {
+          return
+        }
+        this.onClick()
+    },
+    presenterPaneSize() {
+      return this.getStored().presenterPane;
+    },
+    miniaturesPaneSize() {
+      if (this.shouldShowPresenter) {
+        return 100 - this.presenterPaneSize();
+      } else {
+        return 100;
+      }
+    },
+
+    prepareForStore() {
+      const ret = this.getStored();
+
+      const paneSizes = this.$refs.splVideo.panes.map(i => i.size);
+      if (this.shouldShowPresenter) {
+        ret.presenterPane = paneSizes[0];
+      } else {
+        ret.presenterPane = 0;
+      }
+      return ret
+    },
+    // returns json with sizes from localstore
+    getStored() {
+      const mbItem = localStorage.getItem(panelSizesKey);
+      if (!mbItem) {
+        return emptyStoredPanes();
+      } else {
+        return JSON.parse(mbItem);
+      }
+    },
+    saveToStored(obj) {
+      localStorage.setItem(panelSizesKey, JSON.stringify(obj));
+    },
+    onPanelResized() {
+      this.$nextTick(() => {
+        this.saveToStored(this.prepareForStore());
+      })
+    },
+    onPanelAdd() {
+      this.$nextTick(() => {
+        const stored = this.getStored();
+        this.restorePanelsSize(stored);
+      })
+    },
+    onPanelRemove() {
+      this.$nextTick(() => {
+        const stored = this.getStored();
+        this.restorePanelsSize(stored);
+      })
+    },
+    restorePanelsSize(ret) {
+      if (this.shouldShowPresenter) {
+        this.$refs.splVideo.panes[0].size = ret.presenterPane;
+      } else {
+        this.$refs.splVideo.panes[0].size = 100;
+      }
+    },
   },
   computed: {
     ...mapStores(useChatStore),
+    splitpanesIsHorizontal() {
+      return this.videoIsHorizontal() || this.videoIsGallery()
+    },
+    videoContainerClass() {
+      if (this.videoIsHorizontal()) {
+        return 'video-container-position-horizontal'
+      } else if (this.videoIsGallery()) {
+        return 'video-container-position-gallery'
+      } else {
+        return 'video-container-position-vertical'
+      }
+    },
+    paneVideoContainerClass() {
+      if (this.videoIsHorizontal() || this.videoIsGallery()) {
+        return 'pane-videos-horizontal'
+      } else if (this.videoIsVertical())  {
+        return 'pane-videos-vertical'
+      } else {
+        return null;
+      }
+    },
+    shouldShowPresenter() {
+      return this.chatStore.presenterEnabled && !this.videoIsGallery()
+    },
+    presenterAvatarIsSet() {
+      return hasLength(this.presenterData?.avatar);
+    },
+  },
+  components: {
+      Splitpanes,
+      Pane,
+      VideoButtons,
+  },
+  watch: {
+    'chatStore.videoPosition': {
+      handler: function (newValue, oldValue) {
+        if (this.videoContainerDiv) {
+          const videoIsHorizontal = this.videoIsHorizontalPlain(newValue);
+          const videoIsGallery = this.videoIsGalleryPlain(newValue);
+          for (const containerEl of this.videoContainerDiv.children) {
+            this.setUserVideoWrapperClass(containerEl, videoIsHorizontal, videoIsGallery);
+          }
+
+          // we added it for the case when user switches from gallery to vertical or horizontal where presenter can be shown
+          // test case
+          // disable presenter
+          // switch vertical and horizontal
+          // the local video shouldn't disappear
+          // thus because of this this.updatePresenter(data) doesn't have this.detachPresenter()
+          if (this.canUsePresenterPlain(newValue) && this.chatStore.presenterEnabled) {
+            this.$nextTick(() => {
+              this.electNewPresenter();
+            })
+          }
+          if (videoIsGallery) {
+            setTimeout(()=>{
+              this.recalculateLayout();
+            }, 300)
+          }
+        }
+      }
+    },
+    'chatStore.presenterEnabled': {
+      handler: function (newValue, oldValue) {
+        if (this.videoContainerDiv) {
+          if (newValue) {
+            this.$nextTick(()=>{ // needed because videoContainerDiv still not visible for attaching from livekit js
+              this.electNewPresenter();
+            })
+          } else {
+            this.detachPresenter();
+          }
+        }
+      }
+    },
+    'chatStore.showDrawer': {
+      handler: function (newValue, oldValue) {
+        setTimeout(()=>{
+          this.recalculateLayout();
+        }, 300)
+      }
+    },
+    'chatStore.localMicrophoneEnabled': {
+      handler: function (newValue, oldValue) {
+        const onlyOneLocalComponentWithAudio = this.onlyOneLocalTrackWith(this.room.localParticipant.identity)
+        if (onlyOneLocalComponentWithAudio) {
+          onlyOneLocalComponentWithAudio.doMuteAudio(!newValue, true);
+        } else {
+          // just for case
+          this.chatStore.canShowMicrophoneButton = false;
+        }
+      },
+    },
+    'chatStore.localVideoEnabled': {
+      handler: function (newValue, oldValue) {
+        const onlyOneLocalComponentWithVideo = this.onlyOneLocalTrackWith(this.room.localParticipant.identity, true)
+        if (onlyOneLocalComponentWithVideo) {
+          onlyOneLocalComponentWithVideo.doMuteVideo(!newValue, true);
+        } else {
+          // just for case
+          this.chatStore.canShowVideoButton = false;
+        }
+      },
+    },
+  },
+  created() {
+    this.recalculateLayout = debounce(this.recalculateLayout);
   },
   async mounted() {
+    this.initPositionAndPresenter();
+
     this.chatStore.setCallStateInCall();
 
     this.chatStore.initializingVideoCall = true;
 
-    this.chatId = this.chatStore.chatDto.id;
-
-    if (!this.isMobile() && this.videoIsAtSide()) {
+    if (!this.isMobile()) {
       this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
-      this.chatStore.showDrawer = this.shouldShowChatList();
+      this.chatStore.showDrawer = false;
     }
 
     // creates the userCallState and assigns sessionId (as part of primary key)
@@ -560,8 +968,9 @@ export default {
     bus.on(ADD_VIDEO_SOURCE, this.onAddVideoSource);
     bus.on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-    bus.on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
     bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+
+    window.addEventListener("resize", this.recalculateLayout);
 
     this.videoContainerDiv = document.getElementById("video-container");
 
@@ -573,6 +982,9 @@ export default {
             tokenId: this.chatStore.videoTokenId
         }
     });
+
+    this.detachPresenter();
+
     this.stopRoom().then(()=>{
       console.log("Cleaning videoContainerDiv");
       this.videoContainerDiv = null;
@@ -581,8 +993,9 @@ export default {
 
     this.chatStore.canShowMicrophoneButton = false;
 
-    if (!this.isMobile() && this.videoIsAtSide()) {
+    if (!this.isMobile()) {
       this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
+      this.chatStore.showDrawerPrevious = false;
     }
 
     this.chatStore.videoChatUsersCount = 0;
@@ -594,10 +1007,11 @@ export default {
 
     this.chatStore.setCallStateReady();
 
+    window.removeEventListener("resize", this.recalculateLayout);
+
     bus.off(ADD_VIDEO_SOURCE, this.onAddVideoSource);
     bus.off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
-    bus.off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
     bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
   },
 }
@@ -609,31 +1023,88 @@ export default {
   display: flex;
   //scroll-snap-align width
   //scroll-padding 0
-  height 100%
-  width 100%
   //object-fit: contain;
   //box-sizing: border-box
 }
 
-.video-container-position-top {
+.video-container-position-horizontal {
+  height 100%
+  width 100%
   flex-direction: row;
-  overflow-x: scroll;
+  overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: none;
+  // scrollbar-width: none;
+  background black
 }
 
-.video-container-position-side {
-  overflow-y: scroll;
-  scrollbar-width: auto;
+.video-container-position-vertical {
+  height 100%
+  width 100%
+  overflow-y: auto;
   background black
   flex-direction: column;
 }
 
+.video-container-position-gallery {
+  height: 100%;
+  width: 100%;
+
+  align-items: center;
+  justify-content: center;
+  align-content: baseline;
+  overflow-y: auto;
+
+  display: flex
+  flex-wrap: wrap
+  // max-width: calc(var(--width) * var(--cols))
+  background-color: black;
+}
+
+
+.video-presenter-container-element {
+    position relative
+    display flex
+    flex-direction column
+    align-items: center;
+
+    width 100%
+    height 100%
+}
+
+
+.video-presenter-element {
+    //box-sizing: border-box;
+    width: 100% !important
+    height: 100% !important
+    object-fit: contain;
+    background black
+}
+
+// need to center the nested video buttons
+.pane-videos-horizontal {
+  display: flex;
+  justify-content: center;
+  position: relative // for mobile
+}
+
+.pane-videos-vertical {
+  display: flex;
+  align-items center
+}
+
+.presenter-element-caption {
+  max-width: calc(100% - 1em) // still needed for thin (vertical) video on mobile - it prevents bulging
+}
+
+.presenter-element-caption-speaking {
+  text-shadow: -2px 0 #9cffa1, 0 2px #9cffa1, 2px 0 #9cffa1, 0 -2px #9cffa1;
+}
 
 </style>
 
 <style lang="stylus">
-.video-component-wrapper-position-top {
+// applied from js, so it shouldn't be changed, so without scoped
+.video-component-wrapper-position-horizontal {
   display contents
 }
 

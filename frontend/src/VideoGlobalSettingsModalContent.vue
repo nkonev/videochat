@@ -32,12 +32,26 @@
                         :label="$vuetify.locale.t('$vuetify.video_position')"
                         :items="positionItems"
                         density="comfortable"
+                        hide-details
                         color="primary"
                         @update:modelValue="changeVideoPosition"
-                        v-model="videoPosition"
+                        v-model="chatStore.videoPosition"
                         variant="underlined"
                     ></v-select>
 
+                    <v-row no-gutters class="my-4">
+                        <v-col>
+                            <v-checkbox
+                                :disabled="!isPresenterEnabled()"
+                                density="comfortable"
+                                color="primary"
+                                hide-details
+                                v-model="chatStore.presenterEnabled"
+                                @update:modelValue="changePresenterEnabled"
+                                :label="$vuetify.locale.t('$vuetify.video_presenter_enable')"
+                            ></v-checkbox>
+                        </v-col>
+                    </v-row>
 
                     <v-select
                         :disabled="serverPreferredCodec"
@@ -128,44 +142,47 @@
 </template>
 
 <script>
-import bus, {
-  CHANGE_VIDEO_SOURCE,
-  CHANGE_VIDEO_SOURCE_DIALOG, CHOOSING_VIDEO_SOURCE_CANCELED,
-  REQUEST_CHANGE_VIDEO_PARAMETERS,
-  VIDEO_PARAMETERS_CHANGED,
-} from "./bus/bus";
+    import bus, {
+      CHANGE_VIDEO_SOURCE,
+      CHANGE_VIDEO_SOURCE_DIALOG, CHOOSING_VIDEO_SOURCE_CANCELED,
+      REQUEST_CHANGE_VIDEO_PARAMETERS,
+    } from "./bus/bus";
     import {
-        setVideoResolution,
-        getStoredAudioDevicePresents,
-        setStoredAudioPresents,
-        getStoredVideoDevicePresents,
-        setStoredVideoPresents,
-        setScreenResolution,
-        setStoredVideoSimulcast,
-        setStoredScreenSimulcast,
-        setStoredRoomDynacast,
-        setStoredRoomAdaptiveStream,
-        VIDEO_POSITION_AUTO,
-        VIDEO_POSITION_TOP,
-        VIDEO_POSITION_SIDE,
-        setStoredVideoPosition,
-        getStoredVideoPosition,
-        setStoredCodec,
-        NULL_CODEC,
-        NULL_SCREEN_RESOLUTION,
-        setStoredCallVideoDeviceId, setStoredCallAudioDeviceId
+      setVideoResolution,
+      getStoredAudioDevicePresents,
+      setStoredAudioPresents,
+      getStoredVideoDevicePresents,
+      setStoredVideoPresents,
+      setScreenResolution,
+      setStoredVideoSimulcast,
+      setStoredScreenSimulcast,
+      setStoredRoomDynacast,
+      setStoredRoomAdaptiveStream,
+      setStoredVideoPosition,
+      setStoredCodec,
+      NULL_CODEC,
+      NULL_SCREEN_RESOLUTION,
+      setStoredCallVideoDeviceId,
+      setStoredCallAudioDeviceId,
+      setStoredPresenter,
+      positionItems
     } from "./store/localStore";
     import {videochat_name} from "./router/routes";
     import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
     import {PURPOSE_CALL} from "@/utils.js";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore.js";
+    import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 
     export default {
-        mixins: [videoServerSettingsMixin()],
+        mixins: [
+            videoServerSettingsMixin(),
+            videoPositionMixin(),
+        ],
         data () {
             return {
                 audioPresents: null,
                 videoPresents: null,
-                videoPosition: null,
 
                 tempStream: null,
             }
@@ -174,10 +191,10 @@ import bus, {
             showModal() {
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
-                this.videoPosition = getStoredVideoPosition();
+
+                this.initPositionAndPresenter();
 
                 this.initServerData();
-
             },
             isVideoRoute() {
                 return this.$route.name == videochat_name
@@ -198,6 +215,9 @@ import bus, {
                 setStoredVideoPresents(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
+            changePresenterEnabled(v) {
+              setStoredPresenter(v);
+            },
             changeVideoSimulcast(v) {
                 setStoredVideoSimulcast(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
@@ -215,10 +235,8 @@ import bus, {
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoPosition(v) {
+                this.chatStore.videoPosition = v;
                 setStoredVideoPosition(v);
-                if (this.$route.name == videochat_name) {
-                    this.setWarning(this.$vuetify.locale.t('$vuetify.video_position_changed_apply'));
-                }
             },
             changeCodec(v) {
                 setStoredCodec(v)
@@ -256,7 +274,8 @@ import bus, {
             },
         },
         computed: {
-            displayQualityItems() {
+          ...mapStores(useChatStore),
+          displayQualityItems() {
                 // ./frontend/node_modules/livekit-client/dist/room/track/options.d.ts
                 return ['h180', 'h360', 'h720', 'h1080', 'h1440', 'h2160']
             },
@@ -269,7 +288,7 @@ import bus, {
                 return [NULL_CODEC, 'vp8', 'h264', 'vp9', 'av1']
             },
             positionItems() {
-                return [VIDEO_POSITION_AUTO, VIDEO_POSITION_TOP, VIDEO_POSITION_SIDE]
+                return positionItems()
             },
             chatId() {
                 return this.$route.params.id

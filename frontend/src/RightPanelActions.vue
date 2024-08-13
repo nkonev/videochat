@@ -85,7 +85,6 @@ import bus, {
     OPEN_SETTINGS,
     OPEN_VIEW_FILES_DIALOG, PROFILE_SET
 } from "@/bus/bus";
-import {goToPreservingQuery} from "@/mixins/searchString";
 import {copyCallLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
 

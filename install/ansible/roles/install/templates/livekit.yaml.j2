@@ -44,3 +44,8 @@ webhook:
   api_key: '{{ livekit_api_key }}'
   urls:
     - 'http://video:1237/internal/livekit-webhook'
+
+audio:
+  # minimum level to be considered active, 0-127, where 0 is loudest
+  # defaults to 30
+  active_level: 100

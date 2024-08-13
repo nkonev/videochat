@@ -27,7 +27,7 @@
             <template v-if="showSearchButton || !isMobile()">
                 <v-badge
                          :content="chatStore.videoChatUsersCount"
-                         :model-value="!!chatStore.videoChatUsersCount"
+                         :model-value="showVideoBadge"
                          color="green"
                          overlap
                          offset-y="1.8em"
@@ -44,8 +44,8 @@
             <template v-if="!isMobile()">
               <template v-if="chatStore.isInCall()">
                 <template v-if="chatStore.canShowMicrophoneButton">
-                  <v-btn v-if="chatStore.showMicrophoneOnButton" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
-                  <v-btn v-if="chatStore.showMicrophoneOffButton" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
+                  <v-btn v-if="chatStore.localMicrophoneEnabled" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
+                  <v-btn v-if="!chatStore.localMicrophoneEnabled" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
                 </template>
 
                 <v-btn icon @click="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
@@ -175,7 +175,7 @@ import {
   hasLength,
   isCalling,
   isChatRoute,
-  setLanguageToVuetify
+  setLanguageToVuetify, stopCall, unescapeHtml, goToPreservingQuery
 } from "@/utils";
 import {
     chat_list_name,
@@ -200,7 +200,6 @@ import bus, {
   PLAYER_MODAL,
   PROFILE_SET,
   REFRESH_ON_WEBSOCKET_RESTORED,
-  SET_LOCAL_MICROPHONE_MUTED,
   UNREAD_MESSAGES_CHANGED,
   CO_CHATTED_PARTICIPANT_CHANGED,
   VIDEO_CALL_INVITED,
@@ -218,7 +217,6 @@ import {
   SEARCH_MODE_CHATS,
   SEARCH_MODE_MESSAGES,
   SEARCH_MODE_USERS,
-  goToPreservingQuery
 } from "@/mixins/searchString";
 import RightPanelActions from "@/RightPanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
@@ -256,6 +254,7 @@ import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@
 import {getHumanReadableDate} from "@/date.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 import SetPasswordModal from "@/SetPasswordModal.vue";
+import debounce from "lodash/debounce.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -278,6 +277,8 @@ export default {
 
             globalEventsSubscription: null,
             selfProfileEventsSubscription: null,
+            showNotificationBadge: false,
+            showVideoBadge: false,
         }
     },
     computed: {
@@ -299,9 +300,6 @@ export default {
         },
         notificationsCount() {
             return this.chatStore.notificationsCount
-        },
-        showNotificationBadge() {
-            return this.notificationsCount != 0 && !this.chatStore.showDrawer
         },
         shouldShowFileUpload() {
             return !!this.chatStore.fileUploadingQueue.length
@@ -340,10 +338,7 @@ export default {
             goToPreservingQuery(this.$route, this.$router, routerNewState);
         },
         stopCall() {
-            console.debug("stopping Call");
-            this.chatStore.leavingVideoAcceptableParam = true;
-            const routerNewState = { name: chat_name };
-            goToPreservingQuery(this.$route, this.$router, routerNewState);
+          stopCall(this.chatStore, this.$route, this.$router);
         },
 
         onProfileSet(){
@@ -639,7 +634,7 @@ export default {
               this.invitedVideoChatAlert = true;
               this.$nextTick(()=>{
                 this.invitedVideoChatId = data.chatId;
-                this.invitedVideoChatName = data.chatName;
+                this.invitedVideoChatName = unescapeHtml(data.chatName);
                 this.invitedVideoChatState = true;
               }).then(()=>{
                   createBrowserNotificationIfPermitted(this.$router, data.chatId, data.chatName, data.avatar, null, this.$vuetify.locale.t('$vuetify.you_called_short', this.invitedVideoChatId), NOTIFICATION_TYPE_CALL);
@@ -664,10 +659,10 @@ export default {
           });
         },
         onMicrophone() {
-          bus.emit(SET_LOCAL_MICROPHONE_MUTED, false);
+          this.chatStore.localMicrophoneEnabled = true
         },
         offMicrophone() {
-          bus.emit(SET_LOCAL_MICROPHONE_MUTED, true);
+          this.chatStore.localMicrophoneEnabled = false
         },
         addVideoSource() {
           bus.emit(ADD_VIDEO_SOURCE_DIALOG);
@@ -790,7 +785,13 @@ export default {
         onEditUser(u) {
           this.chatStore.currentUser = u;
         },
-
+        updateNotificationBadgeDebounced() {
+          this.showNotificationBadge = this.chatStore.notificationsCount != 0 && !this.chatStore.showDrawer
+        },
+        // debounce fixes a dangling badge with 0 value
+        updateVideoBadgeDebounced() {
+          this.showVideoBadge = !!this.chatStore.videoChatUsersCount
+        },
     },
     components: {
         ChooseColorModal,
@@ -818,8 +819,28 @@ export default {
         PublishedMessagesModal,
         SetPasswordModal,
     },
+    watch: {
+      'chatStore.notificationsCount': {
+        handler: function (newValue, oldValue) {
+            this.updateNotificationBadgeDebounced()
+        }
+      },
+      'chatStore.showDrawer': {
+        handler: function (newValue, oldValue) {
+          this.updateNotificationBadgeDebounced()
+        }
+      },
+      'chatStore.videoChatUsersCount': {
+        handler: function (newValue, oldValue) {
+          this.updateVideoBadgeDebounced()
+        }
+      },
+    },
+
     created() {
         this.afterRouteInitialized = once(this.afterRouteInitialized);
+        this.updateNotificationBadgeDebounced = debounce(this.updateNotificationBadgeDebounced, 1000);
+        this.updateVideoBadgeDebounced = debounce(this.updateVideoBadgeDebounced, 1000)
     },
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
@@ -968,6 +989,28 @@ html {
 
 div .stop-scrolling {
     overflow: hidden !important;
+}
+
+.inline-caption-base {
+  z-index 2
+  display inherit
+  margin: 0;
+  left 0.4em
+  bottom 0.4em
+  position: absolute
+  background rgba(255, 255, 255, 0.65)
+  padding-left 0.3em
+  padding-right 0.3em
+  border-radius 4px
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media screen and (max-width: $mobileWidth) {
+  .inline-caption-base {
+    font-size 0.6em
+  }
 }
 
 </style>

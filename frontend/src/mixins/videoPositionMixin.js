@@ -1,22 +1,35 @@
-import {getStoredVideoPosition, VIDEO_POSITION_AUTO, VIDEO_POSITION_TOP} from "@/store/localStore";
+import {
+    getStoredPresenter,
+    getStoredVideoPosition,
+    VIDEO_POSITION_GALLERY,
+    VIDEO_POSITION_HORIZONTAL,
+    VIDEO_POSITION_VERTICAL
+} from "@/store/localStore";
 import {videochat_name} from "@/router/routes";
 
 export default () => {
     return {
         methods: {
-            videoIsOnTop() {
-              const stored = getStoredVideoPosition();
-              if (stored == VIDEO_POSITION_AUTO) {
-                return true // both mobile and desktop
-              } else {
-                return getStoredVideoPosition() == VIDEO_POSITION_TOP;
-              }
+            videoIsHorizontalPlain(value) {
+                return value === VIDEO_POSITION_HORIZONTAL;
             },
-
-            videoIsAtSide() {
-              return !this.videoIsOnTop();
+            videoIsHorizontal() {
+              const stored = this.chatStore.videoPosition;
+              return this.videoIsHorizontalPlain(stored);
             },
-
+            videoIsVertical() {
+                return this.chatStore.videoPosition === VIDEO_POSITION_VERTICAL;
+            },
+            videoIsGalleryPlain(value) {
+                return value === VIDEO_POSITION_GALLERY;
+            },
+            videoIsGallery() {
+                const stored = this.chatStore.videoPosition;
+                return this.videoIsGalleryPlain(stored);
+            },
+            isPresenterEnabled() {
+                return this.videoIsHorizontal() || this.videoIsVertical()
+            },
             isVideoRoute() {
               return this.$route.name == videochat_name
             },
@@ -25,14 +38,12 @@ export default () => {
               if (this.isMobile()) {
                 return false;
               }
-              if (this.isVideoRoute()) {
-                if (this.videoIsAtSide()) {
-                  return false
-                }
-              }
-              return true;
+              return !this.isVideoRoute();
             },
-
+            initPositionAndPresenter() {
+                this.chatStore.videoPosition = getStoredVideoPosition();
+                this.chatStore.presenterEnabled = getStoredPresenter();
+            },
         }
     }
 }

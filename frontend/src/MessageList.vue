@@ -8,6 +8,7 @@
             :chatId="chatId"
             :my="meIsOwnerOfMessage(item)"
             :highlight="item.id == highlightItemId"
+            :isCompact="isCompact"
             @customcontextmenu.stop="onShowContextMenu($event, item)"
             @deleteMessage="deleteMessage"
             @editMessage="editMessage"
@@ -105,7 +106,7 @@
         searchString(SEARCH_MODE_MESSAGES),
         onFocusMixin(),
       ],
-      props: ['canResend', 'blog'],
+      props: ['canResend', 'blog', 'isCompact'],
       data() {
         return {
           markInstance: null,

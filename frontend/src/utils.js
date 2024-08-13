@@ -447,3 +447,20 @@ awaitingForConfirmEmailChange,
 }
 `
 }
+
+export const isFullscreen = () => {
+    return !!(document.fullscreenElement)
+}
+
+export const loadingMessage = 'Loading...';
+
+export const goToPreservingQuery = (route, router, to) => {
+    const prev = deepCopy(route.query);
+    return router.push({ ...to, query: prev })
+}
+
+export const stopCall = (chatStore, route, router) => {
+    chatStore.leavingVideoAcceptableParam = true;
+    const routerNewState = { name: chat_name };
+    goToPreservingQuery(route, router, routerNewState);
+}

@@ -115,8 +115,6 @@ export const CHOOSING_VIDEO_SOURCE_CANCELED = "choosingVideoSourceCanceled";
 export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
 export const CHANGE_VIDEO_SOURCE_DIALOG = "changeVideoSourceDialog";
 
-export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";
-
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
 export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
 

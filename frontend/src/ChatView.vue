@@ -4,45 +4,45 @@
         <ChatList :embedded="true" v-if="isAllowedChatList()" ref="chatListRef"/>
       </pane>
 
-      <pane>
-        <splitpanes ref="splInner" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
-          <pane v-if="showTopPane()" min-size="15" :size="topPaneSize()">
-            <ChatVideo v-if="chatDtoIsReady" :videoIsOnTopProperty="videoIsOnTop()" />
+      <pane style="background: white" :size="centralPaneSize()">
+        <splitpanes ref="splCentral" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+          <pane v-if="showTopPane()" :size="topPaneSize()">
+            <ChatVideo v-if="chatDtoIsReady" :chatId="chatId" ref="chatVideoRef"/>
           </pane>
 
-          <pane style="width: 100%; background: white" :class="messageListPaneClass()">
-              <v-tooltip
+          <pane :class="messageListPaneClass()" :size="messageListPaneSize()">
+            <v-tooltip
                 v-if="broadcastMessage"
                 :model-value="showTooltip"
                 activator=".message-edit-pane"
                 location="bottom start"
-              >
-                <span v-html="broadcastMessage"></span>
-              </v-tooltip>
+            >
+              <span v-html="broadcastMessage"></span>
+            </v-tooltip>
 
-              <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
-                <v-alert
+            <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
+              <v-alert
                   color="red-lighten-4"
                   elevation="2"
                   density="compact"
-                >
-                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
-                </v-alert>
-              </div>
+              >
+                <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
+              </v-alert>
+            </div>
 
-              <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog"/>
+            <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog" :isCompact="isVideoRoute()"/>
 
-              <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
-              <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab-b" @click="openNewMessageDialog()"></v-btn>
-
+            <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
+            <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab-b" @click="openNewMessageDialog()"></v-btn>
           </pane>
           <pane class="message-edit-pane" v-if="showBottomPane()" :size="bottomPaneSize()">
             <MessageEdit :chatId="this.chatId"/>
           </pane>
         </splitpanes>
       </pane>
-      <pane v-if="showRightPane()" min-size="15" :size="rightPaneSize()">
-        <ChatVideo v-if="chatDtoIsReady" :videoIsOnTop="videoIsOnTop()"/>
+
+      <pane v-if="showRightPane()" :size="rightPaneSize()">
+        <ChatVideo v-if="chatDtoIsReady" :chatId="chatId" ref="chatVideoRef"/>
       </pane>
 
     </splitpanes>
@@ -62,7 +62,8 @@ import {
     isCalling,
     isChatRoute,
     new_message,
-    setTitle
+    setTitle,
+    goToPreservingQuery
 } from "@/utils";
 import bus, {
     CHAT_DELETED,
@@ -97,7 +98,7 @@ import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
-import {goToPreservingQuery, SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
+import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 const getChatEventsData = (message) => {
@@ -110,9 +111,9 @@ const panelSizesKey = "panelSizes";
 
 const emptyStoredPanes = () => {
   return {
+    topPane: 60, // ChatVideo mobile
     leftPane: 20, // ChatList
-    rightPane: 40, // ChatVideo in case videoIsAtSide()
-    topPane: 30, // ChatVideo in case videoIsOnTop()
+    rightPane: 40, // ChatVideo desktop
     bottomPane: 20, // MessageEdit in case desktop (!isMobile())
     bottomPaneBig: 60, // MessageEdit in case desktop (!isMobile()) and a text containing a newline
   }
@@ -612,9 +613,6 @@ export default {
     openNewMessageDialog() { // on mobile OPEN_EDIT_MESSAGE with the null argument
       bus.emit(OPEN_EDIT_MESSAGE, {dto: null, actionType: new_message});
     },
-    shouldShowVideoOnTop() {
-        return this.videoIsOnTop() && this.isAllowedVideo()
-    },
     messageListPaneClass() {
       const classes = [];
       classes.push('message-pane');
@@ -624,15 +622,12 @@ export default {
       return classes;
     },
 
+    showRightPane() {
+      return !this.isMobile() && this.isAllowedVideo()
+    },
 
     showLeftPane() {
       return this.shouldShowChatList()
-    },
-    showRightPane() {
-      return this.videoIsAtSide() && this.isAllowedVideo();
-    },
-    showTopPane() {
-      return this.shouldShowVideoOnTop();
     },
     showBottomPane() {
       return !this.isMobile();
@@ -644,14 +639,45 @@ export default {
     rightPaneSize() {
       return this.getStored().rightPane;
     },
+    showTopPane() {
+      return this.isMobile() && this.isAllowedVideo()
+    },
     topPaneSize() {
       return this.getStored().topPane;
+    },
+    centralPaneSize() {
+      if (this.isMobile()) {
+        return 100
+      } else {
+        if (this.showRightPane()) {
+          return 100 - this.rightPaneSize();
+        } else if (this.showLeftPane()) {
+          return 100 - this.leftPaneSize();
+        } else {
+          return 100;
+        }
+      }
     },
     bottomPaneSize() {
       if (!this.chatStore.isEditingBigText) {
         return this.getStored().bottomPane;
       } else {
         return this.getStored().bottomPaneBig;
+      }
+    },
+    messageListPaneSize() {
+      if (this.isMobile()) {
+        if (this.showTopPane()) {
+          return 100 - this.topPaneSize();
+        } else {
+          return 100;
+        }
+      } else {
+        if (this.showBottomPane()) {
+          return 100 - this.bottomPaneSize()
+        } else {
+          return 100
+        }
       }
     },
 
@@ -671,23 +697,27 @@ export default {
     // prepares json to store by extracting concrete panel sizes
     prepareForStore() {
       const outerPaneSizes = this.$refs.splOuter.panes.map(i => i.size);
-      const innerPaneSizes = this.$refs.splInner.panes.map(i => i.size);
+      const centralPaneSizes = this.$refs.splCentral.panes.map(i => i.size);
       const ret = this.getStored();
-      if (this.showLeftPane()) {
-        ret.leftPane = outerPaneSizes[0];
-      }
-      if (this.showRightPane()) {
-        ret.rightPane = outerPaneSizes[outerPaneSizes.length - 1]
-      }
-      if (this.showTopPane()) {
-        ret.topPane = innerPaneSizes[0]
-      }
-      if (this.showBottomPane()) {
-        const bottomPaneSize = innerPaneSizes[innerPaneSizes.length - 1];
-        if (!this.chatStore.isEditingBigText) {
-          ret.bottomPane = bottomPaneSize;
-        } else {
-          ret.bottomPaneBig = bottomPaneSize;
+      if (this.isMobile()) {
+        if (this.showTopPane()) {
+          const topPaneSize = centralPaneSizes[0];
+          ret.topPane = topPaneSize;
+        }
+      } else {
+        if (this.showLeftPane()) {
+          ret.leftPane = outerPaneSizes[0];
+        }
+        if (this.showRightPane()) {
+          ret.rightPane = outerPaneSizes[outerPaneSizes.length - 1]
+        }
+        if (this.showBottomPane()) {
+          const bottomPaneSize = centralPaneSizes[centralPaneSizes.length - 1];
+          if (!this.chatStore.isEditingBigText) {
+            ret.bottomPane = bottomPaneSize;
+          } else {
+            ret.bottomPaneBig = bottomPaneSize;
+          }
         }
       }
       // console.debug("Preparing for store", ret)
@@ -696,46 +726,32 @@ export default {
     // sets concrete panel sizes
     restorePanelsSize(ret) {
       // console.debug("Restoring from", ret);
-      if (this.showLeftPane()) {
-        this.$refs.splOuter.panes[0].size = ret.leftPane;
-      }
-      if (this.showRightPane()) {
-        this.$refs.splOuter.panes[this.$refs.splOuter.panes.length - 1].size = ret.rightPane;
-      }
-      if (this.showTopPane()) {
-        this.$refs.splInner.panes[0].size = ret.topPane;
-      }
-      if (this.showBottomPane()) {
-        let bottomPaneSize;
-        if (!this.chatStore.isEditingBigText) {
-          bottomPaneSize = ret.bottomPane;
-        } else {
-          bottomPaneSize = ret.bottomPaneBig;
+      if (this.isMobile()) {
+        if (this.showTopPane()) {
+          this.$refs.splCentral.panes[0].size = ret.topPane;
         }
-        this.$refs.splInner.panes[this.$refs.splInner.panes.length - 1].size = bottomPaneSize;
-      }
-      this.setMiddlePane(ret);
-    },
-    setMiddlePane(ret) {
-      let middleSize = 100; // percents
-      let middlePaneIndex = 0;
-      if (this.showTopPane()) {
-        middleSize -= ret.topPane;
-        middlePaneIndex = 1;
-      }
-      if (this.showBottomPane()) {
-        let bottomPaneSize;
-        if (!this.chatStore.isEditingBigText) {
-          bottomPaneSize = ret.bottomPane;
-        } else {
-          bottomPaneSize = ret.bottomPaneBig;
+      } else {
+        if (this.showLeftPane()) {
+          this.$refs.splOuter.panes[0].size = ret.leftPane;
         }
-        middleSize -= bottomPaneSize;
+        if (this.showRightPane()) {
+          this.$refs.splOuter.panes[this.$refs.splOuter.panes.length - 1].size = ret.rightPane;
+        }
+        if (this.showBottomPane()) {
+          let bottomPaneSize;
+          if (!this.chatStore.isEditingBigText) {
+            bottomPaneSize = ret.bottomPane;
+          } else {
+            bottomPaneSize = ret.bottomPaneBig;
+          }
+          this.$refs.splCentral.panes[this.$refs.splCentral.panes.length - 1].size = bottomPaneSize;
+        }
       }
-      this.$refs.splInner.panes[middlePaneIndex].size = middleSize;
     },
 
     onPanelAdd() {
+      this.$refs.chatVideoRef?.recalculateLayout();
+
       // console.debug("On panel add", this.$refs.splOuter.panes);
       this.$nextTick(() => {
         const stored = this.getStored();
@@ -745,6 +761,8 @@ export default {
 
     },
     onPanelRemove() {
+      this.$refs.chatVideoRef?.recalculateLayout();
+
       // console.debug("On panel removed", this.$refs.splOuter.panes);
       this.$nextTick(() => {
         const stored = this.getStored();
@@ -753,6 +771,8 @@ export default {
       })
     },
     onPanelResized() {
+      this.$refs.chatVideoRef?.recalculateLayout();
+
       this.$nextTick(() => {
         this.saveToStored(this.prepareForStore());
       })
@@ -789,12 +809,6 @@ export default {
         }
       }
     },
-    'chatStore.isEditingBigText': {
-      handler: function (newValue, oldValue) {
-        const stored = this.getStored();
-        this.setMiddlePane(stored);
-      }
-    }
   },
   created() {
 
