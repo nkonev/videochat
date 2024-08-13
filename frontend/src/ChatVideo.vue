@@ -1,7 +1,7 @@
 <template>
     <splitpanes :dbl-click-splitter="false">
         <pane size="80">
-            <div>With presenter</div>
+            <video id="presenter" ref="presenterRef"/>
         </pane>
         <pane>
             <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'"></v-col>
@@ -151,6 +151,9 @@ export default {
             candidateToAppendVideo.setUserName(md.login);
             candidateToAppendVideo.setAvatar(md.avatar);
             candidateToAppendVideo.setUserId(md.userId);
+
+            this.updatePresenter(track);
+
             return
           } else if (track.kind == 'audio') {
             console.debug("Processing audio track", track);
@@ -182,6 +185,11 @@ export default {
           this.chatStore.initializingVideoCall = false;
         }
       }
+    },
+
+    // TODO also in presenter mode apply the decreased resolution
+    updatePresenter(cameraPub) {
+        cameraPub?.videoTrack?.attach(this.$refs.presenterRef);
     },
 
     handleTrackUnsubscribed(
