@@ -187,7 +187,9 @@ export default {
       }
     },
 
-    // TODO also in presenter mode apply the decreased resolution
+    // TODO add a presenter mode property and create html elements (old-fashioned all equal videos or the new with presenter) in accordance with
+    // TODO also in presenter mode apply the decreased resolution for side the video elements
+    // TODO think how to reuse the presenter mode with egress
     updatePresenter(cameraPub) {
         cameraPub?.videoTrack?.attach(this.$refs.presenterRef);
     },
