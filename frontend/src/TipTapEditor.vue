@@ -46,14 +46,14 @@ import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
 import {getStoredMessageEditNormalizeText, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
 import {mapStores} from "pinia";
-import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore.js";
+import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore.js";
 import {mergeAttributes} from "@tiptap/core";
 import {profile} from "@/router/routes.js";
 
 const empty = "";
 
 const embedUploadFunction = (chatId, files, correlationId, fileItemId, shouldAddDateToTheFilename) => {
-    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemId, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemId, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
@@ -169,9 +169,10 @@ export default {
             } else if (dto.aType == media_audio) {
                 this.setAudio(dto.url)
             }
-            if (this.chatStore.sendMessageAfterMediaInsert) {
+            if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia) {
                 this.$emit("sendMessage");
                 this.chatStore.sendMessageAfterMediaInsert = false;
+                this.chatStore.resetFileUploadingSessionType();
             }
         }
     },

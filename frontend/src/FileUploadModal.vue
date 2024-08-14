@@ -78,7 +78,7 @@ import axios from "axios";
 import throttle from "lodash/throttle";
 import {formatSize, hasLength, renameFilePart} from "./utils";
 import {mapStores} from "pinia";
-import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore";
+import {fileUploadingSessionTypeMessageEdit, fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore";
 import {v4 as uuidv4} from "uuid";
 import {retry} from "@lifeomic/attempt";
 const CancelToken = axios.CancelToken;
@@ -318,13 +318,12 @@ export default {
             if (this.chatStore.fileUploadingQueue.length == this.chatStore.fileUploadingQueue.filter((item) => item.finished).length) {
                 this.chatStore.fileUploadingQueue = [];
                 this.chatStore.fileUploadOverallProgress = 0;
-                this.chatStore.resetFileUploadingSessionType();
             }
             this.hideModal();
             return Promise.resolve();
         },
         shouldShowSendMessageAfterMediaInsert() {
-            return this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit
+            return this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit || this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia
         },
         cancel(item) {
             item.cancelSource.cancel()

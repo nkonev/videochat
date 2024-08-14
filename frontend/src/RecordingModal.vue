@@ -59,7 +59,7 @@ import bus, {
     MESSAGE_EDIT_SET_FILE_ITEM_UUID
 } from "@/bus/bus";
 import {mapStores} from "pinia";
-import {useChatStore} from "@/store/chatStore";
+import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore";
 import {RecordRTCPromisesHandler} from "recordrtc";
 import {v4 as uuidv4} from "uuid";
 
@@ -229,7 +229,7 @@ export default {
       const correlationId = uuidv4();
       bus.emit(CORRELATION_ID_SET, correlationId);
       const files = this.makeFiles();
-      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: true});
+      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia});
       bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 
       this.closeModal();

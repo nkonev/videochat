@@ -8,6 +8,7 @@ import {setStoredLanguage} from "@/store/localStore";
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
 export const fileUploadingSessionTypeMessageEdit = "fromMessageEdit"
+export const fileUploadingSessionTypeMedia = "media"
 
 const chatDtoFactory = () => {
     return {

@@ -185,7 +185,7 @@
         ON_WINDOW_RESIZED,
         OPEN_SETTINGS,
         ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
-        OPEN_RECORDING_MODAL,
+        OPEN_RECORDING_MODAL, FILE_CREATED,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -209,7 +209,7 @@
     import MessageEditLinkModal from "@/MessageEditLinkModal";
     import MessageEditMediaModal from "@/MessageEditMediaModal";
     import {mapStores} from "pinia";
-    import {useChatStore} from "@/store/chatStore";
+    import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
     import {
         BubbleMenu,
@@ -412,10 +412,10 @@
             },
             openFileUploadForAddingFiles() {
                 const fileItemUuid = this.editMessageDto.fileItemUuid;
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id});
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
             },
             onFilesClicked() {
-                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id});
+                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
             },
             onFileItemUuid({fileItemUuid, chatId}) {
               if (chatId == this.chatId) {
@@ -662,6 +662,13 @@
             openRecordingModal() {
                 bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.editMessageDto.fileItemUuid})
             },
+            onFileCreatedEvent(e) {
+                if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
+                    this.sendMessageToChat();
+                    this.chatStore.sendMessageAfterMediaInsert = false;
+                    this.chatStore.resetFileUploadingSessionType();
+                }
+            },
         },
         computed: {
           ...mapStores(useChatStore),
@@ -674,6 +681,7 @@
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
+            bus.on(FILE_CREATED, this.onFileCreatedEvent);
 
             this.targetElement = document.getElementById('sendButtonContainer')
             this.$nextTick(()=>{
@@ -695,6 +703,8 @@
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
+            bus.off(FILE_CREATED, this.onFileCreatedEvent);
+
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
             this.targetElement = null;
