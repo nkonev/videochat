@@ -53,7 +53,6 @@
 import {getStoreRecordingTab, setStoreRecordingTab} from "@/store/localStore.js";
 import bus, {
     OPEN_RECORDING_MODAL,
-    CORRELATION_ID_SET,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     OPEN_FILE_UPLOAD_MODAL,
     MESSAGE_EDIT_SET_FILE_ITEM_UUID
@@ -226,10 +225,9 @@ export default {
       }
     },
     onAddToMessage() {
-      const correlationId = uuidv4();
-      bus.emit(CORRELATION_ID_SET, correlationId);
+      this.chatStore.correlationId = uuidv4();
       const files = this.makeFiles();
-      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia});
+      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: this.chatStore.correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia});
       bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 
       this.closeModal();
