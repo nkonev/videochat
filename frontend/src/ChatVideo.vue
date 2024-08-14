@@ -191,6 +191,7 @@ export default {
     // TODO also in presenter mode apply the decreased resolution for side the video elements
     // TODO think how to reuse the presenter mode with egress
     // TODO invoke this method on user_is_speaking events
+    // TODO if it is a new publication then unsubscribe / unbind the previous
     updatePresenter(cameraPub) {
         cameraPub?.videoTrack?.attach(this.$refs.presenterRef);
     },
