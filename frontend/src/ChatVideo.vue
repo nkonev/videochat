@@ -588,7 +588,6 @@ export default {
 <style lang="stylus" scoped>
 #video-container {
   display: flex;
-  overflow-x: scroll;
   //scroll-snap-align width
   //scroll-padding 0
   height 100%
@@ -599,9 +598,9 @@ export default {
 
 .video-container-position-top {
   flex-direction: row;
+  overflow-x: scroll;
   overflow-y: hidden;
   scrollbar-width: none;
-
 }
 
 .video-container-position-side {
