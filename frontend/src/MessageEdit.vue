@@ -217,6 +217,7 @@
     } from '@tiptap/vue-3';
     import chroma from "chroma-js/chroma-light.js";
     import RecordingModal from "@/RecordingModal.vue";
+    import {v4 as uuidv4} from "uuid";
 
     export default {
         props:['chatId'],
@@ -230,6 +231,7 @@
                 answerOnPreview: null,
                 targetElement: null,
                 resizeObserver: null,
+                correlationId: null,
             }
         },
         methods: {
@@ -410,12 +412,16 @@
                 return undefined
               }
             },
+            setCorrelationId(newCorrelationId) {
+                this.correlationId = newCorrelationId;
+            },
             openFileUploadForAddingFiles() {
                 const fileItemUuid = this.editMessageDto.fileItemUuid;
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
+                this.setCorrelationId(uuidv4());
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.correlationId});
             },
             onFilesClicked() {
-                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
+                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id});
             },
             onFileItemUuid({fileItemUuid, chatId}) {
               if (chatId == this.chatId) {
@@ -662,11 +668,13 @@
             openRecordingModal() {
                 bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.editMessageDto.fileItemUuid})
             },
-            onFileCreatedEvent(e) {
-                if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
-                    this.sendMessageToChat();
-                    this.chatStore.sendMessageAfterMediaInsert = false;
-                    this.chatStore.resetFileUploadingSessionType();
+            onFileCreatedEvent(dto) {
+                if (hasLength(this.correlationId) && this.correlationId == dto?.fileInfoDto?.correlationId) {
+                    if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
+                        this.sendMessageToChat();
+                        this.chatStore.sendMessageAfterMediaInsert = false;
+                        this.chatStore.resetFileUploadingSessionType();
+                    }
                 }
             },
         },
@@ -708,6 +716,7 @@
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
             this.targetElement = null;
+            this.correlationId = null;
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);

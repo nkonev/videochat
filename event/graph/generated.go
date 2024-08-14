@@ -161,6 +161,7 @@ type ComplexityRoot struct {
 		CanPlayAsVideo func(childComplexity int) int
 		CanShare       func(childComplexity int) int
 		CanShowAsImage func(childComplexity int) int
+		CorrelationID  func(childComplexity int) int
 		FileItemUUID   func(childComplexity int) int
 		Filename       func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -1014,6 +1015,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FileInfoDto.CanShowAsImage(childComplexity), true
+
+	case "FileInfoDto.correlationId":
+		if e.complexity.FileInfoDto.CorrelationID == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.CorrelationID(childComplexity), true
 
 	case "FileInfoDto.fileItemUuid":
 		if e.complexity.FileInfoDto.FileItemUUID == nil {
@@ -6406,6 +6414,47 @@ func (ec *executionContext) _FileInfoDto_fileItemUuid(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_FileInfoDto_fileItemUuid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_correlationId(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_correlationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CorrelationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_correlationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FileInfoDto",
 		Field:      field,
@@ -12378,6 +12427,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(_ contex
 				return ec.fieldContext_FileInfoDto_canPlayAsAudio(ctx, field)
 			case "fileItemUuid":
 				return ec.fieldContext_FileInfoDto_fileItemUuid(ctx, field)
+			case "correlationId":
+				return ec.fieldContext_FileInfoDto_correlationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FileInfoDto", field.Name)
 		},
@@ -15000,6 +15051,8 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "correlationId":
+			out.Values[i] = ec._FileInfoDto_correlationId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

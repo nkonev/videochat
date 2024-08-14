@@ -159,6 +159,7 @@ type FileInfoDto {
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
     fileItemUuid: String!
+    correlationId: String
 }
 
 type WrappedFileInfoDto {

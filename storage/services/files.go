@@ -268,7 +268,7 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 
 	metadata := objInfo.UserMetadata
 
-	_, fileOwnerId, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
+	_, fileOwnerId, correlationId, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
 		GetLogEntry(c).Errorf("Error get metadata: %v", err)
 		return nil, err
@@ -298,6 +298,10 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 	if err != nil {
 		GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", objInfo.Key, err)
 	}
+	var theCorrelationId *string
+	if len(correlationId) > 0 {
+		theCorrelationId = &correlationId
+	}
 	info := &dto.FileInfoDto{
 		Id:             objInfo.Key,
 		Filename:       filename,
@@ -314,6 +318,7 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 		CanShowAsImage: utils.IsImage(objInfo.Key),
 		CanPlayAsAudio: utils.IsAudio(objInfo.Key),
 		FileItemUuid:   itemUuid,
+		CorrelationId:  theCorrelationId,
 	}
 	return info, nil
 }

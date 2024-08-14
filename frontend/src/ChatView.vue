@@ -379,6 +379,7 @@ export default {
                                         canShowAsImage
                                         canPlayAsAudio
                                         fileItemUuid
+                                        correlationId
                                       }
                                     }
                                     reactionChangedEvent {
