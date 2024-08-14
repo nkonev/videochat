@@ -151,6 +151,8 @@ export default {
             showSearchButton: true,
             markInstance: null,
             chatId: null,
+            fileUploadingSessionType: null,
+            correlationId: null,
         }
     },
     computed: {
@@ -161,11 +163,15 @@ export default {
         isCachedRelevantToArguments({fileItemUuid, chatId}) {
             return this.fileItemUuid == fileItemUuid && this.chatId == chatId
         },
-        initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles, chatId}) {
+        initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles, chatId, fileUploadingSessionType, correlationId}) {
             this.messageIdToDetachFiles = messageIdToDetachFiles;
             this.isMessageEditing = messageEditing;
             this.fileItemUuid = fileItemUuid;
             this.chatId = chatId;
+
+            // just pass them to FileUploadModal
+            this.fileUploadingSessionType = fileUploadingSessionType;
+            this.correlationId = correlationId;
         },
         initiateRequest() {
             return axios.get(`/api/storage/${this.chatId}`, {
@@ -193,7 +199,7 @@ export default {
             item.loadingHasNoMessage = false;
         },
         openUploadModal() {
-            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.isMessageEditing});
+            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.isMessageEditing, fileUploadingSessionType: this.fileUploadingSessionType, correlationId: this.correlationId});
         },
         onDetachFilesFromMessage () {
           axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
@@ -332,6 +338,8 @@ export default {
             this.messageIdToDetachFiles = null;
             this.isMessageEditing = false;
             this.showSearchButton = true;
+            this.fileUploadingSessionType = null;
+            this.correlationId = null;
         },
         clearOnReset() {
             this.chatId = null;
