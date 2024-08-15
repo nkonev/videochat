@@ -57,9 +57,10 @@ Click on image to open a screenshot gallery.
 * Firewall friendly: only two ports for WebRTC are needed (TURN, WebRTC).
 * Simple setup with Ansible and Docker Swarm.
 * No vendor lock on cloud provider.
-* Familiar infrastructure - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, NGINX.
+* Familiar infrastructure - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, Nginx.
 * Self-contained frontend bundle without any CDN downloads - it can work in a closed network without internet access.
 * No need to edit `/etc/hosts` for local demo installation or development.
+* Send the message on finishing media (image, video) or file uploading.
 
 # Try
 Demo server [installation](https://chat.nkonev.name/)
