@@ -358,8 +358,10 @@
                 return url;
             },
             doSearch(){
-                this.page = firstPage;
-                this.updateItems();
+                if (this.chatId) {
+                    this.page = firstPage;
+                    this.updateItems();
+                }
             },
             transformItems(items) {
                 if (items != null) {

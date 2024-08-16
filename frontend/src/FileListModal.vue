@@ -184,8 +184,10 @@ export default {
             })
         },
         doSearch(){
-            this.page = firstPage;
-            this.updateItems();
+            if (this.chatId) { // we search for .mp3, then close modal, then switch to another chat
+                this.page = firstPage;
+                this.updateItems();
+            }
         },
         transformItems(items) {
           if (items != null) {
