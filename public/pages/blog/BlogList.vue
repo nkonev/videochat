@@ -54,7 +54,7 @@
       </v-card>
 
       <v-divider/>
-      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
+      <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()" :total-visible="pagesCount < 10 && !isMobile() ? 10 : undefined"/>
     </div>
 
   </v-container>
