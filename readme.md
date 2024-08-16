@@ -62,7 +62,7 @@ Click on image to open a screenshot gallery.
 * Familiar infrastructure - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, Nginx.
 * Self-contained frontend bundle without any CDN downloads - it can work in a closed network without internet access.
 * No need to edit `/etc/hosts` for local demo installation or development.
-* Send the message on finishing media (image, video) or file uploading.
+* Send the message on finishing media (image, video) or file has been uploaded.
 
 # Try
 Demo server [installation](https://chat.nkonev.name/)
