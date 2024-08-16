@@ -155,7 +155,7 @@ export default {
       }
     },
     resetFileItemUuid() {
-      this.chatStore.fileItemUuid = null;
+        this.fileItemUuid = null;
     },
     setCorrelationId(newCorrelationId) {
       this.chatStore.correlationId = newCorrelationId;
