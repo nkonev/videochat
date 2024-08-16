@@ -178,8 +178,8 @@ func configureApiEcho(
 	e.PUT("/video/:id/dial/enter", ih.ProcessEnterToDial)     // user enters to call somehow, either by clicking green tube or opening .../video link
 	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelCall)     // cancelling by invitee
 	e.PUT("/video/:id/dial/exit", ih.ProcessLeave)            // used by any user on exit
-	e.PUT("/video/:id/dial/request-for-is-calling", ih.SendDialStatusChangedToCallOwner)
-	e.GET("/video/user/status", ih.GetInvitationStatus)
+	e.PUT("/video/user/request-status", ih.SendCurrentVideoStatuses)
+	e.GET("/video/user/status", ih.GetMyVideoStatus)
 
 	e.PUT("/video/:id/record/start", rh.StartRecording)
 	e.PUT("/video/:id/record/stop", rh.StopRecording)

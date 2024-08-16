@@ -12,6 +12,7 @@ import (
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
+	"strings"
 )
 
 type InviteHandler struct {
@@ -230,7 +231,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		vh.sendEvents(c, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusInCall, maybeOwnerId, maybeOwnerAvatar, maybeTetATet)
 	}
 
-	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
+	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context(), []int64{userPrincipalDto.UserId})
 
 	return c.NoContent(http.StatusOK)
 }
@@ -423,7 +424,7 @@ func (vh *InviteHandler) ProcessLeave(c echo.Context) error {
 		// set myself to temporarily status
 		vh.removeFromCallingList(c, ownerId, ownerAvatar, tetATet, chatId, []int64{userPrincipalDto.UserId}, services.CallStatusRemoving)
 	}
-	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
+	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context(), []int64{userPrincipalDto.UserId})
 	return c.NoContent(http.StatusOK)
 }
 
@@ -477,31 +478,33 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 }
 
 // send current dial statuses to WebSocket
-func (vh *InviteHandler) SendDialStatusChangedToCallOwner(c echo.Context) error {
+func (vh *InviteHandler) SendCurrentVideoStatuses(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
+	if !ok || userPrincipalDto == nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
-	chatId, err := GetPathParamAsInt64(c, "id")
-	if err != nil {
-		return err
+	userIdParam := c.QueryParam("userId")
+	userIds := make([]int64, 0)
+	split := strings.Split(userIdParam, ",")
+	for _, us := range split {
+		parseInt64, err := utils.ParseInt64(us)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("unable to parse %v", err)
+		} else {
+			userIds = append(userIds, parseInt64)
+		}
 	}
 
-	// check my access to chat
-	if ok, err := vh.chatClient.CheckAccess(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
-		return c.NoContent(http.StatusInternalServerError)
-	} else if !ok {
-		return c.NoContent(http.StatusUnauthorized)
+	if len(userIds) > 0 {
+		vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context(), userIds)
 	}
-
-	vh.stateChangedEventService.NotifyAllChatsAboutUsersVideoStatus(c.Request().Context())
 
 	return c.NoContent(http.StatusOK)
 }
 
-func (vh *InviteHandler) GetInvitationStatus(c echo.Context) error {
+func (vh *InviteHandler) GetMyVideoStatus(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")

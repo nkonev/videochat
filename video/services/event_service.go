@@ -71,7 +71,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 
 
 // sends info about "red dot"
-func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx context.Context) {
+func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx context.Context, userIdsToFilter []int64) {
 	userIds, err := h.redisService.GetUserIds(ctx)
 	if err != nil {
 		GetLogEntry(ctx).Error(err, "error during reading userIds %v", err)
@@ -80,6 +80,12 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx conte
 
 	var dtos []dto.VideoCallUserCallStatusChangedDto = make([]dto.VideoCallUserCallStatusChangedDto, 0)
 	for _, userId := range userIds {
+		if userIdsToFilter != nil {
+			if !utils.Contains(userIdsToFilter, userId) {
+				continue
+			}
+		}
+
 		status, err := h.redisService.GetUserCallStatus(ctx, userId)
 		if err != nil {
 			GetLogEntry(ctx).Error(err, "error during reading userStatus, userId = %v", userId, err)

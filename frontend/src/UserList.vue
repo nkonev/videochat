@@ -302,6 +302,7 @@ export default {
 
           this.graphQlUserStatusSubscribe();
           this.performMarking();
+          this.requestInVideo();
           return Promise.resolve(true)
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
@@ -632,9 +633,23 @@ export default {
               params: {
                   userId: joined
               },
-          });
+          }).then(()=>{
+              this.requestInVideo();
+          })
       }
     },
+    requestInVideo() {
+      this.$nextTick(()=>{
+          const list = this.items.map(item => item.id);
+          const joined = list.join(",");
+
+          axios.put("/api/video/user/request-status", null, {
+              params: {
+                  userId: joined
+              },
+          });
+      })
+    }
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})

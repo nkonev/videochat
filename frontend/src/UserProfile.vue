@@ -206,6 +206,13 @@ export default {
     onProfileSet() {
       this.loadUser();
       this.graphQlUserStatusSubscribe();
+      this.$nextTick(()=>{
+          axios.put("/api/video/user/request-status", null, {
+              params: {
+                  userId: this.userId
+              },
+          });
+      })
     },
     canDrawUsers() {
       return !!this.chatStore.currentUser

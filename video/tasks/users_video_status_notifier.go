@@ -32,7 +32,7 @@ func (srv *UsersVideoStatusNotifierService) doJob() {
 	defer span.End()
 
 	GetLogEntry(ctx).Debugf("Invoked periodic UsersVideoStatusNotifier")
-	srv.scheduleService.NotifyAllChatsAboutUsersVideoStatus(ctx)
+	srv.scheduleService.NotifyAllChatsAboutUsersVideoStatus(ctx, nil)
 
 	GetLogEntry(ctx).Debugf("End of UsersVideoStatusNotifier")
 }

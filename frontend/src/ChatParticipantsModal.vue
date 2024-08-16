@@ -236,7 +236,14 @@
             },
             afterFirstDrawItems() {
                 this.$nextTick(()=>{
-                    axios.put(`/api/video/${this.chatId}/dial/request-for-is-calling`);
+                    const userIds = this.itemsDto?.items.map(item => item.id);
+                    const joined = userIds.join(",");
+
+                    axios.put("/api/video/user/request-status", null, {
+                        params: {
+                            userId: joined
+                        },
+                    });
                 })
             },
             changeChatAdmin(item) {

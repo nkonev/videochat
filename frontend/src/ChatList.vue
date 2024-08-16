@@ -237,6 +237,7 @@ export default {
             }
           }
           this.performMarking();
+          this.requestInVideo();
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
         })
@@ -599,9 +600,23 @@ export default {
               params: {
                   userId: joined
               },
-          });
+          }).then(()=>{
+              this.requestInVideo();
+          })
       }
     },
+    requestInVideo() {
+        this.$nextTick(()=>{
+            const userIds = this.tetAtetParticipants;
+            const joined = userIds.join(",");
+
+            axios.put("/api/video/user/request-status", null, {
+                params: {
+                    userId: joined
+                },
+            });
+        })
+    }
   },
   components: {
     ChatListContextMenu
