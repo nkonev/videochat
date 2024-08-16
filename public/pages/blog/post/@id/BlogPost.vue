@@ -200,7 +200,7 @@ export default {
   z-index 100
   background white
   border-color $borderColor
-  border-style: dashed;
+  border-style: solid;
   border-width 1px
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.05),
