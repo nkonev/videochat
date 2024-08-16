@@ -11,6 +11,7 @@
 import "prosemirror-view/style/prosemirror.css";
 import "./messageBody.styl";
 import { Editor, EditorContent } from "@tiptap/vue-3";
+import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Italic from "@tiptap/extension-italic";
@@ -230,6 +231,17 @@ export default {
             },
         });
 
+    // We use Ctrl+Enter for sending a message
+    // https://github.com/ueberdosis/tiptap/issues/2195#issuecomment-979171024
+    // https://github.com/ueberdosis/tiptap/discussions/2948
+    const DisableCtrlEnter = Extension.create({
+      addKeyboardShortcuts() {
+          return {
+              'Mod-Enter': () => true,
+          };
+      },
+    });
+
     this.editor = new Editor({
       // https://github.com/ueberdosis/tiptap/issues/873#issuecomment-730147217
       parseOptions: {
@@ -294,6 +306,7 @@ export default {
           ListItem,
           BulletList,
           OrderedList,
+          DisableCtrlEnter,
       ],
       editorProps: {
           // Preserves newline on text paste.
