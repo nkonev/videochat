@@ -1,5 +1,7 @@
 [![Build Status](https://github.com/nkonev/videochat/workflows/CI%20jobs/badge.svg)](https://github.com/nkonev/videochat/actions)
 
+[GitHub](https://github.com/nkonev/videochat) | [GitFlic](https://gitflic.ru/project/nkonev/videochat)
+
 # Videochat
 Your open source self-hosted videoconference platform.
 
