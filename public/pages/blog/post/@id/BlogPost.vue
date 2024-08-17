@@ -1,16 +1,16 @@
 <template>
   <v-container class="ma-0 pa-0 my-list-container" fluid>
-  <h1 v-if="blogDto.is404">404 Not found</h1>
+  <h1 v-if="pageContext.data.blogDto.is404">404 Not found</h1>
   <div v-else class="my-messages-scroller">
-    <h1 v-html="blogDto.title" class="ml-3 mt-2"></h1>
+    <h1 v-html="pageContext.data.blogDto.title" class="ml-3 mt-2"></h1>
 
     <div class="pr-1 mr-1 pl-1 mt-0 ml-3 message-item-root" >
       <div class="message-item-with-buttons-wrapper">
-        <v-list-item class="pl-2 pt-0" v-if="blogDto?.owner">
-          <template v-slot:prepend v-if="hasLength(blogDto.owner.avatar)">
+        <v-list-item class="pl-2 pt-0" v-if="pageContext.data.blogDto?.owner">
+          <template v-slot:prepend v-if="hasLength(pageContext.data.blogDto.owner.avatar)">
             <div class="item-avatar pr-0 mr-3">
-              <a :href="getProfileLink(blogDto.owner)" class="user-link">
-                  <img :src="blogDto.owner.avatar">
+              <a :href="getProfileLink(pageContext.data.blogDto.owner)" class="user-link">
+                  <img :src="pageContext.data.blogDto.owner.avatar">
               </a>
             </div>
 
@@ -18,9 +18,9 @@
 
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
-              <div class="author-and-date" v-if="blogDto.owner">
-                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(blogDto.owner, true)" :href="getProfileLink(blogDto.owner)">{{blogDto.owner.login}}</a></v-list-item-title>
-                <v-list-item-subtitle>{{getDate(blogDto.createDateTime)}}</v-list-item-subtitle>
+              <div class="author-and-date" v-if="pageContext.data.blogDto.owner">
+                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(pageContext.data.blogDto.owner, true)" :href="getProfileLink(pageContext.data.blogDto.owner)">{{pageContext.data.blogDto.owner.login}}</a></v-list-item-title>
+                <v-list-item-subtitle>{{getDate(pageContext.data.blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
                 <v-btn variant="plain" rounded size="large" :href="getChatMessageLink()" title="Go to the message in chat"><v-icon size="large">mdi-forum</v-icon></v-btn>
@@ -30,17 +30,17 @@
         </v-list-item>
 
         <div class="pa-0 ma-0 mt-1 message-item-wrapper post-content" @click="onClickTrap">
-          <v-container v-html="blogDto.text" class="message-item-text ml-0"></v-container>
-          <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(blogDto)">
-            <v-btn v-for="(reaction, i) in blogDto.reactions" variant="tonal" size="small" height="32px" rounded :class="reactionClass(i)" :title="getReactedUsers(reaction)"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
+          <v-container v-html="pageContext.data.blogDto.text" class="message-item-text ml-0"></v-container>
+          <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(pageContext.data.blogDto)">
+            <v-btn v-for="(reaction, i) in pageContext.data.blogDto.reactions" variant="tonal" size="small" height="32px" rounded :class="reactionClass(i)" :title="getReactedUsers(reaction)"><span v-if="reaction.count > 1" class="text-body-2 with-space">{{ '' + reaction.count + ' ' }}</span><span class="text-h6">{{ reaction.reaction }}</span></v-btn>
           </div>
         </div>
       </div>
     </div>
 
-    <template v-if="blogDto.messageId">
-        <v-container class="ma-0 pa-0 mb-2" fluid>
-          <MessageItem v-for="(item, index) in items" v-if="!commentsLoading"
+    <template v-if="pageContext.data.blogDto.messageId">
+        <v-container class="ma-0 pa-0" fluid>
+          <MessageItem v-for="(item, index) in pageContext.data.items" v-if="!pageContext.data.commentsLoading"
             :id="getItemId(item.id)"
             :key="item.id"
             :item="item"
@@ -58,7 +58,7 @@
 
           <v-btn class="mt-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
 
-          <v-pagination v-model="page" @update:modelValue="onClickPage" :length="pagesCount" v-if="shouldShowPagination()"/>
+          <v-pagination v-model="pageContext.data.page" @update:modelValue="onClickPage" :length="pageContext.data.pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
     </template>
   </div>
@@ -66,7 +66,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import MessageItem from "#root/common/components/MessageItem.vue";
 import {getHumanReadableDate, hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM, onClickTrap} from "#root/common/utils";
 import {chat, messageIdHashPrefix, messageIdPrefix, profile} from "#root/common/router/routes";
@@ -82,9 +81,6 @@ export default {
         pageContext
     }
   },
-  data() {
-      return this.pageContext.data;
-  },
   methods: {
     getLoginColoredStyle,
     hasLength,
@@ -96,10 +92,10 @@ export default {
       return url;
     },
     getChatMessageLink() {
-      return chat + '/' + this.blogDto.chatId + messageIdHashPrefix + this.blogDto.messageId;
+      return chat + '/' + this.pageContext.data.blogDto.chatId + messageIdHashPrefix + this.pageContext.data.blogDto.messageId;
     },
     getChatLink() {
-      return chat + '/' + this.blogDto.chatId;
+      return chat + '/' + this.pageContext.data.blogDto.chatId;
     },
     getDate(date) {
       if (hasLength(date)) {
@@ -127,36 +123,16 @@ export default {
     },
 
     onClickPage(e) {
-      this.page = e;
-
-      let actualPage = e - 1;
+      this.commentsLoading = true; // false will be set with the new data from server
 
       const url = new URL(window.location.href);
       url.searchParams.set(PAGE_PARAM, e);
       navigate(url.pathname + url.search);
-      this.loadComments(actualPage)
     },
     shouldShowPagination() {
-      return this.count > PAGE_SIZE
+      return this.pageContext.data.count > PAGE_SIZE
     },
 
-    loadComments(page) {
-        this.commentsLoading = true;
-        axios.get(`/api/blog/${this.blogDto.chatId}/comment`, {
-            params: {
-                page: page,
-                size: PAGE_SIZE,
-                reverse: false,
-            },
-        }).then((res) => {
-            this.items = res.data.items;
-            // this.page = res.data.page;
-            this.pagesCount = res.data.pagesCount;
-            this.count = res.data.count;
-        }).finally(()=>{
-            this.commentsLoading = false;
-        })
-    },
     onClickTrap(e) {
         onClickTrap(e)
     },
@@ -165,8 +141,16 @@ export default {
     MessageItem,
   },
   computed: {
+      commentsLoading: {
+        get() {
+            return this.pageContext.data.commentsLoading
+        },
+        set(v) {
+            this.pageContext.data.commentsLoading = v;
+        }
+    }
   },
-  async mounted() {
+  mounted() {
   },
   beforeUnmount() {
   },

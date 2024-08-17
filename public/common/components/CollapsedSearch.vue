@@ -17,9 +17,7 @@
                       :model-value="provider.getModelValue()"
                       @update:model-value="provider.setModelValue"
                       clearable clear-icon="mdi-close-circle"
-                      @keyup.esc="resetInput()" @blur="provider.setShowSearchButton(true)" :label="provider.searchName()"
-                      ref="textField"
-        >
+                      @keyup.esc="resetInput()" @blur="provider.setShowSearchButton(true)" :label="provider.searchName()">
             <template v-slot:append-inner>
                 <v-btn icon density="compact" :disabled="true"><v-icon class="search-icon">{{ provider.searchIcon() }}</v-icon></v-btn>
             </template>
@@ -72,22 +70,11 @@ export default {
                 this.provider.setShowSearchButton(true);
             }
         },
-        setCursorToTheEnd() {
-            if (this.provider.getModelValue()) {
-                const el = this.$refs.textField;
-
-                el.focus();
-                el.selectionStart = el.selectionEnd = el.value.length;
-            }
-        }
     },
     mounted() {
         if ('visualViewport' in window && this.isMobile()) {
             window.visualViewport.addEventListener('resize', this.reactOnKeyboardChange);
         }
-        this.$nextTick(()=>{
-            this.setCursorToTheEnd()
-        })
     },
     beforeUnmount() {
         if ('visualViewport' in window && this.isMobile()) {
