@@ -1,14 +1,19 @@
 <template>
-    <splitpanes :dbl-click-splitter="false">
-        <pane size="80">
-            <div class="video-presenter-container-element">
-                <video id="presenter" class="video-presenter-element" ref="presenterRef"/>
-            </div>
-        </pane>
-        <pane>
-            <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'"></v-col>
-        </pane>
-    </splitpanes>
+    <template v-if="presenter">
+        <splitpanes :dbl-click-splitter="false">
+            <pane size="80">
+                <div class="video-presenter-container-element">
+                    <video id="presenter" class="video-presenter-element" ref="presenterRef"/>
+                </div>
+            </pane>
+            <pane>
+                <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'"></v-col>
+            </pane>
+        </splitpanes>
+    </template>
+    <template v-else>
+        <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoIsOnTopProperty ? 'video-container-position-top' : 'video-container-position-side'"></v-col>
+    </template>
 </template>
 
 <script>
@@ -60,7 +65,7 @@ export default {
     refreshLocalMutedInAppBarMixin(),
     videoPositionMixin(),
   ],
-  props: ['chatDto', 'videoIsOnTopProperty'],
+  props: ['chatDto', 'videoIsOnTopProperty', 'presenter'],
   data() {
     return {
       room: null,
