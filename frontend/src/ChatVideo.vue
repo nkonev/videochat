@@ -67,6 +67,7 @@ export default {
       inRestarting: false,
       chatId: null,
       participantIds: [],
+      presenterVideoPublication: null,
     }
   },
   methods: {
@@ -152,7 +153,7 @@ export default {
             candidateToAppendVideo.setAvatar(md.avatar);
             candidateToAppendVideo.setUserId(md.userId);
 
-            this.updatePresenter(track);
+            this.updatePresenterIfNeed(track);
 
             return
           } else if (track.kind == 'audio') {
@@ -191,9 +192,12 @@ export default {
     // TODO also in presenter mode apply the decreased resolution for side the video elements
     // TODO think how to reuse the presenter mode with egress
     // TODO invoke this method on user_is_speaking events
-    // TODO if it is a new publication then unsubscribe / unbind the previous
-    updatePresenter(cameraPub) {
+    updatePresenterIfNeed(cameraPub) {
+        if (this.presenterVideoPublication) {
+            this.presenterVideoPublication.videoTrack?.detach(this.$refs.presenterRef);
+        }
         cameraPub?.videoTrack?.attach(this.$refs.presenterRef);
+        this.presenterVideoPublication = cameraPub;
     },
 
     handleTrackUnsubscribed(
@@ -249,6 +253,9 @@ export default {
           console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);
           if (tracksSids.includes(component.getAudioStreamId())) {
             component.setSpeakingWithTimeout(1000);
+
+            const videoStream = component.getVideoStream();
+            this.updatePresenterIfNeed(videoStream);
           }
         }
       }

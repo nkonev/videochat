@@ -79,6 +79,12 @@ export default {
 
             cameraPub?.videoTrack?.attach(this.$refs.videoRef);
         },
+        getVideoStream() {
+            return this.videoPublication
+        },
+        getAudioStream() {
+            return this.audioPublication
+        },
         getVideoStreamId() {
             return this.videoPublication?.trackSid;
         },
