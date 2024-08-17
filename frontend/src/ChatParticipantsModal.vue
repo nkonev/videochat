@@ -358,10 +358,12 @@
                 return url;
             },
             doSearch(){
-                if (this.chatId) {
-                    this.page = firstPage;
-                    this.updateItems();
+                if (!this.dataLoaded) {
+                    return
                 }
+
+                this.page = firstPage;
+                this.updateItems();
             },
             transformItems(items) {
                 if (items != null) {
