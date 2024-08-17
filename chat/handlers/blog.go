@@ -118,6 +118,8 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	page := utils.FixPageString(c.QueryParam("page"))
 	searchString := c.QueryParam("searchString")
+	searchString = strings.ToLower(searchString)
+	searchString = strings.TrimSpace(searchString)
 
 	var response = make([]*BlogPostPreviewDto, 0)
 
@@ -275,13 +277,13 @@ func appendKeepingN(input []*BlogPostPreviewDto, post *BlogPostPreviewDto, sizeT
 }
 
 func (h *BlogHandler) performSearch(searchString string, searchable []*BlogPostPreviewDto) ([]*BlogPostPreviewDto, error) {
-	searchString = strings.ToLower(searchString)
+	// searchString = strings.ToLower(searchString) // this is already done above
 
 	var intermediateList = make([]*BlogPostPreviewDto, 0)
 
 	for _, blogPostPreviewDto := range searchable {
 		if strings.Contains(strings.ToLower(blogPostPreviewDto.Title), searchString) ||
-			(blogPostPreviewDto.Preview != nil && strings.Contains(strings.ToLower(*blogPostPreviewDto.Text), searchString)) {
+			(blogPostPreviewDto.Text != nil && strings.Contains(strings.ToLower(h.stripTagsPolicy.Sanitize(*blogPostPreviewDto.Text)), searchString)) {
 			intermediateList = append(intermediateList, blogPostPreviewDto)
 		}
 	}
