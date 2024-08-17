@@ -198,7 +198,6 @@ export default {
     // TODO add a presenter mode property and create html elements (old-fashioned all equal videos or the new with presenter) in accordance with
     // TODO also in presenter mode apply the decreased resolution for side the video elements
     // TODO think how to reuse the presenter mode with egress
-    // TODO invoke this method on user_is_speaking events
     updatePresenterIfNeed(cameraPub) {
         if (this.presenter) {
             if (this.presenterVideoPublication) {
