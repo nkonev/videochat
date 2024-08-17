@@ -65,15 +65,13 @@ export default {
     refreshLocalMutedInAppBarMixin(),
     videoPositionMixin(),
   ],
-  props: ['chatDto', 'videoIsOnTopProperty', 'presenter'],
+  props: ['videoIsOnTopProperty', 'chatId', 'presenter'],
   data() {
     return {
       room: null,
       videoContainerDiv: null,
       userVideoComponents: new Map(),
       inRestarting: false,
-      chatId: null,
-      participantIds: [],
       presenterVideoPublication: null,
     }
   },
@@ -202,11 +200,13 @@ export default {
     // TODO think how to reuse the presenter mode with egress
     // TODO invoke this method on user_is_speaking events
     updatePresenterIfNeed(cameraPub) {
-        if (this.presenterVideoPublication) {
-            this.presenterVideoPublication.videoTrack?.detach(this.$refs.presenterRef);
+        if (this.presenter) {
+            if (this.presenterVideoPublication) {
+                this.presenterVideoPublication.videoTrack?.detach(this.$refs.presenterRef);
+            }
+            cameraPub?.videoTrack?.attach(this.$refs.presenterRef);
+            this.presenterVideoPublication = cameraPub;
         }
-        cameraPub?.videoTrack?.attach(this.$refs.presenterRef);
-        this.presenterVideoPublication = cameraPub;
     },
 
     handleTrackUnsubscribed(
@@ -568,9 +568,6 @@ export default {
     this.chatStore.setCallStateInCall();
 
     this.chatStore.initializingVideoCall = true;
-
-    this.chatId = this.chatDto.id;
-    this.participantIds = this.chatDto.participantIds;
 
     if (!this.isMobile() && this.videoIsAtSide()) {
       this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;
