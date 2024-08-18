@@ -63,6 +63,7 @@ Click on image to open a screenshot gallery.
 * Self-contained frontend bundle without any CDN downloads - it can work in a closed network without internet access.
 * No need to edit `/etc/hosts` for local demo installation or development.
 * Send the message when finishing media (image, video) or file has been uploaded.
+* Simple SEO-friendly blog, based on chats.
 
 # Try
 Demo server [installation](https://chat.nkonev.name/)
