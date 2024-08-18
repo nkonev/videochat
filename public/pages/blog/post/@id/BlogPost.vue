@@ -40,7 +40,7 @@
 
     <template v-if="pageContext.data.blogDto.messageId">
         <v-container class="ma-0 pa-0" fluid>
-          <MessageItem v-for="(item, index) in pageContext.data.items" v-if="!pageContext.data.commentsLoading"
+          <MessageItem v-for="(item, index) in pageContext.data.items" v-if="!commentsLoading"
             :id="getItemId(item.id)"
             :key="item.id"
             :item="item"
@@ -56,7 +56,7 @@
             indeterminate
           ></v-progress-linear>
 
-          <v-btn class="mt-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
+          <v-btn class="my-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
 
           <v-pagination v-model="pageContext.data.page" @update:modelValue="onClickPage" :length="pageContext.data.pagesCount" v-if="shouldShowPagination()"/>
         </v-container>
