@@ -42,7 +42,9 @@ Click on image to open a screenshot gallery.
 * Multiple devices support - an user can use several devices simultaneously (e. g. smartphone / PC / Laptop / ...).
 * Screen [sharing](./screenshots.md#screen-sharing).
 * Video recording, recordings are saved to Files.
-* File [sharing](./screenshots.md#chat-files).
+* [Files](./screenshots.md#chat-files).
+* Public files.
+* Public messages.
 * [Muting, kicking](./screenshots.md#videoconference-and-participant-management) video participants.
 * Calling to user to [invite](./screenshots.md#inviting-user-to-videoconference) his or her to video conference.
 * User is [speaking indication](./screenshots.md#user-is-speaking-indication-green-nickname-and-microphone).
@@ -50,16 +52,17 @@ Click on image to open a screenshot gallery.
 * [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
 * Notifications about `@mention`, `@all`, `@here` and missed video calls.
 * Pinned messages.
+* Pinned chats.
 * Reactions.
-* Horizontal scaling, including video server itself thanks to Livekit.
-* No sticky sessions required.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
 * LDAP login integration.
 * Internationalization: English and Russian UI.
 * Firewall friendly: only two ports for WebRTC are needed (TURN, WebRTC).
+* Loadbalancer friendly: No sticky sessions required.
+* Horizontal scaling, including video server itself thanks to Livekit.
 * Simple setup with Ansible and Docker Swarm.
 * No vendor lock on cloud provider.
-* Familiar infrastructure - PostgreSQL, RabbitMQ, Redis, Jaeger, Minio, Traefik, Nginx.
+* Known and popular technologies: PostgreSQL, RabbitMQ, ~Redis~ Valkey, Jaeger, Minio, Traefik, Nginx, Node.js with their communities, no rare nor exotic technologies.
 * Self-contained frontend bundle without any CDN downloads - it can work in a closed network without internet access.
 * No need to edit `/etc/hosts` for local demo installation or development.
 * Send the message when finishing media (image, video) or file has been uploaded.
