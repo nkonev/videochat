@@ -164,7 +164,11 @@ export const useChatStore = defineStore('chat', {
     },
     setFileUploadingSessionType(v) {
       this.fileUploadingSessionType = v;
-    }
+    },
+    resetSendMessageAfterMediaInsertRoutine() {
+      this.sendMessageAfterMediaInsert = false;
+      this.resetFileUploadingSessionType();
+    },
   },
 
 })

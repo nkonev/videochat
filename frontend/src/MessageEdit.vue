@@ -669,8 +669,7 @@
                 if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId) {
                     if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
                         this.sendMessageToChat();
-                        this.chatStore.sendMessageAfterMediaInsert = false;
-                        this.chatStore.resetFileUploadingSessionType();
+                        this.chatStore.resetSendMessageAfterMediaInsertRoutine();
                     }
                 }
             },

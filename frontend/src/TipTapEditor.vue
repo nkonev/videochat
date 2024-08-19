@@ -171,8 +171,7 @@ export default {
             }
             if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia) {
                 this.$emit("sendMessage");
-                this.chatStore.sendMessageAfterMediaInsert = false;
-                this.chatStore.resetFileUploadingSessionType();
+                this.chatStore.resetSendMessageAfterMediaInsertRoutine();
             }
         }
     },
