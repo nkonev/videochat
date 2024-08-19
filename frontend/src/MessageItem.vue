@@ -84,6 +84,8 @@
             onMessageMouseMove(item) {
                 this.sendRead(item);
             },
+            // we cannot move it from front to back because there are messages-over-websocket
+            // and itsn't clear did user read them or not
             sendRead(dto) {
               if (!this.isInBlog) {
                 axios.put(`/api/chat/${this.chatId}/message/read/${dto.id}`)

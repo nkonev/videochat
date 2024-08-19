@@ -258,6 +258,10 @@
             }
             this.updateTopAndBottomIds();
 
+            if (this.isMobile() && this.items.length) {
+                axios.put(`/api/chat/${this.chatId}/message/read/${this.startingFromItemIdBottom}`)
+            }
+
             if (!this.isFirstLoad) {
               this.clearRouteHash()
             }
