@@ -326,7 +326,8 @@ export default {
             return this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit || this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia
         },
         cancel(item) {
-            item.cancelSource.cancel()
+            item.cancelSource.cancel();
+            this.chatStore.sendMessageAfterMediaInsert = false;
         },
         updateChosenFiles(files) {
             console.log("updateChosenFiles", files);
