@@ -44,6 +44,7 @@ type DisplayMessageDto {
     reactions:      [Reaction!]!
     published:      Boolean!
     canPublish:     Boolean!
+    canPin:         Boolean!
 }
 
 type MessageDeletedDto {
@@ -87,6 +88,7 @@ type ChatDto {
     loginColor:          String
     regularParticipantCanPublishMessage: Boolean!
     lastLoginDateTime: Time
+    regularParticipantCanPinMessage: Boolean!
 }
 
 type ChatDeletedDto {
@@ -135,6 +137,7 @@ type PinnedMessageDto {
     owner:          Participant
     pinnedPromoted: Boolean!
     createDateTime: Time!
+    canPin:         Boolean!
 }
 
 type PinnedMessageEvent {

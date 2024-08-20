@@ -412,7 +412,7 @@ func convertToMessageDto(ctx context.Context, dbMessage *db.Message, users map[i
 	if !ok {
 		GetLogEntry(ctx).Errorf("Unable to get message's chat for message id = %v, chat id = %v", dbMessage.Id, dbMessage.ChatId)
 	}
-	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, behalfUserIsAdminInChat, behalfUserId)
+	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, messageChat.RegularParticipantCanPinMessage, behalfUserIsAdminInChat, behalfUserId)
 
 	return ret
 }
@@ -709,7 +709,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			var addedMentions, strippedText = mc.findMentions(message.Text, true, users, userOnlines)
 			var reallyAddedMentions = excludeMyself(addedMentions, userPrincipalDto)
 			mc.notificator.NotifyAddMention(c.Request().Context(), reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
-			mc.notificator.NotifyAboutNewMessage(c.Request().Context(), participantIds, chatId, message, chatDto.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutNewMessage(c.Request().Context(), participantIds, chatId, message, toChatBasic(chatDto), areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -723,6 +723,24 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
+}
+
+func toChatBasic(chatDto *dto.ChatDto) *db.BasicChatDto {
+	if chatDto == nil {
+		return nil
+	} else {
+		return &db.BasicChatDto{
+			Id:                                  chatDto.Id,
+			Title:                               chatDto.Name,
+			IsTetATet:                           chatDto.IsTetATet,
+			CanResend:                           chatDto.CanResend,
+			AvailableToSearch:                   chatDto.AvailableToSearch,
+			IsBlog:                              chatDto.Blog,
+			CreateDateTime:                      chatDto.LastUpdateDateTime, // TODO
+			RegularParticipantCanPublishMessage: chatDto.RegularParticipantCanPublishMessage,
+			RegularParticipantCanPinMessage:     chatDto.RegularParticipantCanPinMessage,
+		}
+	}
 }
 
 func (mc *MessageHandler) getChatNameForNotification(tx *db.Tx, chatId int64) (string, error) {
@@ -895,7 +913,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			mc.notificator.NotifyAddMention(c.Request().Context(), reallyAddedMentions, chatId, message.Id, strippedText, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 			mc.notificator.NotifyRemoveMention(c.Request().Context(), userIdsToNotifyAboutMentionDeleted, chatId, message.Id)
 
-			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1024,7 +1042,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 			return err
 		}
 
-		mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+		mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic, areAdmins)
 		return nil
 	})
 	if err != nil {
@@ -1371,7 +1389,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, message, chatBasic, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1415,6 +1433,11 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 			return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 		}
 
+		isAdmin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+
 		if pin {
 			err = tx.PinMessage(chatId, messageId, pin)
 			if err != nil {
@@ -1434,6 +1457,11 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 				return err
 			}
+			chatBasic := chatsSet[message.ChatId].BasicChatDto
+			if !dto.CanPinMessage(chatBasic.RegularParticipantCanPinMessage, isAdmin) {
+				return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You cannot pin messages in this chat"})
+			}
+
 			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 			count0, err := tx.GetPinnedMessagesCount(chatId)
@@ -1446,10 +1474,10 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				if err != nil {
 					return err
 				}
-				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
+				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, &chatBasic, areAdmins)
 
 				// notify about newly promoted result (promoted can be different)
-				errInternal := mc.sendPromotePinnedMessageEvent(c, mc.stripAllTags, message, users, chatId, participantIds, userPrincipalDto.UserId, true, count0)
+				errInternal := mc.sendPromotePinnedMessageEvent(c, &chatBasic, isAdmin, mc.stripAllTags, message, users, chatId, participantIds, userPrincipalDto.UserId, true, count0)
 				return errInternal
 			})
 			if err != nil {
@@ -1471,6 +1499,11 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
 				return err
 			}
+			chatBasic := chatsSet[message.ChatId].BasicChatDto
+			if !dto.CanPinMessage(chatBasic.RegularParticipantCanPinMessage, isAdmin) {
+				return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You cannot unpin messages in this chat"})
+			}
+
 			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 			count1, err := tx.GetPinnedMessagesCount(chatId)
@@ -1484,10 +1517,10 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 					return err
 				}
 
-				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatsSet[message.ChatId].RegularParticipantCanPublishMessage, areAdmins)
+				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, &chatBasic, areAdmins)
 
 				// actually instead of unpromote - remove is better
-				errInternal := mc.sendPromotePinnedMessageEvent(c, mc.stripAllTags, message, users, chatId, participantIds, userPrincipalDto.UserId, false, count1)
+				errInternal := mc.sendPromotePinnedMessageEvent(c, &chatBasic, isAdmin, mc.stripAllTags, message, users, chatId, participantIds, userPrincipalDto.UserId, false, count1)
 				return errInternal
 			})
 			if err != nil {
@@ -1517,7 +1550,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 					}
 
 					err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-						errInternal := mc.sendPromotePinnedMessageEvent(c, mc.stripAllTags, message2, users2, chatId, participantIds, userPrincipalDto.UserId, true, count2)
+						errInternal := mc.sendPromotePinnedMessageEvent(c, &chatBasic, isAdmin, mc.stripAllTags, message2, users2, chatId, participantIds, userPrincipalDto.UserId, true, count2)
 						return errInternal
 					})
 					if err != nil {
@@ -1615,7 +1648,7 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 				return err
 			}
 
-			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatBasic, areAdmins)
 
 			var copiedMsg = convertToPublishedMessageDto(mc.stripAllTags, message, users)
 
@@ -1699,9 +1732,9 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 				return err
 			}
 			if res0 != nil {
-				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res0, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+				mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res0, chatBasic, areAdmins)
 			}
-			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatBasic.RegularParticipantCanPublishMessage, areAdmins)
+			mc.notificator.NotifyAboutEditMessage(c.Request().Context(), participantIds, chatId, res, chatBasic, areAdmins)
 			return nil
 		})
 		if err != nil {
@@ -1744,6 +1777,11 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
+		isAdmin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+
 		messages, err := tx.GetPinnedMessages(chatId, size, offset)
 		if err != nil {
 			return err
@@ -1756,9 +1794,14 @@ func (mc *MessageHandler) GetPinnedMessages(c echo.Context) error {
 		}
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 		messageDtos := make([]*dto.PinnedMessageDto, 0)
+		chatBasic, err := tx.GetChatBasic(chatId)
+		if err != nil {
+			return err
+		}
 		for _, message := range messages {
 
 			converted := convertToPinnedMessageDto(mc.stripAllTags, message, owners)
+			converted.CanPin = dto.CanPinMessage(chatBasic.RegularParticipantCanPinMessage, isAdmin)
 
 			messageDtos = append(messageDtos, converted)
 		}
@@ -2012,15 +2055,19 @@ func patchForViewAndSetPromoted(cleanTagsPolicy *services.StripTagsPolicy, messa
 	message.PinnedPromoted = &promote
 }
 
-func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, cleanTagsPolicy *services.StripTagsPolicy, dbMessage *db.Message, users map[int64]*dto.User, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64) error {
+func (mc *MessageHandler) sendPromotePinnedMessageEvent(c echo.Context, chatBasic *db.BasicChatDto, isAdmin bool, cleanTagsPolicy *services.StripTagsPolicy, dbMessage *db.Message, users map[int64]*dto.User, chatId int64, participantIds []int64, behalfUserId int64, promote bool, count int64) error {
 
 	messageDto := convertToPinnedMessageDto(cleanTagsPolicy, dbMessage, users)
 
-	// notify about promote to the pinned
-	mc.notificator.NotifyAboutPromotePinnedMessage(c.Request().Context(), chatId, &dto.PinnedMessageEvent{
-		Message:    *messageDto,
-		TotalCount: count,
-	}, promote, participantIds)
+	for _, participantId := range participantIds {
+		messageDto.CanPin = dto.CanPinMessage(chatBasic.RegularParticipantCanPinMessage, isAdmin)
+
+		// notify about promote to the pinned
+		mc.notificator.NotifyAboutPromotePinnedMessage(c.Request().Context(), chatId, &dto.PinnedMessageEvent{
+			Message:    *messageDto,
+			TotalCount: count,
+		}, promote, participantId)
+	}
 	return nil
 }
 

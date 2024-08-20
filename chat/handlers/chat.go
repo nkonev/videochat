@@ -70,6 +70,7 @@ type CreateChatDto struct {
 	AvailableToSearch                   bool        `json:"availableToSearch"`
 	Blog                                *bool       `json:"blog"`
 	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
 }
 
 type ChatHandler struct {
@@ -519,6 +520,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		LastUpdateDateTime:                  c.LastUpdateDateTime,
 		Blog:                                c.Blog,
 		RegularParticipantCanPublishMessage: c.RegularParticipantCanPublishMessage,
+		RegularParticipantCanPinMessage:     c.RegularParticipantCanPinMessage,
 	}
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
@@ -637,6 +639,7 @@ func convertToCreatableChat(d *CreateChatDto, policy *services.StripTagsPolicy) 
 		AvailableToSearch:                   d.AvailableToSearch,
 		Blog:                                isBlog,
 		RegularParticipantCanPublishMessage: d.RegularParticipantCanPublishMessage,
+		RegularParticipantCanPinMessage:     d.RegularParticipantCanPinMessage,
 	}
 }
 
@@ -728,6 +731,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			bindTo.AvailableToSearch,
 			bindTo.Blog,
 			bindTo.RegularParticipantCanPublishMessage,
+			bindTo.RegularParticipantCanPinMessage,
 		)
 		if err != nil {
 			return err
@@ -746,7 +750,8 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
 
-			if chatBasicBefore.RegularParticipantCanPublishMessage != bindTo.RegularParticipantCanPublishMessage {
+			if chatBasicBefore.RegularParticipantCanPublishMessage != bindTo.RegularParticipantCanPublishMessage ||
+			  chatBasicBefore.RegularParticipantCanPinMessage != bindTo.RegularParticipantCanPinMessage {
 				regularParticipants := make([]int64, 0)
 				for userId, isAdmin := range areAdmins {
 					if !isAdmin {

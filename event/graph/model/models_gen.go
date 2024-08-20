@@ -55,6 +55,7 @@ type ChatDto struct {
 	LoginColor                          *string        `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool           `json:"regularParticipantCanPublishMessage"`
 	LastLoginDateTime                   *time.Time     `json:"lastLoginDateTime"`
+	RegularParticipantCanPinMessage     bool           `json:"regularParticipantCanPinMessage"`
 }
 
 type ChatEvent struct {
@@ -103,6 +104,7 @@ type DisplayMessageDto struct {
 	Reactions      []*Reaction           `json:"reactions"`
 	Published      bool                  `json:"published"`
 	CanPublish     bool                  `json:"canPublish"`
+	CanPin         bool                  `json:"canPin"`
 }
 
 type EmbedMessageResponse struct {
@@ -217,6 +219,7 @@ type PinnedMessageDto struct {
 	Owner          *Participant `json:"owner"`
 	PinnedPromoted bool         `json:"pinnedPromoted"`
 	CreateDateTime time.Time    `json:"createDateTime"`
+	CanPin         bool         `json:"canPin"`
 }
 
 type PinnedMessageEvent struct {

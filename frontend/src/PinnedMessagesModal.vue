@@ -20,7 +20,7 @@
                                         </router-link>
                                     </v-list-item-title>
 
-                                    <template v-slot:append>
+                                    <template v-slot:append v-if="canPin(item)">
                                         <v-btn variant="flat" icon @click="promotePinMessage(item)">
                                             <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.pin_message')">mdi-pin</v-icon>
                                         </v-btn>
@@ -80,7 +80,7 @@
 <script>
 
 import bus, {
-    LOGGED_OUT,
+    LOGGED_OUT, MESSAGES_RELOAD,
     OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus/bus";
 import axios from "axios";
@@ -194,18 +194,27 @@ export default {
         shouldReactOnPageChange() {
             return this.show
         },
+        canPin(item) {
+            return item.canPin
+        },
+        onMessagesReload() {
+            this.reset();
+            this.closeModal();
+        },
     },
     mounted() {
         bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
         bus.on(LOGGED_OUT, this.onLogout);
+        bus.on(MESSAGES_RELOAD, this.onMessagesReload);
     },
     beforeUnmount() {
         bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
         bus.off(LOGGED_OUT, this.onLogout);
+        bus.off(MESSAGES_RELOAD, this.onMessagesReload);
     },
 }
 </script>

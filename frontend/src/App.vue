@@ -437,6 +437,7 @@ export default {
                         loginColor
                         regularParticipantCanPublishMessage
                         lastLoginDateTime
+                        regularParticipantCanPinMessage
                       }
                       chatDeletedEvent {
                         id

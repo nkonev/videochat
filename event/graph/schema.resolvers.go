@@ -680,6 +680,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		PinnedPromoted: messageDto.PinnedPromoted,
 		Published:      messageDto.Published,
 		CanPublish:     messageDto.CanPublish,
+		CanPin:         messageDto.CanPin,
 	}
 	embedMessageDto := messageDto.EmbedMessage
 	if embedMessageDto != nil {
@@ -746,6 +747,7 @@ func convertPinnedMessageDto(e *dto.PinnedMessageDto) *model.PinnedMessageDto {
 		Owner:          convertParticipant(e.Owner),
 		PinnedPromoted: e.PinnedPromoted,
 		CreateDateTime: e.CreateDateTime,
+		CanPin:         e.CanPin,
 	}
 }
 func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
@@ -782,6 +784,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			LoginColor:                          chatEvent.LoginColor.Ptr(),
 			RegularParticipantCanPublishMessage: chatEvent.RegularParticipantCanPublishMessage,
 			LastLoginDateTime:                   chatEvent.LastLoginDateTime.Ptr(),
+			RegularParticipantCanPinMessage:     chatEvent.RegularParticipantCanPinMessage,
 		}
 	}
 

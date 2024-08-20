@@ -31,6 +31,7 @@ type BaseChatDto struct {
 	LoginColor                   null.String `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
 	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
+	RegularParticipantCanPinMessage bool `json:"regularParticipantCanPinMessage"`
 }
 
 type ChatDeletedDto struct {

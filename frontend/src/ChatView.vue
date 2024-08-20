@@ -285,6 +285,7 @@ export default {
                                   }
                                   published
                                   canPublish
+                                  canPin
                                 }
 
                                 subscription{
@@ -337,6 +338,7 @@ export default {
                                         }
                                         pinnedPromoted
                                         createDateTime
+                                        canPin
                                       }
                                     }
                                     publishedMessageEvent {

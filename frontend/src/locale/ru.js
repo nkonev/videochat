@@ -288,6 +288,7 @@ export default {
     published_messages_full: "Опубликованные сообщения",
     copy_public_link_to_message: "Скопировать публичную ссылку",
     regular_participant_can_publish: "Участники могут публиковать сообщения",
+    regular_participant_can_pin: "Участники могут закреплять сообщения",
     open_published_message: "Открыть опубликованное сообщение",
     no_published_messages: "Нет опубликованных сообщений",
     request_notifications_in_browser: "Запросить нотификации в браузере",

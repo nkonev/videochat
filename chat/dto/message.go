@@ -48,6 +48,7 @@ type DisplayMessageDto struct {
 	Reactions []Reaction				 `json:"reactions"`
 	Published      bool                  `json:"published"`
 	CanPublish     bool                  `json:"canPublish"`
+	CanPin         bool                  `json:"canPin"`
 }
 
 type PublishedMessageDto struct {
@@ -68,16 +69,22 @@ type PinnedMessageDto struct {
 	Owner          *User                 `json:"owner"`
 	PinnedPromoted bool                  `json:"pinnedPromoted"`
 	CreateDateTime time.Time             `json:"createDateTime"`
+	CanPin         bool                  `json:"canPin"`
 }
 
 func CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, messageOwnerId, behalfUserId int64) bool {
 	return chatIsAdmin || (chatRegularParticipantCanPublishMessage && messageOwnerId == behalfUserId)
 }
 
-func (copied *DisplayMessageDto) SetPersonalizedFields(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, participantId int64) {
+func CanPinMessage(chatRegularParticipantCanPinMessage, chatIsAdmin bool) bool {
+	return chatIsAdmin || chatRegularParticipantCanPinMessage
+}
+
+func (copied *DisplayMessageDto) SetPersonalizedFields(chatRegularParticipantCanPublishMessage, chatRegularParticipantCanPinMessage, chatIsAdmin bool, participantId int64) {
 	copied.CanEdit = ((copied.OwnerId == participantId) && (copied.EmbedMessage == nil || copied.EmbedMessage.EmbedType != EmbedMessageTypeResend))
 	copied.CanDelete = copied.OwnerId == participantId
 	copied.CanPublish = CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin, copied.OwnerId, participantId)
+	copied.CanPin = CanPinMessage(chatRegularParticipantCanPinMessage, chatIsAdmin)
 }
 
 type MessageDeletedDto struct {

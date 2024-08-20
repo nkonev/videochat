@@ -28,6 +28,7 @@ type Chat struct {
 	Pinned                       bool
 	Blog                                bool
 	RegularParticipantCanPublishMessage bool
+	RegularParticipantCanPinMessage bool
 }
 
 type Blog struct {
@@ -55,7 +56,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage)
+	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -97,7 +98,8 @@ func selectChatClause() string {
 				ch.available_to_search,
 				cp.user_id IS NOT NULL as pinned,
 				ch.blog,
-				ch.regular_participant_can_publish_message
+				ch.regular_participant_can_publish_message,
+				ch.regular_participant_can_pin_message
 			FROM chat ch 
 				LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
 `
@@ -116,6 +118,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.Pinned,
 		&chat.Blog,
 		&chat.RegularParticipantCanPublishMessage,
+		&chat.RegularParticipantCanPinMessage,
 	}
 }
 
@@ -459,14 +462,14 @@ func (tx *Tx) DeleteChat(id int64) error {
 	return nil
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog* bool, regularParticipantCanPublish bool) (*time.Time, error) {
+func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog* bool, regularParticipantCanPublishMessage bool, regularParticipantCanPinMessage bool) (*time.Time, error) {
 	var res sql.Result
 	var err error
 	if blog != nil {
 		isBlog := utils.NullableToBoolean(blog)
-		res, err = tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublish)
+		res, err = tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	} else {
-		res, err = tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublish)
+		res, err = tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	}
 	if err != nil {
 		Logger.Errorf("Error during editing chat id %v", err)
@@ -522,12 +525,13 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error
 				ch.available_to_search,
 				ch.blog,
 				ch.create_date_time,
-				ch.regular_participant_can_publish_message
+				ch.regular_participant_can_publish_message,
+				ch.regular_participant_can_pin_message
 			FROM chat ch 
 			WHERE ch.id = $1
 `, chatId)
 	chat := BasicChatDto{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.CreateDateTime, &chat.RegularParticipantCanPublishMessage)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.CreateDateTime, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -577,7 +581,8 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 			c.available_to_search,
 			c.blog,
 			c.create_date_time,
-			c.regular_participant_can_publish_message
+			c.regular_participant_can_publish_message,
+			c.regular_participant_can_pin_message
 		FROM chat c 
 		    LEFT JOIN chat_participant cp 
 		        ON (c.id = cp.chat_id AND cp.user_id = $1) 
@@ -590,7 +595,7 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.CreateDateTime,  &dto.RegularParticipantCanPublishMessage); err != nil {
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.CreateDateTime, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, dto)
@@ -620,6 +625,7 @@ type BasicChatDto struct {
 	IsBlog            bool
 	CreateDateTime    time.Time
 	RegularParticipantCanPublishMessage bool
+	RegularParticipantCanPinMessage bool
 }
 
 type BasicChatDtoExtended struct {

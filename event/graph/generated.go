@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 		Participants                        func(childComplexity int) int
 		ParticipantsCount                   func(childComplexity int) int
 		Pinned                              func(childComplexity int) int
+		RegularParticipantCanPinMessage     func(childComplexity int) int
 		RegularParticipantCanPublishMessage func(childComplexity int) int
 		ShortInfo                           func(childComplexity int) int
 		TetATet                             func(childComplexity int) int
@@ -128,6 +129,7 @@ type ComplexityRoot struct {
 		BlogPost       func(childComplexity int) int
 		CanDelete      func(childComplexity int) int
 		CanEdit        func(childComplexity int) int
+		CanPin         func(childComplexity int) int
 		CanPublish     func(childComplexity int) int
 		ChatID         func(childComplexity int) int
 		CreateDateTime func(childComplexity int) int
@@ -249,6 +251,7 @@ type ComplexityRoot struct {
 	}
 
 	PinnedMessageDto struct {
+		CanPin         func(childComplexity int) int
 		ChatID         func(childComplexity int) int
 		CreateDateTime func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -645,6 +648,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatDto.Pinned(childComplexity), true
 
+	case "ChatDto.regularParticipantCanPinMessage":
+		if e.complexity.ChatDto.RegularParticipantCanPinMessage == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.RegularParticipantCanPinMessage(childComplexity), true
+
 	case "ChatDto.regularParticipantCanPublishMessage":
 		if e.complexity.ChatDto.RegularParticipantCanPublishMessage == nil {
 			break
@@ -826,6 +836,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.CanEdit(childComplexity), true
+
+	case "DisplayMessageDto.canPin":
+		if e.complexity.DisplayMessageDto.CanPin == nil {
+			break
+		}
+
+		return e.complexity.DisplayMessageDto.CanPin(childComplexity), true
 
 	case "DisplayMessageDto.canPublish":
 		if e.complexity.DisplayMessageDto.CanPublish == nil {
@@ -1421,6 +1438,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ParticipantWithAdmin.ShortInfo(childComplexity), true
+
+	case "PinnedMessageDto.canPin":
+		if e.complexity.PinnedMessageDto.CanPin == nil {
+			break
+		}
+
+		return e.complexity.PinnedMessageDto.CanPin(childComplexity), true
 
 	case "PinnedMessageDto.chatId":
 		if e.complexity.PinnedMessageDto.ChatID == nil {
@@ -3729,6 +3753,50 @@ func (ec *executionContext) fieldContext_ChatDto_lastLoginDateTime(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatDto_regularParticipantCanPinMessage(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_regularParticipantCanPinMessage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RegularParticipantCanPinMessage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_regularParticipantCanPinMessage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
 	if err != nil {
@@ -3843,6 +3911,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(_ context.Contex
 				return ec.fieldContext_DisplayMessageDto_published(ctx, field)
 			case "canPublish":
 				return ec.fieldContext_DisplayMessageDto_canPublish(ctx, field)
+			case "canPin":
+				return ec.fieldContext_DisplayMessageDto_canPin(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayMessageDto", field.Name)
 		},
@@ -5408,6 +5478,50 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_canPublish(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _DisplayMessageDto_canPin(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DisplayMessageDto_canPin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DisplayMessageDto_canPin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmbedMessageResponse_id(ctx context.Context, field graphql.CollectedField, obj *model.EmbedMessageResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EmbedMessageResponse_id(ctx, field)
 	if err != nil {
@@ -6643,6 +6757,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(_ context.Context
 				return ec.fieldContext_ChatDto_regularParticipantCanPublishMessage(ctx, field)
 			case "lastLoginDateTime":
 				return ec.fieldContext_ChatDto_lastLoginDateTime(ctx, field)
+			case "regularParticipantCanPinMessage":
+				return ec.fieldContext_ChatDto_regularParticipantCanPinMessage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -8920,6 +9036,50 @@ func (ec *executionContext) fieldContext_PinnedMessageDto_createDateTime(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PinnedMessageDto_canPin(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PinnedMessageDto_canPin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PinnedMessageDto_canPin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PinnedMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PinnedMessageEvent_message(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PinnedMessageEvent_message(ctx, field)
 	if err != nil {
@@ -8973,6 +9133,8 @@ func (ec *executionContext) fieldContext_PinnedMessageEvent_message(_ context.Co
 				return ec.fieldContext_PinnedMessageDto_pinnedPromoted(ctx, field)
 			case "createDateTime":
 				return ec.fieldContext_PinnedMessageDto_createDateTime(ctx, field)
+			case "canPin":
+				return ec.fieldContext_PinnedMessageDto_canPin(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PinnedMessageDto", field.Name)
 		},
@@ -14615,6 +14777,11 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "lastLoginDateTime":
 			out.Values[i] = ec._ChatDto_lastLoginDateTime(ctx, field, obj)
+		case "regularParticipantCanPinMessage":
+			out.Values[i] = ec._ChatDto_regularParticipantCanPinMessage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14883,6 +15050,11 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 			}
 		case "canPublish":
 			out.Values[i] = ec._DisplayMessageDto_canPublish(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPin":
+			out.Values[i] = ec._DisplayMessageDto_canPin(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -15579,6 +15751,11 @@ func (ec *executionContext) _PinnedMessageDto(ctx context.Context, sel ast.Selec
 			}
 		case "createDateTime":
 			out.Values[i] = ec._PinnedMessageDto_createDateTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPin":
+			out.Values[i] = ec._PinnedMessageDto_canPin(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

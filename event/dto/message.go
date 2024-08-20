@@ -33,6 +33,7 @@ type PinnedMessageDto struct {
 	Owner          *User                 `json:"owner"`
 	PinnedPromoted bool                  `json:"pinnedPromoted"`
 	CreateDateTime time.Time             `json:"createDateTime"`
+	CanPin         bool                  `json:"canPin"`
 }
 
 type Reaction struct {
@@ -59,6 +60,7 @@ type DisplayMessageDto struct {
 	Reactions []Reaction				 `json:"reactions"`
 	Published      bool                  `json:"published"`
 	CanPublish     bool                  `json:"canPublish"`
+	CanPin         bool                  `json:"canPin"`
 }
 
 type MessageDeletedDto struct {

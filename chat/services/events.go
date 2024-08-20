@@ -171,7 +171,7 @@ func (not *Events) NotifyAboutHasNewMessagesChanged(ctx context.Context, partici
 	}
 }
 
-func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, eventType string, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
+func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, eventType string, chatBasic *db.BasicChatDto, chatAdmins map[int64]bool) {
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("message.%s", eventType))
 	defer messageSpan.End()
 
@@ -196,7 +196,7 @@ func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, cha
 				continue
 			}
 
-			copied.SetPersonalizedFields(chatRegularParticipantCanPublishMessage, chatAdmins[participantId], participantId)
+			copied.SetPersonalizedFields(chatBasic.RegularParticipantCanPublishMessage, chatBasic.RegularParticipantCanPinMessage, chatAdmins[participantId], participantId)
 
 			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 				EventType:           eventType,
@@ -211,16 +211,16 @@ func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, cha
 	}
 }
 
-func (not *Events) NotifyAboutNewMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
-	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_created", chatRegularParticipantCanPublishMessage, chatAdmins)
+func (not *Events) NotifyAboutNewMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatBasic *db.BasicChatDto, chatAdmins map[int64]bool) {
+	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_created", chatBasic, chatAdmins)
 }
 
 func (not *Events) NotifyAboutDeleteMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto) {
-	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_deleted", false, nil)
+	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_deleted", nil, nil)
 }
 
-func (not *Events) NotifyAboutEditMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatRegularParticipantCanPublishMessage bool, chatAdmins map[int64]bool) {
-	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_edited", chatRegularParticipantCanPublishMessage, chatAdmins)
+func (not *Events) NotifyAboutEditMessage(ctx context.Context, userIds []int64, chatId int64, message *dto.DisplayMessageDto, chatBasic *db.BasicChatDto, chatAdmins map[int64]bool) {
+	not.messageNotifyCommon(ctx, userIds, chatId, message, "message_edited", chatBasic, chatAdmins)
 }
 
 func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, user *dto.User, co db.CommonOperations) {
@@ -466,7 +466,7 @@ func (not *Events) NotifyAboutChangeParticipants(ctx context.Context, userIds []
 	}
 }
 
-func (not *Events) NotifyAboutPromotePinnedMessage(ctx context.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantIds []int64) {
+func (not *Events) NotifyAboutPromotePinnedMessage(ctx context.Context, chatId int64, msg *dto.PinnedMessageEvent, promote bool, participantId int64) {
 
 	var eventType = ""
 	if promote {
@@ -478,17 +478,14 @@ func (not *Events) NotifyAboutPromotePinnedMessage(ctx context.Context, chatId i
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
 	defer messageSpan.End()
 
-	for _, participantId := range participantIds {
-
-		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
-			EventType:                  eventType,
-			PromoteMessageNotification: msg,
-			UserId:                     participantId,
-			ChatId:                     chatId,
-		})
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
-		}
+	err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+		EventType:                  eventType,
+		PromoteMessageNotification: msg,
+		UserId:                     participantId,
+		ChatId:                     chatId,
+	})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 }
 

@@ -288,6 +288,7 @@ export default {
     published_messages_full: "Public messages",
     copy_public_link_to_message: "Copy public link",
     regular_participant_can_publish: "Regular participant can publish messages",
+    regular_participant_can_pin: "Regular participant can pin messages",
     open_published_message: "Open published message",
     no_published_messages: "No published messages",
     request_notifications_in_browser: "Request notifications in browser",

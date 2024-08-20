@@ -79,6 +79,14 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            v-model="editDto.regularParticipantCanPinMessage"
+                            :label="$vuetify.locale.t('$vuetify.regular_participant_can_pin')"
+                            hide-details
+                            density="compact"
+                            color="primary"
+                        ></v-checkbox>
+
+                        <v-checkbox
                             v-if="canCreateBlog"
                             v-model="editDto.blog"
                             :label="$vuetify.locale.t('$vuetify.blog')"
@@ -224,6 +232,7 @@
                 availableToSearch: chatDto.availableToSearch,
                 blog: chatDto.blog,
                 regularParticipantCanPublishMessage: chatDto.regularParticipantCanPublishMessage,
+                regularParticipantCanPinMessage: chatDto.regularParticipantCanPinMessage,
               }
             },
             loadCanCreateBlog() {

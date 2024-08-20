@@ -94,10 +94,20 @@ export default {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editMessage', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.users_read'), icon: 'mdi-account-supervisor', action: () => this.$emit('showReadUsers', this.menuableItem) });
-                if (this.menuableItem.pinned) {
-                    ret.push({title: this.$vuetify.locale.t('$vuetify.remove_from_pinned'), icon: 'mdi-pin-off-outline', action: () => this.$emit('removedFromPinned', this.menuableItem)});
-                } else {
-                    ret.push({title: this.$vuetify.locale.t('$vuetify.pin_message'), icon: 'mdi-pin', action: () => this.$emit('pinMessage', this.menuableItem)});
+                if (this.menuableItem.canPin) {
+                    if (this.menuableItem.pinned) {
+                        ret.push({
+                            title: this.$vuetify.locale.t('$vuetify.remove_from_pinned'),
+                            icon: 'mdi-pin-off-outline',
+                            action: () => this.$emit('removedFromPinned', this.menuableItem)
+                        });
+                    } else {
+                        ret.push({
+                            title: this.$vuetify.locale.t('$vuetify.pin_message'),
+                            icon: 'mdi-pin',
+                            action: () => this.$emit('pinMessage', this.menuableItem)
+                        });
+                    }
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.reply'), icon: 'mdi-reply', action: () => this.$emit('replyOnMessage', this.menuableItem) });
                 if (this.canResend) {
