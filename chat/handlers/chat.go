@@ -969,6 +969,8 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		}
 		ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, []int64{interestingUserId}, len(chatDto.ParticipantIds) == 1, true, tx, map[int64]bool{interestingUserId: newAdmin})
 
+		ch.notificator.NotifyMessagesReloadCommand(c.Request().Context(), chatId, []int64{interestingUserId})
+
 		return c.JSON(http.StatusAccepted, newUsersWithAdmin)
 	})
 	if errOuter != nil {
