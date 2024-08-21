@@ -558,7 +558,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	if !ch.checkCanCreateBlog(userPrincipalDto.Roles, bindTo.Blog) {
+	if !ch.checkCanCreateBlog(userPrincipalDto, bindTo.Blog) {
 		GetLogEntry(c.Request().Context()).Infof("Blog is disabled for regular users")
 		bindTo.Blog = nil
 	}
@@ -699,7 +699,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	if !ch.checkCanCreateBlog(userPrincipalDto.Roles, bindTo.Blog) {
+	if !ch.checkCanCreateBlog(userPrincipalDto, bindTo.Blog) {
 		GetLogEntry(c.Request().Context()).Infof("Blog is disabled for regular users")
 		bindTo.Blog = nil
 	}
@@ -1983,19 +1983,12 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 	return c.JSON(http.StatusOK, &ParticipantsBelongToChat{Users: users})
 }
 
-func (ch *ChatHandler) checkCanCreateBlog(roles []string, blog *bool) bool {
+func (ch *ChatHandler) checkCanCreateBlog(userPrincipalDto *auth.AuthResult, blog *bool) bool {
 	if !ch.canCreateBlog {
 		return true
 	}
-	if blog != nil && *blog {
-		adminFound := false
-		for _, role := range roles {
-			if "ROLE_ADMIN" == role {
-				adminFound = true
-				break
-			}
-		}
-		return adminFound
+	if blog != nil && *blog && userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN") {
+		return true
 	} else {
 		return true
 	}
@@ -2009,5 +2002,5 @@ func (ch *ChatHandler) CanCreateBlog(c echo.Context) error {
 	}
 
 	isBlog := true
-	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto.Roles, &isBlog)} )
+	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto, &isBlog)} )
 }

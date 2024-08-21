@@ -189,10 +189,10 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #userId)")
+    @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #setRolesDTO.userId)")
     @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
-    public name.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam long userId, @RequestParam UserRole role){
-        return userProfileService.setRole(userAccountDetailsDTO, userId, role);
+    public name.nkonev.aaa.dto.UserAccountDTOExtended setRole(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody SetRolesDTO setRolesDTO){
+        return userProfileService.setRole(userAccountDetailsDTO, setRolesDTO.userId(), setRolesDTO.roles());
     }
 
     @ResponseBody

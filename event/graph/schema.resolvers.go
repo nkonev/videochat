@@ -326,7 +326,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 				break
 			}
 			// if I'm an admin then prepare dto with admin's fields
-			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") {
+			if authResult.HasRole("ROLE_ADMIN") {
 				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
 				if anEvent != nil {
 					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
@@ -340,7 +340,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 				break
 			}
 			// else if I'm un user then prepare dto with user's fields
-			if utils.ContainsString(authResult.Roles, "ROLE_USER") {
+			if authResult.HasRole("ROLE_USER") {
 				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
 				if anEvent != nil {
 					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
@@ -372,7 +372,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 		switch typedEvent := event.(type) {
 		case dto.UserAccountCreatedEventGroup:
 			// if I'm an admin then prepare dto with admin's fields
-			if utils.ContainsString(authResult.Roles, "ROLE_ADMIN") {
+			if authResult.HasRole("ROLE_ADMIN") {
 				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
 				if anEvent != nil {
 					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
@@ -386,7 +386,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 				break
 			}
 			// else if I'm un user then prepare dto with user's fields
-			if utils.ContainsString(authResult.Roles, "ROLE_USER") {
+			if authResult.HasRole("ROLE_USER") {
 				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
 				if anEvent != nil {
 					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))

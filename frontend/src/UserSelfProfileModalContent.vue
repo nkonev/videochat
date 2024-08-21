@@ -64,10 +64,10 @@
               </v-container>
             </v-container>
             <v-container class="ma-0 pa-0 d-flex flex-column text-caption" v-if="chatStore.currentUser.awaitingForConfirmEmailChange">
-                <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_1') }}</span>
+                <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_part_1') }}</span>
                 <span>
-                    <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_part_2') }}</span>
-                    <v-btn class="mx-2 mb-1" density="compact" variant="outlined" size="" @click="resendEmailConfirmation()">{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_role_btn') }}</v-btn>
+                    <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_part_2') }}</span>
+                    <v-btn class="mx-2 mb-1" density="compact" variant="outlined" size="" @click="resendEmailConfirmation()">{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_btn') }}</v-btn>
                 </span>
             </v-container>
 

@@ -4,14 +4,11 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +20,8 @@ public class UserListViewRepository {
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
 
-    private final RowMapper<UserAccount> rowMapper = DataClassRowMapper.newInstance(UserAccount.class);
+    @Autowired
+    private RowMapper<UserAccount> userAccountRowMapper;
 
     private record MinMax(Long leftId, Long rightId) { }
 
@@ -138,7 +136,7 @@ public class UserListViewRepository {
                             "rightMessageId", rightItemId,
                             "searchStringPercents", searchStringPercents
                         ),
-                        rowMapper
+                        userAccountRowMapper
                     );
                 } else {
                     list = jdbcTemplate.query(
@@ -156,7 +154,7 @@ public class UserListViewRepository {
                             "leftMessageId", leftItemId,
                             "rightMessageId", rightItemId
                         ),
-                        rowMapper
+                        userAccountRowMapper
                     );
                 }
             }
@@ -192,7 +190,7 @@ public class UserListViewRepository {
                     "startingFromItemId", startingFromItemId,
                     "searchStringPercents", searchStringPercents
                 ),
-                rowMapper
+                userAccountRowMapper
             );
         } else {
             list = jdbcTemplate.query("""
@@ -207,7 +205,7 @@ public class UserListViewRepository {
                     "limit", limit,
                     "startingFromItemId", startingFromItemId
                 ),
-                rowMapper
+                userAccountRowMapper
             );
         }
         return list;
@@ -226,7 +224,7 @@ public class UserListViewRepository {
                 "limit", pageSize,
                 "offset", offset
             ),
-            rowMapper);
+            userAccountRowMapper);
     }
 
     private static final String AND_USERNAME_ILIKE = " and " + USERNAME_SEARCH;
@@ -239,7 +237,7 @@ public class UserListViewRepository {
                 "limit", pageSize,
                 "offset", offset
             ),
-            rowMapper);
+            userAccountRowMapper);
     }
 
     public long findByUsernameContainsIgnoreCaseCount(String searchString) {
@@ -262,7 +260,7 @@ public class UserListViewRepository {
                 "limit", pageSize,
                 "offset", offset
             ),
-            rowMapper);
+            userAccountRowMapper);
     }
 
     public long findByUsernameContainsIgnoreCaseAndIdInCount(String searchString, List<Long> includingUserIds) {
@@ -286,7 +284,7 @@ public class UserListViewRepository {
                 "limit", pageSize,
                 "offset", offset
             ),
-            rowMapper);
+            userAccountRowMapper);
     }
 
     public long findByUsernameContainsIgnoreCaseAndIdNotInCount(String searchString, List<Long> excludingUserIds) {

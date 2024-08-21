@@ -34,9 +34,7 @@ public class UserAccountConverter {
     @Autowired
     private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
-    private static UserRole getDefaultUserRole(){
-        return UserRole.ROLE_USER;
-    }
+    static final UserRole[] newUserRoles = new UserRole[]{UserRole.ROLE_USER};
 
     public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isForOauth2) {
         var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isForOauth2));
@@ -75,7 +73,7 @@ public class UserAccountConverter {
                 userAccount.locked(),
                 userAccount.enabled(),
                 userAccount.confirmed(),
-                Collections.singletonList(convertRole(userAccount.role())),
+                Arrays.stream(userAccount.roles()).map(UserAccountConverter::convertRole).collect(Collectors.toSet()),
                 userAccount.email(),
                 awaitingForConfirmEmailChange,
                 userAccount.lastLoginDateTime(),
@@ -138,7 +136,7 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
         if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
-            dataDTO = new name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Set.of(userAccount.role()));
+            dataDTO = new name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
         } else {
             dataDTO = null;
         }
@@ -176,8 +174,6 @@ public class UserAccountConverter {
         final boolean enabled = true;
         final boolean confirmed = false;
 
-        final UserRole newUserRole = getDefaultUserRole();
-
         validateLoginAndEmail(userAccountDTO);
         String password = userAccountDTO.password();
         try {
@@ -198,7 +194,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRole,
+                newUserRoles,
                 userAccountDTO.email(),
                 null,
                 null,
@@ -255,8 +251,6 @@ public class UserAccountConverter {
         final boolean enabled = true;
         final boolean confirmed = true;
 
-        final UserRole newUserRole = getDefaultUserRole();
-
         return new UserAccount(
                 null,
                 CreationType.FACEBOOK,
@@ -269,7 +263,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRole,
+                newUserRoles,
                 null,
                 null,
                 facebookId,
@@ -287,8 +281,6 @@ public class UserAccountConverter {
         final boolean enabled = true;
         final boolean confirmed = true;
 
-        final UserRole newUserRole = getDefaultUserRole();
-
         return new UserAccount(
                 null,
                 CreationType.VKONTAKTE,
@@ -301,7 +293,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRole,
+                newUserRoles,
                 null,
                 null,
                 null,
@@ -319,8 +311,6 @@ public class UserAccountConverter {
         final boolean enabled = true;
         final boolean confirmed = true;
 
-        final UserRole newUserRole = getDefaultUserRole();
-
         return new UserAccount(
                 null,
                 CreationType.GOOGLE,
@@ -333,7 +323,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRole,
+                newUserRoles,
                 null,
                 null,
                 null,
@@ -351,7 +341,11 @@ public class UserAccountConverter {
         final boolean enabled = true;
         final boolean confirmed = true;
 
-        final UserRole newUserRole = hasAdminRole ? UserRole.ROLE_ADMIN : getDefaultUserRole();
+        var rolesList = Arrays.stream(newUserRoles).toList();
+        if (hasAdminRole) {
+            rolesList.add(UserRole.ROLE_ADMIN);
+        }
+        final UserRole[] newUserRolesExtended = rolesList.toArray(UserRole[]::new);
 
         return new UserAccount(
                 null,
@@ -365,7 +359,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRole,
+                newUserRolesExtended,
                 null,
                 null,
                 null,
@@ -383,8 +377,6 @@ public class UserAccountConverter {
         final boolean enabled = true;
         final boolean confirmed = true;
 
-        final UserRole newUserRole = getDefaultUserRole();
-
         return new UserAccount(
                 null,
                 CreationType.LDAP,
@@ -397,7 +389,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRole,
+                newUserRoles,
                 null,
                 null,
                 null,

@@ -371,10 +371,13 @@ public class UserProfileService {
     }
 
     @Transactional
-    public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, UserRole role){
+    public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        userAccount = userAccount.withRole(role);
+        userAccount = userAccount.withRoles(roles.toArray(new UserRole[0]));
         userAccount = userAccountRepository.save(userAccount);
+        if (!userAccountDetailsDTO.getId().equals(userId)) {
+            aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_roles_changed);
+        }
         notifier.notifyProfileUpdated(userAccount);
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
     }

@@ -119,3 +119,10 @@ databaseChangeLog:
         - sqlFile:
             splitStatements: false
             path: /db/migration/V17__translate.sql
+
+  - changeSet:
+      id: 18
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V18__plural_roles.sql

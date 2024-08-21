@@ -90,7 +90,7 @@ export default {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.delete_user'), icon: 'mdi-delete', iconColor: 'error', action: () => this.$emit('deleteUser', this.menuableItem) });
                 }
                 if (this.menuableItem.canChangeRole){
-                    ret.push({title: this.$vuetify.locale.t('$vuetify.change_role'), icon: 'mdi-account-edit', action: () => this.$emit('changeRole', this.menuableItem) });
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.change_roles'), icon: 'mdi-account-edit', action: () => this.$emit('changeRole', this.menuableItem) });
                 }
             }
             return ret;

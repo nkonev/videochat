@@ -1,14 +1,15 @@
 <template>
         <v-dialog v-model="show" max-width="440" persistent>
-            <v-card v-if="show" :title="$vuetify.locale.t('$vuetify.change_role')">
+            <v-card v-if="show" :title="$vuetify.locale.t('$vuetify.change_roles')">
 
                 <v-card-text class="pb-0">
                     <v-select v-if="!loading"
                         :items="allPossibleRoles"
-                        label="Select a role"
-                        v-model="chosenRole"
+                        label="Select roles"
+                        v-model="chosenRoles"
                         variant="outlined"
                         density="compact"
+                        multiple
                     ></v-select>
                     <v-progress-circular
                         class="ma-4"
@@ -20,7 +21,7 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn variant="flat" v-if="chosenRole != null" color="primary" @click="changeRole()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
+                    <v-btn variant="flat" v-if="chosenRoles.length" color="primary" @click="changeRole()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn variant="flat" color="red" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
 
@@ -41,7 +42,7 @@ import bus, {
                 show: false,
                 user: null,
                 allPossibleRoles: [],
-                chosenRole: null,
+                chosenRoles: [],
                 loading: false,
             }
         },
@@ -49,13 +50,13 @@ import bus, {
             showModal(user) {
                 this.show = true;
                 this.user = user;
-                this.chosenRole = user.additionalData.roles[0];
+                this.chosenRoles = user.additionalData.roles;
                 this.requestAllPossibleRolesIfNeed()
             },
             closeModal() {
                 this.show = false;
                 this.user = null;
-                this.chosenRole = null;
+                this.chosenRoles = [];
             },
             requestAllPossibleRolesIfNeed() {
                 if (!this.allPossibleRoles.length) {
@@ -69,10 +70,10 @@ import bus, {
             },
             changeRole() {
                 this.loading = true;
-                axios.put('/api/aaa/user/role', null, { params: {
-                        userId: this.user.id,
-                        role: this.chosenRole,
-                    }}).then(()=>{
+                axios.put('/api/aaa/user/role', {
+                    userId: this.user.id,
+                    roles: this.chosenRoles,
+                }).then(()=>{
                         this.closeModal();
                     }).finally(()=>{
                         this.loading = false;

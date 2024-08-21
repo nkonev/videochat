@@ -1,6 +1,7 @@
 package name.nkonev.aaa.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.BeanClassLoaderAware;
@@ -9,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
+
+import java.util.HashSet;
 
 @Configuration
 public class RedisSessionJsonConfig implements BeanClassLoaderAware {
@@ -20,6 +23,7 @@ public class RedisSessionJsonConfig implements BeanClassLoaderAware {
         mapper.registerModules(SecurityJackson2Modules.getModules(this.loader));
         mapper.registerModule(new JavaTimeModule());
         mapper.addMixIn(Long.class, LongMixin.class);
+        mapper.addMixIn(new HashSet<>().getClass(), HashSetMixin.class);
         return mapper;
     }
 
@@ -41,4 +45,8 @@ abstract class LongMixin {
     @SuppressWarnings("unused")
     @JsonProperty("long")
     Long value;
+}
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+abstract class HashSetMixin {
 }
