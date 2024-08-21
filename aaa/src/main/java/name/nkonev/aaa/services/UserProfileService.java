@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.session.Session;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -372,6 +373,7 @@ public class UserProfileService {
 
     @Transactional
     public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
+        Assert.isTrue(!roles.isEmpty(), "Role should be");
         UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
         userAccount = userAccount.withRoles(roles.toArray(new UserRole[0]));
         userAccount = userAccountRepository.save(userAccount);

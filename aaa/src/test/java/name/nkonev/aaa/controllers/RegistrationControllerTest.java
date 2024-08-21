@@ -363,7 +363,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertEquals(TestConstants.USER_ALICE, userAccountBefore.username());
         Assertions.assertEquals(userAccountBefore.username(), userAccountAfter.username());
         Assertions.assertEquals(userAccountBefore.password(), userAccountAfter.password());
-        Assertions.assertEquals(userAccountBefore.role(), userAccountAfter.role());
+        Assertions.assertArrayEquals(userAccountBefore.roles(), userAccountAfter.roles());
 
         Assertions.assertEquals(countBefore, countAfter);
     }

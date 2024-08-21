@@ -19,8 +19,6 @@ INSERT INTO user_account (username, password, avatar, email, confirmed)
 	FROM generate_series(0, 1000) AS i;
 
 
-UPDATE user_account SET role = 'ROLE_ADMIN' WHERE id = (SELECT id FROM user_account WHERE username = 'admin');
-
 -- insert additional users and roles
 INSERT INTO user_account(username, password, avatar, email, confirmed) VALUES
 	('forgot-password-user', '$2a$10$e3pEnL2d3RB7jBrlEA3B9eUhayb/bmEG1V35h.4EhdReUAMzlAWxS', NULL, 'forgot-password-user@example.com', true);
