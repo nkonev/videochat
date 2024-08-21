@@ -167,11 +167,19 @@ func ContainsUrl(elems []string, elem string) bool {
 			return false
 		}
 
-		if parsedUrlToTest.Host == parsedAllowedUrl.Host && parsedUrlToTest.Scheme == parsedAllowedUrl.Scheme {
+		if ContainUrl(parsedUrlToTest, parsedAllowedUrl) {
 			return true
 		}
 	}
 	return false
+}
+
+func ContainUrl(parsedUrlToTest, parsedAllowedUrl *url.URL) bool {
+	if parsedUrlToTest.Host == parsedAllowedUrl.Host && parsedUrlToTest.Scheme == parsedAllowedUrl.Scheme {
+		return true
+	} else {
+		return false
+	}
 }
 
 func Remove(ids []int64, elem int64) []int64 {

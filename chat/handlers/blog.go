@@ -473,7 +473,7 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 		return ""
 	}
 
-	wlArr := []string{"", viper.GetString("frontendUrl")}
+	wlArr := []string{"", viper.GetString("frontendUrl")} // if our own server (storage)
 
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()

@@ -2139,7 +2139,7 @@ func patchStorageUrlToPreventCachingVideo(ctx context.Context, text string) stri
 		return ""
 	}
 
-	wlArr := []string{"", viper.GetString("frontendUrl")}
+	wlArr := []string{"", viper.GetString("frontendUrl")} // if our own server (storage)
 
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()

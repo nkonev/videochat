@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
+	"net/url"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/dto"
@@ -213,6 +214,9 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 
 	whitelist := viper.GetString("message.allowedMediaUrls")
 	wlArr := strings.Split(whitelist, ",")
+	frontendUrl := viper.GetString("frontendUrl")
+	wlArr = append(wlArr, frontendUrl)
+	wlArr = append(wlArr, "") // storage urls without protocol://host:port
 
 	iframeWhitelist := viper.GetString("message.allowedIframeUrls")
 	iframeWlArr := strings.Split(iframeWhitelist, ",")
@@ -225,8 +229,9 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 	}
 
 	var retErr error
-	maxImagesCount := viper.GetInt("message.maxImages")
-	imagesCount := 0
+	maxMediasCount := viper.GetInt("message.maxMedias")
+	mediaCount := 0
+
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		maybeImage := s.First()
 		if maybeImage != nil {
@@ -235,18 +240,34 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in image src %v", src)
 				retErr = &MediaUrlErr{src, "image src"}
 			}
-			imagesCount++
+			if exists {
+				fixedSrc, err := removeProtocolHostPortIfNeed(src, frontendUrl)
+				if err != nil {
+					retErr = err
+				}
+				maybeImage.SetAttr("src", fixedSrc)
+			}
+
+			original, originalExists := maybeImage.Attr("data-original")
+			if originalExists && !utils.ContainsUrl(wlArr, original) {
+				GetLogEntry(ctx).Infof("Filtered not allowed url in image src %v", original)
+				retErr = &MediaUrlErr{original, "image src"}
+			}
+			if originalExists {
+				fixedSrc, err := removeProtocolHostPortIfNeed(original, frontendUrl)
+				if err != nil {
+					retErr = err
+				}
+				maybeImage.SetAttr("data-original", fixedSrc)
+			}
+
+			mediaCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
-	if imagesCount > maxImagesCount {
-		return "", errors.New("Too many images")
-	}
 
-	maxVideosCount := viper.GetInt("message.maxVideos")
-	videosCount := 0
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()
 		if maybeVideo != nil {
@@ -255,24 +276,34 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in video src %v", src)
 				retErr = &MediaUrlErr{src, "video src"}
 			}
+			if srcExists {
+				fixedSrc, err := removeProtocolHostPortIfNeed(src, frontendUrl)
+				if err != nil {
+					retErr = err
+				}
+				maybeVideo.SetAttr("src", fixedSrc)
+			}
 
 			poster, posterExists := maybeVideo.Attr("poster")
 			if posterExists && !utils.ContainsUrl(wlArr, poster) {
 				GetLogEntry(ctx).Infof("Filtered not allowed url in video poster %v", poster)
 				retErr = &MediaUrlErr{src, "video poster"}
 			}
-			videosCount++
+			if posterExists {
+				fixedPoster, err := removeProtocolHostPortIfNeed(poster, frontendUrl)
+				if err != nil {
+					retErr = err
+				}
+				maybeVideo.SetAttr("poster", fixedPoster)
+			}
+
+			mediaCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
-	if videosCount > maxVideosCount {
-		return "", errors.New("Too many videos")
-	}
 
-	maxIframesCount := viper.GetInt("message.maxIframes")
-	iframesCount := 0
 	doc.Find("iframe").Each(func(i int, s *goquery.Selection) {
 		maybeIframe := s.First()
 		if maybeIframe != nil {
@@ -281,37 +312,82 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 				GetLogEntry(ctx).Infof("Filtered not allowed url in iframe src %v", src)
 				retErr = &MediaUrlErr{src, "iframe src"}
 			}
-			iframesCount++
+			mediaCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
-	if iframesCount > maxIframesCount {
-		return "", errors.New("Too many iframes")
-	}
 
-	maxAudiosCount := viper.GetInt("message.maxAudios")
-	audiosCount := 0
 	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
-		maybeImage := s.First()
-		if maybeImage != nil {
-			src, exists := maybeImage.Attr("src")
+		maybeAudio := s.First()
+		if maybeAudio != nil {
+			src, exists := maybeAudio.Attr("src")
 			if exists && !utils.ContainsUrl(wlArr, src) {
 				GetLogEntry(ctx).Infof("Filtered not allowed url in audio src %v", src)
 				retErr = &MediaUrlErr{src, "audio src"}
 			}
-			audiosCount++
+			if exists {
+				fixedSrc, err := removeProtocolHostPortIfNeed(src, frontendUrl)
+				if err != nil {
+					retErr = err
+				}
+				maybeAudio.SetAttr("src", fixedSrc)
+			}
+
+			mediaCount++
 		}
 	})
 	if retErr != nil {
 		return "", retErr
 	}
-	if audiosCount > maxAudiosCount {
-		return "", errors.New("Too many audios")
+	if mediaCount > maxMediasCount {
+		return "", errors.New("Too many medias")
 	}
 
-	return sanitizedHtml, retErr
+	doc.Find("a").Each(func(i int, s *goquery.Selection) {
+		maybeA := s.First()
+		if maybeA != nil {
+			src, exists := maybeA.Attr("href")
+			if exists {
+				fixedSrc, err := removeProtocolHostPortIfNeed(src, frontendUrl)
+				if err != nil {
+					retErr = err
+				}
+				maybeA.SetAttr("href", fixedSrc)
+			}
+		}
+	})
+	if retErr != nil {
+		return "", retErr
+	}
+
+	ret, err := doc.Find("html").Find("body").Html()
+	if err != nil {
+		GetLogEntry(ctx).Warnf("Unagle to write html: %v", err)
+		return "", err
+	}
+
+	return ret, nil
+}
+
+func removeProtocolHostPortIfNeed(src, frontendUrl string) (string, error) {
+	parsed, err := url.Parse(src)
+	if err != nil {
+		return "", err
+	}
+
+	parsedAllowedUrl, err := url.Parse(frontendUrl)
+	if err != nil {
+		return "", err
+	}
+
+	if utils.ContainUrl(parsed, parsedAllowedUrl) {
+		parsed.Host = ""
+		parsed.Scheme = ""
+		parsed.User = nil
+	}
+	return parsed.String(), nil
 }
 
 func TrimAmdSanitizeAvatar(ctx context.Context, policy *services.SanitizerPolicy, input null.String) (null.String) {
