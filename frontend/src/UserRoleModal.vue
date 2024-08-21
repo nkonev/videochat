@@ -9,6 +9,7 @@
                         v-model="chosenRoles"
                         variant="outlined"
                         density="compact"
+                        color="primary"
                         multiple
                     ></v-select>
                     <v-progress-circular
