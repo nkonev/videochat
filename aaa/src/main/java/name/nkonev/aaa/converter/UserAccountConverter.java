@@ -44,7 +44,7 @@ public class UserAccountConverter {
         userAccountDTO = userAccountDTO.withAvatar(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatar())));
         userAccountDTO = userAccountDTO.withAvatarBig(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig())));
         userAccountDTO = userAccountDTO.withShortInfo(trimToNull(NullEncode.forHtml(userAccountDTO.shortInfo())));
-        userAccountDTO = userAccountDTO.withLoginColor(trimToNull(userAccountDTO.loginColor()));
+        userAccountDTO = userAccountDTO.withLoginColor(trimToNull(NullEncode.forHtml(userAccountDTO.loginColor())));
         return userAccountDTO;
     }
 
