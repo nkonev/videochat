@@ -13,6 +13,7 @@ public class TestConstants {
     public static final String USER_BOB_LDAP = "bobby";
     public static final String USER_BOB_LDAP_PASSWORD = "bobspassword"; // see in src/test/resources/test-server.ldif
     public static final String USER_BOB_LDAP_ID = "2"; // see in src/test/resources/test-server.ldif
+    public static final String USER_BOB_LDAP_EMAIL = "bham@sf.org";
     public static final String USER_NIKITA = "nikita";
 
     public static final String USER_LOCKED = "generated_user_66";

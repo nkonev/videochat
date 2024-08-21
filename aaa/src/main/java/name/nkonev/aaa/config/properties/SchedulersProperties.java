@@ -1,6 +1,7 @@
 package name.nkonev.aaa.config.properties;
 
 public record SchedulersProperties(
-    UserOnlineSchedulerProperties userOnline
+    UserOnlineSchedulerProperties userOnline,
+    SyncLdapSchedulerProperties syncLdap
 ) {
 }

@@ -8,11 +8,9 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-@ConditionalOnProperty("custom.schedulers.user-online.enabled")
 @Service
 public class UserOnlineTask {
 
@@ -33,8 +31,16 @@ public class UserOnlineTask {
     @Scheduled(cron = "${custom.schedulers.user-online.cron}")
     @SchedulerLock(name = "userOnlineTask")
     public void scheduledTask() {
+        if (!aaaProperties.schedulers().userOnline().enabled()) {
+            return;
+        }
+
+        this.doWork();
+    }
+
+    public void doWork() {
         final int pageSize = aaaProperties.schedulers().userOnline().batchSize();
-        LOGGER.debug("User online task start, userOnlineBatchSize={}", pageSize);
+        LOGGER.debug("User online task start, batchSize={}", pageSize);
 
         var shouldContinue = true;
         for (int i = 0; shouldContinue; i++) {

@@ -3,6 +3,8 @@ package name.nkonev.aaa.config.properties;
 public record LdapAttributes(
     String id,
     String role,
-    String email
+    String email,
+    String locked,
+    String username
 ) {
 }

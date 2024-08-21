@@ -67,6 +67,10 @@ custom:
       enabled: false
       batch-size: 20
       cron: "*/20 * * * * *"
+    sync-ldap:
+      enabled: false
+      batch-size: 20
+      cron: "*/20 * * * * *"
 
 server.port: 9080
 
@@ -167,6 +171,8 @@ custom.ldap:
     id: uidNumber # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
     role: memberOf
     email: mail
+    locked: blocked
+    username: uid
   password:
     encodingType: ""
     strength: 10

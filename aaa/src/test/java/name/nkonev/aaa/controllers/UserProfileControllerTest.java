@@ -14,6 +14,7 @@ import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.services.EventReceiver;
+import name.nkonev.aaa.tasks.SyncLdapTask;
 import name.nkonev.aaa.util.UrlParser;
 import com.icegreen.greenmail.util.Retriever;
 import jakarta.mail.Message;
@@ -66,6 +67,9 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
     @Autowired
     private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
+
+    @Autowired
+    private SyncLdapTask syncLdapTask;
 
     @BeforeAll
     public static void ba() {
@@ -570,7 +574,23 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertEquals(1, bobRedisSessions.size());
         Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_USER));
         Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_ADMIN));
-        Assertions.assertEquals("bham@sf.org", gotBob.email());
+        Assertions.assertEquals(USER_BOB_LDAP_EMAIL, gotBob.email());
+
+        userAccountRepository.save(gotBob
+            .withEmail("a@b.com")
+            .withRoles(new UserRole[]{})
+        );
+
+        var overridedBob = userAccountRepository.findByUsername(USER_BOB_LDAP).get();
+        Assertions.assertEquals("a@b.com", overridedBob.email());
+        Assertions.assertEquals(0, overridedBob.roles().length);
+
+        syncLdapTask.doWork();
+
+        var restoredBob = userAccountRepository.findByUsername(USER_BOB_LDAP).get();
+        Assertions.assertEquals(USER_BOB_LDAP_EMAIL, restoredBob.email());
+        Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_USER));
+        Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_ADMIN));
     }
 
     final String userForChangeEmail0 = "generated_user_20";

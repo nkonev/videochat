@@ -9,6 +9,8 @@ import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.services.EventService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -43,6 +45,8 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     @Autowired
     private UserAccountConverter userAccountConverter;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaUserDetailsService.class);
 
     /**
      * load UserAccountDetailsDTO from database, or throws UsernameNotFoundException
@@ -103,6 +107,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public void killSessions(long userId, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
+        LOGGER.info("Killing sessions for userId={}, reason={}", userId, reasonType);
         String userName = getUserAccount(userId).username();
         Map<String, Session> sessionMap = getSessions(userName);
         sessionMap.keySet().stream().filter(aSession -> filterOutSession != null ? !aSession.equals(filterOutSession) : true).forEach(session -> redisOperationsSessionRepository.deleteById(session));

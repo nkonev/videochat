@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.converter.UserAccountConverter.normalizeEmail;
+import name.nkonev.aaa.utils.NullUtils;
 
 // https://spring.io/guides/gs/authenticating-ldap
 @Component
@@ -76,18 +77,19 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
                     var ctx = ldapOperations.searchForContext(lq);
-                    var ldapUserId = ctx.getObjectAttribute(aaaProperties.ldap().attributeNames().id()).toString();
+                    var ldapUserId = NullUtils.getOrNull(() -> ctx.getObjectAttribute(aaaProperties.ldap().attributeNames().id()).toString());
 
                     final Set<String> rawRoles = new HashSet<>();
                     if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                        String[] groups = ctx.getStringAttributes(aaaProperties.ldap().attributeNames().role());
+                        String[] groups = NullUtils.getOrNull(() -> ctx.getStringAttributes(aaaProperties.ldap().attributeNames().role()));
                         if (groups != null) {
                             rawRoles.addAll(Arrays.stream(groups).collect(Collectors.toSet()));
                         }
                     }
                     final AtomicReference<String> email = new AtomicReference<>();
                     if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
-                        email.set(normalizeEmail(ctx.getStringAttribute(aaaProperties.ldap().attributeNames().email())));
+                        var ev = NullUtils.getOrNull(() -> ctx.getStringAttribute(aaaProperties.ldap().attributeNames().email()));
+                        email.set(normalizeEmail(ev));
                     }
 
                     UserAccount byLdapId = userAccountRepository

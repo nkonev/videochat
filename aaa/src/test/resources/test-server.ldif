@@ -61,6 +61,7 @@ uidNumber: 2
 memberOf: user
 memberOf: admin
 mail: bham@sf.org
+blocked: false
 
 dn: uid=joe,ou=otherpeople,dc=springframework,dc=org
 objectclass: top
