@@ -153,7 +153,7 @@ custom.ldap:
     base: ""
     enabled: false
     filter: "uid={0}"
-    uid-name: uid
+    ldap-id-name: uidNumber # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
   password:
     encodingType: ""
     strength: 10

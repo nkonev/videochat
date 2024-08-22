@@ -65,7 +65,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                         .findByUsername(userName)
                         .orElseGet(() -> {
                             var ctx = ldapOperations.searchForContext(lq);
-                            var userId = ctx.getObjectAttribute(aaaProperties.ldap().auth().uidName()).toString();
+                            var userId = ctx.getObjectAttribute(aaaProperties.ldap().auth().ldapIdName()).toString();
                             var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId));
                             created.set(true);
                             return user;

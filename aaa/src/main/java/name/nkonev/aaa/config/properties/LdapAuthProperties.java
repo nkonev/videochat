@@ -4,6 +4,6 @@ public record LdapAuthProperties(
     String base,
     boolean enabled,
     String filter,
-    String uidName
+    String ldapIdName
 ) {
 }

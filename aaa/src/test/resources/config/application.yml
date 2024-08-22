@@ -138,16 +138,20 @@ management:
       enabled: false
     add-application-context-header: false
 
+# https://docs.spring.io/spring-boot/reference/data/nosql.html#data.nosql.ldap.embedded
+# only for tests
 spring.ldap.embedded:
   base-dn: dc=springframework,dc=org
   ldif: classpath:test-server.ldif
+  validation:
+    enabled: false
 
 custom.ldap:
   auth:
-    base: ""
+    base: "ou=people,dc=springframework,dc=org"
     enabled: true
     filter: "uid={0}"
-    uid-name: uid
+    ldap-id-name: uidNumber
   password:
     encodingType: ""
     strength: 10
