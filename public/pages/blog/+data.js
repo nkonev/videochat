@@ -35,7 +35,6 @@ async function data(pageContext) {
         items: response.data.items,
         showSearchButton: true,
         searchStringFacade: searchString,
-        markInstance: null,
         title: "Blog",
         description: "Various tech blog",
         loading: false,
