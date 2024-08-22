@@ -15,6 +15,6 @@ export default {
   },
   hydrationCanBeAborted: true,
   passToClient: [ // props in pageContext
-    'urlParsed', 'isMobile'
+    'isMobile'
   ]
 }
