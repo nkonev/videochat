@@ -39,6 +39,7 @@ import org.springframework.web.util.UriBuilder;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -563,9 +564,12 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         getMockMvcSession(USER_BOB_LDAP, USER_BOB_LDAP_PASSWORD);
         Optional<UserAccount> bob = userAccountRepository.findByUsername(USER_BOB_LDAP);
         Assertions.assertTrue(bob.isPresent());
-        Assertions.assertEquals(USER_BOB_LDAP_ID, bob.get().ldapId());
+        var gotBob = bob.get();
+        Assertions.assertEquals(USER_BOB_LDAP_ID, gotBob.ldapId());
         Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions(USER_BOB_LDAP);
         Assertions.assertEquals(1, bobRedisSessions.size());
+        Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_USER));
+        Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_ADMIN));
     }
 
     final String userForChangeEmail0 = "generated_user_20";

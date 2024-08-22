@@ -1,5 +1,6 @@
 package name.nkonev.aaa.security;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -33,6 +34,9 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
 
     @Autowired
     private DefaultOAuth2UserService delegate;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -94,8 +98,10 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
     @Override
     protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
-        boolean hasAdminRole = Optional.ofNullable(roles).orElse(new HashSet<>()).stream().anyMatch(s -> "ROLE_ADMIN".equalsIgnoreCase(s) || "ADMIN".equalsIgnoreCase(s));
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, hasAdminRole);
+
+        var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().keycloak(), roles);
+
+        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, mappedRoles);
         userAccount = userAccountRepository.save(userAccount);
         LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 

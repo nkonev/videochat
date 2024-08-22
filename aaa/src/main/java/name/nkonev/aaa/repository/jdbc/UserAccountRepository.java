@@ -17,6 +17,8 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
 
     Optional<UserAccount> findByUsername(String username);
 
+    Optional<UserAccount> findByLdapId(String ldapId);
+
     Optional<UserAccount> findByEmail(String email);
 
     Optional<UserAccount> findByFacebookId(String facebookId);

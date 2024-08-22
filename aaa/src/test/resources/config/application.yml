@@ -146,12 +146,26 @@ spring.ldap.embedded:
   validation:
     enabled: false
 
+custom.role-mappings:
+  ldap:
+    - their: "user"
+      our: "ROLE_USER"
+    - their: "admin"
+      our: "ROLE_ADMIN"
+  keycloak:
+    - their: "USER"
+      our: "ROLE_USER"
+    - their: "uma_authorization"
+      our: "ROLE_ADMIN"
+
 custom.ldap:
   auth:
     base: "ou=people,dc=springframework,dc=org"
     enabled: true
     filter: "uid={0}"
     ldap-id-name: uidNumber
+    ldap-role-name: memberOf
+
   password:
     encodingType: ""
     strength: 10

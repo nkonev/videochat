@@ -4,6 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.exception.UserAlreadyPresentException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
@@ -20,9 +21,15 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+// https://spring.io/guides/gs/authenticating-ldap
 @Component
 public class LdapAuthenticationProvider implements AuthenticationProvider {
 
@@ -61,16 +68,30 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 var userAccount = transactionTemplate.execute(status -> {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
-                    UserAccount byUsername = userAccountRepository
-                        .findByUsername(userName)
+                    var ctx = ldapOperations.searchForContext(lq);
+                    var userId = ctx.getObjectAttribute(aaaProperties.ldap().auth().ldapIdName()).toString();
+
+                    final Set<String> rawGroups = new HashSet<>();
+                    if (StringUtils.hasLength(aaaProperties.ldap().auth().ldapRoleName())) {
+                        String[] groups = ctx.getStringAttributes(aaaProperties.ldap().auth().ldapRoleName());
+                        if (groups != null) {
+                            rawGroups.addAll(Arrays.stream(groups).collect(Collectors.toSet()));
+                        }
+                    }
+
+                    UserAccount byLdapId = userAccountRepository
+                        .findByLdapId(userId)
                         .orElseGet(() -> {
-                            var ctx = ldapOperations.searchForContext(lq);
-                            var userId = ctx.getObjectAttribute(aaaProperties.ldap().auth().ldapIdName()).toString();
-                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId));
+                            // create a new
+                            userAccountRepository.findByUsername(userName).ifPresent(ua -> {
+                                throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
+                            });
+                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawGroups);
+                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId, mappedRoles));
                             created.set(true);
                             return user;
                         });
-                    return byUsername;
+                    return byLdapId;
                 });
                 UserAccountDetailsDTO userDetails = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
 
@@ -79,6 +100,8 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 }
 
                 return new AaaAuthenticationToken(userDetails);
+            } catch (UserAlreadyPresentException e) {
+                LOGGER.warn("User already exists: {}", e.getMessage());
             } catch (IncorrectResultSizeDataAccessException | NamingException e) {
                 LOGGER.debug("Unable to authenticate via LDAP", e);
             }

@@ -44,6 +44,8 @@ sn: Alex
 uid: ben
 userPassword: $2a$10$c6bSeWPhg06xB1lvmaWNNe4NROmZiSpYhlocU/98HNr2MhIOiSt36
 uidNumber: 1
+memberOf: user
+memberOf: admin
 
 dn: uid=bobby,ou=people,dc=springframework,dc=org
 objectclass: top
@@ -55,6 +57,8 @@ sn: Hamilton
 uid: bobby
 userPassword: bobspassword
 uidNumber: 2
+memberOf: user
+memberOf: admin
 
 dn: uid=joe,ou=otherpeople,dc=springframework,dc=org
 objectclass: top
@@ -66,6 +70,8 @@ sn: Smeth
 uid: joe
 userPassword: joespassword
 uidNumber: 3
+memberOf: user
+memberOf: admin
 
 dn: cn=mouse\, jerry,ou=people,dc=springframework,dc=org
 objectclass: top
@@ -77,6 +83,8 @@ sn: Mouse
 uid: jerry
 userPassword: jerryspassword
 uidNumber: 4
+memberOf: user
+memberOf: admin
 
 dn: cn=slash/guy,ou=people,dc=springframework,dc=org
 objectclass: top
@@ -88,6 +96,8 @@ sn: Slash
 uid: slashguy
 userPassword: slashguyspassword
 uidNumber: 5
+memberOf: user
+memberOf: admin
 
 dn: cn=quote\"guy,ou=\"quoted people\",dc=springframework,dc=org
 objectclass: top
@@ -99,6 +109,8 @@ sn: Quote
 uid: quoteguy
 userPassword: quoteguyspassword
 uidNumber: 6
+memberOf: user
+memberOf: admin
 
 dn: uid=space cadet,ou=space cadets,dc=springframework,dc=org
 objectclass: top
@@ -110,3 +122,5 @@ sn: Cadet
 uid: space cadet
 userPassword: spacecadetspassword
 uidNumber: 7
+memberOf: user
+memberOf: admin

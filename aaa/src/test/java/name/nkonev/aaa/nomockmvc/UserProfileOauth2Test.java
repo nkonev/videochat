@@ -6,6 +6,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.Cookie;
 import name.nkonev.aaa.AbstractHtmlUnitRunner;
 import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.security.OAuth2Providers;
 import org.awaitility.Awaitility;
@@ -23,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Arrays;
 
 import static name.nkonev.aaa.TestConstants.*;
 import static name.nkonev.aaa.Constants.Urls.PUBLIC_API;
@@ -340,6 +342,8 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         Assertions.assertNull(userAccount.avatar());
         Assertions.assertEquals(keycloakLogin, userAccount.username());
         Assertions.assertEquals(keycloakId, userAccount.oauth2Identifiers().keycloakId());
+        Assertions.assertTrue(Arrays.asList(userAccount.roles()).contains(UserRole.ROLE_USER));
+        Assertions.assertTrue(Arrays.asList(userAccount.roles()).contains(UserRole.ROLE_ADMIN));
 
         final String bindDeleteUrl = "/" + OAuth2Providers.KEYCLOAK;
 

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
+import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 @Component
 public class UserAccountConverter {
@@ -34,7 +35,7 @@ public class UserAccountConverter {
     @Autowired
     private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
-    static final UserRole[] newUserRoles = new UserRole[]{UserRole.ROLE_USER};
+    static final UserRole[] newUserRoles = new UserRole[]{DEFAULT_ROLE};
 
     public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isForOauth2) {
         var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isForOauth2));
@@ -335,17 +336,11 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, boolean hasAdminRole) {
+    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, Set<UserRole> roles) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
         final boolean confirmed = true;
-
-        var rolesList = Arrays.stream(newUserRoles).toList();
-        if (hasAdminRole) {
-            rolesList.add(UserRole.ROLE_ADMIN);
-        }
-        final UserRole[] newUserRolesExtended = rolesList.toArray(UserRole[]::new);
 
         return new UserAccount(
                 null,
@@ -359,7 +354,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRolesExtended,
+                roles.toArray(UserRole[]::new),
                 null,
                 null,
                 null,
@@ -371,7 +366,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId) {
+    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -389,7 +384,7 @@ public class UserAccountConverter {
                 locked,
                 enabled,
                 confirmed,
-                newUserRoles,
+                mappedRoles.toArray(UserRole[]::new),
                 null,
                 null,
                 null,
