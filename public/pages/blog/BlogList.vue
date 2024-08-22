@@ -30,7 +30,7 @@
                             >
                                 <v-container class="post-title ma-0 pa-0">
                                     <v-card-title>
-                                        <a class="post-title-text" v-html="item.title" :href="getLink(item)"></a>
+                                        <a class="post-title-text" v-html="item.title" rel="external" :href="getLink(item)"></a>
                                     </v-card-title>
                                 </v-container>
                             </v-img>
