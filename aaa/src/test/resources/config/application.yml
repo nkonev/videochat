@@ -163,9 +163,9 @@ custom.ldap:
     base: "ou=people,dc=springframework,dc=org"
     enabled: true
     filter: "uid={0}"
-    ldap-id-name: uidNumber
-    ldap-role-name: memberOf
-
+  attribute-names:
+    id: uidNumber # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
+    role: memberOf
   password:
     encodingType: ""
     strength: 10

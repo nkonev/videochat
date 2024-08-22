@@ -69,25 +69,25 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
                     var ctx = ldapOperations.searchForContext(lq);
-                    var userId = ctx.getObjectAttribute(aaaProperties.ldap().auth().ldapIdName()).toString();
+                    var ldapUserId = ctx.getObjectAttribute(aaaProperties.ldap().attributeNames().id()).toString();
 
-                    final Set<String> rawGroups = new HashSet<>();
-                    if (StringUtils.hasLength(aaaProperties.ldap().auth().ldapRoleName())) {
-                        String[] groups = ctx.getStringAttributes(aaaProperties.ldap().auth().ldapRoleName());
+                    final Set<String> rawRoles = new HashSet<>();
+                    if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
+                        String[] groups = ctx.getStringAttributes(aaaProperties.ldap().attributeNames().role());
                         if (groups != null) {
-                            rawGroups.addAll(Arrays.stream(groups).collect(Collectors.toSet()));
+                            rawRoles.addAll(Arrays.stream(groups).collect(Collectors.toSet()));
                         }
                     }
 
                     UserAccount byLdapId = userAccountRepository
-                        .findByLdapId(userId)
+                        .findByLdapId(ldapUserId)
                         .orElseGet(() -> {
                             // create a new
                             userAccountRepository.findByUsername(userName).ifPresent(ua -> {
                                 throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
                             });
-                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawGroups);
-                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, userId, mappedRoles));
+                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
+                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles));
                             created.set(true);
                             return user;
                         });
