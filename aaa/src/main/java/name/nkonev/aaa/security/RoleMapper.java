@@ -13,7 +13,7 @@ import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 public abstract class RoleMapper {
 
-    public static Set<UserRole> map(List<RoleMapEntry> roleMappings,  Set<String> rawRoles) {
+    public static Set<UserRole> map(List<RoleMapEntry> roleMappings, Set<String> rawRoles) {
         if (rawRoles == null) {
             return Set.of(DEFAULT_ROLE);
         }

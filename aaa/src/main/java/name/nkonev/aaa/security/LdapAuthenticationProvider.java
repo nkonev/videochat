@@ -6,6 +6,7 @@ import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.exception.UserAlreadyPresentException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.services.CheckService;
 import name.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static name.nkonev.aaa.converter.UserAccountConverter.normalizeEmail;
 
 // https://spring.io/guides/gs/authenticating-ldap
 @Component
@@ -50,6 +54,9 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
 
     @Autowired
     private UserAccountConverter userAccountConverter;
+
+    @Autowired
+    private CheckService userService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapAuthenticationProvider.class);
 
@@ -78,6 +85,10 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                             rawRoles.addAll(Arrays.stream(groups).collect(Collectors.toSet()));
                         }
                     }
+                    final AtomicReference<String> email = new AtomicReference<>();
+                    if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
+                        email.set(normalizeEmail(ctx.getStringAttribute(aaaProperties.ldap().attributeNames().email())));
+                    }
 
                     UserAccount byLdapId = userAccountRepository
                         .findByLdapId(ldapUserId)
@@ -86,8 +97,15 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                             userAccountRepository.findByUsername(userName).ifPresent(ua -> {
                                 throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
                             });
+                            var emailValue = email.get();
+                            if (StringUtils.hasLength(emailValue)) {
+                                if (!userService.checkEmailIsFree(emailValue)){
+                                    throw new UserAlreadyPresentException("User with email '" + emailValue + "' is already present");
+                                }
+                            }
+
                             var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
-                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles));
+                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles, emailValue));
                             created.set(true);
                             return user;
                         });

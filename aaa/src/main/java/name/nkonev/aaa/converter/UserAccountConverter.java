@@ -37,9 +37,13 @@ public class UserAccountConverter {
 
     static final UserRole[] newUserRoles = new UserRole[]{DEFAULT_ROLE};
 
+    public static String normalizeEmail(String email) {
+        return trimToNull(NullEncode.forHtml(email));
+    }
+
     public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isForOauth2) {
         var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isForOauth2));
-        userAccountDTO = userAccountDTO.withEmail(trimToNull(NullEncode.forHtml(userAccountDTO.email())));
+        userAccountDTO = userAccountDTO.withEmail(normalizeEmail(userAccountDTO.email()));
         userAccountDTO = userAccountDTO.withAvatar(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatar())));
         userAccountDTO = userAccountDTO.withAvatarBig(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig())));
         userAccountDTO = userAccountDTO.withShortInfo(trimToNull(NullEncode.forHtml(userAccountDTO.shortInfo())));
@@ -366,7 +370,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles) {
+    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles, String email) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -385,7 +389,7 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 mappedRoles.toArray(UserRole[]::new),
-                null,
+                email,
                 null,
                 null,
                 null,

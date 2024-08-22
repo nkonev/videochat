@@ -166,6 +166,7 @@ custom.ldap:
   attribute-names:
     id: uidNumber # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
     role: memberOf
+    email: mail
   password:
     encodingType: ""
     strength: 10

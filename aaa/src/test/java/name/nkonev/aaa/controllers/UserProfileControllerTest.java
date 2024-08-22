@@ -570,6 +570,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertEquals(1, bobRedisSessions.size());
         Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_USER));
         Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_ADMIN));
+        Assertions.assertEquals("bham@sf.org", gotBob.email());
     }
 
     final String userForChangeEmail0 = "generated_user_20";
