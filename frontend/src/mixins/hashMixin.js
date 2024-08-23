@@ -8,8 +8,8 @@ export default () => {
                 startingFromItemIdTop: null,
                 startingFromItemIdBottom: null,
                 // those two doesn't play in reset() in order to survive after reload()
-                hasInitialHash: false, // do we have hash in address line (message id)
-                loadedHash: null, // keeps loaded message id from localstore the most top visible message - preserves scroll between page reload or switching between chats
+                hasHashFromRoute: false, // do we have hash in address line (message id)
+                loadedFromStoreHash: null, // keeps loaded message id from localstore the most top visible message - preserves scroll between page reload or switching between chats
             }
         },
         computed: {
@@ -21,23 +21,23 @@ export default () => {
             getDefaultItemId() {
                 return this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
             },
-            setHashes() {
-                this.hasInitialHash = hasLength(this.highlightItemId);
-                this.loadedHash = this.getPositionFromStore();
+            initializeHashVariables() {
+                this.hasHashFromRoute = hasLength(this.highlightItemId);
+                this.loadedFromStoreHash = this.getPositionFromStore();
             },
-            prepareHashesForLoad() {
+            prepareHashesForRequest() {
                 let startingFromItemId;
                 let hasHash;
-                if (this.hasInitialHash) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
+                if (this.hasHashFromRoute) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
                     // how to check:
                     // 1. click on hash
                     // 2. reload page
                     // 3. press "arrow down" (Scroll down)
-                    // 4. It is going to invoke this load method which will use cashed and reset hasInitialHash = false
+                    // 4. It is going to invoke this load method which will use cashed and reset hasHashFromRoute = false
                     startingFromItemId = this.highlightItemId;
                     hasHash = true;
-                } else if (this.loadedHash) {
-                    startingFromItemId = this.loadedHash;
+                } else if (this.loadedFromStoreHash) {
+                    startingFromItemId = this.loadedFromStoreHash;
                     hasHash = true;
                 } else {
                     startingFromItemId = this.getDefaultItemId();
@@ -48,13 +48,13 @@ export default () => {
             async doScrollOnFirstLoad(prefix) {
                 if (this.highlightItemId) {
                     await this.scrollTo(prefix + this.highlightItemId);
-                } else if (this.loadedHash) {
-                    await this.scrollTo(prefix + this.loadedHash);
+                } else if (this.loadedFromStoreHash) {
+                    await this.scrollTo(prefix + this.loadedFromStoreHash);
                 } else {
                     await this.doDefaultScroll(); // we need it to prevent browser's scrolling
                 }
-                this.loadedHash = null;
-                this.hasInitialHash = false;
+                this.loadedFromStoreHash = null;
+                this.hasHashFromRoute = false;
             },
             async scrollTo(newValue) {
                 return await this.$nextTick(()=>{
@@ -67,7 +67,7 @@ export default () => {
                 const res = await this.scrollTo(newValue);
                 if (!res) {
                     console.log("Didn't scrolled, resetting");
-                    await this.setHashAndReloadItems();
+                    await this.initializeHashVariablesAndReloadItems();
                 }
             },
             getMaximumItemId() {
@@ -80,8 +80,8 @@ export default () => {
                 // console.log("Cleaning hash");
                 this.$router.push({ hash: null, query: this.$route.query })
             },
-            async setHashAndReloadItems() {
-                this.setHashes();
+            async initializeHashVariablesAndReloadItems() {
+                this.initializeHashVariables();
                 await this.reloadItems();
             },
         }

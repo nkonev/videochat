@@ -223,7 +223,7 @@
 
           this.chatStore.incrementProgressCount();
 
-          const { startingFromItemId, hasHash } = this.prepareHashesForLoad();
+          const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
           return axios.get(`/api/chat/${this.chatId}/message`, {
             params: {
@@ -317,7 +317,7 @@
           }
         },
         async onProfileSet() {
-          await this.setHashAndReloadItems();
+          await this.initializeHashVariablesAndReloadItems();
         },
         onLoggedOut() {
           this.reset();

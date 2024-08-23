@@ -265,7 +265,7 @@ export default {
 
       this.chatStore.incrementProgressCount();
 
-      const { startingFromItemId, hasHash } = this.prepareHashesForLoad();
+      const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
       return axios.post(`/api/aaa/user/search`, {
           startingFromItemId: startingFromItemId,
@@ -343,7 +343,7 @@ export default {
       }
     },
     async onProfileSet() {
-      await this.setHashAndReloadItems();
+      await this.initializeHashVariablesAndReloadItems();
       this.graphQlSubscribe();
     },
 
