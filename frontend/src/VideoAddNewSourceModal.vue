@@ -25,7 +25,7 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn variant="flat" v-if="videoDevice != null || audioDevice != null" color="primary" @click="addSource()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
+                    <v-btn variant="flat" v-if="videoDevice != null || audioDevice != null" color="primary" @click="onChosen()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn variant="flat" color="red" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
 
@@ -35,10 +35,10 @@
 </template>
 
 <script>
-    import bus, {
-        ADD_VIDEO_SOURCE,
-        ADD_VIDEO_SOURCE_DIALOG,
-    } from "./bus/bus";
+import bus, {
+    ADD_VIDEO_SOURCE,
+    ADD_VIDEO_SOURCE_DIALOG, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG,
+} from "./bus/bus";
 
     export default {
         data () {
@@ -48,11 +48,19 @@
                 videoDevice: null, // actually contains id due to v-select configuration
                 audioDevices: [],
                 audioDevice: null, // actually contains id due to v-select configuration
+                change: false,
+                purpose: null,
             }
         },
         methods: {
-            showModal() {
+            showModalAdd() {
                 this.show = true;
+                this.requestVideoDeviceItems()
+            },
+            showModalChange(purpose) {
+                this.show = true;
+                this.change = true;
+                this.purpose = purpose;
                 this.requestVideoDeviceItems()
             },
             closeModal() {
@@ -61,6 +69,8 @@
                 this.videoDevice = null;
                 this.audioDevices = [];
                 this.audioDevice = null;
+                this.change = false;
+                this.purpose = null;
             },
             requestVideoDeviceItems() {
                 navigator.mediaDevices.enumerateDevices()
@@ -79,16 +89,22 @@
                         console.log(err.name + ": " + err.message);
                     });
             },
-            addSource() {
-                bus.emit(ADD_VIDEO_SOURCE, {videoId: this.videoDevice, audioId: this.audioDevice});
+            onChosen() {
+                if (this.change) {
+                    bus.emit(CHANGE_VIDEO_SOURCE, {videoId: this.videoDevice, audioId: this.audioDevice, purpose: this.purpose});
+                } else {
+                    bus.emit(ADD_VIDEO_SOURCE, {videoId: this.videoDevice, audioId: this.audioDevice});
+                }
                 this.closeModal();
             }
         },
         mounted() {
-            bus.on(ADD_VIDEO_SOURCE_DIALOG, this.showModal);
+            bus.on(ADD_VIDEO_SOURCE_DIALOG, this.showModalAdd);
+            bus.on(CHANGE_VIDEO_SOURCE_DIALOG, this.showModalChange);
         },
         beforeUnmount() {
-            bus.off(ADD_VIDEO_SOURCE_DIALOG, this.showModal);
+            bus.off(ADD_VIDEO_SOURCE_DIALOG, this.showModalAdd);
+            bus.off(CHANGE_VIDEO_SOURCE_DIALOG, this.showModalChange);
         },
     }
 </script>

@@ -362,3 +362,6 @@ export const checkUpByTreeObj = (el, maxLevels, condition) => {
         found: false
     };
 }
+
+export const PURPOSE_CALL = 'call';
+export const PURPOSE_RECORDING = 'recording';

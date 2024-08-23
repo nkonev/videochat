@@ -18,19 +18,23 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {
-  defaultAudioMute,
-  getWebsocketUrlPrefix, isMobileBrowser,
-  isMobileFireFox
+    defaultAudioMute,
+    getWebsocketUrlPrefix, isMobileBrowser,
+    isMobileFireFox, PURPOSE_CALL
 } from "@/utils";
 import {
-    getStoredAudioDevicePresents,
-    getStoredVideoDevicePresents, NULL_CODEC, NULL_SCREEN_RESOLUTION,
+    getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
+    getStoredVideoDevicePresents,
+    NULL_CODEC,
+    NULL_SCREEN_RESOLUTION,
+    setStoredCallAudioDeviceId,
+    setStoredCallVideoDeviceId,
 } from "@/store/localStore";
 import bus, {
-  ADD_SCREEN_SOURCE,
-  ADD_VIDEO_SOURCE,
-  REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED,
-  VIDEO_PARAMETERS_CHANGED
+    ADD_SCREEN_SOURCE,
+    ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE,
+    REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED,
+    VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
 import {chat_name, videochat_name} from "@/router/routes";
 import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
@@ -270,7 +274,7 @@ export default {
       for (const publication of this.room.localParticipant.getTrackPublications().values()) {
         await this.room.localParticipant.unpublishTrack(publication.track, true);
       }
-      await this.createLocalMediaTracks(null, null);
+      await this.createLocalMediaTracks(getStoredCallVideoDeviceId(), getStoredCallAudioDeviceId());
       bus.emit(VIDEO_PARAMETERS_CHANGED);
       this.inRestarting = false;
     },
@@ -333,7 +337,7 @@ export default {
         })
         .on(RoomEvent.Disconnected, this.handleDisconnect)
         .on(RoomEvent.SignalConnected, () => {
-          this.createLocalMediaTracks(null, null);
+          this.createLocalMediaTracks(getStoredCallVideoDeviceId(), getStoredCallAudioDeviceId());
         })
       ;
 
@@ -489,7 +493,13 @@ export default {
     onAddScreenSource() {
       this.createLocalMediaTracks(null, null, true);
     },
-
+    onChangeVideoSource({videoId, audioId, purpose}) {
+        if (purpose === PURPOSE_CALL) {
+            setStoredCallVideoDeviceId(videoId);
+            setStoredCallAudioDeviceId(audioId);
+            this.tryRestartVideoDevice();
+        }
+    },
     addComponentForUser(userIdentity, componentWrapper) {
       let existingList = this.userVideoComponents.get(userIdentity);
       if (!existingList) {
@@ -549,6 +559,7 @@ export default {
     bus.on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
+    bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
 
     this.videoContainerDiv = document.getElementById("video-container");
 
@@ -579,7 +590,7 @@ export default {
     bus.off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
-
+    bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
   },
 }
 

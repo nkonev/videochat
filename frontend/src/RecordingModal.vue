@@ -61,12 +61,13 @@ import bus, {
     OPEN_RECORDING_MODAL,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     OPEN_FILE_UPLOAD_MODAL,
-    MESSAGE_EDIT_SET_FILE_ITEM_UUID, ADD_VIDEO_SOURCE_DIALOG, ADD_VIDEO_SOURCE
+    MESSAGE_EDIT_SET_FILE_ITEM_UUID, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG
 } from "@/bus/bus";
 import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore";
 import {RecordRTCPromisesHandler} from "recordrtc";
 import {v4 as uuidv4} from "uuid";
+import {PURPOSE_RECORDING} from "@/utils.js";
 
 export default {
   data () {
@@ -254,10 +255,10 @@ export default {
       this.closeModal();
     },
     openSettings() {
-        bus.emit(ADD_VIDEO_SOURCE_DIALOG);
+        bus.emit(CHANGE_VIDEO_SOURCE_DIALOG, PURPOSE_RECORDING);
     },
-    onChangeVideoSource({videoId, audioId}) {
-        if (this.show) {
+    onChangeVideoSource({videoId, audioId, purpose}) {
+        if (this.show && purpose == PURPOSE_RECORDING) {
             this.overrideVideoDeviceId = videoId;
             this.overrideAudioDeviceId = audioId;
             setStoredRecordingVideoDeviceId(this.overrideVideoDeviceId);
@@ -282,12 +283,12 @@ export default {
   beforeUnmount() {
     bus.off(OPEN_RECORDING_MODAL, this.showModal);
     bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
-    bus.off(ADD_VIDEO_SOURCE, this.onChangeVideoSource);
+    bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
   },
   mounted() {
     bus.on(OPEN_RECORDING_MODAL, this.showModal);
     bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
-    bus.on(ADD_VIDEO_SOURCE, this.onChangeVideoSource);
+    bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
 
     this.overrideVideoDeviceId = getStoredRecordingVideoDeviceId();
     this.overrideAudioDeviceId = getStoredRecordingAudioDeviceId();

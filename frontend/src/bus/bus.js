@@ -105,8 +105,10 @@ export const CO_CHATTED_PARTICIPANT_CHANGED = "participantChanged";
 
 export const ADD_VIDEO_SOURCE = "addVideoSource";
 export const ADD_SCREEN_SOURCE = "addScreenSource";
+export const CHANGE_VIDEO_SOURCE = "changeVideoSource";
 
 export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
+export const CHANGE_VIDEO_SOURCE_DIALOG = "changeVideoSourceDialog";
 
 export const SET_LOCAL_MICROPHONE_MUTED = "setLocalMicrophoneMuted";
 

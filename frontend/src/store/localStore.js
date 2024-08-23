@@ -362,3 +362,20 @@ export const getStoredRecordingAudioDeviceId = () => {
 export const setStoredRecordingAudioDeviceId = (v) => {
     localStorage.setItem(KEY_RECORDING_AUDIO_DEVICE_ID, v);
 }
+
+
+export const KEY_CALL_VIDEO_DEVICE_ID = 'callVideoDeviceId';
+export const getStoredCallVideoDeviceId = () => {
+    return localStorage.getItem(KEY_CALL_VIDEO_DEVICE_ID);
+}
+export const setStoredCallVideoDeviceId = (v) => {
+    localStorage.setItem(KEY_CALL_VIDEO_DEVICE_ID, v);
+}
+
+export const KEY_CALL_AUDIO_DEVICE_ID = 'callAudioDeviceId';
+export const getStoredCallAudioDeviceId = () => {
+    return localStorage.getItem(KEY_CALL_AUDIO_DEVICE_ID);
+}
+export const setStoredCallAudioDeviceId = (v) => {
+    localStorage.setItem(KEY_CALL_AUDIO_DEVICE_ID, v);
+}

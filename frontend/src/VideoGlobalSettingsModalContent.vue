@@ -3,8 +3,7 @@
             <v-card-text class="pb-0">
 
                     <v-row no-gutters class="mb-4">
-                        <v-col
-                        >
+                        <v-col>
                             <v-checkbox
                                 density="comfortable"
                                 color="primary"
@@ -15,8 +14,7 @@
                             ></v-checkbox>
                         </v-col>
 
-                        <v-col
-                        >
+                        <v-col>
                             <v-checkbox
                                 density="comfortable"
                                 color="primary"
@@ -27,6 +25,8 @@
                             ></v-checkbox>
                         </v-col>
                     </v-row>
+
+                    <v-btn variant="outlined" class="mb-4" @click="openDevicesSettings()">{{ $vuetify.locale.t('$vuetify.default_devices_for_call') }}</v-btn>
 
                     <v-select
                         :label="$vuetify.locale.t('$vuetify.video_position')"
@@ -73,8 +73,7 @@
                     ></v-select>
 
                     <v-row no-gutters>
-                        <v-col
-                        >
+                        <v-col>
                             <v-checkbox
                                 density="comfortable"
                                 color="primary"
@@ -86,8 +85,7 @@
                             ></v-checkbox>
                         </v-col>
 
-                        <v-col
-                        >
+                        <v-col>
                             <v-checkbox
                                 density="comfortable"
                                 color="primary"
@@ -101,8 +99,7 @@
                     </v-row>
 
                     <v-row no-gutters>
-                        <v-col
-                        >
+                        <v-col>
                             <v-checkbox
                                 density="comfortable"
                                 color="primary"
@@ -114,8 +111,7 @@
                             ></v-checkbox>
                         </v-col>
 
-                        <v-col
-                        >
+                        <v-col>
                             <v-checkbox
                                 density="comfortable"
                                 color="primary"
@@ -132,10 +128,12 @@
 </template>
 
 <script>
-    import bus, {
-        REQUEST_CHANGE_VIDEO_PARAMETERS,
-        VIDEO_PARAMETERS_CHANGED,
-    } from "./bus/bus";
+import bus, {
+    CHANGE_VIDEO_SOURCE,
+    CHANGE_VIDEO_SOURCE_DIALOG,
+    REQUEST_CHANGE_VIDEO_PARAMETERS,
+    VIDEO_PARAMETERS_CHANGED,
+} from "./bus/bus";
     import {
         setVideoResolution,
         getStoredAudioDevicePresents,
@@ -150,10 +148,16 @@
         VIDEO_POSITION_AUTO,
         VIDEO_POSITION_ON_THE_TOP,
         VIDEO_POSITION_SIDE,
-        setStoredVideoPosition, getStoredVideoPosition, setStoredCodec, NULL_CODEC, NULL_SCREEN_RESOLUTION
+        setStoredVideoPosition,
+        getStoredVideoPosition,
+        setStoredCodec,
+        NULL_CODEC,
+        NULL_SCREEN_RESOLUTION,
+        setStoredCallVideoDeviceId, setStoredCallAudioDeviceId
     } from "./store/localStore";
     import {videochat_name} from "./router/routes";
     import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
+    import {PURPOSE_CALL} from "@/utils.js";
 
     export default {
         mixins: [videoServerSettingsMixin()],
@@ -164,6 +168,8 @@
                 audioPresents: null,
                 videoPresents: null,
                 videoPosition: null,
+
+                tempStream: null,
             }
         },
         methods: {
@@ -246,6 +252,31 @@
             changeCodec(v) {
                 setStoredCodec(v)
             },
+            async requestPermissions() {
+                this.tempStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+            },
+            requestPermissionsClose() {
+                if (this.tempStream) {
+                    for (const track of this.tempStream.getTracks()) {
+                        track.stop();
+                    }
+                }
+            },
+            async openDevicesSettings() {
+                if (!this.isVideoRoute()) {
+                    await this.requestPermissions();
+                }
+                bus.emit(CHANGE_VIDEO_SOURCE_DIALOG, PURPOSE_CALL);
+            },
+            onChangeVideoSource({videoId, audioId, purpose}) {
+                if (!this.isVideoRoute()) {
+                    this.requestPermissionsClose();
+                    if (purpose === PURPOSE_CALL) {
+                        setStoredCallVideoDeviceId(videoId);
+                        setStoredCallAudioDeviceId(audioId);
+                    }
+                }
+            },
         },
         computed: {
             displayQualityItems() {
@@ -271,10 +302,12 @@
             this.showModal()
         },
         created() {
-            bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged)
+            bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
+            bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
         },
         beforeUnmount() {
-            bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged)
+            bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
+            bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
         },
     }
 </script>
