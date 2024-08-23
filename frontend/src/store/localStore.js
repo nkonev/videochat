@@ -345,3 +345,20 @@ export const NOTIFICATION_TYPE_ANSWERS = 'answers';
 export const NOTIFICATION_TYPE_REACTIONS = 'reactions';
 export const NOTIFICATION_TYPE_NEW_MESSAGES = 'newMessages';
 export const NOTIFICATION_TYPE_CALL = 'call';
+
+
+export const KEY_RECORDING_VIDEO_DEVICE_ID = 'recordingVideoDeviceId';
+export const getStoredRecordingVideoDeviceId = () => {
+    return localStorage.getItem(KEY_RECORDING_VIDEO_DEVICE_ID);
+}
+export const setStoredRecordingVideoDeviceId = (v) => {
+    localStorage.setItem(KEY_RECORDING_VIDEO_DEVICE_ID, v);
+}
+
+export const KEY_RECORDING_AUDIO_DEVICE_ID = 'recordingAudioDeviceId';
+export const getStoredRecordingAudioDeviceId = () => {
+    return localStorage.getItem(KEY_RECORDING_AUDIO_DEVICE_ID);
+}
+export const setStoredRecordingAudioDeviceId = (v) => {
+    localStorage.setItem(KEY_RECORDING_AUDIO_DEVICE_ID, v);
+}

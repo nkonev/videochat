@@ -51,7 +51,12 @@
 </template>
 
 <script>
-import {getStoreRecordingTab, setStoreRecordingTab} from "@/store/localStore.js";
+import {
+    getStoredRecordingAudioDeviceId,
+    getStoredRecordingVideoDeviceId,
+    getStoreRecordingTab, setStoredRecordingAudioDeviceId, setStoredRecordingVideoDeviceId,
+    setStoreRecordingTab
+} from "@/store/localStore.js";
 import bus, {
     OPEN_RECORDING_MODAL,
     FILE_UPLOAD_MODAL_START_UPLOADING,
@@ -159,13 +164,14 @@ export default {
     async onShow() {
       await this.$nextTick();
 
+      const video = this.overrideVideoDeviceId ? {
+            deviceId: this.overrideVideoDeviceId
+      } : true;
+
       const audio = this.overrideAudioDeviceId ? {
             deviceId: this.overrideAudioDeviceId,
             echoCancellation: true,
             noiseSuppression: true,
-      } : true;
-      const video = this.overrideVideoDeviceId ? {
-            deviceId: this.overrideVideoDeviceId
       } : true;
 
       if (this.isVideo()) {
@@ -254,6 +260,8 @@ export default {
         if (this.show) {
             this.overrideVideoDeviceId = videoId;
             this.overrideAudioDeviceId = audioId;
+            setStoredRecordingVideoDeviceId(this.overrideVideoDeviceId);
+            setStoredRecordingAudioDeviceId(this.overrideAudioDeviceId);
             this.onUpdateTab(this.tab)
         }
     },
@@ -280,6 +288,9 @@ export default {
     bus.on(OPEN_RECORDING_MODAL, this.showModal);
     bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
     bus.on(ADD_VIDEO_SOURCE, this.onChangeVideoSource);
+
+    this.overrideVideoDeviceId = getStoredRecordingVideoDeviceId();
+    this.overrideAudioDeviceId = getStoredRecordingAudioDeviceId();
   }
 }
 </script>
