@@ -41,6 +41,7 @@
           </v-card-text>
           <v-card-actions>
               <v-spacer/>
+              <v-btn variant="outlined" @click="openSettings()" :disabled="isRecording" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>
               <v-btn v-if="mediaDevicesGotten" :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()"><v-icon size="x-large">{{isRecording ? 'mdi-stop' : 'mdi-record'}}</v-icon> {{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }} </v-btn>
               <v-btn v-if="mediaDevicesGotten" :color="blob ? 'primary' : null" :variant="blob ? 'flat' : 'outlined'" @click="onAddToMessage()" :disabled="!blob">{{ $vuetify.locale.t('$vuetify.add_to_message') }}</v-btn>
               <v-btn color="red" variant="flat" @click="closeModal()" :disabled="isRecording">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
@@ -55,7 +56,7 @@ import bus, {
     OPEN_RECORDING_MODAL,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     OPEN_FILE_UPLOAD_MODAL,
-    MESSAGE_EDIT_SET_FILE_ITEM_UUID
+    MESSAGE_EDIT_SET_FILE_ITEM_UUID, ADD_VIDEO_SOURCE_DIALOG, ADD_VIDEO_SOURCE
 } from "@/bus/bus";
 import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore";
@@ -78,6 +79,8 @@ export default {
       recordingLabelUpdateInterval: null,
       mediaDevicesGotten: false,
       fileItemUuid: null,
+      overrideVideoDeviceId: null,
+      overrideAudioDeviceId: null,
     }
   },
   methods: {
@@ -105,6 +108,8 @@ export default {
       this.tab = null;
       this.mediaDevicesGotten = false;
       this.fileItemUuid = null;
+      this.overrideVideoDeviceId = null;
+      this.overrideAudioDeviceId = null;
       this.onClose();
     },
     onClose() {
@@ -153,12 +158,22 @@ export default {
     },
     async onShow() {
       await this.$nextTick();
+
+      const audio = this.overrideAudioDeviceId ? {
+            deviceId: this.overrideAudioDeviceId,
+            echoCancellation: true,
+            noiseSuppression: true,
+      } : true;
+      const video = this.overrideVideoDeviceId ? {
+            deviceId: this.overrideVideoDeviceId
+      } : true;
+
       if (this.isVideo()) {
           this.videoElement = document.querySelector('.recording-wrapper video');
-          this.stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+          this.stream = await navigator.mediaDevices.getUserMedia({video: video, audio: audio});
       } else {
           this.videoElement = document.querySelector('.recording-wrapper audio');
-          this.stream = await navigator.mediaDevices.getUserMedia({video: false, audio: true});
+          this.stream = await navigator.mediaDevices.getUserMedia({video: false, audio: audio});
       }
       this.mediaDevicesGotten = true;
 
@@ -232,6 +247,16 @@ export default {
 
       this.closeModal();
     },
+    openSettings() {
+        bus.emit(ADD_VIDEO_SOURCE_DIALOG);
+    },
+    onChangeVideoSource({videoId, audioId}) {
+        if (this.show) {
+            this.overrideVideoDeviceId = videoId;
+            this.overrideAudioDeviceId = audioId;
+            this.onUpdateTab(this.tab)
+        }
+    },
   },
   watch: {
     show(newValue) {
@@ -249,10 +274,12 @@ export default {
   beforeUnmount() {
     bus.off(OPEN_RECORDING_MODAL, this.showModal);
     bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
+    bus.off(ADD_VIDEO_SOURCE, this.onChangeVideoSource);
   },
   mounted() {
     bus.on(OPEN_RECORDING_MODAL, this.showModal);
     bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
+    bus.on(ADD_VIDEO_SOURCE, this.onChangeVideoSource);
   }
 }
 </script>
