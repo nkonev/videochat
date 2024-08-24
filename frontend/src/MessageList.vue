@@ -367,17 +367,17 @@
             const visible = elems.filter((el) => el.visible);
             // console.log("visible", visible, "elems", elems);
             if (visible.length == 0) {
-              console.warn("Unable to get top visible")
+              console.warn("Unable to get desiredVisible")
               return
             }
-            const topVisible = visible[visible.length - 1].item
+            const desiredVisible = visible[visible.length - 1].item
 
-            const mid = this.getIdFromRouteHash(topVisible.id);
-            console.log("Found topVisible", topVisible, "in chat", chatId, "messageId", mid);
+            const mid = this.getIdFromRouteHash(desiredVisible.id);
+            console.log("For storing to localstore found visible", desiredVisible, "in chat", chatId, "messageId", mid);
 
             setTopMessagePosition(chatId, mid)
           } else {
-            console.log("Skipped saved topVisible because we are already scrolled to the bottom ")
+            console.log("Skipped saved desiredVisible because we are already scrolled")
           }
         },
         beforeUnload() {

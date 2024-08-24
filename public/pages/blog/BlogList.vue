@@ -78,11 +78,13 @@
 <script>
 import Mark from "mark.js";
 import {getHumanReadableDate, hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE} from "#root/common/utils";
-import {path_prefix, blog_post, blogIdPrefix, profile} from "#root/common/router/routes";
+import {path_prefix, blog_post, blogIdPrefix, blogIdHashPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 import debounce from "lodash/debounce.js";
 import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
 import { navigate } from 'vike/client/router';
+const SCROLLING_THRESHHOLD = 200; // px
+const KEY_TOP_BLOG = 'topBlog';
 
 export default {
   setup() {
@@ -96,6 +98,7 @@ export default {
   data() {
       return {
           markInstance: null,
+          scrollerDiv: null,
       }
   },
   methods: {
@@ -153,6 +156,75 @@ export default {
           }
       })
     },
+    scrollerSelector() {
+        return ".my-blog-scroller"
+    },
+    isScrolledToTop() {
+      if (this.scrollerDiv) {
+          return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+      } else {
+          return false
+      }
+    },
+    getIdFromRouteHash(hash) {
+        if (!hash) {
+            return null;
+        }
+        const str = hash.replace(/\D/g, '');
+        return hasLength(str) ? str : null;
+    },
+    setTopBlogPosition(blogId) {
+        localStorage.setItem(KEY_TOP_BLOG, JSON.stringify(blogId));
+    },
+    removeTopBlogPosition() {
+        localStorage.removeItem(KEY_TOP_BLOG);
+    },
+    getTopBlogPosition() {
+        return JSON.parse(localStorage.getItem(KEY_TOP_BLOG));
+    },
+    saveLastVisibleElement() {
+      console.log("saveLastVisibleElement", !this.isScrolledToTop())
+      if (!this.isScrolledToTop()) {
+          const elems = [...document.querySelectorAll(this.scrollerSelector() + " .blog-item-root")].map((item) => {
+              const visible = item.getBoundingClientRect().top > 0
+              return {item, visible}
+          });
+
+          const visible = elems.filter((el) => el.visible);
+          // console.log("visible", visible, "elems", elems);
+          if (visible.length == 0) {
+              console.warn("Unable to get desiredVisible")
+              return
+          }
+          const desiredVisible = visible[0].item
+
+          const bid = this.getIdFromRouteHash(desiredVisible.id);
+          console.log("For storing to localstore found desiredVisible", desiredVisible, "blogId", bid);
+
+          this.setTopBlogPosition(bid)
+      } else {
+          console.log("Skipped saved desiredVisible because we are already scrolled")
+      }
+    },
+    async doScrollOnFirstLoad(prefix) {
+        const loadedFromStoreHash = this.getTopBlogPosition();
+        if (loadedFromStoreHash) {
+            await this.scrollTo(prefix + loadedFromStoreHash);
+        }
+    },
+    async scrollTo(newValue) {
+      return await this.$nextTick(()=>{
+          const el = document.querySelector(newValue);
+          el?.scrollIntoView({behavior: 'instant', block: "start"});
+          return el
+      })
+    },
+    async onFirstLoad(loadedResult) {
+      await this.doScrollOnFirstLoad(blogIdHashPrefix);
+      if (loadedResult === true) {
+          this.removeTopBlogPosition();
+      }
+    },
   },
   computed: {
       loading: {
@@ -176,11 +248,17 @@ export default {
       this.markInstance = new Mark("div#blog-post-list");
       bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
       this.performMarking(); // for initial
+      addEventListener("beforeunload", this.saveLastVisibleElement);
+      this.scrollerDiv = document.querySelector(this.scrollerSelector());
+      this.onFirstLoad(true);
   },
   beforeUnmount() {
       this.markInstance.unmark();
       this.markInstance = null;
       bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
+      this.saveLastVisibleElement();
+      removeEventListener("beforeunload", this.saveLastVisibleElement);
+      this.scrollerDiv = null;
   },
 }
 </script>

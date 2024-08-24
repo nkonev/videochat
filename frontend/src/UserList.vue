@@ -358,17 +358,17 @@ export default {
           const visible = elems.filter((el) => el.visible);
           // console.log("visible", visible, "elems", elems);
           if (visible.length == 0) {
-              console.warn("Unable to get top visible")
+              console.warn("Unable to get desiredVisible")
               return
           }
-          const topVisible = visible[0].item
+          const desiredVisible = visible[0].item
 
-          const uid = this.getIdFromRouteHash(topVisible.id);
-          console.log("Found bottomUser", topVisible, "userId", uid);
+          const uid = this.getIdFromRouteHash(desiredVisible.id);
+          console.log("For storing to localstore found desiredVisible", desiredVisible, "userId", uid);
 
           setTopUserPosition(uid)
       } else {
-          console.log("Skipped saved topVisible because we are already scrolled to the bottom ")
+          console.log("Skipped saved desiredVisible because we are already scrolled")
       }
     },
     beforeUnload() {
