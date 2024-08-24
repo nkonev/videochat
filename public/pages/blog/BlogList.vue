@@ -107,7 +107,6 @@ export default {
   data() {
       return {
           markInstance: null,
-          scrollerDiv: null,
       }
   },
   methods: {
@@ -169,8 +168,10 @@ export default {
         return ".my-blog-scroller"
     },
     isScrolledToTop() {
-      if (this.scrollerDiv) {
-          return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+      // in-place getting because of server-side rendering on changing page makes "cached" scrollerDiv invalid
+      const scrollerDiv = document.querySelector(this.scrollerSelector());
+      if (scrollerDiv) {
+          return Math.abs(scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
       } else {
           return false
       }
@@ -258,7 +259,6 @@ export default {
       bus.on(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
       this.performMarking(); // for initial
       addEventListener("beforeunload", this.saveLastVisibleElement);
-      this.scrollerDiv = document.querySelector(this.scrollerSelector());
       this.onFirstLoad(true);
   },
   beforeUnmount() {
@@ -267,7 +267,6 @@ export default {
       bus.off(SEARCH_STRING_CHANGED, this.onSearchStringChanged);
       this.saveLastVisibleElement();
       removeEventListener("beforeunload", this.saveLastVisibleElement);
-      this.scrollerDiv = null;
   },
 }
 </script>
