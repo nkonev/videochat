@@ -64,7 +64,16 @@
 
                 <v-divider/>
                 <v-container class="ma-0 pa-0" fluid>
-                    <v-pagination v-model="pageContext.data.page" @update:modelValue="onClickPage" :length="pageContext.data.pagesCount" v-if="shouldShowPagination()" :total-visible="pageContext.data.pagesCount < 10 && !isMobile() ? 10 : undefined"/>
+                    <v-pagination
+                        v-model="pageContext.data.page"
+                        @update:modelValue="onClickPage"
+                        :length="pageContext.data.pagesCount"
+                        v-if="shouldShowPagination()"
+                        :total-visible="pageContext.data.pagesCount < 10 && !isMobile() ? 10 : undefined"
+                        variant="elevated"
+                        active-color="primary"
+                        density="comfortable"
+                    />
                 </v-container>
             </div>
         </template>

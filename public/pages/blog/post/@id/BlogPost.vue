@@ -58,7 +58,16 @@
 
           <v-btn class="my-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
 
-          <v-pagination v-model="pageContext.data.page" @update:modelValue="onClickPage" :length="pageContext.data.pagesCount" v-if="shouldShowPagination()"/>
+          <v-pagination
+              v-model="pageContext.data.page"
+              @update:modelValue="onClickPage"
+              :length="pageContext.data.pagesCount"
+              v-if="shouldShowPagination()"
+              :total-visible="pageContext.data.pagesCount < 10 && !isMobile() ? 10 : undefined"
+              variant="elevated"
+              active-color="primary"
+              density="comfortable"
+          />
         </v-container>
     </template>
   </div>
