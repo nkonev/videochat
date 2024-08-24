@@ -357,28 +357,17 @@
           this.startingFromItemIdTop = this.getMinimumItemId();
           this.startingFromItemIdBottom = this.getMaximumItemId();
         },
-        saveLastVisibleElement(chatId) {
-          if (!this.isScrolledToBottom()) {
-            const elems = [...document.querySelectorAll(this.scrollerSelector() + " .message-item-root")].map((item) => {
-              const visible = item.getBoundingClientRect().top > 0
-              return {item, visible}
-            });
-
-            const visible = elems.filter((el) => el.visible);
-            // console.log("visible", visible, "elems", elems);
-            if (visible.length == 0) {
-              console.warn("Unable to get desiredVisible")
-              return
-            }
-            const desiredVisible = visible[visible.length - 1].item
-
-            const mid = this.getIdFromRouteHash(desiredVisible.id);
-            console.log("For storing to localstore found visible", desiredVisible, "in chat", chatId, "messageId", mid);
-
-            setTopMessagePosition(chatId, mid)
-          } else {
-            console.log("Skipped saved desiredVisible because we are already scrolled")
-          }
+        conditionToSaveLastVisible() {
+            return !this.isScrolledToBottom()
+        },
+        itemSelector() {
+            return '.message-item-root'
+        },
+        doSaveTheFirstItem() {
+          return false
+        },
+        setPositionToStore(messageId, chatId) {
+            setTopMessagePosition(chatId, messageId)
         },
         beforeUnload() {
           this.saveLastVisibleElement(this.chatId);

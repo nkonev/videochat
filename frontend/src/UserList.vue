@@ -346,30 +346,17 @@ export default {
       await this.initializeHashVariablesAndReloadItems();
       this.graphQlSubscribe();
     },
-
-    saveLastVisibleElement() {
-      console.log("saveLastVisibleElement", !this.isScrolledToTop())
-      if (!this.isScrolledToTop()) {
-          const elems = [...document.querySelectorAll(this.scrollerSelector() + " .user-item-root")].map((item) => {
-              const visible = item.getBoundingClientRect().top > 0
-              return {item, visible}
-          });
-
-          const visible = elems.filter((el) => el.visible);
-          // console.log("visible", visible, "elems", elems);
-          if (visible.length == 0) {
-              console.warn("Unable to get desiredVisible")
-              return
-          }
-          const desiredVisible = visible[0].item
-
-          const uid = this.getIdFromRouteHash(desiredVisible.id);
-          console.log("For storing to localstore found desiredVisible", desiredVisible, "userId", uid);
-
-          setTopUserPosition(uid)
-      } else {
-          console.log("Skipped saved desiredVisible because we are already scrolled")
-      }
+    conditionToSaveLastVisible() {
+        return !this.isScrolledToTop();
+    },
+    itemSelector() {
+        return '.user-item-root'
+    },
+    doSaveTheFirstItem() {
+        return true
+    },
+    setPositionToStore(userId) {
+        setTopUserPosition(userId)
     },
     beforeUnload() {
       this.saveLastVisibleElement();

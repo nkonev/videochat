@@ -1,6 +1,7 @@
 import {hasLength} from "@/utils";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(). isTopDirection() - from infiniteScrollMixin.js
+// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore()
+// isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {
         data() {
@@ -83,6 +84,30 @@ export default () => {
             async initializeHashVariablesAndReloadItems() {
                 this.initializeHashVariables();
                 await this.reloadItems();
+            },
+            saveLastVisibleElement(obj) {
+                console.log("saveLastVisibleElement", this.conditionToSaveLastVisible());
+                if (this.conditionToSaveLastVisible()) {
+                    const elems = [...document.querySelectorAll(this.scrollerSelector() + " " + this.itemSelector())].map((item) => {
+                        const visible = item.getBoundingClientRect().top > 0
+                        return {item, visible}
+                    });
+
+                    const visible = elems.filter((el) => el.visible);
+                    // console.log("visible", visible, "elems", elems);
+                    if (visible.length == 0) {
+                        console.warn("Unable to get desiredVisible")
+                        return
+                    }
+                    const desiredVisible = this.doSaveTheFirstItem() ?  visible[0].item : visible[visible.length - 1].item;
+
+                    const iid = this.getIdFromRouteHash(desiredVisible.id);
+                    console.log("For storing to localstore found desiredVisible", desiredVisible, "itemId", iid, "obj", obj);
+
+                    this.setPositionToStore(iid, obj)
+                } else {
+                    console.log("Skipped saved desiredVisible because we are already scrolled")
+                }
             },
         }
     }
