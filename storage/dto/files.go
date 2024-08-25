@@ -34,4 +34,5 @@ type MinioEvent struct {
 	ChatId        int64
 	OwnerId       int64
 	CorrelationId *string
+	Recording   bool // user records a video or an audio
 }

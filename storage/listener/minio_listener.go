@@ -14,7 +14,13 @@ import (
 
 type MinioEventsListener func(*amqp.Delivery) error
 
-func CreateMinioEventsListener(previewService *services.PreviewService, eventService *services.EventService, client *client.RestClient, minioConfig *utils.MinioConfig) MinioEventsListener {
+func CreateMinioEventsListener(
+	previewService *services.PreviewService,
+	eventService *services.EventService,
+	client *client.RestClient,
+	minioConfig *utils.MinioConfig,
+	convertingService *services.ConvertingService,
+) MinioEventsListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -42,6 +48,7 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			ChatId:        maybeChatId,
 			OwnerId:       ownerId,
 			CorrelationId: correlationId,
+			Recording:     isRecording,
 		}
 
 		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
@@ -58,9 +65,13 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
+		var convertedServiceResponse *services.ConvertedResponse
 		var errEventService error
 		if isEventForEventService(eventType) {
 			eventServiceResponse, errEventService = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType,)
+		}
+		if isEventForConvertedService(eventType, minioEvent) {
+			convertedServiceResponse = convertingService.HandleConvertedEvent(ctx, minioEvent)
 		}
 		if isEventForPreviewService(eventType) {
 			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent)
@@ -69,6 +80,9 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
 			if errEventService == nil && isEventForEventService(eventType) {
 				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
+			}
+			if isEventForConvertedService(eventType, minioEvent) {
+				convertingService.SendToOwner(ctx, minioEvent, ownerId, convertedServiceResponse)
 			}
 			if isEventForPreviewService(eventType) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
@@ -94,4 +108,8 @@ func isEventForEventService(eventType utils.EventType) bool {
 
 func isEventForPreviewService(eventType utils.EventType) bool {
 	return eventType == utils.FILE_CREATED
+}
+
+func isEventForConvertedService(eventType utils.EventType, minioEvent *dto.MinioEvent) bool {
+	return eventType == utils.FILE_CREATED && minioEvent.Recording
 }

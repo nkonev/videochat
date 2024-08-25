@@ -59,6 +59,7 @@ minio:
     chatAvatar: "chat-avatar"
     files: "files"
     filesPreview: "files-preview"
+    filesConverted: "files-converted"
 
 chat:
   url:
