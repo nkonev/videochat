@@ -31,7 +31,7 @@ type EventService struct {
 	publisher    *producer.RabbitFileUploadedPublisher
 }
 
-func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) (*HandleEventResponse, error) {
+func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) (*HandleEventResponse) {
 	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
 	var err error
@@ -42,23 +42,23 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during stat %v", err)
-			return nil, err
+			return nil
 		}
 
 		tagging, err = s.minio.GetObjectTagging(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectTaggingOptions{})
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during getting tags %v", err)
-			return nil, err
+			return nil
 		}
 	}
 
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		_, fileOwnerId, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
+		_, fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error get metadata: %v", err)
-			return nil, err
+			return nil
 		}
 
 		var participantIdSet = map[int64]bool{}
@@ -70,7 +70,7 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 		tagging:     tagging,
 		users:       users,
 		fileOwnerId: fileOwnerId,
-	}, nil
+	}
 }
 
 type HandleEventResponse struct {
@@ -81,31 +81,32 @@ type HandleEventResponse struct {
 }
 
 func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse) {
-	// iterate over chat participants
-	for _, participantId := range participantIds {
-		var fileInfo *dto.FileInfoDto
-		var err error
-		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-			if response.objectInfo != nil {
-				fileInfo, err = s.filesService.GetFileInfo(ctx, participantId, *response.objectInfo, chatId, response.tagging, false)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Error get file info: %v, skipping", err)
+	if response != nil {
+		// iterate over chat participants
+		for _, participantId := range participantIds {
+			var fileInfo *dto.FileInfoDto
+			var err error
+			if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+				if response.objectInfo != nil {
+					fileInfo, err = s.filesService.GetFileInfo(ctx, participantId, *response.objectInfo, chatId, response.tagging, false)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Error get file info: %v, skipping", err)
+						continue
+					}
+					fileInfo.Owner = response.users[response.fileOwnerId]
+				} else {
+					GetLogEntry(ctx).Errorf("Missed objectInfo")
 					continue
 				}
-				fileInfo.Owner = response.users[response.fileOwnerId]
-			} else {
-				GetLogEntry(ctx).Errorf("Missed objectInfo")
-				continue
+			} else if eventType == utils.FILE_DELETED {
+				fileInfo = &dto.FileInfoDto{
+					Id:           normalizedKey,
+					LastModified: time.Now(),
+				}
 			}
-		} else if eventType == utils.FILE_DELETED {
-			fileInfo = &dto.FileInfoDto{
-				Id:           normalizedKey,
-				LastModified: time.Now(),
-			}
+			s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
+				FileInfoDto: fileInfo,
+			}, eventType)
 		}
-		s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
-			FileInfoDto: fileInfo,
-		}, eventType)
 	}
-
 }

@@ -2,19 +2,28 @@ package listener
 
 import (
 	"context"
+	"github.com/minio/minio-go/v7"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
 
 type MinioEventsListener func(*amqp.Delivery) error
 
-func CreateMinioEventsListener(previewService *services.PreviewService, eventService *services.EventService, client *client.RestClient, minioConfig *utils.MinioConfig) MinioEventsListener {
+func CreateMinioEventsListener(
+	previewService *services.PreviewService,
+	eventService *services.EventService,
+	client *client.RestClient,
+	minioConfig *utils.MinioConfig,
+	minioClient *s3.InternalMinioClient,
+	convertingService *services.ConvertingService,
+) MinioEventsListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -31,7 +40,8 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 		maybeChatId := userMetadata.Get(services.ChatIdKey(true)).Int()
 		ownerId := userMetadata.Get(services.OwnerIdKey(true)).Int()
 		correlationIdStr := userMetadata.Get(services.CorrelationIdKey(true)).String()
-		isRecording := userMetadata.Get(services.RecordingKey(true)).Bool()
+		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey(true)).Bool()
+		isMessageRecording := userMetadata.Get(services.MessageRecordingKey(true)).Bool()
 		var correlationId *string
 		if correlationIdStr != "" {
 			correlationId = &correlationIdStr
@@ -50,7 +60,7 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 			GetLogEntry(ctx).Errorf("Error during parsing chatId: %v", err)
 			return err
 		}
-		eventType, err := utils.GetEventType(eventName, isRecording)
+		eventType, err := utils.GetEventType(eventName, isConferenceRecording || isMessageRecording)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
 			return err
@@ -58,26 +68,29 @@ func CreateMinioEventsListener(previewService *services.PreviewService, eventSer
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		var errEventService error
+		var previewAlreadyExists = isPreviewAlreadyExists(ctx, minioConfig, minioClient, normalizedKey)
+		var eventForConvertingService = isEventForConvertingService(eventType, minioEvent, previewAlreadyExists, isMessageRecording)
 		if isEventForEventService(eventType) {
-			eventServiceResponse, errEventService = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType,)
+			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType)
 		}
-		if isEventForPreviewService(eventType) {
-			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent)
+		if isEventForPreviewService(eventType, previewAlreadyExists) {
+			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
 		}
-
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
-			if errEventService == nil && isEventForEventService(eventType) {
+			if isEventForEventService(eventType) {
 				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
 			}
-			if isEventForPreviewService(eventType) {
+			if isEventForPreviewService(eventType, previewAlreadyExists) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
 			}
 			return nil
 		})
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during getting participant ids: %v", err)
-			return err
+		}
+		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
+		if eventForConvertingService {
+			convertingService.HandleEvent(ctx, minioEvent)
 		}
 
 		return nil
@@ -92,6 +105,21 @@ func isEventForEventService(eventType utils.EventType) bool {
 	}
 }
 
-func isEventForPreviewService(eventType utils.EventType) bool {
-	return eventType == utils.FILE_CREATED
+func isEventForPreviewService(eventType utils.EventType, previewExists bool) bool {
+	return eventType == utils.FILE_CREATED && !previewExists
+}
+
+func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.MinioEvent, previewExists, isMessageRecording bool) bool {
+	return eventType == utils.FILE_CREATED &&
+		isMessageRecording &&
+		utils.IsVideo(minioEvent.Key) &&
+		!previewExists // prevents the indefinite converting
+}
+
+func isPreviewAlreadyExists(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) bool {
+	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
+	var previewExists = false
+	_, err := minioClient.StatObject(ctx, minioConfig.FilesPreview, previewKey, minio.StatObjectOptions{})
+	previewExists = err == nil // error means there is no file
+	return previewExists
 }

@@ -18,6 +18,10 @@ type H map[string]interface{}
 
 const MessageIdNonExistent = -1
 
+const converted = "converted"
+const underscoreConverted = "_" + converted
+const ConvertedContentType = "video/webm"
+
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
 	for i, str := range strings {
@@ -201,6 +205,45 @@ func SetExtension(fileName string, newExtension string) string {
 	} else {
 		return fileName
 	}
+}
+
+func RemoveExtension(fileName string) string {
+	idx := strings.LastIndex(fileName, ".")
+	if idx > 0 {
+		firstPart := fileName[0:idx]
+		return firstPart
+	} else {
+		return fileName
+	}
+}
+
+func GetFilename(aKey string) string {
+	split := strings.Split(aKey, "/")
+	if len(split) > 1 {
+		return split[len(split)-1]
+	} else {
+		return aKey
+	}
+}
+
+func GetKeyForConverted(minioKey string) string {
+	if IsVideo(minioKey) {
+		idx := strings.LastIndex(minioKey, ".")
+		if idx > 0 {
+			firstPart := minioKey[0:idx]
+			extPart := minioKey[idx+1:]
+			extPart = strings.ToLower(extPart)
+			return firstPart + underscoreConverted + "." + extPart
+		} else {
+			return minioKey
+		}
+	} else {
+		return minioKey
+	}
+}
+
+func IsConverted(minioKey string) bool {
+	return strings.Contains(GetFilename(minioKey), underscoreConverted)
 }
 
 func IsImage(minioKey string) bool {

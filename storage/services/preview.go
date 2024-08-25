@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/siyouyun-open/imaging"
+	"github.com/spf13/viper"
 	"image"
 	"image/jpeg"
 	"io"
@@ -16,7 +17,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"os/exec"
-	"time"
 )
 
 type PreviewService struct {
@@ -35,12 +35,47 @@ func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioCo
 	}
 }
 
-func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEvent) *PreviewResponse {
+func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEvent, shouldSavePreviewForConverted bool) *PreviewResponse {
 	GetLogEntry(ctx).Debugf("Got %v", data)
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
-	s.CreatePreview(ctx, normalizedKey)
-	return &PreviewResponse {
-		normalizedKey: normalizedKey,
+
+	if utils.IsVideo(normalizedKey) {
+		// save byteBuffer for the original
+		theBytes, err := s.createVideoPreview(ctx, normalizedKey)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during creating video preview %v for %v", err, normalizedKey)
+			return nil
+		}
+		byteBuffer := bytes.NewBuffer(*theBytes)
+		err = s.saveVideoPreviewToMinio(ctx, normalizedKey, byteBuffer)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during storing video thumbnail %v for %v", err, normalizedKey)
+			return nil
+		}
+
+		// save byteBuffer as of convertedVideoKey - as of (yet not existed _converted.webm) _converted.jpg
+		if shouldSavePreviewForConverted {
+			convertedVideoKey := utils.GetKeyForConverted(normalizedKey)
+			byteBuffer2 := bytes.NewBuffer(*theBytes)
+			err = s.saveVideoPreviewToMinio(ctx, convertedVideoKey, byteBuffer2)
+			if err != nil {
+				GetLogEntry(ctx).Errorf("Error during storing converted video thumbnail %v for %v", err, normalizedKey)
+				return nil
+			}
+			return &PreviewResponse{ // next we send preview_created event for converted
+				normalizedKey: convertedVideoKey,
+			}
+		} else {
+			// normal, non-convertable video
+			return &PreviewResponse{
+				normalizedKey: normalizedKey,
+			}
+		}
+	} else {
+		s.CreatePreview(ctx, normalizedKey)
+		return &PreviewResponse {
+			normalizedKey: normalizedKey,
+		}
 	}
 }
 
@@ -49,18 +84,19 @@ type PreviewResponse struct {
 }
 
 func (s *PreviewService) SendToParticipants(ctx context.Context, data *dto.MinioEvent, participantIds []int64, response *PreviewResponse) {
-	if pu, err := s.getFileUploadedEvent(ctx, response.normalizedKey, data.ChatId, data.CorrelationId); err == nil {
-		for _, participantId := range participantIds {
-			err = s.rabbitFileUploadedPublisher.Publish(ctx, participantId, data.ChatId, pu)
-			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during ending: %v", err)
-				continue
+	if response != nil {
+		if pu, err := s.getFileUploadedEvent(ctx, response.normalizedKey, data.ChatId, data.CorrelationId); err == nil {
+			for _, participantId := range participantIds {
+				err = s.rabbitFileUploadedPublisher.Publish(ctx, participantId, data.ChatId, pu)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Error during ending: %v", err)
+					continue
+				}
 			}
+		} else {
+			GetLogEntry(ctx).Errorf("Error during constructing uploaded event %v for %v", err, response.normalizedKey)
 		}
-	} else {
-		GetLogEntry(ctx).Errorf("Error during constructing uploaded event %v for %v", err, response.normalizedKey)
 	}
-
 }
 
 func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string) {
@@ -81,47 +117,21 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 		var objectSize int64 = int64(byteBuffer.Len())
 		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during storing image thumbnail %v for %v", err, normalizedKey)
 			return
 		}
 	} else if utils.IsVideo(normalizedKey) {
-		d, _ := time.ParseDuration("10m")
-		presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
+		theBytes, err := s.createVideoPreview(ctx, normalizedKey)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
-			return
-		}
-		stringPresingedUrl := presignedUrl.String()
-
-		ffCmd := exec.Command("ffmpeg",
-			"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
-			"-c:v", "png", "-f", "rawvideo", "-an", "-")
-
-		// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		ffCmd.Stdout = &out
-		ffCmd.Stderr = &stderr
-		err = ffCmd.Run()
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during creating thumbnail for key %v: %v: %v", normalizedKey, fmt.Sprint(err), stderr.String())
-			return
-		}
-		newKey := utils.SetVideoPreviewExtension(normalizedKey)
-
-		reader := bytes.NewReader(out.Bytes())
-
-		byteBuffer, err := s.resizeImageToJpg(ctx, reader)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during creating video preview %v for %v", err, normalizedKey)
 			return
 		}
 
-		var objectSize int64 = int64(byteBuffer.Len())
+		byteBuffer := bytes.NewBuffer(*theBytes)
 
-		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
+		err = s.saveVideoPreviewToMinio(ctx, normalizedKey, byteBuffer)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during storing thumbnail %v for %v", err, normalizedKey)
+			GetLogEntry(ctx).Errorf("Error during storing video thumbnail %v for %v", err, normalizedKey)
 			return
 		}
 	}
@@ -142,6 +152,50 @@ func (s *PreviewService) resizeImageToJpg(ctx context.Context, reader io.Reader)
 		return nil, err
 	}
 	return byteBuffer, nil
+}
+
+func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey string) (*[]byte, error) {
+	d := viper.GetDuration("preview.presignedDuration")
+	presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
+		return nil, err
+	}
+	stringPresingedUrl := presignedUrl.String()
+
+	ffCmd := exec.Command(viper.GetString("preview.ffmpegPath"),
+		"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
+		"-c:v", "png", "-f", "rawvideo", "-an", "-")
+
+	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	ffCmd.Stdout = &out
+	ffCmd.Stderr = &stderr
+	err = ffCmd.Run()
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during creating thumbnail for key %v: %v: stderr: %v", normalizedKey, fmt.Sprint(err), stderr.String())
+		return nil, err
+	}
+
+	reader := bytes.NewReader(out.Bytes())
+
+	byteBuffer, err := s.resizeImageToJpg(ctx, reader)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)
+		return nil, err
+	}
+	theBytes := byteBuffer.Bytes()
+	return &theBytes, nil
+}
+
+func (s *PreviewService) saveVideoPreviewToMinio(ctx context.Context, normalizedKey string, byteBuffer *bytes.Buffer) error {
+	newKey := utils.SetVideoPreviewExtension(normalizedKey)
+
+	var objectSize int64 = int64(byteBuffer.Len())
+
+	_, err := s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
+	return err
 }
 
 func (s *PreviewService) getFileUploadedEvent(ctx context.Context, normalizedKey string, chatId int64, correlationId *string) (*dto.PreviewCreatedEvent, error) {

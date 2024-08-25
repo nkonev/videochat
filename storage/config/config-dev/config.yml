@@ -92,7 +92,7 @@ schedulers:
     enabled: true
     interval: 60s
     batchChats: 20
-  actualizePreviewsTask:
+  actualizeGeneratedFilesTask:
     enabled: true
     interval: 60s
 
@@ -103,3 +103,13 @@ response:
 
 ulid:
   topYear: 3000
+
+converting:
+  ffmpegPath: "ffmpeg"
+  tempDir: "/tmp/video"
+  presignedDuration: 30m
+  maxDuration: 1h
+
+preview:
+  ffmpegPath: "ffmpeg"
+  presignedDuration: 10m

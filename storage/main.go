@@ -55,8 +55,8 @@ func main() {
 			tasks.RedisV8,
 			tasks.NewCleanFilesOfDeletedChatService,
 			tasks.CleanFilesOfDeletedChatScheduler,
-			tasks.NewActualizePreviewsService,
-			tasks.ActualizePreviewsScheduler,
+			tasks.NewActualizeGeneratedFilesService,
+			tasks.ActualizeGeneratedFilesScheduler,
 			client.NewChatAccessClient,
 			handlers.ConfigureStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
@@ -69,6 +69,8 @@ func main() {
 			services.NewFilesService,
 			services.NewPreviewService,
 			services.NewEventService,
+			services.NewConvertingService,
+			services.NewRedisInfoService,
 		),
 		fx.Invoke(
 			runScheduler,
@@ -345,7 +347,7 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 	}, nil
 }
 
-func runScheduler(dt *tasks.CleanFilesOfDeletedChatTask, a *tasks.ActualizePreviewsTask) {
+func runScheduler(dt *tasks.CleanFilesOfDeletedChatTask, a *tasks.ActualizeGeneratedFilesTask) {
 	if viper.GetBool("schedulers.cleanFilesOfDeletedChatTask.enabled") {
 		go func() {
 			Logger.Infof("Starting scheduler cleanFilesOfDeletedChatTask")
@@ -355,12 +357,12 @@ func runScheduler(dt *tasks.CleanFilesOfDeletedChatTask, a *tasks.ActualizePrevi
 			}
 		}()
 	}
-	if viper.GetBool("schedulers.actualizePreviewsTask.enabled") {
+	if viper.GetBool("schedulers.actualizeGeneratedFilesTask.enabled") {
 		go func() {
-			Logger.Infof("Starting scheduler actualizePreviewsTask")
+			Logger.Infof("Starting scheduler actualizeGeneratedFilesTask")
 			err := a.Run(context.Background())
 			if err != nil {
-				Logger.Errorf("Error during working actualizePreviewsTask: %s", err)
+				Logger.Errorf("Error during working actualizeGeneratedFilesTask: %s", err)
 			}
 		}()
 	}
