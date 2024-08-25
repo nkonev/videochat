@@ -123,7 +123,8 @@ export default {
       this.$router.push({name: root_name} )
     },
     copyCallLink() {
-      copyCallLink(this.chatId)
+      copyCallLink(this.chatId);
+      this.setTempNotification(this.$vuetify.locale.t('$vuetify.video_call_link_copied'));
     },
     addVideoSource() {
           bus.emit(ADD_VIDEO_SOURCE_DIALOG);

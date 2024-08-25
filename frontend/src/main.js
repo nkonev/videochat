@@ -97,6 +97,14 @@ app.config.globalProperties.setOk = (txt) => {
     chatStore.errorColor = "green";
 }
 
+app.config.globalProperties.setTempNotification = (txt) => {
+    console.info(txt);
+    chatStore.lastError = txt;
+    chatStore.showAlert = true;
+    chatStore.errorColor = "black";
+    chatStore.alertTimeout = 10000;
+}
+
 app.config.globalProperties.closeError = () => {
     chatStore.lastError = "";
     chatStore.showAlert = false;

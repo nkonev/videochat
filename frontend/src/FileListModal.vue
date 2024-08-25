@@ -128,8 +128,8 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 import {
-  formatSize,
-  hasLength,
+    formatSize, getUrlPrefix,
+    hasLength,
 } from "./utils";
 import { getHumanReadableDate } from "@/date.js";
 import debounce from "lodash/debounce";
@@ -243,7 +243,13 @@ export default {
             });
         },
         shareFile(dto, share) {
-            axios.put(`/api/storage/publish/file`, {id: dto.id, public: share})
+            axios.put(`/api/storage/publish/file`, {id: dto.id, public: share}).then((resp)=>{
+                const link = resp.data.publicUrl;
+                if (link) {
+                    navigator.clipboard.writeText(getUrlPrefix() + link);
+                    this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_file_link_copied'));
+                }
+            })
         },
         fireEdit(dto) {
             bus.emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});

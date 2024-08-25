@@ -30,8 +30,7 @@
 
 <script>
 
-import {chat, messageIdHashPrefix} from "./router/routes"
-import {getMessageLink, getPublicMessageLink, getUrlPrefix, hasLength} from "@/utils";
+import {getMessageLink, getPublicMessageLink, hasLength} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {SEARCH_MODE_MESSAGES, searchString} from "@/mixins/searchString";
@@ -147,10 +146,12 @@ export default {
         copyLink(item) {
             const link = getMessageLink(this.chatId, item.id)
             navigator.clipboard.writeText(link);
+            this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_link_copied'));
         },
         copyPublicLink(item) {
             const link = getPublicMessageLink(this.chatId, item.id)
             navigator.clipboard.writeText(link);
+            this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_message_link_copied'));
         },
         getSelection() {
             return window.getSelection().toString();

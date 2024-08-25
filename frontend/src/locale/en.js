@@ -304,5 +304,10 @@ export default {
     send_message_after_media_insert_description: "Send the message after media insert",
     open_in_new_tab: "Open in the new tab",
     last_logged_in_at: "Last logged in at {0}",
-    default_devices_for_call: "Default devices for call"
+    default_devices_for_call: "Default devices for call",
+    published_message_link_copied: "The link to the published message copied to clipboard",
+    video_call_link_copied: "The link to the video call copied to clipboard",
+    message_link_copied: "The link to the message copied to clipboard",
+    chat_link_copied: "The link to the chat copied to clipboard",
+    published_file_link_copied: "The link to the published file copied to clipboard"
 }

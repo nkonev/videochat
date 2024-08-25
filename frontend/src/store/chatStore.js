@@ -27,6 +27,7 @@ export const useChatStore = defineStore('chat', {
         shouldPhoneBlink: false,
         availableOAuth2Providers: [],
         showAlert: false,
+        alertTimeout: null,
         lastError: "",
         errorColor: "",
         showDrawer: !isMobileBrowser(),

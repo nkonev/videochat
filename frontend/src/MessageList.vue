@@ -530,6 +530,7 @@
             }).then(()=>{
                 const link = getPublicMessageLink(this.chatId, dto.id);
                 navigator.clipboard.writeText(link);
+                this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_message_link_copied'));
             })
         },
         removePublic(dto) {

@@ -718,8 +718,6 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return err
 	}
 
-	showResponse := utils.ParseBooleanOr(c.QueryParam("response"), false)
-
 	// check user is owner
 	fileId := bindTo.Id
 	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
@@ -752,11 +750,13 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if !showResponse {
-		return c.NoContent(http.StatusOK)
+	publicUrl, err := h.filesService.GetPublicUrl(bindTo.Public, objectInfo.Key)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error get public url: %v", err)
+		return err
 	}
 
-	return c.NoContent(http.StatusOK)
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "publicUrl": publicUrl})
 }
 
 type CountResponse struct {
