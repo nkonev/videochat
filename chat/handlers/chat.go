@@ -78,18 +78,18 @@ type ChatHandler struct {
 	notificator     *services.Events
 	restClient      *client.RestClient
 	policy          *services.SanitizerPolicy
-	stripTagsPolicy *services.StripTagsPolicy
-	canCreateBlog   bool
+	stripTagsPolicy        *services.StripTagsPolicy
+	onlyAdminCanCreateBlog bool
 }
 
 func NewChatHandler(dbR *db.DB, notificator *services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy) *ChatHandler {
 	return &ChatHandler{
-		db: dbR,
-		notificator: notificator,
-		restClient: restClient,
-		policy: policy,
-		stripTagsPolicy: cleanTagsPolicy,
-		canCreateBlog: viper.GetBool("onlyAdminCanCreateBlog"),
+		db:                     dbR,
+		notificator:            notificator,
+		restClient:             restClient,
+		policy:                 policy,
+		stripTagsPolicy:        cleanTagsPolicy,
+		onlyAdminCanCreateBlog: viper.GetBool("onlyAdminCanCreateBlog"),
 	}
 }
 
@@ -1984,13 +1984,13 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 }
 
 func (ch *ChatHandler) checkCanCreateBlog(userPrincipalDto *auth.AuthResult, blog *bool) bool {
-	if !ch.canCreateBlog {
+	if !ch.onlyAdminCanCreateBlog {
 		return true
 	}
 	if blog != nil && *blog && userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN") {
 		return true
 	} else {
-		return true
+		return false
 	}
 }
 
