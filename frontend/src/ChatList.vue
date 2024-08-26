@@ -616,7 +616,10 @@ export default {
                 },
             });
         })
-    }
+    },
+    hasItems() {
+        return !!this.items?.length
+    },
   },
   components: {
     ChatListContextMenu
