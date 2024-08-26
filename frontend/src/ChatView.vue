@@ -536,7 +536,12 @@ export default {
       return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatStore.chatDto?.participantIds?.length
     },
     isAllowedChatList() {
-      return this.chatStore.currentUser
+        // second condition is for waiting full loading (including PUT /join) of chat in order to be visible
+        // testcase: user 1 creates blog without any other users
+        // user 2 wants to write a comment, clicking the button in blog
+        // he is being redirected to chat, because user 2 is not a participant, he gets a http code and the browser issues /join
+        // after the joining all user 2 want to see chat of blog at the left
+      return this.chatStore.currentUser && this.chatStore.chatDto?.id
     },
     onVideoCallChanged(dto) {
       if (dto.chatId == this.chatId) {
