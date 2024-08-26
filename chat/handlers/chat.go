@@ -814,7 +814,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			if chatDto.AvailableToSearch {
+			if chatDto.AvailableToSearch || chatDto.Blog {
 				// send duplicated event to the former user to re-draw chat on their search results
 				ch.notificator.NotifyAboutRedrawLeftChat(c.Request().Context(), chatDto, userPrincipalDto.UserId, len(chatDto.ParticipantIds) == 1, false, tx, map[int64]bool{userPrincipalDto.UserId: false}) // false because userPrincipalDto left the chat
 			} else {
@@ -889,6 +889,12 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 				},
 			})
 			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
+
+			// update chats at left for the new user who joined
+			if utils.Contains(participantIds, userPrincipalDto.UserId) {
+				ch.notificator.NotifyAboutNewChat(c.Request().Context(), chatDto, []int64{userPrincipalDto.UserId}, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
+			}
+
 			return nil
 		})
 		if err != nil {
@@ -1082,7 +1088,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			return err
 		}
 
-		if chatDto.AvailableToSearch {
+		if chatDto.AvailableToSearch || chatDto.Blog {
 			// send duplicated event to the former user to re-draw chat on their search results
 			ch.notificator.NotifyAboutRedrawLeftChat(c.Request().Context(), chatDto, interestingUserId, len(chatDto.ParticipantIds) == 1, false, tx, map[int64]bool{interestingUserId: false}) // // false because interestingUserId left the chat
 		} else {
