@@ -58,10 +58,17 @@ import heightMixin from "@/mixins/heightMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {hasLength, isCalling, isChatRoute, new_message, setTitle} from "@/utils";
+import {
+    hasLength,
+    isCalling,
+    isChatRoute,
+    new_message,
+    publicallyAvailableForSearchChatsQuery,
+    setTitle
+} from "@/utils";
 import bus, {
     CHAT_DELETED,
-    CHAT_EDITED,
+    CHAT_EDITED, CHAT_REDRAW,
     FILE_CREATED,
     FILE_REMOVED,
     FILE_UPDATED,
@@ -93,6 +100,7 @@ import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
+import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
 
 
 const getChatEventsData = (message) => {
@@ -118,6 +126,7 @@ export default {
     heightMixin(),
     graphqlSubscriptionMixin('chatEvents'),
     videoPositionMixin(),
+    searchString(SEARCH_MODE_CHATS),
   ],
   data() {
     return {
@@ -518,6 +527,11 @@ export default {
           this.$router.push(({name: chat_list_name}))
       }
     },
+    onChatRedraw(dto) { // copy from ChatList::redrawItem
+        if (this.searchString != publicallyAvailableForSearchChatsQuery) {
+            this.onChatDelete(dto)
+        }
+    },
     isAllowedVideo() {
       return this.chatStore.currentUser && this.$route.name == videochat_name && this.chatStore.chatDto?.participantIds?.length
     },
@@ -768,6 +782,7 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
+    bus.on(CHAT_REDRAW, this.onChatRedraw);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -793,7 +808,7 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-
+    bus.off(CHAT_REDRAW, this.onChatRedraw);
 
     this.chatStore.isShowSearch = false;
 
