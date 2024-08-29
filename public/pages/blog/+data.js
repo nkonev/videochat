@@ -16,7 +16,7 @@ async function data(pageContext) {
 
     const searchString = pageContext.urlParsed.search[SEARCH_MODE_POSTS];
 
-    const response = await axios.get(apiHost + '/blog', {
+    const response = await axios.get(apiHost + '/api/blog', {
         params: {
             page: actualPage,
             size: PAGE_SIZE,

@@ -15,19 +15,19 @@ services:
         - "traefik.http.services.chat-service.loadbalancer.server.port=1235"
         - "traefik.http.routers.chat-router.rule=PathPrefix(`/api/chat`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.chat-router.entrypoints=https"
-        - "traefik.http.routers.chat-router.middlewares=auth-middleware@file,api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.chat-router.middlewares=auth-middleware@file,retry-middleware@file"
         - "traefik.http.routers.chat-router.tls=true"
         - "traefik.http.routers.chat-router.tls.certresolver=myresolver"
 
         - "traefik.http.routers.blog-router.rule=PathPrefix(`/api/blog`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.blog-router.entrypoints=https"
-        - "traefik.http.routers.blog-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.blog-router.middlewares=retry-middleware@file"
         - "traefik.http.routers.blog-router.tls=true"
         - "traefik.http.routers.blog-router.tls.certresolver=myresolver"
 
         - "traefik.http.routers.chat-public-router.rule=PathPrefix(`/api/chat/public`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.chat-public-router.entrypoints=https"
-        - "traefik.http.routers.chat-public-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.chat-public-router.middlewares=retry-middleware@file"
         - "traefik.http.routers.chat-public-router.tls=true"
         - "traefik.http.routers.chat-public-router.tls.certresolver=myresolver"
 

@@ -15,13 +15,13 @@ services:
         - "traefik.http.services.notification-service.loadbalancer.server.port=1230"
         - "traefik.http.routers.notification-router.rule=PathPrefix(`/api/notification`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.notification-router.entrypoints=https"
-        - "traefik.http.routers.notification-router.middlewares=auth-middleware@file,api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.notification-router.middlewares=auth-middleware@file,retry-middleware@file"
         - "traefik.http.routers.notification-router.tls=true"
         - "traefik.http.routers.notification-router.tls.certresolver=myresolver"
 
         - "traefik.http.routers.notification-public-router.rule=PathPrefix(`/api/notification/public`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.notification-public-router.entrypoints=https"
-        - "traefik.http.routers.notification-public-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.notification-public-router.middlewares=retry-middleware@file"
         - "traefik.http.routers.notification-public-router.tls=true"
         - "traefik.http.routers.notification-public-router.tls.certresolver=myresolver"
 

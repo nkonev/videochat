@@ -7,7 +7,7 @@ export { data };
 async function data(pageContext) {
     const apiHost = getChatApiUrl();
 
-    const blogResponse = await axios.get(apiHost + `/blog/${pageContext.routeParams.id}`);
+    const blogResponse = await axios.get(apiHost + `/api/blog/${pageContext.routeParams.id}`);
 
     if (blogResponse.status == 204) {
         pageContext.httpStatus = 404;
@@ -28,7 +28,7 @@ async function data(pageContext) {
         actualPage = page - 1;
     }
 
-    const commentResponse = await axios.get(apiHost + `/blog/${pageContext.routeParams.id}/comment`, {
+    const commentResponse = await axios.get(apiHost + `/api/blog/${pageContext.routeParams.id}/comment`, {
         params: {
             page: actualPage,
             size: PAGE_SIZE,

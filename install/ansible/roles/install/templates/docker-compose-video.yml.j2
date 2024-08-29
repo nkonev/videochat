@@ -16,7 +16,7 @@ services:
 
         - "traefik.http.routers.video-router.rule=PathPrefix(`/api/video`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.video-router.entrypoints=https"
-        - "traefik.http.routers.video-router.middlewares=auth-middleware@file,api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.video-router.middlewares=auth-middleware@file,retry-middleware@file"
         - "traefik.http.routers.video-router.tls=true"
         - "traefik.http.routers.video-router.tls.certresolver=myresolver"
 

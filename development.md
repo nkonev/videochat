@@ -232,8 +232,8 @@ cat /proc/$(pgrep livekit)/limits
 ## Egress
 Article https://blog.livekit.io/livekit-universal-egress-launch/
 ```
-curl -i -X PUT 'http://localhost:1237/video/1/record/start'
-curl -i -X PUT 'http://localhost:1237/video/1/record/stop?egressId=EG_6Kf4zXaq7ood'
+curl -i -X PUT 'http://localhost:1237/api/video/1/record/start'
+curl -i -X PUT 'http://localhost:1237/api/video/1/record/stop?egressId=EG_6Kf4zXaq7ood'
 ```
 
 

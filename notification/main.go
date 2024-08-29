@@ -124,14 +124,14 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/notification/list", ch.GetNotifications)
-	e.GET("/notification/count", ch.GetNotificationsCount)
-	e.DELETE("/notification", ch.DeleteAllNotifications)
-	e.GET("/notification/settings/global", ch.GetGlobalNotificationSettings)
-	e.PUT("/notification/settings/global", ch.PutGlobalNotificationSettings)
-	e.GET("/notification/settings/:id/chat", ch.GetChatNotificationSettings)
-	e.PUT("/notification/settings/:id/chat", ch.PutChatNotificationSettings)
-	e.PUT("/notification/read/:notificationId", ch.ReadNotification)
+	e.GET("/api/notification/list", ch.GetNotifications)
+	e.GET("/api/notification/count", ch.GetNotificationsCount)
+	e.DELETE("/api/notification", ch.DeleteAllNotifications)
+	e.GET("/api/notification/settings/global", ch.GetGlobalNotificationSettings)
+	e.PUT("/api/notification/settings/global", ch.PutGlobalNotificationSettings)
+	e.GET("/api/notification/settings/:id/chat", ch.GetChatNotificationSettings)
+	e.PUT("/api/notification/settings/:id/chat", ch.PutChatNotificationSettings)
+	e.PUT("/api/notification/read/:notificationId", ch.ReadNotification)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

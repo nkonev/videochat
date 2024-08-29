@@ -2,7 +2,6 @@ server:
   address: ":1236"
   shutdown.timeout: "10s"
   body.limit: "100G"
-  contextPath: "/api"
 
 # Rest client
 http:
@@ -12,7 +11,7 @@ http:
 
 auth:
   exclude:
-    - "^/storage/public.*"
+    - "^/api/storage/public.*"
     - "^/internal.*"
 
 types:

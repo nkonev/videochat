@@ -240,10 +240,10 @@ func GetType(aDto interface{}) string {
 	return strName
 }
 
-const UrlStoragePublicGetFile = "/storage/public/download"
-const UrlStoragePublicPreviewFile = "/storage/public/download/embed/preview"
-const UrlStorageGetFile = "/storage/download"
-const UrlStorageGetFilePublicExternal = "/public/download"
+const UrlStoragePublicGetFile = "/api/storage/public/download"
+const UrlStoragePublicPreviewFile = "/api/storage/public/download/embed/preview"
+const UrlStorageGetFile = "/api/storage/download"
+const UrlStorageGetFilePublicExternal = "/api/storage/public/download"
 const UrlBasePreview = "/api/storage/embed/preview"
 const UrlBasePublicPreview = "/api/storage/public/download/embed/preview"
 

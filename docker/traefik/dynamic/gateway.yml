@@ -76,46 +76,39 @@ http:
       service: chat-service
       middlewares:
         - "auth-middleware"
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     blog-router:
       rule: "PathPrefix(`/api/blog`)"
       service: chat-service
       middlewares:
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     storage-router:
       rule: "PathPrefix(`/api/storage`)"
       service: storage-service
       middlewares:
         - "auth-middleware"
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     video-router:
       rule: "PathPrefix(`/api/video`)"
       service: video-service
       middlewares:
         - "auth-middleware"
-        - "api-strip-prefix-middleware"
     notification-router:
       rule: "PathPrefix(`/api/notification`)"
       service: notification-service
       middlewares:
         - "auth-middleware"
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
 
     chat-public-router:
       rule: "PathPrefix(`/api/chat/public`)"
       service: chat-service
       middlewares:
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     storage-public-router:
       rule: "PathPrefix(`/api/storage/public`)"
       service: storage-service
       middlewares:
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     livekit-router:
       rule: "PathPrefix(`/api/livekit`)"
@@ -133,13 +126,11 @@ http:
       rule: "PathPrefix(`/api/event/public`)"
       service: event-service
       middlewares:
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     notification-public-router:
       rule: "PathPrefix(`/api/notification/public`)"
       service: notification-service
       middlewares:
-        - "api-strip-prefix-middleware"
         - "retry-middleware"
     minio-router:
       rule: "PathPrefix(`/api/s3`)"
@@ -150,10 +141,6 @@ http:
         - "minio-fix-host-middleware"
 
   middlewares:
-    api-strip-prefix-middleware:
-      stripPrefix:
-        prefixes:
-          - "/api"
     livekit-strip-prefix-middleware:
       stripPrefix:
         prefixes:

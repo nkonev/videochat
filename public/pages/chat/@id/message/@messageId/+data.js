@@ -10,7 +10,7 @@ async function data(pageContext) {
     const chatId = pageContext.routeParams?.id;
     const messageId = pageContext.routeParams?.messageId;
 
-    const publishedMessageResponse = await axios.get(apiHost + `/chat/public/${chatId}/message/${messageId}`);
+    const publishedMessageResponse = await axios.get(apiHost + `/api/chat/public/${chatId}/message/${messageId}`);
 
     if (publishedMessageResponse.status == 204) {
         pageContext.httpStatus = 404;

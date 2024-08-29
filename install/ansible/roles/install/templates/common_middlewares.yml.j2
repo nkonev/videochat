@@ -1,9 +1,5 @@
 http:
   middlewares:
-    api-strip-prefix-middleware:
-      stripPrefix:
-        prefixes:
-          - "/api"
     retry-middleware:
       retry:
         attempts: 4

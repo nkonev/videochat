@@ -21,7 +21,7 @@ services:
 
         - "traefik.http.routers.event-public-router.rule=PathPrefix(`/api/event/public`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.event-public-router.entrypoints=https"
-        - "traefik.http.routers.event-public-router.middlewares=api-strip-prefix-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.event-public-router.middlewares=retry-middleware@file"
         - "traefik.http.routers.event-public-router.tls=true"
         - "traefik.http.routers.event-public-router.tls.certresolver=myresolver"
 

@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/siyouyun-open/imaging"
-	"github.com/spf13/viper"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -102,7 +101,7 @@ func (h *abstractAvatarHandler) putSizedFile(c echo.Context, srcImage image.Imag
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return "", "", err
 	}
-	relativeUrl := fmt.Sprintf("%v%v/%v?%v=%v", viper.GetString("server.contextPath"), h.delegate.GetUrlPath(), filename, utils.TimeParam, currTime)
+	relativeUrl := fmt.Sprintf("%v/%v?%v=%v", h.delegate.GetUrlPath(), filename, utils.TimeParam, currTime)
 
 	return filename, relativeUrl, nil
 }
@@ -151,7 +150,7 @@ func NewUserAvatarHandler(minio *s3.InternalMinioClient, minioConfig *utils.Mini
 	return &uah
 }
 
-const urlStorageGetUserAvatar = "/storage/public/user/avatar"
+const urlStorageGetUserAvatar = "/api/storage/public/user/avatar"
 
 func (h *UserAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
 	return h.minioConfig.UserAvatar, nil
@@ -182,7 +181,7 @@ func NewChatAvatarHandler(minio *s3.InternalMinioClient, minioConfig *utils.Mini
 	return &uah
 }
 
-const urlStorageGetChatAvatar = "/storage/public/chat/avatar"
+const urlStorageGetChatAvatar = "/api/storage/public/chat/avatar"
 
 func (h *ChatAvatarHandler) ensureAndGetAvatarBucket() (string, error) {
 	return h.minioConfig.ChatAvatar, nil

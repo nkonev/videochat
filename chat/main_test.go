@@ -64,7 +64,7 @@ func setup() {
 }
 
 func TestExtractAuth(t *testing.T) {
-	req := test.NewRequest("GET", "/should-be-secured", nil)
+	req := test.NewRequest("GET", "/api/should-be-secured", nil)
 	headers := map[string][]string{
 		"X-Auth-Expiresin": {"1590022342295000"},
 		"X-Auth-Username":  {userTester},
@@ -148,7 +148,7 @@ func waitForChatServer() {
 		getChatRequest := &http.Request{
 			Method: "GET",
 			Header: requestHeaders1,
-			URL:    stringToUrl("http://localhost:1235/chat"),
+			URL:    stringToUrl("http://localhost:1235/api/chat"),
 		}
 		getChatResponse, err := restClient.Do(getChatRequest)
 		if err != nil {
@@ -285,7 +285,7 @@ func createFanoutNotificationsChannel(connection *rabbitmq.Connection, lc fx.Lif
 
 func TestGetChats(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		c, b, _ := request("GET", "/chat", nil, e)
+		c, b, _ := request("GET", "/api/chat", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
 	})
@@ -310,7 +310,7 @@ func TestGetChatsPaginated(t *testing.T) {
 	defer emu.Close()
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
@@ -332,7 +332,7 @@ func TestGetChatsPaginated(t *testing.T) {
 		paginationToken := getJsonPathResult(t, bodyFirstPage, "$.paginationToken").(string)
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/chat?paginationToken="+paginationToken, nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?paginationToken="+paginationToken, nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
@@ -349,7 +349,7 @@ func TestGetChatsPaginated(t *testing.T) {
 func TestGetChatsPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat?searchString=gen", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat?searchString=gen", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
@@ -364,7 +364,7 @@ func TestGetChatsPaginatedSearch(t *testing.T) {
 		paginationToken := getJsonPathResult(t, bodyFirstPage, "$.paginationToken").(string)
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/chat?searchString=gen&paginationToken="+paginationToken, nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?searchString=gen&paginationToken="+paginationToken, nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
@@ -380,17 +380,17 @@ func TestGetChatsPaginatedSearch(t *testing.T) {
 
 func TestChatValidation(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": ""}`), e)
+		c, b, _ := request("POST", "/api/chat", strings.NewReader(`{"name": ""}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
 		textString := utils.InterfaceToString(getJsonPathResult(t, b, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString)
 
-		c2, b2, _ := request("POST", "/chat", strings.NewReader(``), e)
+		c2, b2, _ := request("POST", "/api/chat", strings.NewReader(``), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
 		textString2 := utils.InterfaceToString(getJsonPathResult(t, b2, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString2)
 
-		c3, b3, _ := request("PUT", "/chat", strings.NewReader(``), e)
+		c3, b3, _ := request("PUT", "/api/chat", strings.NewReader(``), e)
 		assert.Equal(t, http.StatusBadRequest, c3)
 		textString30 := utils.InterfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
 		assert.Equal(t, "cannot be blank", textString30)
@@ -402,11 +402,11 @@ func TestChatValidation(t *testing.T) {
 func TestChatCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
 		// test not found
-		c30, _, _ := request("GET", "/chat/50666", nil, e)
+		c30, _, _ := request("GET", "/api/chat/50666", nil, e)
 		assert.Equal(t, http.StatusNoContent, c30)
 
 		chatsBefore, _ := db.CountChats()
-		c, b, _ := request("POST", "/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
+		c, b, _ := request("POST", "/api/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
 		chatsAfterCreate, _ := db.CountChats()
@@ -417,19 +417,19 @@ func TestChatCrud(t *testing.T) {
 		id, _ := utils.ParseInt64(idString)
 		assert.True(t, id > 0)
 
-		c3, b3, _ := request("GET", "/chat/"+idString, nil, e)
+		c3, b3, _ := request("GET", "/api/chat/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
 		nameString := utils.InterfaceToString(getJsonPathResult(t, b3, "$.name").(interface{}))
 		assert.Equal(t, "Ultra new chat", nameString)
 
-		c2, _, _ := request("PUT", "/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
+		c2, _, _ := request("PUT", "/api/chat", strings.NewReader(`{ "id": `+idString+`, "name": "Mega ultra new chat"}`), e)
 		assert.Equal(t, http.StatusAccepted, c2)
 		row := db.QueryRow("SELECT title FROM chat WHERE id = $1", id)
 		var newTitle string
 		assert.Nil(t, row.Scan(&newTitle))
 		assert.Equal(t, "Mega ultra new chat", newTitle)
 
-		c1, _, _ := request("DELETE", "/chat/"+idString, nil, e)
+		c1, _, _ := request("DELETE", "/api/chat/"+idString, nil, e)
 		assert.Equal(t, http.StatusAccepted, c1)
 		chatsAfterDelete, _ := db.CountChats()
 		assert.Equal(t, chatsBefore, chatsAfterDelete)
@@ -468,7 +468,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]}`),
-		URL:    stringToUrl("http://localhost:1235/chat"),
+		URL:    stringToUrl("http://localhost:1235/api/chat"),
 	}
 
 	cl := client.NewRestClient()
@@ -489,7 +489,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
-		URL:    stringToUrl("http://localhost:1235/chat/" + chatIdString + "/message"),
+		URL:    stringToUrl("http://localhost:1235/api/chat/" + chatIdString + "/message"),
 	}
 	messageResponse, err := cl.Do(messageRequest)
 	assert.Nil(t, err)
@@ -500,7 +500,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
-		URL:    stringToUrl("http://localhost:1235/chat/" + chatIdString + "/message"),
+		URL:    stringToUrl("http://localhost:1235/api/chat/" + chatIdString + "/message"),
 	}
 	messageResponse2, err := cl.Do(messageRequest2)
 	assert.Nil(t, err)
@@ -530,7 +530,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]`),
-		URL:    stringToUrl("http://localhost:1235/chat"),
+		URL:    stringToUrl("http://localhost:1235/api/chat"),
 	}
 
 	cl := client.NewRestClient()
@@ -544,7 +544,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 func TestGetMessagesPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat/1/message?startingFromItemId=6&size=3", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=6&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
@@ -562,7 +562,7 @@ func TestGetMessagesPaginated(t *testing.T) {
 
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/chat/1/message?startingFromItemId=9&size=3", nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=9&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 
@@ -583,7 +583,7 @@ func TestGetMessagesPaginated(t *testing.T) {
 func TestGetMessagesPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat/1/message?startingFromItemId=6&size=3&searchString=gen", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=6&size=3&searchString=gen", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
@@ -601,7 +601,7 @@ func TestGetMessagesPaginatedSearch(t *testing.T) {
 
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/chat/1/message?startingFromItemId=9&size=3", nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=9&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 
@@ -622,7 +622,7 @@ func TestGetMessagesPaginatedSearch(t *testing.T) {
 func TestGetMessagesHasHash(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat/1/message?startingFromItemId=7&size=10&hasHash=true", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=7&size=10&hasHash=true", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
@@ -657,7 +657,7 @@ func TestGetMessagesHasHash(t *testing.T) {
 func TestGetMessagesHasHashSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/chat/1/message?startingFromItemId=7&size=10&hasHash=true&searchString=gen", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=7&size=10&hasHash=true&searchString=gen", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
@@ -691,12 +691,12 @@ func TestGetMessagesHasHashSearch(t *testing.T) {
 
 func TestMessageValidation(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": ""}`), e)
+		c, b, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": ""}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
 		textString := utils.InterfaceToString(getJsonPathResult(t, b, "$.text").(interface{}))
 		assert.Equal(t, "cannot be blank", textString)
 
-		c2, b2, _ := request("POST", "/chat/1/message", strings.NewReader(``), e)
+		c2, b2, _ := request("POST", "/api/chat/1/message", strings.NewReader(``), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
 		textString2 := utils.InterfaceToString(getJsonPathResult(t, b2, "$.text").(interface{}))
 		assert.Equal(t, "cannot be blank", textString2)
@@ -706,7 +706,7 @@ func TestMessageValidation(t *testing.T) {
 func TestMessageCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
 		messagesBefore, _ := db.CountMessages()
-		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "Ultra new message"}`), e)
+		c, b, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": "Ultra new message"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
 		messagesAfterCreate, _ := db.CountMessages()
@@ -717,15 +717,15 @@ func TestMessageCrud(t *testing.T) {
 		id, _ := utils.ParseInt64(idString)
 		assert.True(t, id > 0)
 
-		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
+		c3, b3, _ := request("GET", "/api/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
 		textString := utils.InterfaceToString(getJsonPathResult(t, b3, "$.text").(interface{}))
 		assert.Equal(t, "Ultra new message", textString)
 
-		c4, _, _ := request("PUT", "/chat/1/message", strings.NewReader(`{"text": "Edited ultra new message", "id": `+idString+`}`), e)
+		c4, _, _ := request("PUT", "/api/chat/1/message", strings.NewReader(`{"text": "Edited ultra new message", "id": `+idString+`}`), e)
 		assert.Equal(t, http.StatusCreated, c4)
 
-		c5, b5, _ := request("GET", "/chat/1/message/"+idString, nil, e)
+		c5, b5, _ := request("GET", "/api/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c5)
 		textString5 := utils.InterfaceToString(getJsonPathResult(t, b5, "$.text").(interface{}))
 		assert.Equal(t, "Edited ultra new message", textString5)
@@ -733,7 +733,7 @@ func TestMessageCrud(t *testing.T) {
 		dateTimeInterface5 := utils.InterfaceToString(getJsonPathResult(t, b5, "$.editDateTime").(interface{}))
 		assert.NotEmpty(t, dateTimeInterface5)
 
-		c1, _, _ := request("DELETE", "/chat/1/message/"+idString, nil, e)
+		c1, _, _ := request("DELETE", "/api/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusAccepted, c1)
 		messagesAfterDelete, _ := db.CountMessages()
 		assert.Equal(t, messagesBefore, messagesAfterDelete)
@@ -742,13 +742,13 @@ func TestMessageCrud(t *testing.T) {
 
 func TestMessageIsSanitized(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "<a onblur=\"alert(secret)\" href=\"http://www.google.com\">Google</a>"}`), e)
+		c, b, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": "<a onblur=\"alert(secret)\" href=\"http://www.google.com\">Google</a>"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
 		idString := utils.InterfaceToString(idInterface)
 
-		c3, b3, _ := request("GET", "/chat/1/message/"+idString, nil, e)
+		c3, b3, _ := request("GET", "/api/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusOK, c3)
 		textInterface := getJsonPathResult(t, b3, "$.text").(interface{})
 		textString := utils.InterfaceToString(textInterface)
@@ -758,7 +758,7 @@ func TestMessageIsSanitized(t *testing.T) {
 
 func TestNotPossibleToWriteAMessageWithNotAllowedMediaUrl(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		c, b, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "<img src=\"http://malicious.example.com/virus.jpg\"> Lorem ipsum"}`), e)
+		c, b, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": "<img src=\"http://malicious.example.com/virus.jpg\"> Lorem ipsum"}`), e)
 		assert.Equal(t, http.StatusBadRequest, c)
 
 		messageInterface := getJsonPathResult(t, b, "$.message").(interface{})
@@ -769,12 +769,12 @@ func TestNotPossibleToWriteAMessageWithNotAllowedMediaUrl(t *testing.T) {
 
 func TestNotPossibleToEditAMessageAndSetNotAllowedMediaUrl(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		c1, b1, _ := request("POST", "/chat/1/message", strings.NewReader(`{"text": "Lorem ipsum"}`), e)
+		c1, b1, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": "Lorem ipsum"}`), e)
 		assert.Equal(t, http.StatusCreated, c1)
 		idInterface := getJsonPathResult(t, b1, "$.id").(interface{})
 		idString := utils.InterfaceToString(idInterface)
 
-		c2, b2, _ := request("PUT", "/chat/1/message", strings.NewReader(fmt.Sprintf(`{ "id": %v, "text": "<img src=\"http://malicious.example.com/virus.jpg\"> Lorem ipsum"}`, idString)), e)
+		c2, b2, _ := request("PUT", "/api/chat/1/message", strings.NewReader(fmt.Sprintf(`{ "id": %v, "text": "<img src=\"http://malicious.example.com/virus.jpg\"> Lorem ipsum"}`, idString)), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
 
 		messageInterface := getJsonPathResult(t, b2, "$.message").(interface{})
@@ -798,17 +798,17 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 	}
 
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		c, b, _ := requestWithHeader("POST", "/chat", h2, strings.NewReader(`{"name": "Chat of second user"}`), e)
+		c, b, _ := requestWithHeader("POST", "/api/chat", h2, strings.NewReader(`{"name": "Chat of second user"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
 		idString := utils.InterfaceToString(idInterface)
 
 		// test not found
-		c3, _, _ := requestWithHeader("GET", "/chat/"+idString+"/message/666", h2, nil, e)
+		c3, _, _ := requestWithHeader("GET", "/api/chat/"+idString+"/message/666", h2, nil, e)
 		assert.Equal(t, http.StatusNotFound, c3)
 
 		// first user tries to write to second user's chat
-		c2, b2, _ := requestWithHeader("POST", "/chat/"+idString+"/message", h1, strings.NewReader(`{"text": "Ultra new message to the foreign chat"}`), e)
+		c2, b2, _ := requestWithHeader("POST", "/api/chat/"+idString+"/message", h1, strings.NewReader(`{"text": "Ultra new message to the foreign chat"}`), e)
 		assert.Equal(t, http.StatusBadRequest, c2)
 		messageString := utils.InterfaceToString(getJsonPathResult(t, b2, "$.message").(interface{}))
 		assert.Equal(t, "You are not allowed to write to this chat", messageString)
@@ -817,7 +817,7 @@ func TestItIsNotPossibleToWriteToForeignChat(t *testing.T) {
 
 func TestGetBlogsPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/blog?page=2&size=3", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/blog?page=2&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
@@ -839,7 +839,7 @@ func TestGetBlogsPaginated(t *testing.T) {
 
 func TestGetBlogsPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/blog?size=3&searchString=generated_chat994", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/blog?size=3&searchString=generated_chat994", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 

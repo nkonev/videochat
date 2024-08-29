@@ -11,7 +11,7 @@ http:
 
 auth:
   exclude:
-    - "^/notification/public.*"
+    - "^/api/notification/public.*"
     - "^/internal.*"
 
 postgresql:

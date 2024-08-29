@@ -11,7 +11,7 @@ http:
 
 auth:
   exclude:
-    - "^/video/public.*"
+    - "^/api/video/public.*"
     - "^/internal/.*"
 
 otlp:

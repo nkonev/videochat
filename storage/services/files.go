@@ -198,7 +198,7 @@ func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, time.Durati
 }
 
 func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
-	downloadUrl, err := url.Parse(viper.GetString("server.contextPath") + utils.UrlStorageGetFile)
+	downloadUrl, err := url.Parse(utils.UrlStorageGetFile)
 	if err != nil {
 		return "", err
 	}
@@ -232,7 +232,7 @@ func (h *FilesService) GetPublicUrl(public bool, fileName string) (*string, erro
 		return nil, nil
 	}
 
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + utils.UrlStorageGetFilePublicExternal)
+	downloadUrl, err := url.Parse(utils.UrlStorageGetFilePublicExternal)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (h *FilesService) GetPublicUrl(public bool, fileName string) (*string, erro
 }
 
 func (h *FilesService) GetAnonymousUrl(fileName string, messageId int64) (string, error) {
-	downloadUrl, err := url.Parse(h.getBaseUrlForDownload() + utils.UrlStorageGetFilePublicExternal)
+	downloadUrl, err := url.Parse(utils.UrlStorageGetFilePublicExternal)
 	if err != nil {
 		return "", err
 	}
@@ -321,10 +321,6 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 		CorrelationId:  theCorrelationId,
 	}
 	return info, nil
-}
-
-func (h *FilesService) getBaseUrlForDownload() string {
-	return viper.GetString("server.contextPath") + "/storage"
 }
 
 const Media_image = "image"

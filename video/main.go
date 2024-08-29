@@ -167,23 +167,23 @@ func configureApiEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/video/:chatId/token", th.GetTokenHandler)
-	e.GET("/video/:chatId/users", uh.GetVideoUsers)
-	e.GET("/video/config", ch.GetConfig)
+	e.GET("/api/video/:chatId/token", th.GetTokenHandler)
+	e.GET("/api/video/:chatId/users", uh.GetVideoUsers)
+	e.GET("/api/video/config", ch.GetConfig)
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
-	e.PUT("/video/:chatId/kick", uh.Kick)
-	e.PUT("/video/:chatId/mute", uh.Mute)
+	e.PUT("/api/video/:chatId/kick", uh.Kick)
+	e.PUT("/api/video/:chatId/mute", uh.Mute)
 
-	e.PUT("/video/:id/dial/invite", ih.ProcessCallInvitation) // used by owner to add or remove from dial list
-	e.PUT("/video/:id/dial/enter", ih.ProcessEnterToDial)     // user enters to call somehow, either by clicking green tube or opening .../video link
-	e.PUT("/video/:id/dial/cancel", ih.ProcessCancelCall)     // cancelling by invitee
-	e.PUT("/video/:id/dial/exit", ih.ProcessLeave)            // used by any user on exit
-	e.PUT("/video/user/request-status", ih.SendCurrentVideoStatuses)
-	e.GET("/video/user/status", ih.GetMyVideoStatus)
+	e.PUT("/api/video/:id/dial/invite", ih.ProcessCallInvitation) // used by owner to add or remove from dial list
+	e.PUT("/api/video/:id/dial/enter", ih.ProcessEnterToDial)     // user enters to call somehow, either by clicking green tube or opening .../video link
+	e.PUT("/api/video/:id/dial/cancel", ih.ProcessCancelCall)     // cancelling by invitee
+	e.PUT("/api/video/:id/dial/exit", ih.ProcessLeave)            // used by any user on exit
+	e.PUT("/api/video/user/request-status", ih.SendCurrentVideoStatuses)
+	e.GET("/api/video/user/status", ih.GetMyVideoStatus)
 
-	e.PUT("/video/:id/record/start", rh.StartRecording)
-	e.PUT("/video/:id/record/stop", rh.StopRecording)
-	e.GET("/video/:id/record/status", rh.StatusRecording)
+	e.PUT("/api/video/:id/record/start", rh.StartRecording)
+	e.PUT("/api/video/:id/record/stop", rh.StopRecording)
+	e.GET("/api/video/:id/record/status", rh.StatusRecording)
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
