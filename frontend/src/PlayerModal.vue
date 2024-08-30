@@ -1,6 +1,6 @@
 <template>
-    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7">
-        <span class="d-flex justify-center align-center" style="width: 100%; height: 100%" id="my-player">
+    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7" id="my-player">
+        <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
             <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
             <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
             <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
@@ -50,8 +50,13 @@ export default {
                 this.fetchMediaListView();
                 window.addEventListener("keydown", this.onKeyPress);
             }
+            this.$nextTick(()=>{
+                document.querySelector("#my-player video").addEventListener("error", this.onError);
+            })
         },
         hideModal() {
+            document.querySelector("#my-player video").removeEventListener("error", this.onError);
+
             this.$data.show = false;
             if (this.$data.dto?.canSwitch) {
                 window.removeEventListener("keydown", this.onKeyPress);
@@ -110,17 +115,17 @@ export default {
         },
         onError(e) {
             console.warn("onError", e);
-            switch (e.target.error.code) {
-                case e.target.error.MEDIA_ERR_ABORTED:
+            switch (e.target.error?.code) {
+                case 1: // MEDIA_ERR_ABORTED
                     console.warn('You aborted the video playback.', e.target);
                     break;
-                case e.target.error.MEDIA_ERR_NETWORK:
+                case 2: // MEDIA_ERR_NETWORK
                     console.warn('A network error caused the video download to fail part-way.', e.target);
                     break;
-                case e.target.error.MEDIA_ERR_DECODE:
+                case 3: // MEDIA_ERR_DECODE
                     console.warn('The video playback was aborted due to a corruption problem or because the video used features your browser did not support.', e.target);
                     break;
-                case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
                     console.warn('The video could not be loaded, either because the server or network failed or because the format is not supported.', e.target);
                     break;
                 default:
@@ -131,11 +136,9 @@ export default {
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
-        document.addEventListener("error", this.onError);
     },
     beforeUnmount() {
         bus.off(PLAYER_MODAL, this.showModal);
-        document.removeEventListener("error", this.onError);
     },
     watch: {
         show(newValue) {
