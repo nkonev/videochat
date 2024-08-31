@@ -320,14 +320,14 @@ git show -s --format=%s dda6c910 | grep -F [force]
 
 
 # merge commit
-./should-run.sh 965b2800 frontend https://chat.nkonev.name
+./scripts/should-run.sh 965b2800 frontend https://chat.nkonev.name
 
 # with force commit
-./should-run.sh dda6c910 frontend https://chat.nkonev.name
-./should-run.sh dda6c910 aaa https://chat.nkonev.name
+./scripts/should-run.sh dda6c910 frontend https://chat.nkonev.name
+./scripts/should-run.sh dda6c910 aaa https://chat.nkonev.name
 
 # or condition for e2e-test
-./should-run.sh 965b2800 'frontend|aaa' https://chat.nkonev.name && echo "ok" || echo "ko"
+./scripts/should-run.sh 965b2800 'frontend|aaa' https://chat.nkonev.name && echo "ok" || echo "ko"
 ```
 
 
