@@ -1,3 +1,7 @@
+# Add
+# export CONNECT_LINE=user@api.site.local
+# before calling goals which deploy image to server
+
 .PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run
 
 BUILDDIR := ./build

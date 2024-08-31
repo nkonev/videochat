@@ -1,3 +1,7 @@
+# Add
+# export JAVA_HOME=/usr/lib/jvm/java-21
+# before any building goal
+
 .PHONY: check-env download test test-headed-chrome test-headed-firefox clean install_node_deps patch_playwright install_browsers
 
 install_node_deps:
