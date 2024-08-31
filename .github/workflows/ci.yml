@@ -17,10 +17,6 @@ jobs:
           fetch-depth: 100
       - name: Decide should we build it
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-      - name: Install software
-        if: env.SHOULD_RUN == 'true'
-        run: |
-          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Set up JDK 21
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-java@v4
@@ -33,12 +29,12 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         run: |
           docker compose up -d postgresql redis rabbitmq jaeger
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          sleep 5 && ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
           docker compose -f docker-compose.keycloak.yml up -d keycloak
-          sleep 15 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
+          sleep 15 && ./scripts/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
       - name: Build and test with Maven
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -146,18 +142,14 @@ jobs:
         with:
           go-version: 1.22.0
           cache-dependency-path: 'chat/go.sum'
-      - name: Install software
-        if: env.SHOULD_RUN == 'true'
-        run: |
-          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
           docker compose up -d postgresql redis rabbitmq jaeger
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          sleep 5 && ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd chat; make check-env clean download generate test package)
@@ -323,10 +315,6 @@ jobs:
           fetch-depth: 100
       - name: Decide should we build it
         run: ./scripts/should-run.sh HEAD 'frontend|aaa|chat|event|e2e-test' ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-      - name: Install software
-        if: env.SHOULD_RUN == 'true'
-        run: |
-          mkdir -p ${HOME}/bin && curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${HOME}/bin/wait-for-it.sh && chmod +x ${HOME}/bin/wait-for-it.sh
 
       - name: Set up JDK 21
         if: env.SHOULD_RUN == 'true'
@@ -369,13 +357,13 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         run: |
           docker compose up -d postgresql redis rabbitmq jaeger minio traefik
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          sleep 5 && ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:39000 -- echo 'minio is up'
-          ${HOME}/bin/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          sleep 5 && ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:39000 -- echo 'minio is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -393,13 +381,13 @@ jobs:
       - name: Wait for microservices
         if: env.SHOULD_RUN == 'true'
         run: |
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:3000 -- echo 'front is up'
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:3000 -- echo 'front is up'
           # Once we started aaa (compiling) we start the emulator
           (cd aaa; make run-oauth2-emu &)
-          ${HOME}/bin/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:9080 -- echo 'oauth2 emulator controller is up'
       - name: Run your Playwright tests
         if: env.SHOULD_RUN == 'true'
         run: (cd e2e-test; make test)
