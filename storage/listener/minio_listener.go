@@ -86,7 +86,7 @@ func CreateMinioEventsListener(
 			GetLogEntry(ctx).Errorf("Error during getting participant ids: %v", err)
 			return err
 		}
-		// because converting is longer than creating preview, we do this long job in the end, after sending preview_created event
+		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
 		if eventForConvertingService {
 			convertingService.HandleConvertedEvent(ctx, minioEvent)
 		}

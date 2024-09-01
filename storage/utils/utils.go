@@ -205,6 +205,25 @@ func SetExtension(fileName string, newExtension string) string {
 	}
 }
 
+func RemoveExtension(fileName string) string {
+	idx := strings.LastIndex(fileName, ".")
+	if idx > 0 {
+		firstPart := fileName[0:idx]
+		return firstPart
+	} else {
+		return fileName
+	}
+}
+
+func GetFilename(aKey string) string {
+	split := strings.Split(aKey, "/")
+	if len(split) > 1 {
+		return split[len(split)-1]
+	} else {
+		return aKey
+	}
+}
+
 func GetKeyForConverted(minioKey string) string {
 	if IsVideo(minioKey) {
 		idx := strings.LastIndex(minioKey, ".")
