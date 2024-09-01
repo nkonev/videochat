@@ -122,5 +122,4 @@ func isEventForConvertingService(ctx context.Context, minioConfig *utils.MinioCo
 		!previewExists // prevent the indefinite converting
 		// TODO не прилетает событие file_created на фронт с правильным fileItemUuid - прилетает updated из-за непростановки recording
 		// TODO неправильный порядок сортировки в FileListModal, по-хорошему, сначала должен быть _converted. Возможно, это можно пофиксить, добавив uild в имена файлов
-		// TODO попробовать просто записать в minio Content-Type, возможно этого будет достаточно для firefox
 }
