@@ -48,7 +48,7 @@ func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEve
 	defer os.RemoveAll(dir)
 
 	//// download the original recording_123.webm to the tmp dir (configurable)
-	filePath := dir + fileName
+	filePath := dir + string(os.PathSeparator) + fileName
 	pathOfConvertedFile := utils.GetKeyForConverted(filePath)
 
 	// run ffmpeg

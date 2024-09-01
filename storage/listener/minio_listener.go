@@ -120,4 +120,5 @@ func isEventForConvertingService(ctx context.Context, minioConfig *utils.MinioCo
 		// minioEvent.Recording && TODO fixme
 		utils.IsVideo(minioEvent.Key) &&
 		!previewExists // prevent the indefinite converting
+		// TODO не прилетает событие file_created на фронт с правильным fileItemUuid
 }
