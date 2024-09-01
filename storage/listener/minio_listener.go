@@ -120,5 +120,6 @@ func isEventForConvertingService(ctx context.Context, minioConfig *utils.MinioCo
 		// minioEvent.Recording && TODO fixme
 		utils.IsVideo(minioEvent.Key) &&
 		!previewExists // prevent the indefinite converting
-		// TODO не прилетает событие file_created на фронт с правильным fileItemUuid
+		// TODO не прилетает событие file_created на фронт с правильным fileItemUuid - прилетает updated из-за непростановки recording
+		// TODO неправильный порядок сортировки в FileListModal, по-хорошему, сначала должен быть _converted. Возможно, это можно пофиксить, добавив uild в имена файлов
 }
