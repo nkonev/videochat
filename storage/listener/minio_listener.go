@@ -65,24 +65,17 @@ func CreateMinioEventsListener(
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		var convertedServiceResponse *services.ConvertedResponse
 		var errEventService error
+		var eventForConvertingService bool = isEventForConvertingService(eventType, minioEvent)
 		if isEventForEventService(eventType) {
 			eventServiceResponse, errEventService = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType,)
 		}
-		if isEventForConvertedService(eventType, minioEvent) {
-			convertedServiceResponse = convertingService.HandleConvertedEvent(ctx, minioEvent)
-		}
 		if isEventForPreviewService(eventType) {
-			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent)
+			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
 		}
-
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
 			if errEventService == nil && isEventForEventService(eventType) {
 				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
-			}
-			if isEventForConvertedService(eventType, minioEvent) {
-				convertingService.SendToOwner(ctx, minioEvent, ownerId, convertedServiceResponse)
 			}
 			if isEventForPreviewService(eventType) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
@@ -92,6 +85,10 @@ func CreateMinioEventsListener(
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during getting participant ids: %v", err)
 			return err
+		}
+		// because converting is longer than creating preview, we do this long job in the end, after sending preview_created event
+		if eventForConvertingService {
+			convertingService.HandleConvertedEvent(ctx, minioEvent)
 		}
 
 		return nil
@@ -110,6 +107,6 @@ func isEventForPreviewService(eventType utils.EventType) bool {
 	return eventType == utils.FILE_CREATED
 }
 
-func isEventForConvertedService(eventType utils.EventType, minioEvent *dto.MinioEvent) bool {
-	return eventType == utils.FILE_CREATED && minioEvent.Recording
+func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.MinioEvent) bool {
+	return eventType == utils.FILE_CREATED && minioEvent.Recording && utils.IsVideo(minioEvent.Key)
 }

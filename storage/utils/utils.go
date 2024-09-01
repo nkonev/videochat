@@ -5,6 +5,7 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/spf13/viper"
 	"net/url"
+	"nkonev.name/chat/utils"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
@@ -17,6 +18,8 @@ const USER_PRINCIPAL_DTO = "userPrincipalDto"
 type H map[string]interface{}
 
 const MessageIdNonExistent = -1
+
+const converted = "converted"
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
@@ -200,6 +203,22 @@ func SetExtension(fileName string, newExtension string) string {
 		return firstPart + "." + newExtension
 	} else {
 		return fileName
+	}
+}
+
+func GetKeyForConverted(minioKey string) string {
+	if IsVideo(minioKey) {
+		idx := strings.LastIndex(minioKey, ".")
+		if idx > 0 {
+			firstPart := minioKey[0:idx]
+			extPart := minioKey[idx+1:]
+			extPart = strings.ToLower(extPart)
+			return firstPart + "_" + converted + "." + extPart
+		} else {
+			return minioKey
+		}
+	} else {
+		return minioKey
 	}
 }
 
