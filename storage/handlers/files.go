@@ -183,11 +183,13 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().Add(expire)
 	converted := convertMetadata(&metadata)
+	ct := "video/webm"
 	mpu := awsS3.CreateMultipartUploadInput{
 		Expires: &expTime,
 		Bucket: &bucketName,
 		Key: &aKey,
 		Metadata: converted,
+		ContentType: &ct,
 	}
 	upload, err := h.awsS3.CreateMultipartUpload(&mpu)
 	if err != nil {
