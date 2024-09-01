@@ -40,7 +40,7 @@ func CreateMinioEventsListener(
 		maybeChatId := userMetadata.Get(services.ChatIdKey(true)).Int()
 		ownerId := userMetadata.Get(services.OwnerIdKey(true)).Int()
 		correlationIdStr := userMetadata.Get(services.CorrelationIdKey(true)).String()
-		isRecording := userMetadata.Get(services.RecordingKey(true)).Bool()
+		isConferenceRecording := userMetadata.Get(services.ConfenenceRecordingKey(true)).Bool()
 		var correlationId *string
 		if correlationIdStr != "" {
 			correlationId = &correlationIdStr
@@ -51,7 +51,6 @@ func CreateMinioEventsListener(
 			ChatId:        maybeChatId,
 			OwnerId:       ownerId,
 			CorrelationId: correlationId,
-			Recording:     isRecording,
 		}
 
 		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
@@ -60,7 +59,7 @@ func CreateMinioEventsListener(
 			GetLogEntry(ctx).Errorf("Error during parsing chatId: %v", err)
 			return err
 		}
-		eventType, err := utils.GetEventType(eventName, isRecording)
+		eventType, err := utils.GetEventType(eventName, isConferenceRecording)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
 			return err
@@ -118,7 +117,7 @@ func isEventForConvertingService(ctx context.Context, minioConfig *utils.MinioCo
 	previewExists = err == nil // error means there is no file
 
 	return eventType == utils.FILE_CREATED &&
-		minioEvent.Recording &&
+		// minioEvent.Recording && TODO fixme
 		utils.IsVideo(minioEvent.Key) &&
 		!previewExists // prevent the indefinite converting
 }

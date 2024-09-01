@@ -79,10 +79,12 @@ func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEve
 	// set tag recording=true in order to correct work utils.GetEventType in minio_listener
 	// put recording_123_converted.webm to minio
 	convertedKey := utils.GetKeyForConverted(normalizedKey)
-	_, err = s.minio.FPutObject(ctx, s.minioConfig.Files, convertedKey, pathOfConvertedFile, minio.PutObjectOptions{})
+	objectInfo, err := s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
+
+	_, err = s.minio.FPutObject(ctx, s.minioConfig.Files, convertedKey, pathOfConvertedFile, minio.PutObjectOptions{ContentType: utils.ConvertedContentType, UserMetadata: objectInfo.UserMetadata})
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during storing to minio %v: %v", pathOfConvertedFile, err)
 		return
 	}
-	// rm recording_123_converted.webm from the temporary directory
+	// defer - rm recording_123_converted.webm from the temporary directory
 }

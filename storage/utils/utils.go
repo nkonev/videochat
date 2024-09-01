@@ -19,6 +19,7 @@ type H map[string]interface{}
 const MessageIdNonExistent = -1
 
 const converted = "converted"
+const ConvertedContentType = "video/webm"
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
