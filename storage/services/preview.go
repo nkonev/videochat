@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/siyouyun-open/imaging"
+	"github.com/spf13/viper"
 	"image"
 	"image/jpeg"
 	"io"
@@ -16,7 +17,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"os/exec"
-	"time"
 )
 
 type PreviewService struct {
@@ -35,59 +35,41 @@ func NewPreviewService(minio *s3.InternalMinioClient, minioConfig *utils.MinioCo
 	}
 }
 
-// in case video and _converted.webm this function is invoked twice
-// pass 1 - to create preview for both original and _converted
-// pass 2 - to do nothing and return zero response in order not to send preview_created events below in SendToParticipants()
-func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEvent, eventForConvertingService bool) *PreviewResponse {
+func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEvent, shouldSavePreviewForConverted bool) *PreviewResponse {
 	GetLogEntry(ctx).Debugf("Got %v", data)
 	normalizedKey := utils.StripBucketName(data.Key, s.minioConfig.Files)
 
 	if utils.IsVideo(normalizedKey) {
-		previewKey := utils.SetVideoPreviewExtension(normalizedKey)
-		var previewExists = false
-		_, err := s.minio.StatObject(ctx, s.minioConfig.FilesPreview, previewKey, minio.StatObjectOptions{})
-		previewExists = err == nil // error means there is no file
+		// save byteBuffer for the original
+		theBytes, err := s.createVideoPreview(ctx, normalizedKey)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during creating video preview %v for %v", err, normalizedKey)
+			return nil
+		}
+		byteBuffer := bytes.NewBuffer(*theBytes)
+		err = s.saveVideoPreviewToMinio(ctx, normalizedKey, byteBuffer)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during storing video thumbnail %v for %v", err, normalizedKey)
+			return nil
+		}
 
-		var theBytes *[]byte
-
-		if !previewExists { // don't make preview again for converted file
-			// pass 1: save byteBuffer for the original
-			theBytes, err = s.createVideoPreview(ctx, normalizedKey)
+		// save byteBuffer as of convertedVideoKey - as of (yet not existed _converted.webm) _converted.jpg
+		if shouldSavePreviewForConverted {
+			convertedVideoKey := utils.GetKeyForConverted(normalizedKey)
+			byteBuffer2 := bytes.NewBuffer(*theBytes)
+			err = s.saveVideoPreviewToMinio(ctx, convertedVideoKey, byteBuffer2)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during creating video preview %v for %v", err, normalizedKey)
+				GetLogEntry(ctx).Errorf("Error during storing converted video thumbnail %v for %v", err, normalizedKey)
 				return nil
 			}
-
-			byteBuffer := bytes.NewBuffer(*theBytes)
-			err = s.saveVideoPreviewToMinio(ctx, normalizedKey, byteBuffer)
-			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during storing video thumbnail %v for %v", err, normalizedKey)
-				return nil
-			}
-
-			// pass 1: save byteBuffer as of keyOfConverted - as of (yet not existed _converted.webm) _converted.jpg
-			if eventForConvertingService {
-				keyOfConverted := utils.GetKeyForConverted(normalizedKey)
-				byteBuffer2 := bytes.NewBuffer(*theBytes)
-				err = s.saveVideoPreviewToMinio(ctx, keyOfConverted, byteBuffer2)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Error during storing converted video thumbnail %v for %v", err, normalizedKey)
-					return nil
-				}
-
-				return &PreviewResponse{ // next we send preview_created event for converted
-					normalizedKey: keyOfConverted,
-				}
-			} else {
-				// pass 1: normal, non-convertable video
-				return &PreviewResponse{
-					normalizedKey: normalizedKey,
-				}
+			return &PreviewResponse{ // next we send preview_created event for converted
+				normalizedKey: convertedVideoKey,
 			}
 		} else {
-			// pass 2
-			// if we already have preview then this is minio_created event for _converted.webm, we just exit becasue we created both previews in the previous pass
-			return nil
+			// normal, non-convertable video
+			return &PreviewResponse{
+				normalizedKey: normalizedKey,
+			}
 		}
 	} else {
 		s.CreatePreview(ctx, normalizedKey)
@@ -173,7 +155,7 @@ func (s *PreviewService) resizeImageToJpg(ctx context.Context, reader io.Reader)
 }
 
 func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey string) (*[]byte, error) {
-	d, _ := time.ParseDuration("10m")
+	d := viper.GetDuration("preview.presignedDuration")
 	presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
@@ -181,7 +163,7 @@ func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey s
 	}
 	stringPresingedUrl := presignedUrl.String()
 
-	ffCmd := exec.Command("ffmpeg",
+	ffCmd := exec.Command(viper.GetString("preview.ffmpegPath"),
 		"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
 		"-c:v", "png", "-f", "rawvideo", "-an", "-")
 
@@ -192,7 +174,7 @@ func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey s
 	ffCmd.Stderr = &stderr
 	err = ffCmd.Run()
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during creating thumbnail for key %v: %v: %v", normalizedKey, fmt.Sprint(err), stderr.String())
+		GetLogEntry(ctx).Errorf("Error during creating thumbnail for key %v: %v: stderr: %v", normalizedKey, fmt.Sprint(err), stderr.String())
 		return nil, err
 	}
 

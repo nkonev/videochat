@@ -2,12 +2,14 @@ package listener
 
 import (
 	"context"
+	"github.com/minio/minio-go/v7"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -19,6 +21,7 @@ func CreateMinioEventsListener(
 	eventService *services.EventService,
 	client *client.RestClient,
 	minioConfig *utils.MinioConfig,
+	minioClient *s3.InternalMinioClient,
 	convertingService *services.ConvertingService,
 ) MinioEventsListener {
 	tr := otel.Tracer("amqp/listener")
@@ -66,7 +69,7 @@ func CreateMinioEventsListener(
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
 		var errEventService error
-		var eventForConvertingService bool = isEventForConvertingService(eventType, minioEvent)
+		var eventForConvertingService = isEventForConvertingService(ctx, minioConfig, minioClient, eventType, minioEvent)
 		if isEventForEventService(eventType) {
 			eventServiceResponse, errEventService = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType,)
 		}
@@ -88,7 +91,7 @@ func CreateMinioEventsListener(
 		}
 		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
 		if eventForConvertingService {
-			convertingService.HandleConvertedEvent(ctx, minioEvent)
+			convertingService.HandleEvent(ctx, minioEvent)
 		}
 
 		return nil
@@ -107,6 +110,15 @@ func isEventForPreviewService(eventType utils.EventType) bool {
 	return eventType == utils.FILE_CREATED
 }
 
-func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.MinioEvent) bool {
-	return eventType == utils.FILE_CREATED && minioEvent.Recording && utils.IsVideo(minioEvent.Key)
+func isEventForConvertingService(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, eventType utils.EventType, minioEvent *dto.MinioEvent) bool {
+	normalizedKey := utils.StripBucketName(minioEvent.Key, minioConfig.Files)
+	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
+	var previewExists = false
+	_, err := minioClient.StatObject(ctx, minioConfig.FilesPreview, previewKey, minio.StatObjectOptions{})
+	previewExists = err == nil // error means there is no file
+
+	return eventType == utils.FILE_CREATED &&
+		minioEvent.Recording &&
+		utils.IsVideo(minioEvent.Key) &&
+		!previewExists // prevent the indefinite converting
 }

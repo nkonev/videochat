@@ -59,7 +59,6 @@ minio:
     chatAvatar: "chat-avatar"
     files: "files"
     filesPreview: "files-preview"
-    filesConverted: "files-converted"
 
 chat:
   url:
@@ -106,4 +105,10 @@ ulid:
   topYear: 3000
 
 converting:
+  ffmpegPath: "ffmpeg"
   tempDir: "/tmp/video"
+  presignedDuration: 30m
+
+preview:
+  ffmpegPath: "ffmpeg"
+  presignedDuration: 10m

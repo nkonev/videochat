@@ -282,7 +282,7 @@ func runEcho(e *echo.Echo) {
 }
 
 func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
-	var ua, ca, f, p, c string
+	var ua, ca, f, p string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
 		return nil, err
@@ -294,9 +294,6 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 		return nil, err
 	}
 	if p, err = utils.EnsureAndGetFilesPreviewBucket(client); err != nil {
-		return nil, err
-	}
-	if c, err = utils.EnsureAndGetFilesConvertedBucket(client); err != nil {
 		return nil, err
 	}
 	bucketNotification, err := client.GetBucketNotification(context.Background(), f)
@@ -346,7 +343,6 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 		ChatAvatar:   ca,
 		Files:        f,
 		FilesPreview: p,
-		FilesConverted: c,
 	}, nil
 }
 

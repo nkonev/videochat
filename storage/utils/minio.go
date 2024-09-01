@@ -60,15 +60,8 @@ func EnsureAndGetFilesPreviewBucket(minioClient *s3.InternalMinioClient) (string
 	return bucketName, err
 }
 
-func EnsureAndGetFilesConvertedBucket(minioClient *s3.InternalMinioClient) (string, error) {
-	bucketName := viper.GetString("minio.bucket.filesConverted")
-	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(minioClient, bucketName, bucketLocation)
-	return bucketName, err
-}
-
 type MinioConfig struct {
-	UserAvatar, ChatAvatar, Files, FilesPreview, FilesConverted string
+	UserAvatar, ChatAvatar, Files, FilesPreview string
 }
 
 // https://min.io/docs/minio/linux/reference/minio-mc/mc-event-add.html#mc-event-supported-events
