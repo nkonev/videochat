@@ -5,7 +5,6 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/spf13/viper"
 	"net/url"
-	"nkonev.name/chat/utils"
 	. "nkonev.name/storage/logger"
 	"regexp"
 	"strconv"
