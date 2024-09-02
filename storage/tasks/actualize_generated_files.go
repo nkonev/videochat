@@ -15,39 +15,39 @@ import (
 	"time"
 )
 
-type ActualizePreviewsTask struct {
+type ActualizeGeneratedFilesTask struct {
 	*gointerlock.GoInterval
 }
 
-func ActualizePreviewsScheduler(
+func ActualizeGeneratedFilesScheduler(
 	redisConnector *redisV8.Client,
-	service *ActualizePreviewsService,
-) *ActualizePreviewsTask {
-	var interv = viper.GetDuration("schedulers.actualizePreviewsTask.interval")
-	Logger.Infof("Created ActualizePreviewsScheduler with interval %v", interv)
-	return &ActualizePreviewsTask{&gointerlock.GoInterval{
-		Name:           "actualizePreviewsTask",
+	service *ActualizeGeneratedFilesService,
+) *ActualizeGeneratedFilesTask {
+	var interv = viper.GetDuration("schedulers.actualizeGeneratedFilesTask.interval")
+	Logger.Infof("Created ActualizeGeneratedFilesScheduler with interval %v", interv)
+	return &ActualizeGeneratedFilesTask{&gointerlock.GoInterval{
+		Name:           "actualizeGeneratedFilesTask",
 		Interval:       interv,
 		Arg:            service.doJob,
 		RedisConnector: redisConnector,
 	}}
 }
 
-type ActualizePreviewsService struct {
+type ActualizeGeneratedFilesService struct {
 	minioClient        *s3.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	previewService     *services.PreviewService
 	tracer             trace.Tracer
 }
 
-func (srv *ActualizePreviewsService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ActualizePreviews")
+func (srv *ActualizeGeneratedFilesService) doJob() {
+	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ActualizeGeneratedFiles")
 	defer span.End()
 	filenameChatPrefix := "chat/"
 	srv.processFiles(ctx, filenameChatPrefix)
 }
 
-func (srv *ActualizePreviewsService) processFiles(c context.Context, filenameChatPrefix string) {
+func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
 	GetLogEntry(c).Infof("Starting actualize previews job")
 
 	// create preview for files if need
@@ -114,9 +114,9 @@ func (srv *ActualizePreviewsService) processFiles(c context.Context, filenameCha
 	GetLogEntry(c).Infof("End of actualize previews job")
 }
 
-func NewActualizePreviewsService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizePreviewsService {
+func NewActualizeGeneratedFilesService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizeGeneratedFilesService {
 	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
-	return &ActualizePreviewsService{
+	return &ActualizeGeneratedFilesService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,
 		previewService:     previewService,

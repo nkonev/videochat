@@ -92,7 +92,7 @@ schedulers:
     enabled: true
     interval: 60s
     batchChats: 20
-  actualizePreviewsTask:
+  actualizeGeneratedFilesTask:
     enabled: true
     interval: 60s
 
