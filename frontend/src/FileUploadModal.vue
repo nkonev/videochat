@@ -97,10 +97,11 @@ export default {
             messageIdToAttachFiles: null,
             shouldAddDateToTheFilename: null,
             checkingLimitsStep: false,
+            isMessageRecording: null,
         }
     },
     methods: {
-        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType}) {
+        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType, isMessageRecording}) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.showFileInput = showFileInput;
@@ -114,7 +115,8 @@ export default {
             if (!this.chatStore.fileUploadingQueue.length) { // there is no prev active uploading
                 this.chatStore.setFileUploadingSessionType(fileUploadingSessionType)
             }
-            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType);
+            this.isMessageRecording = isMessageRecording;
+            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
         },
         hideModal() {
             this.$data.show = false;
@@ -127,6 +129,7 @@ export default {
             this.correlationId = null;
             this.messageIdToAttachFiles = null;
             this.shouldAddDateToTheFilename = null;
+            this.isMessageRecording = null;
         },
         onAttachFilesToMessage() {
           bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
@@ -202,6 +205,7 @@ export default {
                     fileName: file.name,
                     correlationId: this.correlationId, // nullable
                     shouldAddDateToTheFilename: this.shouldAddDateToTheFilename, // nullable
+                    isMessageRecording: this.isMessageRecording, // nullable
                 })
                 console.log("For", file.name, "got init response: ", response.data)
 

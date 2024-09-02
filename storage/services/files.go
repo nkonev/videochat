@@ -404,10 +404,11 @@ const chatIdKey = "chatid"
 const correlationIdKey = "correlationid"
 
 const conferenceRecordingKey = "confrecording"
+const messageRecordingKey = "msgrecording"
 
 const originalKey = "originalkey"
 
-func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, isConferenceRecording *bool) map[string]string {
+func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, isConferenceRecording *bool, isUserMessageRecording *bool) map[string]string {
 	var userMetadata = map[string]string{}
 	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
 	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
@@ -417,18 +418,13 @@ func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, 
 	if isConferenceRecording != nil {
 		userMetadata[conferenceRecordingKey] = utils.BooleanToString(*isConferenceRecording)
 	}
+	if isUserMessageRecording != nil {
+		userMetadata[messageRecordingKey] = utils.BooleanToString(*isUserMessageRecording)
+	}
 	return userMetadata
 }
 
 const xAmzMetaPrefix = "X-Amz-Meta-"
-
-func SerializeMetadataAndStore(urlValues *url.Values, userId int64, chatId int64, correlationId *string) {
-	urlValues.Set(xAmzMetaPrefix+strings.Title(ownerIdKey), utils.Int64ToString(userId))
-	urlValues.Set(xAmzMetaPrefix+strings.Title(chatIdKey), utils.Int64ToString(chatId))
-	if correlationId != nil {
-		urlValues.Set(xAmzMetaPrefix+strings.Title(correlationIdKey), *correlationId)
-	}
-}
 
 func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
 	var prefix = ""
@@ -510,12 +506,20 @@ func CorrelationIdKey(hasAmzPrefix bool) string {
 	return prefix + strings.Title(correlationIdKey)
 }
 
-func ConfenenceRecordingKey(hasAmzPrefix bool) string {
+func ConferenceRecordingKey(hasAmzPrefix bool) string {
 	var prefix = ""
 	if hasAmzPrefix {
 		prefix = xAmzMetaPrefix
 	}
 	return prefix + strings.Title(conferenceRecordingKey)
+}
+
+func MessageRecordingKey(hasAmzPrefix bool) string {
+	var prefix = ""
+	if hasAmzPrefix {
+		prefix = xAmzMetaPrefix
+	}
+	return prefix + strings.Title(messageRecordingKey)
 }
 
 func SerializeTags(public bool) map[string]string {

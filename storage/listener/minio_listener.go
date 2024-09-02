@@ -40,7 +40,8 @@ func CreateMinioEventsListener(
 		maybeChatId := userMetadata.Get(services.ChatIdKey(true)).Int()
 		ownerId := userMetadata.Get(services.OwnerIdKey(true)).Int()
 		correlationIdStr := userMetadata.Get(services.CorrelationIdKey(true)).String()
-		isConferenceRecording := userMetadata.Get(services.ConfenenceRecordingKey(true)).Bool()
+		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey(true)).Bool()
+		isMessageRecording := userMetadata.Get(services.MessageRecordingKey(true)).Bool()
 		var correlationId *string
 		if correlationIdStr != "" {
 			correlationId = &correlationIdStr
@@ -59,7 +60,7 @@ func CreateMinioEventsListener(
 			GetLogEntry(ctx).Errorf("Error during parsing chatId: %v", err)
 			return err
 		}
-		eventType, err := utils.GetEventType(eventName, isConferenceRecording)
+		eventType, err := utils.GetEventType(eventName, isConferenceRecording || isMessageRecording)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
 			return err
@@ -67,26 +68,25 @@ func CreateMinioEventsListener(
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		var errEventService error
-		var eventForConvertingService = isEventForConvertingService(ctx, minioConfig, minioClient, eventType, minioEvent)
+		var previewAlreadyExists = isPreviewAlreadyExists(ctx, minioConfig, minioClient, minioEvent)
+		var eventForConvertingService = isEventForConvertingService(eventType, minioEvent, previewAlreadyExists, isMessageRecording)
 		if isEventForEventService(eventType) {
-			eventServiceResponse, errEventService = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType,)
+			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType)
 		}
-		if isEventForPreviewService(eventType) {
+		if isEventForPreviewService(eventType, previewAlreadyExists) {
 			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
 		}
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
-			if errEventService == nil && isEventForEventService(eventType) {
+			if isEventForEventService(eventType) {
 				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
 			}
-			if isEventForPreviewService(eventType) {
+			if isEventForPreviewService(eventType, previewAlreadyExists) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
 			}
 			return nil
 		})
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during getting participant ids: %v", err)
-			return err
 		}
 		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
 		if eventForConvertingService {
@@ -105,21 +105,22 @@ func isEventForEventService(eventType utils.EventType) bool {
 	}
 }
 
-func isEventForPreviewService(eventType utils.EventType) bool {
-	return eventType == utils.FILE_CREATED
+func isEventForPreviewService(eventType utils.EventType, previewExists bool) bool {
+	return eventType == utils.FILE_CREATED && !previewExists
 }
 
-func isEventForConvertingService(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, eventType utils.EventType, minioEvent *dto.MinioEvent) bool {
+func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.MinioEvent, previewExists, isMessageRecording bool) bool {
+	return eventType == utils.FILE_CREATED &&
+		isMessageRecording &&
+		utils.IsVideo(minioEvent.Key) &&
+		!previewExists // prevents the indefinite converting
+}
+
+func isPreviewAlreadyExists(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, minioEvent *dto.MinioEvent) bool {
 	normalizedKey := utils.StripBucketName(minioEvent.Key, minioConfig.Files)
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
 	var previewExists = false
 	_, err := minioClient.StatObject(ctx, minioConfig.FilesPreview, previewKey, minio.StatObjectOptions{})
 	previewExists = err == nil // error means there is no file
-
-	return eventType == utils.FILE_CREATED &&
-		// minioEvent.Recording && TODO fixme
-		utils.IsVideo(minioEvent.Key) &&
-		!previewExists // prevent the indefinite converting
-		// TODO не прилетает событие file_created на фронт с правильным fileItemUuid - прилетает updated из-за непростановки recording
-		// TODO неправильный порядок сортировки в FileListModal, по-хорошему, сначала должен быть _converted. Возможно, это можно пофиксить, добавив uild в имена файлов
+	return previewExists
 }

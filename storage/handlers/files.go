@@ -65,6 +65,7 @@ type UploadRequest struct {
 	FileSize      int64   `json:"fileSize"`
 	FileName      string  `json:"fileName"`
 	ShouldAddDateToTheFilename bool `json:"shouldAddDateToTheFilename"`
+	IsMessageRecording *bool `json:"isMessageRecording"`
 }
 
 type UploadResponse struct {
@@ -178,7 +179,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	}
 
-	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil)
+	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording)
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().Add(expire)
@@ -356,7 +357,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	aKey := services.GetKey(bindTo.Filename, fileItemUuid, chatId)
 
-	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil)
+	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil, nil)
 
 	if _, err := h.minio.PutObject(context.Background(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -969,8 +970,8 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
-	isRecording := true
-	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isRecording)
+	isConferenceRecording := true
+	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isConferenceRecording, nil)
 
 	chatFileItemUuid := utils.GetFileItemId()
 
