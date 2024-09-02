@@ -50,7 +50,7 @@ func (srv *ActualizeGeneratedFilesService) doJob() {
 }
 
 func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
-	GetLogEntry(c).Infof("Starting actualize previews job")
+	GetLogEntry(c).Infof("Starting actualize generated files job")
 
 	// create preview for files if need
 	// and create _converted.webm
@@ -83,7 +83,9 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 				GetLogEntry(c).Errorf("Unable to isConverting for key %v from redis: %v", fileOjInfo.Key, err)
 				continue
 			}
-			if (isMessageRecording != nil && *isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
+			_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, utils.GetKeyForConverted(fileOjInfo.Key), minio.StatObjectOptions{})
+			if err != nil && (isMessageRecording != nil && *isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
+				GetLogEntry(c).Infof("Create converted for missing %v", fileOjInfo.Key)
 				srv.convertingService.Convert(c, fileOjInfo.Key)
 			}
 		} else if utils.IsImage(fileOjInfo.Key) {
@@ -131,7 +133,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	}
 	GetLogEntry(c).Infof("Checking for excess previews finished")
 
-	GetLogEntry(c).Infof("End of actualize previews job")
+	GetLogEntry(c).Infof("End of generated files job")
 }
 
 func NewActualizeGeneratedFilesService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
