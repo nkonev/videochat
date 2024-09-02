@@ -68,7 +68,7 @@ func CreateMinioEventsListener(
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		var previewAlreadyExists = isPreviewAlreadyExists(ctx, minioConfig, minioClient, minioEvent)
+		var previewAlreadyExists = isPreviewAlreadyExists(ctx, minioConfig, minioClient, normalizedKey)
 		var eventForConvertingService = isEventForConvertingService(eventType, minioEvent, previewAlreadyExists, isMessageRecording)
 		if isEventForEventService(eventType) {
 			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType)
@@ -116,8 +116,7 @@ func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.Mini
 		!previewExists // prevents the indefinite converting
 }
 
-func isPreviewAlreadyExists(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, minioEvent *dto.MinioEvent) bool {
-	normalizedKey := utils.StripBucketName(minioEvent.Key, minioConfig.Files)
+func isPreviewAlreadyExists(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) bool {
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
 	var previewExists = false
 	_, err := minioClient.StatObject(ctx, minioConfig.FilesPreview, previewKey, minio.StatObjectOptions{})

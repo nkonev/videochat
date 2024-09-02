@@ -38,6 +38,8 @@ func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEve
 	normalizedKey := utils.StripBucketName(event.Key, s.minioConfig.Files)
 	fileName := utils.GetFilename(normalizedKey)
 
+	GetLogEntry(ctx).Infof("Converting %v to the common comaptible format", normalizedKey)
+
 	// create temp dir
 	fileWoExt := utils.RemoveExtension(fileName)
 	dir, err := ioutil.TempDir(s.tempDirPrefix, fileWoExt+"__")
@@ -88,5 +90,7 @@ func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEve
 		GetLogEntry(ctx).Errorf("Error during storing to minio %v: %v", pathOfConvertedFile, err)
 		return
 	}
+
+	GetLogEntry(ctx).Infof("Converted %v to %v", normalizedKey, pathOfConvertedFile)
 	// defer removes recording_123_converted.webm from the temporary directory
 }
