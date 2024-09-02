@@ -29,7 +29,7 @@ type SynchronizeWithLivekitService struct {
 }
 
 func NewSynchronizeWithLivekitService(redisService *services.DialRedisRepository, userService *services.UserService, livekitRoomClient *lksdk.RoomServiceClient, restClient *client.RestClient) *SynchronizeWithLivekitService {
-	trcr := otel.Tracer("scheduler/clean-redis-orphan-service")
+	trcr := otel.Tracer("scheduler/synchronize-with-livekit")
 	return &SynchronizeWithLivekitService{
 		redisService: redisService,
 		userService:  userService,

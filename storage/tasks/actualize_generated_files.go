@@ -119,7 +119,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 		if err != nil {
 			GetLogEntry(c).Infof("Key %v is not found, deciding whether to remove the preview %v", originalKey, previewOjInfo.Key)
 			if utils.IsConverted(originalKey) && previewOjInfo.LastModified.Add(maxConvertingDuration).After(time.Now().UTC()) {
-				GetLogEntry(c).Infof("Age of the converted preview key %v is lesser than %v, skipping deletion", originalKey, maxConvertingDuration)
+				GetLogEntry(c).Infof("Age of the converted preview %v for key %v is lesser than %v, skipping deletion", previewOjInfo.Key, originalKey, maxConvertingDuration)
 				continue
 			} else {
 				GetLogEntry(c).Infof("Will remove preview for %v", originalKey)
@@ -137,7 +137,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 }
 
 func NewActualizeGeneratedFilesService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
-	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
+	trcr := otel.Tracer("scheduler/actualize-generated-files")
 	return &ActualizeGeneratedFilesService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,
