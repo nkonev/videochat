@@ -70,6 +70,7 @@ func main() {
 			services.NewPreviewService,
 			services.NewEventService,
 			services.NewConvertingService,
+			services.NewRedisInfoService,
 		),
 		fx.Invoke(
 			runScheduler,

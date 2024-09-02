@@ -38,6 +38,8 @@ type ActualizeGeneratedFilesService struct {
 	minioBucketsConfig *utils.MinioConfig
 	previewService     *services.PreviewService
 	tracer             trace.Tracer
+	redisInfoService   *services.RedisInfoService
+	convertingService  *services.ConvertingService
 }
 
 func (srv *ActualizeGeneratedFilesService) doJob() {
@@ -51,20 +53,38 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	GetLogEntry(c).Infof("Starting actualize previews job")
 
 	// create preview for files if need
+	// and create _converted.webm
 	GetLogEntry(c).Infof("Checking for missing previews")
 	var fileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
+		WithMetadata: true,
 	})
 	for fileOjInfo := range fileObjects {
 		// here in minio 'chat/108/'
 		GetLogEntry(c).Debugf("Start processing minio key '%v'", fileOjInfo.Key)
 		if utils.IsVideo(fileOjInfo.Key) {
+			// preview
 			previewToCheck := utils.SetVideoPreviewExtension(fileOjInfo.Key)
 			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
 			if err != nil {
 				GetLogEntry(c).Infof("Create preview for missing %v", fileOjInfo.Key)
 				srv.previewService.CreatePreview(c, fileOjInfo.Key)
+			}
+
+			// _converted.webm
+			_, _, _, isMessageRecording, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
+			if err != nil {
+				GetLogEntry(c).Errorf("Unable to convert metadata for key %v: %v", fileOjInfo.Key, err)
+				continue
+			}
+			isConverting, err := srv.redisInfoService.GetConverting(c, fileOjInfo.Key)
+			if err != nil {
+				GetLogEntry(c).Errorf("Unable to isConverting for key %v from redis: %v", fileOjInfo.Key, err)
+				continue
+			}
+			if (isMessageRecording != nil && *isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
+				srv.convertingService.Convert(c, fileOjInfo.Key)
 			}
 		} else if utils.IsImage(fileOjInfo.Key) {
 			previewToCheck := utils.SetImagePreviewExtension(fileOjInfo.Key)
@@ -93,11 +113,11 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			continue
 		}
 		_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, originalKey, minio.StatObjectOptions{})
-		convertingKeepPreview := viper.GetDuration("converting.keepPreviewInterval")
+		maxConvertingDuration := viper.GetDuration("converting.maxDuration")
 		if err != nil {
 			GetLogEntry(c).Infof("Key %v is not found, deciding whether to remove the preview", originalKey)
-			if utils.IsConverted(originalKey) && previewOjInfo.LastModified.Add(convertingKeepPreview).After(time.Now().UTC()) {
-				GetLogEntry(c).Infof("Age of the converted preview key %v is lesser than %v, skipping deletion", originalKey, convertingKeepPreview)
+			if utils.IsConverted(originalKey) && previewOjInfo.LastModified.Add(maxConvertingDuration).After(time.Now().UTC()) {
+				GetLogEntry(c).Infof("Age of the converted preview key %v is lesser than %v, skipping deletion", originalKey, maxConvertingDuration)
 				continue
 			} else {
 				GetLogEntry(c).Infof("Will remove preview for %v", originalKey)
@@ -114,12 +134,14 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	GetLogEntry(c).Infof("End of actualize previews job")
 }
 
-func NewActualizeGeneratedFilesService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService) *ActualizeGeneratedFilesService {
+func NewActualizeGeneratedFilesService(minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
 	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
 	return &ActualizeGeneratedFilesService{
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,
 		previewService:     previewService,
 		tracer:             trcr,
+		redisInfoService:   redisInfoService,
+		convertingService:  convertingService,
 	}
 }

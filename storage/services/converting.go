@@ -20,9 +20,10 @@ type ConvertingService struct {
 	minio                       *s3.InternalMinioClient
 	minioConfig                 *utils.MinioConfig
 	tempDirPrefix               string
+	redisInfoService *RedisInfoService
 }
 
-func NewConvertingService(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig) *ConvertingService {
+func NewConvertingService(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
 	tempDirPrefix := viper.GetString("converting.tempDir")
 	Logger.Infof("Ensuring temp root dir for the converting videos using ffmpeg: %v", tempDirPrefix)
 	os.MkdirAll(tempDirPrefix, os.ModePerm)
@@ -31,14 +32,22 @@ func NewConvertingService(minio *s3.InternalMinioClient, minioConfig *utils.Mini
 		minio:       minio,
 		minioConfig: minioConfig,
 		tempDirPrefix: tempDirPrefix,
+		redisInfoService: redisInfoService,
 	}
 }
 
 func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEvent) {
 	normalizedKey := utils.StripBucketName(event.Key, s.minioConfig.Files)
+	s.Convert(ctx, normalizedKey)
+}
+
+func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 	fileName := utils.GetFilename(normalizedKey)
 
-	GetLogEntry(ctx).Infof("Converting %v to the common comaptible format", normalizedKey)
+	s.redisInfoService.SetConverting(ctx, normalizedKey)
+	defer s.redisInfoService.RemoveConverting(ctx, normalizedKey)
+
+	GetLogEntry(ctx).Infof("Converting %v to the common compatible format", normalizedKey)
 
 	// create temp dir
 	fileWoExt := utils.RemoveExtension(fileName)
