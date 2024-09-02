@@ -54,7 +54,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 
 	// create preview for files if need
 	// and create _converted.webm
-	GetLogEntry(c).Infof("Checking for missing previews")
+	GetLogEntry(c).Infof("Checking for missing previews and converted")
 	var fileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
@@ -98,7 +98,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 		}
 
 	}
-	GetLogEntry(c).Infof("Checking for missing previews finished")
+	GetLogEntry(c).Infof("Checking for missing previews and converted finished")
 
 	// remove previews of removed files
 	GetLogEntry(c).Infof("Checking for excess previews")
