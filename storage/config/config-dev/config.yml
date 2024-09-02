@@ -108,6 +108,7 @@ converting:
   ffmpegPath: "ffmpeg"
   tempDir: "/tmp/video"
   presignedDuration: 30m
+  keepPreviewInterval: 1h
 
 preview:
   ffmpegPath: "ffmpeg"

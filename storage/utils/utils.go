@@ -19,6 +19,7 @@ type H map[string]interface{}
 const MessageIdNonExistent = -1
 
 const converted = "converted"
+const underscoreConverted = "_" + converted
 const ConvertedContentType = "video/webm"
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
@@ -232,13 +233,17 @@ func GetKeyForConverted(minioKey string) string {
 			firstPart := minioKey[0:idx]
 			extPart := minioKey[idx+1:]
 			extPart = strings.ToLower(extPart)
-			return firstPart + "_" + converted + "." + extPart
+			return firstPart + underscoreConverted + "." + extPart
 		} else {
 			return minioKey
 		}
 	} else {
 		return minioKey
 	}
+}
+
+func IsConverted(minioKey string) bool {
+	return strings.Contains(GetFilename(minioKey), underscoreConverted)
 }
 
 func IsImage(minioKey string) bool {

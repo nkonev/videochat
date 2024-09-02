@@ -12,6 +12,7 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
+	"time"
 )
 
 type ActualizePreviewsTask struct {
@@ -92,12 +93,19 @@ func (srv *ActualizePreviewsService) processFiles(c context.Context, filenameCha
 			continue
 		}
 		_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, originalKey, minio.StatObjectOptions{})
+		convertingKeepPreview := viper.GetDuration("converting.keepPreviewInterval")
 		if err != nil {
-			GetLogEntry(c).Infof("Will remove preview for %v", originalKey)
-			err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.FilesPreview, previewOjInfo.Key, minio.RemoveObjectOptions{})
-			if err != nil {
-				GetLogEntry(c).Errorf("Error during removing preview key %v", err)
+			GetLogEntry(c).Infof("Key %v is not found, deciding whether to remove the preview", originalKey)
+			if utils.IsConverted(originalKey) && previewOjInfo.LastModified.Add(convertingKeepPreview).After(time.Now().UTC()) {
+				GetLogEntry(c).Infof("Age of the converted preview key %v is lesser than %v, skipping deletion", originalKey, convertingKeepPreview)
 				continue
+			} else {
+				GetLogEntry(c).Infof("Will remove preview for %v", originalKey)
+				err := srv.minioClient.RemoveObject(c, srv.minioBucketsConfig.FilesPreview, previewOjInfo.Key, minio.RemoveObjectOptions{})
+				if err != nil {
+					GetLogEntry(c).Errorf("Error during removing preview key %v", err)
+					continue
+				}
 			}
 		}
 	}
