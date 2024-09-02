@@ -628,8 +628,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	showResponse := utils.ParseBooleanOr(c.QueryParam("response"), false)
-
 	bucketName := h.minioConfig.Files
 
 	// check this fileItem belongs to user
@@ -653,10 +651,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	if !showResponse {
-		return c.NoContent(http.StatusOK)
 	}
 
 	return c.NoContent(http.StatusOK)
