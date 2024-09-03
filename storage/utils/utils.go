@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"github.com/oklog/ulid/v2"
 	"github.com/spf13/viper"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -21,6 +23,9 @@ const MessageIdNonExistent = -1
 const converted = "converted"
 const underscoreConverted = "_" + converted
 const ConvertedContentType = "video/webm"
+
+const maxFilenameLength = 255 // this allows filesystem
+const MaxFilenameLength = maxFilenameLength - 32 // =223. reserve 32 symbols for things like "_converted"
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
@@ -320,4 +325,58 @@ func ContainsUrl(elems []string, elem string) bool {
 		}
 	}
 	return false
+}
+
+func nonLetterSplit(c rune) bool {
+	return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '.' && c != '-' && c != '+' && c != '_' && c != ' '
+}
+
+// output of this fun eventually goes to sanitizer in chat
+func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename bool) string {
+	words := strings.FieldsFunc(input, nonLetterSplit)
+	tmp := strings.Join(words, "")
+	trimmedFilename := strings.TrimSpace(tmp)
+
+	filenameParts := strings.Split(trimmedFilename, ".")
+	hasExt := len(filenameParts) == 2
+	newFileName := ""
+	if hasExt && shouldAddDateToTheFilename {
+		newFileName = filenameParts[0] + "_" + time.Now().Format("20060102150405") + "." + filenameParts[1]
+	} else {
+		newFileName = trimmedFilename
+	}
+
+	lenInBytes := len(newFileName)
+	if lenInBytes > MaxFilenameLength {
+		// https://github.com/minio/minio/discussions/18571
+		GetLogEntry(ctx).Infof("Filename %v has more than %v bytes (%v), so we're going to strip it", newFileName, MaxFilenameLength, lenInBytes)
+		nameAndExt := strings.Split(newFileName, ".")
+
+		name := nameAndExt[0]
+		ext := ""
+		if hasExt {
+			ext = nameAndExt[1]
+		}
+		newStrippedFileName := ""
+		for i:=1; i <= lenInBytes; i++{
+			newStrippedFileName = firstN(name, MaxFilenameLength-i)
+			if hasExt {
+				newStrippedFileName += ("." + ext)
+			}
+			if len(newStrippedFileName) <= MaxFilenameLength {
+				break
+			}
+		}
+		newFileName = newStrippedFileName
+	}
+
+	return newFileName
+}
+
+func firstN(str string, n int) string {
+	v := []rune(str)
+	if n >= len(v) {
+		return str
+	}
+	return string(v[:n])
 }

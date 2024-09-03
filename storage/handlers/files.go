@@ -21,7 +21,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 )
 
 type FilesHandler struct {
@@ -70,28 +69,6 @@ type UploadRequest struct {
 
 type UploadResponse struct {
 	Url string `json:"url"`
-}
-
-func nonLetterSplit(c rune) bool {
-	return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '.' && c != '-' && c != '+' && c != '_' && c != ' '
-}
-
-// output of this fun eventually goes to sanitizer in chat
-func cleanFilename(input string, shouldAddDateToTheFilename bool) string {
-	words := strings.FieldsFunc(input, nonLetterSplit)
-	tmp := strings.Join(words, "")
-	trimmedFilename := strings.TrimSpace(tmp)
-
-	filenameParts := strings.Split(trimmedFilename, ".")
-
-	newFileName := ""
-	if len(filenameParts) == 2 && shouldAddDateToTheFilename {
-		newFileName = filenameParts[0] + "_" + time.Now().Format("20060102150405") + "." + filenameParts[1]
-	} else {
-		newFileName = trimmedFilename
-	}
-
-	return newFileName
 }
 
 type PresignedUrl struct {
@@ -151,7 +128,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 	// end check
 
-	filteredFilename := cleanFilename(reqDto.FileName, reqDto.ShouldAddDateToTheFilename)
+	filteredFilename := utils.CleanFilename(c.Request().Context(), reqDto.FileName, reqDto.ShouldAddDateToTheFilename)
 
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
