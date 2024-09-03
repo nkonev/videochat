@@ -1,9 +1,14 @@
 <template>
     <v-overlay v-model="show" width="100%" height="100%" opacity="0.7">
         <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
-            <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
-            <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
-            <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+                <template v-if="isCorrectStatus()">
+                    <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
+                    <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
+                    <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+                </template>
+                <template v-else>
+                    <img class="image-custom-class-view" :src="statusImage"/>
+                </template>
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
         <template v-if="showArrows">
@@ -26,6 +31,8 @@ export default {
             dto: null,
             viewList: [],
             thisIdx: 0,
+            status: null,
+            statusImage: null,
         }
     },
     computed: {
@@ -42,8 +49,10 @@ export default {
     methods: {
         showModal(dto) {
             this.$data.show = true;
-            this.$data.dto = dto;
-            this.fetchMediaListView();
+            this.fetchStatus(dto.url).then(()=>{
+                this.$data.dto = dto;
+                this.fetchMediaListView();
+            })
             window.addEventListener("keydown", this.onKeyPress);
         },
         hideModal() {
@@ -52,6 +61,19 @@ export default {
             this.$data.viewList = [];
             this.$data.thisIdx = 0;
             window.removeEventListener("keydown", this.onKeyPress);
+            this.$data.status = null;
+            this.$data.statusImage = null;
+        },
+        fetchStatus(url) {
+            return axios.post(`/api/storage/public/view/status`, {
+                url: url
+            }).then((res)=>{
+                this.$data.status = res.data.status
+                this.$data.statusImage = res.data.statusImage;
+            })
+        },
+        isCorrectStatus() {
+            return this.$data.status == "ok"
         },
         fetchMediaListView() {
             axios.post(`/api/storage/public/view/list`, {
