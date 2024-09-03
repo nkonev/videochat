@@ -29,6 +29,7 @@ type FilesHandler struct {
 	restClient   *client.RestClient
 	minioConfig  *utils.MinioConfig
 	filesService *services.FilesService
+	redisInfoService *services.RedisInfoService
 }
 
 type RenameDto struct {
@@ -36,6 +37,7 @@ type RenameDto struct {
 }
 
 const NotFoundImage = "/api/storage/assets/not_found.png"
+const ConvertingImage = "/api/storage/assets/ffmpeg_converting.jpg"
 
 func NewFilesHandler(
 	minio *s3.InternalMinioClient,
@@ -43,6 +45,7 @@ func NewFilesHandler(
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
+	redisInfoService *services.RedisInfoService,
 ) *FilesHandler {
 	return &FilesHandler{
 		minio:        minio,
@@ -50,6 +53,7 @@ func NewFilesHandler(
 		restClient:   restClient,
 		minioConfig:  minioConfig,
 		filesService: filesService,
+		redisInfoService: redisInfoService,
 	}
 }
 
@@ -413,7 +417,7 @@ type ListViewRequest struct {
 	Url string `json:"url"`
 }
 
-func (h *FilesHandler) ViewHandler(c echo.Context) error {
+func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	var userPrincipalDto, _ = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 
 	reqDto := new(ListViewRequest)
@@ -520,6 +524,86 @@ func (h *FilesHandler) ViewHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+}
+
+type StatusViewRequest struct {
+	Url string `json:"url"`
+}
+
+// returns status: ok, error, not_found, converting
+func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
+	var userPrincipalDto, _ = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+
+	reqDto := new(StatusViewRequest)
+	err := c.Bind(reqDto)
+	if err != nil {
+		return err
+	}
+
+	anUrl, err := url.Parse(reqDto.Url)
+	if err != nil {
+		return err
+	}
+
+	selfUrls := strings.Split(viper.GetString("selfUrls"), ",")
+
+	if !utils.ContainsUrl(selfUrls, reqDto.Url) {
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
+	}
+
+	fileId := anUrl.Query().Get(utils.FileParam)
+
+	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
+	if err != nil {
+		return err
+	}
+
+	messageId := int64(utils.MessageIdNonExistent)
+	messageIdRaw := anUrl.Query().Get(utils.MessageIdParam)
+	if len(messageIdRaw) > 0 {
+		messageId, err = utils.ParseInt64(messageIdRaw)
+		if err != nil {
+			return err
+		}
+	}
+
+	chatId, err := utils.ParseChatId(fileId)
+	if err != nil {
+		return err
+	}
+
+	var userId *int64 = nil
+	if userPrincipalDto != nil {
+		userId = &userPrincipalDto.UserId
+	}
+	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, messageId, fileItemUuid); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	} else if !ok {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	bucketName := h.minioConfig.Files
+
+	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	if err != nil {
+		GetLogEntry(c.Request().Context()).Errorf("Unable to check existence of %v: %v", fileId, err)
+		return c.JSON(http.StatusOK, &utils.H{"status": "error"})
+	}
+
+	if exists {
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
+	} else {
+		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Unable to check converting of %v: %v", fileId, err)
+			return c.JSON(http.StatusOK, &utils.H{"status": "error"})
+		}
+		if converting {
+			return c.JSON(http.StatusOK, &utils.H{"status": "converting", "statusImage": ConvertingImage})
+		} else {
+			return c.JSON(http.StatusOK, &utils.H{"status": "not_found", "statusImage": NotFoundImage})
+		}
+	}
 }
 
 func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {

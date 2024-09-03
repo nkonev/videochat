@@ -43,11 +43,15 @@ func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEve
 
 func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 	fileName := utils.GetFilename(normalizedKey)
+	convertedKey := utils.GetKeyForConverted(normalizedKey)
 
-	s.redisInfoService.SetConverting(ctx, normalizedKey)
-	defer s.redisInfoService.RemoveConverting(ctx, normalizedKey)
+	s.redisInfoService.SetOriginalConverting(ctx, normalizedKey)
+	defer s.redisInfoService.RemoveOriginalConverting(ctx, normalizedKey)
 
-	GetLogEntry(ctx).Infof("Converting %v to the common compatible format", normalizedKey)
+	s.redisInfoService.SetConvertedConverting(ctx, convertedKey)
+	defer s.redisInfoService.RemoveConvertedConverting(ctx, convertedKey)
+
+	GetLogEntry(ctx).Infof("Converting %v to %v to the common compatible format", normalizedKey, convertedKey)
 
 	// create temp dir
 	fileWoExt := utils.RemoveExtension(fileName)
@@ -87,7 +91,6 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 	}
 
 	// copy the tag messageRecording=true in order to correct work utils.GetEventType in minio_listener in pass 2
-	convertedKey := utils.GetKeyForConverted(normalizedKey)
 	objectInfo, err := s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during stat for key %v: %v", normalizedKey, err)

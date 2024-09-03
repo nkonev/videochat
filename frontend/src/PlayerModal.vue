@@ -1,9 +1,14 @@
 <template>
     <v-overlay v-model="show" width="100%" height="100%" opacity="0.7">
         <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
-            <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
-            <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
-            <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+            <template v-if="isCorrectStatus()">
+                <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
+                <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
+                <audio class="audio-custom-class-view" v-if="dto?.canPlayAsAudio" :src="dto.url" controls/>
+            </template>
+            <template v-else>
+                <img class="image-custom-class-view" :src="statusImage"/>
+            </template>
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
         <template v-if="showArrows">
@@ -15,6 +20,7 @@
 
 <script>
 import bus, {
+    FILE_CREATED,
     PLAYER_MODAL,
 } from "./bus/bus";
 import axios from "axios";
@@ -26,6 +32,8 @@ export default {
             dto: null,
             viewList: [],
             thisIdx: 0,
+            status: null,
+            statusImage: null,
         }
     },
     computed: {
@@ -45,11 +53,13 @@ export default {
     methods: {
         showModal(dto) {
             this.$data.show = true;
-            this.$data.dto = dto;
-            if (this.$data.dto?.canSwitch) {
-                this.fetchMediaListView();
-                window.addEventListener("keydown", this.onKeyPress);
-            }
+            this.fetchStatus(dto.url).then(()=>{
+                this.$data.dto = dto;
+                if (this.$data.dto?.canSwitch) {
+                    this.fetchMediaListView();
+                    window.addEventListener("keydown", this.onKeyPress);
+                }
+            })
         },
         hideModal() {
             this.$data.show = false;
@@ -59,6 +69,19 @@ export default {
             this.$data.dto = null;
             this.$data.viewList = [];
             this.$data.thisIdx = 0;
+            this.$data.status = null;
+            this.$data.statusImage = null;
+        },
+        fetchStatus(url) {
+            return axios.post(`/api/storage/view/status`, {
+                url: url
+            }).then((res)=>{
+                this.$data.status = res.data.status
+                this.$data.statusImage = res.data.statusImage;
+            })
+        },
+        isCorrectStatus() {
+            return this.$data.status == "ok"
         },
         fetchMediaListView() {
             axios.post(`/api/storage/view/list`, {
@@ -102,18 +125,29 @@ export default {
             this.$data.dto = null;
             this.$nextTick(()=>{
                 this.$data.dto = {};
-                this.dto.url = el.url;
-                this.dto.previewUrl = el.previewUrl;
-                this.dto.canPlayAsVideo = el.canPlayAsVideo;
-                this.dto.canShowAsImage = el.canShowAsImage;
+                this.fetchStatus(el.url).then(()=>{
+                    this.dto.url = el.url;
+                    this.dto.previewUrl = el.previewUrl;
+                    this.dto.canPlayAsVideo = el.canPlayAsVideo;
+                    this.dto.canShowAsImage = el.canShowAsImage;
+                })
             })
-        }
+        },
+        onFileCreatedEvent(dto) {
+            if (this.show && this.dto?.url == dto.fileInfoDto.url) {
+                this.fetchStatus(dto.fileInfoDto.url).then(()=>{
+                    this.fetchMediaListView();
+                })
+            }
+        },
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
+        bus.on(FILE_CREATED, this.onFileCreatedEvent);
     },
     beforeUnmount() {
         bus.off(PLAYER_MODAL, this.showModal);
+        bus.off(FILE_CREATED, this.onFileCreatedEvent);
     },
     watch: {
         show(newValue) {

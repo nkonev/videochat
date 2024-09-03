@@ -16,10 +16,11 @@ func NewRedisInfoService(redisClient *redisV8.Client) *RedisInfoService {
 	}
 }
 
-const convertingPrefix = "converting:"
+const convertingOriginalPrefix = "converting:original:"
+const convertingConvertedPrefix = "converting:converted:"
 
-func (s *RedisInfoService) GetConverting(ctx context.Context, minioKey string) (bool, error) {
-	value, err := s.redisClient.Get(ctx, convertingPrefix+minioKey).Bool()
+func (s *RedisInfoService) GetOriginalConverting(ctx context.Context, minioKeyOfOriginal string) (bool, error) {
+	value, err := s.redisClient.Get(ctx, convertingOriginalPrefix+minioKeyOfOriginal).Bool()
 	if err != nil {
 		if err == redisV8.Nil {
 			return false, nil
@@ -31,11 +32,34 @@ func (s *RedisInfoService) GetConverting(ctx context.Context, minioKey string) (
 	}
 }
 
-func (s *RedisInfoService) SetConverting(ctx context.Context, minioKey string) {
+func (s *RedisInfoService) SetOriginalConverting(ctx context.Context, minioKeyOfOriginal string) {
 	maxConvertingDuration := viper.GetDuration("converting.maxDuration")
-	s.redisClient.Set(ctx, convertingPrefix+minioKey, true, maxConvertingDuration)
+	s.redisClient.Set(ctx, convertingOriginalPrefix+minioKeyOfOriginal, true, maxConvertingDuration)
 }
 
-func (s *RedisInfoService) RemoveConverting(ctx context.Context, minioKey string) {
-	s.redisClient.Del(ctx, convertingPrefix+minioKey)
+func (s *RedisInfoService) RemoveOriginalConverting(ctx context.Context, minioKeyOfOriginal string) {
+	s.redisClient.Del(ctx, convertingOriginalPrefix+minioKeyOfOriginal)
+}
+
+
+func (s *RedisInfoService) GetConvertedConverting(ctx context.Context, minioKeyOfConverted string) (bool, error) {
+	value, err := s.redisClient.Get(ctx, convertingConvertedPrefix+minioKeyOfConverted).Bool()
+	if err != nil {
+		if err == redisV8.Nil {
+			return false, nil
+		} else {
+			return false, err
+		}
+	} else {
+		return value, nil
+	}
+}
+
+func (s *RedisInfoService) SetConvertedConverting(ctx context.Context, minioKeyOfConverted string) {
+	maxConvertingDuration := viper.GetDuration("converting.maxDuration")
+	s.redisClient.Set(ctx, convertingConvertedPrefix+minioKeyOfConverted, true, maxConvertingDuration)
+}
+
+func (s *RedisInfoService) RemoveConvertedConverting(ctx context.Context, minioKeyOfConverted string) {
+	s.redisClient.Del(ctx, convertingConvertedPrefix+minioKeyOfConverted)
 }

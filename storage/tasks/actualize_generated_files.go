@@ -83,7 +83,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 				GetLogEntry(c).Errorf("Unable to convert metadata for key %v: %v", fileOjInfo.Key, err)
 				continue
 			}
-			isConverting, err := srv.redisInfoService.GetConverting(c, fileOjInfo.Key)
+			isConverting, err := srv.redisInfoService.GetOriginalConverting(c, fileOjInfo.Key)
 			if err != nil {
 				GetLogEntry(c).Errorf("Unable to isConverting for key %v from redis: %v", fileOjInfo.Key, err)
 				continue
