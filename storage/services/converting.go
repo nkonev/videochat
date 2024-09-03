@@ -105,4 +105,13 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 
 	GetLogEntry(ctx).Infof("Converted %v to %v", normalizedKey, pathOfConvertedFile)
 	// defer removes recording_123_converted.webm from the temporary directory
+
+	if viper.GetBool("converting.removeOriginal") {
+		GetLogEntry(ctx).Infof("Going to remove original from minio %v", normalizedKey)
+		err = s.minio.RemoveObject(ctx, s.minioConfig.Files, normalizedKey, minio.RemoveObjectOptions{})
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during removing original from minio %v: %v", normalizedKey, err)
+			return
+		}
+	}
 }

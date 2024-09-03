@@ -109,6 +109,7 @@ converting:
   tempDir: "/tmp/video"
   presignedDuration: 30m
   maxDuration: 1h
+  removeOriginal: true
 
 preview:
   ffmpegPath: "ffmpeg"

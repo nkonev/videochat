@@ -591,17 +591,17 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 	}
 
 	if exists {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid})
 	} else {
 		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Unable to check converting of %v: %v", fileId, err)
-			return c.JSON(http.StatusOK, &utils.H{"status": "error"})
+			return c.JSON(http.StatusOK, &utils.H{"status": "error", "fileItemUuid": fileItemUuid})
 		}
 		if converting {
-			return c.JSON(http.StatusOK, &utils.H{"status": "converting", "statusImage": ConvertingImage})
+			return c.JSON(http.StatusOK, &utils.H{"status": "converting", "statusImage": ConvertingImage, "fileItemUuid": fileItemUuid})
 		} else {
-			return c.JSON(http.StatusOK, &utils.H{"status": "not_found", "statusImage": NotFoundImage})
+			return c.JSON(http.StatusOK, &utils.H{"status": "not_found", "statusImage": NotFoundImage, "fileItemUuid": fileItemUuid})
 		}
 	}
 }

@@ -20,7 +20,7 @@
 
 <script>
 import bus, {
-    FILE_CREATED,
+    FILE_CREATED, FILE_REMOVED,
     PLAYER_MODAL,
 } from "./bus/bus";
 import axios from "axios";
@@ -34,6 +34,7 @@ export default {
             thisIdx: 0,
             status: null,
             statusImage: null,
+            fileItemUuid: null,
         }
     },
     computed: {
@@ -71,6 +72,7 @@ export default {
             this.$data.thisIdx = 0;
             this.$data.status = null;
             this.$data.statusImage = null;
+            this.$data.fileItemUuid = null;
         },
         fetchStatus(url) {
             return axios.post(`/api/storage/view/status`, {
@@ -78,6 +80,7 @@ export default {
             }).then((res)=>{
                 this.$data.status = res.data.status
                 this.$data.statusImage = res.data.statusImage;
+                this.$data.fileItemUuid = res.data.fileItemUuid;
             })
         },
         isCorrectStatus() {
@@ -140,14 +143,21 @@ export default {
                 })
             }
         },
+        onFileDeletedEvent(dto) {
+            if (this.show && this.fileItemUuid == dto.fileInfoDto.fileItemUuid) {
+                this.fetchMediaListView();
+            }
+        }
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
+        bus.on(FILE_REMOVED, this.onFileDeletedEvent);
     },
     beforeUnmount() {
         bus.off(PLAYER_MODAL, this.showModal);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
+        bus.off(FILE_REMOVED, this.onFileDeletedEvent);
     },
     watch: {
         show(newValue) {
