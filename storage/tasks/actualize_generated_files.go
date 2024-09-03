@@ -95,7 +95,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 				GetLogEntry(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
 				continue
 			}
-			if !convertedExists && utils.IsVideo(fileOjInfo.Key) && (isMessageRecording != nil && *isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
+			if !convertedExists && utils.IsVideo(fileOjInfo.Key) && utils.NullableToBoolean(isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
 				GetLogEntry(c).Infof("Create missed converted for %v", fileOjInfo.Key)
 				srv.convertingService.Convert(c, fileOjInfo.Key)
 			}

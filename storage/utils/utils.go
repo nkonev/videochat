@@ -380,3 +380,11 @@ func firstN(str string, n int) string {
 	}
 	return string(v[:n])
 }
+
+func NullableToBoolean(v *bool) bool {
+	if v == nil {
+		return false
+	} else {
+		return *v
+	}
+}
