@@ -110,14 +110,6 @@ type MultipartFinishingPart struct {
 	PartNumber int64 `json:"partNumber"`
 }
 
-func (h *FilesHandler) checkFileDoesNorExists(ctx context.Context, bucketName, aKey string) error {
-	_, err := h.minio.StatObject(ctx, bucketName, aKey, minio.StatObjectOptions{})
-	if err == nil {
-		return errors.New(fmt.Sprintf("Already exists: %v", aKey))
-	}
-	return nil
-}
-
 func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -164,9 +156,13 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
-	err = h.checkFileDoesNorExists(c.Request().Context(), bucketName, aKey)
+	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, aKey)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Infof(err.Error())
+		GetLogEntry(c.Request().Context()).Errorf(err.Error())
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "error", "message": err.Error()})
+	}
+	if exists {
+		GetLogEntry(c.Request().Context()).Infof("Conflict for: %v", aKey)
 		return c.JSON(http.StatusConflict, &utils.H{"status": "error", "message": err.Error()})
 	}
 
@@ -1176,15 +1172,14 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+
+	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		if errTyped, ok := err.(minio.ErrorResponse); ok {
-			if errTyped.Code == "NoSuchKey" {
-				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
-			}
-		}
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !exists {
+		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -1221,15 +1216,13 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		if errTyped, ok := err.(minio.ErrorResponse); ok {
-			if errTyped.Code == "NoSuchKey" {
-				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
-			}
-		}
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !exists {
+		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -1281,15 +1274,14 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+
+	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		if errTyped, ok := err.(minio.ErrorResponse); ok {
-			if errTyped.Code == "NoSuchKey" {
-				return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
-			}
-		}
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !exists {
+		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 	chatId, _, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
@@ -1337,10 +1329,13 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 
 	// check file is public
 	fileId := c.QueryParam(utils.FileParam)
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+	if !exists {
+		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 
 	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})

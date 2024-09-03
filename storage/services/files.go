@@ -376,8 +376,8 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 		query := respUrl.Query()
 		query.Set(utils.FileParam, previewMinioKey)
 
-		obj, err := h.minio.StatObject(c, h.minioConfig.FilesPreview, previewMinioKey, minio.StatObjectOptions{})
-		if err == nil {
+		exists, obj, _ := h.minio.FileExists(c, h.minioConfig.FilesPreview, previewMinioKey)
+		if exists {
 			// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
 			query.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
 		}

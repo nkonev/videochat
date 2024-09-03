@@ -119,9 +119,12 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 
 	objId := c.Param("filename")
 
-	info, e := h.minio.StatObject(context.Background(), bucketName, objId, minio.StatObjectOptions{})
-	if e != nil {
-		return c.JSON(http.StatusNotFound, &utils.H{"status": "stat fail"})
+	exists, info, err := h.minio.FileExists(c.Request().Context(), bucketName, objId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "stat fail"})
+	}
+	if !exists {
+		return c.JSON(http.StatusNotFound, &utils.H{"status": "not found"})
 	}
 
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(info.Size, 10))

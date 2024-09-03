@@ -66,8 +66,13 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 		if utils.IsVideo(fileOjInfo.Key) {
 			// preview
 			previewToCheck := utils.SetVideoPreviewExtension(fileOjInfo.Key)
-			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
+
+			previewExists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.FilesPreview, previewToCheck)
 			if err != nil {
+				GetLogEntry(c).Errorf("Unable to check existence for %v: %v", previewToCheck, err)
+				continue
+			}
+			if !previewExists {
 				GetLogEntry(c).Infof("Create missed preview %v for %v", previewToCheck, fileOjInfo.Key)
 				srv.previewService.CreatePreview(c, fileOjInfo.Key)
 			}
@@ -83,15 +88,25 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 				GetLogEntry(c).Errorf("Unable to isConverting for key %v from redis: %v", fileOjInfo.Key, err)
 				continue
 			}
-			_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, utils.GetKeyForConverted(fileOjInfo.Key), minio.StatObjectOptions{})
-			if err != nil && (isMessageRecording != nil && *isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
+
+			keyOfConverted := utils.GetKeyForConverted(fileOjInfo.Key)
+			convertedExists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.Files, keyOfConverted)
+			if err != nil {
+				GetLogEntry(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
+				continue
+			}
+			if !convertedExists && (isMessageRecording != nil && *isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
 				GetLogEntry(c).Infof("Create missed converted for %v", fileOjInfo.Key)
 				srv.convertingService.Convert(c, fileOjInfo.Key)
 			}
 		} else if utils.IsImage(fileOjInfo.Key) {
 			previewToCheck := utils.SetImagePreviewExtension(fileOjInfo.Key)
-			_, err := srv.minioClient.StatObject(c, srv.minioBucketsConfig.FilesPreview, previewToCheck, minio.StatObjectOptions{})
+			exists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.FilesPreview, previewToCheck)
 			if err != nil {
+				GetLogEntry(c).Errorf("Unable to check existence for %v: %v", previewToCheck, err)
+				continue
+			}
+			if !exists {
 				GetLogEntry(c).Infof("Create preview for missing %v", fileOjInfo.Key)
 				srv.previewService.CreatePreview(c, fileOjInfo.Key)
 			}
@@ -114,9 +129,14 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			GetLogEntry(c).Errorf("Error during getting original key %v", err)
 			continue
 		}
-		_, err = srv.minioClient.StatObject(c, srv.minioBucketsConfig.Files, originalKey, minio.StatObjectOptions{})
-		maxConvertingDuration := viper.GetDuration("converting.maxDuration")
+		exists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.Files, originalKey)
 		if err != nil {
+			GetLogEntry(c).Errorf("Unable to get exists for %v: %v", originalKey, err)
+			continue
+		}
+
+		maxConvertingDuration := viper.GetDuration("converting.maxDuration")
+		if !exists {
 			GetLogEntry(c).Infof("Key %v is not found, deciding whether to remove the preview %v", originalKey, previewOjInfo.Key)
 			if utils.IsConverted(originalKey) && previewOjInfo.LastModified.Add(maxConvertingDuration).After(time.Now().UTC()) {
 				GetLogEntry(c).Infof("Age of the converted preview %v for key %v is lesser than %v, skipping deletion", previewOjInfo.Key, originalKey, maxConvertingDuration)

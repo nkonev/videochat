@@ -2,7 +2,6 @@ package listener
 
 import (
 	"context"
-	"github.com/minio/minio-go/v7"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
@@ -68,7 +67,10 @@ func CreateMinioEventsListener(
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		var previewAlreadyExists = isPreviewAlreadyExists(ctx, minioConfig, minioClient, normalizedKey)
+		previewAlreadyExists, err := isPreviewAlreadyExists(ctx, minioConfig, minioClient, normalizedKey)
+		if err != nil {
+			return err
+		}
 		var eventForConvertingService = isEventForConvertingService(eventType, minioEvent, previewAlreadyExists, isMessageRecording)
 		if isEventForEventService(eventType) {
 			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType)
@@ -116,10 +118,11 @@ func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.Mini
 		!previewExists // prevents the indefinite converting
 }
 
-func isPreviewAlreadyExists(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) bool {
+func isPreviewAlreadyExists(ctx context.Context, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) (bool, error) {
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
-	var previewExists = false
-	_, err := minioClient.StatObject(ctx, minioConfig.FilesPreview, previewKey, minio.StatObjectOptions{})
-	previewExists = err == nil // error means there is no file
-	return previewExists
+	exists, _, err := minioClient.FileExists(ctx, minioConfig.FilesPreview, previewKey)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during checking existence for %v: %v", previewKey, err)
+	}
+	return exists, err
 }
