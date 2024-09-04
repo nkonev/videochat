@@ -9,14 +9,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
+	"nkonev.name/video/db"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
+	"nkonev.name/video/utils"
 	"time"
 )
 
 type ChatDialerService struct {
-	redisService            *services.DialRedisRepository
+	database   			    *db.DB
 	conf                    *config.ExtendedConfig
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
 	dialStatusPublisher     *producer.RabbitDialStatusPublisher
@@ -26,7 +29,7 @@ type ChatDialerService struct {
 }
 
 func NewChatDialerService(
-	scheduleService *services.DialRedisRepository,
+	database   			  *db.DB,
 	conf *config.ExtendedConfig,
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher,
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
@@ -35,7 +38,7 @@ func NewChatDialerService(
 ) *ChatDialerService {
 	trcr := otel.Tracer("scheduler/chat-dialer")
 	return &ChatDialerService{
-		redisService:            scheduleService,
+		database:                database,
 		conf:                    conf,
 		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
 		dialStatusPublisher:     dialStatusPublisher,
@@ -52,101 +55,113 @@ func (srv *ChatDialerService) doJob() {
 
 	GetLogEntry(ctx).Debugf("Invoked periodic ChatDialer")
 
-	usersOwners, err := srv.redisService.GetUsersOwesCalls(ctx)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Error %v", err)
-		return
-	}
-
-	for _, ownerId := range usersOwners {
-		srv.makeDial(ctx, ownerId)
-	}
+	srv.makeDial(ctx)
 
 	GetLogEntry(ctx).Debugf("End of ChatNotifier")
 }
 
-func (srv *ChatDialerService) makeDial(ctx context.Context, ownerId int64) {
-	userIdsToDial, err := srv.redisService.GetUserCalls(ctx, ownerId)
-	if err != nil {
-		GetLogEntry(ctx).Warnf("Error %v", err)
-		return
-	}
+func (srv *ChatDialerService) makeDial(ctx context.Context) {
+	err := db.Transact(srv.database, func(tx *db.Tx) error {
+		offset := int64(0)
+		hasMoreElements := true
+		for hasMoreElements {
+			// here we use order by owner_id
+			batchUserStates, err := tx.GetAllUserStatesOrderByOwnerAndChat(utils.DefaultSize, offset)
+			if err != nil {
+				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
+				continue
+			}
 
-	_, chatId, _, _, _, _, _, err := srv.redisService.GetUserCallState(ctx, ownerId)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", ownerId, err)
-		return
-	}
+			// prepare batch
+			// chat:owner:[UserCallState]
+			byChatAndOwner := map[int64]map[int64][]dto.UserCallState{}
+			// in order to process a case when we have different owners, chats in the same batch
+			for _, st := range batchUserStates {
+				owner := utils.OwnerIdToNoUser(st.OwnerUserId)
+				if _, ok := byChatAndOwner[st.ChatId]; !ok {
+					byChatAndOwner[st.ChatId] = map[int64][]dto.UserCallState{}
+				}
+				byChatAndOwner[st.ChatId][owner] = append(byChatAndOwner[st.ChatId][owner], st)
+			}
 
-	inviteNames, err := srv.chatClient.GetChatNameForInvite(ctx, chatId, ownerId, userIdsToDial)
-	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
-		return
-	}
-
-	for _, userId := range userIdsToDial {
-		status, _, userCallMarkedForRemoveAt, _, _, ownerAvatar, tetATet, err := srv.redisService.GetUserCallState(ctx, userId)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("An error occured during getting the status for user %v: %v", userId, err)
-			continue
-		}
-		// cleanNotNeededAnymoreDialRedisData - should be before status == services.CallStatusNotFound exit
-		srv.cleanNotNeededAnymoreDialRedisData(ctx, chatId, ownerId, userId, status, userCallMarkedForRemoveAt, userIdsToDial)
-
-		if status == services.CallStatusNotFound {
-			GetLogEntry(ctx).Warnf("Call status isn't found for user %v", userId)
-			continue
-		}
-
-		GetLogEntry(ctx).Infof("Sending userCallStatus for userId %v, from ownerId %v", userId, ownerId)
-		// send invitations to callees
-		srv.stateChangedEventService.SendInvitationsWithStatuses(ctx, chatId, ownerId, map[int64]string{userId: status}, inviteNames, ownerAvatar, tetATet)
-		// send state changes to owner (ownerId) of call
-		srv.dialStatusPublisher.Publish(ctx, chatId, map[int64]string{userId: status}, ownerId)
-	}
-
-}
-
-// chatId can be NoChat
-func (srv *ChatDialerService) cleanNotNeededAnymoreDialRedisData(
-	ctx context.Context,
-	chatId int64,
-	ownerId int64,
-	userId int64,
-	userCallState string,
-	userCallMarkedForRemoveAt int64,
-	userIdsOfDial []int64,
-) {
-	if userCallState == services.CallStatusNotFound { // shouldn't happen
-		GetLogEntry(ctx).Warnf("Going to remove excess data for user %v, chat %v", userId, chatId)
-		err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
-			return
-		}
-	} else if services.IsTemporary(userCallState) {
-		if userCallMarkedForRemoveAt != services.UserCallMarkedForRemoveAtNotSet &&
-			time.Now().Sub(time.UnixMilli(userCallMarkedForRemoveAt)) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
-
-			// case: tet-a-tet
-			// user 1 starts video and invites user 2
-			// then user 1 exits
-			// if we don't do this - we will have dangling dials_of_user:1
-			// delegate ownership to another user
-			if ownerId == userId {
-				err := srv.redisService.TransferOwnership(ctx, userIdsOfDial, ownerId, chatId)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable invoke TransferOwnership, user %v, chat %v, error %v", userId, chatId, err)
-					return
+			// process batch
+			for chat, maps := range byChatAndOwner {
+				for owner, states := range maps {
+					srv.processBatch(ctx, tx, chat, owner, states)
 				}
 			}
 
-			GetLogEntry(ctx).Infof("Removing temporary userCallStatus of user %v, chat %v", userId, chatId)
-			err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
+			hasMoreElements = len(batchUserStates) == utils.DefaultSize
+			offset += utils.DefaultSize
+		}
+		return nil
+	})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during processing: %v", err)
+	}
+}
+
+func (srv *ChatDialerService) processBatch(ctx context.Context, tx *db.Tx, chatId, ownerId int64, batchUserStates []dto.UserCallState) {
+	if len(batchUserStates) == 0 {
+		return
+	}
+
+	userIds := []int64{}
+	for _, st := range batchUserStates {
+		userIds = append(userIds, st.UserId)
+	}
+
+	inviteNames, err := srv.chatClient.GetChatNameForInvite(ctx, chatId, ownerId, userIds)
+	if err != nil {
+		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
+	}
+
+	for _, st := range batchUserStates {
+		// cleanNotNeededAnymoreDialData - should be before status == services.CallStatusNotFound exit
+		srv.cleanNotNeededAnymoreDialData(ctx, tx, chatId, st)
+
+		m := map[int64]string{st.UserId: st.Status}
+		realOwnerId := ownerId
+		if realOwnerId == db.NoUser {
+			realOwnerId = st.UserId
+		}
+		srv.stateChangedEventService.SendDialEvents(ctx, chatId, m, realOwnerId, utils.NullToEmpty(st.OwnerAvatar), st.ChatTetATet, inviteNames)
+	}
+}
+
+func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
+	ctx context.Context,
+	tx *db.Tx,
+	chatId int64,
+	state dto.UserCallState,
+) {
+	if db.IsTemporary(state.Status) { // cleanup "normally" created temporary statuses
+		if state.MarkedForRemoveAt != nil &&
+			time.Now().UTC().Sub(*state.MarkedForRemoveAt) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
+
+			GetLogEntry(ctx).Infof("Removing temporary in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
+			err := tx.Remove(dto.UserCallStateId{
+				TokenId: state.TokenId,
+				UserId:  state.UserId,
+			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, chat %v, error %v", userId, chatId, err)
+				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user tokenId %v, userId %v, chat %v, error %v", state.TokenId, state.UserId, chatId, err)
 				return
 			}
+		}
+	} else if state.Status == db.CallStatusBeingInvited { // clean "dangling" beingInvited
+		if time.Now().UTC().Sub(state.CreateDateTime) > viper.GetDuration("schedulers.chatDialerTask.removeDanglingCallStatusBeingInvitedAfter") {
+
+			GetLogEntry(ctx).Infof("Removing dangling in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
+			err := tx.Remove(dto.UserCallStateId{
+				TokenId: state.TokenId,
+				UserId:  state.UserId,
+			})
+			if err != nil {
+				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user tokenId %v, userId %v, chat %v, error %v", state.TokenId, state.UserId, chatId, err)
+				return
+			}
+
 		}
 	}
 }

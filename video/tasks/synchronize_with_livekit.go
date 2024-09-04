@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/livekit/protocol/livekit"
@@ -12,6 +11,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
+	"nkonev.name/video/db"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
@@ -21,17 +22,22 @@ import (
 var numErr = &strconv.NumError{}
 
 type SynchronizeWithLivekitService struct {
-	redisService            *services.DialRedisRepository
+	database   			    *db.DB
 	userService   			*services.UserService
 	tracer             		trace.Tracer
 	livekitRoomClient   	*lksdk.RoomServiceClient
 	restClient              *client.RestClient
 }
 
-func NewSynchronizeWithLivekitService(redisService *services.DialRedisRepository, userService *services.UserService, livekitRoomClient *lksdk.RoomServiceClient, restClient *client.RestClient) *SynchronizeWithLivekitService {
+func NewSynchronizeWithLivekitService(
+	database   			    *db.DB,
+	userService *services.UserService,
+	livekitRoomClient *lksdk.RoomServiceClient,
+	restClient *client.RestClient,
+) *SynchronizeWithLivekitService {
 	trcr := otel.Tracer("scheduler/synchronize-with-livekit")
 	return &SynchronizeWithLivekitService{
-		redisService: redisService,
+		database:     database,
 		userService:  userService,
 		tracer:       trcr,
 		livekitRoomClient: livekitRoomClient,
@@ -40,93 +46,100 @@ func NewSynchronizeWithLivekitService(redisService *services.DialRedisRepository
 }
 
 func (srv *SynchronizeWithLivekitService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ChatDialer")
+	ctx, span := srv.tracer.Start(context.Background(), "scheduler.SynchronizeWithLivekit")
 	defer span.End()
 
 	GetLogEntry(ctx).Debugf("Invoked periodic SynchronizeWithLivekit")
 
-	allUserIds, err := srv.redisService.GetAllUserIds(ctx)
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Unable to get userCallStateKeys")
-		return
-	}
-
-	srv.cleanOrphans(ctx, allUserIds)
+	srv.cleanOrphans(ctx)
 
 	srv.createParticipants(ctx)
 }
 
-func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, userIds []int64) {
+func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
+	err := db.Transact(srv.database, func(tx *db.Tx) error {
+		offset := int64(0)
+		hasMoreElements := true
+		for hasMoreElements {
+			// here we use order by owner_id
+			batchUserStates, err := tx.GetAllUserStates(utils.DefaultSize, offset)
+			if err != nil {
+				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
+				continue
+			}
+			srv.processBatch(ctx, tx, batchUserStates)
+
+			hasMoreElements = len(batchUserStates) == utils.DefaultSize
+			offset += utils.DefaultSize
+		}
+		return nil
+	})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during processing: %v", err)
+	}
+}
+
+func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *db.Tx, batchUserStates []dto.UserCallState) {
 
 	// move orphaned users in "inCall" status to "cancelling"
-	for _, userId := range userIds {
-		userCallState, chatId, _, markedForChangeStatusAttempt, ownerId, _, _, err := srv.redisService.GetUserCallState(ctx, userId)
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
-
-			if isNonRestorableError(err) {
-				GetLogEntry(ctx).Warnf("Going to remove invalid call state %v", err)
-				err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user %v, error %v", userId, err)
-					continue
-				}
-			}
-
-			continue
+	for _, st := range batchUserStates {
+		chatId := st.ChatId
+		userCallStateId := dto.UserCallStateId{
+			TokenId: st.TokenId,
+			UserId:  st.UserId,
 		}
-
-		if services.ShouldProlong(userCallState) { // consider only users, hanged in "inCall" state in redis and not presented in livekit
-			// removing
-			if markedForChangeStatusAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
-				// user is owner of call
-				GetLogEntry(ctx).Warnf("Removing owned call by user userId %v because attempts were exhausted", userId)
-				err = srv.redisService.RemoveOwn(ctx, userId)
+		// consider only users, hanged in "inCall" state in redis and not presented in livekit
+		// you need to start reading from 1.
+		if db.ShouldProlong(st.Status) {
+			// 2. removing
+			if st.MarkedForOrphanRemoveAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
+				// case 2.a user is owner of the call
+				GetLogEntry(ctx).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
+				err := tx.RemoveOwn(userCallStateId)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to remove owned call by user userId %v, chatId %v, error %v", userId, chatId, err)
+					GetLogEntry(ctx).Errorf("Unable to remove owned call by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
 
-				// user is own by somebody
-				GetLogEntry(ctx).Warnf("Removing userCallState of user %v, owned by ownerId %v because attempts were exhausted", userId, ownerId)
-				err := srv.redisService.RemoveFromDialList(ctx, userId, true, ownerId)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to remove user userId %v owned by ownerId %v, chatId %v, error %v", userId, ownerId, chatId, err)
+				// case 2.b user is owned by somebody
+				if st.OwnerUserId != nil {
+					ownerId := *st.OwnerUserId
+					GetLogEntry(ctx).Warnf("Removing userCallState of user tokenId %v, userId %v, owned by ownerId %v because attempts were exhausted", st.TokenId, st.UserId, ownerId)
+					err = tx.Remove(userCallStateId)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to remove user tokenId %v, userId %v owned by ownerId %v, chatId %v, error: %v", st.TokenId, st.UserId, ownerId, chatId, err)
+					}
 				}
 				continue // because we don't need increment an attempt
 			}
 
-			// changing attempt number
+			// 1. changing attempt number
 			videoParticipants, err := srv.userService.GetVideoParticipants(ctx, chatId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to get video participants of %v", chatId)
 				continue
 			}
-			if !utils.Contains(videoParticipants, userId) {
-				newAttempt := markedForChangeStatusAttempt + 1
-				GetLogEntry(ctx).Infof("Setting attempt %v on userCallState %v of user %v because they aren't among video room participants", newAttempt, userCallState, userId)
-				err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, newAttempt)
+			if !srv.Contains(videoParticipants, userCallStateId) {
+				newAttempt := st.MarkedForOrphanRemoveAttempt + 1
+				GetLogEntry(ctx).Infof("Setting attempt %v on userCallState %v of user tokenId %v, userId %v because they aren't among video room participants", newAttempt, st.Status, st.TokenId, st.UserId)
+				err = tx.SetMarkedForOrphanRemoveAttempt(userCallStateId, newAttempt)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt userId %v", userId)
+					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
 					continue
 				}
 			} else {
-				if markedForChangeStatusAttempt >= 1 {
-					GetLogEntry(ctx).Infof("Resetting attempt on userCallState %v of user %v because they appeared among video room participants", userCallState, userId)
+				if st.MarkedForOrphanRemoveAttempt >= 1 {
+					GetLogEntry(ctx).Infof("Resetting attempt on userCallState %v of user tokenId %v, userId %v because they appeared among video room participants", st.Status, userCallStateId.TokenId, userCallStateId.UserId)
 
-					err = srv.redisService.SetMarkedForChangeStatusAttempt(ctx, userId, services.UserCallMarkedForOrphanRemoveAttemptNotSet)
+					err = tx.SetMarkedForOrphanRemoveAttempt(userCallStateId, db.UserCallMarkedForOrphanRemoveAttemptNotSet)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt userId %v", userId)
+						GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
 						continue
 					}
 				}
 			}
 
-		} // else branch not needed, because they removed from chat_dialer task's cleanNotNeededAnymoreDialRedisData()
+		} // else branch not needed, because they removed from chat_dialer task's cleanNotNeededAnymoreDialData()
 	}
-}
-
-func isNonRestorableError(err error) bool {
-	return errors.As(err, &numErr)
 }
 
 func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context) {
@@ -151,42 +164,50 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 		}
 
 		// if no such users
-		for _, videoUserId := range videoParticipants {
-			userCallState, _, _, _, _, _, _, err := srv.redisService.GetUserCallState(ctx, videoUserId)
+		for _, videoParticipant := range videoParticipants {
+			err = db.Transact(srv.database, func(tx *db.Tx) error {
+				userState, err := tx.Get(dto.UserCallStateId{
+					TokenId: videoParticipant.TokenId,
+					UserId:  videoParticipant.UserId,
+				})
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
+					return err
+				}
+
+				// if there is no status in redis, but we have it in livekit - then create
+				if userState.Status == db.CallStatusNotFound {
+					GetLogEntry(ctx).Warnf("Populating user with tokenId %v userId %v from livekit to redis in chat %v", videoParticipant.TokenId, videoParticipant.UserId, chatId)
+
+					chatInfo, err := srv.restClient.GetBasicChatInfo(ctx, chatId, videoParticipant.UserId)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
+						return err
+					}
+
+					err = tx.AddAsEntered(videoParticipant.TokenId, videoParticipant.UserId, chatId, chatInfo.TetATet)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
+						return err
+					}
+				}
+				return nil
+			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
+				GetLogEntry(ctx).Errorf("Error: %v", err)
 				continue
-			}
-
-			// if there is no status in redis, but we have it in livekit - then create
-			if userCallState == services.CallStatusNotFound {
-				GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
-
-				chatInfo, err := srv.restClient.GetBasicChatInfo(ctx, chatId, videoUserId)
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
-					continue
-				}
-
-				aaaUsers, err := srv.restClient.GetUsers(ctx, []int64{videoUserId})
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to users %v", err)
-					continue
-				}
-				if len(aaaUsers) != 1 {
-					GetLogEntry(ctx).Errorf("len of users is %v, but we need 1", len(aaaUsers))
-					continue
-				}
-				aaaUser := aaaUsers[0]
-
-				err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, utils.NullToEmpty(aaaUser.Avatar), chatInfo.TetATet) // dummy set NoAvatar
-				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
-					continue
-				}
 			}
 		}
 	}
+}
+
+func (srv *SynchronizeWithLivekitService) Contains(participants []dto.UserCallStateId, id dto.UserCallStateId) bool {
+	for _, p := range participants {
+		if p == id {
+			return true
+		}
+	}
+	return false
 }
 
 

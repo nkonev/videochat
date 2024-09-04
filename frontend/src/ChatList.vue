@@ -610,7 +610,7 @@ export default {
             const userIds = this.tetAtetParticipants;
             const joined = userIds.join(",");
 
-            axios.put("/api/video/user/request-status", null, {
+            axios.put("/api/video/user/request-in-video-status", null, {
                 params: {
                     userId: joined
                 },

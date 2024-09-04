@@ -91,7 +91,7 @@
                                         </template>
 
                                         <template v-if="item.id != chatStore.currentUser.id">
-                                            <v-btn variant="flat" icon @click="startCalling(item)" :title="item.callingTo ? $vuetify.locale.t('$vuetify.stop_call') : $vuetify.locale.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
+                                            <v-btn variant="flat" icon @click="inviteToCall(item)" :title="item.callingTo ? $vuetify.locale.t('$vuetify.stop_call') : $vuetify.locale.t('$vuetify.call')"><v-icon :class="{'call-blink': item.callingTo}" color="success">mdi-phone</v-icon></v-btn>
                                         </template>
                                     </template>
                                 </v-list-item>
@@ -239,7 +239,7 @@
                     const userIds = this.itemsDto?.items.map(item => item.id);
                     const joined = userIds.join(",");
 
-                    axios.put("/api/video/user/request-status", null, {
+                    axios.put("/api/video/user/request-in-video-status", null, {
                         params: {
                             userId: joined
                         },
@@ -254,9 +254,18 @@
                     },
                 });
             },
-            startCalling(dto) {
+            inviteToCall(dto) {
                 const call = !dto.callingTo;
-                axios.put(`/api/video/${this.chatId}/dial/invite?userId=${dto.id}&call=${call}`).then(value => {
+                axios.put(`/api/video/${this.chatId}/dial/invite`, null, {
+                    params: {
+                        userId: dto.id,
+                        call: call,
+                        tokenId: this.chatStore.videoTokenId,
+                    }
+                }).then(resp => {
+                    // if we are't in call we receive the token in advance
+                    this.chatStore.videoTokenId = resp.data.tokenId;
+
                     // console.log("Inviting to video chat", call);
                     if (this.$route.name != videochat_name && call) {
                         const routerNewState = { name: videochat_name};

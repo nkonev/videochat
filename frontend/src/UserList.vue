@@ -631,7 +631,7 @@ export default {
           const list = this.items.map(item => item.id);
           const joined = list.join(",");
 
-          axios.put("/api/video/user/request-status", null, {
+          axios.put("/api/video/user/request-in-video-status", null, {
               params: {
                   userId: joined
               },

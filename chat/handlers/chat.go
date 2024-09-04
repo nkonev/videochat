@@ -1863,11 +1863,12 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	var behalfUserLogin string
 	if len(behalfUsers) != 1 {
-		GetLogEntry(c.Request().Context()).Errorf("Behalf user is not found")
-		return c.NoContent(http.StatusNotFound)
+		GetLogEntry(c.Request().Context()).Infof("Behalf user with id %v is not found", behalfUserId)
+	} else {
+		behalfUserLogin = behalfUsers[0].Login
 	}
-	behalfUserLogin := behalfUsers[0].Login
 
 	users, err := ch.restClient.GetUsers(c.Request().Context(), participantIds)
 	if err != nil {

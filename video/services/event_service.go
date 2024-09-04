@@ -6,6 +6,7 @@ import (
 	lksdk "github.com/livekit/server-sdk-go/v2"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
+	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
@@ -19,13 +20,33 @@ type StateChangedEventService struct {
 	notificationService *NotificationService
 	egressService       *EgressService
 	restClient          *client.RestClient
-	redisService        *DialRedisRepository
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
+	dialStatusPublisher   *producer.RabbitDialStatusPublisher
 }
 
-func NewStateChangedEventService(conf *config.ExtendedConfig, livekitRoomClient *lksdk.RoomServiceClient, userService *UserService, notificationService *NotificationService, egressService *EgressService, restClient *client.RestClient, redisService *DialRedisRepository, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher, rabbitMqInvitePublisher *producer.RabbitInvitePublisher) *StateChangedEventService {
-	return &StateChangedEventService{conf: conf, livekitRoomClient: livekitRoomClient, userService: userService, notificationService: notificationService, egressService: egressService, restClient: restClient, redisService: redisService, rabbitUserIdsPublisher: rabbitUserIdsPublisher, rabbitMqInvitePublisher: rabbitMqInvitePublisher}
+func NewStateChangedEventService(
+	conf *config.ExtendedConfig,
+	livekitRoomClient *lksdk.RoomServiceClient,
+	userService *UserService,
+	notificationService *NotificationService,
+	egressService *EgressService,
+	restClient *client.RestClient,
+	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
+	rabbitMqInvitePublisher *producer.RabbitInvitePublisher,
+	dialStatusPublisher   *producer.RabbitDialStatusPublisher,
+) *StateChangedEventService {
+	return &StateChangedEventService{
+		conf: conf,
+		livekitRoomClient: livekitRoomClient,
+		userService: userService,
+		notificationService: notificationService,
+		egressService: egressService,
+		restClient: restClient,
+		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
+		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
+		dialStatusPublisher: dialStatusPublisher,
+	}
 }
 
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx context.Context) {
@@ -71,37 +92,60 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 
 
 // sends info about "red dot"
-func (h *StateChangedEventService) NotifyAllChatsAboutUsersVideoStatus(ctx context.Context, userIdsToFilter []int64) {
-	allUserIds, err := h.redisService.GetAllUserIds(ctx)
-	if err != nil {
-		GetLogEntry(ctx).Error(err, "error during reading userIds %v", err)
-		return
-	}
-
-	var dtos []dto.VideoCallUserCallStatusChangedDto = make([]dto.VideoCallUserCallStatusChangedDto, 0)
-	for _, userId := range allUserIds {
-		if userIdsToFilter != nil {
-			if !utils.Contains(userIdsToFilter, userId) {
+func (h *StateChangedEventService) NotifyAllChatsAboutUsersInVideoStatus(ctx context.Context, tx *db.Tx, userIdsToFilter []int64) {
+	if len (userIdsToFilter) > 0 {
+		batchUserStates, err := tx.GetUserStatesFiltered(userIdsToFilter)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("error during reading user states %v", err)
+			return
+		}
+		h.processBatch(ctx, batchUserStates)
+	} else {
+		offset := int64(0)
+		hasMoreElements := true
+		for hasMoreElements {
+			batchUserStates, err := tx.GetAllUserStates(utils.DefaultSize, offset)
+			if err != nil {
+				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
 				continue
 			}
-		}
+			h.processBatch(ctx, batchUserStates)
 
-		status, err := h.redisService.GetUserCallStatus(ctx, userId)
-		if err != nil {
-			GetLogEntry(ctx).Error(err, "error during reading userStatus, userId = %v", userId, err)
+			hasMoreElements = len(batchUserStates) == utils.DefaultSize
+			offset += utils.DefaultSize
+		}
+	}
+}
+
+func (h *StateChangedEventService) processBatch(ctx context.Context, batchUserStates []dto.UserCallState) {
+	var dtos []dto.VideoCallUserCallStatusChangedDto = make([]dto.VideoCallUserCallStatusChangedDto, 0)
+
+	var byUserId = map[int64][]dto.UserCallState{}
+	for _, st := range batchUserStates {
+		byUserId[st.UserId] = append(byUserId[st.UserId], st)
+	}
+
+	for userId, userStates := range byUserId {
+		if len(userStates) == 0 {
 			continue
 		}
-		isInVideo := status == CallStatusInCall
+
+		// a situation when user has inCall and removing states simultaneously is _im_possible
+		// kinda deduplication (we are looping over the same user)
+		userState := userStates[0]
+
+		isInVideo := userState.Status == db.CallStatusInCall
 		dtos = append(dtos, dto.VideoCallUserCallStatusChangedDto{
 			UserId:    		userId,
 			IsInVideo:     	isInVideo,
 		})
-		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during notifying about user is in video, userId=%v, error=%v", userId, err)
-			continue
-		}
 	}
-	err = h.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: dtos})
+	// red dot
+	err := h.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: dtos})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("error during publishing: %v", err)
+		return
+	}
 }
 
 func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx context.Context) {
@@ -144,27 +188,27 @@ func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Conte
 	}
 
 	for anUserId, aStatus := range statuses {
+		if ownerId == anUserId {
+			continue // not to send invitations to myself
+		}
+
+		invitation := dto.VideoCallInvitation{
+			ChatId:   chatId,
+			Status:   aStatus,
+		}
+
 		// this is sending call invitations to all the ivitees
 		for _, chatInviteName := range inviteNames {
-			if ownerId == chatInviteName.UserId {
-				continue // not to send invitations to myself
-			}
-
-			if anUserId == chatInviteName.UserId {
-
-				invitation := dto.VideoCallInvitation{
-					ChatId:   chatId,
-					ChatName: chatInviteName.Name,
-					Status:   aStatus,
-				}
-
+			if anUserId == chatInviteName.UserId { // we found match between a target userId and chatInviteName for him
+				invitation.ChatName = chatInviteName.Name
 				invitation.Avatar = GetAvatar(ownerAvatar, tetATet)
-
-				err := h.rabbitMqInvitePublisher.Publish(ctx, &invitation, chatInviteName.UserId)
-				if err != nil {
-					GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
-				}
+				break
 			}
+		}
+
+		err := h.rabbitMqInvitePublisher.Publish(ctx, &invitation, anUserId)
+		if err != nil {
+			GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
 		}
 	}
 }
@@ -175,4 +219,14 @@ func GetAvatar(ownerAvatar string, tetATet bool) *string {
 	} else {
 		return nil
 	}
+}
+
+func (h *StateChangedEventService) SendDialEvents(c context.Context, chatId int64, userIdAndStatus map[int64]string, ownerId int64, ownerAvatar string, tetATet bool, inviteNames []*dto.ChatName) {
+	GetLogEntry(c).Infof("Sending dial events for %v with ownerId %v", userIdAndStatus, ownerId)
+
+	// updates for ChatParticipants (blinking green tube) and ChatView (blinking it tet-a-tet)
+	h.dialStatusPublisher.Publish(c, chatId, userIdAndStatus, ownerId)
+
+	// send the new status (= invitation) immediately to users (callees)
+	h.SendInvitationsWithStatuses(c, chatId, ownerId, userIdAndStatus, inviteNames, ownerAvatar, tetATet)
 }

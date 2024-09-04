@@ -7,6 +7,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
@@ -49,11 +50,11 @@ func (h *UserService) CountUsers(ctx context.Context, roomName string) (int64, b
 	return usersCount, hasScreenShares, nil
 }
 
-func (vh *UserService) GetVideoParticipants(ctx context.Context, chatId int64) ([]int64, error) {
+func (vh *UserService) GetVideoParticipants(ctx context.Context, chatId int64) ([]dto.UserCallStateId, error) {
 	roomName := utils.GetRoomNameFromId(chatId)
 
-	var ret = []int64{}
-	var set = make(map[int64]bool)
+	var ret = []dto.UserCallStateId{}
+	var set = make(map[dto.UserCallStateId]bool)
 
 	lpr := &livekit.ListParticipantsRequest{Room: roomName}
 	participants, err := vh.livekitRoomClient.ListParticipants(ctx, lpr)
@@ -71,7 +72,10 @@ func (vh *UserService) GetVideoParticipants(ctx context.Context, chatId int64) (
 		if metadata == nil {
 			continue
 		}
-		set[metadata.UserId] = true
+		set[dto.UserCallStateId{
+			UserId: metadata.UserId,
+			TokenId: metadata.TokenId,
+		}] = true
 	}
 
 	for key, value := range set {

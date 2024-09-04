@@ -35,3 +35,7 @@ create user notification with password 'notificationPazZw0rd';
 create database notification with owner notification;
 \connect notification;
 
+create user video with password 'videoPazZw0rd';
+create database video with owner video;
+\connect video;
+

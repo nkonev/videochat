@@ -323,13 +323,7 @@ export default {
       this.loadUser();
       this.graphQlUserStatusSubscribe();
       this.graphQlSubscribe();
-      this.$nextTick(()=>{
-          axios.put("/api/video/user/request-status", null, {
-              params: {
-                  userId: this.userId
-              },
-          });
-      })
+      this.requestInVideo();
     },
     canDrawUsers() {
       return !!this.chatStore.currentUser
@@ -403,7 +397,7 @@ export default {
     },
     requestInVideo() {
           this.$nextTick(()=>{
-              axios.put("/api/video/user/request-status", null, {
+              axios.put("/api/video/user/request-in-video-status", null, {
                   params: {
                       userId: this.userId
                   },

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -21,6 +22,7 @@ import (
 	"net/http"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
+	"nkonev.name/video/db"
 	"nkonev.name/video/handlers"
 	"nkonev.name/video/listener"
 	. "nkonev.name/video/logger"
@@ -50,7 +52,6 @@ func main() {
 			handlers.NewConfigHandler,
 			handlers.ConfigureApiStaticMiddleware,
 			handlers.ConfigureAuthMiddleware,
-			handlers.NewTokenHandler,
 			handlers.NewLivekitWebhookHandler,
 			handlers.NewInviteHandler,
 			handlers.NewRecordHandler,
@@ -65,25 +66,25 @@ func main() {
 			services.NewNotificationService,
 			services.NewUserService,
 			services.NewStateChangedEventService,
-			services.NewDialRedisRepository,
 			services.NewEgressService,
-			//services.NewChatInvitationService,
 			tasks.RedisV8,
 			tasks.NewVideoCallUsersCountNotifierService,
 			tasks.VideoCallUsersCountNotifierScheduler,
-			tasks.NewUsersVideoStatusNotifierService,
-			tasks.UsersVideoStatusNotifierScheduler,
+			tasks.NewUsersInVideoStatusNotifierService,
+			tasks.UsersInVideoStatusNotifierScheduler,
 			tasks.NewChatDialerService,
 			tasks.ChatDialerScheduler,
 			tasks.NewRecordingNotifierService,
 			tasks.RecordingNotifierScheduler,
 			tasks.NewSynchronizeWithLivekitService,
 			tasks.SynchronizeWithLivekitSheduler,
-
 			listener.CreateAaaUserSessionsKilledListener,
 			type_registry.NewTypeRegistryInstance,
+			configureMigrations,
+			db.ConfigureDb,
 		),
 		fx.Invoke(
+			runMigrations,
 			runApiEcho,
 			runScheduler,
 			listener.CreateAaaChannel,
@@ -122,7 +123,8 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
-		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", err)
+		formattedStr := eris.ToString(err, true)
+		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", formattedStr)
 		originalHandler(err, c)
 	}
 }
@@ -136,7 +138,6 @@ func configureApiEcho(
 	authMiddleware handlers.AuthMiddleware,
 	staticMiddleware handlers.ApiStaticMiddleware,
 	lc fx.Lifecycle,
-	th *handlers.TokenHandler,
 	uh *handlers.UserHandler,
 	ch *handlers.ConfigHandler,
 	lhf *handlers.LivekitWebhookHandler,
@@ -167,19 +168,18 @@ func configureApiEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/api/video/:chatId/token", th.GetTokenHandler)
 	e.GET("/api/video/:chatId/users", uh.GetVideoUsers)
 	e.GET("/api/video/config", ch.GetConfig)
 	e.POST("/internal/livekit-webhook", lhf.GetLivekitWebhookHandler())
 	e.PUT("/api/video/:chatId/kick", uh.Kick)
 	e.PUT("/api/video/:chatId/mute", uh.Mute)
 
-	e.PUT("/api/video/:id/dial/invite", ih.ProcessCallInvitation) // used by owner to add or remove from dial list
-	e.PUT("/api/video/:id/dial/enter", ih.ProcessEnterToDial)     // user enters to call somehow, either by clicking green tube or opening .../video link
-	e.PUT("/api/video/:id/dial/cancel", ih.ProcessCancelCall)     // cancelling by invitee
-	e.PUT("/api/video/:id/dial/exit", ih.ProcessLeave)            // used by any user on exit
-	e.PUT("/api/video/user/request-status", ih.SendCurrentVideoStatuses)
-	e.GET("/api/video/user/status", ih.GetMyVideoStatus)
+	e.PUT("/api/video/:id/dial/invite", ih.ProcessCreatingOrDeletingInvite) // used by owner to add or remove from dial list
+	e.PUT("/api/video/:id/dial/enter", ih.ProcessEnterToDial)               // user enters to call somehow, either by clicking green tube or opening .../video link
+	e.PUT("/api/video/:id/dial/cancel", ih.ProcessCancelInvitation)         // cancelling by invitee
+	e.PUT("/api/video/:id/dial/exit", ih.ProcessExit)                       // used by any user on exit
+	e.PUT("/api/video/user/request-in-video-status", ih.SendCurrentInVideoStatuses)
+	e.GET("/api/video/user/being-invited-status", ih.GetMyBeingInvitedStatus)
 
 	e.PUT("/api/video/:id/record/start", rh.StartRecording)
 	e.PUT("/api/video/:id/record/stop", rh.StopRecording)
@@ -234,6 +234,14 @@ func configureTracer(lc fx.Lifecycle, cfg *config.ExtendedConfig) (*sdktrace.Tra
 	return tp, nil
 }
 
+func configureMigrations() *db.MigrationsConfig {
+	return &db.MigrationsConfig{}
+}
+
+func runMigrations(db *db.DB, migrationsConfig *db.MigrationsConfig) {
+	db.Migrate(migrationsConfig)
+}
+
 // rely on viper import and it's configured by
 func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 	address := cfg.HttpServerConfig.ApiAddress
@@ -252,7 +260,7 @@ func runScheduler(
 	chatNotifierTask *tasks.VideoCallUsersCountNotifierTask,
 	chatDialerTask *tasks.ChatDialerTask,
 	videoRecordingTask *tasks.RecordingNotifierTask,
-	usersVideoStatusNotifierTask *tasks.UsersVideoStatusNotifierTask,
+	usersInVideoStatusNotifierTask *tasks.UsersInVideoStatusNotifierTask,
 	synchronizeWithLivekitTask *tasks.SynchronizeWithLivekitTask,
 ) {
 	if viper.GetBool("schedulers.videoCallUsersCountNotifierTask.enabled") {
@@ -282,12 +290,12 @@ func runScheduler(
 			}
 		}()
 	}
-	if viper.GetBool("schedulers.usersVideoStatusNotifierTask.enabled") {
+	if viper.GetBool("schedulers.usersInVideoStatusNotifierTask.enabled") {
 		go func() {
-			Logger.Infof("Starting scheduler usersVideoStatusNotifierTask")
-			err := usersVideoStatusNotifierTask.Run(context.Background())
+			Logger.Infof("Starting scheduler usersInVideoStatusNotifierTask")
+			err := usersInVideoStatusNotifierTask.Run(context.Background())
 			if err != nil {
-				Logger.Errorf("Error during working usersVideoStatusNotifierTask: %s", err)
+				Logger.Errorf("Error during working usersInVideoStatusNotifierTask: %s", err)
 			}
 		}()
 	}

@@ -297,7 +297,7 @@ export const renameFilePart = (file, newFileName) => {
 }
 
 export const isCalling = (status) => {
-  return status == "inviting"
+  return status == "beingInvited"
 }
 
 export const setLanguageToVuetify = (that, newLanguage) => {

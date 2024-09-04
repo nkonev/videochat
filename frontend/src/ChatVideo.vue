@@ -279,7 +279,7 @@ export default {
       this.inRestarting = false;
     },
 
-    async startRoom() {
+    async startRoom(token) {
       try {
         await this.setConfig();
       } catch (e) {
@@ -340,15 +340,6 @@ export default {
           this.createLocalMediaTracks(getStoredCallVideoDeviceId(), getStoredCallAudioDeviceId());
         })
       ;
-
-      let token;
-      try {
-        token = await axios.get(`/api/video/${this.chatId}/token`).then(response => response.data.token);
-        console.debug("Got video token", token);
-      } catch (e) {
-        this.setError(e, "Error during getting token");
-        return;
-      }
 
       const retryOptions = {
         delay: 200,
@@ -548,7 +539,15 @@ export default {
       this.chatStore.showDrawer = this.shouldShowChatList();
     }
 
-    await axios.put(`/api/video/${this.chatId}/dial/enter`);
+    // creates the userCallState and assigns sessionId (as part of primary key)
+    // and puts this tokenId to metadata
+    const enterResponse = await axios.put(`/api/video/${this.chatId}/dial/enter`, null, {
+        params: {
+            // in case we earlier got the token from /invite
+            tokenId: this.chatStore.videoTokenId
+        }
+    });
+    this.chatStore.videoTokenId = enterResponse.data.tokenId;
 
     if (!this.chatStore.showRecordStopButton && this.chatStore.canMakeRecord) {
       this.chatStore.showRecordStartButton = true;
@@ -563,10 +562,14 @@ export default {
 
     this.videoContainerDiv = document.getElementById("video-container");
 
-    this.startRoom();
+    this.startRoom(enterResponse.data.token);
   },
   beforeUnmount() {
-    axios.put(`/api/video/${this.chatId}/dial/exit`);
+    axios.put(`/api/video/${this.chatId}/dial/exit`, null, {
+        params: {
+            tokenId: this.chatStore.videoTokenId
+        }
+    });
     this.stopRoom().then(()=>{
       console.log("Cleaning videoContainerDiv");
       this.videoContainerDiv = null;
@@ -583,6 +586,8 @@ export default {
     this.chatStore.showRecordStartButton = false;
     this.chatStore.initializingStaringVideoRecord = false;
     this.chatStore.initializingStoppingVideoRecord = false;
+
+    this.chatStore.videoTokenId = null;
 
     this.chatStore.setCallStateReady();
 

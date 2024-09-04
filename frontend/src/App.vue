@@ -369,6 +369,7 @@ export default {
             this.chatStore.fetchNotificationsCount();
             this.chatStore.fetchHasNewMessages();
             this.graphQlSubscribe();
+            this.refreshInvitationCall();
         },
         onLoggedOut() {
             this.resetVariables();
@@ -600,7 +601,11 @@ export default {
             bus.emit(FOCUS);
         },
         refreshInvitationCall() {
-          axios.get(`/api/video/user/status`).then(({data}) => {
+          axios.get(`/api/video/user/being-invited-status`, {
+              params: {
+                  tokenId: this.chatStore.videoTokenId
+              }
+          }).then(({data}) => {
             this.onVideoCallInvited(data);
           })
         },

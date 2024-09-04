@@ -884,3 +884,17 @@ ansible-galaxy collection list
 https://unix.stackexchange.com/questions/599812/is-rsyslog-a-mandatory-requirement-in-linux-with-journald
 
 
+# Testing transfer ownership
+```sql
+insert into user_call_state (token_id, user_id, chat_id, token_taken, owner_token_id, owner_user_id, status)
+values
+('t1', 1, 100, true, null, null, 'inCall'),
+('t2', 2, 100, true, 't1', 1, 'inCall'),
+('t3', 3, 100, true, 't1', 1, 'inCall');
+
+update user_call_state set (owner_token_id, owner_user_id) = (
+	select owner_token_id, owner_user_id 
+	from user_call_state 
+	where chat_id = 100 and token_id != 't1' and user_id != 1 order by owner_user_id limit 1
+) where chat_id = 100 and token_id != 't1' and user_id != 1;
+```

@@ -65,7 +65,7 @@ func NewRabbitUserCountPublisher(connection *rabbitmq.Connection) *RabbitUserCou
 
 
 
-
+// in_video = red dot
 func (rp *RabbitUserIdsPublisher) Publish(ctx context.Context, videoCallUsersCallStatusChanged *dto.VideoCallUsersCallStatusChangedDto) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
@@ -112,7 +112,7 @@ func NewRabbitUserIdsPublisher(connection *rabbitmq.Connection) *RabbitUserIdsPu
 
 
 
-
+// sends "you are invited"
 func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto.VideoCallInvitation, toUserId int64) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
@@ -153,12 +153,12 @@ func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePubl
 	}
 }
 
-// send info about user being invited, used in ChatParticipants (green tube) and ChatView (blinking it tet-a-tet)
+// send info about user being invited, used in ChatParticipants (blinking green tube) and ChatView (blinking it tet-a-tet)
 func (rp *RabbitDialStatusPublisher) Publish(
 	ctx context.Context,
 	chatId       int64,
 	userStatuses map[int64]string,
-	ownerId int64,
+	toUserId int64,
 ) {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
@@ -175,7 +175,7 @@ func (rp *RabbitDialStatusPublisher) Publish(
 
 	event := dto.GlobalUserEvent{
 		EventType: "video_dial_status_changed",
-		UserId:    ownerId,
+		UserId:    toUserId,
 		VideoParticipantDialEvent: &dto.VideoDialChanges{
 			ChatId: chatId,
 			Dials:  dials,
@@ -260,10 +260,10 @@ func NewRabbitRecordingPublisher(connection *rabbitmq.Connection) *RabbitRecordi
 	}
 }
 
-func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interface{}) error {
+func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, notification dto.NotificationEvent) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
-	bytea, err := json.Marshal(aDto)
+	bytea, err := json.Marshal(notification)
 	if err != nil {
 		Logger.Error(err, "Failed during marshal dto")
 		return err

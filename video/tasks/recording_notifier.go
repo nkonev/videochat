@@ -19,7 +19,7 @@ type RecordingNotifierService struct {
 }
 
 func NewRecordingNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *RecordingNotifierService {
-	trcr := otel.Tracer("scheduler/new-recording-notifier")
+	trcr := otel.Tracer("scheduler/recording-notifier")
 	return &RecordingNotifierService{
 		scheduleService: scheduleService,
 		conf:            conf,

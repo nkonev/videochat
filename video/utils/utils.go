@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/livekit"
+	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"regexp"
@@ -140,8 +141,22 @@ func GetIndexOf(ids []int64, elem int64) int {
 	return -1
 }
 
+func GetIndexOfString(ids []string, elem string) int {
+	for i := 0; i < len(ids); i++ {
+		if ids[i] == elem {
+			return i
+		}
+	}
+	return -1
+}
+
+
 func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
+}
+
+func ContainsString(ids []string, elem string) bool {
+	return GetIndexOfString(ids, elem) != -1
 }
 
 func Remove(ids []int64, elem int64) []int64 {
@@ -182,11 +197,12 @@ func IsNotHumanUser(identity string) bool {
 	return split[0] == "EG"
 }
 
-func MakeMetadata(userId int64, userLogin string, avatar string) (string, error) {
+func MakeMetadata(userId int64, userLogin string, avatar string, tokenId uuid.UUID ) (string, error) {
 	md := &dto.MetadataDto{
 		UserId: userId,
 		Login:  userLogin,
 		Avatar: avatar,
+		TokenId: tokenId,
 	}
 
 	bytes, err := json.Marshal(md)
@@ -238,10 +254,32 @@ func GetOppositeUser(users []int64, me int64) *int64 {
 	return oppositeUser
 }
 
+func GetOppositeUser2(users []dto.UserCallStateId, me int64) *int64 {
+	var oppositeUser *int64
+	for _, userId := range users {
+		var deUid = userId.UserId
+		if deUid != me {
+			oppositeUser = &deUid
+			break
+		}
+	}
+	return oppositeUser
+}
+
 func NullToEmpty(input *string) string {
 	if input == nil {
 		return ""
 	} else {
 		return *input
 	}
+}
+
+func OwnerIdToNoUser(OwnerUserId *int64) int64 {
+	var ownerId int64
+	if OwnerUserId != nil {
+		ownerId = *OwnerUserId
+	} else {
+		ownerId = db.NoUser
+	}
+	return ownerId
 }

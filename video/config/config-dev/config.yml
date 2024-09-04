@@ -14,6 +14,13 @@ auth:
     - "^/api/video/public.*"
     - "^/internal/.*"
 
+postgresql:
+  # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+  url: "postgres://video:videoPazZw0rd@localhost:35432/video?sslmode=disable&application_name=video-app"
+  maxOpenConnections: 16
+  maxIdleConnections: 4
+  maxLifetime: 30s
+
 otlp:
   endpoint: "localhost:4317"
 
@@ -78,10 +85,11 @@ schedulers:
     enabled: true
     dialPeriod: 5s
     removeTemporaryUserCallStatusAfter: 20s
+    removeDanglingCallStatusBeingInvitedAfter: 5m
   videoRecordingNotifierTask:
     enabled: true
     notificationPeriod: 20s
-  usersVideoStatusNotifierTask:
+  usersInVideoStatusNotifierTask:
     enabled: true
     notificationPeriod: 7s # more or less close to aaa's user online and less than closing empty room timeout in livekit
   synchronizeWithLivekitTask:

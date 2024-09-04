@@ -27,6 +27,7 @@ services:
         - "traefik.http.routers.video-version-router.tls.certresolver=myresolver"
         - "traefik.http.routers.video-version-router.middlewares=video-stripprefix-middleware"
     environment:
+      - VIDEO_POSTGRESQL.URL=postgres://video:videoPazZw0rd@postgresql:5432/video?sslmode=disable&application_name=video-app
       - VIDEO_AAA.URL.BASE=http://aaa:8060
       - VIDEO_CHAT.URL.BASE=http://chat:1235
       - VIDEO_STORAGE.URL.BASE=http://storage:1236
