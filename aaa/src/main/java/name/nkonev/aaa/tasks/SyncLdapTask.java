@@ -140,7 +140,7 @@ public class SyncLdapTask {
                                 boolean ldapEnabled = convertToBoolean(ldapEnabledV);
                                 if (ldapEnabled != userAccount.enabled()) {
                                     LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
-                                    if (ldapEnabled) {
+                                    if (!ldapEnabled) {
                                         aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
                                     }
                                     userAccount = userAccount.withEnabled(ldapEnabled);

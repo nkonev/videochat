@@ -76,9 +76,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 var userAccount = transactionTemplate.execute(status -> {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
-                    var ctx = ldapOperations.searchForContext(lq);
-
-                    var ldapEntry = ctx.getAttributes();
+                    var ldapEntry = ldapOperations.searchForContext(lq).getAttributes();
 
                     var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
 
