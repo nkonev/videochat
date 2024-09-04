@@ -311,7 +311,7 @@ func (s *DialRedisRepository) GetUserCallState(ctx context.Context, userId int64
 	return userCallStatus, chatId, userCallMarkedForRemoveAt, markedForChangeStatusAttempt, userCallOwnerId, userCallOwnerAvatar, userCallChatTetATet, nil
 }
 
-func (s *DialRedisRepository) GetUserIds(ctx context.Context) ([]int64, error) {
+func (s *DialRedisRepository) GetAllUserIds(ctx context.Context) ([]int64, error) {
 	var ret = make([]int64, 0)
 	result, err := s.redisClient.Keys(ctx, allUserCallsStatesKey()).Result()
 	if err != nil {

@@ -45,15 +45,15 @@ func (srv *SynchronizeWithLivekitService) doJob() {
 
 	GetLogEntry(ctx).Debugf("Invoked periodic SynchronizeWithLivekit")
 
-	userIds, err := srv.redisService.GetUserIds(ctx)
+	allUserIds, err := srv.redisService.GetAllUserIds(ctx)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Unable to get userCallStateKeys")
 		return
 	}
 
-	srv.cleanOrphans(ctx, userIds)
+	srv.cleanOrphans(ctx, allUserIds)
 
-	srv.createParticipants(ctx, userIds)
+	srv.createParticipants(ctx)
 }
 
 func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context, userIds []int64) {
@@ -129,7 +129,7 @@ func isNonRestorableError(err error) bool {
 	return errors.As(err, &numErr)
 }
 
-func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context, userIds []int64) {
+func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context) {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := srv.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
@@ -160,20 +160,18 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 
 			// if there is no status in redis, but we have it in livekit - then create
 			if userCallState == services.CallStatusNotFound {
-				if !utils.Contains(userIds, videoUserId) {
-					GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
+				GetLogEntry(ctx).Warnf("Populating user %v from livekit to redis in chat %v", videoUserId, chatId)
 
-					chatInfo, err := srv.restClient.GetBasicChatInfo(ctx, chatId, videoUserId)
-					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
-						continue
-					}
+				chatInfo, err := srv.restClient.GetBasicChatInfo(ctx, chatId, videoUserId)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
+					continue
+				}
 
-					err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, services.NoAvatar, chatInfo.TetATet) // dummy set NoAvatar
-					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
-						continue
-					}
+				err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, services.NoAvatar, chatInfo.TetATet) // dummy set NoAvatar
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
+					continue
 				}
 			}
 		}
