@@ -1,15 +1,13 @@
 <template>
-  <v-card v-if="viewableUser"
-          class="mr-auto"
-          width="fit-content"
+  <v-container v-if="viewableUser" fluid
   >
-    <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container">
+    <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container" fluid>
       <v-card-title class="title px-0 pb-0">
         {{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ viewableUser.id }}
       </v-card-title>
       <v-img v-if="hasAva"
          :src="ava"
-             max-width="320"
+         max-width="320"
          class="mt-2"
       >
       </v-img>
@@ -39,11 +37,10 @@
       </v-card-subtitle>
 
       <template v-if="displayShortInfo(viewableUser)">
-          <v-divider></v-divider>
-          <span class="mx-1 my-1">{{ viewableUser.shortInfo }}</span>
+          <span class="mx-0 my-1 force-wrap">{{ viewableUser.shortInfo }}</span>
       </template>
 
-      <v-container class="ma-0 pa-0">
+      <v-container class="ma-0 pa-0 pt-1">
         <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
           <template v-slot:prepend><v-icon>mdi-message-text-outline</v-icon></template>
           <template v-slot:default>
@@ -52,7 +49,6 @@
         </v-btn>
       </v-container>
     </v-container>
-    <v-divider class="mx-4"></v-divider>
 
     <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.roles') }}</v-card-title>
     <v-card-actions class="mx-2 nominheight">
@@ -128,7 +124,7 @@
       </v-chip>
 
     </v-card-actions>
-  </v-card>
+  </v-container>
 </template>
 
 <script>
@@ -292,5 +288,9 @@ export default {
 <style lang="stylus" scoped>
 .nominheight {
     min-height unset
+}
+
+.force-wrap {
+    word-wrap: break-word;
 }
 </style>
