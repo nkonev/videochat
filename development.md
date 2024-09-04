@@ -474,6 +474,8 @@ curl -Ss -X POST 'http://localhost:8484/realms/my_realm2/protocol/openid-connect
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq 
 ```
 
+Wait for Get multiple users by Ids [#12025](https://github.com/keycloak/keycloak/issues/12025)
+
 ## How to save added users to realm-export.json ?
 from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e289273801492a
 
