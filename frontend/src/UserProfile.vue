@@ -38,10 +38,6 @@
         {{ $vuetify.locale.t('$vuetify.last_logged_in_at', getHumanReadableDate(viewableUser.lastLoginDateTime)) }}
       </v-card-subtitle>
 
-      <v-divider></v-divider>
-      <span v-if="viewableUser.email" class="text-h6">{{ viewableUser.email }}</span>
-      <span v-else class="text-h6">{{ $vuetify.locale.t('$vuetify.no_email') }}</span>
-
       <template v-if="displayShortInfo(viewableUser)">
           <v-divider></v-divider>
           <span class="mx-1 my-1">{{ viewableUser.shortInfo }}</span>
