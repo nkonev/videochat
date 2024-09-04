@@ -7,6 +7,7 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.exception.UnauthorizedException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
@@ -69,6 +70,9 @@ public class UserProfileService {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private AaaPermissionService aaaPermissionService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileService.class);
 
     private Long getExpiresAt(HttpSession session) {
@@ -90,19 +94,26 @@ public class UserProfileService {
     }
 
     @Transactional
-    public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session) {
+    public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session, HttpHeaders requestHeaders) {
         Long expiresAt = getExpiresAt(session);
         var dto = getProfile(userAccount, session);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
-        headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
-        headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
-        headers.set(X_AUTH_SESSION_ID, session.getId());
-        headers.set(X_AUTH_AVATAR, userAccount.getAvatar());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
+        responseHeaders.set(X_AUTH_USER_ID, ""+userAccount.getId());
+        responseHeaders.set(X_AUTH_EXPIRESIN, ""+expiresAt);
+        responseHeaders.set(X_AUTH_SESSION_ID, session.getId());
+        responseHeaders.set(X_AUTH_AVATAR, userAccount.getAvatar());
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
-            headers.add(X_AUTH_ROLE, s);
+            responseHeaders.add(X_AUTH_ROLE, s);
         });
-        return headers;
+        String path = requestHeaders.getFirst("x-forwarded-uri"); // nullable
+        if (aaaPermissionService.isJaegerPath(path)) {
+            var roles = convertRoles2Enum(userAccount.getRoles());
+            if(!aaaPermissionService.canAccessToJaeger(roles, path)) {
+                throw new UnauthorizedException("user with id %s and roles %s cannot access this path".formatted(userAccount.getId(), userAccount.roles()));
+            }
+        }
+        return responseHeaders;
     }
 
 

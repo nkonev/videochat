@@ -31,7 +31,7 @@ import {
     wrong_user,
     wrong_user_name,
     wrong_change_email_confirmation_token,
-    wrong_change_email_confirmation_token_name,
+    wrong_change_email_confirmation_token_name, admins_corner_name, admins_corner,
 } from "@/router/routes";
 import vuetify from "@/plugins/vuetify";
 import bus, {CLOSE_SIMPLE_MODAL, OPEN_SIMPLE_MODAL} from "@/bus/bus";
@@ -112,6 +112,11 @@ const routes = [
         name: wrong_change_email_confirmation_token_name,
         path: wrong_change_email_confirmation_token,
         component: () => import('@/UserChangeEmailWrongConfirmationToken.vue'),
+    },
+    {
+        name: admins_corner_name,
+        path: admins_corner,
+        component: () => import('@/AdminsCorner.vue'),
     },
 ]
 

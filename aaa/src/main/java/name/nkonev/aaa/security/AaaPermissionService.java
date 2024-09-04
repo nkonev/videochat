@@ -1,6 +1,8 @@
 package name.nkonev.aaa.security;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.ConfirmDTO;
+import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.LockDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -8,6 +10,7 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import static name.nkonev.aaa.Constants.DELETED_ID;
@@ -23,6 +26,9 @@ public class AaaPermissionService {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     public boolean hasSessionManagementPermission(PrincipalToCheck userAccount) {
         if (userAccount==null){
@@ -128,5 +134,17 @@ public class AaaPermissionService {
             return false;
         }
         return currentUser.isAdmin();
+    }
+
+    public static boolean canAccessToAdminsCorner(Collection<UserRole> roles) {
+        return roles.contains(UserRole.ROLE_ADMIN);
+    }
+
+    public boolean isJaegerPath(String path) {
+        return path!= null && path.startsWith(aaaProperties.adminsCorner().jaeger());
+    }
+
+    public boolean canAccessToJaeger(Collection<UserRole> roles, String path) {
+        return roles.contains(UserRole.ROLE_ADMIN) && path!= null && path.startsWith(aaaProperties.adminsCorner().jaeger());
     }
 }

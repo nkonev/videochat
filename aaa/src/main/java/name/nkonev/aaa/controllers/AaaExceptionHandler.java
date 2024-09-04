@@ -121,4 +121,11 @@ public class AaaExceptionHandler {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "internal error");
         }
     }
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @org.springframework.web.bind.annotation.ExceptionHandler(UnauthorizedException.class)
+    public AaaError unauthorized(UnauthorizedException e)  {
+        return new AaaError(HttpStatus.UNAUTHORIZED.value(), "unauthorized", e.getMessage(), new Date().toString());
+    }
 }

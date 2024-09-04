@@ -41,6 +41,10 @@ http:
       loadBalancer:
         servers:
           - url: http://minio:9000
+    jaeger-service:
+      loadBalancer:
+        servers:
+          - url: http://jaeger:16686
 
   routers:
     frontend-router:
@@ -139,6 +143,12 @@ http:
         - "minio-strip-prefix-middleware"
         - "retry-middleware"
         - "minio-fix-host-middleware"
+    jaeger-router:
+      rule: "PathPrefix(`/jaeger`) || PathPrefix(`/static`) || PathPrefix(`/api/services`)"
+      service: jaeger-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
 
   middlewares:
     livekit-strip-prefix-middleware:

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
+import static name.nkonev.aaa.security.AaaPermissionService.canAccessToAdminsCorner;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 @Component
@@ -89,6 +90,8 @@ public class UserAccountConverter {
 
     public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastLoginDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
+        var roles = convertRoles2Enum(userAccount.getRoles());
+        var canShowAdminsCorner = canAccessToAdminsCorner(roles);
         return new name.nkonev.aaa.dto.UserSelfProfileDTO(
                 userAccount.getId(),
                 userAccount.getUsername(),
@@ -99,13 +102,14 @@ public class UserAccountConverter {
                 userAccount.awaitingForConfirmEmailChange(),
                 lastLoginDateTime,
                 userAccount.getOauth2Identifiers(),
-                convertRoles2Enum(userAccount.getRoles()),
+                roles,
                 expiresAt,
-                userAccount.getLoginColor()
+                userAccount.getLoginColor(),
+                canShowAdminsCorner
         );
     }
 
-    private static Collection<UserRole> convertRoles2Enum(Collection<GrantedAuthority> roles) {
+    public static Collection<UserRole> convertRoles2Enum(Collection<GrantedAuthority> roles) {
         if (roles == null) {
             return null;
         } else {
