@@ -132,6 +132,19 @@ public class SyncLdapTask {
                                 }
                             }
 
+                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().enabled())) {
+                                var ldapEnabledV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().enabled()).get().toString());
+                                boolean ldapEnabled = convertToBoolean(ldapEnabledV);
+                                if (ldapEnabled != userAccount.enabled()) {
+                                    LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
+                                    if (ldapEnabled) {
+                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                    }
+                                    userAccount = userAccount.withEnabled(ldapEnabled);
+                                    shouldSave = true;
+                                }
+                            }
+
                             if (shouldSave) {
                                 LOGGER.info("Saving userId={}, ldapId={}", userAccount.id(), ldapUserId);
                                 userAccountRepository.save(userAccount);
@@ -149,16 +162,16 @@ public class SyncLdapTask {
         LOGGER.debug("Sync ldap task finish");
     }
 
-    private boolean convertToBoolean(String ldapLocked) {
-        if (ldapLocked == null) {
+    private boolean convertToBoolean(String value) {
+        if (value == null) {
             return false;
         }
-        ldapLocked = ldapLocked.trim();
-        if (!StringUtils.hasLength(ldapLocked)) {
+        value = value.trim();
+        if (!StringUtils.hasLength(value)) {
             return false;
         }
-        ldapLocked = ldapLocked.toLowerCase();
-        return ldapLocked.equals("true") || ldapLocked.equals("yes") || ldapLocked.equals("1");
+        value = value.toLowerCase();
+        return value.equals("true") || value.equals("yes") || value.equals("1");
     }
 
     private Set<String> convertToStrings(NamingEnumeration rawRoles) {

@@ -5,6 +5,7 @@ public record LdapAttributes(
     String role,
     String email,
     String locked,
+    String enabled,
     String username
 ) {
 }
