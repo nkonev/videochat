@@ -17,6 +17,7 @@ public record EditUserDTO (
 
     String avatarBig,
 
+    Boolean removeShortInfo, // it handles 3 values: true, false, null
     String shortInfo,
     String loginColor,
     Boolean removeLoginColor
@@ -30,6 +31,7 @@ public record EditUserDTO (
                 null,
                 email,
                 avatarBig,
+                null,
                 shortInfo,
                 null,
                 null
@@ -44,6 +46,7 @@ public record EditUserDTO (
                 removeAvatar,
                 email,
                 avatarBig,
+                removeShortInfo,
                 shortInfo,
                 loginColor,
                 removeLoginColor
@@ -58,6 +61,7 @@ public record EditUserDTO (
                 removeAvatar,
                 email,
                 avatarBig,
+                removeShortInfo,
                 shortInfo,
                 loginColor,
                 removeLoginColor
@@ -72,6 +76,7 @@ public record EditUserDTO (
                 removeAvatar,
                 newEmail,
                 avatarBig,
+                removeShortInfo,
                 shortInfo,
                 loginColor,
                 removeLoginColor
@@ -86,6 +91,7 @@ public record EditUserDTO (
             removeAvatar,
             email,
             avatarBig,
+            removeShortInfo,
             shortInfo,
             loginColor,
             removeLoginColor
@@ -100,6 +106,7 @@ public record EditUserDTO (
             removeAvatar,
             email,
             newAvatar,
+            removeShortInfo,
             shortInfo,
             loginColor,
             removeLoginColor
@@ -114,6 +121,7 @@ public record EditUserDTO (
             removeAvatar,
             email,
             avatarBig,
+            removeShortInfo,
             newShortInfo,
             loginColor,
             removeLoginColor
@@ -128,6 +136,7 @@ public record EditUserDTO (
             removeAvatar,
             email,
             avatarBig,
+            removeShortInfo,
             shortInfo,
             newLoginColor,
             removeLoginColor

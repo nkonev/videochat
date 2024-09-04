@@ -459,7 +459,9 @@ public class UserAccountConverter {
                 emailAction = UpdateUserAccountEntityNotEmptyResponse.Action.SHOULD_REMOVE_NEW_EMAIL;
             }
         }
-        if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
+        if (Boolean.TRUE.equals(userAccountDTO.removeShortInfo())){
+            userAccount = userAccount.withShortInfo(null);
+        } else if (StringUtils.hasLength(userAccountDTO.shortInfo())) {
             userAccount = userAccount.withShortInfo(userAccountDTO.shortInfo());
         }
         if (Boolean.TRUE.equals(userAccountDTO.removeLoginColor())) {
@@ -488,6 +490,7 @@ public class UserAccountConverter {
                 null,
                 userAccount.email(),
                 userAccount.avatarBig(),
+                null,
                 userAccount.shortInfo(),
                 userAccount.loginColor(),
                 null

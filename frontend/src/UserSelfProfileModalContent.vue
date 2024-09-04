@@ -412,7 +412,8 @@ export default {
         },
         sendShortInfo() {
             this.loading = true;
-            axios.patch('/api/aaa/profile', {shortInfo: this.chatStore.currentUser.shortInfo})
+            const removeShortInfo = this.chatStore.currentUser.shortInfo == null || this.chatStore.currentUser.shortInfo == "";
+            axios.patch('/api/aaa/profile', {shortInfo: this.chatStore.currentUser.shortInfo, removeShortInfo})
                 .then((response) => {
                     this.chatStore.currentUser = response.data;
                     this.showShortInfoInput = false;
