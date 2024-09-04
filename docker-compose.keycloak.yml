@@ -17,8 +17,11 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin_password
     ports:
       - "8484:8080"
+      - "9484:9000"
     # https://www.keycloak.org/server/importExport
     command: [
       "start-dev",
-      "--import-realm"
+      "--import-realm",
+      # https://www.keycloak.org/server/health
+      "--health-enabled=true"
     ]

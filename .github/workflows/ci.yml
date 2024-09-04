@@ -35,7 +35,7 @@ jobs:
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
           docker compose -f docker-compose.keycloak.yml up -d keycloak
-          sleep 15 && ./scripts/wait-for-it.sh -t 30 127.0.0.1:8484 -- echo 'keycloak is up'
+          ./scripts/wait-for-keycloak-http.sh 'localhost:9484' 60
       - name: Build and test with Maven
         if: env.SHOULD_RUN == 'true'
         run: |
