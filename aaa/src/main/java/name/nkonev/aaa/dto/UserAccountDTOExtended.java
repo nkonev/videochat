@@ -40,10 +40,11 @@ public record UserAccountDTOExtended (
         @JsonProperty("canConfirm") boolean canConfirm,
         @JsonProperty("awaitingForConfirmEmailChange") boolean awaitingForConfirmEmailChange,
         @JsonProperty("loginColor") String loginColor,
-        @JsonProperty("canRemoveSessions") boolean canRemoveSessions
+        @JsonProperty("canRemoveSessions") boolean canRemoveSessions,
+        @JsonProperty("ldap") boolean ldap
     ) {
         this(
-            new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor),
+            new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor, ldap),
             managementData,
             canDelete,
             canLock,

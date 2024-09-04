@@ -316,6 +316,7 @@ type ComplexityRoot struct {
 		AvatarBig         func(childComplexity int) int
 		ID                func(childComplexity int) int
 		LastLoginDateTime func(childComplexity int) int
+		Ldap              func(childComplexity int) int
 		Login             func(childComplexity int) int
 		LoginColor        func(childComplexity int) int
 		Oauth2Identifiers func(childComplexity int) int
@@ -338,6 +339,7 @@ type ComplexityRoot struct {
 		CanRemoveSessions func(childComplexity int) int
 		ID                func(childComplexity int) int
 		LastLoginDateTime func(childComplexity int) int
+		Ldap              func(childComplexity int) int
 		Login             func(childComplexity int) int
 		LoginColor        func(childComplexity int) int
 		Oauth2Identifiers func(childComplexity int) int
@@ -1715,6 +1717,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountDto.LastLoginDateTime(childComplexity), true
 
+	case "UserAccountDto.ldap":
+		if e.complexity.UserAccountDto.Ldap == nil {
+			break
+		}
+
+		return e.complexity.UserAccountDto.Ldap(childComplexity), true
+
 	case "UserAccountDto.login":
 		if e.complexity.UserAccountDto.Login == nil {
 			break
@@ -1826,6 +1835,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAccountExtendedDto.LastLoginDateTime(childComplexity), true
+
+	case "UserAccountExtendedDto.ldap":
+		if e.complexity.UserAccountExtendedDto.Ldap == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.Ldap(childComplexity), true
 
 	case "UserAccountExtendedDto.login":
 		if e.complexity.UserAccountExtendedDto.Login == nil {
@@ -10898,6 +10914,50 @@ func (ec *executionContext) fieldContext_UserAccountDto_loginColor(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _UserAccountDto_ldap(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_ldap(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ldap, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountDto_ldap(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserAccountEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserAccountEvent_eventType(ctx, field)
 	if err != nil {
@@ -11588,6 +11648,50 @@ func (ec *executionContext) _UserAccountExtendedDto_canRemoveSessions(ctx contex
 }
 
 func (ec *executionContext) fieldContext_UserAccountExtendedDto_canRemoveSessions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_ldap(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_ldap(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ldap, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_ldap(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserAccountExtendedDto",
 		Field:      field,
@@ -16207,6 +16311,11 @@ func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._UserAccountDto_oauth2Identifiers(ctx, field, obj)
 		case "loginColor":
 			out.Values[i] = ec._UserAccountDto_loginColor(ctx, field, obj)
+		case "ldap":
+			out.Values[i] = ec._UserAccountDto_ldap(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16328,6 +16437,11 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			out.Values[i] = ec._UserAccountExtendedDto_loginColor(ctx, field, obj)
 		case "canRemoveSessions":
 			out.Values[i] = ec._UserAccountExtendedDto_canRemoveSessions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ldap":
+			out.Values[i] = ec._UserAccountExtendedDto_ldap(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

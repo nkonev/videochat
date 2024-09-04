@@ -83,7 +83,8 @@ public class UserAccountConverter {
                 awaitingForConfirmEmailChange,
                 userAccount.lastLoginDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
-                userAccount.loginColor()
+                userAccount.loginColor(),
+                userAccount.ldapId()
         );
     }
 
@@ -101,7 +102,8 @@ public class UserAccountConverter {
                 userAccount.getOauth2Identifiers(),
                 convertRoles2Enum(userAccount.getRoles()),
                 expiresAt,
-                userAccount.getLoginColor()
+                userAccount.getLoginColor(),
+                userAccount.ldapId() != null
         );
     }
 
@@ -133,7 +135,8 @@ public class UserAccountConverter {
                 userAccount.shortInfo(),
                 userAccount.lastLoginDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
-                userAccount.loginColor()
+                userAccount.loginColor(),
+                userAccount.ldapId() != null
         );
     }
 
@@ -161,7 +164,8 @@ public class UserAccountConverter {
                 aaaSecurityService.canConfirm(currentUser, userAccount),
                 awaitingForConfirmEmailChange,
                 userAccount.loginColor(),
-                aaaSecurityService.canRemoveSessions(currentUser, userAccount.id())
+                aaaSecurityService.canRemoveSessions(currentUser, userAccount.id()),
+                userAccount.ldapId() != null
         );
     }
 

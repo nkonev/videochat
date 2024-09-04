@@ -276,6 +276,7 @@ type UserAccountDto struct {
 	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
 	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
 	LoginColor        *string            `json:"loginColor"`
+	Ldap              bool               `json:"ldap"`
 }
 
 func (UserAccountDto) IsUserAccountEventDto() {}
@@ -300,6 +301,7 @@ type UserAccountExtendedDto struct {
 	CanConfirm        bool               `json:"canConfirm"`
 	LoginColor        *string            `json:"loginColor"`
 	CanRemoveSessions bool               `json:"canRemoveSessions"`
+	Ldap              bool               `json:"ldap"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

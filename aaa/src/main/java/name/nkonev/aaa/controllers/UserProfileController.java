@@ -93,7 +93,7 @@ public class UserProfileController {
 
     @ResponseBody
     @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.USER_ID)
-    public Record getUser(
+    public UserAccountDTOExtended getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {

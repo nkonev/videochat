@@ -31,7 +31,8 @@ public record UserSelfProfileDTO(
             OAuth2IdentifiersDTO oauth2Identifiers,
             Collection<UserRole> roles,
             Long expiresAt,
-            String loginColor
+            String loginColor,
+            boolean ldap
     ) {
         this(new UserAccountDTO(
                 id,
@@ -41,7 +42,8 @@ public record UserSelfProfileDTO(
                 shortInfo,
                 lastLoginDateTime,
                 oauth2Identifiers,
-                loginColor
+                loginColor,
+                ldap
         ), email, awaitingForConfirmEmailChange, roles, expiresAt);
     }
 

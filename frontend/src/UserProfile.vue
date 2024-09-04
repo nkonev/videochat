@@ -46,8 +46,39 @@
         </v-btn>
       </v-container>
     </v-container>
-
     <v-divider class="mx-4"></v-divider>
+
+    <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.roles') }}</v-card-title>
+    <v-card-actions class="mx-2 nominheight">
+        <v-chip v-for="(role, index) in viewableUser?.additionalData?.roles"
+          density="comfortable"
+          text-color="white"
+        >
+          <template v-slot:default>
+              <span>
+                {{role}}
+              </span>
+          </template>
+        </v-chip>
+    </v-card-actions>
+
+    <v-card-title class="title pb-0 pt-1" v-if="viewableUser.ldap">LDAP</v-card-title>
+    <v-chip
+          density="comfortable"
+          v-if="viewableUser.ldap"
+          class="mx-4 c-btn-database"
+          text-color="white"
+    >
+          <template v-slot:prepend>
+              <font-awesome-icon :icon="{ prefix: 'fas', iconName: 'database'}"></font-awesome-icon>
+          </template>
+          <template v-slot:default>
+              <span class="ml-1">
+                Ldap
+              </span>
+          </template>
+    </v-chip>
+
     <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.bound_oauth2_providers') }}</v-card-title>
     <v-card-actions class="mx-2" v-if="shouldShowBound()">
       <v-chip
@@ -249,4 +280,9 @@ export default {
 
 <style lang="stylus">
 @import "oAuth2.styl"
+</style>
+<style lang="stylus" scoped>
+.nominheight {
+    min-height unset
+}
 </style>

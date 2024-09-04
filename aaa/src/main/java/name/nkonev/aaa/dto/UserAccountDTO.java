@@ -28,9 +28,10 @@ public record UserAccountDTO (
     LocalDateTime lastLoginDateTime,
 
     OAuth2IdentifiersDTO oauth2Identifiers,
-    String loginColor
+    String loginColor,
+    boolean ldap
 ) {
-    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, String shortInfo, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers, String loginColor) {
+    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, String shortInfo, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers, String loginColor, boolean ldap) {
         this.id = id;
         this.login = login;
         this.avatar = avatar;
@@ -39,6 +40,7 @@ public record UserAccountDTO (
         this.lastLoginDateTime = lastLoginDateTime;
         this.oauth2Identifiers = oauth2Identifiers;
         this.loginColor = loginColor;
+        this.ldap = ldap;
     }
 
     @JsonIgnore // to use in Freemarker template header.ftlh

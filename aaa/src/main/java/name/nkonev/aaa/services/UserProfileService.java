@@ -174,16 +174,12 @@ public class UserProfileService {
     }
 
     @Transactional
-    public Record getUser(
+    public UserAccountDTOExtended getUser(
             Long userId,
             UserAccountDetailsDTO userAccountPrincipal
     ) {
         final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-        if (userAccountPrincipal != null && userAccountEntity.id().equals(userAccountPrincipal.getId())) {
-            return UserAccountConverter.getUserSelfProfile(userAccountPrincipal, userAccountEntity.lastLoginDateTime(), null);
-        } else {
-            return convertToUserAccountDTO(userAccountEntity);
-        }
+        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountPrincipal, userRoleService), userAccountEntity);
     }
 
     @Transactional

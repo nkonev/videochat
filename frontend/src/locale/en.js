@@ -246,6 +246,7 @@ export default {
     delete_user_title: "Delete user #{0}",
     delete_user_text: "Are you sure to delete user '{0}' ?",
     change_roles: "Change roles",
+    roles: "Roles",
     confirm_email_to_change_part_1: "New email is waiting for confirmation",
     confirm_email_to_change_part_2: "If need",
     confirm_email_to_change_btn: "resend",

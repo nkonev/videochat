@@ -36,7 +36,8 @@ public record UserAccountDetailsDTO (
 
     Collection<GrantedAuthority> roles,
     String email,
-    boolean awaitingForConfirmEmailChange
+    boolean awaitingForConfirmEmailChange,
+    String ldapId
 ) implements UserDetails, OAuth2User, OidcUser {
 
     public UserAccountDetailsDTO(
@@ -55,13 +56,14 @@ public record UserAccountDetailsDTO (
             boolean awaitingForConfirmEmailChange,
             LocalDateTime lastLoginDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers,
-            String loginColor
+            String loginColor,
+            String ldapId
     ) {
         this(
                 new UserAccountDTO(
-                    id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor
+                    id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor, ldapId != null
                 ),
-                new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange
+                new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange, ldapId
         );
     }
 
@@ -160,7 +162,7 @@ public record UserAccountDetailsDTO (
     public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
         return new UserAccountDetailsDTO(
                 new UserAccountDTO(
-                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers, userAccountDTO.loginColor()
+                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers, userAccountDTO.loginColor(), ldapId != null
                 ),
                 oauth2Attributes,
                 idToken,
@@ -172,7 +174,8 @@ public record UserAccountDetailsDTO (
                 confirmed,
                 roles,
                 email,
-                awaitingForConfirmEmailChange
+                awaitingForConfirmEmailChange,
+                ldapId
         );
     }
 }

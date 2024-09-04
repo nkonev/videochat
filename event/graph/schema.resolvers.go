@@ -310,7 +310,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserAccountEventGroup:
+		case dto.UserAccountEventGroup: // changed
 			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
 			if authResult.UserId == typedEvent.UserId {
 				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForMyself)
@@ -495,6 +495,7 @@ func convertUserAccountEvent(eventType string, aDto *dto.UserAccount) *model.Use
 			LastLoginDateTime: aDto.LastLoginDateTime,
 			Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
 			LoginColor:        aDto.LoginColor,
+			Ldap:              aDto.Ldap,
 		}
 		return &ret
 	}
@@ -521,6 +522,7 @@ func convertUserAccountExtended(aDto *dto.UserAccountExtended) *model.UserAccoun
 		CanConfirm:        aDto.CanConfirm,
 		LoginColor:        aDto.LoginColor,
 		CanRemoveSessions: aDto.CanRemoveSessions,
+		Ldap:              aDto.Ldap,
 	}
 	if aDto.AdditionalData != nil {
 		userAccountEvent.AdditionalData = &model.DataDto{

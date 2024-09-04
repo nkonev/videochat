@@ -307,6 +307,7 @@ type UserAccountDto {
     lastLoginDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
     loginColor: String
+    ldap: Boolean!
 }
 
 type UserDeletedDto {
@@ -336,6 +337,7 @@ type UserAccountExtendedDto {
     canConfirm: Boolean!
     loginColor:  String
     canRemoveSessions: Boolean!
+    ldap: Boolean!
 }
 
 union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto | UserDeletedDto

@@ -35,7 +35,7 @@
                       <v-chip
                         density="comfortable"
                         v-if="item.oauth2Identifiers.vkontakteId"
-                        class="mr-1 c-btn-vk cursor-pointer"
+                        class="mr-1 c-btn-vk"
                         text-color="white"
                       >
                         <template v-slot:prepend>
@@ -50,7 +50,7 @@
                       <v-chip
                         density="comfortable"
                         v-if="item.oauth2Identifiers.facebookId"
-                        class="mr-1 c-btn-fb cursor-pointer"
+                        class="mr-1 c-btn-fb"
                         text-color="white"
                       >
                         <template v-slot:prepend>
@@ -65,7 +65,7 @@
                       <v-chip
                         density="comfortable"
                         v-if="item.oauth2Identifiers.googleId"
-                        class="mr-1 c-btn-google cursor-pointer"
+                        class="mr-1 c-btn-google"
                         text-color="white"
                       >
                         <template v-slot:prepend>
@@ -80,7 +80,7 @@
                       <v-chip
                         density="comfortable"
                         v-if="item.oauth2Identifiers.keycloakId"
-                        class="mr-1 c-btn-keycloak cursor-pointer"
+                        class="mr-1 c-btn-keycloak"
                         text-color="white"
                       >
                         <template v-slot:prepend>
@@ -92,11 +92,26 @@
                           </span>
                         </template>
                       </v-chip>
+                      <v-chip
+                        density="comfortable"
+                        v-if="item.ldap"
+                        class="mr-1 c-btn-database"
+                        text-color="white"
+                      >
+                        <template v-slot:prepend>
+                            <font-awesome-icon :icon="{ prefix: 'fas', iconName: 'database'}"></font-awesome-icon>
+                        </template>
+                        <template v-slot:default>
+                          <span class="ml-1">
+                            Ldap
+                          </span>
+                        </template>
+                      </v-chip>
 
                       <template v-if="item.additionalData">
                       <v-chip v-for="(role, index) in item.additionalData.roles"
                         density="comfortable"
-                        class="mr-1 cursor-pointer"
+                        class="mr-1"
                         text-color="white"
                       >
                         <template v-slot:default>
@@ -468,6 +483,7 @@ export default {
                         canConfirm
                         loginColor
                         canRemoveSessions
+                        ldap
                       }
                       ... on UserAccountDto {
                         id
@@ -483,6 +499,7 @@ export default {
                           keycloakId
                         }
                         loginColor
+                        ldap
                       }
                       ... on UserDeletedDto {
                         id
@@ -724,9 +741,5 @@ export default {
 <style lang="stylus" scoped>
 @import "itemAvatar.styl"
 @import "oAuth2.styl"
-
-.cursor-pointer {
-  cursor pointer
-}
 
 </style>

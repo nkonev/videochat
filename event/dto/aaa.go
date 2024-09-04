@@ -21,6 +21,7 @@ type UserAccount struct {
 	LastLoginDateTime *time.Time `json:"lastLoginDateTime"`
 	Oauth2Identifiers *Oauth2Identifiers `json:"oauth2Identifiers"`
 	LoginColor    *string `json:"loginColor"`
+	Ldap bool `json:"ldap"`
 }
 
 type DataDTO struct {
