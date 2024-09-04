@@ -5,7 +5,8 @@
   >
     <v-container class="d-flex justify-space-around flex-column py-0 user-self-settings-container">
       <v-card-title class="title px-0 pb-0">
-        {{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ viewableUser.id }}      </v-card-title>
+        {{ $vuetify.locale.t('$vuetify.user_profile') }} #{{ viewableUser.id }}
+      </v-card-title>
       <v-img v-if="hasAva"
          :src="ava"
              max-width="320"
@@ -32,10 +33,19 @@
           </span>
         </span>
       </span>
+
+      <v-card-subtitle class="title px-0 pb-0" v-if="viewableUser.lastLoginDateTime">
+        {{ $vuetify.locale.t('$vuetify.last_logged_in_at', getHumanReadableDate(viewableUser.lastLoginDateTime)) }}
+      </v-card-subtitle>
+
       <v-divider></v-divider>
       <span v-if="viewableUser.email" class="text-h6">{{ viewableUser.email }}</span>
-      <v-divider></v-divider>
-      <span v-if="displayShortInfo(viewableUser)" class="my-1">{{ viewableUser.shortInfo }}</span>
+      <span v-else class="text-h6">{{ $vuetify.locale.t('$vuetify.no_email') }}</span>
+
+      <template v-if="displayShortInfo(viewableUser)">
+          <v-divider></v-divider>
+          <span class="mx-1 my-1">{{ viewableUser.shortInfo }}</span>
+      </template>
 
       <v-container class="ma-0 pa-0">
         <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
@@ -134,6 +144,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
 import bus, {LOGGED_OUT, PROFILE_SET} from "@/bus/bus";
+import {getHumanReadableDate} from "@/date.js";
 
 export default {
   mixins: [
@@ -170,6 +181,7 @@ export default {
   },
   methods: {
     getLoginColoredStyle,
+    getHumanReadableDate,
     isNotMyself() {
       return this.chatStore.currentUser && this.chatStore.currentUser.id != this.viewableUser.id
     },
