@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.ldap.NamingException;
 import org.springframework.ldap.core.LdapOperations;
 import org.springframework.ldap.query.LdapQueryBuilder;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -24,15 +23,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.converter.UserAccountConverter.normalizeEmail;
+import static name.nkonev.aaa.utils.ConvertUtils.convertToStrings;
+
 import name.nkonev.aaa.utils.NullUtils;
+
+import javax.naming.NamingException;
 
 // https://spring.io/guides/gs/authenticating-ldap
 @Component
@@ -77,20 +77,10 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
                     var ctx = ldapOperations.searchForContext(lq);
-                    var ldapUserId = NullUtils.getOrNull(() -> ctx.getObjectAttribute(aaaProperties.ldap().attributeNames().id()).toString());
 
-                    final Set<String> rawRoles = new HashSet<>();
-                    if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                        String[] groups = NullUtils.getOrNull(() -> ctx.getStringAttributes(aaaProperties.ldap().attributeNames().role()));
-                        if (groups != null) {
-                            rawRoles.addAll(Arrays.stream(groups).collect(Collectors.toSet()));
-                        }
-                    }
-                    final AtomicReference<String> email = new AtomicReference<>();
-                    if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
-                        var ev = NullUtils.getOrNull(() -> ctx.getStringAttribute(aaaProperties.ldap().attributeNames().email()));
-                        email.set(normalizeEmail(ev));
-                    }
+                    var ldapEntry = ctx.getAttributes();
+
+                    var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
 
                     UserAccount byLdapId = userAccountRepository
                         .findByLdapId(ldapUserId)
@@ -99,15 +89,33 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                             userAccountRepository.findByUsername(userName).ifPresent(ua -> {
                                 throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
                             });
-                            var emailValue = email.get();
-                            if (StringUtils.hasLength(emailValue)) {
-                                if (!userService.checkEmailIsFree(emailValue)){
-                                    throw new UserAlreadyPresentException("User with email '" + emailValue + "' is already present");
+
+                            String email = null;
+                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
+                                var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
+                                email = normalizeEmail(ldapEmail);
+                            }
+
+                            final Set<String> rawRoles = new HashSet<>();
+                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
+                                try {
+                                    var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
+                                    if (groups != null) {
+                                        rawRoles.addAll(convertToStrings(groups));
+                                    }
+                                } catch (NamingException e) {
+                                    LOGGER.error(e.getMessage(), e);
+                                }
+                            }
+                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
+
+                            if (StringUtils.hasLength(email)) {
+                                if (!userService.checkEmailIsFree(email)){
+                                    throw new UserAlreadyPresentException("User with email '" + email + "' is already present");
                                 }
                             }
 
-                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
-                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles, emailValue));
+                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles, email));
                             created.set(true);
                             return user;
                         });
@@ -122,7 +130,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 return new AaaAuthenticationToken(userDetails);
             } catch (UserAlreadyPresentException e) {
                 LOGGER.warn("User already exists: {}", e.getMessage());
-            } catch (IncorrectResultSizeDataAccessException | NamingException e) {
+            } catch (IncorrectResultSizeDataAccessException e) {
                 LOGGER.debug("Unable to authenticate via LDAP", e);
             }
         }

@@ -27,6 +27,9 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import static name.nkonev.aaa.utils.ConvertUtils.convertToBoolean;
+import static name.nkonev.aaa.utils.ConvertUtils.convertToStrings;
+
 @Service
 public class SyncLdapTask {
     @Autowired
@@ -162,28 +165,5 @@ public class SyncLdapTask {
         LOGGER.debug("Sync ldap task finish");
     }
 
-    private boolean convertToBoolean(String value) {
-        if (value == null) {
-            return false;
-        }
-        value = value.trim();
-        if (!StringUtils.hasLength(value)) {
-            return false;
-        }
-        value = value.toLowerCase();
-        return value.equals("true") || value.equals("yes") || value.equals("1");
-    }
-
-    private Set<String> convertToStrings(NamingEnumeration rawRoles) {
-        try {
-            var res = new HashSet<String>();
-            while (rawRoles.hasMore()) {
-                res.add(NullUtils.getOrNullWrapException(() -> rawRoles.next().toString()));
-            }
-            return res;
-        } catch (NamingException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
 
