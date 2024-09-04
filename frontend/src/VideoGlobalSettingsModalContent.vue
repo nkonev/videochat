@@ -146,7 +146,7 @@ import bus, {
         setStoredRoomDynacast,
         setStoredRoomAdaptiveStream,
         VIDEO_POSITION_AUTO,
-        VIDEO_POSITION_ON_THE_TOP,
+        VIDEO_POSITION_TOP,
         VIDEO_POSITION_SIDE,
         setStoredVideoPosition,
         getStoredVideoPosition,
@@ -292,7 +292,7 @@ import bus, {
                 return [NULL_CODEC, 'vp8', 'h264', 'vp9', 'av1']
             },
             positionItems() {
-                return [VIDEO_POSITION_AUTO, VIDEO_POSITION_ON_THE_TOP, VIDEO_POSITION_SIDE]
+                return [VIDEO_POSITION_AUTO, VIDEO_POSITION_TOP, VIDEO_POSITION_SIDE]
             },
             chatId() {
                 return this.$route.params.id

@@ -1,4 +1,4 @@
-import {getStoredVideoPosition, VIDEO_POSITION_AUTO, VIDEO_POSITION_ON_THE_TOP} from "@/store/localStore";
+import {getStoredVideoPosition, VIDEO_POSITION_AUTO, VIDEO_POSITION_TOP} from "@/store/localStore";
 import {videochat_name} from "@/router/routes";
 
 export default () => {
@@ -9,7 +9,7 @@ export default () => {
               if (stored == VIDEO_POSITION_AUTO) {
                 return true // both mobile and desktop
               } else {
-                return getStoredVideoPosition() == VIDEO_POSITION_ON_THE_TOP;
+                return getStoredVideoPosition() == VIDEO_POSITION_TOP;
               }
             },
 

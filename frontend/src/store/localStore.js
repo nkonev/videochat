@@ -172,7 +172,7 @@ export const removeStoredChatEditMessageDto = (chatId) => {
 }
 
 export const VIDEO_POSITION_AUTO = 'auto';
-export const VIDEO_POSITION_ON_THE_TOP = 'onTheTop'; // as usual
+export const VIDEO_POSITION_TOP = 'top'; // as usual
 export const VIDEO_POSITION_SIDE = 'side'; // new
 
 export const KEY_VIDEO_POSITION = 'videoPosition';
