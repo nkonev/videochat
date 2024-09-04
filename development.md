@@ -451,9 +451,28 @@ curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/to
 ```bash
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
-2. User Client Credentials Grant (not working)
-see [here][https://www.appsdeveloperblog.com/keycloak-rest-api-create-a-new-user/]
 
+2. User Client Credentials Grant (not working)
+First of all, create client `my_client3` (Below I changed my_client2, Rest API sterted to work, but user login stopped)
+
+2.1 Troubles:
+2.1.1 `Public client not allowed to retrieve service account`
+see [SO](https://stackoverflow.com/questions/72086736/python-keycloak-error-public-client-not-allowed-to-retrieve-service-account) 
+  -> (site)[https://www.appsdeveloperblog.com/keycloak-rest-api-create-a-new-user/]
+
+2.1.2 `Keycloak Get Users returns 403 forbidden`
+[SO](https://stackoverflow.com/questions/66452108/keycloak-get-users-returns-403-forbidden/66454728#66454728)
+
+2.2 Invoke them
+```bash
+curl -Ss -X POST 'http://localhost:8484/realms/my_realm2/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'grant_type=client_credentials' \
+--data-urlencode 'client_id=my_client3' \
+--data-urlencode 'client_secret=DLsSCEaJPpJIolYriSvZUnNBSxva4URj' | jq
+
+curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq 
+```
 
 ## How to save added users to realm-export.json ?
 from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e289273801492a
