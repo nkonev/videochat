@@ -156,11 +156,6 @@ custom.role-mappings:
       our: "ROLE_USER"
     - their: "admin"
       our: "ROLE_ADMIN"
-  keycloak:
-    - their: "USER"
-      our: "ROLE_USER"
-    - their: "uma_authorization"
-      our: "ROLE_ADMIN"
 
 custom.ldap:
   auth:

@@ -8,3 +8,10 @@ spring.security:
       provider:
         keycloak:
           issuer-uri: http://localhost:8484/realms/my_realm2
+
+custom.role-mappings:
+  keycloak:
+    - their: "USER"
+      our: "ROLE_USER"
+    - their: "uma_authorization"
+      our: "ROLE_ADMIN"
