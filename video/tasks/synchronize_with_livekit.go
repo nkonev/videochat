@@ -168,7 +168,18 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 					continue
 				}
 
-				err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, services.NoAvatar, chatInfo.TetATet) // dummy set NoAvatar
+				aaaUsers, err := srv.restClient.GetUsers(ctx, []int64{videoUserId})
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to users %v", err)
+					continue
+				}
+				if len(aaaUsers) != 1 {
+					GetLogEntry(ctx).Errorf("len of users is %v, but we need 1", len(aaaUsers))
+					continue
+				}
+				aaaUser := aaaUsers[0]
+
+				err = srv.redisService.AddToDialList(ctx, videoUserId, chatId, videoUserId, services.CallStatusInCall, utils.NullToEmpty(aaaUser.Avatar), chatInfo.TetATet) // dummy set NoAvatar
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
 					continue

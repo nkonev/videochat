@@ -237,3 +237,11 @@ func GetOppositeUser(users []int64, me int64) *int64 {
 	}
 	return oppositeUser
 }
+
+func NullToEmpty(input *string) string {
+	if input == nil {
+		return ""
+	} else {
+		return *input
+	}
+}
