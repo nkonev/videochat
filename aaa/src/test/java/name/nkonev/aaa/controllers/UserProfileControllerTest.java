@@ -273,7 +273,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ADMIN);
         RequestEntity requestEntity = RequestEntity
-            .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.USER + "/" + foreignUserAccount.id()))
+            .get(new URI(urlWithContextPath() + Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE))
             .header(TestConstants.HEADER_COOKIE, headerValue).build();
         ResponseEntity<String> responseEntity = testRestTemplate.exchange(requestEntity, String.class);
         var response = objectMapper.readValue(responseEntity.getBody(), JsonNode.class);
