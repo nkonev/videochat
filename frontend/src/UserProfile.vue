@@ -11,7 +11,7 @@
          class="mt-2"
       >
       </v-img>
-      <span class="d-flex">
+      <span class="d-flex flex-wrap">
         <span class="text-h3" :style="getLoginColoredStyle(viewableUser)">
           {{ viewableUser.login }}
         </span>
