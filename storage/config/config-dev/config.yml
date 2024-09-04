@@ -89,11 +89,11 @@ redis:
 
 schedulers:
   cleanFilesOfDeletedChatTask:
-    enabled: true
+    enabled: false
     interval: 60s
     batchChats: 20
   actualizeGeneratedFilesTask:
-    enabled: true
+    enabled: false
     interval: 60s
 
 response:
@@ -107,7 +107,7 @@ ulid:
 converting:
   ffmpegPath: "ffmpeg"
   tempDir: "/tmp/video"
-  presignedDuration: 30m
+  presignedDuration: 120m
   maxDuration: 1h
   removeOriginal: true
 

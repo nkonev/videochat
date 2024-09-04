@@ -6,32 +6,24 @@ import (
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
-	"io/ioutil"
 	"net/url"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"os"
 	"os/exec"
 )
 
 type ConvertingService struct {
 	minio                       *s3.InternalMinioClient
 	minioConfig                 *utils.MinioConfig
-	tempDirPrefix               string
 	redisInfoService *RedisInfoService
 }
 
 func NewConvertingService(minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
-	tempDirPrefix := viper.GetString("converting.tempDir")
-	Logger.Infof("Ensuring temp root dir for the converting videos using ffmpeg: %v", tempDirPrefix)
-	os.MkdirAll(tempDirPrefix, os.ModePerm)
-
 	return &ConvertingService{
 		minio:       minio,
 		minioConfig: minioConfig,
-		tempDirPrefix: tempDirPrefix,
 		redisInfoService: redisInfoService,
 	}
 }
@@ -42,7 +34,6 @@ func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEve
 }
 
 func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
-	fileName := utils.GetFilename(normalizedKey)
 	convertedKey := utils.GetKeyForConverted(normalizedKey)
 
 	s.redisInfoService.SetOriginalConverting(ctx, normalizedKey)
@@ -53,31 +44,37 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 
 	GetLogEntry(ctx).Infof("Converting %v to %v to the common compatible format", normalizedKey, convertedKey)
 
-	// create temp dir
-	fileWoExt := utils.RemoveExtension(fileName)
-	dir, err := ioutil.TempDir(s.tempDirPrefix, fileWoExt+"__")
-	if err != nil {
-		GetLogEntry(ctx).Errorf("error during create temp dir for the converting videos using ffmpeg: %v", err)
-		return
-	}
-	defer os.RemoveAll(dir)
-
-	filePath := dir + string(os.PathSeparator) + fileName
-	pathOfConvertedFile := utils.GetKeyForConverted(filePath)
-
 	// run ffmpeg
 	d := viper.GetDuration("converting.presignedDuration")
-	presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
+	presignedGetUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
+		GetLogEntry(ctx).Errorf("Error during getting presigned get url for %v", normalizedKey)
 		return
 	}
-	stringPresingedUrl := presignedUrl.String()
+	stringPresingedGetUrl := presignedGetUrl.String()
+
+	// copy the tag messageRecording=true in order to correct work utils.GetEventType in minio_listener in pass 2
+	// also set the owner
+	tags := url.Values{}
+	tags.Set("aaa", "bbb")
+	presignedPutUrl, err := s.minio.Presign(ctx, "PUT", s.minioConfig.Files, convertedKey, d, tags)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during getting presigned put url for %v", normalizedKey)
+		return
+	}
+	stringPresingedPutUrl := presignedPutUrl.String()
+
+	// https://superuser.com/questions/424015/what-bunch-of-ffmpeg-scripts-do-i-need-to-get-html5-compatible-video-for-everyb/424024#424024
 	ffCmd := exec.Command(viper.GetString("converting.ffmpegPath"),
-		"-i", stringPresingedUrl,
+		"-i", stringPresingedGetUrl,
 		"-c:v", "libvpx-vp9",
 		"-c:a", "libopus",
-		pathOfConvertedFile,
+		"-f", "webm",
+		// for debug purposes you can just send it to a file
+		// search "Publish contents of your desktop directly to a WebDAV server every second" on https://www.ffmpeg.org/ffmpeg-all.html
+		"-protocol_opts",
+		"method=PUT",
+		stringPresingedPutUrl,
 	)
 	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
 	var out bytes.Buffer
@@ -90,21 +87,7 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 		return
 	}
 
-	// copy the tag messageRecording=true in order to correct work utils.GetEventType in minio_listener in pass 2
-	objectInfo, err := s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during stat for key %v: %v", normalizedKey, err)
-		return
-	}
-	// put recording_123_converted.webm to minio
-	_, err = s.minio.FPutObject(ctx, s.minioConfig.Files, convertedKey, pathOfConvertedFile, minio.PutObjectOptions{ContentType: utils.ConvertedContentType, UserMetadata: objectInfo.UserMetadata})
-	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during storing to minio %v: %v", pathOfConvertedFile, err)
-		return
-	}
-
-	GetLogEntry(ctx).Infof("Converted %v to %v", normalizedKey, pathOfConvertedFile)
-	// defer removes recording_123_converted.webm from the temporary directory
+	GetLogEntry(ctx).Infof("Converted %v to %v", normalizedKey, convertedKey)
 
 	if viper.GetBool("converting.removeOriginal") {
 		GetLogEntry(ctx).Infof("Going to remove original from minio %v", normalizedKey)
