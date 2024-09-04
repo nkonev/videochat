@@ -200,3 +200,10 @@ custom.http-client:
   read-timeout: 30s
 
 custom.allowed-avatar-urls: ""
+
+custom.admins-corner:
+  management-urls:
+    - "/jaeger"
+    - "/minio"
+    - "/rabbitmq"
+    - "/postgresql"

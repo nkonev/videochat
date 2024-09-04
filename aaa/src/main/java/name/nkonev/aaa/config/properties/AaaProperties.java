@@ -31,7 +31,8 @@ public record AaaProperties(
     boolean debugResponse,
 
     String allowedAvatarUrls,
-    RoleMappings roleMappings
+    RoleMappings roleMappings,
+    AdminsCornerProperties adminsCorner
 ) {
     public List<String> getAllowedAvatarUrlsList() {
         if (allowedAvatarUrls == null) {

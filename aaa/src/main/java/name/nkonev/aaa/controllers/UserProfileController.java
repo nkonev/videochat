@@ -51,9 +51,9 @@ public class UserProfileController {
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = {Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
+    public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session, @RequestHeader HttpHeaders headers) {
         LOGGER.info("Requesting internal user profile");
-        return userProfileService.checkAuthenticatedInternal(userAccount, session);
+        return userProfileService.checkAuthenticatedInternal(userAccount, session, headers);
     }
 
     @ResponseBody

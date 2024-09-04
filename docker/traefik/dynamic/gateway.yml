@@ -41,6 +41,22 @@ http:
       loadBalancer:
         servers:
           - url: http://minio:9000
+    jaeger-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://jaeger:16686
+    minio-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://minio:9001
+    rabbitmq-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://rabbitmq:15672
+    postgresql-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://pgadmin:8080
 
   routers:
     frontend-router:
@@ -139,6 +155,31 @@ http:
         - "minio-strip-prefix-middleware"
         - "retry-middleware"
         - "minio-fix-host-middleware"
+    jaeger-ui-router:
+      rule: "PathPrefix(`/jaeger`)"
+      service: jaeger-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
+    minio-ui-router:
+      rule: "PathPrefix(`/minio`)"
+      service: minio-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
+        - "minio-ui-strip-prefix-middleware"
+    rabbitmq-ui-router:
+      rule: "PathPrefix(`/rabbitmq`)"
+      service: rabbitmq-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
+    postgresql-ui-router:
+      rule: "PathPrefix(`/postgresql`)"
+      service: postgresql-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
 
   middlewares:
     livekit-strip-prefix-middleware:
@@ -153,6 +194,10 @@ http:
       headers:
         customRequestHeaders:
           Host: "127.0.0.1:39000"
+    minio-ui-strip-prefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/minio"
     retry-middleware:
       retry:
         attempts: 4

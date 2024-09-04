@@ -36,6 +36,7 @@ import java.util.function.Function;
 import static name.nkonev.aaa.Constants.*;
 import static name.nkonev.aaa.Constants.Headers.*;
 import static name.nkonev.aaa.converter.UserAccountConverter.*;
+import static name.nkonev.aaa.utils.NullUtils.trimToNull;
 
 @Service
 public class UserProfileService {
@@ -76,6 +77,9 @@ public class UserProfileService {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private AaaPermissionService aaaPermissionService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileService.class);
 
     private Long getExpiresAt(HttpSession session) {
@@ -97,19 +101,26 @@ public class UserProfileService {
     }
 
     @Transactional
-    public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session) {
+    public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session, HttpHeaders requestHeaders) {
         Long expiresAt = getExpiresAt(session);
         var dto = getProfile(userAccount, session);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
-        headers.set(X_AUTH_USER_ID, ""+userAccount.getId());
-        headers.set(X_AUTH_EXPIRESIN, ""+expiresAt);
-        headers.set(X_AUTH_SESSION_ID, session.getId());
-        headers.set(X_AUTH_AVATAR, userAccount.getAvatar());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
+        responseHeaders.set(X_AUTH_USER_ID, ""+userAccount.getId());
+        responseHeaders.set(X_AUTH_EXPIRESIN, ""+expiresAt);
+        responseHeaders.set(X_AUTH_SESSION_ID, session.getId());
+        responseHeaders.set(X_AUTH_AVATAR, userAccount.getAvatar());
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
-            headers.add(X_AUTH_ROLE, s);
+            responseHeaders.add(X_AUTH_ROLE, s);
         });
-        return headers;
+        var path = trimToNull(requestHeaders.getFirst("x-forwarded-uri")); // nullable
+        if (aaaPermissionService.isManagementUrlPath(path)) {
+            var roles = convertRoles2Enum(userAccount.getRoles());
+            if (!aaaPermissionService.canAccessToManagementUrlPath(roles)) {
+                throw new UnauthorizedException("user with id %s and roles %s cannot access this path".formatted(userAccount.getId(), userAccount.roles()));
+            }
+        }
+        return responseHeaders;
     }
 
 

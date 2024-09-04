@@ -30,6 +30,11 @@ export const password_restore_enter_new = `${prefix}/password-restore/enter-new`
 
 export const registration_resend_email = `${prefix}/registration/resend-email`;
 
+export const admins_corner = `${prefix}/admin`;
+
+
+
+
 export const root_name = 'root';
 export const chat_list_name = 'chat_list';
 export const chat_name = 'chat_view';
@@ -64,3 +69,5 @@ export const password_restore_enter_new_name = "password_restore_enter_new";
 export const registration_resend_email_name = "registration_resend_email";
 
 export const wrong_change_email_confirmation_token_name = "wrong_email_confirmation_token";
+
+export const admins_corner_name = `admins_corner`;

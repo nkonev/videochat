@@ -127,6 +127,20 @@
   tags:
     - videochat
 
+- name: Create RabbitMQ config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/rabbitmq"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create RabbitMQ additional.conf
+  ansible.builtin.copy:
+    src: files/additional.conf
+    dest: "{{ dir_prefix }}/rabbitmq/additional.conf"
+  tags:
+    - videochat
+
 - name: Create Egress config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/egress"

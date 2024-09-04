@@ -22,6 +22,7 @@ import jakarta.servlet.http.Cookie;
 import org.awaitility.Awaitility;
 import org.eclipse.angus.mail.imap.IMAPMessage;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -749,5 +750,35 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
             .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
+    }
+
+    @WithUserDetails(TestConstants.USER_ADMIN)
+    @org.junit.jupiter.api.Test
+    public void adminCanAccessToJaeger() throws Exception {
+        mockMvc.perform(
+                get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
+                    .header("x-forwarded-uri", "/jaeger")
+            )
+            .andDo(result -> {
+                LOGGER.info(result.getResponse().getContentAsString());
+            })
+            .andExpect(status().isOk())
+            ;
+    }
+
+    @WithUserDetails(USER_ALICE)
+    @org.junit.jupiter.api.Test
+    public void userCannotAccessToJaeger() throws Exception {
+
+        mockMvc.perform(
+                get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
+                    .header("x-forwarded-uri", "/jaeger")
+            )
+            .andDo(result -> {
+                LOGGER.info(result.getResponse().getContentAsString());
+            })
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.message").value(Matchers.allOf(Matchers.containsString("user with id"), Matchers.containsString("cannot access this path"))))
+            .andReturn();
     }
 }

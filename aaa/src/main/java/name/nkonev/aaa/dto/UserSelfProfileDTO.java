@@ -17,7 +17,8 @@ public record UserSelfProfileDTO(
         Collection<UserRole> roles,
 
         // session expires at
-        Long expiresAt
+        Long expiresAt,
+        boolean canShowAdminsCorner
 ) {
     public UserSelfProfileDTO(
             Long id,
@@ -32,7 +33,8 @@ public record UserSelfProfileDTO(
             Collection<UserRole> roles,
             Long expiresAt,
             String loginColor,
-            boolean ldap
+            boolean ldap,
+            boolean canShowAdminsCorner
     ) {
         this(new UserAccountDTO(
                 id,
@@ -44,7 +46,7 @@ public record UserSelfProfileDTO(
                 oauth2Identifiers,
                 loginColor,
                 ldap
-        ), email, awaitingForConfirmEmailChange, roles, expiresAt);
+        ), email, awaitingForConfirmEmailChange, roles, expiresAt, canShowAdminsCorner);
     }
 
     public String login() {

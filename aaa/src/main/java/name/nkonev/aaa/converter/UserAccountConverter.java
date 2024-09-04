@@ -22,7 +22,9 @@ import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
 import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAME_PREFIXES;
+import static name.nkonev.aaa.utils.NullUtils.trimToNull;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
+import static name.nkonev.aaa.security.AaaPermissionService.canAccessToAdminsCorner;
 
 @Component
 public class UserAccountConverter {
@@ -98,6 +100,8 @@ public class UserAccountConverter {
 
     public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastLoginDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
+        var roles = convertRoles2Enum(userAccount.getRoles());
+        var canShowAdminsCorner = canAccessToAdminsCorner(roles);
         return new name.nkonev.aaa.dto.UserSelfProfileDTO(
                 userAccount.getId(),
                 userAccount.getUsername(),
@@ -108,14 +112,15 @@ public class UserAccountConverter {
                 userAccount.awaitingForConfirmEmailChange(),
                 lastLoginDateTime,
                 userAccount.getOauth2Identifiers(),
-                convertRoles2Enum(userAccount.getRoles()),
+                roles,
                 expiresAt,
                 userAccount.getLoginColor(),
-                userAccount.ldapId() != null
+                userAccount.ldapId() != null,
+                canShowAdminsCorner
         );
     }
 
-    private static Collection<UserRole> convertRoles2Enum(Collection<GrantedAuthority> roles) {
+    public static Collection<UserRole> convertRoles2Enum(Collection<GrantedAuthority> roles) {
         if (roles == null) {
             return null;
         } else {
@@ -488,17 +493,6 @@ public class UserAccountConverter {
             NEW_EMAIL_WAS_SET,
             SHOULD_REMOVE_NEW_EMAIL
         }
-    }
-
-    private static String trimToNull(String input) {
-        if (input == null) {
-            return null;
-        }
-        var ret = input.trim();
-        if (ret.isEmpty()) {
-            return null;
-        }
-        return ret;
     }
 
     // EditUserDTO userAccountDTO is already filtered through normalize()

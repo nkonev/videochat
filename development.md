@@ -855,6 +855,9 @@ docker service scale VIDEOCHATSTACK_chat=1
 docker service scale VIDEOCHATSTACK_storage=1
 ```
 
+## Pgadmin
+https://hub.docker.com/r/dcagatay/pwless-pgadmin4
+
 # Elasticsearch
 * https://olivere.github.io/elastic/
 * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index.html

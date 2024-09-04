@@ -85,6 +85,7 @@ services:
       - MINIO_NOTIFY_AMQP_AUTO_DELETED_primary=off
       - MINIO_NOTIFY_AMQP_DELIVERY_MODE_primary=2
       - MINIO_PROMETHEUS_AUTH_TYPE=public
+      - MINIO_BROWSER_REDIRECT_URL=http://localhost:8081/minio
     volumes:
       - minio_data:/bitnami/minio/data:z
     logging:
@@ -105,6 +106,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=videoChatPazZw0rd
     volumes:
       - rabbitmq_data_dir:/var/lib/rabbitmq/mnesia:z
+      - ./docker/rabbitmq/additional.conf:/etc/rabbitmq/conf.d/additional.conf:ro,z
     networks:
       backend:
     logging:
@@ -136,7 +138,7 @@ services:
       - SYS_ADMIN
 
   jaeger:
-    image: jaegertracing/all-in-one:1.54.0
+    image: jaegertracing/all-in-one:1.58.1
     hostname: jaeger
     restart: unless-stopped
     ports:
@@ -146,6 +148,8 @@ services:
       - 16686:16686 # web ui
     networks:
       backend:
+    environment:
+      - QUERY_BASE_PATH=/jaeger
     logging:
       driver: "json-file"
       options:
@@ -153,6 +157,27 @@ services:
         max-file: "1"
     command:
       - --memory.max-traces=100000
+
+  pgadmin:
+    restart: unless-stopped
+    hostname: pgadmin
+    image: dcagatay/pwless-pgadmin4:8.13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgresqlPassword
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_PORT=5432
+      - PGADMIN_DISABLE_POSTFIX=1
+      - PGADMIN_LISTEN_ADDRESS=0.0.0.0
+      - PGADMIN_LISTEN_PORT=8080
+      - SCRIPT_NAME=/postgresql
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
 
 volumes:
   postgres_data:

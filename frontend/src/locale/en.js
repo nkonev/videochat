@@ -317,5 +317,10 @@ export default {
     mark_as_read_all: "Mark as read all",
     enable_user: "Enable user",
     disable_user: "Disable user",
-    go_to_the_message: "Go to the message"
+    go_to_the_message: "Go to the message",
+    admins_corner: "Admin' s corner",
+    tracing: "Tracing",
+    object_storage: "S3 storage",
+    queue_broker: "Queue broker",
+    database: "Database"
 }

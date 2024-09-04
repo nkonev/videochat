@@ -57,6 +57,7 @@
       </v-list-item>
       <v-list-item @click.prevent="openUsers()" :href="getRouteUsers()" prepend-icon="mdi-account-group" :title="$vuetify.locale.t('$vuetify.users')"></v-list-item>
       <v-list-item @click.prevent="openSettings()" prepend-icon="mdi-cog" :title="$vuetify.locale.t('$vuetify.settings')"></v-list-item>
+      <v-list-item v-if="shouldShowAdminsCorner()" @click.prevent="openAdminsCorner()" :href="getRouteAdminsCorner()" prepend-icon="mdi-tools" :title="$vuetify.locale.t('$vuetify.admins_corner')"></v-list-item>
       <v-list-item :disabled="isLoggingOut" @click.prevent="logout()" v-if="shouldDisplayLogout()" prepend-icon="mdi-logout" :title="$vuetify.locale.t('$vuetify.logout')"></v-list-item>
     </v-list>
 
@@ -66,6 +67,7 @@
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {
+    admins_corner, admins_corner_name,
     blog,
     chat_list_name, chat_name,
     chats,
@@ -282,6 +284,15 @@ export default {
     },
     onUserClick() {
         bus.emit(OPEN_SETTINGS, 'user_profile_self')
+    },
+    shouldShowAdminsCorner() {
+      return this.chatStore.currentUser?.canShowAdminsCorner
+    },
+    openAdminsCorner() {
+      this.$router.push({name: admins_corner_name} )
+    },
+    getRouteAdminsCorner() {
+      return admins_corner
     },
   },
   mounted() {

@@ -21,4 +21,14 @@ public abstract class NullUtils {
         }
     }
 
+    public static String trimToNull(String input) {
+        if (input == null) {
+            return null;
+        }
+        var ret = input.trim();
+        if (ret.isEmpty()) {
+            return null;
+        }
+        return ret;
+    }
 }
