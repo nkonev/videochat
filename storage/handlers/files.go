@@ -440,6 +440,9 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	}
 
 	fileId := anUrl.Query().Get(utils.FileParam)
+	if fileId == "" {
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+	}
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 	if err != nil {
@@ -552,6 +555,9 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 	}
 
 	fileId := anUrl.Query().Get(utils.FileParam)
+	if fileId == "" {
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
+	}
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 	if err != nil {
