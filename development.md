@@ -438,6 +438,23 @@ clients -> my_client2 -> client scopes -> Add client scope, choose `openid`, pre
 curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm2/protocol/openid-connect/token' -d 'client_id=my_client2&grant_type=password&scope=openid&username=user2&password=user_password2' | jq '.'
 ```
 
+## Getting users
+* https://medium.com/@imsanthiyag/introduction-to-keycloak-admin-api-44beb9011f7d
+* https://www.keycloak.org/docs-api/22.0.1/rest-api/index.html#_users
+
+1. Using admin user
+1.1 Get access_token for admin
+```bash
+curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/token' --header 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'username=keycloak_admin' --data-urlencode 'password=admin_password' --data-urlencode 'grant_type=password' --data-urlencode 'client_id=admin-cli' | jq 
+```
+1.2 Request users (do it fast, tokrn expires after 60 sec)
+```bash
+curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
+```
+2. User Client Credentials Grant (not working)
+see [here][https://www.appsdeveloperblog.com/keycloak-rest-api-create-a-new-user/]
+
+
 ## How to save added users to realm-export.json ?
 from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e289273801492a
 
