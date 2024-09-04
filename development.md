@@ -435,9 +435,7 @@ clients -> my_client2 -> client scopes -> Add client scope, choose `openid`, pre
 
 ## Login as user1 (get 3 tokens)
 ```bash
-curl -i -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password'
-
-curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm/protocol/openid-connect/token' -d 'client_id=my_client&grant_type=password&scope=openid&username=user1&password=user_password' | jq '.'
+curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm2/protocol/openid-connect/token' -d 'client_id=my_client2&grant_type=password&scope=openid&username=user2&password=user_password2' | jq '.'
 ```
 
 ## How to save added users to realm-export.json ?
