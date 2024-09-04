@@ -152,9 +152,11 @@ public class SyncLdapTask {
                                 LOGGER.info("Saving userId={}, ldapId={}", userAccount.id(), ldapUserId);
                                 userAccountRepository.save(userAccount);
                             }
+                        } else {
+                            LOGGER.warn("Unable to find the corresponding userAccount for ldapId = {}", ldapUserId);
                         }
                     } else {
-                        LOGGER.warn("Got empty ldap id");
+                        LOGGER.warn("Got empty ldap userId");
                     }
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage(), e);
