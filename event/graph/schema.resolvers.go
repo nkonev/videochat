@@ -310,49 +310,18 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserAccountEventGroup: // changed
-			// prepare dto and send it to channel for myself (if utils.Contains()). Remove this id from userIds and go ahead
-			if authResult.UserId == typedEvent.UserId {
-				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForMyself)
-				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-					defer span.End()
-					span.SetAttributes(
-						attribute.Int64("userId", typedEvent.UserId),
-					)
+		case dto.UserAccountEventChanged:
+			var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
+			if anEvent != nil {
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				defer span.End()
+				span.SetAttributes(
+					attribute.Int64("userId", typedEvent.UserId),
+				)
 
-					cam <- anEvent
-				}
-				break
+				cam <- anEvent
 			}
-			// if I'm an admin then prepare dto with admin's fields
-			if authResult.HasRole("ROLE_ADMIN") {
-				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
-				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-					defer span.End()
-					span.SetAttributes(
-						attribute.Int64("userId", typedEvent.UserId),
-					)
-
-					cam <- anEvent
-				}
-				break
-			}
-			// else if I'm un user then prepare dto with user's fields
-			if authResult.HasRole("ROLE_USER") {
-				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
-				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-					defer span.End()
-					span.SetAttributes(
-						attribute.Int64("userId", typedEvent.UserId),
-					)
-
-					cam <- anEvent
-				}
-				break
-			}
+			break
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
@@ -370,35 +339,18 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserAccountCreatedEventGroup:
-			// if I'm an admin then prepare dto with admin's fields
-			if authResult.HasRole("ROLE_ADMIN") {
-				var anEvent = convertUserAccountEventExtended(typedEvent.EventType, typedEvent.ForRoleAdmin)
-				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-					defer span.End()
-					span.SetAttributes(
-						attribute.Int64("userId", typedEvent.UserId),
-					)
+		case dto.UserAccountEventCreated:
+			var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
+			if anEvent != nil {
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				defer span.End()
+				span.SetAttributes(
+					attribute.Int64("userId", typedEvent.UserId),
+				)
 
-					cam <- anEvent
-				}
-				break
+				cam <- anEvent
 			}
-			// else if I'm un user then prepare dto with user's fields
-			if authResult.HasRole("ROLE_USER") {
-				var anEvent = convertUserAccountEvent(typedEvent.EventType, typedEvent.ForRoleUser)
-				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-					defer span.End()
-					span.SetAttributes(
-						attribute.Int64("userId", typedEvent.UserId),
-					)
-
-					cam <- anEvent
-				}
-				break
-			}
+			break
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
@@ -416,7 +368,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 		}()
 
 		switch typedEvent := event.(type) {
-		case dto.UserAccountDeletedEvent:
+		case dto.UserAccountEventDeleted:
 			var anEvent = convertUserAccountDeletedEvent(typedEvent.EventType, typedEvent.UserId)
 			if anEvent != nil {
 				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
@@ -482,24 +434,22 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func convertUserAccountEvent(eventType string, aDto *dto.UserAccount) *model.UserAccountEvent {
-	if aDto != nil {
-		ret := model.UserAccountEvent{}
-		ret.EventType = eventType
-		ret.UserAccountEvent = &model.UserAccountDto{
-			ID:                aDto.Id,
-			Login:             aDto.Login,
-			Avatar:            aDto.Avatar,
-			AvatarBig:         aDto.AvatarBig,
-			ShortInfo:         aDto.ShortInfo,
-			LastLoginDateTime: aDto.LastLoginDateTime,
-			Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
-			LoginColor:        aDto.LoginColor,
-			Ldap:              aDto.Ldap,
-		}
-		return &ret
+func (sr *subscriptionResolver) prepareUserAccountEvent(ctx context.Context, myUserId int64, eventType string, user *dto.User) *model.UserAccountEvent {
+	if user == nil {
+		logger.GetLogEntry(ctx).Errorf("Logical mistake")
+		return nil
 	}
-	return nil
+
+	extended, err := sr.HttpClient.GetUserExtended(ctx, user.Id, myUserId)
+	if err != nil {
+		logger.GetLogEntry(ctx).Errorf("error during getting user extended: %v", err)
+		return nil
+	}
+
+	ret := model.UserAccountEvent{}
+	ret.EventType = eventType
+	ret.UserAccountEvent = convertUserAccountExtended(extended)
+	return &ret
 }
 func convertUserAccountDeletedEvent(eventType string, userId int64) *model.UserAccountEvent {
 	ret := model.UserAccountEvent{}

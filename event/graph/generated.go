@@ -14593,13 +14593,6 @@ func (ec *executionContext) _UserAccountEventDto(ctx context.Context, sel ast.Se
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.UserAccountDto:
-		return ec._UserAccountDto(ctx, sel, &obj)
-	case *model.UserAccountDto:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._UserAccountDto(ctx, sel, obj)
 	case model.UserAccountExtendedDto:
 		return ec._UserAccountExtendedDto(ctx, sel, &obj)
 	case *model.UserAccountExtendedDto:
@@ -16278,7 +16271,7 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 }
 
-var userAccountDtoImplementors = []string{"UserAccountDto", "UserAccountEventDto"}
+var userAccountDtoImplementors = []string{"UserAccountDto"}
 
 func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountDto) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountDtoImplementors)

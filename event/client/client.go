@@ -3,13 +3,16 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"io/ioutil"
 	"net/http"
+	"nkonev.name/event/dto"
 	. "nkonev.name/event/logger"
 	"nkonev.name/event/utils"
 	"strings"
@@ -21,6 +24,7 @@ type RestClient struct {
 	accessPath           string
 	aaaBaseUrl           string
 	requestForOnlinePath string
+	userExtendedPath string
 	tracer               trace.Tracer
 }
 
@@ -41,6 +45,7 @@ func NewRestClient() *RestClient {
 		accessPath:           viper.GetString("chat.url.access"),
 		aaaBaseUrl:           viper.GetString("aaa.url.base"),
 		requestForOnlinePath: viper.GetString("aaa.url.requestForOnline"),
+		userExtendedPath: viper.GetString("aaa.url.userExtended"),
 		tracer:               trcr,
 	}
 }
@@ -108,4 +113,43 @@ func (h *RestClient) AskForUserOnline(c context.Context, userIds []int64) {
 		GetLogEntry(c).Error(err, "Unexpected status on online.Request", response.StatusCode)
 		return
 	}
+}
+
+func (h *RestClient) GetUserExtended(c context.Context, userId int64, behalfUserId int64) (*dto.UserAccountExtended, error) {
+
+	url := h.aaaBaseUrl + h.userExtendedPath + "/" + utils.Int64ToString(userId) + "?behalfUserId=" + utils.Int64ToString(behalfUserId)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		GetLogEntry(c).Error(err, "Error during create GET")
+		return nil, err
+	}
+
+	ctx, span := h.tracer.Start(c, "user.Extended")
+	defer span.End()
+	req = req.WithContext(ctx)
+
+	response, err := h.client.Do(req)
+	if err != nil {
+		GetLogEntry(c).Error(err, "Transport error during user.Extended")
+		return nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		err := errors.New("Unexpected status on user.Extended")
+		GetLogEntry(c).Error(err, "Unexpected status on user.Extended", response.StatusCode)
+		return nil, err
+	}
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
+		return nil, err
+	}
+
+	user := &dto.UserAccountExtended{}
+	if err := json.Unmarshal(bodyBytes, user); err != nil {
+		GetLogEntry(c).Errorln("Failed to parse extended user:", err)
+		return nil, err
+	}
+	return user, nil
 }

@@ -340,7 +340,7 @@ type UserAccountExtendedDto {
     ldap: Boolean!
 }
 
-union UserAccountEventDto = UserAccountDto | UserAccountExtendedDto | UserDeletedDto
+union UserAccountEventDto = UserAccountExtendedDto | UserDeletedDto
 
 type UserAccountEvent {
     eventType:  String!

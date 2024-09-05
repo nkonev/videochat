@@ -42,39 +42,36 @@ type UserAccountExtended struct {
 	CanRemoveSessions bool `json:"canRemoveSessions"`
 }
 
-type UserAccountEventGroup struct {
+type UserAccountEventChanged struct {
 	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
 	EventType string `json:"eventType"`
-	ForMyself *UserAccountExtended `json:"forMyself"`
-	ForRoleAdmin *UserAccountExtended `json:"forRoleAdmin"`
-	ForRoleUser  *UserAccount `json:"forRoleUser"`
+	User        *User  `json:"user"`
 }
 
-func (UserAccountEventGroup) Name() eventbus.EventName {
+func (UserAccountEventChanged) Name() eventbus.EventName {
 	return AAA_CHANGE
 }
 
-type UserAccountCreatedEventGroup struct {
+type UserAccountEventCreated struct {
 	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
-	EventType string `json:"eventType"`
-	ForRoleAdmin *UserAccountExtended `json:"forRoleAdmin"`
-	ForRoleUser  *UserAccount `json:"forRoleUser"`
+	User        *User  `json:"user"`
+	EventType   string `json:"eventType"`
 }
 
-func (UserAccountCreatedEventGroup) Name() eventbus.EventName {
+func (UserAccountEventCreated) Name() eventbus.EventName {
 	return AAA_CREATE
 }
 
 
-type UserAccountDeletedEvent struct {
+type UserAccountEventDeleted struct {
 	TraceString  string  `json:"-"`
 	UserId int64 `json:"userId"`
 	EventType string `json:"eventType"`
 }
 
-func (UserAccountDeletedEvent) Name() eventbus.EventName {
+func (UserAccountEventDeleted) Name() eventbus.EventName {
 	return AAA_DELETE
 }
 

@@ -99,7 +99,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during sending to bus : %v", err)
 				return err
 			}
-		case dto.UserAccountEventGroup: // changed
+		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)
@@ -112,7 +112,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during sending to bus : %v", err)
 				return err
 			}
-		case dto.UserAccountCreatedEventGroup:
+		case dto.UserAccountEventCreated:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)
@@ -125,7 +125,7 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 				Logger.Errorf("Error during sending to bus : %v", err)
 				return err
 			}
-		case dto.UserAccountDeletedEvent:
+		case dto.UserAccountEventDeleted:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)

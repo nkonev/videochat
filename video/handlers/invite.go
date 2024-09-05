@@ -489,6 +489,9 @@ func (vh *InviteHandler) SendCurrentVideoStatuses(c echo.Context) error {
 	userIds := make([]int64, 0)
 	split := strings.Split(userIdParam, ",")
 	for _, us := range split {
+		if us == "" {
+			continue
+		}
 		parseInt64, err := utils.ParseInt64(us)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("unable to parse %v", err)

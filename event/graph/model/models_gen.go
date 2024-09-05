@@ -279,8 +279,6 @@ type UserAccountDto struct {
 	Ldap              bool               `json:"ldap"`
 }
 
-func (UserAccountDto) IsUserAccountEventDto() {}
-
 type UserAccountEvent struct {
 	EventType        string              `json:"eventType"`
 	UserAccountEvent UserAccountEventDto `json:"userAccountEvent"`

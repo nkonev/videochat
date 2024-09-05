@@ -28,6 +28,7 @@ public class Constants {
 
         public static final String RESEND_CHANGE_EMAIL_CONFIRM = "/change-email/resend";
         public static final String USER = "/user";
+        public static final String EXTENDED = "/extended";
 
         public static final String ONLINE = "/online";
         public static final String LIST = "/list";
@@ -57,6 +58,10 @@ public class Constants {
 
     public static class PathVariables {
         public static final String USER_ID = "userId";
+    }
+
+    public static class QueryVariables {
+        public static final String BEHALF_USER_ID = "behalfUserId";
     }
 
     public static final String DELETED = "deleted";

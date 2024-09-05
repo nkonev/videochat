@@ -11,8 +11,8 @@ type User struct {
 	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
 }
 
-type UserAccountEventGroup struct {
-	ForRoleUser *User  `json:"forRoleUser"`
+type UserAccountEventChanged struct {
+	User        *User  `json:"user"`
 	EventType   string `json:"eventType"`
 }
 

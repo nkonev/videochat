@@ -485,22 +485,6 @@ export default {
                         canRemoveSessions
                         ldap
                       }
-                      ... on UserAccountDto {
-                        id
-                        login
-                        avatar
-                        avatarBig
-                        shortInfo
-                        lastLoginDateTime
-                        oauth2Identifiers {
-                          facebookId
-                          vkontakteId
-                          googleId
-                          keycloakId
-                        }
-                        loginColor
-                        ldap
-                      }
                       ... on UserDeletedDto {
                         id
                       }

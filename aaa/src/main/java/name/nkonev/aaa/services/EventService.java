@@ -3,8 +3,6 @@ package name.nkonev.aaa.services;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
-import name.nkonev.aaa.security.PrincipalToCheck;
-import name.nkonev.aaa.security.UserRoleService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,46 +18,37 @@ public class EventService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private UserAccountConverter userAccountConverter;
-
-    @Autowired
-    private UserRoleService userRoleService;
-
     public void notifyProfileCreated(UserAccount userAccount) {
-        var data = new UserAccountCreatedEventGroupDTO(
+        var data = new UserAccountEventCreatedDTO(
             userAccount.id(),
             "user_account_created",
-            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.knownAdmin(), userAccount),
             UserAccountConverter.convertToUserAccountDTO(userAccount)
         );
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("dto.UserAccountCreatedEventGroup");
+            message.getMessageProperties().setType("dto.UserAccountEventCreated");
             return message;
         });
     }
 
     public void notifyProfileUpdated(UserAccount userAccount) {
-        var data = new UserAccountEventGroupDTO(
+        var data = new UserAccountEventChangedDTO(
             userAccount.id(),
             "user_account_changed",
-            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userRoleService), userAccount),
-            userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.knownAdmin(), userAccount),
             UserAccountConverter.convertToUserAccountDTO(userAccount)
         );
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("dto.UserAccountEventGroup");
+            message.getMessageProperties().setType("dto.UserAccountEventChanged");
             return message;
         });
     }
 
     public void notifyProfileDeleted(long userId) {
-        var data = new UserAccountDeletedEventDTO(
+        var data = new UserAccountEventDeletedDTO(
             userId,
             "user_account_deleted"
         );
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("dto.UserAccountDeletedEvent");
+            message.getMessageProperties().setType("dto.UserAccountEventDeleted");
             return message;
         });
     }

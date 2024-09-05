@@ -20,9 +20,9 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 	res.AddToRegistryIfNeed(dto.GlobalUserEvent{})
 	res.AddToRegistryIfNeed([]dto.UserOnline{})
 	res.AddToRegistryIfNeed(dto.GeneralEvent{})
-	res.AddToRegistryIfNeed(dto.UserAccountEventGroup{})
-	res.AddToRegistryIfNeed(dto.UserAccountCreatedEventGroup{})
-	res.AddToRegistryIfNeed(dto.UserAccountDeletedEvent{})
+	res.AddToRegistryIfNeed(dto.UserAccountEventChanged{})
+	res.AddToRegistryIfNeed(dto.UserAccountEventCreated{})
+	res.AddToRegistryIfNeed(dto.UserAccountEventDeleted{})
 	res.AddToRegistryIfNeed(dto.UserSessionsKilledEvent{})
 	return res
 }

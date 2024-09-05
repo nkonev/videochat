@@ -23,6 +23,7 @@ aaa:
   url:
     base: "http://localhost:8060"
     requestForOnline: "/internal/user/request-for-online"
+    userExtended: "/internal/user/extended"
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"

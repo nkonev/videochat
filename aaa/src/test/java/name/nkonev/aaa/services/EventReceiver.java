@@ -2,8 +2,8 @@ package name.nkonev.aaa.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.dto.UserAccountDTO;
-import name.nkonev.aaa.dto.UserAccountDeletedEventDTO;
-import name.nkonev.aaa.dto.UserAccountEventGroupDTO;
+import name.nkonev.aaa.dto.UserAccountEventChangedDTO;
+import name.nkonev.aaa.dto.UserAccountEventDeletedDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -24,20 +24,20 @@ public class EventReceiver {
 
     private final ConcurrentLinkedQueue<UserAccountDTO> changedQueue = new ConcurrentLinkedQueue<>();
 
-    private final ConcurrentLinkedQueue<UserAccountDeletedEventDTO> deletedQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<UserAccountEventDeletedDTO> deletedQueue = new ConcurrentLinkedQueue<>();
 
     @RabbitListener(queues = QUEUE_PROFILE_TEST)
     public void listen(org.springframework.amqp.core.Message message) throws IOException {
-        LOGGER.info("Received <" + message + ">");
+        LOGGER.info("Received {}", message);
         switch (message.getMessageProperties().getType()) {
-            case "dto.UserAccountDeletedEvent": {
-                var m = objectMapper.readValue(message.getBody(), UserAccountDeletedEventDTO.class);
+            case "dto.UserAccountEventDeleted": {
+                var m = objectMapper.readValue(message.getBody(), UserAccountEventDeletedDTO.class);
                 deletedQueue.add(m);
                 break;
             }
-            case "dto.UserAccountEventGroup": {
-                var m = objectMapper.readValue(message.getBody(), UserAccountEventGroupDTO.class);
-                changedQueue.add(m.forRoleUser());
+            case "dto.UserAccountEventChanged": {
+                var m = objectMapper.readValue(message.getBody(), UserAccountEventChangedDTO.class);
+                changedQueue.add(m.user());
                 break;
             }
             default: {
@@ -67,7 +67,7 @@ public class EventReceiver {
         return deletedQueue.size();
     }
 
-    public UserAccountDeletedEventDTO getLastDeleted() {
+    public UserAccountEventDeletedDTO getLastDeleted() {
         return deletedQueue.poll();
     }
 }

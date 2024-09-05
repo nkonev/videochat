@@ -183,6 +183,14 @@ public class UserProfileService {
     }
 
     @Transactional
+    public UserAccountDTOExtended getUserExtendedInternal(long userId, long behalfUserId) {
+        final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
+        final UserAccount behalfUserAccountEntity = userAccountRepository.findById(behalfUserId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
+        var behalfUserAccountPrincipal = userAccountConverter.convertToUserAccountDetailsDTO(behalfUserAccountEntity);
+        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(behalfUserAccountPrincipal, userRoleService), userAccountEntity);
+    }
+
+    @Transactional
     public List<UserAccountDTO> getUsersInternal(
         List<Long> userIds
     ) {

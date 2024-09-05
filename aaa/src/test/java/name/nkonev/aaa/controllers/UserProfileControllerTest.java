@@ -35,7 +35,6 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.session.Session;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.util.UriBuilder;
 
 import java.net.HttpCookie;
 import java.net.URI;
@@ -527,7 +526,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         await().ignoreExceptions().until(() -> receiver.sizeDeleted(), s -> s > 0);
         Assertions.assertEquals(1, receiver.sizeDeleted());
 
-        final UserAccountDeletedEventDTO userAccountEvent = receiver.getLastDeleted();
+        final UserAccountEventDeletedDTO userAccountEvent = receiver.getLastDeleted();
         Assertions.assertEquals(id, userAccountEvent.userId());
     }
 

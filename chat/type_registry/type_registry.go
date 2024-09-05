@@ -16,7 +16,7 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 		typeRegistry: typeRegistry,
 	}
 
-	res.AddToRegistryIfNeed(dto.UserAccountEventGroup{})
+	res.AddToRegistryIfNeed(dto.UserAccountEventChanged{})
 	return res
 }
 

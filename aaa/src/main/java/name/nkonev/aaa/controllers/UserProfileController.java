@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import static name.nkonev.aaa.Constants.QueryVariables.BEHALF_USER_ID;
+
 /**
  * Created by nik on 08.06.17.
  */
@@ -98,6 +100,15 @@ public class UserProfileController {
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
     ) {
         return userProfileService.getUser(userId, userAccountPrincipal);
+    }
+
+    @ResponseBody
+    @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.EXTENDED+Constants.Urls.USER_ID)
+    public UserAccountDTOExtended getUserExtendedInternal(
+        @PathVariable(Constants.PathVariables.USER_ID) long userId,
+        @RequestParam(BEHALF_USER_ID) long behalfUserId
+    ) {
+        return userProfileService.getUserExtendedInternal(userId, behalfUserId);
     }
 
     @ResponseBody

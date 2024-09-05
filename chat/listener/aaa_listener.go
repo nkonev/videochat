@@ -39,14 +39,14 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 		anInstance := typeRegistry.MakeInstance(aType)
 
 		switch bindTo := anInstance.(type) {
-		case dto.UserAccountEventGroup:
+		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
 				Logger.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			if bindTo.EventType == "user_account_changed" {
-				not.NotifyAboutProfileChanged(ctx, bindTo.ForRoleUser, db)
+				not.NotifyAboutProfileChanged(ctx, bindTo.User, db)
 			}
 
 		default:
