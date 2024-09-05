@@ -54,6 +54,7 @@
     <v-card-actions class="mx-2 nominheight">
         <v-chip v-for="(role, index) in viewableUser?.additionalData?.roles"
           density="comfortable"
+          class="mr-1"
           text-color="white"
         >
           <template v-slot:default>
