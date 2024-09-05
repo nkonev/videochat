@@ -13,6 +13,7 @@ import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
 import name.nkonev.aaa.security.*;
 import name.nkonev.aaa.utils.PageUtils;
 import jakarta.servlet.http.HttpSession;
+import name.nkonev.aaa.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.session.Session;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -68,6 +70,9 @@ public class UserProfileService {
 
     @Autowired
     private AaaProperties aaaProperties;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileService.class);
 
@@ -204,95 +209,108 @@ public class UserProfileService {
         return result;
     }
 
-    @Transactional
     public UserSelfProfileDTO editNonEmpty(
             UserAccountDetailsDTO userAccount,
-            EditUserDTO userAccountDTO,
+            EditUserDTO editUserAccountDTO,
             Language language,
             HttpSession httpSession
     ) {
-        if (userAccount == null) {
-            throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
-        }
-
-        userAccountDTO = UserAccountConverter.normalize(userAccountDTO, false);
-
-        UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
-
-        // check email already present
-        if (userAccountDTO.email() != null && exists.email() != null && !exists.email().equals(userAccountDTO.email()) && !checkService.checkEmailIsFree(userAccountDTO.email())) {
-            LOGGER.info("User {} tries to take an email {} which is already busy", userAccount.getId(), userAccountDTO.email());
-            // we care for email leak...
-            return UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
-        }
-
-        // check login already present
-        if (userAccountDTO.login() != null && !exists.username().equals(userAccountDTO.login())) {
-            checkService.checkLoginIsFree(userAccountDTO.login());
-        }
-
-        var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
-        exists = resp.userAccount();
-        exists = userAccountRepository.save(exists);
-
-        switch (resp.action()) {
-            case NEW_EMAIL_WAS_SET -> {
-                var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id(), resp.newEmail());
-                asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, exists.username(), language);
+        var ret = transactionTemplate.execute(status -> {
+            if (userAccount == null) {
+                throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
             }
-            case SHOULD_REMOVE_NEW_EMAIL -> changeEmailConfirmationTokenRepository.deleteById(userAccount.getId());
+
+            var userAccountDTO = UserAccountConverter.normalize(editUserAccountDTO, false);
+
+            UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
+
+            // check email already present
+            if (userAccountDTO.email() != null && exists.email() != null && !exists.email().equals(userAccountDTO.email()) && !checkService.checkEmailIsFree(userAccountDTO.email())) {
+                LOGGER.info("User {} tries to take an email {} which is already busy", userAccount.getId(), userAccountDTO.email());
+                // we care for email leak...
+                return new Pair<>(
+                    (UserAccount)null,
+                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession))
+                );
+            }
+
+            // check login already present
+            if (userAccountDTO.login() != null && !exists.username().equals(userAccountDTO.login())) {
+                checkService.checkLoginIsFree(userAccountDTO.login());
+            }
+
+            var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+            exists = resp.userAccount();
+            exists = userAccountRepository.save(exists);
+
+            switch (resp.action()) {
+                case NEW_EMAIL_WAS_SET -> {
+                    var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id(), resp.newEmail());
+                    asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, exists.username(), language);
+                }
+                case SHOULD_REMOVE_NEW_EMAIL -> changeEmailConfirmationTokenRepository.deleteById(userAccount.getId());
+            }
+
+            SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, exists);
+            return new Pair<>(
+                exists,
+                UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession))
+            );
+        });
+
+        if (ret.a() != null) {
+            notifier.notifyProfileUpdated(ret.a());
         }
 
-        SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, exists);
-
-        notifier.notifyProfileUpdated(exists);
-
-        return UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession));
+        return ret.b();
     }
-
     private ChangeEmailConfirmationToken createChangeEmailConfirmationToken(long userId, String newEmail) {
         var uuid = UUID.randomUUID();
         ChangeEmailConfirmationToken changeEmailConfirmationToken = new ChangeEmailConfirmationToken(userId, uuid, newEmail, aaaProperties.confirmation().changeEmail().token().ttl().getSeconds());
         return changeEmailConfirmationTokenRepository.save(changeEmailConfirmationToken);
     }
 
-    @Transactional
     public String changeEmailConfirm(long userId, UUID uuid, HttpSession httpSession) {
-        Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(userId);
-        if (userConfirmationTokenOptional.isEmpty()) {
-            LOGGER.info("For uuid {}, change email token is not found", uuid);
-            return aaaProperties.confirmChangeEmailExitTokenNotFoundUrl();
+        var ret = transactionTemplate.execute(status -> {
+            Optional<ChangeEmailConfirmationToken> userConfirmationTokenOptional = changeEmailConfirmationTokenRepository.findById(userId);
+            if (userConfirmationTokenOptional.isEmpty()) {
+                LOGGER.info("For uuid {}, change email token is not found", uuid);
+                return new Pair<>(aaaProperties.confirmChangeEmailExitTokenNotFoundUrl(), (UserAccount)null);
+            }
+            ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
+            if (!userConfirmationToken.uuid().equals(uuid)) {
+                LOGGER.info("For uuid {}, change email token has the different uuid, exiting", uuid);
+                return new Pair<>(aaaProperties.confirmChangeEmailExitTokenNotFoundUrl(), (UserAccount)null);
+            }
+
+            UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
+            var newEmail = userConfirmationToken.newEmail();
+            if (!StringUtils.hasLength(newEmail)) {
+                LOGGER.warn("Token has no email userId {}", userAccount.id());
+                return new Pair<>(aaaProperties.confirmChangeEmailExitSuccessUrl(), (UserAccount)null);
+            }
+
+            // check email already present
+            if (!checkService.checkEmailIsFree(newEmail)) {
+                LOGGER.info("Somebody has already taken this email {}", newEmail);
+                return new Pair<>(aaaProperties.confirmChangeEmailExitSuccessUrl(), (UserAccount)null);
+            }
+
+            userAccount = userAccount.withEmail(newEmail);
+            userAccount = userAccountRepository.save(userAccount);
+
+            changeEmailConfirmationTokenRepository.deleteById(userId);
+
+            var auth = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
+            SecurityUtils.setToContext(httpSession, auth);
+            return new Pair<>(aaaProperties.confirmChangeEmailExitSuccessUrl(), userAccount);
+        });
+
+        if (ret.b() != null) {
+            notifier.notifyProfileUpdated(ret.b());
         }
-        ChangeEmailConfirmationToken userConfirmationToken = userConfirmationTokenOptional.get();
-        if (!userConfirmationToken.uuid().equals(uuid)) {
-            LOGGER.info("For uuid {}, change email token has the different uuid, exiting", uuid);
-            return aaaProperties.confirmChangeEmailExitTokenNotFoundUrl();
-        }
 
-        UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        var newEmail = userConfirmationToken.newEmail();
-        if (!StringUtils.hasLength(newEmail)) {
-            LOGGER.warn("Token has no email userId {}", userAccount.id());
-            return aaaProperties.confirmChangeEmailExitSuccessUrl();
-        }
-
-        // check email already present
-        if (!checkService.checkEmailIsFree(newEmail)) {
-            LOGGER.info("Somebody has already taken this email {}", newEmail);
-            return aaaProperties.confirmChangeEmailExitSuccessUrl();
-        }
-
-        userAccount = userAccount.withEmail(newEmail);
-        userAccount = userAccountRepository.save(userAccount);
-
-        changeEmailConfirmationTokenRepository.deleteById(userId);
-
-        var auth = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
-        SecurityUtils.setToContext(httpSession, auth);
-
-        notifier.notifyProfileUpdated(userAccount);
-
-        return aaaProperties.confirmChangeEmailExitSuccessUrl();
+        return ret.a();
     }
 
     @Transactional
@@ -340,84 +358,101 @@ public class UserProfileService {
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.force_logged_out, httpSession.getId(), userAccount.getId());
     }
 
-    @Transactional
     public UserAccountDTOExtended setLocked(UserAccountDetailsDTO userAccountDetailsDTO, LockDTO lockDTO){
-        UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
-        if (lockDTO.lock()){
-            aaaUserDetailsService.killSessions(lockDTO.userId(), ForceKillSessionsReasonType.user_locked);
-        }
-        userAccount = userAccount.withLocked(lockDTO.lock());
-        userAccount = userAccountRepository.save(userAccount);
-
-        notifier.notifyProfileUpdated(userAccount);
-
-        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
+        var ret = transactionTemplate.execute(status -> {
+            UserAccount userAccount = aaaUserDetailsService.getUserAccount(lockDTO.userId());
+            if (lockDTO.lock()){
+                aaaUserDetailsService.killSessions(lockDTO.userId(), ForceKillSessionsReasonType.user_locked);
+            }
+            userAccount = userAccount.withLocked(lockDTO.lock());
+            userAccount = userAccountRepository.save(userAccount);
+            return new Pair<>(
+                userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount),
+                userAccount
+            );
+        });
+        notifier.notifyProfileUpdated(ret.b());
+        return ret.a();
     }
 
-    @Transactional
     public UserAccountDTOExtended setConfirmed(UserAccountDetailsDTO userAccountDetailsDTO, ConfirmDTO confirmDTO){
-        UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
-        if (!confirmDTO.confirm()){
-            aaaUserDetailsService.killSessions(confirmDTO.userId(), ForceKillSessionsReasonType.user_unconfirmed);
-        }
-        userAccount = userAccount.withConfirmed(confirmDTO.confirm());
-        userAccount = userAccountRepository.save(userAccount);
-
-        notifier.notifyProfileUpdated(userAccount);
-
-        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
+        var ret = transactionTemplate.execute(status -> {
+            UserAccount userAccount = aaaUserDetailsService.getUserAccount(confirmDTO.userId());
+            if (!confirmDTO.confirm()){
+                aaaUserDetailsService.killSessions(confirmDTO.userId(), ForceKillSessionsReasonType.user_unconfirmed);
+            }
+            userAccount = userAccount.withConfirmed(confirmDTO.confirm());
+            userAccount = userAccountRepository.save(userAccount);
+            return new Pair<>(
+                userAccount,
+                userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount)
+            );
+        });
+        notifier.notifyProfileUpdated(ret.a());
+        return ret.b();
     }
 
-    @Transactional
+    public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
+        var ret = transactionTemplate.execute(status -> {
+            Assert.isTrue(!roles.isEmpty(), "Role should be");
+            UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
+            userAccount = userAccount.withRoles(roles.toArray(new UserRole[0]));
+            userAccount = userAccountRepository.save(userAccount);
+            if (!userAccountDetailsDTO.getId().equals(userId)) {
+                aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_roles_changed);
+            }
+            return new Pair<>(
+                    userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount),
+                    userAccount
+                );
+        });
+        notifier.notifyProfileUpdated(ret.b());
+        return ret.a();
+    }
+
     public void deleteUser(UserAccountDetailsDTO userAccountDetailsDTO, long userId){
+        userAccountRepository.deleteById(userId);
+
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
-        userAccountRepository.deleteById(userId);
     }
 
-    @Transactional
-    public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
-        Assert.isTrue(!roles.isEmpty(), "Role should be");
-        UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        userAccount = userAccount.withRoles(roles.toArray(new UserRole[0]));
-        userAccount = userAccountRepository.save(userAccount);
-        if (!userAccountDetailsDTO.getId().equals(userId)) {
-            aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_roles_changed);
-        }
-        notifier.notifyProfileUpdated(userAccount);
-        return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount);
-    }
-
-    @Transactional
     public void selfDeleteUser(UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
+        userAccountRepository.deleteById(userId);
+
         aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
-        userAccountRepository.deleteById(userId);
     }
 
-    @Transactional
     public UserSelfProfileDTO selfDeleteBindingOauth2Provider(
         UserAccountDetailsDTO userAccountDetailsDTO,
         String provider,
         HttpSession httpSession
     ){
-        long userId = userAccountDetailsDTO.getId();
-        UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
-        UserAccount.OAuth2Identifiers oAuth2Identifiers = switch (provider) {
-            case OAuth2Providers.FACEBOOK -> userAccount.oauth2Identifiers().withFacebookId(null);
-            case OAuth2Providers.VKONTAKTE -> userAccount.oauth2Identifiers().withVkontakteId(null);
-            case OAuth2Providers.GOOGLE -> userAccount.oauth2Identifiers().withGoogleId(null);
-            case OAuth2Providers.KEYCLOAK -> userAccount.oauth2Identifiers().withKeycloakId(null);
-            default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
-        };
-        userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
-        userAccount = userAccountRepository.save(userAccount);
-        SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, userAccount);
+        var ret = transactionTemplate.execute(status -> {
+            long userId = userAccountDetailsDTO.getId();
+            UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
+            UserAccount.OAuth2Identifiers oAuth2Identifiers = switch (provider) {
+                case OAuth2Providers.FACEBOOK -> userAccount.oauth2Identifiers().withFacebookId(null);
+                case OAuth2Providers.VKONTAKTE -> userAccount.oauth2Identifiers().withVkontakteId(null);
+                case OAuth2Providers.GOOGLE -> userAccount.oauth2Identifiers().withGoogleId(null);
+                case OAuth2Providers.KEYCLOAK -> userAccount.oauth2Identifiers().withKeycloakId(null);
+                default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
+            };
+            userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);
+            userAccount = userAccountRepository.save(userAccount);
+            SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, userAccount);
+            return
+                new Pair<>(
+                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastLoginDateTime(), getExpiresAt(httpSession)),
+                    userAccount
+                );
+        });
 
-        notifier.notifyProfileUpdated(userAccount);
+        notifier.notifyProfileUpdated(ret.b());
 
-        return UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastLoginDateTime(), getExpiresAt(httpSession));
+        return ret.a();
     }
 
     @Transactional
