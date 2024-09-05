@@ -56,7 +56,7 @@ export default {
     message_creating: "Новое сообщение",
     message_broadcast: "Показать всем",
     user_is_writing: "печатает...",
-    user_open_chat: "Открыть тет-а-тет диалог",
+    user_open_chat: "Открыть диалог",
     user_online: "Онлайн",
     user_in_video_call: "В звонке",
     user_offline: "Оффлайн",
