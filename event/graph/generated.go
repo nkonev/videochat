@@ -307,7 +307,7 @@ type ComplexityRoot struct {
 	Subscription struct {
 		ChatEvents        func(childComplexity int, chatID int64) int
 		GlobalEvents      func(childComplexity int) int
-		UserAccountEvents func(childComplexity int) int
+		UserAccountEvents func(childComplexity int, userIdsFilter []int64) int
 		UserStatusEvents  func(childComplexity int, userIds []int64) int
 	}
 
@@ -411,7 +411,7 @@ type SubscriptionResolver interface {
 	ChatEvents(ctx context.Context, chatID int64) (<-chan *model.ChatEvent, error)
 	GlobalEvents(ctx context.Context) (<-chan *model.GlobalEvent, error)
 	UserStatusEvents(ctx context.Context, userIds []int64) (<-chan []*model.UserStatusEvent, error)
-	UserAccountEvents(ctx context.Context) (<-chan *model.UserAccountEvent, error)
+	UserAccountEvents(ctx context.Context, userIdsFilter []int64) (<-chan *model.UserAccountEvent, error)
 }
 
 type executableSchema struct {
@@ -1675,7 +1675,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Subscription.UserAccountEvents(childComplexity), true
+		args, err := ec.field_Subscription_userAccountEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.UserAccountEvents(childComplexity, args["userIdsFilter"].([]int64)), true
 
 	case "Subscription.userStatusEvents":
 		if e.complexity.Subscription.UserStatusEvents == nil {
@@ -2191,6 +2196,21 @@ func (ec *executionContext) field_Subscription_chatEvents_args(ctx context.Conte
 		}
 	}
 	args["chatId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_userAccountEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []int64
+	if tmp, ok := rawArgs["userIdsFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIdsFilter"))
+		arg0, err = ec.unmarshalOInt642ᚕint64ᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userIdsFilter"] = arg0
 	return args, nil
 }
 
@@ -10520,7 +10540,7 @@ func (ec *executionContext) _Subscription_userAccountEvents(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().UserAccountEvents(rctx)
+		return ec.resolvers.Subscription().UserAccountEvents(rctx, fc.Args["userIdsFilter"].([]int64))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10551,7 +10571,7 @@ func (ec *executionContext) _Subscription_userAccountEvents(ctx context.Context,
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_userAccountEvents(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -10566,6 +10586,17 @@ func (ec *executionContext) fieldContext_Subscription_userAccountEvents(_ contex
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserAccountEvent", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_userAccountEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -18060,6 +18091,44 @@ func (ec *executionContext) marshalOHasUnreadMessagesChangedEvent2ᚖnkonevᚗna
 		return graphql.Null
 	}
 	return ec._HasUnreadMessagesChangedEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInt642ᚕint64ᚄ(ctx context.Context, v interface{}) ([]int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]int64, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInt642int64(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOInt642ᚕint64ᚄ(ctx context.Context, sel ast.SelectionSet, v []int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNInt642int64(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {

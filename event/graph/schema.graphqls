@@ -355,5 +355,5 @@ type Subscription {
     chatEvents(chatId: Int64!): ChatEvent!
     globalEvents: GlobalEvent!
     userStatusEvents(userIds: [Int64!]!): [UserStatusEvent!]!
-    userAccountEvents: UserAccountEvent!
+    userAccountEvents(userIdsFilter: [Int64!]): UserAccountEvent!
 }

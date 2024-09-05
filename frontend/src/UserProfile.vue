@@ -130,17 +130,19 @@
 <script>
 
 import axios from "axios";
-import {chat_name} from "./router/routes";
+import {chat_name, profile_list_name} from "./router/routes";
 import {deepCopy, getLoginColoredStyle, hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
 import bus, {LOGGED_OUT, PROFILE_SET} from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
+import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 
 export default {
   mixins: [
-    userStatusMixin('userProfile')
+      graphqlSubscriptionMixin('userAccountEventsInUserProfile'), // subscription
+      userStatusMixin('userStatusInUserProfile'), // another subscription
   ],
   data() {
     return {
@@ -237,10 +239,12 @@ export default {
     },
     onLoggedOut() {
       this.graphQlUserStatusUnsubscribe();
+      this.graphQlUnsubscribe();
     },
     onProfileSet() {
       this.loadUser();
       this.graphQlUserStatusSubscribe();
+      this.graphQlSubscribe();
       this.$nextTick(()=>{
           axios.put("/api/video/user/request-status", null, {
               params: {
@@ -251,6 +255,62 @@ export default {
     },
     canDrawUsers() {
       return !!this.chatStore.currentUser
+    },
+    getGraphQlSubscriptionQuery() {
+          return `
+                subscription {
+                  userAccountEvents(userIdsFilter: ${this.getUserIdsSubscribeTo()}) {
+                    userAccountEvent {
+                      ... on UserAccountExtendedDto {
+                        id
+                        login
+                        avatar
+                        avatarBig
+                        shortInfo
+                        lastLoginDateTime
+                        oauth2Identifiers {
+                          facebookId
+                          vkontakteId
+                          googleId
+                          keycloakId
+                        }
+                        additionalData {
+                          enabled
+                          expired
+                          locked
+                          confirmed
+                          roles
+                        }
+                        canLock
+                        canDelete
+                        canChangeRole
+                        canConfirm
+                        loginColor
+                        canRemoveSessions
+                        ldap
+                      }
+                      ... on UserDeletedDto {
+                        id
+                      }
+                    }
+                    eventType
+                  }
+                }
+            `
+    },
+    onNextSubscriptionElement(e) {
+          const d = e.data?.userAccountEvents;
+          if (d.eventType === 'user_account_changed') {
+              this.onEditUser(d.userAccountEvent);
+          } else if (d.eventType === 'user_account_deleted') {
+              this.onDeleteUser(d.userAccountEvent);
+          }
+    },
+    onDeleteUser(u) {
+        this.$router.push({name: profile_list_name})
+    },
+    onEditUser(u) {
+        this.viewableUser = u;
     },
   },
   mounted() {
@@ -266,6 +326,7 @@ export default {
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(PROFILE_SET, this.onProfileSet);
     this.graphQlUserStatusUnsubscribe();
+    this.graphQlUnsubscribe();
     this.unsetMainTitle();
 
     this.viewableUser = null;

@@ -292,8 +292,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 }
 
 // UserAccountEvents is the resolver for the userAccountEvents field.
-func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *model.UserAccountEvent, error) {
-	// user online
+func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFilter []int64) (<-chan *model.UserAccountEvent, error) {
 	authResult, ok := ctx.Value(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
@@ -311,15 +310,17 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 
 		switch typedEvent := event.(type) {
 		case dto.UserAccountEventChanged:
-			var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
-			if anEvent != nil {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-				defer span.End()
-				span.SetAttributes(
-					attribute.Int64("userId", typedEvent.UserId),
-				)
+			if filter(typedEvent.UserId, userIdsFilter) {
+				var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
+				if anEvent != nil {
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					defer span.End()
+					span.SetAttributes(
+						attribute.Int64("userId", typedEvent.UserId),
+					)
 
-				cam <- anEvent
+					cam <- anEvent
+				}
 			}
 			break
 		default:
@@ -340,15 +341,17 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 
 		switch typedEvent := event.(type) {
 		case dto.UserAccountEventCreated:
-			var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
-			if anEvent != nil {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-				defer span.End()
-				span.SetAttributes(
-					attribute.Int64("userId", typedEvent.UserId),
-				)
+			if filter(typedEvent.UserId, userIdsFilter) {
+				var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
+				if anEvent != nil {
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					defer span.End()
+					span.SetAttributes(
+						attribute.Int64("userId", typedEvent.UserId),
+					)
 
-				cam <- anEvent
+					cam <- anEvent
+				}
 			}
 			break
 		default:
@@ -369,15 +372,17 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 
 		switch typedEvent := event.(type) {
 		case dto.UserAccountEventDeleted:
-			var anEvent = convertUserAccountDeletedEvent(typedEvent.EventType, typedEvent.UserId)
-			if anEvent != nil {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
-				defer span.End()
-				span.SetAttributes(
-					attribute.Int64("userId", typedEvent.UserId),
-				)
+			if filter(typedEvent.UserId, userIdsFilter) {
+				var anEvent = convertUserAccountDeletedEvent(typedEvent.EventType, typedEvent.UserId)
+				if anEvent != nil {
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					defer span.End()
+					span.SetAttributes(
+						attribute.Int64("userId", typedEvent.UserId),
+					)
 
-				cam <- anEvent
+					cam <- anEvent
+				}
 			}
 		default:
 			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
@@ -417,6 +422,13 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context) (<-chan *m
 	}()
 
 	return cam, nil
+}
+
+func filter(userFromBus int64, userIdsFilter []int64) bool {
+	if len(userIdsFilter) == 0 {
+		return true
+	}
+	return utils.Contains(userIdsFilter, userFromBus)
 }
 
 // Query returns QueryResolver implementation.
