@@ -12,8 +12,7 @@
       >
       </v-img>
       <span class="d-flex flex-wrap">
-        <span class="text-h3" :style="getLoginColoredStyle(viewableUser)">
-          {{ viewableUser.login }}
+        <span class="text-h3" :style="getLoginColoredStyle(viewableUser)" v-html="getUserNamePretty()">
         </span>
 
         <span class="ml-2 mb-2 d-flex flex-row align-self-end">
@@ -47,6 +46,8 @@
             {{ $vuetify.locale.t('$vuetify.user_open_chat') }}
           </template>
         </v-btn>
+
+        <v-btn v-if="isNotMyself()" class="ml-2" variant="plain" @click="onShowContextMenu" icon="mdi-menu"/>
       </v-container>
     </v-container>
 
@@ -125,6 +126,20 @@
       </v-chip>
 
     </v-card-actions>
+
+    <UserListContextMenu
+          ref="contextMenuRef"
+          @tetATet="this.tetATetUser"
+          @unlockUser="this.unlockUser"
+          @lockUser="this.lockUser"
+          @unconfirmUser="this.unconfirmUser"
+          @confirmUser="this.confirmUser"
+          @deleteUser="this.deleteUser"
+          @changeRole="this.changeRole"
+          @removeSessions="this.removeSessions"
+    >
+    </UserListContextMenu>
+    <UserRoleModal/>
   </v-container>
 </template>
 
@@ -136,11 +151,24 @@ import {deepCopy, getLoginColoredStyle, hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
-import bus, {LOGGED_OUT, PROFILE_SET} from "@/bus/bus";
+import bus, {
+    CHANGE_ROLE_DIALOG,
+    CLOSE_SIMPLE_MODAL,
+    FOCUS,
+    LOGGED_OUT,
+    OPEN_SIMPLE_MODAL,
+    PROFILE_SET
+} from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
+import UserListContextMenu from "@/UserListContextMenu.vue";
+import UserRoleModal from "@/UserRoleModal.vue";
 
 export default {
+  components: {
+      UserRoleModal,
+      UserListContextMenu,
+  },
   mixins: [
       graphqlSubscriptionMixin('userAccountEventsInUserProfile'), // subscription
       userStatusMixin('userStatusInUserProfile'), // another subscription
@@ -177,6 +205,13 @@ export default {
   methods: {
     getLoginColoredStyle,
     getHumanReadableDate,
+    getUserNamePretty() {
+      if (this.viewableUser?.additionalData && (!this.viewableUser?.additionalData.confirmed || this.viewableUser?.additionalData.locked)) {
+          return "<s>" + this.viewableUser?.login + "</s>"
+      } else {
+          return this.viewableUser?.login
+      }
+    },
     isNotMyself() {
       return this.chatStore.currentUser && this.chatStore.currentUser.id != this.viewableUser.id
     },
@@ -185,6 +220,48 @@ export default {
       axios.get(`/api/aaa/user/${this.userId}`).then((response) => {
         this.viewableUser = response.data;
       })
+    },
+    unlockUser(user) {
+      axios.post('/api/aaa/user/lock', {userId: user.id, lock: false});
+    },
+    lockUser(user) {
+      axios.post('/api/aaa/user/lock', {userId: user.id, lock: true});
+    },
+    unconfirmUser(user) {
+      axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: false});
+    },
+    confirmUser(user) {
+      axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: true});
+    },
+    deleteUser(user) {
+      bus.emit(OPEN_SIMPLE_MODAL, {
+          buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
+          title: this.$vuetify.locale.t('$vuetify.delete_user_title', user.id),
+          text: this.$vuetify.locale.t('$vuetify.delete_user_text', user.login),
+          actionFunction: (that) => {
+              that.loading = true;
+              axios.delete('/api/aaa/user', { params: {
+                      userId: user.id
+                  }}).then(() => {
+                  bus.emit(CLOSE_SIMPLE_MODAL);
+              }).finally(()=>{
+                  that.loading = false;
+              })
+          }
+      });
+    },
+    changeRole(user) {
+      bus.emit(CHANGE_ROLE_DIALOG, user)
+    },
+    removeSessions(user) {
+      axios.delete('/api/aaa/sessions', {
+          params: {
+              userId: user.id
+          }
+      });
+    },
+    tetATetUser(user) {
+      this.tetATet(user.id)
     },
     tetATet(withUserId) {
       axios.put(`/api/chat/tet-a-tet/${withUserId}`).then(response => {
@@ -313,10 +390,36 @@ export default {
     onEditUser(u) {
         this.viewableUser = u;
     },
+    onFocus() {
+          if (this.chatStore.currentUser) {
+              axios.put(`/api/aaa/user/request-for-online`, null, {
+                  params: {
+                      userId: this.userId
+                  },
+              }).then(()=>{
+                  this.requestInVideo();
+              })
+          }
+    },
+    requestInVideo() {
+          this.$nextTick(()=>{
+              axios.put("/api/video/user/request-status", null, {
+                  params: {
+                      userId: this.userId
+                  },
+              });
+          })
+    },
+    onShowContextMenu(e) {
+        if (this.chatStore.currentUser) {
+            this.$refs.contextMenuRef.onShowContextMenu(e, this.viewableUser);
+        }
+    },
   },
   mounted() {
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(FOCUS, this.onFocus);
     this.setMainTitle()
 
     if (this.canDrawUsers()) {
@@ -326,6 +429,8 @@ export default {
   beforeUnmount() {
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(FOCUS, this.onFocus);
+
     this.graphQlUserStatusUnsubscribe();
     this.graphQlUnsubscribe();
     this.unsetMainTitle();

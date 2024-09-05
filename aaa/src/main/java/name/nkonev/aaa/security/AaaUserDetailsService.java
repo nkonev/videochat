@@ -106,9 +106,19 @@ public class AaaUserDetailsService implements UserDetailsService {
         killSessions(userId, reasonType, null, null);
     }
 
+    public void killSessions(UserAccount userToFillSessions, ForceKillSessionsReasonType reasonType) {
+        killSessions(userToFillSessions, reasonType, null, null);
+    }
+
     public void killSessions(long userId, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
+        UserAccount userToFillSessions = getUserAccount(userId);
+        killSessions(userToFillSessions, reasonType, filterOutSession, currentUserId);
+    }
+
+    public void killSessions(UserAccount userToFillSessions, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
+        var userId = userToFillSessions.id();
+        var userName = userToFillSessions.username();
         LOGGER.info("Killing sessions for userId={}, reason={}", userId, reasonType);
-        String userName = getUserAccount(userId).username();
         Map<String, Session> sessionMap = getSessions(userName);
         sessionMap.keySet().stream().filter(aSession -> filterOutSession != null ? !aSession.equals(filterOutSession) : true).forEach(session -> redisOperationsSessionRepository.deleteById(session));
 

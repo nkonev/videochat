@@ -411,17 +411,19 @@ public class UserProfileService {
     }
 
     public void deleteUser(UserAccountDetailsDTO userAccountDetailsDTO, long userId){
+        var userToKillSessions = userAccountRepository.findById(userId).orElseThrow();
         userAccountRepository.deleteById(userId);
 
-        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
+        aaaUserDetailsService.killSessions(userToKillSessions, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
     }
 
     public void selfDeleteUser(UserAccountDetailsDTO userAccountDetailsDTO){
         long userId = userAccountDetailsDTO.getId();
+        var userToKillSessions = userAccountRepository.findById(userId).orElseThrow();
         userAccountRepository.deleteById(userId);
 
-        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_deleted);
+        aaaUserDetailsService.killSessions(userToKillSessions, ForceKillSessionsReasonType.user_deleted);
         notifier.notifyProfileDeleted(userId);
     }
 
