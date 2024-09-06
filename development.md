@@ -463,12 +463,12 @@ http://localhost:9080/*
 4. Realm `my_realm2` should be chosen
 5. Client scopes -> Create client scope with name `openid` and set `Include in token scope` in the bottom the page
 6. Assign this scope onto client
-clients -> `my_client2` -> client scopes -> Add client scope, choose `openid`, press Add, then default
-7. Manage -> Users -> Add user `user2`
+Clients -> `my_client2` -> client scopes -> Add client scope, choose `openid`, press Add, then default
+7. Users -> Add user `user2`
 8. User's -> Credentials -> Set password `user_password2`, disable temporal
 9. Realm roles -> Create role `USER`
 10. User's -> Role Mappings -> `Assign roles to user2` -> Choose `Fileter by realm roles` at top left -> add `USER` role
-
+11. Clients -> `my_client2` -> `Capability config` -> enable `Client authentication`, then grab Client Secret from credentials tab
 
 #### Login as user1 (get 3 tokens)
 ```bash

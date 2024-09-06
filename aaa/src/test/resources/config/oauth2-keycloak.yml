@@ -4,6 +4,7 @@ spring.security:
       registration:
         keycloak:
           client-id: my_client2
+          client-secret: "z8cr0Nw2z8c7OpSvEix75GgZeDrWJi60"
           redirect-uri: "{baseUrl}/api/aaa/login/oauth2/code/{registrationId}"
       provider:
         keycloak:
