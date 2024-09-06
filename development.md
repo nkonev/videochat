@@ -11,35 +11,31 @@ sudo systemctl start docker
 sudo systemctl enable docker
 ```
 
-# Admin's corner
-## Troubleshooting
-* Poor quality of screen sharing - a) Disable [simulcast](https://github.com/livekit/livekit/issues/761), b) Increase its resolution
-* Connection to livekit is interrupting if at least one participant uses Firefox. Solution is to disable ICE lite in livekit config.
-* Duplication of your own video source(camera). Or interrupts on Android Chrome(sic!). The solution is to switch from mobile network to (more stable) Wi-Fi.
-### Reasons of not showing video
-* jaeger all-in-one ate too much memory - one of participants didn't see other - restart jaeger.
-* Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
-* Desktop Firefox - try to reload tab or restart entire browser - it helps when Desktop Firefox isn't able to show video. It can be in long-idled Firefox window.
 
-# Development
-
-
-[node check updates](https://www.npmjs.com/package/npm-check-updates)
+# AAA
 
 [Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
 
+
 [Reactive, Security, Session MongoDb](https://medium.com/@hantsy/build-a-reactive-application-with-spring-boot-2-0-and-angular-de0ee5837fed)
 
-# AAA Login
+
+## Login via curl
 ```
 curl -i 'http://localhost:8060/api/aaa/login' -X POST -H 'Accept: application/json, text/plain, */*' -H 'Content-Type: application/x-www-form-urlencoded;charset=utf-8' -H 'X-XSRF-TOKEN: 724f5acd-3d1e-421b-a386-eb17dcacece8' -H 'Cookie: VIDEOCHAT_XSRF_TOKEN=724f5acd-3d1e-421b-a386-eb17dcacece8' --data-raw 'username=admin&password=admin'
 ```
 
-# aaa-with-oauth2
+## aaa-with-oauth2
+use Makefile's goals
+* run-oauth2-emu
+* run-with-oauth2
+
+## aaa-with-oauth2 for IDE
 ```
---spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/demo-migration.yml
+--spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/oauth2-keycloak.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml
 ```
 
+## Dump PostgreSQL
 ```
 docker exec -t videochat_postgres_1 pg_dump -U aaa -b --create --column-inserts --serializable-deferrable
 ```
@@ -53,9 +49,32 @@ http://localhost:8081/api/user/list?userId=1&userId=-1
 curl -i -X PUT -H "Content-Type: application/json" -d '{"recipient": "nikita@example.com", "subject": "Test email", "body": "Test body"}' --url 'http://localhost:8060/internal/email'
 ```
 
+## OAuth2 servers emulator
+```
+curl -X PUT -i 'http://localhost:9080/recreate-oauth2-mocks'
+```
+
+## Starting server for e2e tests
+```
+cd aaa
+export JAVA_HOME=/usr/lib/jvm/java-21
+```
+
+use Makefile's goals
+* run-oauth2-emu
+* run-with-oauth2
+
+
+```
+curl -i -X POST 'http://localhost:9080/recreate-oauth2-mocks'
+```
+
+To interact with emulator, you need to use `http://localhost:8081`, not `http://127.0.0.1:8081` because od host checks in OAuth
+
+
 # Go
 
-## Push down dummy go packages
+## Gorce Go to pull the packages
 ```
 go list -m -json all
 ```
@@ -70,6 +89,8 @@ https://github.com/golang/go/wiki/Modules
 ```bash
 go get -u -t ./...
 ```
+
+
 
 # Node.js
 ## Install nodejs same version as in ci.yml on macOS:
@@ -108,7 +129,7 @@ $ /usr/bin/node /home/nkonev/go_1_11/videochat/frontend/node_modules/fibers/buil
 [In plain Russian](http://forasoft.github.io/webrtc-in-plain-russian/)
 
 
-# Access to video camera (WebRTC) from local network without https from Mobile:
+## Access to video camera (WebRTC) from local network without https from Mobile:
 
 Let's suppose you decided to test videochat in your LAN. You don't have a certificate, you use plain http.
 
@@ -125,7 +146,7 @@ The following steps are going to help you to enable WebRTC for non-https setup (
 1. Configure insecure origins treated as secure
 ![](./.markdown/mobile-ch-1.jpg)
 
-# Validate turn server installation
+## Validate turn server installation
 
 Then install on client machine (your PC)
 ```bash
@@ -151,7 +172,7 @@ Correct output
 2: Average jitter 0.800000 ms; min = 0 ms, max = 2 ms
 ```
 
-# Firefox enable video on non-localhost
+## Firefox enable video on non-localhost
 https://lists.mozilla.org/pipermail/dev-platform/2019-February/023590.html
 about:config
 media.devices.insecure.enabled
@@ -229,6 +250,18 @@ https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 cat /proc/$(pgrep livekit)/limits
 ```
 
+## Known issues of Livekit (Outdated, non-actual)
+
+### Troubleshooting (already taken into account in the video settings)
+* Poor quality of screen sharing - a) Disable [simulcast](https://github.com/livekit/livekit/issues/761), b) Increase its resolution
+* Connection to livekit is interrupting if at least one participant uses Firefox. Solution is to disable ICE lite in livekit config.
+* Duplication of your own video source(camera). Or interrupts on Android Chrome(sic!). The solution is to switch from mobile network to (more stable) Wi-Fi.
+#### Reasons of not showing video
+* jaeger all-in-one ate too much memory - one of participants didn't see other - restart jaeger.
+* Mobile Chrome 101.0.4951.41 - swap it up (e. g. close application and open again) helps when video isn't connected from Mobile Chrome.
+* Desktop Firefox - try to reload tab or restart entire browser - it helps when Desktop Firefox isn't able to show video. It can be in long-idled Firefox window.
+
+
 ## Egress
 Article https://blog.livekit.io/livekit-universal-egress-launch/
 ```
@@ -241,7 +274,7 @@ curl -i -X PUT 'http://localhost:1237/api/video/1/record/stop?egressId=EG_6Kf4zX
 # ion-SFU FAQ (Obsoleted)
 https://github.com/pion/ion-sfu/pull/496/files
 
-## Explaination of two peer connections
+## Explanation of two peer connections
 https://github.com/pion/ion-sfu/issues/652#issuecomment-1078364761
 > ion-sfu does not support perfect negotiation, becuase there were some issues on browser implementation, thats why it uses 2 pc, one to publish and other one to subscribe, that way negotiations would be always one sided.
 
@@ -285,7 +318,7 @@ Some mobile operators impede WebRTC traffic.
 Solution: try to use Wi-Fi.
 
 
-## Simulcast
+### Simulcast
 * https://github.com/pion/webrtc/tree/master/examples/simulcast
 * https://github.com/pion/ion-sfu/pull/189
 * https://github.com/pion/ion-sfu/pull/227
@@ -304,7 +337,15 @@ Firefox [bug about layer order](https://bugzilla.mozilla.org/show_bug.cgi?id=166
 * https://github.com/edudip/ion-sfu/commits/master
 * https://github.com/cryptagon/ion-sfu/commits/master-tandem (With fixing simulcast)
 
-
+## Generate ports
+```python
+for x in range(35200, 35401):
+    print("""
+      - target: %d
+        published: %d
+        protocol: udp
+        mode: host""" % (x, x))
+```
 
 
 # For Github CI
@@ -331,15 +372,7 @@ git show -s --format=%s dda6c910 | grep -F [force]
 ```
 
 
-# Generate ports
-```python
-for x in range(35200, 35401):
-    print("""
-      - target: %d
-        published: %d
-        protocol: udp
-        mode: host""" % (x, x))
-```
+# Firewalld (not actual, not needed)
 
 ## Firewalld help
 [Solve no route to host whe invoke host from container by add firewalld rich rule](https://forums.docker.com/t/no-route-to-host-network-request-from-container-to-host-ip-port-published-from-other-container/39063/6)
@@ -349,17 +382,17 @@ firewall-cmd --permanent --zone=public --list-rich-rules
 firewall-cmd --get-default-zone
 ```
 
-# Add firewall exception on dev
+## Add firewall exception on dev
 ```bash
 firewall-cmd --zone=public --add-port=8081/tcp
 ```
 
-# Open firewall on macOS
+## Open firewall on macOS
 ```
 https://www.macworld.co.uk/how-to/how-open-specific-ports-in-os-x-1010-firewall-3616405/
 ```
 
-# Add firewall exception on prod (not working, not need)
+## Add firewall exception on prod (not working, not need)
 [link](https://www.digitalocean.com/community/tutorials/how-to-configure-the-linux-firewall-for-docker-swarm-on-centos-7)
 ```
 firewall-cmd --zone=public --add-port=3478/tcp  --permanent
@@ -376,7 +409,7 @@ systemctl restart docker
 firewall-cmd --list-all-zones
 ```
 
-# Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
+## Temporarily allow firewalld ports for usage in local network (not necessary in Fedora)
 ```
 firewall-cmd --zone=public --add-port=8081/tcp
 firewall-cmd --zone=public --add-port=3478/tcp
@@ -402,7 +435,7 @@ https://habr.com/en/post/422765/
 Keycloak login/password - see in docker-compose.yml
 
 Open user's keyclock page
-http://localhost:8484/auth/realms/my_realm/account
+http://localhost:8484/auth/realms/my_realm2/account
 
 Open keyclock admin console
 http://localhost:8484/ (keycloak_admin:admin_password)
@@ -410,7 +443,7 @@ http://localhost:8484/ (keycloak_admin:admin_password)
 Open protected page
 http://localhost:8060/api2/user
 
-### Configuring Keycloak:
+### Configuring Keycloak as an OIDC provider for "Login via Keycloak" in aaa:
 1. Login as admin `keycloak_admin`:`admin_password`
 2. Create realm `my_realm2`
 3. Create client `my_client2` with all defaults (Save) and then, after saving set
@@ -429,39 +462,58 @@ clients -> my_client2 -> client scopes -> Add client scope, choose `openid`, pre
 9. Realm roles -> Create role `USER`
 10. User's -> Role Mappings -> add `USER` role
 
-### Links
+#### Links
 * https://habr.com/ru/amp/publications/552346/
 * https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
 
-## Login as user1 (get 3 tokens)
+#### Login as user1 (get 3 tokens)
 ```bash
 curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm2/protocol/openid-connect/token' -d 'client_id=my_client2&grant_type=password&scope=openid&username=user2&password=user_password2' | jq '.'
 ```
 
-## Getting users
+### Configuring Keycloak for getting users via REST API:
 * https://medium.com/@imsanthiyag/introduction-to-keycloak-admin-api-44beb9011f7d
 * https://www.keycloak.org/docs-api/22.0.1/rest-api/index.html#_users
 
-1. Using admin user
+#### 1. Using admin user
 1.1 Get access_token for admin
 ```bash
 curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/token' --header 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'username=keycloak_admin' --data-urlencode 'password=admin_password' --data-urlencode 'grant_type=password' --data-urlencode 'client_id=admin-cli' | jq 
 ```
+
+
 1.2 Request users (do it fast, tokrn expires after 60 sec)
 ```bash
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
 
-2. User Client Credentials Grant (not working)
-First of all, create client `my_client3` (Below I changed my_client2, Rest API sterted to work, but user login stopped)
+#### 2. Using User Client Credentials Grant
+First of all, create client `my_client3` (Below I changed my_client2, REST API started to work, but user login stopped, so we need to introduce my_client3)
 
-2.1 Troubles:
+
+2.1 How I changed my_client2 to make REST API working:
+
+
 2.1.1 `Public client not allowed to retrieve service account`
+
+
 see [SO](https://stackoverflow.com/questions/72086736/python-keycloak-error-public-client-not-allowed-to-retrieve-service-account) 
-  -> (site)[https://www.appsdeveloperblog.com/keycloak-rest-api-create-a-new-user/]
+  -> [site](https://www.appsdeveloperblog.com/keycloak-rest-api-create-a-new-user/)
+
+
+![1](./.markdown/keycloak_1_sync_client_settings.png)
 
 2.1.2 `Keycloak Get Users returns 403 forbidden`
+
+
 [SO](https://stackoverflow.com/questions/66452108/keycloak-get-users-returns-403-forbidden/66454728#66454728)
+
+
+![2](./.markdown/keycloak_2.1_enable_querying_users.png)
+![3](./.markdown/keycloak_2.2_enable_querying_users.png)
+![4](./.markdown/keycloak_2.3_enable_querying_users.png)
+![5](./.markdown/keycloak_2.4_enable_querying_users_result.png)
+
 
 2.2 Invoke them
 ```bash
@@ -476,14 +528,15 @@ curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/r
 
 Wait for Get multiple users by Ids [#12025](https://github.com/keycloak/keycloak/issues/12025)
 
-## How to save added users to realm-export.json ?
+
+## Export data from Keycloak
+### 1. exporting (not always importable)
 from https://github.com/nkonev/videochat/tree/062aaf2ea58edcffadf6ddf768e289273801492a
 
-## 1. exporting (not always importable)
 ```bash
 docker compose exec keycloak bash
-/opt/keycloak/bin/kc.sh export --file /tmp/realm-export.json --realm my_realm2
-# don't worry about the busy port
+/opt/keycloak/bin/kc.sh export --file /tmp/realm-export.json --http-management-port 8180 --realm my_realm2
+# --http-management-port 8180 to avoid annoying (but not critical) busy port
 exit
 ```
 next on host
@@ -491,23 +544,17 @@ next on host
 docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/realm-export.json ./export2.json
 ```
 
-## 2. Next find "users" JSON array. Then find required user's document by their name.
 
-## 3. Append user's document to existing realm-export.json under "users" array.
-
-
-# Testing with Keycloak
+## Testing with Keycloak
 To test add 3 environment varianbles:
 ```
-spring.security.oauth2.client.registration.keycloak.client-id=my_client
+spring.security.oauth2.client.registration.keycloak.client-id=my_client2
 spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/api/login/oauth2/code/{registrationId}
-spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484/auth/realms/my_realm
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484/auth/realms/my_realm2
 ```
 
-## Start docker-compose
-```bash
-docker compose up -d
-```
+
+
 
 # Test in browser
 Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;
@@ -522,18 +569,19 @@ sudo yum install -y httpd-tools
 htpasswd -bnBC 10 "" password | tr -d ':'
 ```
 
-# Show minio content
+# Minio
+## Show minio content
 ```
 mc stat local/files/chat/111/e4a37493-c6ff-4bd7-9d81-ffc9558af447/0a583bad-23c0-4c3d-8e8d-3a0591653603.jpg
 ```
 
-# Migrating minio from official to bitnami
+## Migrating minio from official to bitnami
 Remove 'command' tag from `docker-compose-infra.template.yml`
 ```
 chown -R 1001 /mnt/chat-minio
 ```
 
-# Rename minio bucket
+## Rename minio bucket
 ... by [mirroring it](https://github.com/minio/mc/issues/2619#issuecomment-444545894)
 ```
 mc mb myminio/newbucket
@@ -541,18 +589,55 @@ mc mirror myminio/oldbucket myminio/newbucket
 mc rm -r --force myminio/oldbucket
 ```
 
-# Show logs
+## Show minio http logs
 ```
 docker exec -it minio sh
 mc admin trace -v local
 ```
 
-# Open pgCenter
+## Minio events
+```
+mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
+mc event remove local/files --force
+mc event list local/files
+```
+
+https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-amqp.html#minio-bucket-notifications-publish-amqp
+https://medium.com/@tiwari_nitish/lambda-computing-with-minio-and-kafka-de928897ccdf
+```
+# already done via config
+mc admin config set local/ notify_amqp:PRIMARY \
+  url="amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672" \
+  exchange="minio-events" \
+  exchange_type="direct" \
+  durable="on" \
+  no_wait="off" \
+  auto_deleted="off" \
+  delivery_mode="2"
+  
+mc admin service restart local/
+```
+
+Why isn't environment variable MINIO_NOTIFY_KAFKA_ENABLE documented? [#8863](https://github.com/minio/minio/issues/8863)
+https://github.com/minio/minio/pull/8864/files
+
+
+## Attempt to fix (not working)
+```
+Feb 03 10:24:12 Chesnaught chat-storage[1036]: ERRO[2024-02-03T07:24:12Z]nkonev.name/storage/main.go:110 main.createCustomHTTPErrorHandler.func1() Unhandled error: XMinioStorageFull: Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.
+Feb 03 10:24:12 Chesnaught chat-storage[1036]:         status code: 507, request id: 17B0497B5CFA7E62, host id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8  traceId=5c05ddd8d5b1ae02474b165bd3767d94
+
+mc rm --recursive --force --dangerous --incomplete local/files
+```
+
+
+# PostgreSQL
+## Open pgCenter
 ```bash
 docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcenter top -h videochat_postgresql_1 -U chat -d chat
 ```
 
-# Working with Elasticsearch
+# Elasticsearch
 * https://olivere.github.io/elastic/
 * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index.html
 * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/explicit-mapping.html
@@ -561,30 +646,6 @@ docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcente
 curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
 curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```
-
-# OAuth2 servers emulator
-```
-curl -X PUT -i 'http://localhost:9080/recreate-oauth2-mocks'
-```
-
-# Starting server for e2e tests
-```
-cd aaa
-export JAVA_HOME=/usr/lib/jvm/bellsoft-java17.x86_64
-
-# https://docs.spring.io/spring-boot/docs/current/maven-plugin/reference/htmlsingle/#goals-run-parameters-details-mainClass
-# https://stackoverflow.com/questions/40094423/spring-boot-usetestclasspath-throws-cannotloadbeanclassexception-and-classnotfou/43765880#43765880
-./mvnw -Pintegration_test clean spring-boot:run
-
-curl -i -X POST 'http://localhost:9080/recreate-oauth2-mocks'
-```
-
-Or in the IDE
-```
---spring.config.location=file:/home/nkonev/javaWorkspace/videochat/aaa/src/main/resources/config/application.yml,file:/home/nkonev/javaWorkspace/videochat/aaa/src/test/resources/config/oauth2-keycloak.yml,file:/home/nkonev/javaWorkspace/videochat/aaa/src/test/resources/config/user-test-controller.yml
-```
-
-To interact with emulator, you need to use `http://localhost:8081`, not `http://127.0.0.1:8081`.
 
 # Playwright
 https://playwright.dev/docs/intro
@@ -606,14 +667,15 @@ npx playwright test --ui --project=chromium
 * https://askubuntu.com/questions/1235731/can-i-use-an-android-phone-as-webcam-for-an-ubuntu-device
 * https://play.google.com/store/apps/details?id=com.dev47apps.droidcam
 
-# Generate GraphQL
+# GraphQL
+## Generate GraphQL in go app
 About subscriptions https://github.com/99designs/gqlgen/issues/953
 ```
 go install github.com/99designs/gqlgen@v0.17.20
 gqlgen generate
 ```
 
-# Subscribing
+## Subscribing
 ```
 subscription {
   subscribe(subscriber:"dodo")
@@ -668,30 +730,6 @@ ffmpeg -y -i 'http://localhost:9000/files/chat/1/154b52fd-cb90-4952-89f3-81a6a11
 ffmpeg -y -i 'http://localhost:9000/files/chat/1/154b52fd-cb90-4952-89f3-81a6a119838e/d6e9f11c-b52f-40d5-9bcd-6df3d7231065.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=2SNM25VJ805V7RMK4TM0%2F20221227%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20221227T144627Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiIyU05NMjVWSjgwNVY3Uk1LNFRNMCIsImV4cCI6MTY3MjE1NTk2OSwicGFyZW50IjoiQUtJQUlPU0ZPRE5ON0VYQU1QTEUifQ.2KM9yImoL2WWdI_yoSJ6JeB_uHz6PvGrKG1NXugbQAOtFbb7e_SKzM9FvxVFoYieMJoS6F31zI6C3HwsUX4KzA&X-Amz-SignedHeaders=host&versionId=null&X-Amz-Signature=40dc346427e9920af28c7485fe18a2314a7178a79a093b07844fef639945c061' -vf "thumbnail" -frames:v 1 -c:v png -f rawvideo -an - > /tmp/output.png
 ```
 
-https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-amqp.html#minio-bucket-notifications-publish-amqp
-https://medium.com/@tiwari_nitish/lambda-computing-with-minio-and-kafka-de928897ccdf
-```
-# already done via config
-mc admin config set local/ notify_amqp:PRIMARY \
-  url="amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672" \
-  exchange="minio-events" \
-  exchange_type="direct" \
-  durable="on" \
-  no_wait="off" \
-  auto_deleted="off" \
-  delivery_mode="2"
-  
-mc admin service restart local/
-```
-
-Why isn't environment variable MINIO_NOTIFY_KAFKA_ENABLE documented? [#8863](https://github.com/minio/minio/issues/8863)
-https://github.com/minio/minio/pull/8864/files
-
-```
-mc event add local/files arn:minio:sqs::primary:amqp --event put,delete
-mc event remove local/files --force
-mc event list local/files
-```
 
 # Message embedding
 ## Case 1 - reply on message
@@ -755,13 +793,6 @@ curl -Ss --url 'http://localhost:8081/api/blog' -H 'Cookie: VIDEOCHAT_SESSION=YT
 # Materialdesignicons
 https://pictogrammers.github.io/@mdi/font/7.0.96/
 
-# Run front-2
-```
-npm run dev -- --host
-```
-
-Then in browser
-http://localhost:8081/front2
 
 # Initial multi page in Vite
 https://vitejs.dev/guide/build.html#multi-page-app
@@ -771,43 +802,6 @@ http://localhost:8081/front2/blog/
 https://sflanders.net/2018/11/06/makefile-basics/
 https://stackoverflow.com/questions/448910/what-is-the-difference-between-the-gnu-makefile-variable-assignments-a
 https://stackoverflow.com/questions/25185607/whats-the-difference-between-parenthesis-and-curly-bracket-syntax-in-ma
-
-```json
-[
- {
-  "forWho": "forSelf",
-  "userId": 123,
-  "type": "UserSelfProfileDTO",
-  "eventType": "user_account_changed",
-  "userAccount": {
-    "id": 123,
-    "login": "vasya",
-    "canEdit": true
-  }
- },
- {
-  "forWho": "forRole",
-  "forWhoRoles": ["ROLE_ADMIN", "ROLE_MODERATOR"],
-  "type": "UserAdminProfileDTO",
-  "eventType": "user_account_changed",
-  "userAccount": {
-    "id": 123,
-    "login": "vasya",
-    "canEdit": true
-  }
- },
- {
-  "forWho": "forRole",
-  "forWhoRoles": ["ROLE_USER"],
-  "type": "UserAccountDTO",
-  "eventType": "user_account_changed",
-  "userAccount": {
-   "id": 123,
-   "login": "vasya"
-  }
- }
-]
-```
 
 # Testcase for remove incorrect data in video
 ```
@@ -824,14 +818,7 @@ ssh ...
 docker load -i /tmp/frontend.tar
 ```
 
-# Attempt to fix (not working)
-```
-Feb 03 10:24:12 Chesnaught chat-storage[1036]: ERRO[2024-02-03T07:24:12Z]nkonev.name/storage/main.go:110 main.createCustomHTTPErrorHandler.func1() Unhandled error: XMinioStorageFull: Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.
-Feb 03 10:24:12 Chesnaught chat-storage[1036]:         status code: 507, request id: 17B0497B5CFA7E62, host id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8  traceId=5c05ddd8d5b1ae02474b165bd3767d94
-
-mc rm --recursive --force --dangerous --incomplete local/files
-```
-
+# Deploy to server from a local machine
 ```
 cd aaa
 export CONNECT_LINE=user@api.site.local
