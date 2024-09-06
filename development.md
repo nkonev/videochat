@@ -420,10 +420,17 @@ firewall-cmd --zone=public --add-port=5000-5100/udp
 
 # Keycloak
 
-Problem: Keycloak renders 'Invalid parameter: redirect_uri'
+## Links
+* https://habr.com/ru/amp/publications/552346/
+* https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
+
+* Problem: Keycloak renders 'Invalid parameter: redirect_uri'
+* Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
 
 
-Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
+* Problem: Keycloak 24+, Unauthorized in browser after entering login and password on Keycloak's page
+* Solution: From [here](https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/12)
+
 
 ## spring-boot-keycloak
 Using spring boot and Keycloak authorization server
@@ -454,17 +461,14 @@ http://localhost:8060/*
 http://localhost:9080/*
 ```
 4. Realm `my_realm2` should be chosen
-5. Client scopes -> Create client scope `openid`
+5. Client scopes -> Create client scope with name `openid` and set `Include in token scope` in the bottom the page
 6. Assign this scope onto client
-clients -> my_client2 -> client scopes -> Add client scope, choose `openid`, press Add, then default
+clients -> `my_client2` -> client scopes -> Add client scope, choose `openid`, press Add, then default
 7. Manage -> Users -> Add user `user2`
 8. User's -> Credentials -> Set password `user_password2`, disable temporal
 9. Realm roles -> Create role `USER`
-10. User's -> Role Mappings -> add `USER` role
+10. User's -> Role Mappings -> `Assign roles to user2` -> Choose `Fileter by realm roles` at top left -> add `USER` role
 
-#### Links
-* https://habr.com/ru/amp/publications/552346/
-* https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
 
 #### Login as user1 (get 3 tokens)
 ```bash
@@ -541,7 +545,7 @@ exit
 ```
 next on host
 ```bash
-docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/realm-export.json ./export2.json
+docker cp $(docker ps --format {{.Names}} | grep keycloak):/tmp/realm-export.json ./docker/keycloak/realm-export.json
 ```
 
 
