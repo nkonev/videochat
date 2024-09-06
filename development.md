@@ -486,14 +486,12 @@ curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/to
 ```
 
 
-1.2 Request users (do it fast, tokrn expires after 60 sec)
+1.2 Request users (do it fast, token expires after 60 sec)
 ```bash
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
 
 #### 2. Using User Client Credentials Grant
-First of all, create client `my_client3` (Below I changed my_client2, REST API started to work, but user login stopped, so we need to introduce my_client3)
-
 
 2.1 How I changed my_client2 to make REST API working:
 
@@ -519,15 +517,17 @@ see [SO](https://stackoverflow.com/questions/72086736/python-keycloak-error-publ
 ![5](./.markdown/keycloak_2.4_enable_querying_users_result.png)
 
 
-2.2 Invoke them
+2.2 Invoke them (do it fast, token expires after 60 sec)
 ```bash
+# Get token (works thanks to imports file)
 curl -Ss -X POST 'http://localhost:8484/realms/my_realm2/protocol/openid-connect/token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'grant_type=client_credentials' \
---data-urlencode 'client_id=my_client3' \
---data-urlencode 'client_secret=DLsSCEaJPpJIolYriSvZUnNBSxva4URj' | jq
+--data-urlencode 'client_id=my_client2' \
+--data-urlencode 'client_secret=z8cr0Nw2z8c7OpSvEix75GgZeDrWJi60' | jq
 
-curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq 
+# Get users
+curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
 
 Wait for Get multiple users by Ids [#12025](https://github.com/keycloak/keycloak/issues/12025)
