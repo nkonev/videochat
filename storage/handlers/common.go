@@ -207,7 +207,8 @@ func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bu
 
 func cacheableResponse(c echo.Context, ttl time.Duration) {
 	if c.Request().URL.Query().Get("cache") != "false" {
-		cacheControlValue := fmt.Sprintf("public, max-age=%v", ttl.Seconds())
+		delta := viper.GetDuration("response.cache.delta")
+		cacheControlValue := fmt.Sprintf("public, max-age=%v", (ttl - delta).Seconds())
 		c.Response().Header().Set("Cache-Control", cacheControlValue)
 	}
 }
