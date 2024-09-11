@@ -285,7 +285,7 @@ export default {
     consider_messages_of_this_chat_as_unread: "Непрочитанные сообщения",
     remove_from_public: "Отменить публикацию",
     publish_message: "Опубликовать",
-    published_messages: "Опубликованные сообщ.",
+    published_messages: "Опубликован. сообщ.",
     published_messages_full: "Опубликованные сообщения",
     copy_public_link_to_message: "Скопировать публичную ссылку",
     regular_participant_can_publish: "Участники могут публиковать сообщения",
