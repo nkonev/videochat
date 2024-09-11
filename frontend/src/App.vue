@@ -574,6 +574,7 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
             const d = getGlobalEventsData(e).forceLogout;
             console.log("Killed sessions, reason:", d.reasonType)
+            this.chatStore.unsetUser();
             bus.emit(LOGGED_OUT);
           }
         },
@@ -594,9 +595,11 @@ export default {
         onFocus(e) {
             // console.log("Focus", e);
             if (this.chatStore.currentUser) {
-                this.chatStore.fetchNotificationsCount();
-                this.chatStore.fetchHasNewMessages();
-                this.refreshInvitationCall();
+                this.$nextTick(()=>{
+                    this.chatStore.fetchNotificationsCount();
+                    this.chatStore.fetchHasNewMessages();
+                    this.refreshInvitationCall();
+                })
             }
             bus.emit(FOCUS);
         },

@@ -616,6 +616,11 @@ export default {
     onFocus() {
       if (this.chatStore.currentUser) {
           const list = this.items.map(item => item.id);
+
+          if (!list.length) {
+              return
+          }
+
           const joined = list.join(",");
           axios.put(`/api/aaa/user/request-for-online`, null, {
               params: {
