@@ -87,9 +87,9 @@ func requestWithHeader(method, path string, h http.Header, body io.Reader, e *ec
 	return rec.Code, rec.Body.String(), rec.Result().Header
 }
 
-type ProtobufAaaEmu struct{}
+type AaaEmu struct{}
 
-func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (receiver AaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.WriteHeader(200)
 
 	u1 := &dto.User{
@@ -114,17 +114,20 @@ func (receiver ProtobufAaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Req
 func waitForAaaEmu() {
 	restClient := client.NewRestClient()
 	i := 0
-	for ; i <= 30; i++ {
+	const maxAttempts = 60
+	success := false
+	for ; i <= maxAttempts; i++ {
 		_, err := restClient.GetUsers(context.Background(), []int64{0})
 		if err != nil {
 			Logger.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
+			success = true
 			break
 		}
 	}
-	if i == 30 {
+	if !success {
 		Logger.Panicf("Cannot await for aaa emu will be started")
 	}
 	Logger.Infof("Aaa emu have started")
@@ -135,7 +138,9 @@ func waitForAaaEmu() {
 func waitForChatServer() {
 	restClient := client.NewRestClient()
 	i := 0
-	for ; i <= 30; i++ {
+	const maxAttempts = 60
+	success := false
+	for ; i <= maxAttempts; i++ {
 		expirationTime := utils.SecondsToStringMilliseconds(time.Now().Add(4 * time.Hour).Unix())
 		contentType := "application/json;charset=UTF-8"
 		requestHeaders1 := map[string][]string{
@@ -160,10 +165,11 @@ func waitForChatServer() {
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
+			success = true
 			break
 		}
 	}
-	if i == 30 {
+	if !success {
 		Logger.Panicf("Cannot await for chat will be started")
 	}
 	Logger.Infof("chat have started")
@@ -173,7 +179,7 @@ func waitForChatServer() {
 func startAaaEmu() *http.Server {
 	s := &http.Server{
 		Addr:    ":" + aaaEmuPort,
-		Handler: ProtobufAaaEmu{},
+		Handler: AaaEmu{},
 	}
 
 	go func() {
