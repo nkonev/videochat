@@ -2,17 +2,19 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" scrollable>
             <v-card :title="getTitle()">
-                <v-color-picker
-                    dot-size="25"
-                    hide-canvas
-                    hide-inputs
-                    hide-sliders
-                    show-swatches
-                    swatches-max-height="100%"
-                    :elevation="0"
-                    v-model="color"
-                    width="100%"
-                ></v-color-picker>
+                <v-card-text class="ma-0 pa-0">
+                    <v-color-picker
+                        dot-size="25"
+                        hide-canvas
+                        hide-inputs
+                        hide-sliders
+                        show-swatches
+                        swatches-max-height="100%"
+                        :elevation="0"
+                        v-model="color"
+                        width="100%"
+                    ></v-color-picker>
+                </v-card-text>
                 <v-card-actions>
                     <v-spacer/>
                     <v-btn color="primary" variant="flat" @click="accept()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
