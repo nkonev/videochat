@@ -16,7 +16,7 @@
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
                                         <router-link :to="getPublishedRouteObject(item)" :class="getItemClass(item)">
-                                            <div v-html="item.text"></div>
+                                            <div v-html="item.text" class="with-ellipsis"></div>
                                         </router-link>
                                     </v-list-item-title>
 

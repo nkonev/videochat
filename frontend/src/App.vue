@@ -951,6 +951,10 @@ html {
   white-space: pre;
 }
 
+.with-ellipsis {
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
 
 .list-item-prepend-spacer-16 {
     .v-list-item__prepend {
