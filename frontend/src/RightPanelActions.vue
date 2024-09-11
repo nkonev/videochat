@@ -1,12 +1,21 @@
 <template>
     <v-list>
-      <v-list-item id="test-user-login" v-if="chatStore.currentUser"
-      >
-          <template v-slot:prepend>
-              <v-avatar :image="chatStore.currentUser.avatar"></v-avatar>
+      <v-list-item id="test-user-login" v-if="chatStore.currentUser">
+          <template v-slot:prepend v-if="hasLength(chatStore.currentUser.avatar)">
+
+              <v-badge
+                  :color="getUserBadgeColor(userState)"
+                  dot
+                  location="right bottom"
+                  overlap
+                  bordered
+                  :model-value="userState.online"
+              >
+                  <v-avatar :image="chatStore.currentUser.avatar"></v-avatar>
+              </v-badge>
           </template>
           <template v-slot:title>
-              <span :style="getLoginColoredStyle(chatStore.currentUser)">{{ chatStore.currentUser.login }}</span>
+              <span :style="getLoginColoredStyle(chatStore.currentUser)" v-html="getUserNameOverride(chatStore.currentUser, userState)"></span>
           </template>
           <template v-slot:subtitle>
               <span>{{ chatStore.currentUser.shortInfo }}</span>
@@ -73,15 +82,27 @@ import bus, {
     OPEN_NOTIFICATIONS_DIALOG,
     OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
     OPEN_SETTINGS,
-    OPEN_VIEW_FILES_DIALOG
+    OPEN_VIEW_FILES_DIALOG, PROFILE_SET
 } from "@/bus/bus";
 import {goToPreservingQuery} from "@/mixins/searchString";
 import {copyCallLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
+import userStatusMixin from "@/mixins/userStatusMixin.js";
+
+const userStateFactory = () => {
+    return {
+        isInVideo: false,
+        online: false,
+    }
+}
 
 export default {
+  mixins: [
+      userStatusMixin('userStatusInUserList'), // subscription
+  ],
   data() {
       return {
-          isLoggingOut: false
+          isLoggingOut: false,
+          userState: userStateFactory(),
       }
   },
   computed: {
@@ -97,7 +118,34 @@ export default {
       },
   },
   methods: {
+    hasLength,
     getLoginColoredStyle,
+    getUserNameOverride(currentUser, userState) {
+        const item = {
+            login: currentUser.login,
+            avatar: currentUser.avatar,
+            online: userState.online,
+            isInVideo: userState.isInVideo
+        };
+        return this.getUserName(item)
+    },
+    getUserIdsSubscribeTo() {
+          return [this.chatStore.currentUser?.id];
+    },
+    onUserStatusChanged(dtos) {
+        const userId = this.chatStore.currentUser?.id;
+        if (dtos && userId) {
+            dtos.forEach(dtoItem => {
+                if (dtoItem.online !== null && userId == dtoItem.userId) {
+                    this.userState.online = dtoItem.online;
+                }
+                if (dtoItem.isInVideo !== null && userId == dtoItem.userId) {
+                    this.userState.isInVideo = dtoItem.isInVideo;
+                }
+            })
+        }
+    },
+
     createChat() {
       bus.emit(OPEN_CHAT_EDIT, null);
     },
@@ -223,7 +271,30 @@ export default {
         axios.put(`/api/video/${this.chatId}/record/stop`);
         this.chatStore.initializingStoppingVideoRecord = true;
     },
-  }
+    onProfileSet() {
+        this.graphQlUserStatusSubscribe();
+    },
+    onLogOut() {
+        this.userState = userStateFactory();
+        this.graphQlUserStatusUnsubscribe();
+    },
+    canDrawUsers() {
+        return !!this.chatStore.currentUser
+    },
+  },
+  mounted() {
+      if (this.canDrawUsers()) {
+          this.onProfileSet();
+      }
+
+      bus.on(PROFILE_SET, this.onProfileSet);
+      bus.on(LOGGED_OUT, this.onLogOut);
+  },
+  beforeUnmount() {
+      bus.off(PROFILE_SET, this.onProfileSet);
+      bus.off(LOGGED_OUT, this.onLogOut);
+  },
+
 }
 </script>
 
