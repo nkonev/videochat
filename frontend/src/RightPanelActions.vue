@@ -1,6 +1,6 @@
 <template>
     <v-list>
-      <v-list-item id="test-user-login" v-if="chatStore.currentUser">
+      <v-list-item id="right-panel-user-login" v-if="chatStore.currentUser">
           <template v-slot:prepend v-if="hasLength(chatStore.currentUser.avatar)">
 
               <v-badge
@@ -306,5 +306,9 @@ export default {
     .notification-icon {
         opacity: settings.$list-item-icon-opacity;
     }
+}
+
+#right-panel-user-login .v-list-item__prepend > .v-badge ~ .v-list-item__spacer {
+    width: 16px;
 }
 </style>
