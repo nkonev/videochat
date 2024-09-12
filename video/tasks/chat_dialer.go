@@ -116,17 +116,23 @@ func (srv *ChatDialerService) processBatch(ctx context.Context, tx *db.Tx, chatI
 		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
 	}
 
-	for _, st := range batchUserStates {
-		// cleanNotNeededAnymoreDialData - should be before status == services.CallStatusNotFound exit
-		srv.cleanNotNeededAnymoreDialData(ctx, tx, chatId, st)
-
-		m := map[int64]string{st.UserId: st.Status}
-		realOwnerId := ownerId
-		if realOwnerId == db.NoUser {
-			realOwnerId = st.UserId
-		}
-		srv.stateChangedEventService.SendDialEvents(ctx, chatId, m, realOwnerId, utils.NullToEmpty(st.OwnerAvatar), st.ChatTetATet, inviteNames)
+	// we can do it, because
+	// 1. batchUserStates is not empty
+	// 2. st.OwnerAvatar <-> ownerId, st.ChatTetATet <-> chatId from the args of this function
+	st := batchUserStates[0]
+	realOwnerId := ownerId
+	if realOwnerId == db.NoUser {
+		realOwnerId = st.UserId
 	}
+
+	m := map[int64]string{}
+	for _, state := range batchUserStates {
+		// cleanNotNeededAnymoreDialData - should be before status == services.CallStatusNotFound exit
+		srv.cleanNotNeededAnymoreDialData(ctx, tx, chatId, state)
+
+		m[state.UserId] = state.Status
+	}
+	srv.stateChangedEventService.SendDialEvents(ctx, chatId, m, realOwnerId, utils.NullToEmpty(st.OwnerAvatar), st.ChatTetATet, inviteNames)
 }
 
 func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
