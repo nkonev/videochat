@@ -116,7 +116,12 @@ func (vh *InviteHandler) ProcessCreatingOrDeletingInvite(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(code, utils.H{"tokenId": ownerTokenId})
+
+	if code == http.StatusOK {
+		return c.JSON(http.StatusOK, utils.H{"tokenId": ownerTokenId})
+	} else {
+		return c.NoContent(code)
+	}
 }
 
 func (vh *InviteHandler) checkAccessOfAnotherUser(ctx context.Context, callee int64, chatId int64, userPrincipalDto *auth.AuthResult) (bool, int) {

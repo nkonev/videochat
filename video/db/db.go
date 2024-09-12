@@ -152,3 +152,17 @@ func ConfigureDb(lc fx.Lifecycle) (*DB, error) {
 
 	return dbInstance, err
 }
+
+func (db *DB) RecreateDb() {
+	_, err := db.Exec(`
+	DROP SCHEMA IF EXISTS public CASCADE;
+	CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO chat;
+    GRANT ALL ON SCHEMA public TO public;
+    COMMENT ON SCHEMA public IS 'standard public schema';
+`)
+	Logger.Warn("Recreating database")
+	if err != nil {
+		Logger.Panicf("Error during dropping db: %v", err)
+	}
+}

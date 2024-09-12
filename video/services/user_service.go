@@ -3,21 +3,21 @@ package services
 import (
 	"context"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go/v2"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"nkonev.name/video/client"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
 
 type UserService struct {
-	livekitRoomClient *lksdk.RoomServiceClient
+	livekitRoomClient client.LivekitRoomClient
 	tr trace.Tracer
 }
 
-func NewUserService(livekitRoomClient *lksdk.RoomServiceClient) *UserService {
+func NewUserService(livekitRoomClient client.LivekitRoomClient) *UserService {
 	tr := otel.Tracer("userService")
 
 	return &UserService{

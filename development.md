@@ -898,3 +898,15 @@ update user_call_state set (owner_token_id, owner_user_id) = (
 	where chat_id = 100 and token_id != 't1' and user_id != 1 order by owner_user_id limit 1
 ) where chat_id = 100 and token_id != 't1' and user_id != 1;
 ```
+
+# Mockery
+* https://vektra.github.io/mockery/latest/#why-mockery
+* https://medium.com/the-sixt-india-blog/mocking-with-mockery-in-golang-949794372e99
+```bash
+# go install github.com/vektra/mockery/v2@v2.45.1
+go get github.com/vektra/mockery/v2/../
+mockery --all
+
+# or
+go generate ./...
+```

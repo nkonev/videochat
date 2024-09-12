@@ -495,3 +495,11 @@ func (h *RestClient) GetBasicChatInfo(c context.Context, chatId int64, userId in
 	}
 	return ret, nil
 }
+
+func (h *RestClient) CloseIdleConnections() {
+	h.client.CloseIdleConnections()
+}
+
+func (h *RestClient) GetClient() *http.Client {
+	return h.client
+}

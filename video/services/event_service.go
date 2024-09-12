@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go/v2"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/db"
@@ -15,7 +14,7 @@ import (
 
 type StateChangedEventService struct {
 	conf                *config.ExtendedConfig
-	livekitRoomClient   *lksdk.RoomServiceClient
+	livekitRoomClient   client.LivekitRoomClient
 	userService         *UserService
 	notificationService *NotificationService
 	egressService       *EgressService
@@ -27,7 +26,7 @@ type StateChangedEventService struct {
 
 func NewStateChangedEventService(
 	conf *config.ExtendedConfig,
-	livekitRoomClient *lksdk.RoomServiceClient,
+	livekitRoomClient client.LivekitRoomClient,
 	userService *UserService,
 	notificationService *NotificationService,
 	egressService *EgressService,

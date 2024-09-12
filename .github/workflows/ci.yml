@@ -289,6 +289,15 @@ jobs:
         with:
           go-version: 1.22.0
           cache-dependency-path: 'video/go.sum'
+      - name: Start & wait docker-compose environment
+        if: env.SHOULD_RUN == 'true'
+        run: |
+          docker compose up -d postgresql redis rabbitmq jaeger
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+          ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)

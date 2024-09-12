@@ -2,7 +2,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean install-mockery push-docker-image-to-server deploy-docker-image run
 
 BUILDDIR := ./build
 EXECUTABLE := video
@@ -16,19 +16,24 @@ SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
 
-download:
-	echo "Nothing to download"
+download: install-mockery
 
 check-env:
 	docker version && go env
 
-generate: generate-git
+generate: generate-git generate-mocks
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./handlers/static-api/git.json
 
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
+
+install-mockery:
+	go install github.com/vektra/mockery/v2@v2.45.1
+
+generate-mocks:
+	go generate ./...
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1

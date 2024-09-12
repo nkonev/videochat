@@ -5,7 +5,6 @@ import (
 	"github.com/ehsaniara/gointerlock"
 	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go/v2"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -25,14 +24,14 @@ type SynchronizeWithLivekitService struct {
 	database   			    *db.DB
 	userService   			*services.UserService
 	tracer             		trace.Tracer
-	livekitRoomClient   	*lksdk.RoomServiceClient
+	livekitRoomClient   	client.LivekitRoomClient
 	restClient              *client.RestClient
 }
 
 func NewSynchronizeWithLivekitService(
 	database   			    *db.DB,
 	userService *services.UserService,
-	livekitRoomClient *lksdk.RoomServiceClient,
+	livekitRoomClient client.LivekitRoomClient,
 	restClient *client.RestClient,
 ) *SynchronizeWithLivekitService {
 	trcr := otel.Tracer("scheduler/synchronize-with-livekit")
@@ -45,7 +44,7 @@ func NewSynchronizeWithLivekitService(
 	}
 }
 
-func (srv *SynchronizeWithLivekitService) doJob() {
+func (srv *SynchronizeWithLivekitService) DoJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.SynchronizeWithLivekit")
 	defer span.End()
 
@@ -225,7 +224,7 @@ func SynchronizeWithLivekitSheduler(
 	return &SynchronizeWithLivekitTask{&gointerlock.GoInterval{
 		Name:           "synchronizeWithLivekitTask",
 		Interval:       interv,
-		Arg:            service.doJob,
+		Arg:            service.DoJob,
 		RedisConnector: redisConnector,
 	}}
 }

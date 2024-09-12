@@ -424,13 +424,6 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 	return cam, nil
 }
 
-func filter(userFromBus int64, userIdsFilter []int64) bool {
-	if len(userIdsFilter) == 0 {
-		return true
-	}
-	return utils.Contains(userIdsFilter, userFromBus)
-}
-
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -446,6 +439,12 @@ type subscriptionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func filter(userFromBus int64, userIdsFilter []int64) bool {
+	if len(userIdsFilter) == 0 {
+		return true
+	}
+	return utils.Contains(userIdsFilter, userFromBus)
+}
 func (sr *subscriptionResolver) prepareUserAccountEvent(ctx context.Context, myUserId int64, eventType string, user *dto.User) *model.UserAccountEvent {
 	if user == nil {
 		logger.GetLogEntry(ctx).Errorf("Logical mistake")

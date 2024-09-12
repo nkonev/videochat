@@ -16,13 +16,12 @@ SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
 
-download:
-	echo "Nothing to download"
+download: install-graphql
 
 check-env:
 	docker version && go env
 
-generate: generate-git
+generate: generate-git generate-graphql
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./handlers/static/git.json

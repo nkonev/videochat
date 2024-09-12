@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
-	lksdk "github.com/livekit/server-sdk-go/v2"
 	"github.com/pkg/errors"
 	"net/http"
 	"nkonev.name/video/auth"
@@ -16,10 +15,10 @@ import (
 type UserHandler struct {
 	chatClient        *client.RestClient
 	userService       *services.UserService
-	livekitRoomClient *lksdk.RoomServiceClient
+	livekitRoomClient client.LivekitRoomClient
 }
 
-func NewUserHandler(chatClient *client.RestClient, userService *services.UserService, livekitRoomClient *lksdk.RoomServiceClient) *UserHandler {
+func NewUserHandler(chatClient *client.RestClient, userService *services.UserService, livekitRoomClient client.LivekitRoomClient) *UserHandler {
 	return &UserHandler{chatClient: chatClient, userService: userService, livekitRoomClient: livekitRoomClient}
 }
 
