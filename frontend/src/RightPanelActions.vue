@@ -1,8 +1,7 @@
 <template>
     <v-list>
-      <v-list-item id="right-panel-user-login" v-if="chatStore.currentUser">
+      <v-list-item id="right-panel-user-login" v-if="chatStore.currentUser" @click="onUserClick">
           <template v-slot:prepend v-if="hasLength(chatStore.currentUser.avatar)">
-
               <v-badge
                   :color="getUserBadgeColor(userState)"
                   dot
@@ -280,6 +279,9 @@ export default {
     },
     canDrawUsers() {
         return !!this.chatStore.currentUser
+    },
+    onUserClick() {
+        bus.emit(OPEN_SETTINGS, 'user_profile_self')
     },
   },
   mounted() {
