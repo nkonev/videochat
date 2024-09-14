@@ -33,7 +33,7 @@ services:
     ports:
       - 35432:5432
     volumes:
-      - ./docker/postgresql_dev/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:z
+      - ./docker/postgresql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:z
       - postgres_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
