@@ -153,7 +153,7 @@ func waitForChatServer() {
 		getChatRequest := &http.Request{
 			Method: "GET",
 			Header: requestHeaders1,
-			URL:    stringToUrl("http://localhost:1235/api/chat"),
+			URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat"),
 		}
 		getChatResponse, err := restClient.Do(getChatRequest)
 		if err != nil {
@@ -474,7 +474,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]}`),
-		URL:    stringToUrl("http://localhost:1235/api/chat"),
+		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat"),
 	}
 
 	cl := client.NewRestClient()
@@ -495,7 +495,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
-		URL:    stringToUrl("http://localhost:1235/api/chat/" + chatIdString + "/message"),
+		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat/" + chatIdString + "/message"),
 	}
 	messageResponse, err := cl.Do(messageRequest)
 	assert.Nil(t, err)
@@ -506,7 +506,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
-		URL:    stringToUrl("http://localhost:1235/api/chat/" + chatIdString + "/message"),
+		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat/" + chatIdString + "/message"),
 	}
 	messageResponse2, err := cl.Do(messageRequest2)
 	assert.Nil(t, err)
@@ -536,7 +536,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]`),
-		URL:    stringToUrl("http://localhost:1235/api/chat"),
+		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat"),
 	}
 
 	cl := client.NewRestClient()
