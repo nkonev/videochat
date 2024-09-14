@@ -7,6 +7,8 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import name.nkonev.aaa.services.EventService;
+import name.nkonev.aaa.utils.Pair;
+import name.nkonev.aaa.utils.Triple;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -63,13 +65,8 @@ public abstract class AbstractOAuth2UserService {
 
     protected abstract Optional<UserAccount> findByUsername(String login);
 
-    private record MergeOAuthIdResponse(
-        UserAccountDetailsDTO userAccountDetails,
-        UserAccount userAccount
-    ) { }
-
     // @return notnull UserAccountDetailsDTO if was merged - so we should return it immediately from Extractor
-    private MergeOAuthIdResponse mergeOAuth2IdToExistsUser(String oauthId){
+    private Pair<UserAccountDetailsDTO, UserAccount> mergeOAuth2IdToExistsUser(String oauthId){
         if (isAlreadyAuthenticated()) {
             // we already authenticated - so it' s binding
             UserAccountDetailsDTO principal = getPrincipal();
@@ -101,19 +98,14 @@ public abstract class AbstractOAuth2UserService {
                 logger().warn("Unable to set changed principal to session");
             }
 
-            return new MergeOAuthIdResponse(principal, userAccount);
+            return new Pair<>(principal, userAccount);
         } else {
             return null;
         }
     }
 
-    private record CreateOrGetExistsUserResponse(
-        UserAccountDetailsDTO userAccountDetails,
-        UserAccount userAccount,
-        boolean created
-    ) {}
 
-    private CreateOrGetExistsUserResponse createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
+    private Triple<UserAccountDetailsDTO, UserAccount, Boolean> createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
         UserAccount userAccount;
         login = validateLengthAndTrimLogin(login, true);
         Optional<UserAccount> userAccountOpt = findByOAuth2Id(oauthId);
@@ -131,24 +123,18 @@ public abstract class AbstractOAuth2UserService {
             userAccount = userAccountOpt.get();
         }
 
-        return new CreateOrGetExistsUserResponse(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccount, created);
+        return new Triple<>(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccount, created);
     }
 
     abstract protected String getLogin(Map<String, Object> map);
 
     abstract protected String getId(Map<String, Object> map);
 
-    private record ProcessIntermediateDTO (
-        UserAccountDetailsDTO principal,
-        UserAccount userAccount,
-        boolean created
-    ) {}
-
     protected UserAccountDetailsDTO process(Map<String, Object> map, OAuth2UserRequest userRequest) {
         String oauth2userId = getId(map);
         Assert.hasLength(oauth2userId, getOAuth2Name() + " id cannot be empty");
 
-        ProcessIntermediateDTO processIntermediateDTO = transactionTemplate.execute(status -> {
+        Triple<UserAccountDetailsDTO, UserAccount, Boolean> processIntermediateDTO = transactionTemplate.execute(status -> {
             UserAccountDetailsDTO resultPrincipal;
             UserAccount userAccount;
 
@@ -156,26 +142,26 @@ public abstract class AbstractOAuth2UserService {
             var mergeOAuthToUserResponse = mergeOAuth2IdToExistsUser(oauth2userId);
             if (mergeOAuthToUserResponse != null) {
                 // ok
-                resultPrincipal = mergeOAuthToUserResponse.userAccountDetails();
-                userAccount = mergeOAuthToUserResponse.userAccount();
+                resultPrincipal = mergeOAuthToUserResponse.a();
+                userAccount = mergeOAuthToUserResponse.b();
             } else {
                 String login = getLogin(map);
                 var createOrGetResponse = createOrGetExistsUser(oauth2userId, login, map, getRoles(userRequest));
-                created = createOrGetResponse.created();
-                resultPrincipal = createOrGetResponse.userAccountDetails();
-                userAccount = createOrGetResponse.userAccount();
+                created = createOrGetResponse.c();
+                resultPrincipal = createOrGetResponse.a();
+                userAccount = createOrGetResponse.b();
             }
 
             aaaPreAuthenticationChecks.check(resultPrincipal);
             aaaPostAuthenticationChecks.check(resultPrincipal);
-            return new ProcessIntermediateDTO(resultPrincipal, userAccount, created);
+            return new Triple<>(resultPrincipal, userAccount, created);
         });
 
-        if (processIntermediateDTO.created()) {
-            eventService.notifyProfileCreated(processIntermediateDTO.userAccount());
+        if (processIntermediateDTO.c()) {
+            eventService.notifyProfileCreated(processIntermediateDTO.b());
         }
 
-        return processIntermediateDTO.principal();
+        return processIntermediateDTO.a();
     }
 
     protected Set<String> getRoles(OAuth2UserRequest userRequest) {
