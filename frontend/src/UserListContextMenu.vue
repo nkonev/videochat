@@ -62,13 +62,11 @@ export default {
                         }
                     });
                 }
-                if (this.isNotMyself(this.menuableItem)) {
-                    ret.push({
-                        title: this.$vuetify.locale.t('$vuetify.user_open_chat'),
-                        icon: 'mdi-message-text-outline',
-                        action: () => this.$emit('tetATet', this.menuableItem)
-                    });
-                }
+                ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.user_open_chat'),
+                    icon: 'mdi-message-text-outline',
+                    action: () => this.$emit('tetATet', this.menuableItem)
+                });
                 if (this.menuableItem.canRemoveSessions){
                     ret.push({title: this.$vuetify.locale.t('$vuetify.remove_sessions'), icon: 'mdi-logout', action: () => this.$emit('removeSessions', this.menuableItem) });
                 }
@@ -94,9 +92,6 @@ export default {
                 }
             }
             return ret;
-        },
-        isNotMyself(user) {
-            return this.chatStore.currentUser && this.chatStore.currentUser.id != user.id
         },
     }
 }

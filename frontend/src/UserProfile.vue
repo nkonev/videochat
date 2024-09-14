@@ -40,14 +40,14 @@
       </template>
 
       <v-container class="ma-0 pa-0 pt-1">
-        <v-btn v-if="isNotMyself()" color="primary" @click="tetATet(viewableUser.id)">
+        <v-btn color="primary" @click="tetATet(viewableUser.id)">
           <template v-slot:prepend><v-icon>mdi-message-text-outline</v-icon></template>
           <template v-slot:default>
             {{ $vuetify.locale.t('$vuetify.user_open_chat') }}
           </template>
         </v-btn>
 
-        <v-btn v-if="isNotMyself()" class="ml-2" variant="plain" @click="onShowContextMenu" icon="mdi-menu"/>
+        <v-btn class="ml-2" variant="plain" @click="onShowContextMenu" icon="mdi-menu"/>
       </v-container>
     </v-container>
 
@@ -211,9 +211,6 @@ export default {
       } else {
           return this.viewableUser?.login
       }
-    },
-    isNotMyself() {
-      return this.chatStore.currentUser && this.chatStore.currentUser.id != this.viewableUser.id
     },
     loadUser() {
       this.viewableUser = null;
