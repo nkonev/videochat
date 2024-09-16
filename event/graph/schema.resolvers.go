@@ -630,6 +630,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 	var result = &model.DisplayMessageDto{ // dto.DisplayMessageDto
 		ID:             messageDto.Id,
 		Text:           messageDto.Text,
+		PreviewText:    messageDto.PreviewText,
 		ChatID:         messageDto.ChatId,
 		OwnerID:        messageDto.OwnerId,
 		CreateDateTime: messageDto.CreateDateTime,

@@ -142,7 +142,13 @@
           this.updateTopAndBottomIds();
         },
 
-        onNewMessage(dto) {
+        transformItem(dto) {
+            delete dto.previewText
+        },
+        onNewMessage(aDto) {
+          const dto = deepCopy(aDto);
+          this.transformItem(dto);
+
           const chatIdsAreEqual = dto.chatId == this.chatId;
           const isScrolledToBottom = this.isScrolledToBottom();
           const emptySearchString = !hasLength(this.searchString);
@@ -172,7 +178,10 @@
             console.log("Skipping", dto)
           }
         },
-        onEditMessage(dto) {
+        onEditMessage(aDto) {
+          const dto = deepCopy(aDto);
+          this.transformItem(dto);
+
           if (dto.chatId == this.chatId) {
             this.changeItem(dto);
             this.performMarking();
@@ -240,7 +249,13 @@
               return Promise.resolve()
             }
 
-            const items = response.data;
+            const rawItems = response.data;
+            const items = rawItems.map((aDto) => {
+              const dto = deepCopy(aDto);
+              this.transformItem(dto);
+              return dto;
+            });
+
             console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {

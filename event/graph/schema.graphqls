@@ -29,6 +29,7 @@ type Reaction {
 type DisplayMessageDto {
     id:             Int64!
     text:           String!
+    previewText:    String!
     chatId:         Int64!
     ownerId:        Int64!
     createDateTime: Time!

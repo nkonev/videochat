@@ -89,6 +89,7 @@ type DataDto struct {
 type DisplayMessageDto struct {
 	ID             int64                 `json:"id"`
 	Text           string                `json:"text"`
+	PreviewText    string                `json:"previewText"`
 	ChatID         int64                 `json:"chatId"`
 	OwnerID        int64                 `json:"ownerId"`
 	CreateDateTime time.Time             `json:"createDateTime"`

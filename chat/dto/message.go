@@ -33,6 +33,7 @@ type Reaction struct {
 type DisplayMessageDto struct {
 	Id             int64                 `json:"id"`
 	Text           string                `json:"text"`
+	PreviewText    string                `json:"previewText"`
 	ChatId         int64                 `json:"chatId"`
 	OwnerId        int64                 `json:"ownerId"`
 	CreateDateTime time.Time             `json:"createDateTime"`
@@ -40,12 +41,12 @@ type DisplayMessageDto struct {
 	Owner          *User                 `json:"owner"`
 	CanEdit        bool                  `json:"canEdit"`
 	CanDelete      bool                  `json:"canDelete"`
-	FileItemUuid   *string            `json:"fileItemUuid"`
+	FileItemUuid   *string               `json:"fileItemUuid"`
 	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
-	Reactions []Reaction				 `json:"reactions"`
+	Reactions      []Reaction			 `json:"reactions"`
 	Published      bool                  `json:"published"`
 	CanPublish     bool                  `json:"canPublish"`
 	CanPin         bool                  `json:"canPin"`

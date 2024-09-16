@@ -45,6 +45,7 @@ type Reaction struct {
 type DisplayMessageDto struct {
 	Id             int64                 `json:"id"`
 	Text           string                `json:"text"`
+	PreviewText    string                `json:"previewText"`
 	ChatId         int64                 `json:"chatId"`
 	OwnerId        int64                 `json:"ownerId"`
 	CreateDateTime time.Time             `json:"createDateTime"`
@@ -57,7 +58,7 @@ type DisplayMessageDto struct {
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
-	Reactions []Reaction				 `json:"reactions"`
+	Reactions      []Reaction			 `json:"reactions"`
 	Published      bool                  `json:"published"`
 	CanPublish     bool                  `json:"canPublish"`
 	CanPin         bool                  `json:"canPin"`

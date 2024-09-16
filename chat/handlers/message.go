@@ -165,7 +165,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 
 			messageDtos := make([]*dto.DisplayMessageDto, 0)
 			for _, mm := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(c.Request().Context(), mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[userPrincipalDto.UserId]))
+				messageDtos = append(messageDtos, convertToMessageDto(c.Request().Context(), mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[userPrincipalDto.UserId], mc.stripAllTags))
 			}
 
 			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
@@ -174,7 +174,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	})
 }
 
-func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, behalfUserIsAdminInChat bool) (*dto.DisplayMessageDto, error) {
+func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, behalfUserIsAdminInChat bool, stripAllTags *services.StripTagsPolicy) (*dto.DisplayMessageDto, error) {
 	message, chatsSet, users, err := prepareDataForMessage(c, co, restClient, chatId, messageId, behalfUserId)
 
 	if err != nil {
@@ -186,7 +186,7 @@ func getMessage(c echo.Context, co db.CommonOperations, restClient *client.RestC
 		return nil, nil
 	}
 
-	return convertToMessageDto(c.Request().Context(), message, users, chatsSet, behalfUserId, behalfUserIsAdminInChat), nil
+	return convertToMessageDto(c.Request().Context(), message, users, chatsSet, behalfUserId, behalfUserIsAdminInChat, stripAllTags), nil
 }
 
 func prepareDataForMessage(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*db.Message,  map[int64]*db.BasicChatDtoExtended, map[int64]*dto.User, error) {
@@ -211,7 +211,7 @@ func prepareDataForMessage(c echo.Context, co db.CommonOperations, restClient *c
 	}
 }
 
-func getMessageWithoutPersonalized(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
+func getMessageWithoutPersonalized(c echo.Context, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, stripAllTags *services.StripTagsPolicy) (*dto.DisplayMessageDto, error) {
 	message, chatsSet, users, err := prepareDataForMessage(c, co, restClient, chatId, messageId, behalfUserId)
 
 	if err != nil {
@@ -223,7 +223,7 @@ func getMessageWithoutPersonalized(c echo.Context, co db.CommonOperations, restC
 		return nil, nil
 	}
 
-	return convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet), nil
+	return convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet, stripAllTags), nil
 }
 
 func populateSets(message *db.Message, ownersSet map[int64]bool, chatsPreSet map[int64]bool, countReactions bool) {
@@ -389,7 +389,7 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 		return err
 	}
 
-	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId, admin)
+	message, err := getMessage(c, mc.db, mc.restClient, chatId, messageId, userPrincipalDto.UserId, admin, mc.stripAllTags)
 	if err != nil {
 		return err
 	}
@@ -404,9 +404,9 @@ func getDeletedUser(id int64) *dto.User {
 	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
 }
 
-func convertToMessageDto(ctx context.Context, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool) *dto.DisplayMessageDto {
+func convertToMessageDto(ctx context.Context, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool, stripAllTags *services.StripTagsPolicy) *dto.DisplayMessageDto {
 
-	ret := convertToMessageDtoWithoutPersonalized(ctx, dbMessage, users, chats)
+	ret := convertToMessageDtoWithoutPersonalized(ctx, dbMessage, users, chats, stripAllTags)
 
 	messageChat, ok := chats[dbMessage.ChatId]
 	if !ok {
@@ -417,7 +417,7 @@ func convertToMessageDto(ctx context.Context, dbMessage *db.Message, users map[i
 	return ret
 }
 
-func convertToMessageDtoWithoutPersonalized(ctx context.Context, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended) *dto.DisplayMessageDto {
+func convertToMessageDtoWithoutPersonalized(ctx context.Context, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, stripAllTags *services.StripTagsPolicy) *dto.DisplayMessageDto {
 	user := users[dbMessage.OwnerId]
 	if user == nil {
 		user = getDeletedUser(dbMessage.OwnerId)
@@ -425,6 +425,7 @@ func convertToMessageDtoWithoutPersonalized(ctx context.Context, dbMessage *db.M
 	ret := &dto.DisplayMessageDto{
 		Id:             dbMessage.Id,
 		Text:           dbMessage.Text,
+		PreviewText:    stripTagsAndCut(stripAllTags, viper.GetInt("previewMaxTextSize"), dbMessage.Text),
 		ChatId:         dbMessage.ChatId,
 		OwnerId:        dbMessage.OwnerId,
 		CreateDateTime: dbMessage.CreateDateTime,
@@ -659,7 +660,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return err
 		}
 
-		message, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+		message, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 		if err != nil {
 			return err
 		}
@@ -865,7 +866,7 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
-		message, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+		message, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, bindTo.Id, userPrincipalDto.UserId, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 		if err != nil {
 			return err
 		}
@@ -1025,7 +1026,7 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	message, err := getMessageWithoutPersonalized(c, mc.db, mc.restClient, chatId, bindTo.MessageId, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+	message, err := getMessageWithoutPersonalized(c, mc.db, mc.restClient, chatId, bindTo.MessageId, userPrincipalDto.UserId, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 	if err != nil {
 		return err
 	}
@@ -1374,7 +1375,7 @@ func (mc *MessageHandler) RemoveFileItem(c echo.Context) error {
 
 	// notifying
 	if hasMessageId {
-		message, err := getMessageWithoutPersonalized(c, mc.db, mc.restClient, chatId, messageId, userId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+		message, err := getMessageWithoutPersonalized(c, mc.db, mc.restClient, chatId, messageId, userId, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 		if err != nil {
 			return err
 		}
@@ -1462,7 +1463,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You cannot pin messages in this chat"})
 			}
 
-			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 			count0, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
@@ -1504,7 +1505,7 @@ func (mc *MessageHandler) PinMessage(c echo.Context) error {
 				return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You cannot unpin messages in this chat"})
 			}
 
-			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+			res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 			count1, err := tx.GetPinnedMessagesCount(chatId)
 			if err != nil {
@@ -1635,7 +1636,7 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 			return err
 		}
 
-		res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+		res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, users, chatsSet, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 
 		count0, err := tx.GetPublishedMessagesCount(chatId)
 		if err != nil {
@@ -1710,13 +1711,13 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 		// send edit for previous message - it lost "blog_post == true"
 		var res0 *dto.DisplayMessageDto
 		if prevBlogPostMessageId != nil {
-			res0, err = getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, *prevBlogPostMessageId, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+			res0, err = getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, *prevBlogPostMessageId, userPrincipalDto.UserId, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 			if err != nil {
 				return err
 			}
 		}
 		// notify about new "blog_post == true"
-		res, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
+		res, err := getMessageWithoutPersonalized(c, tx, mc.restClient, chatId, messageId, userPrincipalDto.UserId, mc.stripAllTags) // personal values will be set inside IterateOverChatParticipantIds -> event.go
 		if err != nil {
 			return err
 		}
@@ -1859,7 +1860,7 @@ func (mc *MessageHandler) GetPinnedPromotedMessage(c echo.Context) error {
 		}
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
-		res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, owners, chatsSet) // the actual personal values don't needed here
+		res := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, owners, chatsSet, mc.stripAllTags) // the actual personal values don't needed here
 		patchForViewAndSetPromoted(mc.stripAllTags, res, true)
 
 		return c.JSON(http.StatusOK, res)
@@ -2015,7 +2016,7 @@ func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
 
 		var owners = getUsersRemotelyOrEmpty(ownersSet, mc.restClient, c)
 
-		convertedMessage := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, owners, chatsSet) // the actual personal values don't needed here
+		convertedMessage := convertToMessageDtoWithoutPersonalized(c.Request().Context(), message, owners, chatsSet, mc.stripAllTags) // the actual personal values don't needed here
 
 		convertedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), convertedMessage.Text, convertedMessage.Id)
 

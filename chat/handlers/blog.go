@@ -450,7 +450,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	}
 	var users = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
 	for _, cc := range messages {
-		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), cc, users, chatsSet)
+		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), cc, users, chatsSet, h.stripTagsPolicy)
 		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), msg.Text, msg.Id)
 		messageDtos = append(messageDtos, msg)
 	}

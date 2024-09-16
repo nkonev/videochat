@@ -252,6 +252,7 @@ export default {
                                 fragment DisplayMessageDtoFragment on DisplayMessageDto {
                                   id
                                   text
+                                  previewText
                                   chatId
                                   ownerId
                                   createDateTime

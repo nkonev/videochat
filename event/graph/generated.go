@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 		OwnerID        func(childComplexity int) int
 		Pinned         func(childComplexity int) int
 		PinnedPromoted func(childComplexity int) int
+		PreviewText    func(childComplexity int) int
 		Published      func(childComplexity int) int
 		Reactions      func(childComplexity int) int
 		Text           func(childComplexity int) int
@@ -922,6 +923,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DisplayMessageDto.PinnedPromoted(childComplexity), true
+
+	case "DisplayMessageDto.previewText":
+		if e.complexity.DisplayMessageDto.PreviewText == nil {
+			break
+		}
+
+		return e.complexity.DisplayMessageDto.PreviewText(childComplexity), true
 
 	case "DisplayMessageDto.published":
 		if e.complexity.DisplayMessageDto.Published == nil {
@@ -3917,6 +3925,8 @@ func (ec *executionContext) fieldContext_ChatEvent_messageEvent(_ context.Contex
 				return ec.fieldContext_DisplayMessageDto_id(ctx, field)
 			case "text":
 				return ec.fieldContext_DisplayMessageDto_text(ctx, field)
+			case "previewText":
+				return ec.fieldContext_DisplayMessageDto_previewText(ctx, field)
 			case "chatId":
 				return ec.fieldContext_DisplayMessageDto_chatId(ctx, field)
 			case "ownerId":
@@ -4821,6 +4831,50 @@ func (ec *executionContext) _DisplayMessageDto_text(ctx context.Context, field g
 }
 
 func (ec *executionContext) fieldContext_DisplayMessageDto_text(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayMessageDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayMessageDto_previewText(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DisplayMessageDto_previewText(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PreviewText, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DisplayMessageDto_previewText(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DisplayMessageDto",
 		Field:      field,
@@ -15118,6 +15172,11 @@ func (ec *executionContext) _DisplayMessageDto(ctx context.Context, sel ast.Sele
 			}
 		case "text":
 			out.Values[i] = ec._DisplayMessageDto_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "previewText":
+			out.Values[i] = ec._DisplayMessageDto_previewText(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
