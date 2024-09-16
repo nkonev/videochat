@@ -489,6 +489,24 @@ func (not *Events) NotifyAboutPromotePinnedMessage(ctx context.Context, chatId i
 	}
 }
 
+func (not *Events) NotifyAboutPromotePinnedMessageEdit(ctx context.Context, chatId int64, msg *dto.PinnedMessageEvent, participantId int64) {
+
+	var eventType = "pinned_message_edit"
+
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
+	err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+		EventType:                  eventType,
+		PromoteMessageNotification: msg,
+		UserId:                     participantId,
+		ChatId:                     chatId,
+	})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+	}
+}
+
 func (not *Events) NotifyAboutPublishedMessage(ctx context.Context, chatId int64, msg *dto.PublishedMessageEvent, publish bool, participantIds []int64, regularParticipantCanPublishMessage bool, areAdmins map[int64]bool) {
 
 	var eventType = ""
@@ -497,6 +515,35 @@ func (not *Events) NotifyAboutPublishedMessage(ctx context.Context, chatId int64
 	} else {
 		eventType = "published_message_remove"
 	}
+
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
+	defer messageSpan.End()
+
+	for _, participantId := range participantIds {
+
+		var copied *dto.PublishedMessageEvent = &dto.PublishedMessageEvent{}
+		if err := deepcopy.Copy(copied, msg); err != nil {
+			GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
+			continue
+		}
+
+		copied.Message.CanPublish = dto.CanPublishMessage(regularParticipantCanPublishMessage, areAdmins[participantId], copied.Message.OwnerId, participantId)
+
+		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+			EventType:                    eventType,
+			PublishedMessageNotification: copied,
+			UserId:                       participantId,
+			ChatId:                       chatId,
+		})
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+		}
+	}
+}
+
+func (not *Events) NotifyAboutPublishedMessageEdit(ctx context.Context, chatId int64, msg *dto.PublishedMessageEvent, participantIds []int64, regularParticipantCanPublishMessage bool, areAdmins map[int64]bool) {
+
+	var eventType = "published_message_edit"
 
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
 	defer messageSpan.End()

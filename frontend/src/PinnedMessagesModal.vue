@@ -81,7 +81,7 @@
 
 import bus, {
     LOGGED_OUT, MESSAGES_RELOAD,
-    OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
+    OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_EDITED, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
 } from "./bus/bus";
 import axios from "axios";
 import { hasLength } from "./utils";
@@ -206,6 +206,7 @@ export default {
         bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+        bus.on(PINNED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.on(LOGGED_OUT, this.onLogout);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
     },
@@ -213,6 +214,7 @@ export default {
         bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
         bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
         bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+        bus.off(PINNED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
     },

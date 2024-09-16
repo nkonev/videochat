@@ -85,7 +85,7 @@
 import bus, {
     LOGGED_OUT, MESSAGES_RELOAD,
     OPEN_PUBLISHED_MESSAGES_MODAL,
-    PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_REMOVE,
+    PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED, PUBLISHED_MESSAGE_REMOVE,
 } from "./bus/bus";
 import axios from "axios";
 import {getPublicMessageLink, hasLength} from "./utils";
@@ -169,12 +169,6 @@ export default {
         getOwner(owner) {
             return owner.login
         },
-        onPublishedMessageRemove(dto) {
-            this.onItemRemovedEvent(dto);
-        },
-        onPublishedMessageAdd(dto) {
-            this.onItemCreatedEvent(dto);
-        },
         isVideoRoute() {
             return this.$route.name == videochat_name
         },
@@ -207,15 +201,17 @@ export default {
     },
     mounted() {
         bus.on(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
-        bus.on(PUBLISHED_MESSAGE_ADD, this.onPublishedMessageAdd);
-        bus.on(PUBLISHED_MESSAGE_REMOVE, this.onPublishedMessageRemove);
+        bus.on(PUBLISHED_MESSAGE_ADD, this.onItemCreatedEvent);
+        bus.on(PUBLISHED_MESSAGE_REMOVE, this.onItemRemovedEvent);
+        bus.on(PUBLISHED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.on(LOGGED_OUT, this.onLogout);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
     },
     beforeUnmount() {
         bus.off(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
-        bus.off(PUBLISHED_MESSAGE_ADD, this.onPublishedMessageAdd);
-        bus.off(PUBLISHED_MESSAGE_REMOVE, this.onPublishedMessageRemove);
+        bus.off(PUBLISHED_MESSAGE_ADD, this.onItemCreatedEvent);
+        bus.off(PUBLISHED_MESSAGE_REMOVE, this.onItemRemovedEvent);
+        bus.off(PUBLISHED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
     },

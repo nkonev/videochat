@@ -917,8 +917,29 @@ func (tx *Tx) GetPublishedMessages(chatId int64, limit, offset int) ([]*Message,
 	return list, nil
 }
 
+func commonGetPinnedMessagesCount(co CommonOperations, chatId int64) (int64, error) {
+	row := co.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE pinned IS TRUE`, chatId))
+	if row.Err() != nil {
+		return 0, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+	var res int64
+	err := row.Scan(&res)
+	if err != nil {
+		return 0, eris.Wrap(err, "error during interacting with db")
+	}
+	return res, nil
+}
+
 func (tx *Tx) GetPinnedMessagesCount(chatId int64) (int64, error) {
-	row := tx.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE pinned IS TRUE`, chatId))
+	return commonGetPinnedMessagesCount(tx, chatId)
+}
+
+func (db *DB) GetPinnedMessagesCount(chatId int64) (int64, error) {
+	return commonGetPinnedMessagesCount(db, chatId)
+}
+
+func commonGetPublishedMessagesCount(co CommonOperations, chatId int64) (int64, error) {
+	row := co.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE published IS TRUE`, chatId))
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -931,16 +952,11 @@ func (tx *Tx) GetPinnedMessagesCount(chatId int64) (int64, error) {
 }
 
 func (tx *Tx) GetPublishedMessagesCount(chatId int64) (int64, error) {
-	row := tx.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE published IS TRUE`, chatId))
-	if row.Err() != nil {
-		return 0, eris.Wrap(row.Err(), "error during interacting with db")
-	}
-	var res int64
-	err := row.Scan(&res)
-	if err != nil {
-		return 0, eris.Wrap(err, "error during interacting with db")
-	}
-	return res, nil
+	return commonGetPublishedMessagesCount(tx, chatId)
+}
+
+func (db *DB) GetPublishedMessagesCount(chatId int64) (int64, error) {
+	return commonGetPublishedMessagesCount(db, chatId)
 }
 
 func (tx *Tx) UnpromoteMessages(chatId int64) error {

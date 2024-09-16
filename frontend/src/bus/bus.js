@@ -76,12 +76,14 @@ export const PARTICIPANT_DELETED = "participantDeleted";
 export const PARTICIPANT_EDITED = "participantEdited";
 export const PINNED_MESSAGE_PROMOTED = "pinnedMessagePromoted";
 export const PINNED_MESSAGE_UNPROMOTED = "pinnedMessageUnpromoted";
+export const PINNED_MESSAGE_EDITED = "pinnedMessageEdited";
 export const FILE_CREATED = "fileCreated";
 export const FILE_REMOVED = "fileRemoved";
 export const FILE_UPDATED = "fileUpdated";
 
 export const PUBLISHED_MESSAGE_ADD = "publishedMessageAdd";
 export const PUBLISHED_MESSAGE_REMOVE = "publishedMessageRemove";
+export const PUBLISHED_MESSAGE_EDITED = "publishedMessageEdited";
 
 export const REACTION_CHANGED = "reactionChanged";
 

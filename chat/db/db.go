@@ -70,6 +70,8 @@ type CommonOperations interface {
 	CountChatsPerUser(userId int64) (int64, error)
 	FlipReaction(userId int64, chatId int64, messageId int64, reaction string) (bool, error)
 	GetChatIds(chatsSize, chatsOffset int) ([]int64, error)
+	GetPublishedMessagesCount(chatId int64) (int64, error)
+	GetPinnedMessagesCount(chatId int64) (int64, error)
 }
 
 func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {

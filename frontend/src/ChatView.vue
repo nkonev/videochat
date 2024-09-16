@@ -81,12 +81,12 @@ import bus, {
     OPEN_EDIT_MESSAGE,
     PARTICIPANT_ADDED,
     PARTICIPANT_DELETED,
-    PARTICIPANT_EDITED,
+    PARTICIPANT_EDITED, PINNED_MESSAGE_EDITED,
     PINNED_MESSAGE_PROMOTED,
     PINNED_MESSAGE_UNPROMOTED,
     PREVIEW_CREATED,
     PROFILE_SET,
-    PUBLISHED_MESSAGE_ADD,
+    PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED,
     PUBLISHED_MESSAGE_REMOVE,
     REACTION_CHANGED,
     REACTION_REMOVED,
@@ -448,12 +448,18 @@ export default {
       } else if (getChatEventsData(e).eventType === "pinned_message_unpromote") {
         const d = getChatEventsData(e).promoteMessageEvent;
         bus.emit(PINNED_MESSAGE_UNPROMOTED, d);
+      } else if (getChatEventsData(e).eventType === "pinned_message_edit") {
+        const d = getChatEventsData(e).promoteMessageEvent;
+        bus.emit(PINNED_MESSAGE_EDITED, d);
       } else if (getChatEventsData(e).eventType === "published_message_add") {
           const d = getChatEventsData(e).publishedMessageEvent;
           bus.emit(PUBLISHED_MESSAGE_ADD, d);
       } else if (getChatEventsData(e).eventType === "published_message_remove") {
           const d = getChatEventsData(e).publishedMessageEvent;
           bus.emit(PUBLISHED_MESSAGE_REMOVE, d);
+      } else if (getChatEventsData(e).eventType === "published_message_edit") {
+          const d = getChatEventsData(e).publishedMessageEvent;
+          bus.emit(PUBLISHED_MESSAGE_EDITED, d);
       } else if (getChatEventsData(e).eventType === "file_created") {
         const d = getChatEventsData(e).fileEvent;
         bus.emit(FILE_CREATED, d);
@@ -485,6 +491,11 @@ export default {
       if (this.pinnedPromoted && this.pinnedPromoted.id == item.message.id) {
         this.pinnedPromoted = null;
       }
+    },
+    onPinnedMessageChanged(item) {
+        if (this.pinnedPromoted && this.pinnedPromoted.id == item.message.id) {
+            this.onPinnedMessagePromoted(item);
+        }
     },
     onFocus() {
         if (this.chatStore.currentUser && this.chatId) {
@@ -782,6 +793,7 @@ export default {
     bus.on(LOGGED_OUT, this.onLogout);
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+    bus.on(PINNED_MESSAGE_EDITED, this.onPinnedMessageChanged);
     bus.on(FOCUS, this.onFocus);
     bus.on(USER_TYPING, this.onUserTyping);
     bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
@@ -808,6 +820,7 @@ export default {
     bus.off(LOGGED_OUT, this.onLogout);
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
+    bus.off(PINNED_MESSAGE_EDITED, this.onPinnedMessageChanged);
     bus.off(FOCUS, this.onFocus);
     bus.off(USER_TYPING, this.onUserTyping);
     bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
