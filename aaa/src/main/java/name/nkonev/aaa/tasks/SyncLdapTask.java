@@ -74,92 +74,94 @@ public class SyncLdapTask {
 
             var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(filter);
 
-            var ldapEntries = ldapOperations.searchForStream(lq, (Attributes attributes) -> attributes).toList();
-            for (var ldapEntry : ldapEntries) {
-                try {
-                    var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
-                    if (StringUtils.hasLength(ldapUserId)) {
-                        var o = chunk.stream().filter(ua -> ua.ldapId().equals(ldapUserId)).findAny();
-                        if (o.isPresent()) {
-                            var userAccount = o.get();
-                            var shouldSave = false;
+            try (var stream = ldapOperations.searchForStream(lq, (Attributes attributes) -> attributes)) {
+                var ldapEntries = stream.toList();
+                for (var ldapEntry : ldapEntries) {
+                    try {
+                        var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
+                        if (StringUtils.hasLength(ldapUserId)) {
+                            var o = chunk.stream().filter(ua -> ua.ldapId().equals(ldapUserId)).findAny();
+                            if (o.isPresent()) {
+                                var userAccount = o.get();
+                                var shouldSave = false;
 
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().username())) {
-                                var ldapUsername = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().username()).get().toString());
-                                if (StringUtils.hasLength(ldapUsername)) {
-                                    if (!ldapUsername.equals(userAccount.username())) {
-                                        LOGGER.info("For userId={}, ldapId={}, setting username={}", userAccount.id(), ldapUserId, ldapUsername);
-                                        userAccount = userAccount.withUsername(ldapUsername);
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().username())) {
+                                    var ldapUsername = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().username()).get().toString());
+                                    if (StringUtils.hasLength(ldapUsername)) {
+                                        if (!ldapUsername.equals(userAccount.username())) {
+                                            LOGGER.info("For userId={}, ldapId={}, setting username={}", userAccount.id(), ldapUserId, ldapUsername);
+                                            userAccount = userAccount.withUsername(ldapUsername);
+                                            shouldSave = true;
+                                        }
+                                    } else {
+                                        LOGGER.warn("For userId={}, ldapId={}, got empty ldap username", userAccount.id(), ldapUserId);
+                                    }
+                                }
+
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
+                                    var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
+                                    if (!Objects.equals(ldapEmail, userAccount.email())) {
+                                        LOGGER.info("For userId={}, ldapId={}, setting email={}", userAccount.id(), ldapUserId, ldapEmail);
+                                        userAccount = userAccount.withEmail(ldapEmail);
                                         shouldSave = true;
                                     }
-                                } else {
-                                    LOGGER.warn("For userId={}, ldapId={}, got empty ldap username", userAccount.id(), ldapUserId);
                                 }
-                            }
 
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
-                                var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
-                                if (!Objects.equals(ldapEmail, userAccount.email())) {
-                                    LOGGER.info("For userId={}, ldapId={}, setting email={}", userAccount.id(), ldapUserId, ldapEmail);
-                                    userAccount = userAccount.withEmail(ldapEmail);
-                                    shouldSave = true;
-                                }
-                            }
-
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                                Set<String> rawRoles = new HashSet<>();
-                                var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
-                                if (groups != null) {
-                                    rawRoles.addAll(convertToStrings(groups));
-                                }
-                                var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
-                                var oldRoles = Arrays.stream(userAccount.roles()).collect(Collectors.toSet());
-                                if (!oldRoles.equals(mappedRoles)) {
-                                    LOGGER.info("For userId={}, ldapId={}, setting roles={}", userAccount.id(), ldapUserId, mappedRoles);
-                                    aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_roles_changed);
-                                    userAccount = userAccount.withRoles(mappedRoles.toArray(UserRole[]::new));
-                                    shouldSave = true;
-                                }
-                            }
-
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().locked())) {
-                                var ldapLockedV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().locked()).get().toString());
-                                boolean ldapLocked = convertToBoolean(ldapLockedV);
-                                if (ldapLocked != userAccount.locked()) {
-                                    LOGGER.info("For userId={}, ldapId={}, setting locked={}", userAccount.id(), ldapUserId, ldapLocked);
-                                    if (ldapLocked) {
-                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
+                                    Set<String> rawRoles = new HashSet<>();
+                                    var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
+                                    if (groups != null) {
+                                        rawRoles.addAll(convertToStrings(groups));
                                     }
-                                    userAccount = userAccount.withLocked(ldapLocked);
-                                    shouldSave = true;
-                                }
-                            }
-
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().enabled())) {
-                                var ldapEnabledV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().enabled()).get().toString());
-                                boolean ldapEnabled = convertToBoolean(ldapEnabledV);
-                                if (ldapEnabled != userAccount.enabled()) {
-                                    LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
-                                    if (!ldapEnabled) {
-                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                    var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
+                                    var oldRoles = Arrays.stream(userAccount.roles()).collect(Collectors.toSet());
+                                    if (!oldRoles.equals(mappedRoles)) {
+                                        LOGGER.info("For userId={}, ldapId={}, setting roles={}", userAccount.id(), ldapUserId, mappedRoles);
+                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_roles_changed);
+                                        userAccount = userAccount.withRoles(mappedRoles.toArray(UserRole[]::new));
+                                        shouldSave = true;
                                     }
-                                    userAccount = userAccount.withEnabled(ldapEnabled);
-                                    shouldSave = true;
                                 }
-                            }
 
-                            if (shouldSave) {
-                                LOGGER.info("Saving userId={}, ldapId={}", userAccount.id(), ldapUserId);
-                                userAccountRepository.save(userAccount);
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().locked())) {
+                                    var ldapLockedV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().locked()).get().toString());
+                                    boolean ldapLocked = convertToBoolean(ldapLockedV);
+                                    if (ldapLocked != userAccount.locked()) {
+                                        LOGGER.info("For userId={}, ldapId={}, setting locked={}", userAccount.id(), ldapUserId, ldapLocked);
+                                        if (ldapLocked) {
+                                            aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                        }
+                                        userAccount = userAccount.withLocked(ldapLocked);
+                                        shouldSave = true;
+                                    }
+                                }
+
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().enabled())) {
+                                    var ldapEnabledV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().enabled()).get().toString());
+                                    boolean ldapEnabled = convertToBoolean(ldapEnabledV);
+                                    if (ldapEnabled != userAccount.enabled()) {
+                                        LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
+                                        if (!ldapEnabled) {
+                                            aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                        }
+                                        userAccount = userAccount.withEnabled(ldapEnabled);
+                                        shouldSave = true;
+                                    }
+                                }
+
+                                if (shouldSave) {
+                                    LOGGER.info("Saving userId={}, ldapId={}", userAccount.id(), ldapUserId);
+                                    userAccountRepository.save(userAccount);
+                                }
+                            } else {
+                                LOGGER.warn("Unable to find the corresponding userAccount for ldapId = {}", ldapUserId);
                             }
                         } else {
-                            LOGGER.warn("Unable to find the corresponding userAccount for ldapId = {}", ldapUserId);
+                            LOGGER.warn("Got empty ldap userId");
                         }
-                    } else {
-                        LOGGER.warn("Got empty ldap userId");
+                    } catch (Exception e) {
+                        LOGGER.error(e.getMessage(), e);
                     }
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
                 }
             }
         }
