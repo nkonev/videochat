@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.LdapOperations;
 import org.springframework.ldap.query.LdapQueryBuilder;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -76,48 +77,62 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 var userAccount = transactionTemplate.execute(status -> {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
-                    var ldapEntry = ldapOperations.searchForContext(lq).getAttributes();
 
-                    var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
+                    DirContextOperations dco = null;
+                    try {
+                        dco = ldapOperations.searchForContext(lq);
 
-                    UserAccount byLdapId = userAccountRepository
-                        .findByLdapId(ldapUserId)
-                        .orElseGet(() -> {
-                            // create a new
-                            userAccountRepository.findByUsername(userName).ifPresent(ua -> {
-                                throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
-                            });
+                        var ldapEntry = dco.getAttributes();
 
-                            String email = null;
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
-                                var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
-                                email = normalizeEmail(ldapEmail);
-                            }
+                        var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
 
-                            final Set<String> rawRoles = new HashSet<>();
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                                try {
-                                    var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
-                                    if (groups != null) {
-                                        rawRoles.addAll(convertToStrings(groups));
+                        UserAccount byLdapId = userAccountRepository
+                            .findByLdapId(ldapUserId)
+                            .orElseGet(() -> {
+                                // create a new
+                                userAccountRepository.findByUsername(userName).ifPresent(ua -> {
+                                    throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
+                                });
+
+                                String email = null;
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
+                                    var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
+                                    email = normalizeEmail(ldapEmail);
+                                }
+
+                                final Set<String> rawRoles = new HashSet<>();
+                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
+                                    try {
+                                        var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
+                                        if (groups != null) {
+                                            rawRoles.addAll(convertToStrings(groups));
+                                        }
+                                    } catch (NamingException e) {
+                                        LOGGER.error(e.getMessage(), e);
                                     }
-                                } catch (NamingException e) {
-                                    LOGGER.error(e.getMessage(), e);
                                 }
-                            }
-                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
+                                var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
 
-                            if (StringUtils.hasLength(email)) {
-                                if (!userService.checkEmailIsFree(email)){
-                                    throw new UserAlreadyPresentException("User with email '" + email + "' is already present");
+                                if (StringUtils.hasLength(email)) {
+                                    if (!userService.checkEmailIsFree(email)) {
+                                        throw new UserAlreadyPresentException("User with email '" + email + "' is already present");
+                                    }
                                 }
-                            }
 
-                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles, email));
-                            created.set(true);
-                            return user;
-                        });
-                    return byLdapId;
+                                var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles, email));
+                                created.set(true);
+                                return user;
+                            });
+                        return byLdapId;
+                    } finally {
+                        if (dco != null) {
+                            try {
+                                dco.close();
+                            } catch (NamingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
                 });
                 UserAccountDetailsDTO userDetails = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
 
