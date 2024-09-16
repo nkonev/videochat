@@ -194,7 +194,7 @@
         ],
         data () {
             return {
-                dto: dtoFactory(),
+                dto: dtoFactory(), // chatDto
                 chatId: null,
                 userSearchString: null,
                 showSearchButton: true,
@@ -314,7 +314,7 @@
             },
             onChatEdit(dto) {
                 if (dto.id == this.chatId) {
-                    // actually it is need only to reflect canEdit and friends
+                    // actually it is need only to reflect canEdit, canAudioMute and friends
                     this.dto = dto;
                 }
             },

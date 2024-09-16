@@ -5,6 +5,8 @@
             <v-btn variant="plain" icon v-if="isLocal && videoPublication != null" @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.locale.t('$vuetify.unmute_video') : $vuetify.locale.t('$vuetify.mute_video')"><v-icon size="x-large" class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
             <v-btn variant="plain" icon @click="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large" class="video-container-element-control-item">mdi-arrow-expand-all</v-icon></v-btn>
             <v-btn variant="plain" icon v-if="isLocal" @click="onClose()" :title="$vuetify.locale.t('$vuetify.close')"><v-icon size="x-large" class="video-container-element-control-item">mdi-close</v-icon></v-btn>
+            <v-btn variant="plain" icon v-if="!isLocal && canVideoKick" @click="kickRemote()" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon size="x-large" class="video-container-element-control-item">mdi-block-helper</v-icon></v-btn>
+            <v-btn variant="plain" icon v-if="!isLocal && canAudioMute" @click="forceMuteRemote()" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon size="x-large" class="video-container-element-control-item">mdi-microphone-off</v-icon></v-btn>
         </div>
         <span v-if="!isLocal && avatarIsSet" class="video-container-element-hint">{{ $vuetify.locale.t('$vuetify.video_is_not_shown') }}</span>
         <img v-show="avatarIsSet && videoMute" @click="showControls=!showControls" class="video-element" :class="videoIsOnTop ? 'video-element-top' : 'video-element-side'" :src="avatar"/>
@@ -17,6 +19,7 @@
 
 import {hasLength} from "@/utils";
 import refreshLocalMutedInAppBarMixin from "@/mixins/refreshLocalMutedInAppBarMixin";
+import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 
@@ -39,11 +42,14 @@ export default {
             avatar: "",
             videoMute: true,
             userId: null,
+            chatId: null,
             showControls: false,
             audioPublication: null,
             videoPublication: null,
             speakingTimer: null,
             muteAudioBlink: true,
+            canVideoKick: false, // only on remote
+            canAudioMute: false, // only on remote
         }
     },
 
@@ -134,6 +140,9 @@ export default {
         setUserId(id) {
             this.userId = id;
         },
+        setChatId(id) {
+            this.chatId = id;
+        },
         doMuteAudio(requestedState) {
             if (requestedState) {
                 this.audioPublication?.mute();
@@ -168,6 +177,18 @@ export default {
             if (!this.isMobile()) {
                 this.showControls = false;
             }
+        },
+        setCanVideoKick(newState) {
+            this.canVideoKick = newState
+        },
+        setCanAudioMute(newState) {
+            this.canAudioMute = newState
+        },
+        kickRemote() {
+            axios.put(`/api/video/${this.chatId}/kick?userId=${this.userId}`)
+        },
+        forceMuteRemote() {
+            axios.put(`/api/video/${this.chatId}/mute?userId=${this.userId}`)
         },
     },
     computed: {

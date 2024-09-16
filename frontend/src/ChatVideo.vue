@@ -32,7 +32,7 @@ import {
 } from "@/store/localStore";
 import bus, {
     ADD_SCREEN_SOURCE,
-    ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE,
+    ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE, CHAT_EDITED,
     REQUEST_CHANGE_VIDEO_PARAMETERS, SET_LOCAL_MICROPHONE_MUTED,
     VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
@@ -148,6 +148,9 @@ export default {
             candidateToAppendVideo.setUserName(md.login);
             candidateToAppendVideo.setAvatar(md.avatar);
             candidateToAppendVideo.setUserId(md.userId);
+            candidateToAppendVideo.setChatId(this.chatDto.id);
+            candidateToAppendVideo.setCanVideoKick(this.chatDto.canVideoKick);
+            candidateToAppendVideo.setCanAudioMute(this.chatDto.canAudioMute);
             return
           } else if (track.kind == 'audio') {
             console.debug("Processing audio track", track);
@@ -169,6 +172,9 @@ export default {
             candidateToAppendAudio.setUserName(md.login);
             candidateToAppendAudio.setAvatar(md.avatar);
             candidateToAppendAudio.setUserId(md.userId);
+            candidateToAppendAudio.setChatId(this.chatDto.id);
+            candidateToAppendAudio.setCanVideoKick(this.chatDto.canVideoKick);
+            candidateToAppendAudio.setCanAudioMute(this.chatDto.canAudioMute);
             return
           }
         }
@@ -522,6 +528,22 @@ export default {
       }
       return existingList;
     },
+    onChatEdit(dto) {
+      if (dto.id == this.chatId) {
+          // this.chatDto is already changed (or is going to be changed soon) in the parent ChatView.vue, here we only update UserVideo components
+
+          // actually it is need only to reflect canEdit, canAudioMute and friends
+          for (const [userIdentity, components] of this.userVideoComponents) {
+              for (const componentWrapper of components) {
+                  const component = componentWrapper.component;
+                  if (!component.isLocal) {
+                      component.setCanVideoKick(dto.canVideoKick);
+                      component.setCanAudioMute(dto.canAudioMute);
+                  }
+              }
+          }
+      }
+    },
   },
   computed: {
     ...mapStores(useChatStore),
@@ -559,6 +581,7 @@ export default {
     bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.on(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
     bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+    bus.on(CHAT_EDITED, this.onChatEdit);
 
     this.videoContainerDiv = document.getElementById("video-container");
 
@@ -596,6 +619,7 @@ export default {
     bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.off(SET_LOCAL_MICROPHONE_MUTED, this.onLocalMicrophoneMutedByAppBarButton);
     bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+    bus.off(CHAT_EDITED, this.onChatEdit);
   },
 }
 
