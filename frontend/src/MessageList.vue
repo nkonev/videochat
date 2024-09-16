@@ -542,8 +542,9 @@
         },
         onClickTrap(e) {
             const foundElements = [
-                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img"),
-                checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-wrapper") && Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button"))),
+                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
+                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-button")),
+                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-button-replace")),
             ].filter(r => r.found);
             if (foundElements.length) {
                 e.preventDefault();
@@ -554,24 +555,47 @@
                         bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: src, canSwitch: true})
                         break;
                     }
-                    case "span": { // contains video
-                        let video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                        if (video) {
-                            bus.emit(PLAYER_MODAL, {
-                                canPlayAsVideo: true,
-                                url: video.getAttribute('data-original'),
-                                previewUrl: video.src,
-                                canSwitch: true
-                            })
-                        } else {
-                            video = Array.from(found?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
-                            if (video) {
+                    case "span": { // span of any of "show in player" or "replace" button
+                        const spanContainer = found.parentElement;
+                        if (found.classList?.contains("video-in-message-button")) { // "show in player" button
+                            let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                            if (videoHolder) {
                                 bus.emit(PLAYER_MODAL, {
                                     canPlayAsVideo: true,
-                                    url: video.src,
-                                    previewUrl: video.poster,
+                                    url: videoHolder.getAttribute('data-original'),
+                                    previewUrl: videoHolder.src,
                                     canSwitch: true
                                 })
+                            } else {
+                                videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
+                                if (videoHolder) {
+                                    bus.emit(PLAYER_MODAL, {
+                                        canPlayAsVideo: true,
+                                        url: videoHolder.src,
+                                        previewUrl: videoHolder.poster,
+                                        canSwitch: true
+                                    })
+                                }
+                            }
+                        } else { // "replace" button
+                            let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                            if (videoHolder) {
+                                const src = videoHolder.src;
+                                const original = videoHolder.getAttribute('data-original');
+                                spanContainer.removeChild(videoHolder);
+
+                                spanContainer.removeChild(found);
+
+                                const replacement = document.createElement("VIDEO");
+                                replacement.src = original;
+                                replacement.poster = src;
+                                replacement.playsinline = true;
+                                replacement.controls = true;
+                                replacement.className = "video-custom-class";
+
+                                spanContainer.appendChild(replacement);
+                            } else {
+                                console.info("video holder is not found")
                             }
                         }
                         break;
