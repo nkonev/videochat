@@ -3,32 +3,32 @@ package name.nkonev.aaa.tasks;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.dto.UserRole;
+import name.nkonev.aaa.entity.ldap.LdapEntity;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.security.RoleMapper;
-import name.nkonev.aaa.services.EventService;
 import name.nkonev.aaa.utils.NullUtils;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ldap.core.LdapOperations;
-import org.springframework.ldap.filter.EqualsFilter;
-import org.springframework.ldap.filter.OrFilter;
+import org.springframework.ldap.core.*;
+import org.springframework.ldap.filter.WhitespaceWildcardsFilter;
 import org.springframework.ldap.query.LdapQueryBuilder;
+import org.springframework.ldap.support.LdapUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.naming.NamingEnumeration;
+import javax.naming.NameClassPair;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
-
-import static name.nkonev.aaa.utils.ConvertUtils.convertToBoolean;
-import static name.nkonev.aaa.utils.ConvertUtils.convertToStrings;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
 
 @Service
 public class SyncLdapTask {
@@ -37,9 +37,6 @@ public class SyncLdapTask {
 
     @Autowired
     private LdapOperations ldapOperations;
-
-    @Autowired
-    private UserListViewRepository userListViewRepository;
 
     @Autowired
     private AaaUserDetailsService aaaUserDetailsService;
@@ -59,115 +56,192 @@ public class SyncLdapTask {
     }
 
     public void doWork() {
-        final int pageSize = aaaProperties.schedulers().syncLdap().batchSize();
-        LOGGER.debug("Sync ldap task start, batchSize={}", pageSize);
+        LOGGER.debug("Sync ldap task start, batchSize={}", aaaProperties.schedulers().syncLdap().batchSize());
 
-        var shouldContinue = true;
-        for (int i = 0; shouldContinue; i++) {
-            var chunk = userListViewRepository.findPageWithLdapId(pageSize, i * pageSize);
-            shouldContinue = chunk.size() == pageSize;
+        var usernameAttrName = aaaProperties.ldap().attributeNames().username();
+        var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(new WhitespaceWildcardsFilter(usernameAttrName, " "));
 
-            var filter = new OrFilter();
-            chunk.forEach(userAccount -> {
-                filter.or(new EqualsFilter(aaaProperties.ldap().attributeNames().id(), userAccount.ldapId()));
-            });
-
-            var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(filter);
-
-            try (var stream = ldapOperations.searchForStream(lq, (Attributes attributes) -> attributes)) {
-                var ldapEntries = stream.toList();
-                for (var ldapEntry : ldapEntries) {
-                    try {
-                        var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
-                        if (StringUtils.hasLength(ldapUserId)) {
-                            var o = chunk.stream().filter(ua -> ua.ldapId().equals(ldapUserId)).findAny();
-                            if (o.isPresent()) {
-                                var userAccount = o.get();
-                                var shouldSave = false;
-
-                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().username())) {
-                                    var ldapUsername = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().username()).get().toString());
-                                    if (StringUtils.hasLength(ldapUsername)) {
-                                        if (!ldapUsername.equals(userAccount.username())) {
-                                            LOGGER.info("For userId={}, ldapId={}, setting username={}", userAccount.id(), ldapUserId, ldapUsername);
-                                            userAccount = userAccount.withUsername(ldapUsername);
-                                            shouldSave = true;
-                                        }
-                                    } else {
-                                        LOGGER.warn("For userId={}, ldapId={}, got empty ldap username", userAccount.id(), ldapUserId);
-                                    }
-                                }
-
-                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
-                                    var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
-                                    if (!Objects.equals(ldapEmail, userAccount.email())) {
-                                        LOGGER.info("For userId={}, ldapId={}, setting email={}", userAccount.id(), ldapUserId, ldapEmail);
-                                        userAccount = userAccount.withEmail(ldapEmail);
-                                        shouldSave = true;
-                                    }
-                                }
-
-                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                                    Set<String> rawRoles = new HashSet<>();
-                                    var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
-                                    if (groups != null) {
-                                        rawRoles.addAll(convertToStrings(groups));
-                                    }
-                                    var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
-                                    var oldRoles = Arrays.stream(userAccount.roles()).collect(Collectors.toSet());
-                                    if (!oldRoles.equals(mappedRoles)) {
-                                        LOGGER.info("For userId={}, ldapId={}, setting roles={}", userAccount.id(), ldapUserId, mappedRoles);
-                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_roles_changed);
-                                        userAccount = userAccount.withRoles(mappedRoles.toArray(UserRole[]::new));
-                                        shouldSave = true;
-                                    }
-                                }
-
-                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().locked())) {
-                                    var ldapLockedV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().locked()).get().toString());
-                                    boolean ldapLocked = convertToBoolean(ldapLockedV);
-                                    if (ldapLocked != userAccount.locked()) {
-                                        LOGGER.info("For userId={}, ldapId={}, setting locked={}", userAccount.id(), ldapUserId, ldapLocked);
-                                        if (ldapLocked) {
-                                            aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
-                                        }
-                                        userAccount = userAccount.withLocked(ldapLocked);
-                                        shouldSave = true;
-                                    }
-                                }
-
-                                if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().enabled())) {
-                                    var ldapEnabledV = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().enabled()).get().toString());
-                                    boolean ldapEnabled = convertToBoolean(ldapEnabledV);
-                                    if (ldapEnabled != userAccount.enabled()) {
-                                        LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
-                                        if (!ldapEnabled) {
-                                            aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
-                                        }
-                                        userAccount = userAccount.withEnabled(ldapEnabled);
-                                        shouldSave = true;
-                                    }
-                                }
-
-                                if (shouldSave) {
-                                    LOGGER.info("Saving userId={}, ldapId={}", userAccount.id(), ldapUserId);
-                                    userAccountRepository.save(userAccount);
-                                }
-                            } else {
-                                LOGGER.warn("Unable to find the corresponding userAccount for ldapId = {}", ldapUserId);
-                            }
-                        } else {
-                            LOGGER.warn("Got empty ldap userId");
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
-                }
-            }
+        // partial copy-paste from LdapTemplate because of near Long.MAX_VALUE length of array in spliterator in Spliterators.spliteratorUnknownSize()
+        SearchControls controls = new SearchControls();
+        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        if (lq.searchScope() != null) {
+            controls.setSearchScope(lq.searchScope().getId());
         }
+        controls.setReturningObjFlag(true);
+        SearchExecutor se = (DirContext ctx) -> {
+            // var filterValue = "uid=*";
+            var filterValue = lq.filter().encode();
+            LOGGER.debug("Executing search with base [{}] and filter [{}]", lq.base(), filterValue);
+            return ctx.search(lq.base(), filterValue, controls);
+        };
+        AttributesMapper<LdapEntity> mapper = (Attributes attributes) -> new LdapEntity(aaaProperties.ldap().attributeNames(), attributes);
+        MappingConsumingCallbackHandler<LdapEntity> handler = new MappingConsumingCallbackHandler<>(mapper, this::processUserBatch, aaaProperties.schedulers().syncLdap().batchSize());
+        ldapOperations.search(se, handler);
+        handler.processLeftovers();
 
         LOGGER.debug("Sync ldap task finish");
     }
 
+    private void processUserBatch(List<LdapEntity> attributes) {
+        Map<String, LdapEntity> byLdapId = new HashMap<>();
+        for (var ldapEntry : attributes) {
+            var ldapUserId = ldapEntry.id();
+            if (StringUtils.hasLength(ldapUserId)) {
+                byLdapId.put(ldapUserId, ldapEntry);
+            }
+        }
+        var chunk = userAccountRepository.findByLdapIdInOrderById(byLdapId.keySet());
+
+        for (var entry : byLdapId.entrySet()) {
+            try {
+                var ldapUserId = entry.getKey();
+                var ldapEntry = entry.getValue();
+
+                if (StringUtils.hasLength(ldapUserId)) {
+                    var o = chunk.stream().filter(ua -> ua.ldapId().equals(ldapUserId)).findAny();
+                    if (o.isPresent()) {
+                        var userAccount = o.get();
+                        var shouldSave = false;
+
+                        if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().username())) {
+                            var ldapUsername = ldapEntry.username();
+                            if (StringUtils.hasLength(ldapUsername)) {
+                                if (!ldapUsername.equals(userAccount.username())) {
+                                    LOGGER.info("For userId={}, ldapId={}, setting username={}", userAccount.id(), ldapUserId, ldapUsername);
+                                    userAccount = userAccount.withUsername(ldapUsername);
+                                    shouldSave = true;
+                                }
+                            } else {
+                                LOGGER.warn("For userId={}, ldapId={}, got empty ldap username", userAccount.id(), ldapUserId);
+                            }
+                        }
+
+                        if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
+                            var ldapEmail = ldapEntry.email();
+                            if (!Objects.equals(ldapEmail, userAccount.email())) {
+                                LOGGER.info("For userId={}, ldapId={}, setting email={}", userAccount.id(), ldapUserId, ldapEmail);
+                                userAccount = userAccount.withEmail(ldapEmail);
+                                shouldSave = true;
+                            }
+                        }
+
+                        if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
+                            Set<String> rawRoles = ldapEntry.roles();
+                            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
+                            var oldRoles = Arrays.stream(userAccount.roles()).collect(Collectors.toSet());
+                            if (!oldRoles.equals(mappedRoles)) {
+                                LOGGER.info("For userId={}, ldapId={}, setting roles={}", userAccount.id(), ldapUserId, mappedRoles);
+                                aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_roles_changed);
+                                userAccount = userAccount.withRoles(mappedRoles.toArray(UserRole[]::new));
+                                shouldSave = true;
+                            }
+                        }
+
+                        if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().locked())) {
+                            var ldapLockedV = ldapEntry.locked();
+                            if (ldapLockedV != null) {
+                                boolean ldapLocked = ldapLockedV;
+                                if (ldapLocked != userAccount.locked()) {
+                                    LOGGER.info("For userId={}, ldapId={}, setting locked={}", userAccount.id(), ldapUserId, ldapLocked);
+                                    if (ldapLocked) {
+                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                    }
+                                    userAccount = userAccount.withLocked(ldapLocked);
+                                    shouldSave = true;
+                                }
+                            } else {
+                                LOGGER.warn("For userId={}, ldapId={}, got empty ldap locked", userAccount.id(), ldapUserId);
+                            }
+                        }
+
+                        if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().enabled())) {
+                            var ldapEnabledV = ldapEntry.enabled();
+                            if (ldapEnabledV != null) {
+                                boolean ldapEnabled = ldapEnabledV;
+                                if (ldapEnabled != userAccount.enabled()) {
+                                    LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
+                                    if (!ldapEnabled) {
+                                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                                    }
+                                    userAccount = userAccount.withEnabled(ldapEnabled);
+                                    shouldSave = true;
+                                }
+                            } else {
+                                LOGGER.warn("For userId={}, ldapId={}, got empty ldap enabled", userAccount.id(), ldapUserId);
+                            }
+                        }
+
+                        if (shouldSave) {
+                            LOGGER.info("Saving userId={}, ldapId={}", userAccount.id(), ldapUserId);
+                            userAccountRepository.save(userAccount);
+                        }
+                    } else {
+                        LOGGER.warn("Unable to find the corresponding userAccount for ldapId = {}", ldapUserId);
+                    }
+                } else {
+                    LOGGER.warn("Got empty ldap userId");
+                }
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+    }
 }
 
+class MappingConsumingCallbackHandler<T> implements NameClassPairCallbackHandler {
+
+    private final AttributesMapper<T> mapper;
+
+    private final Consumer<List<T>> consumer;
+
+    private final List<T> list = new ArrayList<>();
+
+    private final int batchSize;
+
+    /**
+     * Constructs a new instance around the specified {@link AttributesMapper}.
+     * @param mapper the target mapper.
+     */
+    public MappingConsumingCallbackHandler(AttributesMapper<T> mapper, Consumer<List<T>> consumer, int batchSize) {
+        this.mapper = mapper;
+        this.consumer = consumer;
+        this.batchSize = batchSize;
+    }
+
+    /**
+     * Cast the NameClassPair to a SearchResult and pass its attributes to the
+     * {@link AttributesMapper}.
+     * @param nameClassPair a <code> SearchResult</code> instance.
+     * @return the Object returned from the mapper.
+     */
+    public T getObjectFromNameClassPairInternal(NameClassPair nameClassPair) {
+        if (!(nameClassPair instanceof SearchResult)) {
+            throw new IllegalArgumentException("Parameter must be an instance of SearchResult");
+        }
+
+        SearchResult searchResult = (SearchResult) nameClassPair;
+        Attributes attributes = searchResult.getAttributes();
+        try {
+            return this.mapper.mapFromAttributes(attributes);
+        }
+        catch (javax.naming.NamingException ex) {
+            throw LdapUtils.convertLdapException(ex);
+        }
+    }
+
+    @Override
+    public final void handleNameClassPair(NameClassPair nameClassPair) throws NamingException {
+        this.list.add(getObjectFromNameClassPairInternal(nameClassPair));
+        if (list.size() == batchSize) {
+            this.consumer.accept(list);
+            list.clear();
+        }
+    }
+
+    public void processLeftovers() {
+        if (!list.isEmpty()) {
+            this.consumer.accept(list);
+            list.clear();
+        }
+    }
+}

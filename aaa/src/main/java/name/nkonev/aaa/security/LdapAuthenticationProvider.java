@@ -4,6 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.entity.ldap.LdapEntity;
 import name.nkonev.aaa.exception.UserAlreadyPresentException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.CheckService;
@@ -26,13 +27,6 @@ import org.springframework.util.StringUtils;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static name.nkonev.aaa.converter.UserAccountConverter.normalizeEmail;
-import static name.nkonev.aaa.utils.ConvertUtils.convertToStrings;
-
-import name.nkonev.aaa.utils.NullUtils;
-
-import javax.naming.NamingException;
 
 // https://spring.io/guides/gs/authenticating-ldap
 @Component
@@ -76,37 +70,38 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 var userAccount = transactionTemplate.execute(status -> {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
-                    var ldapEntry = ldapOperations.searchForContext(lq).getAttributes();
 
-                    var ldapUserId = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().id()).get().toString());
+                    var ldapAttributes = ldapOperations.searchForContext(lq).getAttributes();
+                    var ldapEntry = new LdapEntity(aaaProperties.ldap().attributeNames(), ldapAttributes);
+
+                    var ldapUserId = ldapEntry.id();
+                    if (ldapUserId == null) {
+                        LOGGER.warn("Got null ldap id for username={}", userName);
+                        return null;
+                    }
 
                     UserAccount byLdapId = userAccountRepository
                         .findByLdapId(ldapUserId)
                         .orElseGet(() -> {
                             // create a new
+
+                            // check conflict by username
                             userAccountRepository.findByUsername(userName).ifPresent(ua -> {
                                 throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
                             });
 
                             String email = null;
                             if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
-                                var ldapEmail = NullUtils.getOrNullWrapException(() -> ldapEntry.get(aaaProperties.ldap().attributeNames().email()).get().toString());
-                                email = normalizeEmail(ldapEmail);
+                                email = ldapEntry.email();
                             }
 
-                            final Set<String> rawRoles = new HashSet<>();
+                            Set<String> rawRoles = new HashSet<>();
                             if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                                try {
-                                    var groups = ldapEntry.get(aaaProperties.ldap().attributeNames().role()).getAll();
-                                    if (groups != null) {
-                                        rawRoles.addAll(convertToStrings(groups));
-                                    }
-                                } catch (NamingException e) {
-                                    LOGGER.error(e.getMessage(), e);
-                                }
+                                rawRoles = ldapEntry.roles();
                             }
                             var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
 
+                            // check conflict by email
                             if (StringUtils.hasLength(email)) {
                                 if (!userService.checkEmailIsFree(email)){
                                     throw new UserAlreadyPresentException("User with email '" + email + "' is already present");

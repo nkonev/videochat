@@ -227,16 +227,6 @@ public class UserListViewRepository {
             userAccountRowMapper);
     }
 
-    public List<UserAccount> findPageWithLdapId(int pageSize, int offset) {
-        return jdbcTemplate.query(
-            PREFIX + " and ldap_id is not null " + PAGINATION_SUFFIX,
-            Map.of(
-                "limit", pageSize,
-                "offset", offset
-            ),
-            userAccountRowMapper);
-    }
-
     private static final String AND_USERNAME_ILIKE = " and " + USERNAME_SEARCH;
 
     public List<UserAccount> findByUsernameContainsIgnoreCase(int pageSize, long offset, String searchString) {

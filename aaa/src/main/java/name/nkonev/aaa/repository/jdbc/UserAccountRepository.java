@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,4 +39,6 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     // here we intentionally set that deleted user exists
     @Query("select u.id from user_account u where u.id in (:userIds)")
     Set<Long> findUserIds(List<Long> userIds);
+
+    List<UserAccount> findByLdapIdInOrderById(Collection<String> strings);
 }
