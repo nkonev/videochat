@@ -159,7 +159,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording)
 
 	expire := viper.GetDuration("minio.multipart.expire")
-	expTime := time.Now().Add(expire)
+	expTime := time.Now().UTC().Add(expire)
 	converted := convertMetadata(&metadata)
 	mpu := awsS3.CreateMultipartUploadInput{
 		Expires: &expTime,

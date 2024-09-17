@@ -71,7 +71,7 @@ func (h *abstractAvatarHandler) PutAvatar(c echo.Context) error {
 		return err
 	}
 
-	currTime := time.Now().Unix()
+	currTime := time.Now().UTC().Unix()
 	filename200, relativeUrl, err := h.putSizedFile(c, srcImage, err, bucketName, contentType, 200, 200, AVATAR_200x200, currTime)
 	if err != nil {
 		return err

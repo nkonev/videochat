@@ -299,7 +299,7 @@ const UrlBasePublicPreview = "/api/storage/public/download/embed/preview"
 func GetFileItemId() string {
 	location := time.UTC
 	dt0 := time.Date(viper.GetInt("ulid.topYear"), time.January, 1, 0, 0, 0, 0, location)
-	dt1 := time.Now()
+	dt1 := time.Now().UTC()
 	delta := dt0.UnixMilli() - dt1.UnixMilli()
 	initializingReverseTime := time.UnixMilli(delta)
 	ms := ulid.Timestamp(initializingReverseTime)
@@ -341,7 +341,7 @@ func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename
 	hasExt := len(filenameParts) == 2
 	newFileName := ""
 	if hasExt && shouldAddDateToTheFilename {
-		newFileName = filenameParts[0] + "_" + time.Now().Format("20060102150405") + "." + filenameParts[1]
+		newFileName = filenameParts[0] + "_" + time.Now().UTC().Format("20060102150405") + "." + filenameParts[1]
 	} else {
 		newFileName = trimmedFilename
 	}

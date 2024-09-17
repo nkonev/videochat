@@ -101,7 +101,7 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 			} else if eventType == utils.FILE_DELETED {
 				fileInfo = &dto.FileInfoDto{
 					Id:           normalizedKey,
-					LastModified: time.Now(),
+					LastModified: time.Now().UTC(),
 				}
 			}
 			s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
