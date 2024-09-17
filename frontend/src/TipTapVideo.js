@@ -42,8 +42,8 @@ const Video = Node.create({
         return [
             'span', {"class": "video-in-message-wrapper"},
             ['img', mergeAttributes({"class": "video-custom-class", "controls": true}, HTMLAttributes)],
-            ['span', {"class": "video-in-message-button mdi mdi-fullscreen"}],
-            ['span', {"class": "video-in-message-button-replace mdi mdi-play-box-outline"}],
+            ['span', {"class": "video-in-message-button mdi mdi-fullscreen", "title": "Open in player"}],
+            ['span', {"class": "video-in-message-button-replace mdi mdi-play-box-outline", "title": "Play in-place"}],
         ];
     },
     addCommands() {
