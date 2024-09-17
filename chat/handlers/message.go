@@ -1100,7 +1100,7 @@ func convertToEditableMessage(ctx context.Context, dto *EditMessageDto, authPrin
 		Text:         trimmedAndSanitized,
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
-		EditDateTime: null.TimeFrom(time.Now()),
+		EditDateTime: null.TimeFrom(time.Now().UTC()),
 		FileItemUuid: dto.FileItemUuid,
 		BlogPost:     dto.BlogPost,
 	}, nil
@@ -2244,5 +2244,5 @@ func addTimeToUrl(src string) (string, error) {
 }
 
 func addTimeToUrlValues(query *url.Values) {
-	query.Set("time", utils.Int64ToString(time.Now().Unix()))
+	query.Set("time", utils.Int64ToString(time.Now().UTC().Unix()))
 }

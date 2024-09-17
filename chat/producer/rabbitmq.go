@@ -27,7 +27,7 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         aType,
@@ -63,7 +63,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Headers:      headers,
