@@ -33,7 +33,7 @@ func (rp *RabbitUserCountPublisher) Publish(ctx context.Context, participantIds 
 
 		msg := amqp.Publishing{
 			DeliveryMode: amqp.Transient,
-			Timestamp:    time.Now(),
+			Timestamp:    time.Now().UTC(),
 			ContentType:  "application/json",
 			Body:         bytea,
 			Type:         utils.GetType(event),
@@ -82,7 +82,7 @@ func (rp *RabbitUserIdsPublisher) Publish(ctx context.Context, videoCallUsersCal
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
@@ -130,7 +130,7 @@ func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
@@ -190,7 +190,7 @@ func (rp *RabbitDialStatusPublisher) Publish(
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
@@ -235,7 +235,7 @@ func (rp *RabbitRecordingPublisher) Publish(ctx context.Context, recordInProgres
 
 		msg := amqp.Publishing{
 			DeliveryMode: amqp.Transient,
-			Timestamp:    time.Now(),
+			Timestamp:    time.Now().UTC(),
 			ContentType:  "application/json",
 			Body:         bytea,
 			Type:         utils.GetType(event),
@@ -271,7 +271,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, notificatio
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Headers:      headers,
@@ -313,7 +313,7 @@ func (rp *RabbitScreenSharePublisher) Publish(ctx context.Context, participantId
 
 		msg := amqp.Publishing{
 			DeliveryMode: amqp.Transient,
-			Timestamp:    time.Now(),
+			Timestamp:    time.Now().UTC(),
 			ContentType:  "application/json",
 			Body:         bytea,
 			Type:         utils.GetType(event),

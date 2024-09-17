@@ -84,7 +84,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	}
 
 	roomName := utils.GetRoomNameFromId(chatId)
-	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().Format("20060102150405"))
+	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().UTC().Format("20060102150405"))
 	s3, err := rh.restClient.GetS3(c.Request().Context(), fileName, chatId, userPrincipalDto.UserId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during gettting s3 %v", err)
