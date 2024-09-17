@@ -39,7 +39,7 @@ type NotificationPerChatSettings struct {
 func NewNotificationDeleteDto(id int64, notificationType string) *NotificationDto {
 	return &NotificationDto{
 		Id:             id,
-		CreateDateTime: time.Now(), // it needs for GraphQL because this field is not nullable
+		CreateDateTime: time.Now().UTC(), // it needs for GraphQL because this field is not nullable
 		NotificationType: notificationType,
 	}
 }

@@ -50,12 +50,12 @@ func (db *DB) PutNotification(messageId *int64, userId int64, chatId int64, noti
 			returning id, create_date_time`,
 		notificationType, description, messageId, userId, chatId, byUserId, byLogin, chatTitle, messageSubId)
 	if res.Err() != nil {
-		return 0, time.Now(), eris.Wrap(res.Err(), "error during interacting with db")
+		return 0, time.Time{}, eris.Wrap(res.Err(), "error during interacting with db")
 	}
 	var id int64
 	var createDatetime time.Time
 	if err := res.Scan(&id, &createDatetime); err != nil {
-		return 0, time.Now(), eris.Wrap(err, "error during interacting with db")
+		return 0, time.Time{}, eris.Wrap(err, "error during interacting with db")
 	}
 	return id, createDatetime, nil
 }

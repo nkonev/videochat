@@ -31,7 +31,7 @@ func (rp *RabbitEventPublisher) Publish(ctx context.Context, participantId int64
 
 	msg := amqp.Publishing{
 		DeliveryMode: amqp.Transient,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
