@@ -1,8 +1,29 @@
-import { VueRenderer } from '@tiptap/vue-3'
-import tippy from 'tippy.js'
+import {
+    computePosition,
+    flip,
+    shift,
+} from '@floating-ui/dom'
+import { posToDOMRect, VueRenderer } from '@tiptap/vue-3'
 import axios from "axios";
 
 import MentionList from './MentionList.vue'
+
+const updatePosition = (editor, element) => {
+    const virtualElement = {
+        getBoundingClientRect: () => posToDOMRect(editor.view, editor.state.selection.from, editor.state.selection.to),
+    }
+
+    computePosition(virtualElement, element, {
+        placement: 'bottom-start',
+        strategy: 'absolute',
+        middleware: [shift(), flip()],
+    }).then(({ x, y, strategy }) => {
+        element.style.width = 'max-content'
+        element.style.position = strategy
+        element.style.left = `${x}px`
+        element.style.top = `${y}px`
+    })
+}
 
 export default (tipTapEditorVue) => {
 
@@ -20,7 +41,6 @@ export default (tipTapEditorVue) => {
 
         render: () => {
             let component
-            let popup
 
             return {
                 onStart: props => {
@@ -34,16 +54,10 @@ export default (tipTapEditorVue) => {
                         return
                     }
 
-                    popup = tippy('body', {
-                        getReferenceClientRect: props.clientRect,
-                        appendTo: () => document.body,
-                        content: component.element,
-                        showOnCreate: true,
-                        interactive: true,
-                        trigger: 'manual',
-                        placement: 'bottom-start',
-                        hideOnClick: 'toggle'
-                    })
+                    component.element.style.position = 'absolute'
+                    document.body.appendChild(component.element)
+                    updatePosition(props.editor, component.element)
+
                 },
 
                 onUpdate(props) {
@@ -53,14 +67,14 @@ export default (tipTapEditorVue) => {
                         return
                     }
 
-                    popup[0].setProps({
-                        getReferenceClientRect: props.clientRect,
-                    })
+                    updatePosition(props.editor, component.element)
                 },
 
                 onKeyDown(props) {
                     if (props.event.key === 'Escape') {
-                        popup[0].hide()
+
+                        component.destroy()
+                        component.element.remove()
 
                         return true
                     }
@@ -69,8 +83,8 @@ export default (tipTapEditorVue) => {
                 },
 
                 onExit() {
-                    popup[0].destroy()
                     component.destroy()
+                    component.element.remove()
                 },
             }
         },
