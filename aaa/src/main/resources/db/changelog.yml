@@ -126,3 +126,10 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: /db/migration/V18__plural_roles.sql
+
+  - changeSet:
+      id: 19
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V19__sync_ldap.sql

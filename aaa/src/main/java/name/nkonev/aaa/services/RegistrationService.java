@@ -76,7 +76,7 @@ public class RegistrationService {
         validateLengthEmail(userAccountDTO.email());
 
         var userAccountOuter = transactionTemplate.execute(status -> {
-            userService.checkLoginIsFree(userAccountDTO.login());
+            userService.checkLoginIsFreeOrThrow(userAccountDTO.login());
 
             if (!userService.checkEmailIsFree(userAccountDTO.email())){
                 return null; // we care for user email leak

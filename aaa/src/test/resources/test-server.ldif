@@ -45,7 +45,6 @@ uid: ben
 userPassword: $2a$10$c6bSeWPhg06xB1lvmaWNNe4NROmZiSpYhlocU/98HNr2MhIOiSt36
 uidNumber: 1
 memberOf: user
-memberOf: admin
 mail: ben@sf.org
 
 dn: uid=bobby,ou=people,dc=springframework,dc=org

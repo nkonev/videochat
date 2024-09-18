@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
+import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAME_PREFIXES;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 @Component
@@ -211,7 +212,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
-                userAccountDTO.loginColor()
+                userAccountDTO.loginColor(),
+                null
         );
     }
 
@@ -234,14 +236,19 @@ public class UserAccountConverter {
     private static String checkAndTrimLogin(String login, boolean isForOauth2) {
         login = login != null ? login.trim() : null;
         login = trimToNull(login);
+        login = NullEncode.forHtml(login);
 
         if (login != null) {
             if (FORBIDDEN_USERNAMES.contains(login)) {
                 throw new BadRequestException("forbidden login");
             }
-        }
 
-        login = NullEncode.forHtml(login);
+            for (var fp : FORBIDDEN_USERNAME_PREFIXES) {
+                if (login.startsWith(fp)) {
+                    throw new BadRequestException("forbidden login");
+                }
+            }
+        }
 
         if (login != null && !isForOauth2) {
             Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
@@ -280,6 +287,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -307,6 +315,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 vkontakteId,
+                null,
                 null,
                 null,
                 null,
@@ -340,6 +349,7 @@ public class UserAccountConverter {
                 googleId,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -370,14 +380,13 @@ public class UserAccountConverter {
                 null,
                 keycloakId,
                 null,
+                null,
                 null
         );
     }
 
-    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles, String email) {
+    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles, String email, boolean locked, boolean enabled, LocalDateTime syncLdapTime) {
         final boolean expired = false;
-        final boolean locked = false;
-        final boolean enabled = true;
         final boolean confirmed = true;
 
         return new UserAccount(
@@ -400,7 +409,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 ldapId,
-                null
+                null,
+                syncLdapTime
         );
     }
 

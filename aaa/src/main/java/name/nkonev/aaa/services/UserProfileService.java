@@ -236,7 +236,7 @@ public class UserProfileService {
 
             // check login already present
             if (userAccountDTO.login() != null && !exists.username().equals(userAccountDTO.login())) {
-                checkService.checkLoginIsFree(userAccountDTO.login());
+                checkService.checkLoginIsFreeOrThrow(userAccountDTO.login());
             }
 
             var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);

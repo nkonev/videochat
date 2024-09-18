@@ -30,7 +30,8 @@ public record UserAccount(
     String googleId,
     String keycloakId,
     String ldapId,
-    String loginColor
+    String loginColor,
+    LocalDateTime syncLdapTime
 ) {
 
     public UserAccount withPassword(String newPassword) {
@@ -54,7 +55,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -79,7 +81,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -104,7 +107,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -129,7 +133,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -154,7 +159,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -179,7 +185,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -204,7 +211,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -229,7 +237,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -254,7 +263,8 @@ public record UserAccount(
             googleId,
             keycloakId,
             ldapId,
-            loginColor
+            loginColor,
+            syncLdapTime
         );
     }
 
@@ -279,7 +289,8 @@ public record UserAccount(
                 googleId,
                 keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 
@@ -304,7 +315,34 @@ public record UserAccount(
             googleId,
             keycloakId,
             ldapId,
-            newLoginColor
+            newLoginColor,
+            syncLdapTime
+        );
+    }
+
+    public UserAccount withSyncLdapTime(LocalDateTime newSyncLdapDateTime) {
+        return new UserAccount(
+            id,
+            creationType,
+            username,
+            password,
+            avatar,
+            avatarBig,
+            shortInfo,
+            expired,
+            locked,
+            enabled,
+            confirmed,
+            roles,
+            email,
+            lastLoginDateTime,
+            facebookId,
+            vkontakteId,
+            googleId,
+            keycloakId,
+            ldapId,
+            loginColor,
+            newSyncLdapDateTime
         );
     }
 
@@ -329,7 +367,8 @@ public record UserAccount(
                 newOauthIdentifiers.googleId,
                 newOauthIdentifiers.keycloakId,
                 ldapId,
-                loginColor
+                loginColor,
+                syncLdapTime
         );
     }
 

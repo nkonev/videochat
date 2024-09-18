@@ -1,11 +1,17 @@
 package name.nkonev.aaa.services;
 
+import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.exception.UserAlreadyPresentException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CheckService {
@@ -14,19 +20,57 @@ public class CheckService {
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-    public void checkLoginIsFree(String newLogin) {
-        if(userAccountRepository.findByUsername(newLogin).isPresent()){
-            throw new UserAlreadyPresentException("User with login '" + newLogin + "' is already present");
+    public boolean checkLoginIsFree(String login) {
+        return checkLogin(login).isEmpty();
+    }
+
+    public Optional<UserAccount> checkLogin(String login) {
+        var t = userAccountRepository.findByUsername(login);
+        if (t.isPresent()) {
+            LOGGER.info("user with login '{}' already present", login);
+        }
+        return t;
+    }
+
+    public Map<String, UserAccount> checkLogins(List<String> logins) {
+        var res = new HashMap<String, UserAccount>();
+        var users = userAccountRepository.findByUsernameInOrderById(logins);
+        for (var u : users) {
+            res.put(u.username(), u);
+        }
+        return res;
+    }
+
+    public void checkLoginIsFreeOrThrow(String login) {
+        if (!checkLoginIsFree(login)){
+            throw new UserAlreadyPresentException("User with login '" + login + "' is already present");
         }
     }
 
     public boolean checkEmailIsFree(String email) {
-        if (userAccountRepository.findByEmail(email).isPresent()) {
-            LOGGER.warn("user with email '{}' already present. exiting...", email);
-            return false;
-        } else {
-            return true;
-        }
+        return checkEmail(email).isEmpty();
     }
 
+    public Optional<UserAccount> checkEmail(String email) {
+        var t = userAccountRepository.findByEmail(email);
+        if (t.isPresent()) {
+            LOGGER.info("user with email '{}' already present", email);
+        }
+        return t;
+    }
+
+    public Map<String, UserAccount> checkEmails(List<String> emails) {
+        var res = new HashMap<String, UserAccount>();
+        var users = userAccountRepository.findByEmailInOrderById(emails);
+        for (var u : users) {
+            res.put(u.email(), u);
+        }
+        return res;
+    }
+
+    public void checkEmailIsFreeOrThrow(String email) {
+        if (!checkEmailIsFree(email)) {
+            throw new UserAlreadyPresentException("User with email '" + email + "' is already present");
+        }
+    }
 }

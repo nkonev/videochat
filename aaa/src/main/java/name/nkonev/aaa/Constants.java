@@ -64,12 +64,15 @@ public class Constants {
         public static final String BEHALF_USER_ID = "behalfUserId";
     }
 
+    public static final String LDAP_CONFLICT_PREFIX = "conflicts_with_ldap_";
+
     public static final String DELETED = "deleted";
     public static final long DELETED_ID = -1;
 
     public static final Long NonExistentUser = -65000L;
 
     public static final Set<String> FORBIDDEN_USERNAMES = Set.of(DELETED, "all", "here");
+    public static final Set<String> FORBIDDEN_USERNAME_PREFIXES = Set.of(LDAP_CONFLICT_PREFIX);
 
     public static final int MIN_PASSWORD_LENGTH = 6;
     public static final int MAX_PASSWORD_LENGTH = 30;

@@ -5,9 +5,9 @@ import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
-import name.nkonev.aaa.exception.UserAlreadyPresentException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import name.nkonev.aaa.services.CheckService;
+import name.nkonev.aaa.services.ConflictResolvingActions;
+import name.nkonev.aaa.services.ConflictService;
 import name.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +24,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
+import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
+
 // https://spring.io/guides/gs/authenticating-ldap
 @Component
-public class LdapAuthenticationProvider implements AuthenticationProvider {
+public class LdapAuthenticationProvider implements AuthenticationProvider, ConflictResolvingActions {
 
     @Autowired
     private LdapOperations ldapOperations;
@@ -51,7 +55,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     private UserAccountConverter userAccountConverter;
 
     @Autowired
-    private CheckService userService;
+    private ConflictService conflictService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapAuthenticationProvider.class);
 
@@ -59,7 +63,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         if (aaaProperties.ldap().auth().enabled()) {
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) authentication;
-            var userName = usernamePasswordAuthenticationToken.getPrincipal().toString();
+            var userName = validateLengthAndTrimLogin(usernamePasswordAuthenticationToken.getPrincipal().toString(), false);
             var password = usernamePasswordAuthenticationToken.getCredentials().toString();
 
             var encodedPassword = encodePassword(password);
@@ -80,16 +84,10 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                         return null;
                     }
 
-                    UserAccount byLdapId = userAccountRepository
-                        .findByLdapId(ldapUserId)
+                    return userAccountRepository
+                        .findByLdapId(ldapUserId) // find an existing user
                         .orElseGet(() -> {
-                            // create a new
-
-                            // check conflict by username
-                            userAccountRepository.findByUsername(userName).ifPresent(ua -> {
-                                throw new UserAlreadyPresentException("User with login '" + userName + "' is already present");
-                            });
-
+                            // or try to create a new user
                             String email = null;
                             if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().email())) {
                                 email = ldapEntry.email();
@@ -101,19 +99,31 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                             }
                             var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
 
-                            // check conflict by email
-                            if (StringUtils.hasLength(email)) {
-                                if (!userService.checkEmailIsFree(email)){
-                                    throw new UserAlreadyPresentException("User with email '" + email + "' is already present");
-                                }
-                            }
+                            var userToInsert = UserAccountConverter.buildUserAccountEntityForLdapInsert(
+                                    userName,
+                                    ldapUserId,
+                                    mappedRoles,
+                                    email,
+                                    false,
+                                    true,
+                                    getNowUTC()
+                            );
+                            // check for conflicts by username or email and create the user if conflict resolution is not "ignore"
+                            conflictService.process(userToInsert, this);
+                            // due to conflict we can ignore the user and not to save him
+                            // so we try to lookup him
+                            var foundNewUser = userAccountRepository.findByUsername(userName);
 
-                            var user = userAccountRepository.save(UserAccountConverter.buildUserAccountEntityForLdapInsert(userName, ldapUserId, mappedRoles, email));
-                            created.set(true);
-                            return user;
+                            if (foundNewUser.isPresent()) {
+                                created.set(true);
+                            }
+                            return foundNewUser.orElse(null);
                         });
-                    return byLdapId;
                 });
+                if (userAccount == null) {
+                    LOGGER.info("Skipping login via ldap by username {}", userName);
+                    return null;
+                }
                 UserAccountDetailsDTO userDetails = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
 
                 if (created.get()) {
@@ -121,8 +131,6 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 }
 
                 return new AaaAuthenticationToken(userDetails);
-            } catch (UserAlreadyPresentException e) {
-                LOGGER.warn("User already exists: {}", e.getMessage());
             } catch (IncorrectResultSizeDataAccessException e) {
                 LOGGER.debug("Unable to authenticate via LDAP", e);
             }
@@ -142,5 +150,20 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     @Override
     public boolean supports(Class<?> authentication) {
         return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
+    }
+
+    @Override
+    public void saveUser(UserAccount userAccount) {
+        userAccountRepository.save(userAccount);
+    }
+
+    @Override
+    public void saveUsers(Collection<UserAccount> users) {
+        userAccountRepository.saveAll(users);
+    }
+
+    @Override
+    public void removeUser(UserAccount userAccount) {
+        userAccountRepository.deleteById(userAccount.id());
     }
 }

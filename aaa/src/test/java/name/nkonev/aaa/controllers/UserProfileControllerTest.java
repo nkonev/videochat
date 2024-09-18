@@ -500,7 +500,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 login, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, login+"@example.com", null, null, null, null, null, null, null);
+                new UserRole[]{UserRole.ROLE_USER}, login+"@example.com", null, null, null, null, null, null, null, null);
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccount.id();
@@ -590,6 +590,18 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertEquals(USER_BOB_LDAP_EMAIL, restoredBob.email());
         Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_USER));
         Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_ADMIN));
+        Assertions.assertTrue(restoredBob.syncLdapTime().isAfter(gotBob.syncLdapTime()));
+    }
+
+    @Test
+    public void ldapSyncCreatesUsers() {
+        var ldapUsersBefore = jdbcTemplate.queryForObject("select count (*) from user_account where ldap_id is not null", Long.class);
+        Assertions.assertEquals(0L, ldapUsersBefore);
+
+        syncLdapTask.doWork();
+
+        var ldapUsersAfter = jdbcTemplate.queryForObject("select count (*) from user_account where ldap_id is not null", Long.class);
+        Assertions.assertEquals(4L, ldapUsersAfter);
     }
 
     final String userForChangeEmail0 = "generated_user_20";

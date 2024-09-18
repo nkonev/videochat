@@ -32,6 +32,7 @@ import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.LinkedMultiValueMap;
@@ -120,6 +121,9 @@ public abstract class AbstractTestRunner {
     @Autowired
     protected RabbitAdmin rabbitAdmin;
 
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractTestRunner.class);
 
     protected String buildCookieHeader(HttpCookie... cookies) {
@@ -135,6 +139,7 @@ public abstract class AbstractTestRunner {
         rabbitAdmin.purgeQueue(QUEUE_CHANGE_EMAIL_CONFIRMATION_NAME, true);
         rabbitAdmin.purgeQueue(QUEUE_ARBITRARY_EMAILS_NAME, true);
         rabbitAdmin.purgeQueue(QUEUE_PROFILE_TEST, true);
+        jdbcTemplate.execute("delete from user_account where ldap_id is not null");
     }
 
     public static class SessionHolder {

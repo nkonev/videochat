@@ -21,7 +21,7 @@ public abstract class ConvertUtils {
             return false;
         }
         value = value.toLowerCase();
-        return value.equals("true") || value.equals("yes") || value.equals("1");
+        return value.equals("true") || value.equals("yes") || value.equals("1") || value.contains("enable") || value.contains("ok");
     }
 
     public static Set<String> convertToStrings(NamingEnumeration rawRoles) {

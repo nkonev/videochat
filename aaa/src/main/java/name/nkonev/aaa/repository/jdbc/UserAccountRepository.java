@@ -41,4 +41,16 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     Set<Long> findUserIds(List<Long> userIds);
 
     List<UserAccount> findByLdapIdInOrderById(Collection<String> strings);
+
+    @Modifying
+    @Query("update user_account set sync_ldap_time = :newSyncLdapDateTime where ldap_id in (:ldapUserIds)")
+    void updateSyncLdapTime(Set<String> ldapUserIds, LocalDateTime newSyncLdapDateTime);
+
+    @Modifying
+    @Query("delete from user_account where ldap_id is not null and sync_ldap_time < :currTime")
+    long deleteWithLdapIdElderThan(LocalDateTime currTime);
+
+    List<UserAccount> findByUsernameInOrderById(List<String> logins);
+
+    List<UserAccount>  findByEmailInOrderById(List<String> emails);
 }
