@@ -90,6 +90,7 @@ export default {
 @import "constants.styl"
 
 .mention-items {
+    z-index 10
     padding: 0.2rem;
     position: relative;
     border-radius: 0.5rem;

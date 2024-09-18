@@ -117,10 +117,11 @@
         </div>
         <template v-else-if="shouldShowButtons">
             <bubble-menu
-                class="bubble-menu"
-                :tippy-options="{ duration: 0 }"
+                :updateDelay="0"
+                :resizeDelay="0"
                 :editor="this.$refs.tipTapRef.getEditor()"
             >
+              <div class="bubble-menu">
                 <button @click="boldClick" :class="{ 'is-active': boldValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
                 </button>
@@ -130,13 +131,13 @@
                 <button @click="underlineClick" :class="{ 'is-active': underlineValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_underline_short') }}
                 </button>
+              </div>
             </bubble-menu>
 
             <floating-menu
-                class="floating-menu"
-                :tippy-options="{ duration: 0, zIndex: 200, interactive: true, appendTo: documentBody }"
                 :editor="this.$refs.tipTapRef.getEditor()"
             >
+              <div class="floating-menu">
                 <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
                 </button>
@@ -153,7 +154,7 @@
                 <button @click="embedClick">
                     {{ $vuetify.locale.t('$vuetify.message_edit_embed_short') }}
                 </button>
-
+              </div>
             </floating-menu>
         </template>
       </v-container>
@@ -182,7 +183,6 @@
         SET_EDIT_MESSAGE,
         SET_EDIT_MESSAGE_MODAL,
         MESSAGE_EDIT_SET_FILE_ITEM_UUID,
-        ON_WINDOW_RESIZED,
         OPEN_SETTINGS,
         ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
         OPEN_RECORDING_MODAL, FILE_CREATED,
@@ -211,6 +211,8 @@
     import {mapStores} from "pinia";
     import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
+    // https://github.com/ueberdosis/tiptap/pull/5398/files
+    // https://github.com/ueberdosis/tiptap/blob/next/demos/src/Examples/Menus/Vue/index.vue
     import {
         BubbleMenu,
         FloatingMenu,
