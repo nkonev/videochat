@@ -13,34 +13,35 @@ import (
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
-	"strconv"
 )
 
-var numErr = &strconv.NumError{}
-
 type SynchronizeWithLivekitService struct {
-	database   			    *db.DB
-	userService   			*services.UserService
-	tracer             		trace.Tracer
-	livekitRoomClient   	client.LivekitRoomClient
-	restClient              *client.RestClient
+	database               *db.DB
+	userService            *services.UserService
+	tracer                 trace.Tracer
+	livekitRoomClient      client.LivekitRoomClient
+	restClient             *client.RestClient
+	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
 }
 
 func NewSynchronizeWithLivekitService(
-	database   			    *db.DB,
+	database *db.DB,
 	userService *services.UserService,
 	livekitRoomClient client.LivekitRoomClient,
 	restClient *client.RestClient,
+	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
 ) *SynchronizeWithLivekitService {
 	trcr := otel.Tracer("scheduler/synchronize-with-livekit")
 	return &SynchronizeWithLivekitService{
-		database:     database,
-		userService:  userService,
-		tracer:       trcr,
-		livekitRoomClient: livekitRoomClient,
-		restClient: restClient,
+		database:               database,
+		userService:            userService,
+		tracer:                 trcr,
+		livekitRoomClient:      livekitRoomClient,
+		restClient:             restClient,
+		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
 	}
 }
 
@@ -89,7 +90,7 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 		}
 		// consider only users, hanged in "inCall" state in redis and not presented in livekit
 		// you need to start reading from 1.
-		if db.ShouldProlong(st.Status) {
+		if st.Status == db.CallStatusInCall {
 			// 2. removing
 			if st.MarkedForOrphanRemoveAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
 				// case 2.a user is owner of the call
@@ -108,6 +109,17 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 						GetLogEntry(ctx).Errorf("Unable to remove user tokenId %v, userId %v owned by ownerId %v, chatId %v, error: %v", st.TokenId, st.UserId, ownerId, chatId, err)
 					}
 				}
+
+				err = srv.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
+					{
+						UserId:    st.UserId,
+						IsInVideo: false,
+					},
+				}})
+				if err != nil {
+					Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", st.UserId, chatId, err)
+				}
+
 				continue // because we don't need increment an attempt
 			}
 
@@ -208,7 +220,6 @@ func (srv *SynchronizeWithLivekitService) Contains(participants []dto.UserCallSt
 	}
 	return false
 }
-
 
 type SynchronizeWithLivekitTask struct {
 	*gointerlock.GoInterval

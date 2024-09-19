@@ -15,8 +15,8 @@ const NoUser = -1
 const NoChat = -1
 
 const CallStatusBeingInvited = "beingInvited" // the status scheduler should remain,
-const CallStatusInCall = "inCall"         // the status scheduler should remain
-const CallStatusCancelling = "cancelling" // will be removed after some time automatically by scheduler
+const CallStatusInCall = "inCall"             // the status scheduler should remain
+const CallStatusCancelling = "cancelling"     // will be removed after some time automatically by scheduler
 
 const CallStatusRemoving = "removing" // will be removed after some time automatically by scheduler
 
@@ -25,7 +25,6 @@ const CallStatusNotFound = ""
 const UserCallMarkedForRemoveAtNotSet = 0
 
 const UserCallMarkedForOrphanRemoveAttemptNotSet = 0
-
 
 const NoAvatar = ""
 
@@ -37,14 +36,10 @@ func IsTemporary(userCallStatus string) bool {
 }
 
 func getTemporaryStates() []string {
-	return []string {
+	return []string{
 		CallStatusCancelling,
 		CallStatusRemoving,
 	}
-}
-
-func ShouldProlong(userCallStatus string) bool { // all NOT IsTemporary but not CallStatusNotFound
-	return userCallStatus == CallStatusInCall
 }
 
 func CanOverrideCallStatus(userCallStatus string) bool {
@@ -123,12 +118,12 @@ func (tx *Tx) Set(userState dto.UserCallState) error {
 
 func (tx *Tx) AddAsEntered(tokenId uuid.UUID, userId, chatId int64, tetATet bool) error {
 	return tx.Set(dto.UserCallState{
-		TokenId:                      tokenId,
-		UserId:                       userId,
-		ChatId:                       chatId,
-		TokenTaken:                   true,
-		Status:                       CallStatusInCall,
-		ChatTetATet:                  tetATet,
+		TokenId:     tokenId,
+		UserId:      userId,
+		ChatId:      chatId,
+		TokenTaken:  true,
+		Status:      CallStatusInCall,
+		ChatTetATet: tetATet,
 	})
 }
 
@@ -323,7 +318,7 @@ func (tx *Tx) GetBeingInvitedByCalleeId(calleeUserId int64) ([]dto.UserCallState
 func (tx *Tx) Remove(user dto.UserCallStateId) error {
 	_, err := tx.Exec(`delete from user_call_state 
 								where (token_id, user_id) = ($1, $2)`,
-															user.TokenId, user.UserId)
+		user.TokenId, user.UserId)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
@@ -341,7 +336,6 @@ func (tx *Tx) RemoveOwn(owner dto.UserCallStateId) error {
 	// 2. remove myself
 	return tx.Remove(owner)
 }
-
 
 func (tx *Tx) RemoveByUserCallStates(ids []dto.UserCallStateId) error {
 	if len(ids) == 0 {

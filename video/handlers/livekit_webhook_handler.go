@@ -14,21 +14,21 @@ import (
 )
 
 type LivekitWebhookHandler struct {
-	config              *config.ExtendedConfig
-	notificationService *services.NotificationService
-	userService         *services.UserService
-	egressService       *services.EgressService
-	restClient          *client.RestClient
+	config                 *config.ExtendedConfig
+	notificationService    *services.NotificationService
+	userService            *services.UserService
+	egressService          *services.EgressService
+	restClient             *client.RestClient
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
 }
 
 func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService, restClient *client.RestClient, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
-		config:              config,
-		notificationService: notificationService,
-		userService:         userService,
-		egressService:       egressService,
-		restClient:          restClient,
+		config:                 config,
+		notificationService:    notificationService,
+		userService:            userService,
+		egressService:          egressService,
+		restClient:             restClient,
 		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
 	}
 }
@@ -80,13 +80,12 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 				if err != nil {
 					Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", event.Participant, chatId, err)
 				} else if metadata != nil {
-					var dtos []dto.VideoCallUserCallStatusChangedDto = []dto.VideoCallUserCallStatusChangedDto{
-						dto.VideoCallUserCallStatusChangedDto{
+					err = h.rabbitUserIdsPublisher.Publish(c.Request().Context(), &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
+						{
 							UserId:    metadata.UserId,
-							IsInVideo:     true,
+							IsInVideo: true,
 						},
-					}
-					err = h.rabbitUserIdsPublisher.Publish(c.Request().Context(), &dto.VideoCallUsersCallStatusChangedDto{Users: dtos})
+					}})
 					if err != nil {
 						Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", metadata.UserId, chatId, err)
 					}
