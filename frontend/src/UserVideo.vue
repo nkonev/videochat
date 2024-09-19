@@ -42,14 +42,11 @@ export default {
             avatar: "",
             videoMute: true,
             userId: null,
-            chatId: null,
             showControls: false,
             audioPublication: null,
             videoPublication: null,
             speakingTimer: null,
             muteAudioBlink: true,
-            canVideoKick: false, // only on remote
-            canAudioMute: false, // only on remote
         }
     },
 
@@ -140,9 +137,6 @@ export default {
         setUserId(id) {
             this.userId = id;
         },
-        setChatId(id) {
-            this.chatId = id;
-        },
         doMuteAudio(requestedState) {
             if (requestedState) {
                 this.audioPublication?.mute();
@@ -178,17 +172,11 @@ export default {
                 this.showControls = false;
             }
         },
-        setCanVideoKick(newState) {
-            this.canVideoKick = newState
-        },
-        setCanAudioMute(newState) {
-            this.canAudioMute = newState
-        },
         kickRemote() {
-            axios.put(`/api/video/${this.chatId}/kick?userId=${this.userId}`)
+            axios.put(`/api/video/${this.chatStore.chatDto.id}/kick?userId=${this.userId}`)
         },
         forceMuteRemote() {
-            axios.put(`/api/video/${this.chatId}/mute?userId=${this.userId}`)
+            axios.put(`/api/video/${this.chatStore.chatDto.id}/mute?userId=${this.userId}`)
         },
     },
     computed: {
@@ -204,7 +192,13 @@ export default {
         },
         isChangeable() {
             return this.localVideoProperties && !this.localVideoProperties.screen;
-        }
+        },
+        canVideoKick() { // only on remote
+          return !this.isLocal && this.chatStore.chatDto.canVideoKick
+        },
+        canAudioMute() { // only on remote
+          return !this.isLocal && this.chatStore.chatDto.canAudioMute
+        },
     },
     mounted(){
         this.showControls = this.initialShowControls;
