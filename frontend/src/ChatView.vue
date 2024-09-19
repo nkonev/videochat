@@ -7,7 +7,7 @@
       <pane>
         <splitpanes ref="splInner" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
           <pane v-if="showTopPane()" min-size="15" :size="topPaneSize()">
-            <ChatVideo v-if="chatDtoIsReady" :chatDto="chatStore.chatDto" :videoIsOnTopProperty="videoIsOnTop()" />
+            <ChatVideo v-if="chatDtoIsReady" :videoIsOnTopProperty="videoIsOnTop()" />
           </pane>
 
           <pane style="width: 100%; background: white" :class="messageListPaneClass()">
@@ -43,7 +43,7 @@
         </splitpanes>
       </pane>
       <pane v-if="showRightPane()" min-size="15" :size="rightPaneSize()">
-        <ChatVideo v-if="chatDtoIsReady" :chatDto="chatStore.chatDto" :videoIsOnTop="videoIsOnTop()"/>
+        <ChatVideo v-if="chatDtoIsReady" :videoIsOnTop="videoIsOnTop()"/>
       </pane>
 
     </splitpanes>

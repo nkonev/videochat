@@ -55,7 +55,7 @@ export default {
     refreshLocalMutedInAppBarMixin(),
     videoPositionMixin(),
   ],
-  props: ['chatDto', 'videoIsOnTopProperty'],
+  props: ['videoIsOnTopProperty'],
   data() {
     return {
       room: null,
@@ -63,7 +63,6 @@ export default {
       userVideoComponents: new Map(),
       inRestarting: false,
       chatId: null,
-      participantIds: [],
     }
   },
   methods: {
@@ -148,9 +147,9 @@ export default {
             candidateToAppendVideo.setUserName(md.login);
             candidateToAppendVideo.setAvatar(md.avatar);
             candidateToAppendVideo.setUserId(md.userId);
-            candidateToAppendVideo.setChatId(this.chatDto.id);
-            candidateToAppendVideo.setCanVideoKick(this.chatDto.canVideoKick);
-            candidateToAppendVideo.setCanAudioMute(this.chatDto.canAudioMute);
+            candidateToAppendVideo.setChatId(this.chatStore.chatDto.id);
+            candidateToAppendVideo.setCanVideoKick(this.chatStore.chatDto.canVideoKick);
+            candidateToAppendVideo.setCanAudioMute(this.chatStore.chatDto.canAudioMute);
             return
           } else if (track.kind == 'audio') {
             console.debug("Processing audio track", track);
@@ -172,9 +171,9 @@ export default {
             candidateToAppendAudio.setUserName(md.login);
             candidateToAppendAudio.setAvatar(md.avatar);
             candidateToAppendAudio.setUserId(md.userId);
-            candidateToAppendAudio.setChatId(this.chatDto.id);
-            candidateToAppendAudio.setCanVideoKick(this.chatDto.canVideoKick);
-            candidateToAppendAudio.setCanAudioMute(this.chatDto.canAudioMute);
+            candidateToAppendAudio.setChatId(this.chatStore.chatDto.id);
+            candidateToAppendAudio.setCanVideoKick(this.chatStore.chatDto.canVideoKick);
+            candidateToAppendAudio.setCanAudioMute(this.chatStore.chatDto.canAudioMute);
             return
           }
         }
@@ -553,8 +552,7 @@ export default {
 
     this.chatStore.initializingVideoCall = true;
 
-    this.chatId = this.chatDto.id;
-    this.participantIds = this.chatDto.participantIds;
+    this.chatId = this.chatStore.chatDto.id;
 
     if (!this.isMobile() && this.videoIsAtSide()) {
       this.chatStore.showDrawerPrevious = this.chatStore.showDrawer;

@@ -60,8 +60,8 @@
                                     </v-row>
 
                                     <template v-slot:append>
-                                        <template v-if="item.admin || dto.canChangeChatAdmins">
-                                            <template v-if="dto.canChangeChatAdmins && item.id != chatStore.currentUser.id && !isMobile()">
+                                        <template v-if="item.admin || chatStore.chatDto.canChangeChatAdmins">
+                                            <template v-if="chatStore.chatDto.canChangeChatAdmins && item.id != chatStore.currentUser.id && !isMobile()">
                                                 <v-btn
                                                     variant="flat"
                                                     :loading="item.adminLoading ? true : false"
@@ -79,13 +79,13 @@
                                             </template>
                                         </template>
                                         <template v-if="!isMobile()">
-                                            <template v-if="dto.canEdit && item.id != chatStore.currentUser.id">
+                                            <template v-if="chatStore.chatDto.canEdit && item.id != chatStore.currentUser.id">
                                                 <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
                                             </template>
-                                            <template v-if="dto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
+                                            <template v-if="chatStore.chatDto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
                                                 <v-btn variant="flat" icon @click="kickFromVideoCall(item)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
                                             </template>
-                                            <template v-if="dto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
+                                            <template v-if="chatStore.chatDto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
                                                 <v-btn variant="flat" icon @click="forceMute(item)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
                                             </template>
                                         </template>
@@ -134,7 +134,7 @@
                             ></v-pagination>
                         </v-col>
                         <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
-                            <v-btn v-if="dto.canEdit" color="primary" variant="flat" @click="addParticipants()">
+                            <v-btn v-if="chatStore.chatDto.canEdit" color="primary" variant="flat" @click="addParticipants()">
                                 {{ $vuetify.locale.t('$vuetify.add') }}
                             </v-btn>
                             <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
@@ -152,7 +152,6 @@
     import axios from "axios";
     import bus, {
         CHAT_DELETED,
-        CHAT_EDITED,
         CLOSE_SIMPLE_MODAL,
         OPEN_CHAT_EDIT,
         OPEN_PARTICIPANTS_DIALOG,
@@ -183,10 +182,6 @@
     import ChatListContextMenu from "@/ChatListContextMenu.vue";
     import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
 
-    const dtoFactory = ()=>{
-        return { }
-    };
-
     export default {
         mixins: [
             userStatusMixin('chatParticipants'),
@@ -194,7 +189,6 @@
         ],
         data () {
             return {
-                dto: dtoFactory(), // chatDto
                 chatId: null,
                 userSearchString: null,
                 showSearchButton: true,
@@ -217,13 +211,6 @@
             },
             initializeWithArguments({chatId}) {
                 this.chatId = chatId;
-            },
-            onInitialized(){
-                console.log("Getting info about chat id in modal, chatId=", this.chatId);
-                return axios.get(`/api/chat/${this.chatId}`)
-                    .then((response) => {
-                        this.dto = response.data;
-                    })
             },
             initiateRequest() {
                 return axios.get(`/api/chat/${this.chatId}/participant`, {
@@ -302,7 +289,7 @@
                 });
             },
             addParticipants() {
-                bus.emit(OPEN_CHAT_EDIT, this.dto);
+                bus.emit(OPEN_CHAT_EDIT, this.chatStore.chatDto);
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {
@@ -310,12 +297,6 @@
                 }
                 if (dto.id == this.chatId) {
                     this.reset();
-                }
-            },
-            onChatEdit(dto) {
-                if (dto.id == this.chatId) {
-                    // actually it is need only to reflect canEdit, canAudioMute and friends
-                    this.dto = dto;
                 }
             },
             getUserIdsSubscribeTo() {
@@ -457,15 +438,13 @@
               return this.$vuetify.locale.t('$vuetify.search_by_participants')
             },
             onShowContextMenu(e, menuableItem) {
-              this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, this.dto);
+              this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem, this.chatStore.chatDto);
             },
             clearOnClose() {
                 this.showSearchButton = true;
             },
             clearOnReset() {
                 this.chatId = null;
-                // clean non-items dto
-                this.dto = dtoFactory();
                 // because resubscription happens on change computed participantIds
                 // we will hold subscription on status change because we still have participants across opening and closing this modal
                 this.graphQlUserStatusUnsubscribe();
@@ -508,7 +487,6 @@
           bus.on(PARTICIPANT_DELETED, this.onItemRemovedEvent);
           bus.on(PARTICIPANT_EDITED, this.onItemUpdatedEvent);
           bus.on(CHAT_DELETED, this.onChatDelete);
-          bus.on(CHAT_EDITED, this.onChatEdit);
           bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
           bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
           bus.on(LOGGED_OUT, this.onLogout);
@@ -521,7 +499,6 @@
             bus.off(PARTICIPANT_DELETED, this.onItemRemovedEvent);
             bus.off(PARTICIPANT_EDITED, this.onItemUpdatedEvent);
             bus.off(CHAT_DELETED, this.onChatDelete);
-            bus.off(CHAT_EDITED, this.onChatEdit);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
             bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
             bus.off(LOGGED_OUT, this.onLogout);
