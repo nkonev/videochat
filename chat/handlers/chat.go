@@ -35,10 +35,10 @@ const directionBottom = "bottom"
 const defaultDirection = directionBottom
 
 type ChatWrapper struct {
-	Data  []*dto.ChatDto `json:"data"`
-	Count int64          `json:"totalCount"` // total chat number for this user
-	PaginationToken string `json:"paginationToken"`
-	PageSize        int    `json:"pageSize"`
+	Data            []*dto.ChatDto `json:"data"`
+	Count           int64          `json:"totalCount"` // total chat number for this user
+	PaginationToken string         `json:"paginationToken"`
+	PageSize        int            `json:"pageSize"`
 }
 
 type ParticipantsWithAdminWrapper struct {
@@ -47,8 +47,8 @@ type ParticipantsWithAdminWrapper struct {
 }
 
 type ParticipantsWrapper struct {
-	Data  []*dto.User 			`json:"participants"`
-	Count int                   `json:"participantsCount"` // for paginating purposes
+	Data  []*dto.User `json:"participants"`
+	Count int         `json:"participantsCount"` // for paginating purposes
 }
 
 type MessageReadResponse struct {
@@ -74,10 +74,10 @@ type CreateChatDto struct {
 }
 
 type ChatHandler struct {
-	db              *db.DB
-	notificator     *services.Events
-	restClient      *client.RestClient
-	policy          *services.SanitizerPolicy
+	db                     *db.DB
+	notificator            *services.Events
+	restClient             *client.RestClient
+	policy                 *services.SanitizerPolicy
 	stripTagsPolicy        *services.StripTagsPolicy
 	onlyAdminCanCreateBlog bool
 }
@@ -210,8 +210,8 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			tx,
 			userPrincipalDto.UserId,
 			size,
-			pageBottom + 1,
-			pageTop + 1,
+			pageBottom+1,
+			pageTop+1,
 			directionString,
 			searchString,
 			bottomElementId,
@@ -249,7 +249,7 @@ func (ch *ChatHandler) HasNewMessages(c echo.Context) error {
 
 type ChatFilterDto struct {
 	SearchString string `json:"searchString"`
-	ChatId int64 `json:"chatId"`
+	ChatId       int64  `json:"chatId"`
 }
 
 func (ch *ChatHandler) Filter(c echo.Context) error {
@@ -483,7 +483,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 
 	chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, participantsSize, participantsOffset)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	if chat == nil {
@@ -737,7 +737,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0);
+		chatDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -751,7 +751,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
 
 			if chatBasicBefore.RegularParticipantCanPublishMessage != bindTo.RegularParticipantCanPublishMessage ||
-			  chatBasicBefore.RegularParticipantCanPinMessage != bindTo.RegularParticipantCanPinMessage {
+				chatBasicBefore.RegularParticipantCanPinMessage != bindTo.RegularParticipantCanPinMessage {
 				regularParticipants := make([]int64, 0)
 				for userId, isAdmin := range areAdmins {
 					if !isAdmin {
@@ -868,7 +868,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0);
+		chatDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1330,7 +1330,7 @@ func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString str
 				}
 			} else {
 				shouldContinueSearch = false // break outer
-				break // inner
+				break                        // inner
 			}
 		}
 	}
@@ -1438,12 +1438,12 @@ func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 }
 
 type FilteredRequestDto struct {
-	SearchString string `json:"searchString"`
-	UserId []int64 `json:"userId"`
+	SearchString string  `json:"searchString"`
+	UserId       []int64 `json:"userId"`
 }
 
 type FilteredParticipantItemResponse struct {
-	Id  int64 `json:"id"`
+	Id int64 `json:"id"`
 }
 
 func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
@@ -1457,7 +1457,6 @@ func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 
 	bindTo := new(FilteredRequestDto)
 	err = c.Bind(bindTo)
@@ -1562,7 +1561,7 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 
 	messageId, _ := GetQueryParamAsInt64(c, "messageId")
 	if messageId > 0 {
-		text, _, isBlogPostMessage,  published, err := ch.db.GetMessageBasic(chatId, messageId)
+		text, _, isBlogPostMessage, published, err := ch.db.GetMessageBasic(chatId, messageId)
 		if err != nil {
 			return err
 		}
@@ -1758,7 +1757,7 @@ func (ch *ChatHandler) CreatePreview(c echo.Context) error {
 }
 
 type ChatExists struct {
-	Exists bool `json:"exists"`
+	Exists bool  `json:"exists"`
 	ChatId int64 `json:"chatId"`
 }
 
@@ -1789,12 +1788,12 @@ func (ch *ChatHandler) IsExists(c echo.Context) error {
 }
 
 type simpleChat struct {
-	Id        int64
-	Name      string
-	IsTetATet bool
-	Avatar    null.String
-	ShortInfo null.String
-	LoginColor null.String
+	Id                int64
+	Name              string
+	IsTetATet         bool
+	Avatar            null.String
+	ShortInfo         null.String
+	LoginColor        null.String
 	LastLoginDateTime null.Time
 }
 
@@ -1964,7 +1963,6 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 		return err
 	}
 
-
 	var users = []*ParticipantBelongsToChat{}
 	for _, userId := range userIds {
 		var belongs = &ParticipantBelongsToChat{
@@ -1986,7 +1984,6 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 		return err
 	}
 
-
 	return c.JSON(http.StatusOK, &ParticipantsBelongToChat{Users: users})
 }
 
@@ -1994,7 +1991,7 @@ func (ch *ChatHandler) checkCanCreateBlog(userPrincipalDto *auth.AuthResult, blo
 	if !ch.onlyAdminCanCreateBlog {
 		return true
 	}
-	if blog != nil && *blog && userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN") {
+	if blog != nil && userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN") {
 		return true
 	} else {
 		return false
@@ -2009,5 +2006,5 @@ func (ch *ChatHandler) CanCreateBlog(c echo.Context) error {
 	}
 
 	isBlog := true
-	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto, &isBlog)} )
+	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto, &isBlog)})
 }
