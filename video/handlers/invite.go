@@ -20,34 +20,34 @@ import (
 )
 
 type InviteHandler struct {
-	database   			  *db.DB
-	chatClient            *client.RestClient
-	dialStatusPublisher   *producer.RabbitDialStatusPublisher
-	notificationPublisher *producer.RabbitNotificationsPublisher
-	userService           *services.UserService
+	database                 *db.DB
+	chatClient               *client.RestClient
+	dialStatusPublisher      *producer.RabbitDialStatusPublisher
+	notificationPublisher    *producer.RabbitNotificationsPublisher
+	userService              *services.UserService
 	stateChangedEventService *services.StateChangedEventService
-	config                *config.ExtendedConfig
+	config                   *config.ExtendedConfig
 }
 
 const EventMissedCall = "missed_call"
 
 func NewInviteHandler(
-	database   			  *db.DB,
+	database *db.DB,
 	chatClient *client.RestClient,
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
 	notificationPublisher *producer.RabbitNotificationsPublisher,
 	userService *services.UserService,
 	stateChangedEventService *services.StateChangedEventService,
-	config     *config.ExtendedConfig,
+	config *config.ExtendedConfig,
 ) *InviteHandler {
 	return &InviteHandler{
-		database:              database,
-		chatClient:            chatClient,
-		dialStatusPublisher:   dialStatusPublisher,
-		notificationPublisher: notificationPublisher,
-		userService:           userService,
+		database:                 database,
+		chatClient:               chatClient,
+		dialStatusPublisher:      dialStatusPublisher,
+		notificationPublisher:    notificationPublisher,
+		userService:              userService,
 		stateChangedEventService: stateChangedEventService,
-		config: config,
+		config:                   config,
 	}
 }
 
@@ -172,15 +172,15 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 	vh.hardRemove(c, tx, ucss)
 
 	var newCalleeStatus = dto.UserCallState{
-		TokenId:                      uuid.New(),
-		UserId:                       calleeUserId,
-		ChatId:                       chatId,
-		TokenTaken:                   false,
-		OwnerTokenId:                 &ownerTokenId,
-		OwnerUserId:                  &userPrincipalDto.UserId,
-		Status:                       db.CallStatusBeingInvited,
-		ChatTetATet:                  tetATet,
-		OwnerAvatar:                  &userPrincipalDto.Avatar,
+		TokenId:      uuid.New(),
+		UserId:       calleeUserId,
+		ChatId:       chatId,
+		TokenTaken:   false,
+		OwnerTokenId: &ownerTokenId,
+		OwnerUserId:  &userPrincipalDto.UserId,
+		Status:       db.CallStatusBeingInvited,
+		ChatTetATet:  tetATet,
+		OwnerAvatar:  &userPrincipalDto.Avatar,
 	}
 
 	err = tx.Set(newCalleeStatus)
@@ -240,7 +240,6 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
 	}
-
 
 	// https://docs.livekit.io/guides/getting-started/#generating-access-tokens-(jwt)
 	// https://github.com/nkonev/videochat/blob/8fd81bccbe5f552de1ca123e2ba855dfe814cf66/development.md#generate-livekit-token
@@ -361,7 +360,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, TokenResponse{
 		TokenId: tokenId,
-		Token: token,
+		Token:   token,
 	})
 }
 
@@ -393,7 +392,7 @@ func (vh *InviteHandler) getOppositeUserOfTetATetIfPossible(c context.Context, b
 
 type TokenResponse struct {
 	TokenId uuid.UUID `json:"tokenId"`
-	Token string `json:"token"`
+	Token   string    `json:"token"`
 }
 
 func (vh *InviteHandler) getJoinToken(apiKey, apiSecret, room string, authResult *auth.AuthResult, tokenId uuid.UUID) (string, error) {
@@ -436,7 +435,6 @@ func (vh *InviteHandler) hardRemove(c context.Context, tx *db.Tx, userCallStates
 	}
 }
 
-
 func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -476,13 +474,11 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		return http.StatusOK, nil
 	})
 
-
 	return c.NoContent(code)
 }
 
 // question: how not to overwhelm the system by iterating over all the users and all the chats ?
 // answer: using opened rooms and rooms are going to be closed - see livekit's room.empty_timeout
-
 
 func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64, ownerAvatar string, tetATet bool, chatId int64, usersToRemove []dto.UserCallState, callStatus string) int {
 	var err error
@@ -490,12 +486,7 @@ func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64,
 	var sentUserIds = map[int64]bool{}
 	for _, userId := range usersToRemove {
 
-		err = tx.SetUserStatus(dto.UserCallStateId{TokenId: userId.TokenId, UserId: userId.UserId}, callStatus)
-		if err != nil {
-			GetLogEntry(c).Errorf("Error %v", err)
-			continue
-		}
-		err = tx.SetCurrentTimeForRemoving(dto.UserCallStateId{TokenId: userId.TokenId, UserId: userId.UserId})
+		err = tx.SetRemoving(dto.UserCallStateId{TokenId: userId.TokenId, UserId: userId.UserId}, callStatus)
 		if err != nil {
 			GetLogEntry(c).Errorf("Error %v", err)
 			continue

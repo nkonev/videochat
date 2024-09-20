@@ -391,22 +391,12 @@ func (tx *Tx) RemoveByUserCallStates(ids []dto.UserCallStateId) error {
 	return err
 }
 
-func (tx *Tx) SetUserStatus(user dto.UserCallStateId, status string) error {
+func (tx *Tx) SetRemoving(user dto.UserCallStateId, status string) error {
 	_, err := tx.Exec(`update user_call_state 
-								set status = $3
+								set marked_for_remove_at = $3,
+								    status = $4
 								where (token_id, user_id) = ($1, $2)`,
-		user.TokenId, user.UserId, status)
-	if err != nil {
-		return eris.Wrap(err, "error during interacting with db")
-	}
-	return nil
-}
-
-func (tx *Tx) SetCurrentTimeForRemoving(user dto.UserCallStateId) error {
-	_, err := tx.Exec(`update user_call_state 
-								set marked_for_remove_at = $3
-								where (token_id, user_id) = ($1, $2)`,
-		user.TokenId, user.UserId, time.Now().UTC())
+		user.TokenId, user.UserId, time.Now().UTC(), status)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}

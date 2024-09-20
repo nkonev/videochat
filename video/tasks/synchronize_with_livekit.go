@@ -99,26 +99,24 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 		if st.Status == db.CallStatusInCall {
 			// 2. removing
 			if st.MarkedForOrphanRemoveAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
-				// TODO use soft remove
-				// TODO extract and reuse the logic in invite.go
-				// case 2.a user is owner of the call
-				// case 2.b user is owned by somebody
 				GetLogEntry(ctx).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
-				// send events
+				// case 2.a user is owner of the call
+				// soft remove owned (callee, invitee) by user
 				invitedByMe, err := tx.GetBeingInvitedByOwnerId(userCallStateId, chatId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to find owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
 				for _, invitee := range invitedByMe {
-					srv.rabbitUserInvitePublisher.Publish(ctx, &dto.VideoCallInvitation{
-						ChatId: chatId,
-						Status: db.CallStatusRemoving,
-					}, invitee.UserId)
+					err = tx.SetRemoving(dto.UserCallStateId{invitee.TokenId, invitee.UserId}, db.CallStatusRemoving)
+					if err != nil {
+						GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
+					}
 				}
-				// remove owned (callee, invitee), and user
-				err = tx.RemoveOwnedAndOwner(userCallStateId)
+				// case 2.b user is just user
+				// soft remove the user
+				err = tx.SetRemoving(userCallStateId, db.CallStatusRemoving)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to remove owned call by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
+					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
 
 				err = srv.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
