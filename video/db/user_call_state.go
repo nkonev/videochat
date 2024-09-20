@@ -325,7 +325,7 @@ func (tx *Tx) Remove(user dto.UserCallStateId) error {
 	return nil
 }
 
-func (tx *Tx) RemoveOwn(owner dto.UserCallStateId) error {
+func (tx *Tx) RemoveOwnedAndOwner(owner dto.UserCallStateId) error {
 	// 1. remove my own states
 	_, err := tx.Exec(`delete from user_call_state where (owner_token_id, owner_user_id) = ($1, $2)`,
 		owner.TokenId, owner.UserId)

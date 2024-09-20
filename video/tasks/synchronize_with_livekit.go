@@ -97,20 +97,11 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 			// 2. removing
 			if st.MarkedForOrphanRemoveAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
 				// case 2.a user is owner of the call
+				// case 2.b user is owned by somebody
 				GetLogEntry(ctx).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
-				err := tx.RemoveOwn(userCallStateId)
+				err := tx.RemoveOwnedAndOwner(userCallStateId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to remove owned call by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
-				}
-
-				// case 2.b user is owned by somebody
-				if st.OwnerUserId != nil {
-					ownerId := *st.OwnerUserId
-					GetLogEntry(ctx).Warnf("Removing userCallState of user tokenId %v, userId %v, owned by ownerId %v because attempts were exhausted", st.TokenId, st.UserId, ownerId)
-					err = tx.Remove(userCallStateId)
-					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to remove user tokenId %v, userId %v owned by ownerId %v, chatId %v, error: %v", st.TokenId, st.UserId, ownerId, chatId, err)
-					}
 				}
 
 				err = srv.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
