@@ -111,7 +111,7 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 					},
 				}})
 				if err != nil {
-					Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", st.UserId, chatId, err)
+					GetLogEntry(ctx).Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", st.UserId, chatId, err)
 				}
 
 				continue // because we don't need increment an attempt
