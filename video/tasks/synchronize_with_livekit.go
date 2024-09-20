@@ -19,12 +19,13 @@ import (
 )
 
 type SynchronizeWithLivekitService struct {
-	database               *db.DB
-	userService            *services.UserService
-	tracer                 trace.Tracer
-	livekitRoomClient      client.LivekitRoomClient
-	restClient             *client.RestClient
-	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
+	database                  *db.DB
+	userService               *services.UserService
+	tracer                    trace.Tracer
+	livekitRoomClient         client.LivekitRoomClient
+	restClient                *client.RestClient
+	rabbitUserIdsPublisher    *producer.RabbitUserIdsPublisher
+	rabbitUserInvitePublisher *producer.RabbitInvitePublisher
 }
 
 func NewSynchronizeWithLivekitService(
@@ -33,15 +34,17 @@ func NewSynchronizeWithLivekitService(
 	livekitRoomClient client.LivekitRoomClient,
 	restClient *client.RestClient,
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
+	rabbitUserInvitePublisher *producer.RabbitInvitePublisher,
 ) *SynchronizeWithLivekitService {
 	trcr := otel.Tracer("scheduler/synchronize-with-livekit")
 	return &SynchronizeWithLivekitService{
-		database:               database,
-		userService:            userService,
-		tracer:                 trcr,
-		livekitRoomClient:      livekitRoomClient,
-		restClient:             restClient,
-		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
+		database:                  database,
+		userService:               userService,
+		tracer:                    trcr,
+		livekitRoomClient:         livekitRoomClient,
+		restClient:                restClient,
+		rabbitUserIdsPublisher:    rabbitUserIdsPublisher,
+		rabbitUserInvitePublisher: rabbitUserInvitePublisher,
 	}
 }
 
@@ -96,10 +99,24 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 		if st.Status == db.CallStatusInCall {
 			// 2. removing
 			if st.MarkedForOrphanRemoveAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
+				// TODO use soft remove
+				// TODO extract and reuse the logic in invite.go
 				// case 2.a user is owner of the call
 				// case 2.b user is owned by somebody
 				GetLogEntry(ctx).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
-				err := tx.RemoveOwnedAndOwner(userCallStateId)
+				// send events
+				invitedByMe, err := tx.GetBeingInvitedByOwnerId(userCallStateId, chatId)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to find owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
+				}
+				for _, invitee := range invitedByMe {
+					srv.rabbitUserInvitePublisher.Publish(ctx, &dto.VideoCallInvitation{
+						ChatId: chatId,
+						Status: db.CallStatusRemoving,
+					}, invitee.UserId)
+				}
+				// remove owned (callee, invitee), and user
+				err = tx.RemoveOwnedAndOwner(userCallStateId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to remove owned call by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}

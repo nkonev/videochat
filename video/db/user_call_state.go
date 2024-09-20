@@ -247,6 +247,40 @@ func (tx *Tx) GetBeingInvitedByOwnerAndCalleeId(owner dto.UserCallStateId, calle
 	return list, nil
 }
 
+func (tx *Tx) GetBeingInvitedByOwnerId(owner dto.UserCallStateId, chatId int64) ([]dto.UserCallState, error) {
+	rows, err := tx.Query(`select 
+			token_id,
+			user_id, 
+			chat_id,
+		    token_taken,
+			owner_token_id,
+		    owner_user_id,                        
+		    status,
+		    chat_tet_a_tet,
+		    owner_avatar,
+			marked_for_remove_at,
+			marked_for_orphan_remove_attempt,
+			create_date_time
+		from user_call_state 
+		where owner_token_id = $1 and owner_user_id = $2 and chat_id = $3 and status = any($4)
+		order by user_id, token_id
+	`, owner.TokenId, owner.UserId, chatId, []string{CallStatusBeingInvited})
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	defer rows.Close()
+	list := make([]dto.UserCallState, 0)
+	for rows.Next() {
+		ucs := dto.UserCallState{}
+		if err := rows.Scan(provideScanToUserCallState(&ucs)[:]...); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			list = append(list, ucs)
+		}
+	}
+	return list, nil
+}
+
 func (tx *Tx) GetBeingInvitedByCalleeIdAndChatId(calleeUserId int64, chatId int64) ([]dto.UserCallState, error) {
 	rows, err := tx.Query(`select 
 			token_id,
