@@ -71,6 +71,10 @@ custom:
       enabled: false
       batch-size: 20
       cron: "*/20 * * * * *"
+    sync-keycloak:
+      enabled: false
+      batch-size: 20
+      cron: "*/20 * * * * *"
 
 server.port: 9080
 
@@ -171,6 +175,9 @@ custom.ldap:
   password:
     encodingType: ""
     strength: 10
+
+custom.keycloak:
+  token-delta: 5s
 
 custom.http-client:
   connect-timeout: 3s

@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static name.nkonev.aaa.Constants.LDAP_CONFLICT_PREFIX;
 import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
@@ -109,7 +110,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                                     getNowUTC()
                             );
                             // check for conflicts by username or email and create the user if conflict resolution is not "ignore"
-                            conflictService.process(userToInsert, this);
+                            conflictService.process(LDAP_CONFLICT_PREFIX, aaaProperties.ldap().resolveConflictsStrategy(), userToInsert, this);
                             // due to conflict we can ignore the user and not to save him
                             // so we try to lookup him
                             var foundNewUser = userAccountRepository.findByUsername(userName);
@@ -153,12 +154,17 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
     }
 
     @Override
-    public void saveUser(UserAccount userAccount) {
+    public void insertUser(UserAccount userAccount) {
         userAccountRepository.save(userAccount);
     }
 
     @Override
-    public void saveUsers(Collection<UserAccount> users) {
+    public void updateUser(UserAccount userAccount) {
+        userAccountRepository.save(userAccount);
+    }
+
+    @Override
+    public void insertUsers(Collection<UserAccount> users) {
         userAccountRepository.saveAll(users);
     }
 

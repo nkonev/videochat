@@ -530,6 +530,49 @@ curl -Ss -X POST 'http://localhost:8484/realms/my_realm2/protocol/openid-connect
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
 
+example of result
+```json
+[
+  {
+    "id": "959a4c72-9d37-474b-b718-1d3c9e18a462",
+    "username": "user2",
+    "firstName": "User",
+    "lastName": "Second",
+    "email": "user2@example.com",
+    "emailVerified": false,
+    "createdTimestamp": 1725603344594,
+    "enabled": true,
+    "totp": false,
+    "disableableCredentialTypes": [],
+    "requiredActions": [],
+    "notBefore": 0,
+    "access": {
+      "manageGroupMembership": false,
+      "view": true,
+      "mapRoles": false,
+      "impersonate": false,
+      "manage": false
+    }
+  }
+]
+```
+
+2.3 Getting users in role
+To be able to invoke `/admin/realms/{realm_name}/roles/{role_name}/users` assign `view-realm` role, so the final look will be like:
+
+![6](./.markdown/keycloak_2.5_enable_querying_users_in_group_result.png)
+
+
+Getting all roles
+```
+curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/roles | jq
+```
+
+Getting user-in-roles
+```
+curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/roles/USER/users | jq
+```
+
 Wait for Get multiple users by Ids [#12025](https://github.com/keycloak/keycloak/issues/12025)
 
 

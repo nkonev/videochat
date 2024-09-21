@@ -10,6 +10,7 @@
 #logging.level.org.springframework.web: DEBUG
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type: TRACE
+# logging.level.org.springframework.jdbc.core: TRACE
 
 custom.api-url: "http://localhost:8081/api/aaa"
 custom.frontend-url: "http://localhost:8081"
@@ -67,6 +68,10 @@ custom:
       batch-size: 20
       cron: "*/20 * * * * *"
     sync-ldap:
+      enabled: false
+      batch-size: 20
+      cron: "*/20 * * * * *"
+    sync-keycloak:
       enabled: false
       batch-size: 20
       cron: "*/20 * * * * *"
@@ -166,6 +171,9 @@ custom.ldap:
   password:
     encodingType: ""
     strength: 10
+
+custom.keycloak:
+  token-delta: 5s
 
 custom.http-client:
   connect-timeout: 3s

@@ -140,6 +140,7 @@ public abstract class AbstractTestRunner {
         rabbitAdmin.purgeQueue(QUEUE_ARBITRARY_EMAILS_NAME, true);
         rabbitAdmin.purgeQueue(QUEUE_PROFILE_TEST, true);
         jdbcTemplate.execute("delete from user_account where ldap_id is not null");
+        jdbcTemplate.execute("delete from user_account where keycloak_id is not null");
     }
 
     public static class SessionHolder {

@@ -18,37 +18,56 @@ public class EventService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public void notifyProfileCreated(UserAccount userAccount) {
-        var data = new UserAccountEventCreatedDTO(
-            userAccount.id(),
-            "user_account_created",
-            UserAccountConverter.convertToUserAccountDTO(userAccount)
+    public EventWrapper<UserAccountEventCreatedDTO> convertProfileCreated(UserAccount userAccount) {
+        return new EventWrapper<>(
+                new UserAccountEventCreatedDTO(
+                        userAccount.id(),
+                        "user_account_created",
+                        UserAccountConverter.convertToUserAccountDTO(userAccount)
+                ),
+                "dto.UserAccountEventCreated"
         );
-        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("dto.UserAccountEventCreated");
-            return message;
-        });
+    }
+
+    public void notifyProfileCreated(UserAccount userAccount) {
+        var data = convertProfileCreated(userAccount);
+        sendProfileEvent(data);
+    }
+
+    public EventWrapper<UserAccountEventChangedDTO> convertProfileUpdated(UserAccount userAccount) {
+        return new EventWrapper<>(
+                new UserAccountEventChangedDTO(
+                        userAccount.id(),
+                        "user_account_changed",
+                        UserAccountConverter.convertToUserAccountDTO(userAccount)
+                ),
+                "dto.UserAccountEventChanged"
+        );
     }
 
     public void notifyProfileUpdated(UserAccount userAccount) {
-        var data = new UserAccountEventChangedDTO(
-            userAccount.id(),
-            "user_account_changed",
-            UserAccountConverter.convertToUserAccountDTO(userAccount)
+        var data = convertProfileUpdated(userAccount);
+        sendProfileEvent(data);
+    }
+
+    public EventWrapper<UserAccountEventDeletedDTO> convertProfileDeleted(long userId) {
+        return new EventWrapper<>(
+                new UserAccountEventDeletedDTO(
+                        userId,
+                        "user_account_deleted"
+                ),
+                "dto.UserAccountEventDeleted"
         );
-        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("dto.UserAccountEventChanged");
-            return message;
-        });
     }
 
     public void notifyProfileDeleted(long userId) {
-        var data = new UserAccountEventDeletedDTO(
-            userId,
-            "user_account_deleted"
-        );
-        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", data, message -> {
-            message.getMessageProperties().setType("dto.UserAccountEventDeleted");
+        var data = convertProfileDeleted(userId);
+        sendProfileEvent(data);
+    }
+
+    public <E> void sendProfileEvent(EventWrapper<E> eventWrapper) {
+        rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", eventWrapper.event(), message -> {
+            message.getMessageProperties().setType(eventWrapper.type());
             return message;
         });
     }

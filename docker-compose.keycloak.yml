@@ -24,4 +24,5 @@ services:
       "--import-realm",
       # https://www.keycloak.org/server/health
       "--health-enabled=true"
+      # "--log-level=DEBUG"
     ]

@@ -17,6 +17,7 @@ public record AaaProperties(
 
     HttpClientProperties httpClient,
     LdapProperties ldap,
+    KeycloakProperties keycloak,
     EmailProperties email,
     ConfirmationProperties confirmation,
     PasswordResetProperties passwordReset,

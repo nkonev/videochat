@@ -12,7 +12,7 @@ spring.security:
 
 custom.role-mappings:
   keycloak:
-    - their: "USER"
+    - their: "default-roles-my_realm2"
       our: "ROLE_USER"
-    - their: "uma_authorization"
+    - their: "USER"
       our: "ROLE_ADMIN"

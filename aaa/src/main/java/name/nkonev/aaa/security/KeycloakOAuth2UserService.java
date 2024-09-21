@@ -21,6 +21,8 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
+
 
 @Component
 public class KeycloakOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
@@ -101,7 +103,7 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
 
         var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().keycloak(), roles);
 
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, mappedRoles);
+        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, mappedRoles, null, false, true, getNowUTC());
         userAccount = userAccountRepository.save(userAccount);
         LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 

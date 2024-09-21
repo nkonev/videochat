@@ -6,9 +6,11 @@ import java.util.Collection;
 
 public interface ConflictResolvingActions {
 
-    void saveUser(UserAccount userAccount);
+    void insertUser(UserAccount userAccount);
+
+    void updateUser(UserAccount userAccount);
 
     void removeUser(UserAccount userAccount);
 
-    void saveUsers(Collection<UserAccount> users);
+    void insertUsers(Collection<UserAccount> users);
 }

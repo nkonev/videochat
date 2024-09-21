@@ -172,11 +172,11 @@ import bus, {
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-    deepCopy, findIndex, getLoginColoredStyle,
-    hasLength, isSetEqual, replaceInArray,
-    replaceOrAppend,
-    replaceOrPrepend,
-    setTitle
+  deepCopy, findIndex, getLoginColoredStyle,
+  hasLength, isSetEqual, isStrippedUserLogin, replaceInArray,
+  replaceOrAppend,
+  replaceOrPrepend,
+  setTitle
 } from "@/utils";
 import Mark from "mark.js";
 import userStatusMixin from "@/mixins/userStatusMixin";
@@ -226,7 +226,7 @@ export default {
   methods: {
     getLoginColoredStyle,
     getUserNameOverride(item) {
-      if (item.additionalData && (!item.additionalData.confirmed || item.additionalData.locked)) {
+      if (isStrippedUserLogin(item)) {
         return "<s>" + this.getUserName(item) + "</s>"
       } else {
         return this.getUserName(item)

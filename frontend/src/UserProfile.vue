@@ -147,7 +147,7 @@
 
 import axios from "axios";
 import {chat_name, profile_list_name} from "./router/routes";
-import {deepCopy, getLoginColoredStyle, hasLength, setTitle} from "@/utils";
+import {deepCopy, getLoginColoredStyle, hasLength, isStrippedUserLogin, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
@@ -206,7 +206,7 @@ export default {
     getLoginColoredStyle,
     getHumanReadableDate,
     getUserNamePretty() {
-      if (this.viewableUser?.additionalData && (!this.viewableUser?.additionalData.confirmed || this.viewableUser?.additionalData.locked)) {
+      if (isStrippedUserLogin(this.viewableUser)) {
           return "<s>" + this.viewableUser?.login + "</s>"
       } else {
           return this.viewableUser?.login

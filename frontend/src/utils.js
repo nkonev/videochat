@@ -365,3 +365,10 @@ export const checkUpByTreeObj = (el, maxLevels, condition) => {
 
 export const PURPOSE_CALL = 'call';
 export const PURPOSE_RECORDING = 'recording';
+
+export const isStrippedUserLogin = (u) => {
+    if (u == null) {
+        return false
+    }
+    return u.additionalData && (!u.additionalData.confirmed || u.additionalData.locked || !u.additionalData.enabled)
+}

@@ -213,6 +213,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 userAccountDTO.loginColor(),
+                null,
+                null,
                 null
         );
     }
@@ -288,6 +290,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
@@ -315,6 +319,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 vkontakteId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -350,14 +356,14 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
 
-    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, Set<UserRole> roles) {
+    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, Set<UserRole> roles, String email, boolean locked, boolean enabled, LocalDateTime syncKeycloakTime) {
         final boolean expired = false;
-        final boolean locked = false;
-        final boolean enabled = true;
         final boolean confirmed = true;
 
         return new UserAccount(
@@ -373,7 +379,7 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 roles.toArray(UserRole[]::new),
-                null,
+                email,
                 null,
                 null,
                 null,
@@ -381,7 +387,9 @@ public class UserAccountConverter {
                 keycloakId,
                 null,
                 null,
-                null
+                null,
+                syncKeycloakTime,
+                syncKeycloakTime
         );
     }
 
@@ -410,7 +418,9 @@ public class UserAccountConverter {
                 null,
                 ldapId,
                 null,
-                syncLdapTime
+                syncLdapTime,
+                null,
+                null
         );
     }
 

@@ -30,6 +30,10 @@ public abstract class RoleMapper {
         }
     }
 
+    public static UserRole map(List<RoleMapEntry> roleMappings, String their) {
+        return UserRole.valueOf(replaceIfNeed(roleMappings, their));
+    }
+
     private static String replaceIfNeed(List<RoleMapEntry> roleMappings, String rawRole) {
         for (RoleMapEntry entry : roleMappings) {
             if (rawRole.equals(entry.their())) {
