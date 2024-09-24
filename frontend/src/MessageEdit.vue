@@ -115,10 +115,10 @@
               <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="sendMessageBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
-        <template v-else-if="this.$refs.tipTapRef">
+        <template v-else-if="this.$refs.tipTapRef" :key="bubbleMenuKey">
             <bubble-menu
                 class="bubble-menu"
-                :tippy-options="{ duration: 0, interactive: true }"
+                :tippy-options="{ duration: 0}"
                 :editor="this.$refs.tipTapRef?.$data.editor"
             >
                 <button @click="boldClick" :class="{ 'is-active': boldValue() }">
@@ -186,6 +186,7 @@
         OPEN_SETTINGS,
         ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
         OPEN_RECORDING_MODAL, FILE_CREATED,
+        FOCUS
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -231,6 +232,7 @@
                 answerOnPreview: null,
                 targetElement: null,
                 resizeObserver: null,
+                bubbleMenuKey: + new Date(),
             }
         },
         methods: {
@@ -673,6 +675,9 @@
                     }
                 }
             },
+            onFocus() {
+              this.bubbleMenuKey++;
+            },
         },
         computed: {
           ...mapStores(useChatStore),
@@ -686,6 +691,7 @@
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.on(FILE_CREATED, this.onFileCreatedEvent);
+            bus.on(FOCUS, this.onFocus);
 
             this.targetElement = document.getElementById('sendButtonContainer')
             this.$nextTick(()=>{
@@ -708,6 +714,7 @@
             bus.off(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
             bus.off(FILE_CREATED, this.onFileCreatedEvent);
+            bus.off(FOCUS, this.onFocus);
 
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
