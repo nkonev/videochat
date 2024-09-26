@@ -23,7 +23,7 @@ download:
 	./mvnw dependency:resolve
 
 check-env:
-	docker version && java -version
+	docker version && ${JAVA_HOME}/bin/java -version
 
 generate: generate-git
 
