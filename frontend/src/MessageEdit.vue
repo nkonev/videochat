@@ -645,7 +645,12 @@
                 }
             },
             updateShouldShowSendMessageButtons() {
+                const oldValue = this.chatStore.shouldShowSendMessageButtons;
                 this.setShouldShowSendMessageButtons();
+                const newValue = this.chatStore.shouldShowSendMessageButtons;
+                if (oldValue != newValue) {
+                    this.reloadTipTap();
+                }
             },
             reloadTipTap() {
                 // reload
