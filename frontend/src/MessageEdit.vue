@@ -134,7 +134,7 @@
 
             <floating-menu
                 class="floating-menu"
-                :tippy-options="{ duration: 0, zIndex: 200, interactive: true }"
+                :tippy-options="{ duration: 0, zIndex: 200, interactive: true, appendTo: documentBody }"
                 :editor="this.$refs.tipTapRef?.$data.editor"
             >
                 <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
@@ -667,6 +667,9 @@
                         this.chatStore.resetSendMessageAfterMediaInsertRoutine();
                     }
                 }
+            },
+            documentBody() {
+              return document.body
             },
         },
         computed: {
