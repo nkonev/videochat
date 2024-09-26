@@ -136,12 +136,12 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
                 try {
                     var extUserId = entry.getKey();
                     var extEntry = entry.getValue();
-                    getLogger().info("Examining user with {}Id={}", getName(), extUserId);
+                    getLogger().debug("Examining user with {}Id={}", getName(), extUserId);
 
                     if (StringUtils.hasLength(extUserId)) {
                         var o = findByExtUserId(dbChunk, extUserId);
                         if (o.isPresent()) { // update the existing user
-                            getLogger().info("User with {}Id={} is existing in database, deciding to update him or not", getName(), extUserId);
+                            getLogger().debug("User with {}Id={} is existing in database, deciding to update him or not", getName(), extUserId);
                             var userAccount = o.get();
 
                             var p = applyUpdateToUserAccount(extEntry, userAccount);
