@@ -173,6 +173,7 @@ custom.ldap:
     strength: 10
 
 custom.keycloak:
+  resolve-conflicts-strategy: WRITE_NEW_AND_REMOVE_OLD
   token-delta: 5s
   allow-unbind: false
 

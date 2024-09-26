@@ -49,6 +49,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
         if (getConflictResolvingStrategy() == null) {
             throw new IllegalStateException("Conflict resolving strategy is not set");
         }
+        getLogger().info("Configured with conflict resolving strategy: {}", getConflictResolvingStrategy());
     }
 
     public void scheduledTask() {
