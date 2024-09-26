@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.KEYCLOAK_CONFLICT_PREFIX;
 import static name.nkonev.aaa.dto.UserRole.ROLE_USER;
+import static name.nkonev.aaa.security.OAuth2Providers.KEYCLOAK;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 
@@ -152,7 +153,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
 
     @Override
     protected String getName() {
-        return "keycloak";
+        return KEYCLOAK;
     }
 
     @Override

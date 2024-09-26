@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.OAuth2IdentifiersDTO;
+import name.nkonev.aaa.dto.OAuth2ProvidersDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.services.AsyncEmailService;
 import name.nkonev.aaa.services.OAuth2ProvidersService;
@@ -45,7 +46,7 @@ public class DebugController {
         ModelAndView modelAndView = new ModelAndView("oauth2");
         setCommonHeaderData(userAccount, modelAndView);
 
-        var providers = oAuth2ProvidersService.availableOauth2Providers();
+        var providers = oAuth2ProvidersService.availableOauth2Providers().stream().map(OAuth2ProvidersDTO::providerName).toList();
         modelAndView.getModelMap().addAttribute("availableOauth2Providers", providers);
 
         return modelAndView;

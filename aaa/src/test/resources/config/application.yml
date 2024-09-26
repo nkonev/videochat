@@ -178,6 +178,7 @@ custom.ldap:
 
 custom.keycloak:
   token-delta: 5s
+  allow-unbind: true
 
 custom.http-client:
   connect-timeout: 3s

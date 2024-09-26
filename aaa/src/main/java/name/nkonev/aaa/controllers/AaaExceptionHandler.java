@@ -72,6 +72,13 @@ public class AaaExceptionHandler {
     }
 
     @ResponseBody
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @org.springframework.web.bind.annotation.ExceptionHandler(UnauthorizedException.class)
+    public AaaError unauthorized(UnauthorizedException e) {
+        return new AaaError(HttpStatus.UNAUTHORIZED.value(), "unauthorized", e.getMessage(), new Date().toString());
+    }
+
+    @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @org.springframework.web.bind.annotation.ExceptionHandler({DataNotFoundException.class, NoResourceFoundException.class})
     public AaaError dataNotFound(Exception e) {

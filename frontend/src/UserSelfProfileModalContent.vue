@@ -80,10 +80,9 @@
                 v-if="shouldShowBoundVkontakte()"
                 min-width="80px"
                 label
-                close
                 class="c-btn-vk py-5 mr-2"
                 text-color="white"
-                closable
+                :closable="shouldShowUnbindVkontakte()"
                 close-icon="mdi-delete"
                 @click:close="removeVk"
             >
@@ -94,10 +93,9 @@
                 v-if="shouldShowBoundFacebook()"
                 min-width="80px"
                 label
-                close
                 class="c-btn-fb py-5 mr-2"
                 text-color="white"
-                closable
+                :closable="shouldShowUnbindFacebook()"
                 close-icon="mdi-delete"
                 @click:close="removeFb"
             >
@@ -108,10 +106,9 @@
                 v-if="shouldShowBoundGoogle()"
                 min-width="80px"
                 label
-                close
                 class="c-btn-google py-5 mr-2"
                 text-color="white"
-                closable
+                :closable="shouldShowUnbindGoogle()"
                 close-icon="mdi-delete"
                 @click:close="removeGoogle"
             >
@@ -122,10 +119,9 @@
                 v-if="shouldShowBoundKeycloak()"
                 min-width="80px"
                 label
-                close
                 class="c-btn-keycloak py-5 mr-2"
                 text-color="white"
-                closable
+                :closable="shouldShowUnbindKeycloak()"
                 close-icon="mdi-delete"
                 @click:close="removeKeycloak"
             >
@@ -353,7 +349,21 @@ export default {
                 this.chatStore.availableOAuth2Providers.includes('keycloak')
         },
 
-        submitOauthVkontakte() {
+        shouldShowUnbindVkontakte() {
+          return this.chatStore.OAuth2ProvidersAllowUnbind.vkontakte
+        },
+        shouldShowUnbindFacebook() {
+          return this.chatStore.OAuth2ProvidersAllowUnbind.facebook
+        },
+        shouldShowUnbindGoogle() {
+          return this.chatStore.OAuth2ProvidersAllowUnbind.google
+        },
+        shouldShowUnbindKeycloak() {
+          return this.chatStore.OAuth2ProvidersAllowUnbind.keycloak
+        },
+
+
+      submitOauthVkontakte() {
             this.loading = true;
             window.location.href = '/api/aaa/login/oauth2/vkontakte';
         },

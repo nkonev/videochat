@@ -26,6 +26,7 @@ export const useChatStore = defineStore('chat', {
         callState: callStateReady,
         shouldPhoneBlink: false,
         availableOAuth2Providers: [],
+        OAuth2ProvidersAllowUnbind: {},
         showAlert: false,
         alertTimeout: null,
         lastError: "",
@@ -86,7 +87,10 @@ export const useChatStore = defineStore('chat', {
     fetchAvailableOauth2Providers() {
           return axios.get(`/api/aaa/oauth2/providers`).then(( {data} ) => {
               console.debug("fetched oauth2 providers =", data);
-              this.availableOAuth2Providers = data;
+              this.availableOAuth2Providers = data.map(p => p.providerName);
+              for (const p of data) {
+                  this.OAuth2ProvidersAllowUnbind[p.providerName] = p.allowUnbind;
+              }
           });
     },
     updateRedDot() {

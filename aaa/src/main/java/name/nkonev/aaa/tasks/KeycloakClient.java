@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static name.nkonev.aaa.security.OAuth2Providers.KEYCLOAK;
 import static name.nkonev.aaa.utils.TimeUtil.convertToLocalDateTime;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
@@ -54,7 +55,7 @@ public class KeycloakClient {
         if (o == null) {
             throw new IllegalStateException("OAuth2 should be enabled");
         }
-        var kcp = o.getProvider().get("keycloak");
+        var kcp = o.getProvider().get(KEYCLOAK);
         if (kcp == null) {
             throw new IllegalStateException("You must define OAuth2 provider named 'keycloak'");
         }
@@ -71,7 +72,7 @@ public class KeycloakClient {
 
         realm = issuerUrl.getPath().split("/")[2];
 
-        var kcr = o.getRegistration().get("keycloak");
+        var kcr = o.getRegistration().get(KEYCLOAK);
         if (kcr == null) {
             throw new IllegalStateException("You must define OAuth2 registration named 'keycloak'");
         }

@@ -7,6 +7,7 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.exception.UnauthorizedException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
@@ -439,7 +440,13 @@ public class UserProfileService {
                 case OAuth2Providers.FACEBOOK -> userAccount.oauth2Identifiers().withFacebookId(null);
                 case OAuth2Providers.VKONTAKTE -> userAccount.oauth2Identifiers().withVkontakteId(null);
                 case OAuth2Providers.GOOGLE -> userAccount.oauth2Identifiers().withGoogleId(null);
-                case OAuth2Providers.KEYCLOAK -> userAccount.oauth2Identifiers().withKeycloakId(null);
+                case OAuth2Providers.KEYCLOAK -> {
+                    if (aaaProperties.keycloak().allowUnbind()) {
+                        yield userAccount.oauth2Identifiers().withKeycloakId(null);
+                    } else {
+                        throw new UnauthorizedException("Unbinding is prohibited");
+                    }
+                }
                 default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
             };
             userAccount = userAccount.withOauthIdentifiers(oAuth2Identifiers);

@@ -232,7 +232,7 @@ public class UserProfileController {
 
     @ResponseBody
     @GetMapping(Constants.Urls.PUBLIC_API + "/oauth2/providers")
-    public Set<String> availableOauth2Providers() {
+    public List<OAuth2ProvidersDTO> availableOauth2Providers() {
         return oAuth2ProvidersService.availableOauth2Providers();
     }
 
