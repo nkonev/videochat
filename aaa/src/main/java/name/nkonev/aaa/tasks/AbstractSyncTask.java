@@ -1,5 +1,6 @@
 package name.nkonev.aaa.tasks;
 
+import jakarta.annotation.PostConstruct;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -39,13 +40,20 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
 
     protected final List<EventWrapper<?>> events = new ArrayList<>();
 
-    public void scheduledTask() {
+    @PostConstruct
+    public void validate() {
         if (!getEnabled()) {
             return;
         }
 
         if (getConflictResolvingStrategy() == null) {
-            getLogger().error("Conflict resolving strategy is not set");
+            throw new IllegalStateException("Conflict resolving strategy is not set");
+        }
+    }
+
+    public void scheduledTask() {
+        if (!getEnabled()) {
+            return;
         }
 
         try {
