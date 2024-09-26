@@ -128,6 +128,7 @@ public class KeycloakClient {
             var respEntity = restTemplate.exchange(reqEntity, Map.class);
             var gotToken = respEntity.getBody().get("access_token").toString();
             tokenHolder.set(gotToken);
+            LOGGER.info("Got new Keycloak client's token");
             return gotToken;
         } catch (Exception e) {
             throw new RuntimeException(e);
