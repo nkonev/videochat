@@ -118,7 +118,7 @@
         <template v-else-if="this.$refs.tipTapRef">
             <bubble-menu
                 class="bubble-menu"
-                :tippy-options="{ duration: 0, interactive: true }"
+                :tippy-options="{ duration: 0 }"
                 :editor="this.$refs.tipTapRef?.$data.editor"
             >
                 <button @click="boldClick" :class="{ 'is-active': boldValue() }">
