@@ -80,7 +80,6 @@ run-with-oauth2:
 
 run-with-keycloak:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
-	# You need to start EmulatorServersController firstly
 	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/oauth2-keycloak.yml --custom.schedulers.sync-keycloak.enabled=true --custom.schedulers.sync-keycloak.cron="*/5 * * * * *" || true
 
 run-demo: check-env download generate package-java
