@@ -30,7 +30,7 @@ generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 install-graphql:
-	go install github.com/99designs/gqlgen@v0.17.44
+	go install github.com/99designs/gqlgen@v0.17.46
 
 generate-graphql:
 	go generate ./...
@@ -69,4 +69,7 @@ clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
 
 run:
+	./$(EXECUTABLE)
+
+run-demo: check-env download generate package-go
 	./$(EXECUTABLE)

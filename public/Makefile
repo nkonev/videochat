@@ -25,6 +25,8 @@ download:
 check-env:
 	docker version && echo -n 'npm: ' && npm --version && echo -n 'node: ' && node --version
 
+generate: generate-git
+
 generate-git:
 	mkdir -p $(JSON_DIR) && \
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
@@ -44,7 +46,7 @@ package-docker:
 	echo "Will build docker $(SERVICE_NAME) image" && \
  	docker build -t $(IMAGE) $(BUILDDIR)
 
-package: package-node generate-git package-docker
+package: package-node generate package-docker
 
 push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
@@ -75,6 +77,7 @@ clean-cache:
 run-dev:
 	npm run dev
 
-# Using port 3000 we mimic to Vite's npm run dev in order to match traefik's dev config
 run-docker-image:
 	docker run --rm --network=host --name chat-public $(IMAGE)
+
+run-demo: check-env download generate run-dev

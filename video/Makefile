@@ -70,3 +70,6 @@ clean:
 
 run:
 	./$(EXECUTABLE)
+
+run-demo: check-env download generate package-go
+	./$(EXECUTABLE)
