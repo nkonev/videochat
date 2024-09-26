@@ -44,6 +44,10 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
             return;
         }
 
+        if (getConflictResolvingStrategy() == null) {
+            getLogger().error("Conflict resolving strategy is not set");
+        }
+
         try {
             this.doWork();
         } catch (Exception e) {
