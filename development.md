@@ -610,8 +610,9 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484
 ![1](./.markdown/opendj_1.png)
 ![2](./.markdown/opendj_2.png)
 At the end of setup run GUI.
-Or you can start control panel using
+Or you can start the server and control panel using
 ```bash
+./bin/start-ds
 ./bin/control-panel
 ```
 
