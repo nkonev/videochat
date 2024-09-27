@@ -16,7 +16,7 @@ custom.ldap:
     enabled: true
     filter: "cn={0}"
   attribute-names:
-    id: "employeeNumber" # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
+    id: "uid" # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
     role: "objectClass"
     email: "mail"
     locked: ""
