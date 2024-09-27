@@ -1,0 +1,33 @@
+spring:
+  ldap:
+    urls: "ldap://localhost:1389"
+    username: "cn=Directory Manager"
+    password: password
+
+custom.role-mappings:
+  ldap:
+    - their: "person"
+      our: "ROLE_USER"
+
+custom.ldap:
+  resolve-conflicts-strategy: WRITE_NEW_AND_REMOVE_OLD
+  auth:
+    base: "ou=People,dc=example,dc=com"
+    enabled: true
+    filter: "cn={0}"
+  attribute-names:
+    id: "employeeNumber" # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
+    role: "objectClass"
+    email: "mail"
+    locked: ""
+    username: cn
+  password:
+    encodingType: ""
+    strength: 10
+
+custom:
+  schedulers:
+    sync-ldap:
+      enabled: true
+      batch-size: 20
+      cron: "*/20 * * * * *"

@@ -6,7 +6,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2 run-with-keycloak run-demo
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2 run-with-keycloak run-demo run-with-ldap
 
 BUILDDIR := ./build
 IMAGE := nkonev/chat-aaa:changing
@@ -81,6 +81,10 @@ run-with-oauth2:
 run-with-keycloak:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/oauth2-keycloak.yml --custom.schedulers.sync-keycloak.enabled=true --custom.schedulers.sync-keycloak.cron="*/5 * * * * *" || true
+
+run-with-ldap: check-env download generate package-java
+	# export JAVA_HOME=/usr/lib/jvm/java-21
+	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/demo-ldap-opendj.yml || true
 
 run-demo: check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21

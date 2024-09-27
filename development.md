@@ -601,7 +601,26 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484
 ```
 
 
+# LDAP
+1. Download and unzip [OpenDJ](https://github.com/OpenIdentityPlatform/OpenDJ/releases/tag/4.8.0)
+2. Run installation script
+```bash
+./setup 
+```
+![1](./.markdown/opendj_1.png)
+![2](./.markdown/opendj_2.png)
+At the end of setup run GUI.
 
+Change password for an user
+![3](./.markdown/opendj_3.png)
+3. Run
+```bash
+make run-with-ldap 
+```
+Full configuration is here: `src/test/resources/config/demo-ldap-opendj.yml`.
+
+4. Login in videochat
+![4](./.markdown/opendj_4.png)
 
 # Test in browser
 Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;
