@@ -193,7 +193,7 @@ export default {
     },
     openUsers() {
       this.chatStore.incrementProgressCount();
-      this.$router.push({name: profile_list_name} ).finally(()=>{
+      goToPreservingQuery(this.$route, this.$router, { name: profile_list_name}).finally(()=>{
         this.chatStore.decrementProgressCount();
       })
     },
