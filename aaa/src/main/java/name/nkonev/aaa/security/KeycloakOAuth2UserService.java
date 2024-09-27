@@ -123,10 +123,12 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
     @Override
     protected Set<String> getRoles(OAuth2UserRequest userRequest) {
         Set<String> roles = new HashSet<>();
-        try {
-            roles = ((ArrayList<String>) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().collect(Collectors.toSet());
-        } catch (ParseException e) {
-            LOGGER.error("Unable to parse roles", e);
+        if (aaaProperties.schedulers().syncKeycloak().syncRoles()) {
+            try {
+                roles = ((ArrayList<String>) (JWTParser.parse(userRequest.getAccessToken().getTokenValue())).getJWTClaimsSet().getJSONObjectClaim("realm_access").get("roles")).stream().collect(Collectors.toSet());
+            } catch (ParseException e) {
+                LOGGER.error("Unable to parse roles", e);
+            }
         }
         return roles;
     }

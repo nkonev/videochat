@@ -2,9 +2,14 @@ package name.nkonev.aaa.tasks;
 
 import jakarta.annotation.PostConstruct;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
+import name.nkonev.aaa.config.properties.RoleMapEntry;
 import name.nkonev.aaa.dto.EventWrapper;
+import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
+import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.security.AaaUserDetailsService;
+import name.nkonev.aaa.security.RoleMapper;
 import name.nkonev.aaa.services.ConflictResolvingActions;
 import name.nkonev.aaa.services.ConflictService;
 import name.nkonev.aaa.services.EventService;
@@ -17,11 +22,13 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+import static name.nkonev.aaa.dto.UserRole.ROLE_USER;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 // This service is designed for a single-thread using
-public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements ConflictResolvingActions {
+public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends ExternalSyncEntity> implements ConflictResolvingActions {
 
     @Autowired
     protected EventService eventService;
@@ -33,7 +40,10 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
     private ConflictService conflictService;
 
     @Autowired
-    private TransactionTemplate transactionTemplate;
+    protected TransactionTemplate transactionTemplate;
+
+    @Autowired
+    protected AaaUserDetailsService aaaUserDetailsService;
 
     protected LocalDateTime currTime;
 
@@ -192,6 +202,71 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
             sendEvents();
         }
     }
+
+    protected void processAddingRoleToUsers(List<TIR> extUsers, String extRole) {
+        if (extUsers.isEmpty()) {
+            return;
+        }
+        var extIds = extUsers.stream().map(TIR::getId).toList();
+        var dbUsers = findByExtIdInOrderById(extIds);
+
+        var mappedToDbRole = RoleMapper.map(getRoleMappings(), extRole);
+
+        var toUpdateTimeInDb = new HashSet<String>();
+        var toUpdateInDb = new ArrayList<UserAccount>();
+        for (var dbUser : dbUsers) {
+            var dbUserRoles = Arrays.stream(dbUser.roles()).collect(Collectors.toCollection(HashSet::new));
+            var extUserOptional = getExtUserOptional(dbUser, extUsers);
+            extUserOptional.ifPresent(extUser -> {
+                if (!dbUserRoles.contains(mappedToDbRole)) {
+                    getLogger().info("Adding role {} to user id = {}, {}Id = {}", mappedToDbRole, dbUser.id(), getName(), getExtId(dbUser));
+                    aaaUserDetailsService.killSessions(dbUser.id(), ForceKillSessionsReasonType.user_roles_changed);
+                    dbUserRoles.add(mappedToDbRole);
+                    var changedDbUser = setSyncExtRolesTime(dbUser
+                            .withRoles(dbUserRoles.toArray(new UserRole[0])));
+                    toUpdateInDb.add(changedDbUser);
+                } else {
+                    toUpdateTimeInDb.add(getExtId(dbUser));
+                }
+            }); // if not existed - it is handled in the different place
+        }
+
+        if (!toUpdateInDb.isEmpty()) {
+            updateUsers(toUpdateInDb);
+        }
+
+        if (!toUpdateTimeInDb.isEmpty()) {
+            updateSyncExtRolesTime(toUpdateTimeInDb);
+        }
+    }
+
+    protected void processRemovingRolesFromUsers(int batchSize) {
+        var shouldContinue2 = new AtomicBoolean(true);
+        for (var offset = 0; shouldContinue2.get(); offset += batchSize) {
+            final var theOffset = offset;
+            transactionTemplate.executeWithoutResult(s -> {
+                var toMakeWithoutAdminRole = findExtIdsRolesElderThan(batchSize, theOffset); // process almost all users, because typically it's very low amount of admins
+                shouldContinue2.set(toMakeWithoutAdminRole.size() == batchSize);
+
+                var toSaveToDb = toMakeWithoutAdminRole.stream()
+                        .map(u -> {
+                            if (Arrays.stream(u.roles()).collect(Collectors.toSet()).contains(UserRole.ROLE_ADMIN)) {
+                                getLogger().info("Removing role {} from user id = {}, login = {}, {}Id = {}", UserRole.ROLE_ADMIN, u.id(), u.username(), getName(), getExtId(u));
+                                aaaUserDetailsService.killSessions(u.id(), ForceKillSessionsReasonType.user_roles_changed);
+                                events.add(eventService.convertProfileUpdated(u));
+                                return setSyncExtRolesTime(u
+                                        .withRoles(new UserRole[]{ROLE_USER}));
+                            } else {
+                                return setSyncExtRolesTime(u);
+                            }
+                        })
+                        .toList();
+                userAccountRepository.saveAll(toSaveToDb);
+            });
+            sendEvents();
+        }
+    }
+
     protected abstract UserAccount prepareUserAccountForInsert(T t);
 
     protected abstract Pair<UserAccount, Boolean> applyUpdateToUserAccount(T entity, UserAccount userAccount);
@@ -211,4 +286,21 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
     protected abstract ConflictResolveStrategy getConflictResolvingStrategy();
 
     protected abstract String getRenamingPrefix();
+
+    protected abstract String getNecessaryAdminRole();
+
+    protected abstract List<RoleMapEntry> getRoleMappings();
+
+    protected abstract List<UserAccount> findByExtIdInOrderById(Collection<String> extIds);
+
+    protected abstract Optional<TIR> getExtUserOptional(UserAccount dbUser, List<TIR> extUsers);
+
+    protected abstract String getExtId(UserAccount u);
+
+    protected abstract void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb);
+
+    protected abstract UserAccount setSyncExtRolesTime(UserAccount userAccount);
+
+    protected abstract List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset);
+
 }

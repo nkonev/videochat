@@ -147,3 +147,10 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: /db/migration/V21__sync_ldap.sql
+
+  - changeSet:
+      id: 22
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: /db/migration/V22__sync_ldap_roles.sql

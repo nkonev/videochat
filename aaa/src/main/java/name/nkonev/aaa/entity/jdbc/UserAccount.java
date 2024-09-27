@@ -33,7 +33,8 @@ public record UserAccount(
     String loginColor,
     LocalDateTime syncLdapDateTime,
     LocalDateTime syncKeycloakDateTime,
-    LocalDateTime syncKeycloakRolesDateTime // actually, it's only for ADMIN role, because already we have USER role
+    LocalDateTime syncKeycloakRolesDateTime, // actually, it's only for ADMIN role, because already we have USER role
+    LocalDateTime syncLdapRolesDateTime // actually, it's only for ADMIN role, because already we have USER role
 ) {
 
     public UserAccount withPassword(String newPassword) {
@@ -60,7 +61,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -88,7 +90,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -116,7 +119,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -144,7 +148,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -172,7 +177,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -200,7 +206,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -228,7 +235,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -256,7 +264,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -284,7 +293,8 @@ public record UserAccount(
             loginColor,
             syncLdapDateTime,
             syncKeycloakDateTime,
-            syncKeycloakRolesDateTime
+            syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -312,7 +322,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -340,7 +351,8 @@ public record UserAccount(
             newLoginColor,
             syncLdapDateTime,
             syncKeycloakDateTime,
-            syncKeycloakRolesDateTime
+            syncKeycloakRolesDateTime,
+            syncLdapRolesDateTime
         );
     }
 
@@ -368,7 +380,8 @@ public record UserAccount(
             loginColor,
             newSyncLdapDateTime,
             syncKeycloakDateTime,
-            syncKeycloakRolesDateTime
+            syncKeycloakRolesDateTime,
+            syncLdapRolesDateTime
         );
     }
 
@@ -396,7 +409,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 newSyncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 
@@ -424,7 +438,37 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                newSyncKeycloakRolesDateTime
+                newSyncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
+        );
+    }
+
+    public UserAccount withSyncLdapRolesTime(LocalDateTime newSyncLdapRolesDateTime) {
+        return new UserAccount(
+                id,
+                creationType,
+                username,
+                password,
+                avatar,
+                avatarBig,
+                shortInfo,
+                expired,
+                locked,
+                enabled,
+                confirmed,
+                roles,
+                email,
+                lastLoginDateTime,
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId,
+                ldapId,
+                loginColor,
+                syncLdapDateTime,
+                syncKeycloakDateTime,
+                syncKeycloakRolesDateTime,
+                newSyncLdapRolesDateTime
         );
     }
 
@@ -452,7 +496,8 @@ public record UserAccount(
                 loginColor,
                 syncLdapDateTime,
                 syncKeycloakDateTime,
-                syncKeycloakRolesDateTime
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime
         );
     }
 

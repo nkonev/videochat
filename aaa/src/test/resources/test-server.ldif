@@ -1,3 +1,5 @@
+# https://github.com/spring-guides/gs-authenticating-ldap/blob/main/complete/src/main/resources/test-server.ldif
+
 dn: dc=springframework,dc=org
 objectclass: top
 objectclass: domain
@@ -43,8 +45,6 @@ cn: Ben Alex
 sn: Alex
 uid: ben
 userPassword: $2a$10$c6bSeWPhg06xB1lvmaWNNe4NROmZiSpYhlocU/98HNr2MhIOiSt36
-uidNumber: 1
-memberOf: user
 mail: ben@sf.org
 
 dn: uid=bobby,ou=people,dc=springframework,dc=org
@@ -56,9 +56,6 @@ cn: Bob Hamilton
 sn: Hamilton
 uid: bobby
 userPassword: bobspassword
-uidNumber: 2
-memberOf: user
-memberOf: admin
 mail: bham@sf.org
 blocked: false
 
@@ -71,7 +68,6 @@ cn: Joe Smeth
 sn: Smeth
 uid: joe
 userPassword: joespassword
-uidNumber: 3
 
 dn: cn=mouse\, jerry,ou=people,dc=springframework,dc=org
 objectclass: top
@@ -82,9 +78,6 @@ cn: Mouse, Jerry
 sn: Mouse
 uid: jerry
 userPassword: jerryspassword
-uidNumber: 4
-memberOf: user
-memberOf: admin
 mail: mj@sf.org
 
 dn: cn=slash/guy,ou=people,dc=springframework,dc=org
@@ -96,9 +89,6 @@ cn: slash/guy
 sn: Slash
 uid: slashguy
 userPassword: slashguyspassword
-uidNumber: 5
-memberOf: user
-memberOf: admin
 mail: sg@sf.org
 
 dn: cn=quote\"guy,ou=\"quoted people\",dc=springframework,dc=org
@@ -110,9 +100,6 @@ cn: quote\"guy
 sn: Quote
 uid: quoteguy
 userPassword: quoteguyspassword
-uidNumber: 6
-memberOf: user
-memberOf: admin
 mail: cg@sf.org
 
 dn: uid=space cadet,ou=space cadets,dc=springframework,dc=org
@@ -124,7 +111,23 @@ cn: Space Cadet
 sn: Cadet
 uid: space cadet
 userPassword: spacecadetspassword
-uidNumber: 7
-memberOf: user
-memberOf: admin
 mail: sc@sf.org
+
+
+
+#
+# Roles https://github.com/jeantessier/grails-3-ldap-example/blob/master/user_roles.ldif
+#
+
+# Individual roles are listed below.
+dn: cn=user,ou=groups,dc=springframework,dc=org
+objectClass: groupOfUniqueNames
+objectClass: top
+cn: user
+uniqueMember: uid=bobby,ou=people,dc=springframework,dc=org
+
+dn: cn=admin,ou=groups,dc=springframework,dc=org
+objectClass: groupOfUniqueNames
+objectClass: top
+cn: admin
+uniqueMember: uid=bobby,ou=people,dc=springframework,dc=org

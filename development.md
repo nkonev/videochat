@@ -628,6 +628,10 @@ Change password for an user
 
 ![3.2](./.markdown/opendj_3.2.png)
 
+Add group `MyGroup` and add `user.0` and `user.1` there
+
+![3.3](./.markdown/opendj_3.3.png)
+
 3. Run
 ```bash
 make run-with-ldap 

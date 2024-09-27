@@ -215,6 +215,7 @@ public class UserAccountConverter {
                 userAccountDTO.loginColor(),
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -292,6 +293,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -319,6 +321,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 vkontakteId,
+                null,
                 null,
                 null,
                 null,
@@ -358,6 +361,7 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -389,7 +393,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 syncKeycloakTime,
-                syncKeycloakTime
+                syncKeycloakTime,
+                null
         );
     }
 
@@ -420,7 +425,8 @@ public class UserAccountConverter {
                 null,
                 syncLdapTime,
                 null,
-                null
+                null,
+                syncLdapTime
         );
     }
 

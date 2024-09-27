@@ -33,20 +33,17 @@ import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 
 @Service
-public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
+public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, KeycloakUserInRoleEntity> {
 
     @Autowired
     private AaaProperties aaaProperties;
 
     @Autowired
-    private AaaUserDetailsService aaaUserDetailsService;
-
-    @Autowired
     private ObjectProvider<KeycloakClient> keycloakClientProvider;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncKeycloakTask.class);
-    @Autowired
-    private TransactionTemplate transactionTemplate;
+
+    private KeycloakClient keycloakClient;
 
     @Scheduled(cron = "${custom.schedulers.sync-keycloak.cron}")
     @SchedulerLock(name = "syncKeycloakTask")
@@ -71,6 +68,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
             LOGGER.error("Keycloak client is not configured, you must to add its OAuth provider and registration");
             return;
         }
+        this.keycloakClient = keycloakClient;
 
         final var batchSize = aaaProperties.schedulers().syncKeycloak().batchSize();
         LOGGER.info("Sync Keycloak task start, batchSize={}", batchSize);
@@ -78,15 +76,17 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
         LOGGER.info("Upserting entries from Keycloak");
         var shouldContinue = true;
         for (int offset = 0; shouldContinue; offset += batchSize) {
-            var users = keycloakClient.getUsers(batchSize, offset);
+            var users = this.keycloakClient.getUsers(batchSize, offset);
             processUpsertBatch(users);
             if (users.size() < batchSize) {
                 shouldContinue = false;
             }
         }
 
-        LOGGER.info("Syncing roles from Keycloak");
-        processRoles(keycloakClient, batchSize);
+        if (aaaProperties.schedulers().syncKeycloak().syncRoles()) {
+            LOGGER.info("Syncing roles from Keycloak");
+            processRoles(batchSize);
+        }
 
         LOGGER.info("Deleting entries from database which were removed from Keycloak");
         processDeleted(batchSize);
@@ -208,95 +208,68 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
         return KEYCLOAK_CONFLICT_PREFIX;
     }
 
-    private void processRoles(KeycloakClient keycloakClient, int batchSize) {
-        var keycloakAdminRole = getNecessaryKeycloakAdminRole();
+    @Override
+    protected String getNecessaryAdminRole() {
+        var list = aaaProperties.roleMappings().keycloak().stream()
+                .filter(roleMapEntry -> UserRole.ROLE_ADMIN.name().equals(roleMapEntry.our()))
+                .map(RoleMapEntry::their)
+                .toList();
+        if (list.isEmpty()) {
+            throw new IllegalStateException("Admin role not found in mapping");
+        }
+        return list.getFirst();
+    }
+
+    @Override
+    protected List<RoleMapEntry> getRoleMappings() {
+        return aaaProperties.roleMappings().keycloak();
+    }
+
+    @Override
+    protected List<UserAccount> findByExtIdInOrderById(Collection<String> keycloakIds) {
+        return userAccountRepository.findByKeycloakIdInOrderById(keycloakIds);
+    }
+
+    @Override
+    protected Optional<KeycloakUserInRoleEntity> getExtUserOptional(UserAccount dbUser, List<KeycloakUserInRoleEntity> keycloakUsers) {
+        return keycloakUsers.stream().filter(du -> du.id().equals(dbUser.keycloakId())).findFirst();
+    }
+
+    @Override
+    protected String getExtId(UserAccount dbUser) {
+        return dbUser.keycloakId();
+    }
+
+    @Override
+    protected void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb) {
+        userAccountRepository.updateSyncKeycloakRolesTime(toUpdateTimeInDb, currTime);
+    }
+
+    @Override
+    protected UserAccount setSyncExtRolesTime(UserAccount userAccount) {
+        return userAccount.withSyncKeycloakRolesTime(currTime);
+    }
+
+    @Override
+    protected List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset) {
+        return userAccountRepository.findByKeycloakIdRolesElderThan(currTime, limit, theOffset);
+    }
+
+    private void processRoles(int batchSize) {
+        var extAdminRole = getNecessaryAdminRole();
         var shouldContinue = new AtomicBoolean(true);
         for (int offset = 0; shouldContinue.get(); offset += batchSize) {
             final var theOffset = offset;
             transactionTemplate.executeWithoutResult(s -> {
-                List<KeycloakUserInRoleEntity> keycloakUsers = keycloakClient.getUsersInRole(keycloakAdminRole, batchSize, theOffset);
-                processAddingRoleToUsers(keycloakUsers, keycloakAdminRole);
-                shouldContinue.set(keycloakUsers.size() == batchSize);
+                List<KeycloakUserInRoleEntity> extUsersInRole = this.keycloakClient.getUsersInRole(extAdminRole, batchSize, theOffset);
+                processAddingRoleToUsers(extUsersInRole, extAdminRole);
+                shouldContinue.set(extUsersInRole.size() == batchSize);
             });
             sendEvents();
         }
 
         // remove admin role
         processRemovingRolesFromUsers(batchSize);
-    }
-
-    private void processRemovingRolesFromUsers(int batchSize) {
-        var shouldContinue2 = new AtomicBoolean(true);
-        for (var offset = 0; shouldContinue2.get(); offset += batchSize) {
-            final var theOffset = offset;
-            transactionTemplate.executeWithoutResult(s -> {
-                var toMakeWithoutAdminRole = userAccountRepository.findByKeycloakIdRolesElderThan(currTime, batchSize, theOffset); // process almost all users, because typically it's very low amount of admins
-                shouldContinue2.set(toMakeWithoutAdminRole.size() == batchSize);
-
-                var toSaveToDb = toMakeWithoutAdminRole.stream()
-                        .map(u -> {
-                            if (Arrays.stream(u.roles()).collect(Collectors.toSet()).contains(UserRole.ROLE_ADMIN)) {
-                                LOGGER.info("Removing role {} from user id = {}, login = {}, keycloakId = {}", UserRole.ROLE_ADMIN, u.id(), u.username(), u.keycloakId());
-                                aaaUserDetailsService.killSessions(u.id(), ForceKillSessionsReasonType.user_roles_changed);
-                                events.add(eventService.convertProfileUpdated(u));
-                                return u
-                                        .withRoles(new UserRole[]{ROLE_USER})
-                                        .withSyncKeycloakRolesTime(currTime);
-                            } else {
-                                return u
-                                        .withSyncKeycloakRolesTime(currTime);
-                            }
-                        })
-                        .toList();
-                userAccountRepository.saveAll(toSaveToDb);
-            });
-            sendEvents();
-        }
-    }
-
-    private void processAddingRoleToUsers(List<KeycloakUserInRoleEntity> keycloakUsers, String keycloakRole) {
-        if (keycloakUsers.isEmpty()) {
-            return;
-        }
-        var keycloakIds = keycloakUsers.stream().map(KeycloakUserInRoleEntity::getId).toList();
-        var dbUsers = userAccountRepository.findByKeycloakIdInOrderById(keycloakIds);
-
-        var mappedToDbRole = RoleMapper.map(aaaProperties.roleMappings().keycloak(), keycloakRole);
-
-        var toUpdateTimeInDb = new HashSet<String>();
-        var toUpdateInDb = new ArrayList<UserAccount>();
-        for (var dbUser : dbUsers) {
-            var dbUserRoles = Arrays.stream(dbUser.roles()).collect(Collectors.toCollection(HashSet::new));
-            var keycloakUserOptional = keycloakUsers.stream().filter(du -> du.id().equals(dbUser.keycloakId())).findFirst();
-            keycloakUserOptional.ifPresent(keycloakUser -> {
-                if (!dbUserRoles.contains(mappedToDbRole)) {
-                    LOGGER.info("Adding role {} to user id = {}, keycloakId = {}", mappedToDbRole, dbUser.id(), dbUser.keycloakId());
-                    aaaUserDetailsService.killSessions(dbUser.id(), ForceKillSessionsReasonType.user_roles_changed);
-                    dbUserRoles.add(mappedToDbRole);
-                    var changedDbUser = dbUser
-                            .withRoles(dbUserRoles.toArray(new UserRole[0]))
-                            .withSyncKeycloakRolesTime(currTime);
-                    toUpdateInDb.add(changedDbUser);
-                } else {
-                    toUpdateTimeInDb.add(dbUser.keycloakId());
-                }
-            }); // if not existed - it is handled in the different place
-        }
-
-        if (!toUpdateInDb.isEmpty()) {
-            updateUsers(toUpdateInDb);
-        }
-
-        if (!toUpdateTimeInDb.isEmpty()) {
-            userAccountRepository.updateSyncKeycloakRolesTime(toUpdateTimeInDb, currTime);
-        }
-    }
-
-    private String getNecessaryKeycloakAdminRole() {
-        return aaaProperties.roleMappings().keycloak().stream()
-                .filter(roleMapEntry -> UserRole.ROLE_ADMIN.name().equals(roleMapEntry.our()))
-                .map(RoleMapEntry::their)
-                .toList().get(0);
     }
 }
 

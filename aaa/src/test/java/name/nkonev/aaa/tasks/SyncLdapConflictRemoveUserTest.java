@@ -30,7 +30,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 conflictingLogin, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null);
+                new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
         var before = userAccountRepository.findByUsername(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());

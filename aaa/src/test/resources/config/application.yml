@@ -70,11 +70,13 @@ custom:
     sync-ldap:
       enabled: false
       batch-size: 20
+      sync-roles: true
       cron: "*/20 * * * * *"
     sync-keycloak:
       enabled: false
       sync-email-verified: false
       batch-size: 20
+      sync-roles: true
       cron: "*/20 * * * * *"
 
 server.port: 9080
@@ -166,13 +168,16 @@ custom.ldap:
   auth:
     base: "ou=people,dc=springframework,dc=org"
     enabled: true
-    filter: "uid={0}"
+    filter: "cn={0}"
+  group:
+    base: "ou=groups,dc=springframework,dc=org"
+    filter: "cn={0}"
   attribute-names:
-    id: uidNumber # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
-    role: memberOf
+    id: uid # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
+    role: uniqueMember
     email: mail
     locked: blocked
-    username: uid
+    username: cn
   password:
     encodingType: ""
     strength: 10

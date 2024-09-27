@@ -70,11 +70,13 @@ custom:
     sync-ldap:
       enabled: false
       batch-size: 20
+      sync-roles: true
       cron: "*/20 * * * * *"
     sync-keycloak:
       enabled: false
       batch-size: 20
       sync-email-verified: false
+      sync-roles: true
       cron: "*/20 * * * * *"
 
 server.tomcat.accesslog.enabled: false

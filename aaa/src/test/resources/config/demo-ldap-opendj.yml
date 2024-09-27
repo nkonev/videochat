@@ -6,8 +6,8 @@ spring:
 
 custom.role-mappings:
   ldap:
-    - their: "person"
-      our: "ROLE_USER"
+    - their: "MyGroup"
+      our: "ROLE_ADMIN"
 
 custom.ldap:
   resolve-conflicts-strategy: WRITE_NEW_AND_REMOVE_OLD
@@ -15,9 +15,12 @@ custom.ldap:
     base: "ou=People,dc=example,dc=com"
     enabled: true
     filter: "cn={0}"
+  group:
+    base: "dc=example,dc=com"
+    filter: "cn={0}"
   attribute-names:
     id: "uid" # name of attribute, which is considered as ldap_id. any id-like attribute, which won't be changed on user rename, it can be number or string
-    role: "objectClass"
+    role: "member"
     email: "mail"
     locked: ""
     username: cn
@@ -30,4 +33,5 @@ custom:
     sync-ldap:
       enabled: true
       batch-size: 20
-      cron: "*/20 * * * * *"
+      sync-roles: true
+      cron: "*/5 * * * * *"

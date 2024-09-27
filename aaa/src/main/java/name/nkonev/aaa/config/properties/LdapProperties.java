@@ -4,6 +4,7 @@ public record LdapProperties(
     LdapAuthProperties auth,
     LdapAttributes attributeNames,
     LdapPasswordEncodingProperties password,
-    ConflictResolveStrategy resolveConflictsStrategy
+    ConflictResolveStrategy resolveConflictsStrategy,
+    LdapGroup group
 ) {
 }

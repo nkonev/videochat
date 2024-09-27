@@ -13,7 +13,6 @@ public record LdapEntity(
     String id,
     String username,
     String email,
-    Set<String> roles,
     Boolean locked,
     Boolean enabled
 ) implements ExternalSyncEntity {
@@ -23,7 +22,6 @@ public record LdapEntity(
             extractId(attributeNames, ldapEntry),
             extractUsername(attributeNames, ldapEntry),
             extractEmail(attributeNames, ldapEntry),
-            extractRoles(attributeNames, ldapEntry),
             extractLocked(attributeNames, ldapEntry),
             extractEnabled(attributeNames, ldapEntry)
         );

@@ -10,12 +10,12 @@ public class TestConstants {
     public static final String USER_ADMIN = "admin";
     public static final String USER_BOB = "bob";
 
-    public static final String USER_BOB_LDAP = "bobby";
+    public static final String USER_BOB_LDAP = "Bob Hamilton";
     public static final String USER_BOB_LDAP_PASSWORD = "bobspassword"; // see in src/test/resources/test-server.ldif
-    public static final String USER_BOB_LDAP_ID = "2"; // see in src/test/resources/test-server.ldif
+    public static final String USER_BOB_LDAP_ID = "bobby"; // see in src/test/resources/test-server.ldif
     public static final String USER_BOB_LDAP_EMAIL = "bham@sf.org";
 
-    public static final String USER_BEN_LDAP = "ben"; // conflicting
+    public static final String USER_BEN_LDAP = "Ben Alex"; // conflicting
     public static final String USER_BEN_LDAP_EMAIL = "ben@sf.org";
 
     public static final String USER_LOCKED = "generated_user_66";

@@ -61,6 +61,10 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     @Query("update user_account set sync_keycloak_roles_date_time = :newSyncKeycloakRolesDateTime where keycloak_id in (:keycloakUserIds)")
     void updateSyncKeycloakRolesTime(Set<String> keycloakUserIds, LocalDateTime newSyncKeycloakRolesDateTime);
 
+    @Modifying
+    @Query("update user_account set sync_ldap_roles_date_time = :newSyncLdapRolesDateTime where ldap_id in (:ldapUserIds)")
+    void updateSyncLdapRolesTime(Set<String> ldapUserIds, LocalDateTime newSyncLdapRolesDateTime);
+
     @Query("select id from user_account where ldap_id is not null and sync_ldap_date_time < :currTime limit :limit offset :offset")
     List<Long> findByLdapIdElderThan(LocalDateTime currTime, int limit, int offset);
 
@@ -75,4 +79,7 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
 
     @Query("select * from user_account where keycloak_id is not null and sync_keycloak_roles_date_time < :currTime limit :limit offset :offset")
     List<UserAccount> findByKeycloakIdRolesElderThan(LocalDateTime currTime, int limit, int offset);
+
+    @Query("select * from user_account where ldap_id is not null and sync_ldap_roles_date_time < :currTime limit :limit offset :offset")
+    List<UserAccount> findByLdapIdRolesElderThan(LocalDateTime currTime, int limit, int offset);
 }

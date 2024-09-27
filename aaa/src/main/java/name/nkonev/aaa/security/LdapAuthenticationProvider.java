@@ -95,9 +95,6 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                             }
 
                             Set<String> rawRoles = new HashSet<>();
-                            if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-                                rawRoles = ldapEntry.roles();
-                            }
                             var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
 
                             var userToInsert = UserAccountConverter.buildUserAccountEntityForLdapInsert(

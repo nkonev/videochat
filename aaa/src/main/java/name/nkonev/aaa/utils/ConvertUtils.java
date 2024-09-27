@@ -1,11 +1,13 @@
 package name.nkonev.aaa.utils;
 
 import name.nkonev.aaa.config.properties.LdapAttributes;
+import org.springframework.ldap.support.LdapUtils;
 import org.springframework.util.StringUtils;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
+import javax.naming.ldap.Rdn;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -105,5 +107,22 @@ public abstract class ConvertUtils {
             return null;
         }
         return convertToBoolean(ldapEnabledV);
+    }
+
+    // extracts user.0 from
+    // uid=user.0,ou=People,dc=example,dc=com
+    public static String extractExtId(LdapAttributes attributeNames, Object extIdInRole) {
+        if (extIdInRole == null) {
+            return null;
+        }
+        var str = extIdInRole.toString();
+        var ldapName = LdapUtils.newLdapName(str);
+        return ldapName
+                .getRdns().stream()
+                .filter(rdn -> rdn.getType().equals(attributeNames.id()))
+                .findFirst()
+                .map(Rdn::getValue)
+                .map(Object::toString)
+                .orElse(null);
     }
 }

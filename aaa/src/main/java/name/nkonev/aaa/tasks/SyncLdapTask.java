@@ -2,13 +2,14 @@ package name.nkonev.aaa.tasks;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
+import name.nkonev.aaa.config.properties.RoleMapEntry;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
+import name.nkonev.aaa.entity.ldap.LdapUserInRoleEntity;
 import name.nkonev.aaa.security.AaaUserDetailsService;
-import name.nkonev.aaa.security.RoleMapper;
 import name.nkonev.aaa.utils.Pair;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.naming.NameClassPair;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -33,9 +33,11 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import static name.nkonev.aaa.Constants.LDAP_CONFLICT_PREFIX;
+import static name.nkonev.aaa.utils.ConvertUtils.extractExtId;
+import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 @Service
-public class SyncLdapTask extends AbstractSyncTask<LdapEntity> {
+public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEntity> {
     @Autowired
     private AaaProperties aaaProperties;
 
@@ -90,6 +92,11 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity> {
         ldapOperations.search(se, handler);
         handler.processLeftovers();
 
+        if (aaaProperties.schedulers().syncLdap().syncRoles()) {
+            LOGGER.info("Syncing roles from LDAP");
+            processRoles(batchSize);
+        }
+
         LOGGER.info("Deleting entries from database which were removed from LDAP");
         processDeleted(batchSize);
 
@@ -118,18 +125,6 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity> {
             if (!Objects.equals(ldapEmail, userAccount.email())) {
                 LOGGER.info("For userId={}, ldapId={}, setting email={}", userAccount.id(), ldapUserId, ldapEmail);
                 userAccount = userAccount.withEmail(ldapEmail);
-                shouldUpdateInDb = true;
-            }
-        }
-
-        if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().role())) {
-            Set<String> rawRoles = ldapEntry.roles();
-            var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
-            var oldRoles = Arrays.stream(userAccount.roles()).collect(Collectors.toSet());
-            if (!oldRoles.equals(mappedRoles)) {
-                LOGGER.info("For userId={}, ldapId={}, setting roles={}", userAccount.id(), ldapUserId, mappedRoles);
-                aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_roles_changed);
-                userAccount = userAccount.withRoles(mappedRoles.toArray(UserRole[]::new));
                 shouldUpdateInDb = true;
             }
         }
@@ -173,8 +168,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity> {
 
     @Override
     protected UserAccount prepareUserAccountForInsert(LdapEntity ldapEntry) {
-        Set<String> rawRoles = ldapEntry.roles();
-        var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
+        var mappedRoles = Set.of(DEFAULT_ROLE);
         boolean locked = ldapEntry.locked() == null ? false : ldapEntry.locked();
         boolean enabled = ldapEntry.enabled() == null ? true : ldapEntry.enabled();
         return UserAccountConverter.buildUserAccountEntityForLdapInsert(
@@ -226,6 +220,116 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity> {
     @Override
     protected String getRenamingPrefix() {
         return LDAP_CONFLICT_PREFIX;
+    }
+
+    @Override
+    protected String getNecessaryAdminRole() {
+         var list = aaaProperties.roleMappings().ldap().stream()
+                .filter(roleMapEntry -> UserRole.ROLE_ADMIN.name().equals(roleMapEntry.our()))
+                .map(RoleMapEntry::their)
+                .toList();
+        if (list.isEmpty()) {
+            throw new IllegalStateException("Admin role not found in mapping");
+        }
+        return list.getFirst();
+    }
+
+    @Override
+    protected List<RoleMapEntry> getRoleMappings() {
+        return aaaProperties.roleMappings().ldap();
+    }
+
+    @Override
+    protected Optional<LdapUserInRoleEntity> getExtUserOptional(UserAccount dbUser, List<LdapUserInRoleEntity> extUsers) {
+        return extUsers.stream().filter(du -> du.id().equals(dbUser.ldapId())).findFirst();
+    }
+
+    @Override
+    protected String getExtId(UserAccount u) {
+        return u.ldapId();
+    }
+
+    @Override
+    protected UserAccount setSyncExtRolesTime(UserAccount userAccount) {
+        return userAccount.withSyncLdapRolesTime(currTime);
+    }
+
+    @Override
+    protected List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset) {
+        return userAccountRepository.findByLdapIdRolesElderThan(currTime, limit, theOffset);
+    }
+
+    @Override
+    protected void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb) {
+        userAccountRepository.updateSyncLdapRolesTime(toUpdateTimeInDb, currTime);
+
+    }
+
+    @Override
+    protected List<UserAccount> findByExtIdInOrderById(Collection<String> extIds) {
+        return userAccountRepository.findByLdapIdInOrderById(extIds);
+    }
+
+    private void processRoles(int batchSize) {
+        var extAdminRole = getNecessaryAdminRole();
+
+        var groupBase = aaaProperties.ldap().group().base();
+        var groupName = aaaProperties.ldap().group().filter();
+
+        var lq = LdapQueryBuilder.query().base(groupBase).filter(groupName, extAdminRole);
+        // partial copy-paste from LdapTemplate because of near Long.MAX_VALUE length of array in spliterator in Spliterators.spliteratorUnknownSize()
+        SearchControls controls = new SearchControls();
+        controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
+        if (lq.searchScope() != null) {
+            controls.setSearchScope(lq.searchScope().getId());
+        }
+        controls.setReturningObjFlag(true);
+        SearchExecutor se = (DirContext ctx) -> {
+            var filterValue = lq.filter().encode();
+            LOGGER.debug("Executing search with base [{}] and filter [{}]", lq.base(), filterValue);
+            return ctx.search(lq.base(), filterValue, controls);
+        };
+        var handler = new ConsumingCallbackHandler(a -> mapAttributesToInRoleEntity(batchSize, extAdminRole, a));
+        ldapOperations.search(se, handler);
+
+        // remove admin role
+        processRemovingRolesFromUsers(batchSize);
+    }
+
+    private void mapAttributesToInRoleEntity(int batchSize, String extAdminRole, Attributes attributes) throws NamingException {
+        final List<LdapUserInRoleEntity> list = new ArrayList<>();
+
+        javax.naming.NamingEnumeration<?> iter = null;
+        try {
+            iter = attributes.get(aaaProperties.ldap().attributeNames().role()).getAll();
+            while (iter.hasMore()) {
+                var extIdInRole = iter.next();
+                var extId = extractExtId(aaaProperties.ldap().attributeNames(), extIdInRole);
+                if (StringUtils.hasLength(extId)) {
+                    list.add(new LdapUserInRoleEntity(extId));
+                }
+                if (list.size() == batchSize) {
+                    processRolesBatch(extAdminRole, list);
+                    list.clear();
+                }
+            }
+            // process leftovers
+            if (!list.isEmpty()) {
+                processRolesBatch(extAdminRole, list);
+                list.clear();
+            }
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (iter != null) {
+                iter.close();
+            }
+        }
+    }
+
+    private void processRolesBatch(String extAdminRole, List<LdapUserInRoleEntity> extUsersInRole) {
+        processAddingRoleToUsers(extUsersInRole, extAdminRole);
+        sendEvents();
     }
 }
 
@@ -285,4 +389,49 @@ class MappingConsumingCallbackHandler<T> implements NameClassPairCallbackHandler
             list.clear();
         }
     }
+}
+
+class ConsumingCallbackHandler implements NameClassPairCallbackHandler {
+
+    private final AttributesConsumer consumer;
+
+    /**
+     * Constructs a new instance around the specified {@link AttributesMapper}.
+     * @param consumer the target mapper.
+     */
+    public ConsumingCallbackHandler(AttributesConsumer consumer) {
+        this.consumer = consumer;
+    }
+
+    /**
+     * Cast the NameClassPair to a SearchResult and pass its attributes to the
+     * {@link AttributesMapper}.
+     * @param nameClassPair a <code> SearchResult</code> instance.
+     * @return the Object returned from the mapper.
+     */
+    public void getObjectFromNameClassPairInternal(NameClassPair nameClassPair) {
+        if (!(nameClassPair instanceof SearchResult)) {
+            throw new IllegalArgumentException("Parameter must be an instance of SearchResult");
+        }
+
+        SearchResult searchResult = (SearchResult) nameClassPair;
+        Attributes attributes = searchResult.getAttributes();
+        try {
+            this.consumer.consumeFromAttributes(attributes);
+            return;
+        }
+        catch (javax.naming.NamingException ex) {
+            throw LdapUtils.convertLdapException(ex);
+        }
+    }
+
+    @Override
+    public final void handleNameClassPair(NameClassPair nameClassPair) throws NamingException {
+        getObjectFromNameClassPairInternal(nameClassPair);
+    }
+
+}
+
+interface AttributesConsumer {
+    void consumeFromAttributes(Attributes attributes) throws NamingException;
 }
