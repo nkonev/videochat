@@ -610,6 +610,10 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484
 ![1](./.markdown/opendj_1.png)
 ![2](./.markdown/opendj_2.png)
 At the end of setup run GUI.
+Or you can start control panel using
+```bash
+./bin/control-panel
+```
 
 Change password for an user
 ![3](./.markdown/opendj_3.png)
