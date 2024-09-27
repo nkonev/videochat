@@ -620,10 +620,12 @@ from the server installation folder.
 
 
 Open users
+
 ![3.1](./.markdown/opendj_3.1.png)
 
 
 Change password for an user
+
 ![3.2](./.markdown/opendj_3.2.png)
 
 3. Run
