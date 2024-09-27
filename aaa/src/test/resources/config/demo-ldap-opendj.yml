@@ -2,7 +2,7 @@ spring:
   ldap:
     urls: "ldap://localhost:1389"
     username: "cn=Directory Manager"
-    password: password
+    password: "password2"
 
 custom.role-mappings:
   ldap:

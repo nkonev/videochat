@@ -609,15 +609,23 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484
 ```
 ![1](./.markdown/opendj_1.png)
 ![2](./.markdown/opendj_2.png)
-At the end of setup run GUI.
-Or you can start the server and control panel using
+
+
+At the end of setup run both server and GUI. Or you can start the server and control panel using
 ```bash
 ./bin/start-ds
 ./bin/control-panel
 ```
+from the server installation folder.
+
+
+Open users
+![3.1](./.markdown/opendj_3.1.png)
+
 
 Change password for an user
-![3](./.markdown/opendj_3.png)
+![3.2](./.markdown/opendj_3.2.png)
+
 3. Run
 ```bash
 make run-with-ldap 
