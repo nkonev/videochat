@@ -8,7 +8,6 @@ import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.ConflictResolvingActions;
 import name.nkonev.aaa.services.ConflictService;
 import name.nkonev.aaa.services.EventService;
-import name.nkonev.aaa.utils.PageUtils;
 import name.nkonev.aaa.utils.Pair;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,9 +178,8 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity> implements 
         sendEvents();
     }
 
-    protected void processDeleted() {
+    protected void processDeleted(int size) {
         var shouldContinue = new AtomicBoolean(true);
-        final var size = PageUtils.DEFAULT_SIZE;
         for (int offset = 0; shouldContinue.get(); offset += size) {
             final var theOffset = offset;
             transactionTemplate.executeWithoutResult(s -> {

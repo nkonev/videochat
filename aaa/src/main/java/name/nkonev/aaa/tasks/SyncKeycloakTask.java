@@ -89,7 +89,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
         processRoles(keycloakClient, batchSize);
 
         LOGGER.info("Deleting entries from database which were removed from Keycloak");
-        processDeleted();
+        processDeleted(batchSize);
 
         LOGGER.info("Sync Keycloak task finish");
     }

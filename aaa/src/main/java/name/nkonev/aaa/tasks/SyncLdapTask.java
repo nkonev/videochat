@@ -91,7 +91,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity> {
         handler.processLeftovers();
 
         LOGGER.info("Deleting entries from database which were removed from LDAP");
-        processDeleted();
+        processDeleted(batchSize);
 
         LOGGER.info("Sync ldap task finish");
     }
