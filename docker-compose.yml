@@ -28,7 +28,7 @@ services:
 
 
   postgresql:
-    image: postgres:15.1-alpine3.17
+    image: postgres:17.0-alpine3.20
     restart: unless-stopped
     ports:
       - 35432:5432
@@ -46,7 +46,7 @@ services:
         max-file: "1"
 
   redis:
-    image: valkey/valkey:7.2.5-bookworm
+    image: valkey/valkey:8.0.0-alpine3.20
     hostname: redis
     restart: unless-stopped
     ports:
@@ -92,7 +92,7 @@ services:
         max-file: "1"
 
   rabbitmq:
-    image: rabbitmq:3.11.7-management-alpine
+    image: rabbitmq:4.0.2-management-alpine
     hostname: rabbitmq
     restart: unless-stopped
     ports:
