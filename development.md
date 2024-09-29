@@ -1012,3 +1012,4 @@ mockery --all
 # or
 go generate ./...
 ```
+
