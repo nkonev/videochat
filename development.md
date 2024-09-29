@@ -719,8 +719,8 @@ docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcente
 ```
 
 ## Restore data
-Be careful! During a short period while videocaht uses an empty database, the scheduler in storage microservice can remove files because chats aren't exists.
-To prevent this just stop storage for the all period of maintenence.
+Be careful! During a short period while videochat uses an empty database, the scheduler in storage microservice can remove files because chats aren't exists.
+To prevent this just stop storage for the all period of maintenance.
 ```
 docker service scale VIDEOCHATSTACK_aaa=0
 docker service scale VIDEOCHATSTACK_chat=0
