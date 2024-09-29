@@ -74,6 +74,7 @@ custom:
     sync-keycloak:
       enabled: false
       batch-size: 20
+      sync-email-verified: false
       cron: "*/20 * * * * *"
 
 server.tomcat.accesslog.enabled: false

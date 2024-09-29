@@ -131,6 +131,23 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity> {
             LOGGER.warn("For userId={}, keycloakId={}, got empty keycloak's enabled", userAccount.id(), keycloakUserId);
         }
 
+        if (aaaProperties.schedulers().syncKeycloak().syncEmailVerified()) {
+            var keycloakEmailVerifiedV = keycloakEntry.emailVerified();
+            if (keycloakEmailVerifiedV != null) {
+                boolean keycloakEmailVerified = keycloakEmailVerifiedV;
+                if (keycloakEmailVerified != userAccount.confirmed()) {
+                    LOGGER.info("For userId={}, keycloakId={}, setting confirmed={}", userAccount.id(), keycloakUserId, keycloakEmailVerified);
+                    if (!keycloakEmailVerified) {
+                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                    }
+                    userAccount = userAccount.withConfirmed(keycloakEmailVerified);
+                    shouldUpdateInDb = true;
+                }
+            } else {
+                LOGGER.warn("For userId={}, keycloakId={}, got empty keycloak's email verified", userAccount.id(), keycloakUserId);
+            }
+        }
+
         return new Pair<>(userAccount, shouldUpdateInDb);
     }
 

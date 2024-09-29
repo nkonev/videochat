@@ -73,6 +73,7 @@ custom:
       cron: "*/20 * * * * *"
     sync-keycloak:
       enabled: false
+      sync-email-verified: false
       batch-size: 20
       cron: "*/20 * * * * *"
 
