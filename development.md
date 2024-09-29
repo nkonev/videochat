@@ -718,6 +718,31 @@ mc rm --recursive --force --dangerous --incomplete local/files
 docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcenter top -h videochat_postgresql_1 -U chat -d chat
 ```
 
+## Restore data
+```
+docker service scale VIDEOCHATSTACK_aaa=0
+docker service scale VIDEOCHATSTACK_chat=0
+docker service scale VIDEOCHATSTACK_notification=0
+docker service scale VIDEOCHATSTACK_video=0
+ 
+scp ~/blog/backup-2024-09-29_09-11-01/chat-aaa.sql THEUSER@nkonev.name:/tmp/chat-aaa.sql
+scp ~/blog/backup-2024-09-29_09-11-01/chat.sql THEUSER@nkonev.name:/tmp/chat.sql
+
+echo 'drop database aaa;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+
+cat /tmp/chat-aaa.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+cat /tmp/chat.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+
+rm -rf /tmp/chat-aaa.sql
+rm -rf /tmp/chat.sql
+
+docker service scale VIDEOCHATSTACK_aaa=1
+docker service scale VIDEOCHATSTACK_chat=1
+docker service scale VIDEOCHATSTACK_notification=1
+docker service scale VIDEOCHATSTACK_video=1
+```
+
 # Elasticsearch
 * https://olivere.github.io/elastic/
 * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index.html
