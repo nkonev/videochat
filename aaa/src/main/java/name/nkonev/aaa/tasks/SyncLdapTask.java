@@ -328,7 +328,9 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     private void processRolesBatch(String extAdminRole, List<LdapUserInRoleEntity> extUsersInRole) {
-        processAddingRoleToUsers(extUsersInRole, extAdminRole);
+        transactionTemplate.executeWithoutResult(s -> {
+            processAddingRoleToUsers(extUsersInRole, extAdminRole);
+        });
         sendEvents();
     }
 }
