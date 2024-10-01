@@ -1,7 +1,9 @@
 package db
 
-func TransactWithResult [T any] (db *DB, txFunc func(*Tx) (T, error)) (ret T, err error) {
-	tx, err := db.Begin()
+import "context"
+
+func TransactWithResult[T any](ctx context.Context, db *DB, txFunc func(*Tx) (T, error)) (ret T, err error) {
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		return
 	}
@@ -19,8 +21,8 @@ func TransactWithResult [T any] (db *DB, txFunc func(*Tx) (T, error)) (ret T, er
 	return ret, err
 }
 
-func Transact(db *DB, txFunc func(*Tx) error) (err error) {
-	tx, err := db.Begin()
+func Transact(ctx context.Context, db *DB, txFunc func(*Tx) error) (err error) {
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		return
 	}

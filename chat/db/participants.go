@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/rotisserie/eris"
@@ -15,23 +16,23 @@ type ChatParticipant struct {
 	UserId int64
 }
 
-func (tx *Tx) AddParticipant(userId int64, chatId int64, admin bool) error {
-	_, err := tx.Exec(`INSERT INTO chat_participant (chat_id, user_id, admin) VALUES ($1, $2, $3)`, chatId, userId, admin)
+func (tx *Tx) AddParticipant(ctx context.Context, userId int64, chatId int64, admin bool) error {
+	_, err := tx.ExecContext(ctx, `INSERT INTO chat_participant (chat_id, user_id, admin) VALUES ($1, $2, $3)`, chatId, userId, admin)
 	return eris.Wrap(err, "error during interacting with db")
 }
 
-func (tx *Tx) DeleteParticipant(userId int64, chatId int64) error {
-	_, err := tx.Exec(`DELETE FROM chat_participant WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
+func (tx *Tx) DeleteParticipant(ctx context.Context, userId int64, chatId int64) error {
+	_, err := tx.ExecContext(ctx, `DELETE FROM chat_participant WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
 	return eris.Wrap(err, "error during interacting with db")
 }
 
-func (tx *Tx) DeleteUserAsAParticipantFromAllChats(userId int64) error {
-	_, err := tx.Exec(`DELETE FROM chat_participant WHERE user_id = $1`, userId)
+func (tx *Tx) DeleteUserAsAParticipantFromAllChats(ctx context.Context, userId int64) error {
+	_, err := tx.ExecContext(ctx, `DELETE FROM chat_participant WHERE user_id = $1`, userId)
 	return eris.Wrap(err, "error during interacting with db")
 }
 
-func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
-	if rows, err := qq.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY create_date_time DESC LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
+func getParticipantIdsCommon(ctx context.Context, qq CommonOperations, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
+	if rows, err := qq.QueryContext(ctx, "SELECT user_id FROM chat_participant WHERE chat_id = $1 ORDER BY create_date_time DESC LIMIT $2 OFFSET $3", chatId, participantsSize, participantsOffset); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -48,21 +49,21 @@ func getParticipantIdsCommon(qq CommonOperations, chatId int64, participantsSize
 	}
 }
 
-func (tx *Tx) GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
-	return getParticipantIdsCommon(tx, chatId, participantsSize, participantsOffset)
+func (tx *Tx) GetParticipantIds(ctx context.Context, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
+	return getParticipantIdsCommon(ctx, tx, chatId, participantsSize, participantsOffset)
 }
 
-func (db *DB) GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
-	return getParticipantIdsCommon(db, chatId, participantsSize, participantsOffset)
+func (db *DB) GetParticipantIds(ctx context.Context, chatId int64, participantsSize, participantsOffset int) ([]int64, error) {
+	return getParticipantIdsCommon(ctx, db, chatId, participantsSize, participantsOffset)
 }
 
-func getParticipantIdsBatchCommon(qq CommonOperations, chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
+func getParticipantIdsBatchCommon(ctx context.Context, qq CommonOperations, chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
 	res := make([]*ParticipantIds, 0)
 	if len(chatIds) == 0 {
 		return res, nil
 	}
 
-	if rows, err := qq.Query(`
+	if rows, err := qq.QueryContext(ctx, `
 		select ch.chat_id, usr.user_id from 
 		   ( select distinct(cp.chat_id) from chat_participant cp where cp.chat_id = any($2) ) ch
 		   join lateral ( select cpi.user_id from chat_participant cpi where cpi.chat_id = ch.chat_id order by create_date_time desc limit $1 ) usr on true 
@@ -96,20 +97,20 @@ func getParticipantIdsBatchCommon(qq CommonOperations, chatIds []int64, particip
 	}
 }
 
-func (tx *Tx) GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
-	return getParticipantIdsBatchCommon(tx, chatIds, participantsSize)
+func (tx *Tx) GetParticipantIdsBatch(ctx context.Context, chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
+	return getParticipantIdsBatchCommon(ctx, tx, chatIds, participantsSize)
 }
 
-func (db *DB) GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
-	return getParticipantIdsBatchCommon(db, chatIds, participantsSize)
+func (db *DB) GetParticipantIdsBatch(ctx context.Context, chatIds []int64, participantsSize int) ([]*ParticipantIds, error) {
+	return getParticipantIdsBatchCommon(ctx, db, chatIds, participantsSize)
 }
 
-func getChatParticipantIdsCommon(qq CommonOperations, chatId int64, consumer func(participantIds []int64) error) error {
+func getChatParticipantIdsCommon(ctx context.Context, qq CommonOperations, chatId int64, consumer func(participantIds []int64) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
-		participantIds, err := getParticipantIdsCommon(qq, chatId, utils.DefaultSize, offset)
+		participantIds, err := getParticipantIdsCommon(ctx, qq, chatId, utils.DefaultSize, offset)
 		if err != nil {
 			logger.Logger.Errorf("Got error during getting portion %v", err)
 			lastError = err
@@ -131,16 +132,16 @@ func getChatParticipantIdsCommon(qq CommonOperations, chatId int64, consumer fun
 	return lastError
 }
 
-func (tx *Tx) IterateOverChatParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
-	return getChatParticipantIdsCommon(tx, chatId, consumer)
+func (tx *Tx) IterateOverChatParticipantIds(ctx context.Context, chatId int64, consumer func(participantIds []int64) error) error {
+	return getChatParticipantIdsCommon(ctx, tx, chatId, consumer)
 }
 
-func (db *DB) IterateOverChatParticipantIds(chatId int64, consumer func(participantIds []int64) error) error {
-	return getChatParticipantIdsCommon(db, chatId, consumer)
+func (db *DB) IterateOverChatParticipantIds(ctx context.Context, chatId int64, consumer func(participantIds []int64) error) error {
+	return getChatParticipantIdsCommon(ctx, db, chatId, consumer)
 }
 
-func getPortionOfAllParticipantIdsCommon(qq CommonOperations, participantsSize, participantsOffset int) ([]int64, error) {
-	if rows, err := qq.Query("SELECT distinct (user_id) FROM chat_participant ORDER BY user_id LIMIT $1 OFFSET $2", participantsSize, participantsOffset); err != nil {
+func getPortionOfAllParticipantIdsCommon(ctx context.Context, qq CommonOperations, participantsSize, participantsOffset int) ([]int64, error) {
+	if rows, err := qq.QueryContext(ctx, "SELECT distinct (user_id) FROM chat_participant ORDER BY user_id LIMIT $1 OFFSET $2", participantsSize, participantsOffset); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -157,12 +158,12 @@ func getPortionOfAllParticipantIdsCommon(qq CommonOperations, participantsSize, 
 	}
 }
 
-func getAllParticipantIdsCommon(qq CommonOperations, consumer func(participantIds []int64) error) error {
+func getAllParticipantIdsCommon(ctx context.Context, qq CommonOperations, consumer func(participantIds []int64) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
-		participantIds, err := getPortionOfAllParticipantIdsCommon(qq, utils.DefaultSize, offset)
+		participantIds, err := getPortionOfAllParticipantIdsCommon(ctx, qq, utils.DefaultSize, offset)
 		if err != nil {
 			logger.Logger.Errorf("Got error during getting portion %v", err)
 			lastError = err
@@ -185,17 +186,17 @@ func getAllParticipantIdsCommon(qq CommonOperations, consumer func(participantId
 	return lastError
 }
 
-func (tx *Tx) IterateOverAllParticipantIds(consumer func(participantIds []int64) error) error {
-	return getAllParticipantIdsCommon(tx, consumer)
+func (tx *Tx) IterateOverAllParticipantIds(ctx context.Context, consumer func(participantIds []int64) error) error {
+	return getAllParticipantIdsCommon(ctx, tx, consumer)
 }
 
-func (db *DB) IterateOverAllParticipantIds(consumer func(participantIds []int64) error) error {
-	return getAllParticipantIdsCommon(db, consumer)
+func (db *DB) IterateOverAllParticipantIds(ctx context.Context, consumer func(participantIds []int64) error) error {
+	return getAllParticipantIdsCommon(ctx, db, consumer)
 }
 
-func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) {
+func getParticipantsCountCommon(ctx context.Context, qq CommonOperations, chatId int64) (int, error) {
 	var count int
-	row := qq.QueryRow("SELECT count(*) FROM chat_participant WHERE chat_id = $1", chatId)
+	row := qq.QueryRowContext(ctx, "SELECT count(*) FROM chat_participant WHERE chat_id = $1", chatId)
 
 	if err := row.Scan(&count); err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -204,15 +205,15 @@ func getParticipantsCountCommon(qq CommonOperations, chatId int64) (int, error) 
 	}
 }
 
-func (tx *Tx) GetParticipantsCount(chatId int64) (int, error) {
-	return getParticipantsCountCommon(tx, chatId)
+func (tx *Tx) GetParticipantsCount(ctx context.Context, chatId int64) (int, error) {
+	return getParticipantsCountCommon(ctx, tx, chatId)
 }
 
-func (db *DB) GetParticipantsCount(chatId int64) (int, error) {
-	return getParticipantsCountCommon(db, chatId)
+func (db *DB) GetParticipantsCount(ctx context.Context, chatId int64) (int, error) {
+	return getParticipantsCountCommon(ctx, db, chatId)
 }
 
-func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[int64]int, error) {
+func getParticipantsCountBatchCommon(ctx context.Context, qq CommonOperations, chatIds []int64) (map[int64]int, error) {
 	res := map[int64]int{}
 
 	if len(chatIds) == 0 {
@@ -232,7 +233,7 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 
 	var rows *sql.Rows
 	var err error
-	rows, err = qq.Query(builder)
+	rows, err = qq.QueryContext(ctx, builder)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -253,17 +254,17 @@ func getParticipantsCountBatchCommon(qq CommonOperations, chatIds []int64) (map[
 	}
 }
 
-func (tx *Tx) GetParticipantsCountBatch(chatIds []int64) (map[int64]int, error) {
-	return getParticipantsCountBatchCommon(tx, chatIds)
+func (tx *Tx) GetParticipantsCountBatch(ctx context.Context, chatIds []int64) (map[int64]int, error) {
+	return getParticipantsCountBatchCommon(ctx, tx, chatIds)
 }
 
-func (db *DB) GetParticipantsCountBatch(chatIds []int64) (map[int64]int, error) {
-	return getParticipantsCountBatchCommon(db, chatIds)
+func (db *DB) GetParticipantsCountBatch(ctx context.Context, chatIds []int64) (map[int64]int, error) {
+	return getParticipantsCountBatchCommon(ctx, db, chatIds)
 }
 
-func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
+func getIsAdminCommon(ctx context.Context, qq CommonOperations, userId int64, chatId int64) (bool, error) {
 	var admin bool = false
-	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
+	row := qq.QueryRowContext(ctx, `SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 AND admin = true LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&admin); err != nil {
 		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -271,15 +272,15 @@ func getIsAdminCommon(qq CommonOperations, userId int64, chatId int64) (bool, er
 	}
 }
 
-func (tx *Tx) IsAdmin(userId int64, chatId int64) (bool, error) {
-	return getIsAdminCommon(tx, userId, chatId)
+func (tx *Tx) IsAdmin(ctx context.Context, userId int64, chatId int64) (bool, error) {
+	return getIsAdminCommon(ctx, tx, userId, chatId)
 }
 
-func (db *DB) IsAdmin(userId int64, chatId int64) (bool, error) {
-	return getIsAdminCommon(db, userId, chatId)
+func (db *DB) IsAdmin(ctx context.Context, userId int64, chatId int64) (bool, error) {
+	return getIsAdminCommon(ctx, db, userId, chatId)
 }
 
-func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (map[int64]bool, error) {
+func getIsAdminBatchCommon(ctx context.Context, qq CommonOperations, userId int64, chatIds []int64) (map[int64]bool, error) {
 	var result = map[int64]bool{}
 
 	if len(chatIds) == 0 {
@@ -300,7 +301,7 @@ func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (
 		first = false
 	}
 
-	if rows, err := qq.Query(fmt.Sprintf(`SELECT chat_id, admin FROM chat_participant WHERE user_id = $1 AND chat_id IN (%v) AND admin = true`, builder), userId); err != nil {
+	if rows, err := qq.QueryContext(ctx, fmt.Sprintf(`SELECT chat_id, admin FROM chat_participant WHERE user_id = $1 AND chat_id IN (%v) AND admin = true`, builder), userId); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -318,23 +319,22 @@ func getIsAdminBatchCommon(qq CommonOperations, userId int64, chatIds []int64) (
 	}
 }
 
-func (tx *Tx) IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error) {
-	return getIsAdminBatchCommon(tx, userId, chatIds)
+func (tx *Tx) IsAdminBatch(ctx context.Context, userId int64, chatIds []int64) (map[int64]bool, error) {
+	return getIsAdminBatchCommon(ctx, tx, userId, chatIds)
 }
 
-func (db *DB) IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error) {
-	return getIsAdminBatchCommon(db, userId, chatIds)
+func (db *DB) IsAdminBatch(ctx context.Context, userId int64, chatIds []int64) (map[int64]bool, error) {
+	return getIsAdminBatchCommon(ctx, db, userId, chatIds)
 }
 
-
-func getIsAdminBatchByParticipantsCommon(qq CommonOperations, userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
+func getIsAdminBatchByParticipantsCommon(ctx context.Context, qq CommonOperations, userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
 	var result = []UserAdminDbDTO{}
 
 	if len(userIds) == 0 {
 		return result, nil
 	}
 
-	if rows, err := qq.Query(fmt.Sprintf(`SELECT user_id, admin FROM chat_participant WHERE user_id = ANY($1) AND chat_id = $2 ORDER BY create_date_time DESC`), userIds, chatId); err != nil {
+	if rows, err := qq.QueryContext(ctx, fmt.Sprintf(`SELECT user_id, admin FROM chat_participant WHERE user_id = ANY($1) AND chat_id = $2 ORDER BY create_date_time DESC`), userIds, chatId); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -351,17 +351,17 @@ func getIsAdminBatchByParticipantsCommon(qq CommonOperations, userIds []int64, c
 		return result, nil
 	}
 }
-func (db *DB) IsAdminBatchByParticipants(userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
-	return getIsAdminBatchByParticipantsCommon(db, userIds, chatId)
+func (db *DB) IsAdminBatchByParticipants(ctx context.Context, userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
+	return getIsAdminBatchByParticipantsCommon(ctx, db, userIds, chatId)
 }
 
-func (tx *Tx) IsAdminBatchByParticipants(userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
-	return getIsAdminBatchByParticipantsCommon(tx, userIds, chatId)
+func (tx *Tx) IsAdminBatchByParticipants(ctx context.Context, userIds []int64, chatId int64) ([]UserAdminDbDTO, error) {
+	return getIsAdminBatchByParticipantsCommon(ctx, tx, userIds, chatId)
 }
 
-func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool, error) {
+func isParticipantCommon(ctx context.Context, qq CommonOperations, userId int64, chatId int64) (bool, error) {
 	var exists bool = false
-	row := qq.QueryRow(`SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
+	row := qq.QueryRowContext(ctx, `SELECT exists(SELECT * FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1)`, userId, chatId)
 	if err := row.Scan(&exists); err != nil {
 		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -369,17 +369,17 @@ func isParticipantCommon(qq CommonOperations, userId int64, chatId int64) (bool,
 	}
 }
 
-func (tx *Tx) IsParticipant(userId int64, chatId int64) (bool, error) {
-	return isParticipantCommon(tx, userId, chatId)
+func (tx *Tx) IsParticipant(ctx context.Context, userId int64, chatId int64) (bool, error) {
+	return isParticipantCommon(ctx, tx, userId, chatId)
 }
 
-func (db *DB) IsParticipant(userId int64, chatId int64) (bool, error) {
-	return isParticipantCommon(db, userId, chatId)
+func (db *DB) IsParticipant(ctx context.Context, userId int64, chatId int64) (bool, error) {
+	return isParticipantCommon(ctx, db, userId, chatId)
 }
 
-func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
+func (tx *Tx) GetFirstParticipant(ctx context.Context, chatId int64) (int64, error) {
 	var pid int64
-	row := tx.QueryRow(`SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT 1`, chatId)
+	row := tx.QueryRowContext(ctx, `SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT 1`, chatId)
 	if err := row.Scan(&pid); err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -387,8 +387,8 @@ func (tx *Tx) GetFirstParticipant(chatId int64) (int64, error) {
 	}
 }
 
-func getCoChattedParticipantIdsCommon(co CommonOperations, participantId int64, limit, offset int) ([]int64, error) {
-	if rows, err := co.Query("SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id LIMIT $2 OFFSET $3", participantId, limit, offset); err != nil {
+func getCoChattedParticipantIdsCommon(ctx context.Context, co CommonOperations, participantId int64, limit, offset int) ([]int64, error) {
+	if rows, err := co.QueryContext(ctx, "SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id LIMIT $2 OFFSET $3", participantId, limit, offset); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -406,8 +406,8 @@ func getCoChattedParticipantIdsCommon(co CommonOperations, participantId int64, 
 }
 
 // returns only found participant ids
-func (db *DB) ParticipantsExistence(chatId int64, participantIds []int64) ([]int64, error) {
-	if rows, err := db.Query("SELECT user_id FROM chat_participant WHERE chat_id = $1 AND user_id = ANY ($2)", chatId, participantIds); err != nil {
+func (db *DB) ParticipantsExistence(ctx context.Context, chatId int64, participantIds []int64) ([]int64, error) {
+	if rows, err := db.QueryContext(ctx, "SELECT user_id FROM chat_participant WHERE chat_id = $1 AND user_id = ANY ($2)", chatId, participantIds); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -424,12 +424,12 @@ func (db *DB) ParticipantsExistence(chatId int64, participantIds []int64) ([]int
 	}
 }
 
-func iterateOverCoChattedParticipantIdsCommon(co CommonOperations, participantId int64, consumer func(participantIds []int64) error) error {
+func iterateOverCoChattedParticipantIdsCommon(ctx context.Context, co CommonOperations, participantId int64, consumer func(participantIds []int64) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
-		participantIds, err := getCoChattedParticipantIdsCommon(co, participantId, utils.DefaultSize, offset)
+		participantIds, err := getCoChattedParticipantIdsCommon(ctx, co, participantId, utils.DefaultSize, offset)
 		if err != nil {
 			logger.Logger.Errorf("Got error during getting portion %v", err)
 			lastError = err
@@ -451,35 +451,35 @@ func iterateOverCoChattedParticipantIdsCommon(co CommonOperations, participantId
 	return lastError
 }
 
-func (db *DB) IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error {
-	return iterateOverCoChattedParticipantIdsCommon(db, participantId, consumer)
+func (db *DB) IterateOverCoChattedParticipantIds(ctx context.Context, participantId int64, consumer func(participantIds []int64) error) error {
+	return iterateOverCoChattedParticipantIdsCommon(ctx, db, participantId, consumer)
 }
 
-func (tx *Tx) IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error {
-	return iterateOverCoChattedParticipantIdsCommon(tx, participantId, consumer)
+func (tx *Tx) IterateOverCoChattedParticipantIds(ctx context.Context, participantId int64, consumer func(participantIds []int64) error) error {
+	return iterateOverCoChattedParticipantIdsCommon(ctx, tx, participantId, consumer)
 }
 
-func setAdminCommon(qq CommonOperations, userId int64, chatId int64, newAdmin bool) error {
-	if _, err := qq.Exec("UPDATE chat_participant SET admin = $3 WHERE user_id = $1 AND chat_id = $2", userId, chatId, newAdmin); err != nil {
+func setAdminCommon(ctx context.Context, qq CommonOperations, userId int64, chatId int64, newAdmin bool) error {
+	if _, err := qq.ExecContext(ctx, "UPDATE chat_participant SET admin = $3 WHERE user_id = $1 AND chat_id = $2", userId, chatId, newAdmin); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
 
-func (tx *Tx) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
-	return setAdminCommon(tx, userId, chatId, newAdmin)
+func (tx *Tx) SetAdmin(ctx context.Context, userId int64, chatId int64, newAdmin bool) error {
+	return setAdminCommon(ctx, tx, userId, chatId, newAdmin)
 }
 
-func (db *DB) SetAdmin(userId int64, chatId int64, newAdmin bool) error {
-	return setAdminCommon(db, userId, chatId, newAdmin)
+func (db *DB) SetAdmin(ctx context.Context, userId int64, chatId int64, newAdmin bool) error {
+	return setAdminCommon(ctx, db, userId, chatId, newAdmin)
 }
 
-func (tx *Tx) HasParticipants(chatIds []int64) (map[int64]bool, error) {
+func (tx *Tx) HasParticipants(ctx context.Context, chatIds []int64) (map[int64]bool, error) {
 	response := map[int64]bool{}
 	for _, chatId := range chatIds {
 		response[chatId] = false
 	}
-	if rows, err := tx.Query("SELECT DISTINCT(chat_id) FROM chat_participant WHERE chat_id = ANY ($1)", chatIds); err != nil {
+	if rows, err := tx.QueryContext(ctx, "SELECT DISTINCT(chat_id) FROM chat_participant WHERE chat_id = ANY ($1)", chatIds); err != nil {
 		return nil, err
 	} else {
 		defer rows.Close()
@@ -496,8 +496,8 @@ func (tx *Tx) HasParticipants(chatIds []int64) (map[int64]bool, error) {
 	}
 }
 
-func (tx *Tx) GetAmIParticipantBatch(chatIds []int64, userId int64) (map[int64]bool, error) {
-	if rows, err := tx.Query("SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = ANY ($2)", userId, chatIds); err != nil {
+func (tx *Tx) GetAmIParticipantBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
+	if rows, err := tx.QueryContext(ctx, "SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = ANY ($2)", userId, chatIds); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()

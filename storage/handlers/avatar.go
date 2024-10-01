@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -97,7 +96,7 @@ func (h *abstractAvatarHandler) putSizedFile(c echo.Context, srcImage image.Imag
 		GetLogEntry(c.Request().Context()).Errorf("Error during get avatar filename: %v", err)
 		return "", "", err
 	}
-	if _, err := h.minio.PutObject(context.Background(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
+	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return "", "", err
 	}
@@ -131,7 +130,7 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, info.ContentType)
 	//c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+mongoDto.Filename+"\"")
 
-	object, e := h.minio.GetObject(context.Background(), bucketName, objId, minio.GetObjectOptions{})
+	object, e := h.minio.GetObject(c.Request().Context(), bucketName, objId, minio.GetObjectOptions{})
 	defer object.Close()
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})

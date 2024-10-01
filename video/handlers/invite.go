@@ -105,7 +105,7 @@ func (vh *InviteHandler) ProcessCreatingOrDeletingInvite(c echo.Context) error {
 		return err
 	}
 
-	code, err = db.TransactWithResult(vh.database, func(tx *db.Tx) (int, error) {
+	code, err = db.TransactWithResult(c.Request().Context(), vh.database, func(tx *db.Tx) (int, error) {
 		if addToCall {
 			// here we generate the token and further we're gonna take it
 			return vh.addAsCallee(c.Request().Context(), tx, callee, chatId, userPrincipalDto, ownerTokenId, basicChatInfo.TetATet), nil
@@ -138,7 +138,7 @@ func (vh *InviteHandler) checkAccessOfAnotherUser(ctx context.Context, callee in
 // addToCalling
 func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId int64, chatId int64, userPrincipalDto *auth.AuthResult, ownerTokenId uuid.UUID, tetATet bool) int {
 	// forbid to make calls to the different chats
-	calleesOfOwner, err := tx.GetUserOwnedBeingInvitedCallees(dto.UserCallStateId{
+	calleesOfOwner, err := tx.GetUserOwnedBeingInvitedCallees(c, dto.UserCallStateId{
 		TokenId: ownerTokenId,
 		UserId:  userPrincipalDto.UserId,
 	})
@@ -153,7 +153,7 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 		}
 	}
 
-	gotStatusesAllChats, err := tx.GetByCalleeUserIdFromAllChats(calleeUserId)
+	gotStatusesAllChats, err := tx.GetByCalleeUserIdFromAllChats(c, calleeUserId)
 	if err != nil {
 		GetLogEntry(c).Errorf("Error %v", err)
 		return http.StatusInternalServerError
@@ -183,7 +183,7 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 		OwnerAvatar:  &userPrincipalDto.Avatar,
 	}
 
-	err = tx.Set(newCalleeStatus)
+	err = tx.Set(c, newCalleeStatus)
 
 	if err != nil {
 		GetLogEntry(c).Errorf("Error %v", err)
@@ -196,13 +196,13 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 	return http.StatusOK
 }
 
-func (vh *InviteHandler) addAsEntered(tx *db.Tx, tokenId uuid.UUID, userId, chatId int64, tetATet bool) error {
-	return tx.AddAsEntered(tokenId, userId, chatId, tetATet)
+func (vh *InviteHandler) addAsEntered(ctx context.Context, tx *db.Tx, tokenId uuid.UUID, userId, chatId int64, tetATet bool) error {
+	return tx.AddAsEntered(ctx, tokenId, userId, chatId, tetATet)
 }
 
 func (vh *InviteHandler) ownerRemoveFromCalling(ctx context.Context, tx *db.Tx, callee int64, chatId int64, userPrincipalDto *auth.AuthResult, ownerTokenId uuid.UUID, tetATet bool) int {
 
-	statuses, err := tx.GetBeingInvitedByOwnerAndCalleeId(dto.UserCallStateId{TokenId: ownerTokenId, UserId: userPrincipalDto.UserId}, callee, chatId)
+	statuses, err := tx.GetBeingInvitedByOwnerAndCalleeId(ctx, dto.UserCallStateId{TokenId: ownerTokenId, UserId: userPrincipalDto.UserId}, callee, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting stetuses %v", err)
 		return http.StatusInternalServerError
@@ -258,8 +258,8 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 		return err
 	}
 
-	err = db.Transact(vh.database, func(tx *db.Tx) error {
-		allPrevMyStates, err := tx.GetByCalleeUserIdFromAllChats(userPrincipalDto.UserId)
+	err = db.Transact(c.Request().Context(), vh.database, func(tx *db.Tx) error {
+		allPrevMyStates, err := tx.GetByCalleeUserIdFromAllChats(c.Request().Context(), userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -307,6 +307,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			// and put myself with a status "inCall"
 			// add ourself status
 			err = vh.addAsEntered(
+				c.Request().Context(),
 				tx,
 				tokenId,
 				userPrincipalDto.UserId,
@@ -337,6 +338,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			}
 
 			err = vh.addAsEntered(
+				c.Request().Context(),
 				tx,
 				tokenId,
 				userPrincipalDto.UserId,
@@ -429,7 +431,7 @@ func (vh *InviteHandler) hardRemove(c context.Context, tx *db.Tx, userCallStates
 			UserId:  st.UserId,
 		})
 	}
-	err := tx.RemoveByUserCallStates(userCallStateIds)
+	err := tx.RemoveByUserCallStates(c, userCallStateIds)
 	if err != nil {
 		GetLogEntry(c).Errorf("Error during removing from db: %v", err)
 	}
@@ -454,8 +456,8 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	code, err := db.TransactWithResult(vh.database, func(tx *db.Tx) (int, error) {
-		myPrevInvitingStates, err := tx.GetBeingInvitedByCalleeIdAndChatId(userPrincipalDto.UserId, chatId)
+	code, err := db.TransactWithResult(c.Request().Context(), vh.database, func(tx *db.Tx) (int, error) {
+		myPrevInvitingStates, err := tx.GetBeingInvitedByCalleeIdAndChatId(c.Request().Context(), userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return 0, err
 		}
@@ -486,7 +488,7 @@ func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64,
 	var sentUserIds = map[int64]bool{}
 	for _, userId := range usersToRemove {
 
-		err = tx.SetRemoving(dto.UserCallStateId{TokenId: userId.TokenId, UserId: userId.UserId}, callStatus)
+		err = tx.SetRemoving(c, dto.UserCallStateId{TokenId: userId.TokenId, UserId: userId.UserId}, callStatus)
 		if err != nil {
 			GetLogEntry(c).Errorf("Error %v", err)
 			continue
@@ -546,8 +548,8 @@ func (vh *InviteHandler) ProcessExit(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	err = db.Transact(vh.database, func(tx *db.Tx) error {
-		calleesIOwe, err := tx.GetUserOwnedBeingInvitedCallees(dto.UserCallStateId{
+	err = db.Transact(c.Request().Context(), vh.database, func(tx *db.Tx) error {
+		calleesIOwe, err := tx.GetUserOwnedBeingInvitedCallees(c.Request().Context(), dto.UserCallStateId{
 			TokenId: tokenId,
 			UserId:  userPrincipalDto.UserId,
 		})
@@ -561,7 +563,7 @@ func (vh *InviteHandler) ProcessExit(c echo.Context) error {
 			iAmLeavingOwner = true
 		}
 
-		myState, err := tx.Get(dto.UserCallStateId{
+		myState, err := tx.Get(c.Request().Context(), dto.UserCallStateId{
 			TokenId: tokenId,
 			UserId:  userPrincipalDto.UserId,
 		})
@@ -674,7 +676,7 @@ func (vh *InviteHandler) SendCurrentInVideoStatuses(c echo.Context) error {
 	}
 
 	if len(userIds) > 0 {
-		err := db.Transact(vh.database, func(tx *db.Tx) error {
+		err := db.Transact(c.Request().Context(), vh.database, func(tx *db.Tx) error {
 			vh.stateChangedEventService.NotifyAllChatsAboutUsersInVideoStatus(c.Request().Context(), tx, userIds)
 			return nil
 		})
@@ -693,9 +695,9 @@ func (vh *InviteHandler) GetMyBeingInvitedStatus(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	invitation, err := db.TransactWithResult(vh.database, func(tx *db.Tx) (dto.VideoCallInvitation, error) {
+	invitation, err := db.TransactWithResult(c.Request().Context(), vh.database, func(tx *db.Tx) (dto.VideoCallInvitation, error) {
 
-		myStates, err := tx.GetBeingInvitedByCalleeId(userPrincipalDto.UserId)
+		myStates, err := tx.GetBeingInvitedByCalleeId(c.Request().Context(), userPrincipalDto.UserId)
 		if err != nil {
 			return dto.VideoCallInvitation{}, err
 		}

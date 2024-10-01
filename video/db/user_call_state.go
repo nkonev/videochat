@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -58,8 +59,8 @@ func GetStatusesToRemoveOnEnter() []string {
 	return arr
 }
 
-func (tx *Tx) Set(userState dto.UserCallState) error {
-	_, err := tx.Exec(`
+func (tx *Tx) Set(ctx context.Context, userState dto.UserCallState) error {
+	_, err := tx.ExecContext(ctx, `
 		insert into user_call_state(
 			token_id,
 			user_id, 
@@ -116,8 +117,8 @@ func (tx *Tx) Set(userState dto.UserCallState) error {
 	return nil
 }
 
-func (tx *Tx) AddAsEntered(tokenId uuid.UUID, userId, chatId int64, tetATet bool) error {
-	return tx.Set(dto.UserCallState{
+func (tx *Tx) AddAsEntered(ctx context.Context, tokenId uuid.UUID, userId, chatId int64, tetATet bool) error {
+	return tx.Set(ctx, dto.UserCallState{
 		TokenId:     tokenId,
 		UserId:      userId,
 		ChatId:      chatId,
@@ -144,8 +145,8 @@ func provideScanToUserCallState(ucs *dto.UserCallState) []any {
 	}
 }
 
-func (tx *Tx) Get(user dto.UserCallStateId) (*dto.UserCallState, error) {
-	row := tx.QueryRow(`select 
+func (tx *Tx) Get(ctx context.Context, user dto.UserCallStateId) (*dto.UserCallState, error) {
+	row := tx.QueryRowContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -179,8 +180,8 @@ func (tx *Tx) Get(user dto.UserCallStateId) (*dto.UserCallState, error) {
 	return &ucs, nil
 }
 
-func (tx *Tx) GetByCalleeUserIdFromAllChats(calleeUserId int64) ([]dto.UserCallState, error) {
-	rows, err := tx.Query(`select 
+func (tx *Tx) GetByCalleeUserIdFromAllChats(ctx context.Context, calleeUserId int64) ([]dto.UserCallState, error) {
+	rows, err := tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -213,8 +214,8 @@ func (tx *Tx) GetByCalleeUserIdFromAllChats(calleeUserId int64) ([]dto.UserCallS
 	return list, nil
 }
 
-func (tx *Tx) GetBeingInvitedByOwnerAndCalleeId(owner dto.UserCallStateId, calleeUserId int64, chatId int64) ([]dto.UserCallState, error) {
-	rows, err := tx.Query(`select 
+func (tx *Tx) GetBeingInvitedByOwnerAndCalleeId(ctx context.Context, owner dto.UserCallStateId, calleeUserId int64, chatId int64) ([]dto.UserCallState, error) {
+	rows, err := tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -247,8 +248,8 @@ func (tx *Tx) GetBeingInvitedByOwnerAndCalleeId(owner dto.UserCallStateId, calle
 	return list, nil
 }
 
-func (tx *Tx) GetBeingInvitedByOwnerId(owner dto.UserCallStateId, chatId int64) ([]dto.UserCallState, error) {
-	rows, err := tx.Query(`select 
+func (tx *Tx) GetBeingInvitedByOwnerId(ctx context.Context, owner dto.UserCallStateId, chatId int64) ([]dto.UserCallState, error) {
+	rows, err := tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -281,8 +282,8 @@ func (tx *Tx) GetBeingInvitedByOwnerId(owner dto.UserCallStateId, chatId int64) 
 	return list, nil
 }
 
-func (tx *Tx) GetBeingInvitedByCalleeIdAndChatId(calleeUserId int64, chatId int64) ([]dto.UserCallState, error) {
-	rows, err := tx.Query(`select 
+func (tx *Tx) GetBeingInvitedByCalleeIdAndChatId(ctx context.Context, calleeUserId int64, chatId int64) ([]dto.UserCallState, error) {
+	rows, err := tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -315,8 +316,8 @@ func (tx *Tx) GetBeingInvitedByCalleeIdAndChatId(calleeUserId int64, chatId int6
 	return list, nil
 }
 
-func (tx *Tx) GetBeingInvitedByCalleeId(calleeUserId int64) ([]dto.UserCallState, error) {
-	rows, err := tx.Query(`select 
+func (tx *Tx) GetBeingInvitedByCalleeId(ctx context.Context, calleeUserId int64) ([]dto.UserCallState, error) {
+	rows, err := tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -349,8 +350,8 @@ func (tx *Tx) GetBeingInvitedByCalleeId(calleeUserId int64) ([]dto.UserCallState
 	return list, nil
 }
 
-func (tx *Tx) Remove(user dto.UserCallStateId) error {
-	_, err := tx.Exec(`delete from user_call_state 
+func (tx *Tx) Remove(ctx context.Context, user dto.UserCallStateId) error {
+	_, err := tx.ExecContext(ctx, `delete from user_call_state 
 								where (token_id, user_id) = ($1, $2)`,
 		user.TokenId, user.UserId)
 	if err != nil {
@@ -359,19 +360,19 @@ func (tx *Tx) Remove(user dto.UserCallStateId) error {
 	return nil
 }
 
-func (tx *Tx) RemoveOwnedAndOwner(owner dto.UserCallStateId) error {
+func (tx *Tx) RemoveOwnedAndOwner(ctx context.Context, owner dto.UserCallStateId) error {
 	// 1. remove my own states
-	_, err := tx.Exec(`delete from user_call_state where (owner_token_id, owner_user_id) = ($1, $2)`,
+	_, err := tx.ExecContext(ctx, `delete from user_call_state where (owner_token_id, owner_user_id) = ($1, $2)`,
 		owner.TokenId, owner.UserId)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 
 	// 2. remove myself
-	return tx.Remove(owner)
+	return tx.Remove(ctx, owner)
 }
 
-func (tx *Tx) RemoveByUserCallStates(ids []dto.UserCallStateId) error {
+func (tx *Tx) RemoveByUserCallStates(ctx context.Context, ids []dto.UserCallStateId) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -386,13 +387,13 @@ func (tx *Tx) RemoveByUserCallStates(ids []dto.UserCallStateId) error {
 
 		first = false
 	}
-	_, err := tx.Exec(fmt.Sprintf(`delete from user_call_state
+	_, err := tx.ExecContext(ctx, fmt.Sprintf(`delete from user_call_state
 		 where (token_id, user_id) in (%v)`, bldr))
 	return err
 }
 
-func (tx *Tx) SetRemoving(user dto.UserCallStateId, status string) error {
-	_, err := tx.Exec(`update user_call_state 
+func (tx *Tx) SetRemoving(ctx context.Context, user dto.UserCallStateId, status string) error {
+	_, err := tx.ExecContext(ctx, `update user_call_state 
 								set marked_for_remove_at = $3,
 								    status = $4
 								where (token_id, user_id) = ($1, $2)`,
@@ -403,8 +404,8 @@ func (tx *Tx) SetRemoving(user dto.UserCallStateId, status string) error {
 	return nil
 }
 
-func (tx *Tx) SetMarkedForOrphanRemoveAttempt(user dto.UserCallStateId, attempt int) error {
-	_, err := tx.Exec(`update user_call_state 
+func (tx *Tx) SetMarkedForOrphanRemoveAttempt(ctx context.Context, user dto.UserCallStateId, attempt int) error {
+	_, err := tx.ExecContext(ctx, `update user_call_state 
 								set marked_for_orphan_remove_attempt = $3
 								where (token_id, user_id) = ($1, $2)`,
 		user.TokenId, user.UserId, attempt)
@@ -414,8 +415,8 @@ func (tx *Tx) SetMarkedForOrphanRemoveAttempt(user dto.UserCallStateId, attempt 
 	return nil
 }
 
-func (tx *Tx) GetUserOwnedBeingInvitedCallees(owner dto.UserCallStateId) ([]dto.UserCallState, error) {
-	rows, err := tx.Query(`select 
+func (tx *Tx) GetUserOwnedBeingInvitedCallees(ctx context.Context, owner dto.UserCallStateId) ([]dto.UserCallState, error) {
+	rows, err := tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -449,10 +450,10 @@ func (tx *Tx) GetUserOwnedBeingInvitedCallees(owner dto.UserCallStateId) ([]dto.
 }
 
 // for red dot
-func (tx *Tx) GetUserStatesFiltered(userIdsToFilter []int64) ([]dto.UserCallState, error) {
+func (tx *Tx) GetUserStatesFiltered(ctx context.Context, userIdsToFilter []int64) ([]dto.UserCallState, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = tx.Query(`select 
+	rows, err = tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -485,10 +486,10 @@ func (tx *Tx) GetUserStatesFiltered(userIdsToFilter []int64) ([]dto.UserCallStat
 	return list, nil
 }
 
-func (tx *Tx) GetAllUserStates(limit, offset int64) ([]dto.UserCallState, error) {
+func (tx *Tx) GetAllUserStates(ctx context.Context, limit, offset int64) ([]dto.UserCallState, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = tx.Query(`select 
+	rows, err = tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,
@@ -521,10 +522,10 @@ func (tx *Tx) GetAllUserStates(limit, offset int64) ([]dto.UserCallState, error)
 	return list, nil
 }
 
-func (tx *Tx) GetAllUserStatesOrderByOwnerAndChat(limit, offset int64) ([]dto.UserCallState, error) {
+func (tx *Tx) GetAllUserStatesOrderByOwnerAndChat(ctx context.Context, limit, offset int64) ([]dto.UserCallState, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = tx.Query(`select 
+	rows, err = tx.QueryContext(ctx, `select 
 			token_id,
 			user_id, 
 			chat_id,

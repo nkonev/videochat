@@ -1,12 +1,13 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/guregu/null"
-	"github.com/spf13/viper"
 	"github.com/rotisserie/eris"
+	"github.com/spf13/viper"
 	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -17,18 +18,18 @@ const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
 
 // db model
 type Chat struct {
-	Id                           int64
-	Title                        string
-	LastUpdateDateTime           time.Time
-	TetATet                      bool
-	CanResend                    bool
-	Avatar                       null.String
-	AvatarBig                    null.String
-	AvailableToSearch            bool
-	Pinned                       bool
+	Id                                  int64
+	Title                               string
+	LastUpdateDateTime                  time.Time
+	TetATet                             bool
+	CanResend                           bool
+	Avatar                              null.String
+	AvatarBig                           null.String
+	AvailableToSearch                   bool
+	Pinned                              bool
 	Blog                                bool
 	RegularParticipantCanPublishMessage bool
-	RegularParticipantCanPinMessage bool
+	RegularParticipantCanPinMessage     bool
 }
 
 type Blog struct {
@@ -47,7 +48,7 @@ type ChatWithParticipants struct {
 
 // CreateChat creates a new chat.
 // Returns an error if user is invalid or the tx fails.
-func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
+func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error) {
 	// Validate the input.
 	if u == nil {
 		return 0, nil, eris.New("chat required")
@@ -56,7 +57,7 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRow(`SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage)
+	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -66,14 +67,14 @@ func (tx *Tx) CreateChat(u *Chat) (int64, *time.Time, error) {
 	return id, &lastUpdateDateTime, nil
 }
 
-func (tx *Tx) CreateTetATetChat(behalfUserId int64, toParticipantId int64) (int64, error) {
+func (tx *Tx) CreateTetATetChat(ctx context.Context, behalfUserId int64, toParticipantId int64) (int64, error) {
 	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", behalfUserId, toParticipantId)
-	chatId, _, err := tx.CreateChat(&Chat{Title: tetATetChatName, TetATet: true, CanResend: viper.GetBool("canResendFromTetATet")})
+	chatId, _, err := tx.CreateChat(ctx, &Chat{Title: tetATetChatName, TetATet: true, CanResend: viper.GetBool("canResendFromTetATet")})
 	return chatId, err
 }
 
-func (tx *Tx) IsExistsTetATet(participant1 int64, participant2 int64) (bool, int64, error) {
-	res := tx.QueryRow("select b.chat_id from (select a.count >= 2 as exists, a.chat_id from ( (select cp.chat_id, count(cp.user_id) from chat_participant cp join chat ch on ch.id = cp.chat_id where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) group by cp.chat_id)) a) b where b.exists is true;", participant1, participant2)
+func (tx *Tx) IsExistsTetATet(ctx context.Context, participant1 int64, participant2 int64) (bool, int64, error) {
+	res := tx.QueryRowContext(ctx, "select b.chat_id from (select a.count >= 2 as exists, a.chat_id from ( (select cp.chat_id, count(cp.user_id) from chat_participant cp join chat ch on ch.id = cp.chat_id where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) group by cp.chat_id)) a) b where b.exists is true;", participant1, participant2)
 	var chatId int64
 	if err := res.Scan(&chatId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -123,7 +124,7 @@ func provideScanToChat(chat *Chat) []any {
 }
 
 // rowNumber is in [1, count]
-func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderDirection, searchString string) (int, error) {
+func (tx *Tx) GetChatRowNumber(ctx context.Context, itemId, userId int64, orderDirection, searchString string) (int, error) {
 
 	var searchStringWithPercents = "%" + searchString + "%"
 	var theQuery = `
@@ -134,11 +135,11 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderDirection, searchStrin
 			FROM 
 				chat ch 
 				LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1)
-			WHERE `+ getChatSearchClause([]int64{}) +`
+			WHERE ` + getChatSearchClause([]int64{}) + `
 		) al WHERE al.cid = $4
 	`
 	var position int
-	row := tx.QueryRow(theQuery, userId, searchStringWithPercents, searchString, itemId)
+	row := tx.QueryRowContext(ctx, theQuery, userId, searchStringWithPercents, searchString, itemId)
 	err := row.Scan(&position)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -147,10 +148,10 @@ func (tx *Tx) GetChatRowNumber(itemId, userId int64, orderDirection, searchStrin
 	}
 }
 
-func getChatIdsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int) ([]int64, error) {
+func getChatIdsByLimitOffsetCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, offset int) ([]int64, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = co.Query(`SELECT ch.id from chat ch
+	rows, err = co.QueryContext(ctx, `SELECT ch.id from chat ch
 		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) 
 		ORDER BY ch.id
 		LIMIT $2 OFFSET $3
@@ -172,10 +173,10 @@ func getChatIdsByLimitOffsetCommon(co CommonOperations, participantId int64, lim
 	}
 }
 
-func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
+func getChatsByLimitOffsetCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = co.Query(fmt.Sprintf(selectChatClause()+`
+	rows, err = co.QueryContext(ctx, fmt.Sprintf(selectChatClause()+`
 		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) 
 		ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s 
 		LIMIT $2 OFFSET $3
@@ -197,12 +198,12 @@ func getChatsByLimitOffsetCommon(co CommonOperations, participantId int64, limit
 	}
 }
 
-func (db *DB) GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
-	return getChatsByLimitOffsetCommon(db, participantId, limit, offset, orderDirection)
+func (db *DB) GetChatsByLimitOffset(ctx context.Context, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
+	return getChatsByLimitOffsetCommon(ctx, db, participantId, limit, offset, orderDirection)
 }
 
-func (tx *Tx) GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
-	return getChatsByLimitOffsetCommon(tx, participantId, limit, offset, orderDirection)
+func (tx *Tx) GetChatsByLimitOffset(ctx context.Context, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error) {
+	return getChatsByLimitOffsetCommon(ctx, tx, participantId, limit, offset, orderDirection)
 }
 
 // requires
@@ -229,13 +230,13 @@ func getChatSearchClause(additionalFoundUserIds []int64) string {
 	)
 }
 
-func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+func getChatsByLimitOffsetSearchCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	var rows *sql.Rows
 	var err error
 	searchStringWithPercents := "%" + searchString + "%"
 
-	rows, err = commonOps.Query(selectChatClause() + " WHERE " + getChatSearchClause(additionalFoundUserIds) + `
-			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) ` + orderDirection + ` 
+	rows, err = commonOps.QueryContext(ctx, selectChatClause()+" WHERE "+getChatSearchClause(additionalFoundUserIds)+`
+			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) `+orderDirection+` 
 			LIMIT $4 OFFSET $5
 	`, participantId, searchStringWithPercents, searchString, limit, offset)
 	if err != nil {
@@ -255,23 +256,23 @@ func getChatsByLimitOffsetSearchCommon(commonOps CommonOperations, participantId
 	}
 }
 
-func (db *DB) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
-	return getChatsByLimitOffsetSearchCommon(db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
+func (db *DB) GetChatsByLimitOffsetSearch(ctx context.Context, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+	return getChatsByLimitOffsetSearchCommon(ctx, db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
 }
 
-func (tx *Tx) GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
-	return getChatsByLimitOffsetSearchCommon(tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
+func (tx *Tx) GetChatsByLimitOffsetSearch(ctx context.Context, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+	return getChatsByLimitOffsetSearchCommon(ctx, tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
 }
 
-func convertToWithParticipants(db CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	if ids, err := db.GetParticipantIds(chat.Id, participantsSize, participantsOffset); err != nil {
+func convertToWithParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	if ids, err := db.GetParticipantIds(ctx, chat.Id, participantsSize, participantsOffset); err != nil {
 		return nil, err
 	} else {
-		admin, err := db.IsAdmin(behalfUserId, chat.Id)
+		admin, err := db.IsAdmin(ctx, behalfUserId, chat.Id)
 		if err != nil {
 			return nil, err
 		}
-		participantsCount, err := db.GetParticipantsCount(chat.Id)
+		participantsCount, err := db.GetParticipantsCount(ctx, chat.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -285,8 +286,8 @@ func convertToWithParticipants(db CommonOperations, chat *Chat, behalfUserId int
 	}
 }
 
-func convertToWithoutParticipants(db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithParticipants, error) {
-	admin, err := db.IsAdmin(behalfUserId, chat.Id)
+func convertToWithoutParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithParticipants, error) {
+	admin, err := db.IsAdmin(ctx, behalfUserId, chat.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -335,14 +336,14 @@ func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*Participa
 	return ccc, nil
 }
 
-func getChatsWithParticipantsCommon(commonOps CommonOperations, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
 	if searchString == "" {
-		chats, err = commonOps.GetChatsByLimitOffset(participantId, limit, offset, orderDirection)
+		chats, err = commonOps.GetChatsByLimitOffset(ctx, participantId, limit, offset, orderDirection)
 	} else {
-		chats, err = commonOps.GetChatsByLimitOffsetSearch(participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
+		chats, err = commonOps.GetChatsByLimitOffsetSearch(ctx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
 	}
 
 	if err != nil {
@@ -354,17 +355,17 @@ func getChatsWithParticipantsCommon(commonOps CommonOperations, participantId in
 		}
 
 		fixedParticipantsSize := utils.FixSize(participantsSize)
-		participantIdsBatch, err := commonOps.GetParticipantIdsBatch(chatIds, fixedParticipantsSize)
+		participantIdsBatch, err := commonOps.GetParticipantIdsBatch(ctx, chatIds, fixedParticipantsSize)
 		if err != nil {
 			return nil, err
 		}
 
-		isAdminBatch, err := commonOps.IsAdminBatch(userPrincipalDto.UserId, chatIds)
+		isAdminBatch, err := commonOps.IsAdminBatch(ctx, userPrincipalDto.UserId, chatIds)
 		if err != nil {
 			return nil, err
 		}
 
-		participantsCountBatch, err := commonOps.GetParticipantsCountBatch(chatIds)
+		participantsCountBatch, err := commonOps.GetParticipantsCountBatch(ctx, chatIds)
 		if err != nil {
 			return nil, err
 		}
@@ -381,53 +382,53 @@ func getChatsWithParticipantsCommon(commonOps CommonOperations, participantId in
 		return list, nil
 	}
 }
-func (db *DB) GetChatsWithParticipants(participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
+func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatsWithParticipants(participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
+func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(tx, behalfParticipantId, chatId, participantsSize, participantsOffset)
+func (tx *Tx) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(ctx, tx, behalfParticipantId, chatId, participantsSize, participantsOffset)
 }
 
-func (db *DB) GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(db, behalfParticipantId, chatId, participantsSize, participantsOffset)
+func (db *DB) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(ctx, db, behalfParticipantId, chatId, participantsSize, participantsOffset)
 }
 
-func getChatWithParticipantsCommon(commonOps CommonOperations, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	if chat, err := commonOps.GetChat(behalfParticipantId, chatId); err != nil {
+func getChatWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	if chat, err := commonOps.GetChat(ctx, behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else if chat == nil {
 		return nil, nil
 	} else {
-		return convertToWithParticipants(commonOps, chat, behalfParticipantId, participantsSize, participantsOffset)
+		return convertToWithParticipants(ctx, commonOps, chat, behalfParticipantId, participantsSize, participantsOffset)
 	}
 }
 
-func (tx *Tx) GetChatWithoutParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	return getChatWithoutParticipantsCommon(tx, behalfParticipantId, chatId)
+func (tx *Tx) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+	return getChatWithoutParticipantsCommon(ctx, tx, behalfParticipantId, chatId)
 }
 
-func (db *DB) GetChatWithoutParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	return getChatWithoutParticipantsCommon(db, behalfParticipantId, chatId)
+func (db *DB) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+	return getChatWithoutParticipantsCommon(ctx, db, behalfParticipantId, chatId)
 }
 
-func getChatWithoutParticipantsCommon(commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	if chat, err := commonOps.GetChat(behalfParticipantId, chatId); err != nil {
+func getChatWithoutParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+	if chat, err := commonOps.GetChat(ctx, behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else if chat == nil {
 		return nil, nil
 	} else {
-		return convertToWithoutParticipants(commonOps, chat, behalfParticipantId)
+		return convertToWithoutParticipants(ctx, commonOps, chat, behalfParticipantId)
 	}
 }
 
-func (db *DB) CountChats() (int64, error) {
+func (db *DB) CountChats(ctx context.Context) (int64, error) {
 	var count int64
-	row := db.QueryRow("SELECT count(*) FROM chat")
+	row := db.QueryRowContext(ctx, "SELECT count(*) FROM chat")
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -436,9 +437,9 @@ func (db *DB) CountChats() (int64, error) {
 	}
 }
 
-func countChatsPerUser(commonOps CommonOperations, userId int64) (int64, error) {
+func countChatsPerUser(ctx context.Context, commonOps CommonOperations, userId int64) (int64, error) {
 	var count int64
-	row := commonOps.QueryRow("SELECT count(*) FROM chat_participant WHERE user_id = $1", userId)
+	row := commonOps.QueryRowContext(ctx, "SELECT count(*) FROM chat_participant WHERE user_id = $1", userId)
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -447,29 +448,29 @@ func countChatsPerUser(commonOps CommonOperations, userId int64) (int64, error) 
 	}
 }
 
-func (db *DB) CountChatsPerUser(userId int64) (int64, error) {
-	return countChatsPerUser(db, userId)
+func (db *DB) CountChatsPerUser(ctx context.Context, userId int64) (int64, error) {
+	return countChatsPerUser(ctx, db, userId)
 }
 
-func (tx *Tx) CountChatsPerUser(userId int64) (int64, error) {
-	return countChatsPerUser(tx, userId)
+func (tx *Tx) CountChatsPerUser(ctx context.Context, userId int64) (int64, error) {
+	return countChatsPerUser(ctx, tx, userId)
 }
 
-func (tx *Tx) DeleteChat(id int64) error {
-	if _, err := tx.Exec(`CALL DELETE_CHAT($1)`, id); err != nil {
+func (tx *Tx) DeleteChat(ctx context.Context, id int64) error {
+	if _, err := tx.ExecContext(ctx, `CALL DELETE_CHAT($1)`, id); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
 
-func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog* bool, regularParticipantCanPublishMessage bool, regularParticipantCanPinMessage bool) (*time.Time, error) {
+func (tx *Tx) EditChat(ctx context.Context, id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog *bool, regularParticipantCanPublishMessage bool, regularParticipantCanPinMessage bool) (*time.Time, error) {
 	var res sql.Result
 	var err error
 	if blog != nil {
 		isBlog := utils.NullableToBoolean(blog)
-		res, err = tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	} else {
-		res, err = tx.Exec(`UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	}
 	if err != nil {
 		Logger.Errorf("Error during editing chat id %v", err)
@@ -485,7 +486,7 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 	}
 
 	var lastUpdateDateTime time.Time
-	res2 := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, id)
+	res2 := tx.QueryRowContext(ctx, `SELECT last_update_date_time FROM chat WHERE id = $1`, id)
 	if err := res2.Scan(&lastUpdateDateTime); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -493,8 +494,8 @@ func (tx *Tx) EditChat(id int64, newTitle string, avatar, avatarBig null.String,
 	return &lastUpdateDateTime, nil
 }
 
-func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRow(selectChatClause()+` WHERE ch.id in (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $2)`, participantId, chatId)
+func getChatCommon(ctx context.Context, co CommonOperations, participantId, chatId int64) (*Chat, error) {
+	row := co.QueryRowContext(ctx, selectChatClause()+` WHERE ch.id in (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $2)`, participantId, chatId)
 	chat := Chat{}
 	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -508,16 +509,16 @@ func getChatCommon(co CommonOperations, participantId, chatId int64) (*Chat, err
 	}
 }
 
-func (db *DB) GetChat(participantId, chatId int64) (*Chat, error) {
-	return getChatCommon(db, participantId, chatId)
+func (db *DB) GetChat(ctx context.Context, participantId, chatId int64) (*Chat, error) {
+	return getChatCommon(ctx, db, participantId, chatId)
 }
 
-func (tx *Tx) GetChat(participantId, chatId int64) (*Chat, error) {
-	return getChatCommon(tx, participantId, chatId)
+func (tx *Tx) GetChat(ctx context.Context, participantId, chatId int64) (*Chat, error) {
+	return getChatCommon(ctx, tx, participantId, chatId)
 }
 
-func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error) {
-	row := co.QueryRow(`SELECT 
+func getChatBasicCommon(ctx context.Context, co CommonOperations, chatId int64) (*BasicChatDto, error) {
+	row := co.QueryRowContext(ctx, `SELECT 
 				ch.id, 
 				ch.title, 
 				ch.tet_a_tet,
@@ -543,15 +544,15 @@ func getChatBasicCommon(co CommonOperations, chatId int64) (*BasicChatDto, error
 	}
 }
 
-func (db *DB) GetChatBasic(chatId int64) (*BasicChatDto, error) {
-	return getChatBasicCommon(db, chatId)
+func (db *DB) GetChatBasic(ctx context.Context, chatId int64) (*BasicChatDto, error) {
+	return getChatBasicCommon(ctx, db, chatId)
 }
 
-func (tx *Tx) GetChatBasic(chatId int64) (*BasicChatDto, error) {
-	return getChatBasicCommon(tx, chatId)
+func (tx *Tx) GetChatBasic(ctx context.Context, chatId int64) (*BasicChatDto, error) {
+	return getChatBasicCommon(ctx, tx, chatId)
 }
 
-func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
+func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
 	result := map[int64]*BasicChatDtoExtended{}
 	if len(chatIds) == 0 {
 		return result, nil
@@ -571,7 +572,7 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 
 		first = false
 	}
-	rows, err := co.Query(fmt.Sprintf(`
+	rows, err := co.QueryContext(ctx, fmt.Sprintf(`
 		SELECT 
 			c.id, 
 			c.title,
@@ -608,24 +609,24 @@ func getChatsBasicCommon(co CommonOperations, chatIds map[int64]bool, behalfPart
 	}
 }
 
-func (db *DB) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
-	return getChatsBasicCommon(db, chatIds, behalfParticipantId)
+func (db *DB) GetChatsBasic(ctx context.Context, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
+	return getChatsBasicCommon(ctx, db, chatIds, behalfParticipantId)
 }
 
-func (tx *Tx) GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
-	return getChatsBasicCommon(tx, chatIds, behalfParticipantId)
+func (tx *Tx) GetChatsBasic(ctx context.Context, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
+	return getChatsBasicCommon(ctx, tx, chatIds, behalfParticipantId)
 }
 
 type BasicChatDto struct {
-	Id                int64
-	Title             string
-	IsTetATet         bool
-	CanResend         bool
-	AvailableToSearch bool
-	IsBlog            bool
-	CreateDateTime    time.Time
+	Id                                  int64
+	Title                               string
+	IsTetATet                           bool
+	CanResend                           bool
+	AvailableToSearch                   bool
+	IsBlog                              bool
+	CreateDateTime                      time.Time
 	RegularParticipantCanPublishMessage bool
-	RegularParticipantCanPinMessage bool
+	RegularParticipantCanPinMessage     bool
 }
 
 type BasicChatDtoExtended struct {
@@ -633,16 +634,16 @@ type BasicChatDtoExtended struct {
 	BehalfUserIsParticipant bool
 }
 
-func (tx *Tx) UpdateChatLastDatetimeChat(id int64) error {
-	if _, err := tx.Exec("UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
+func (tx *Tx) UpdateChatLastDatetimeChat(ctx context.Context, id int64) error {
+	if _, err := tx.ExecContext(ctx, "UPDATE chat SET last_update_date_time = utc_now() WHERE id = $1", id); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		return nil
 	}
 }
 
-func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
-	row := tx.QueryRow(`SELECT last_update_date_time FROM chat WHERE id = $1`, chatId)
+func (tx *Tx) GetChatLastDatetimeChat(ctx context.Context, chatId int64) (time.Time, error) {
+	row := tx.QueryRowContext(ctx, `SELECT last_update_date_time FROM chat WHERE id = $1`, chatId)
 	var lastUpdateDateTime time.Time
 	err := row.Scan(&lastUpdateDateTime)
 	if err != nil {
@@ -652,8 +653,7 @@ func (tx *Tx) GetChatLastDatetimeChat(chatId int64) (time.Time, error) {
 	}
 }
 
-
-func (db *DB) GetExistingChatIds(chatIds []int64) (*[]int64, error) {
+func (db *DB) GetExistingChatIds(ctx context.Context, chatIds []int64) (*[]int64, error) {
 	list := make([]int64, 0)
 
 	if len(chatIds) == 0 {
@@ -670,7 +670,7 @@ func (db *DB) GetExistingChatIds(chatIds []int64) (*[]int64, error) {
 		first = false
 	}
 
-	rows, err := db.Query(fmt.Sprintf(`SELECT id FROM chat WHERE id IN (%s)`, additionalChatIds))
+	rows, err := db.QueryContext(ctx, fmt.Sprintf(`SELECT id FROM chat WHERE id IN (%s)`, additionalChatIds))
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -688,14 +688,14 @@ func (db *DB) GetExistingChatIds(chatIds []int64) (*[]int64, error) {
 	return &list, nil
 }
 
-func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) error {
+func pinChatCommon(ctx context.Context, co CommonOperations, chatId int64, userId int64, pin bool) error {
 	if pin {
-		_, err := co.Exec("insert into chat_pinned(user_id, chat_id) values ($1, $2) on conflict do nothing", userId, chatId)
+		_, err := co.ExecContext(ctx, "insert into chat_pinned(user_id, chat_id) values ($1, $2) on conflict do nothing", userId, chatId)
 		if err != nil {
 			return eris.Wrap(err, "error during interacting with db")
 		}
 	} else {
-		_, err := co.Exec("delete from chat_pinned where user_id = $1 and chat_id = $2", userId, chatId)
+		_, err := co.ExecContext(ctx, "delete from chat_pinned where user_id = $1 and chat_id = $2", userId, chatId)
 		if err != nil {
 			return eris.Wrap(err, "error during interacting with db")
 		}
@@ -703,20 +703,20 @@ func pinChatCommon(co CommonOperations, chatId int64, userId int64, pin bool) er
 	return nil
 }
 
-func (db *DB) PinChat(chatId int64, userId int64, pin bool) error {
-	return pinChatCommon(db, chatId, userId, pin)
+func (db *DB) PinChat(ctx context.Context, chatId int64, userId int64, pin bool) error {
+	return pinChatCommon(ctx, db, chatId, userId, pin)
 }
 
-func (tx *Tx) PinChat(chatId int64, userId int64, pin bool) error {
-	return pinChatCommon(tx, chatId, userId, pin)
+func (tx *Tx) PinChat(ctx context.Context, chatId int64, userId int64, pin bool) error {
+	return pinChatCommon(ctx, tx, chatId, userId, pin)
 }
 
-func (tx *Tx) IsChatPinnedBatch(userIds []int64, chatId int64) (map[int64]bool, error) {
+func (tx *Tx) IsChatPinnedBatch(ctx context.Context, userIds []int64, chatId int64) (map[int64]bool, error) {
 	res := map[int64]bool{}
 
 	var rows *sql.Rows
 	var err error
-	rows, err = tx.Query(`
+	rows, err = tx.QueryContext(ctx, `
 		SELECT 
 			cp.user_id
 			FROM chat_pinned cp WHERE cp.user_id = ANY($1) AND cp.chat_id = $2
@@ -740,24 +740,24 @@ func (tx *Tx) IsChatPinnedBatch(userIds []int64, chatId int64) (map[int64]bool, 
 	}
 }
 
-func (tx *Tx) DeleteChatsPinned(userId int64) error {
-	if _, err := tx.Exec("DELETE FROM chat_pinned WHERE user_id = $1", userId); err != nil {
+func (tx *Tx) DeleteChatsPinned(ctx context.Context, userId int64) error {
+	if _, err := tx.ExecContext(ctx, "DELETE FROM chat_pinned WHERE user_id = $1", userId); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		return nil
 	}
 }
 
-func (tx *Tx) RenameChat(chatId int64, title string) error {
-	_, err := tx.Exec("update chat set title = $1 where id = $2", title, chatId)
+func (tx *Tx) RenameChat(ctx context.Context, chatId int64, title string) error {
+	_, err := tx.ExecContext(ctx, "update chat set title = $1 where id = $2", title, chatId)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
 
-func getChatIdsCommon(qq CommonOperations, chatsSize, chatsOffset int) ([]int64, error) {
-	if rows, err := qq.Query("SELECT id FROM chat ORDER BY id LIMIT $1 OFFSET $2", chatsSize, chatsOffset); err != nil {
+func getChatIdsCommon(ctx context.Context, qq CommonOperations, chatsSize, chatsOffset int) ([]int64, error) {
+	if rows, err := qq.QueryContext(ctx, "SELECT id FROM chat ORDER BY id LIMIT $1 OFFSET $2", chatsSize, chatsOffset); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		defer rows.Close()
@@ -774,17 +774,15 @@ func getChatIdsCommon(qq CommonOperations, chatsSize, chatsOffset int) ([]int64,
 	}
 }
 
-func (tx *Tx) GetChatIds(chatsSize, chatsOffset int) ([]int64, error) {
-	return getChatIdsCommon(tx, chatsSize, chatsOffset)
+func (tx *Tx) GetChatIds(ctx context.Context, chatsSize, chatsOffset int) ([]int64, error) {
+	return getChatIdsCommon(ctx, tx, chatsSize, chatsOffset)
 }
 
-func (db *DB) GetChatIds(chatsSize, chatsOffset int) ([]int64, error) {
-	return getChatIdsCommon(db, chatsSize, chatsOffset)
+func (db *DB) GetChatIds(ctx context.Context, chatsSize, chatsOffset int) ([]int64, error) {
+	return getChatIdsCommon(ctx, db, chatsSize, chatsOffset)
 }
 
-
-
-func getBlogPostsByLimitOffsetCommon(co CommonOperations, reverse bool, limit int, offset int) ([]*Blog, error) {
+func getBlogPostsByLimitOffsetCommon(ctx context.Context, co CommonOperations, reverse bool, limit int, offset int) ([]*Blog, error) {
 	var rows *sql.Rows
 	var err error
 	var sort string
@@ -793,7 +791,7 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, reverse bool, limit in
 	} else {
 		sort = "desc"
 	}
-	rows, err = co.Query(fmt.Sprintf(`SELECT 
+	rows, err = co.QueryContext(ctx, fmt.Sprintf(`SELECT 
 			ch.id, 
 			ch.title,
 			ch.create_date_time,
@@ -820,16 +818,16 @@ func getBlogPostsByLimitOffsetCommon(co CommonOperations, reverse bool, limit in
 	}
 }
 
-func (tx *Tx) GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]*Blog, error) {
-	return getBlogPostsByLimitOffsetCommon(tx, reverse, limit, offset)
+func (tx *Tx) GetBlogPostsByLimitOffset(ctx context.Context, reverse bool, limit int, offset int) ([]*Blog, error) {
+	return getBlogPostsByLimitOffsetCommon(ctx, tx, reverse, limit, offset)
 }
 
-func (db *DB) GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]*Blog, error) {
-	return getBlogPostsByLimitOffsetCommon(db, reverse, limit, offset)
+func (db *DB) GetBlogPostsByLimitOffset(ctx context.Context, reverse bool, limit int, offset int) ([]*Blog, error) {
+	return getBlogPostsByLimitOffsetCommon(ctx, db, reverse, limit, offset)
 }
 
-func (db *DB) CountBlogs() (int64, error) {
-	res := db.QueryRow("SELECT count(*) FROM chat ch WHERE ch.blog IS TRUE")
+func (db *DB) CountBlogs(ctx context.Context) (int64, error) {
+	res := db.QueryRowContext(ctx, "SELECT count(*) FROM chat ch WHERE ch.blog IS TRUE")
 	var count int64
 	if err := res.Scan(&count); err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -844,7 +842,7 @@ type BlogPost struct {
 	Text      string
 }
 
-func getBlogPostsByChatIdsCommon(co CommonOperations, ids []int64) ([]*BlogPost, error) {
+func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, ids []int64) ([]*BlogPost, error) {
 	var builder = ""
 	var first = true
 	for _, chatId := range ids {
@@ -858,7 +856,7 @@ func getBlogPostsByChatIdsCommon(co CommonOperations, ids []int64) ([]*BlogPost,
 
 	var rows *sql.Rows
 	var err error
-	rows, err = co.Query(builder)
+	rows, err = co.QueryContext(ctx, builder)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -876,16 +874,16 @@ func getBlogPostsByChatIdsCommon(co CommonOperations, ids []int64) ([]*BlogPost,
 	}
 }
 
-func (tx *Tx) GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error) {
-	return getBlogPostsByChatIdsCommon(tx, ids)
+func (tx *Tx) GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPost, error) {
+	return getBlogPostsByChatIdsCommon(ctx, tx, ids)
 }
 
-func (db *DB) GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error) {
-	return getBlogPostsByChatIdsCommon(db, ids)
+func (db *DB) GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPost, error) {
+	return getBlogPostsByChatIdsCommon(ctx, db, ids)
 }
 
-func (db *DB) GetBlogPostMessageId(chatId int64) (int64, error) {
-	res := db.QueryRow(fmt.Sprintf("(select id from message_chat_%v where blog_post is true order by id limit 1)", chatId))
+func (db *DB) GetBlogPostMessageId(ctx context.Context, chatId int64) (int64, error) {
+	res := db.QueryRowContext(ctx, fmt.Sprintf("(select id from message_chat_%v where blog_post is true order by id limit 1)", chatId))
 	var messageId int64
 	if err := res.Scan(&messageId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -897,7 +895,7 @@ func (db *DB) GetBlogPostMessageId(chatId int64) (int64, error) {
 	return messageId, nil
 }
 
-func (db *DB) GetBlobPostModifiedDates(chatIds []int64) (map[int64]time.Time, error) {
+func (db *DB) GetBlobPostModifiedDates(ctx context.Context, chatIds []int64) (map[int64]time.Time, error) {
 	res := map[int64]time.Time{}
 
 	if len(chatIds) == 0 {
@@ -917,7 +915,7 @@ func (db *DB) GetBlobPostModifiedDates(chatIds []int64) (map[int64]time.Time, er
 
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(builder)
+	rows, err = db.QueryContext(ctx, builder)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -934,23 +932,23 @@ func (db *DB) GetBlobPostModifiedDates(chatIds []int64) (map[int64]time.Time, er
 	return res, nil
 }
 
-func (db *DB) InitUserChatNotificationSettings(userId, chatId int64) error {
-	if _, err := db.Exec(`insert into chat_participant_notification(user_id, chat_id) values($1, $2) on conflict(user_id, chat_id) do nothing`, userId, chatId); err != nil {
+func (db *DB) InitUserChatNotificationSettings(ctx context.Context, userId, chatId int64) error {
+	if _, err := db.ExecContext(ctx, `insert into chat_participant_notification(user_id, chat_id) values($1, $2) on conflict(user_id, chat_id) do nothing`, userId, chatId); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
 
-func (db *DB) PutUserChatNotificationSettings(considerMessagesOfThisChatAsUnread *bool, userId, chatId int64) error {
-	_, err := db.Exec("update chat_participant_notification set consider_messages_as_unread = $1 where user_id = $2 and chat_id = $3", considerMessagesOfThisChatAsUnread, userId, chatId)
+func (db *DB) PutUserChatNotificationSettings(ctx context.Context, considerMessagesOfThisChatAsUnread *bool, userId, chatId int64) error {
+	_, err := db.ExecContext(ctx, "update chat_participant_notification set consider_messages_as_unread = $1 where user_id = $2 and chat_id = $3", considerMessagesOfThisChatAsUnread, userId, chatId)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
 }
 
-func (db *DB) GetUserChatNotificationSettings(userId, chatId int64) (*bool, error) {
-	res := db.QueryRow(`SELECT consider_messages_as_unread FROM chat_participant_notification where user_id = $1 and chat_id = $2`, userId, chatId)
+func (db *DB) GetUserChatNotificationSettings(ctx context.Context, userId, chatId int64) (*bool, error) {
+	res := db.QueryRowContext(ctx, `SELECT consider_messages_as_unread FROM chat_participant_notification where user_id = $1 and chat_id = $2`, userId, chatId)
 	var consider *bool
 	if err := res.Scan(&consider); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -962,9 +960,9 @@ func (db *DB) GetUserChatNotificationSettings(userId, chatId int64) (*bool, erro
 	return consider, nil
 }
 
-func (tx *Tx) ChatFilter(searchString string, chatId int64) (bool, error) {
+func (tx *Tx) ChatFilter(ctx context.Context, searchString string, chatId int64) (bool, error) {
 	searchStringWithPercents := "%" + searchString + "%"
-	row := tx.QueryRow(fmt.Sprintf("SELECT EXISTS (SELECT * FROM chat ch WHERE ch.id = $1 AND strip_tags(ch.title) ILIKE $2)"), chatId, searchStringWithPercents)
+	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT * FROM chat ch WHERE ch.id = $1 AND strip_tags(ch.title) ILIKE $2)"), chatId, searchStringWithPercents)
 	if row.Err() != nil {
 		Logger.Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
@@ -981,13 +979,13 @@ func (tx *Tx) ChatFilter(searchString string, chatId int64) (bool, error) {
 	return found, nil
 }
 
-func (db *DB) DeleteAllParticipants() error {
+func (db *DB) DeleteAllParticipants(ctx context.Context) error {
 	// see aaa/src/main/resources/db/demo/V32000__demo.sql
 	// 1 admin
 	// 2 nikita
 	// 3 alice
 	// 4 bob
 	// 5 John Smith
-	_, err := db.Exec("DELETE FROM chat_participant WHERE user_id > 5")
+	_, err := db.ExecContext(ctx, "DELETE FROM chat_participant WHERE user_id > 5")
 	return eris.Wrap(err, "error during interacting with db")
 }

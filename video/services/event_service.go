@@ -13,15 +13,15 @@ import (
 )
 
 type StateChangedEventService struct {
-	conf                *config.ExtendedConfig
-	livekitRoomClient   client.LivekitRoomClient
-	userService         *UserService
-	notificationService *NotificationService
-	egressService       *EgressService
-	restClient          *client.RestClient
-	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
+	conf                    *config.ExtendedConfig
+	livekitRoomClient       client.LivekitRoomClient
+	userService             *UserService
+	notificationService     *NotificationService
+	egressService           *EgressService
+	restClient              *client.RestClient
+	rabbitUserIdsPublisher  *producer.RabbitUserIdsPublisher
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
-	dialStatusPublisher   *producer.RabbitDialStatusPublisher
+	dialStatusPublisher     *producer.RabbitDialStatusPublisher
 }
 
 func NewStateChangedEventService(
@@ -33,18 +33,18 @@ func NewStateChangedEventService(
 	restClient *client.RestClient,
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher,
-	dialStatusPublisher   *producer.RabbitDialStatusPublisher,
+	dialStatusPublisher *producer.RabbitDialStatusPublisher,
 ) *StateChangedEventService {
 	return &StateChangedEventService{
-		conf: conf,
-		livekitRoomClient: livekitRoomClient,
-		userService: userService,
-		notificationService: notificationService,
-		egressService: egressService,
-		restClient: restClient,
-		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
+		conf:                    conf,
+		livekitRoomClient:       livekitRoomClient,
+		userService:             userService,
+		notificationService:     notificationService,
+		egressService:           egressService,
+		restClient:              restClient,
+		rabbitUserIdsPublisher:  rabbitUserIdsPublisher,
 		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
-		dialStatusPublisher: dialStatusPublisher,
+		dialStatusPublisher:     dialStatusPublisher,
 	}
 }
 
@@ -89,11 +89,10 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 	}
 }
 
-
 // sends info about "red dot"
 func (h *StateChangedEventService) NotifyAllChatsAboutUsersInVideoStatus(ctx context.Context, tx *db.Tx, userIdsToFilter []int64) {
-	if len (userIdsToFilter) > 0 {
-		batchUserStates, err := tx.GetUserStatesFiltered(userIdsToFilter)
+	if len(userIdsToFilter) > 0 {
+		batchUserStates, err := tx.GetUserStatesFiltered(ctx, userIdsToFilter)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("error during reading user states %v", err)
 			return
@@ -103,7 +102,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersInVideoStatus(ctx con
 		offset := int64(0)
 		hasMoreElements := true
 		for hasMoreElements {
-			batchUserStates, err := tx.GetAllUserStates(utils.DefaultSize, offset)
+			batchUserStates, err := tx.GetAllUserStates(ctx, utils.DefaultSize, offset)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
 				continue
@@ -135,8 +134,8 @@ func (h *StateChangedEventService) processBatch(ctx context.Context, batchUserSt
 
 		isInVideo := userState.Status == db.CallStatusInCall
 		dtos = append(dtos, dto.VideoCallUserCallStatusChangedDto{
-			UserId:    		userId,
-			IsInVideo:     	isInVideo,
+			UserId:    userId,
+			IsInVideo: isInVideo,
 		})
 	}
 	// red dot
@@ -192,8 +191,8 @@ func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Conte
 		}
 
 		invitation := dto.VideoCallInvitation{
-			ChatId:   chatId,
-			Status:   aStatus,
+			ChatId: chatId,
+			Status: aStatus,
 		}
 
 		// this is sending call invitations to all the ivitees

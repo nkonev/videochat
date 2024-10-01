@@ -34,7 +34,7 @@ func CleanChatsOfDeletedUserScheduler(
 type CleanChatsOfDeletedUserService struct {
 	restClient *client.RestClient
 	tracer     trace.Tracer
-	dbR 	   *db.DB
+	dbR        *db.DB
 }
 
 func (srv *CleanChatsOfDeletedUserService) doJob() {
@@ -46,8 +46,8 @@ func (srv *CleanChatsOfDeletedUserService) doJob() {
 func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 	logger.GetLogEntry(c).Infof("Starting cleaning chats of deleted user job")
 
-	err := db.Transact(srv.dbR, func(tx *db.Tx) error {
-		return tx.IterateOverAllParticipantIds(func(participantIds []int64) error {
+	err := db.Transact(c, srv.dbR, func(tx *db.Tx) error {
+		return tx.IterateOverAllParticipantIds(c, func(participantIds []int64) error {
 			existResponse, err := srv.restClient.CheckAreUsersExists(c, participantIds)
 			if err != nil {
 				logger.GetLogEntry(c).Errorf("Got error getting existResponse %v", err)
@@ -62,23 +62,23 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 				if !userExists.Exists {
 					// remove message_read
 					logger.GetLogEntry(c).Infof("Deleteing message read for user %v", userExists.UserId)
-					err = tx.DeleteAllMessageRead(userExists.UserId)
+					err = tx.DeleteAllMessageRead(c, userExists.UserId)
 					if err != nil {
 						logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
 					}
 					// remove from chat_participants
 					logger.GetLogEntry(c).Infof("Deleteing patricipance for user %v", userExists.UserId)
-					err = tx.DeleteUserAsAParticipantFromAllChats(userExists.UserId)
+					err = tx.DeleteUserAsAParticipantFromAllChats(c, userExists.UserId)
 					if err != nil {
 						logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
 					}
 					logger.GetLogEntry(c).Infof("Deleteing pinned chats for user %v", userExists.UserId)
-					err = tx.DeleteChatsPinned(userExists.UserId)
+					err = tx.DeleteChatsPinned(c, userExists.UserId)
 					if err != nil {
 						logger.GetLogEntry(c).Errorf("Got error DeleteChatsPinned %v", err)
 					}
 					logger.GetLogEntry(c).Infof("Deleteing notification settings for user %v", userExists.UserId)
-					err = tx.DeleteAllChatParticipantNotification(userExists.UserId)
+					err = tx.DeleteAllChatParticipantNotification(c, userExists.UserId)
 					if err != nil {
 						logger.GetLogEntry(c).Errorf("Got error DeleteMessageRead %v", err)
 					}
@@ -93,15 +93,15 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 
 	// batch by chats // ... order by id
 	var hasMoreChats = true
-	for chatPage := 0 ; hasMoreChats; chatPage++ {
-		err := db.Transact(srv.dbR, func(tx *db.Tx) error {
-			chatIds, err := tx.GetChatIds(utils.DefaultSize, utils.GetOffset(chatPage, utils.DefaultSize))
+	for chatPage := 0; hasMoreChats; chatPage++ {
+		err := db.Transact(c, srv.dbR, func(tx *db.Tx) error {
+			chatIds, err := tx.GetChatIds(c, utils.DefaultSize, utils.GetOffset(chatPage, utils.DefaultSize))
 			if err != nil {
 				return err
 			}
 			hasMoreChats = len(chatIds) == utils.DefaultSize
 
-			hasParticipantsMap, err := tx.HasParticipants(chatIds)
+			hasParticipantsMap, err := tx.HasParticipants(c, chatIds)
 			if err != nil {
 				logger.GetLogEntry(c).Errorf("Got error HasParticipants %v", err)
 				return nil
@@ -112,7 +112,7 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 				hasParticipants := hasParticipantsMap[chatId]
 				if !hasParticipants {
 					logger.GetLogEntry(c).Infof("Deleteing chat %v because it does not have participants", chatId)
-					err = tx.DeleteChat(chatId)
+					err = tx.DeleteChat(c, chatId)
 					if err != nil {
 						logger.GetLogEntry(c).Errorf("Got error DeleteChat %v", err)
 						continue
@@ -129,7 +129,6 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 
 	logger.GetLogEntry(c).Infof("End of cleaning chats of deleted user job")
 }
-
 
 func NewCleanChatsOfDeletedUserService(chatClient *client.RestClient, dbR *db.DB) *CleanChatsOfDeletedUserService {
 	trcr := otel.Tracer("scheduler/clean-chats-of-deleted-user")

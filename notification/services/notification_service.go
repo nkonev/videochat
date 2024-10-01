@@ -48,13 +48,13 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				return
 			}
 
-			id, createDateTime, err := srv.dbs.PutNotification(&mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
+			id, createDateTime, err := srv.dbs.PutNotification(ctx, &mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to put notification %v", err)
 				return
 			}
 
-			count, err = srv.dbs.GetNotificationCount(event.UserId)
+			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return
@@ -85,7 +85,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 			}
 
 		case "mention_deleted":
-			id, err := srv.dbs.DeleteNotificationByMessageId(mentionNotification.Id, notificationType, event.UserId, nil)
+			id, err := srv.dbs.DeleteNotificationByMessageId(ctx, mentionNotification.Id, notificationType, event.UserId, nil)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					GetLogEntry(ctx).Debugf("Missed notification %v", err)
@@ -95,7 +95,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				return
 			}
 
-			count, err = srv.dbs.GetNotificationCount(event.UserId)
+			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return
@@ -117,13 +117,13 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 
 		notification := event.MissedCallNotification
 		notificationType := "missed_call"
-		id, createDateTime, err := srv.dbs.PutNotification(nil, event.UserId, event.ChatId, notificationType, notification.Description, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
+		id, createDateTime, err := srv.dbs.PutNotification(ctx, nil, event.UserId, event.ChatId, notificationType, notification.Description, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to put notification %v", err)
 			return
 		}
 
-		count, err = srv.dbs.GetNotificationCount(event.UserId)
+		count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 			return
@@ -145,7 +145,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 					ByAvatar:         event.ByAvatar,
 					ChatTitle:        event.ChatTitle,
 				},
-				TotalCount:       count,
+				TotalCount: count,
 			},
 			NotificationAdd,
 		)
@@ -163,12 +163,12 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 		notificationType := "reply"
 		switch event.EventType {
 		case "reply_added":
-			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
+			id, createDateTime, err := srv.dbs.PutNotification(ctx, &notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to put notification %v", err)
 				return
 			}
-			count, err = srv.dbs.GetNotificationCount(event.UserId)
+			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return
@@ -190,7 +190,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 						ByAvatar:         event.ByAvatar,
 						ChatTitle:        event.ChatTitle,
 					},
-					TotalCount:       count,
+					TotalCount: count,
 				},
 				NotificationAdd,
 			)
@@ -199,7 +199,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 			}
 
 		case "reply_deleted":
-			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId, nil)
+			id, err := srv.dbs.DeleteNotificationByMessageId(ctx, notification.MessageId, notificationType, event.UserId, nil)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					GetLogEntry(ctx).Debugf("Missed notification %v", err)
@@ -208,7 +208,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				}
 				return
 			}
-			count, err = srv.dbs.GetNotificationCount(event.UserId)
+			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return
@@ -233,12 +233,12 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 
 		switch event.EventType {
 		case "reaction_notification_added":
-			id, createDateTime, err := srv.dbs.PutNotification(&notification.MessageId, event.UserId, event.ChatId, notificationType, notification.Reaction, event.ByUserId, event.ByLogin, event.ChatTitle, &notification.Reaction)
+			id, createDateTime, err := srv.dbs.PutNotification(ctx, &notification.MessageId, event.UserId, event.ChatId, notificationType, notification.Reaction, event.ByUserId, event.ByLogin, event.ChatTitle, &notification.Reaction)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to put notification %v", err)
 				return
 			}
-			count, err = srv.dbs.GetNotificationCount(event.UserId)
+			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return
@@ -260,7 +260,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 						ByAvatar:         event.ByAvatar,
 						ChatTitle:        event.ChatTitle,
 					},
-					TotalCount:       count,
+					TotalCount: count,
 				},
 				NotificationAdd,
 			)
@@ -269,7 +269,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 			}
 
 		case "reaction_notification_removed":
-			id, err := srv.dbs.DeleteNotificationByMessageId(notification.MessageId, notificationType, event.UserId, &notification.Reaction)
+			id, err := srv.dbs.DeleteNotificationByMessageId(ctx, notification.MessageId, notificationType, event.UserId, &notification.Reaction)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
 					GetLogEntry(ctx).Debugf("Missed notification %v", err)
@@ -278,7 +278,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				}
 				return
 			}
-			count, err = srv.dbs.GetNotificationCount(event.UserId)
+			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return
@@ -295,13 +295,13 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 
 func (srv *NotificationService) getNotificationSettings(ctx context.Context, event *dto.NotificationEvent) (*dto.NotificationGlobalSettings, error) {
 
-	userNotificationsGlobalSettings, err := srv.dbs.GetNotificationGlobalSettings(event.UserId)
+	userNotificationsGlobalSettings, err := srv.dbs.GetNotificationGlobalSettings(ctx, event.UserId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting global notification settings %v", err)
 		return nil, err
 	}
 
-	userNotificationsPerChatSettings, err := srv.dbs.GetNotificationPerChatSettings(event.UserId, event.ChatId)
+	userNotificationsPerChatSettings, err := srv.dbs.GetNotificationPerChatSettings(ctx, event.UserId, event.ChatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting per chat notification settings %v", err)
 		return nil, err
@@ -335,7 +335,7 @@ func (srv *NotificationService) getNotificationSettings(ctx context.Context, eve
 }
 
 func (srv *NotificationService) removeExcessNotificationsIfNeed(ctx context.Context, userId int64) error {
-	count, err := srv.dbs.GetNotificationCount(userId)
+	count, err := srv.dbs.GetNotificationCount(ctx, userId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Unable to get notification count %v", err)
 		return err
@@ -346,18 +346,18 @@ func (srv *NotificationService) removeExcessNotificationsIfNeed(ctx context.Cont
 		GetLogEntry(ctx).Infof("Notifications %v are exceeded maxNotificationsPerUser %v, going to delete the oldest", count, maxNotifications)
 
 		toDelete := count - int64(maxNotifications) + 1
-		notificationsIdsToDelete, err := srv.dbs.GetExcessUserNotificationIds(userId, toDelete)
+		notificationsIdsToDelete, err := srv.dbs.GetExcessUserNotificationIds(ctx, userId, toDelete)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Unable to get notification ids to delete %v", err)
 			return err
 		}
 		for _, id := range notificationsIdsToDelete {
-			deletedNotificationType, err := srv.dbs.DeleteNotification(id, userId)
+			deletedNotificationType, err := srv.dbs.DeleteNotification(ctx, id, userId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to delete notification %v", err)
 				return err
 			}
-			count, err = srv.dbs.GetNotificationCount(userId)
+			count, err = srv.dbs.GetNotificationCount(ctx, userId)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Unable to count notification %v", err)
 				return err

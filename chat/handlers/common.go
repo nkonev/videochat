@@ -23,14 +23,14 @@ import (
 	"time"
 )
 
-func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.User, error) {
+func getUsersRemotely(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	GetLogEntry(c.Request().Context()).Infof("Requested user length is %v", length)
+	GetLogEntry(ctx).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}
-	users, err := restClient.GetUsers(c.Request().Context(), userIds)
+	users, err := restClient.GetUsers(ctx, userIds)
 	if err != nil {
 		return nil, err
 	}
@@ -41,14 +41,14 @@ func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c
 	return ownersObjects, nil
 }
 
-func getUserOnlinesRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) (map[int64]*dto.UserOnline, error) {
+func getUserOnlinesRemotely(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.UserOnline, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	GetLogEntry(c.Request().Context()).Infof("Requested user length is %v", length)
+	GetLogEntry(ctx).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.UserOnline{}, nil
 	}
-	users, err := restClient.GetOnlines(c.Request().Context(), userIds)
+	users, err := restClient.GetOnlines(ctx, userIds)
 	if err != nil {
 		return nil, err
 	}
@@ -59,26 +59,26 @@ func getUserOnlinesRemotely(userIdSet map[int64]bool, restClient *client.RestCli
 	return ownersObjects, nil
 }
 
-func getUsersRemotelyOrEmptyFromSlice(userIds []int64, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
-	return getUsersRemotelyOrEmpty(utils.ArrayToSet(userIds), restClient, c)
+func getUsersRemotelyOrEmptyFromSlice(ctx context.Context, userIds []int64, restClient *client.RestClient) map[int64]*dto.User {
+	return getUsersRemotelyOrEmpty(ctx, utils.ArrayToSet(userIds), restClient)
 }
 
-func getUserOnlinesRemotelyOrEmptyFromSlice(userIds []int64, restClient *client.RestClient, c echo.Context) map[int64]*dto.UserOnline {
-	return getUserOnlinesRemotelyOrEmpty(utils.ArrayToSet(userIds), restClient, c)
+func getUserOnlinesRemotelyOrEmptyFromSlice(ctx context.Context, userIds []int64, restClient *client.RestClient) map[int64]*dto.UserOnline {
+	return getUserOnlinesRemotelyOrEmpty(ctx, utils.ArrayToSet(userIds), restClient)
 }
 
-func getUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.User {
-	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
-		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
+func getUsersRemotelyOrEmpty(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
+	if remoteUsers, err := getUsersRemotely(ctx, userIdSet, restClient); err != nil {
+		GetLogEntry(ctx).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
 	} else {
 		return remoteUsers
 	}
 }
 
-func getUserOnlinesRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c echo.Context) map[int64]*dto.UserOnline {
-	if remoteUsers, err := getUserOnlinesRemotely(userIdSet, restClient, c); err != nil {
-		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
+func getUserOnlinesRemotelyOrEmpty(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.UserOnline {
+	if remoteUsers, err := getUserOnlinesRemotely(ctx, userIdSet, restClient); err != nil {
+		GetLogEntry(ctx).Warn("Error during getting users from aaa")
 		return map[int64]*dto.UserOnline{}
 	} else {
 		return remoteUsers
@@ -390,7 +390,7 @@ func removeProtocolHostPortIfNeed(src, frontendUrl string) (string, error) {
 	return parsed.String(), nil
 }
 
-func TrimAmdSanitizeAvatar(ctx context.Context, policy *services.SanitizerPolicy, input null.String) (null.String) {
+func TrimAmdSanitizeAvatar(ctx context.Context, policy *services.SanitizerPolicy, input null.String) null.String {
 	if input.IsZero() {
 		return input
 	}

@@ -80,7 +80,6 @@ func (h *FilesService) GetListFilesInFileItem(
 		}
 	}
 
-
 	if requestOwners {
 		var participantIdSet = map[int64]bool{}
 		for _, fileDto := range list {
@@ -99,14 +98,14 @@ func (h *FilesService) GetListFilesInFileItem(
 }
 
 type SimpleFileItem struct {
-	Id             string    `json:"id"`
-	Filename       string    `json:"filename"`
-	LastModified   time.Time `json:"time"`
+	Id           string    `json:"id"`
+	Filename     string    `json:"filename"`
+	LastModified time.Time `json:"time"`
 }
 
 type GroupedByFileItemUuid struct {
-	FileItemUuid string `json:"fileItemUuid"`
-	Files []SimpleFileItem `json:"files"`
+	FileItemUuid string           `json:"fileItemUuid"`
+	Files        []SimpleFileItem `json:"files"`
 }
 
 func (h *FilesService) GetListFilesItemUuids(
@@ -181,10 +180,10 @@ func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) 
 	return count, nil
 }
 
-func (h *FilesService) GetTemporaryDownloadUrl(aKey string) (string, time.Duration, error) {
+func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
 	ttl := viper.GetDuration("minio.publicDownloadTtl")
 
-	u, err := h.minio.PresignedGetObject(context.Background(), h.minioConfig.Files, aKey, ttl, url.Values{})
+	u, err := h.minio.PresignedGetObject(ctx, h.minioConfig.Files, aKey, ttl, url.Values{})
 	if err != nil {
 		return "", time.Second, err
 	}

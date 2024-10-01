@@ -33,69 +33,69 @@ type MigrationsConfig struct {
 
 type UserAdminDbDTO struct {
 	UserId int64
-	Admin bool
+	Admin  bool
 }
 
 // enumerates common tx and non-tx operations
 type CommonOperations interface {
-	Query(query string, args ...interface{}) (*dbP.Rows, error)
-	QueryRow(query string, args ...interface{}) *dbP.Row
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	GetParticipantIds(chatId int64, participantsSize, participantsOffset int) ([]int64, error)
-	GetParticipantIdsBatch(chatIds []int64, participantsSize int) ([]*ParticipantIds, error)
-	IterateOverChatParticipantIds(chatId int64, consumer func(participantIds []int64) error) error
-	IterateOverAllParticipantIds(consumer func(participantIds []int64) error) error
-	IterateOverCoChattedParticipantIds(participantId int64, consumer func(participantIds []int64) error) error
-	GetParticipantsCount(chatId int64) (int, error)
-	IsAdmin(userId int64, chatId int64) (bool, error)
-	IsAdminBatch(userId int64, chatIds []int64) (map[int64]bool, error)
-	IsAdminBatchByParticipants(userIds []int64, chatId int64) ([]UserAdminDbDTO, error)
-	IsParticipant(userId int64, chatId int64) (bool, error)
-	GetChat(participantId, chatId int64) (*Chat, error)
-	GetChatWithParticipants(behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)
-	GetChatWithoutParticipants(behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
-	GetParticipantsCountBatch(chatIds []int64) (map[int64]int, error)
-	GetMessage(chatId int64, userId int64, messageId int64) (*Message, error)
-	GetUnreadMessagesCount(chatId int64, userId int64) (int64, error)
-	GetUnreadMessagesCountBatch(chatIds []int64, userId int64) (map[int64]int64, error)
-	SetAdmin(userId int64, chatId int64, newAdmin bool) error
-	GetChatBasic(chatId int64) (*BasicChatDto, error)
-	GetChatsBasic(chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error)
-	GetBlogPostsByLimitOffset(reverse bool, limit int, offset int) ([]*Blog, error)
-	GetBlogPostsByChatIds(ids []int64) ([]*BlogPost, error)
-	GetMessageBasic(chatId int64, messageId int64) (*string, *int64, *bool, *bool, error)
-	GetChatsByLimitOffsetSearch(participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
-	GetChatsByLimitOffset(participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error)
-	GetChatsWithParticipants(participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
-	CountChatsPerUser(userId int64) (int64, error)
-	FlipReaction(userId int64, chatId int64, messageId int64, reaction string) (bool, error)
-	GetChatIds(chatsSize, chatsOffset int) ([]int64, error)
-	GetPublishedMessagesCount(chatId int64) (int64, error)
-	GetPinnedMessagesCount(chatId int64) (int64, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	GetParticipantIds(ctx context.Context, chatId int64, participantsSize, participantsOffset int) ([]int64, error)
+	GetParticipantIdsBatch(ctx context.Context, chatIds []int64, participantsSize int) ([]*ParticipantIds, error)
+	IterateOverChatParticipantIds(ctx context.Context, chatId int64, consumer func(participantIds []int64) error) error
+	IterateOverAllParticipantIds(ctx context.Context, consumer func(participantIds []int64) error) error
+	IterateOverCoChattedParticipantIds(ctx context.Context, participantId int64, consumer func(participantIds []int64) error) error
+	GetParticipantsCount(ctx context.Context, chatId int64) (int, error)
+	IsAdmin(ctx context.Context, userId int64, chatId int64) (bool, error)
+	IsAdminBatch(ctx context.Context, userId int64, chatIds []int64) (map[int64]bool, error)
+	IsAdminBatchByParticipants(ctx context.Context, userIds []int64, chatId int64) ([]UserAdminDbDTO, error)
+	IsParticipant(ctx context.Context, userId int64, chatId int64) (bool, error)
+	GetChat(ctx context.Context, participantId, chatId int64) (*Chat, error)
+	GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)
+	GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
+	GetParticipantsCountBatch(ctx context.Context, chatIds []int64) (map[int64]int, error)
+	GetMessage(ctx context.Context, chatId int64, userId int64, messageId int64) (*Message, error)
+	GetUnreadMessagesCount(ctx context.Context, chatId int64, userId int64) (int64, error)
+	GetUnreadMessagesCountBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]int64, error)
+	SetAdmin(ctx context.Context, userId int64, chatId int64, newAdmin bool) error
+	GetChatBasic(ctx context.Context, chatId int64) (*BasicChatDto, error)
+	GetChatsBasic(ctx context.Context, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error)
+	GetBlogPostsByLimitOffset(ctx context.Context, reverse bool, limit int, offset int) ([]*Blog, error)
+	GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPost, error)
+	GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*string, *int64, *bool, *bool, error)
+	GetChatsByLimitOffsetSearch(ctx context.Context, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
+	GetChatsByLimitOffset(ctx context.Context, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error)
+	GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
+	CountChatsPerUser(ctx context.Context, userId int64) (int64, error)
+	FlipReaction(ctx context.Context, userId int64, chatId int64, messageId int64, reaction string) (bool, error)
+	GetChatIds(ctx context.Context, chatsSize, chatsOffset int) ([]int64, error)
+	GetPublishedMessagesCount(ctx context.Context, chatId int64) (int64, error)
+	GetPinnedMessagesCount(ctx context.Context, chatId int64) (int64, error)
 }
 
-func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {
-	return dbR.DB.Query(query, args...)
+func (dbR *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
+	return dbR.DB.QueryContext(ctx, query, args...)
 }
 
-func (txR *Tx) Query(query string, args ...interface{}) (*dbP.Rows, error) {
-	return txR.Tx.Query(query, args...)
+func (txR *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
+	return txR.Tx.QueryContext(ctx, query, args...)
 }
 
-func (dbR *DB) QueryRow(query string, args ...interface{}) *dbP.Row {
-	return dbR.DB.QueryRow(query, args...)
+func (dbR *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row {
+	return dbR.DB.QueryRowContext(ctx, query, args...)
 }
 
-func (txR *Tx) QueryRow(query string, args ...interface{}) *dbP.Row {
-	return txR.Tx.QueryRow(query, args...)
+func (txR *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row {
+	return txR.Tx.QueryRowContext(ctx, query, args...)
 }
 
-func (dbR *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return dbR.DB.Exec(query, args...)
+func (dbR *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return dbR.DB.ExecContext(ctx, query, args...)
 }
 
-func (txR *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return txR.Tx.Exec(query, args...)
+func (txR *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return txR.Tx.ExecContext(ctx, query, args...)
 }
 
 const postgresDriverString = "pgx"
@@ -113,8 +113,8 @@ func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) 
 }
 
 // Begin starts an returns a new transaction.
-func (db *DB) Begin() (*Tx, error) {
-	if tx, err := db.DB.Begin(); err != nil {
+func (db *DB) Begin(ctx context.Context) (*Tx, error) {
+	if tx, err := db.DB.BeginTx(ctx, nil); err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
 		return &Tx{tx}, nil

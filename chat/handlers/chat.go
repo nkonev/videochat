@@ -150,9 +150,9 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		}
 	}
 
-	return db.Transact(ch.db, func(tx *db.Tx) error {
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
-		dbChats, err := tx.GetChatsWithParticipants(userPrincipalDto.UserId, size, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
+		dbChats, err := tx.GetChatsWithParticipants(c.Request().Context(), userPrincipalDto.UserId, size, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, 0, 0)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get chats from db %v", err)
 			return err
@@ -162,12 +162,12 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		for _, cc := range dbChats {
 			chatIds = append(chatIds, cc.Id)
 		}
-		unreadMessageBatch, err := tx.GetUnreadMessagesCountBatch(chatIds, userPrincipalDto.UserId)
+		unreadMessageBatch, err := tx.GetUnreadMessagesCountBatch(c.Request().Context(), chatIds, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
 
-		membership, err := tx.GetAmIParticipantBatch(chatIds, userPrincipalDto.UserId) // need to setting isResultFromSearch correctly
+		membership, err := tx.GetAmIParticipantBatch(c.Request().Context(), chatIds, userPrincipalDto.UserId) // need to setting isResultFromSearch correctly
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
 			return err
@@ -189,7 +189,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 				participantIdSet[participantId] = true
 			}
 		}
-		var users = getUsersRemotelyOrEmpty(participantIdSet, ch.restClient, c)
+		var users = getUsersRemotelyOrEmpty(c.Request().Context(), participantIdSet, ch.restClient)
 		for _, chatDto := range chatDtos {
 			for _, participantId := range chatDto.ParticipantIds {
 				user := users[participantId]
@@ -200,7 +200,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			}
 		}
 
-		userChatCount, err := tx.CountChatsPerUser(userPrincipalDto.UserId)
+		userChatCount, err := tx.CountChatsPerUser(c.Request().Context(), userPrincipalDto.UserId)
 		if err != nil {
 			return errors.New("Error during getting user chat count")
 		}
@@ -238,8 +238,8 @@ func (ch *ChatHandler) HasNewMessages(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	return db.Transact(ch.db, func(tx *db.Tx) error {
-		has, err := tx.HasUnreadMessages(userPrincipalDto.UserId)
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		has, err := tx.HasUnreadMessages(c.Request().Context(), userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -267,8 +267,8 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 
 	searchString := strings.TrimSpace(bindTo.SearchString)
 
-	return db.Transact(ch.db, func(tx *db.Tx) error {
-		found, err := tx.ChatFilter(searchString, bindTo.ChatId)
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		found, err := tx.ChatFilter(c.Request().Context(), searchString, bindTo.ChatId)
 		if err != nil {
 			return err
 		}
@@ -310,7 +310,7 @@ func (ch *ChatHandler) RecreatePageToken(c echo.Context) error {
 	pageBottom, pageTop, size := getFromPageToken(c.Request().Context(), paginationToken)
 
 	directionString := getDirection(c.QueryParam("direction"))
-	return db.Transact(ch.db, func(tx *db.Tx) error {
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		nextPaginationToken, err := getNextPageToken(
 			c.Request().Context(),
 			tx,
@@ -343,7 +343,7 @@ func getNextPageToken(ctx context.Context, tx *db.Tx, userId int64, size, nextPa
 	if directionString == directionTop {
 		var returnPageBottom = utils.DefaultPage
 		if bottomElementId != nil { // in advance, we create pageBottom as well
-			rowNumber, err := tx.GetChatRowNumber(*bottomElementId, userId, desc, searchString) // desc because desc is used for direction Bottom
+			rowNumber, err := tx.GetChatRowNumber(ctx, *bottomElementId, userId, desc, searchString) // desc because desc is used for direction Bottom
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Error during GetChatRowNumber %v", err)
 				return "", err
@@ -354,7 +354,7 @@ func getNextPageToken(ctx context.Context, tx *db.Tx, userId int64, size, nextPa
 	} else if directionString == directionBottom {
 		var returnPageTop = utils.DefaultPage
 		if topElementId != nil { // in advance, we create pageTop as well
-			rowNumber, err := tx.GetChatRowNumber(*topElementId, userId, asc, searchString) // asc because asc is used for direction Top
+			rowNumber, err := tx.GetChatRowNumber(ctx, *topElementId, userId, asc, searchString) // asc because asc is used for direction Top
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Error during GetChatRowNumber %v", err)
 				return "", err
@@ -398,9 +398,9 @@ func getFromPageToken(ctx context.Context, str string) (int, int, int) {
 }
 
 func getChat(
+	ctx context.Context,
 	dbR db.CommonOperations,
 	restClient *client.RestClient,
-	c echo.Context,
 	chatId int64,
 	behalfParticipantId int64,
 	participantsSize, participantsOffset int,
@@ -409,7 +409,7 @@ func getChat(
 
 	var users []*dto.User = []*dto.User{}
 
-	cc, err := dbR.GetChatWithParticipants(behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset)
+	cc, err := dbR.GetChatWithParticipants(ctx, behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -417,18 +417,18 @@ func getChat(
 		return nil, nil
 	}
 
-	users, err = restClient.GetUsers(c.Request().Context(), cc.ParticipantsIds)
+	users, err = restClient.GetUsers(ctx, cc.ParticipantsIds)
 	if err != nil {
 		users = []*dto.User{}
-		GetLogEntry(c.Request().Context()).Warn("Error during getting users from aaa")
+		GetLogEntry(ctx).Warn("Error during getting users from aaa")
 	}
 
-	unreadMessages, err := dbR.GetUnreadMessagesCount(cc.Id, behalfParticipantId)
+	unreadMessages, err := dbR.GetUnreadMessagesCount(ctx, cc.Id, behalfParticipantId)
 	if err != nil {
 		return nil, err
 	}
 
-	isParticipant, err := dbR.IsParticipant(behalfParticipantId, chatId)
+	isParticipant, err := dbR.IsParticipant(ctx, behalfParticipantId, chatId)
 	if err != nil {
 		return nil, err
 	}
@@ -448,9 +448,9 @@ func getChat(
 					chatDto.SetLastLoginDateTime(participant.LastLoginDateTime)
 				}
 
-				onlines, err := restClient.GetOnlines(c.Request().Context(), []int64{participant.Id}) // get online for opposite user
+				onlines, err := restClient.GetOnlines(ctx, []int64{participant.Id}) // get online for opposite user
 				if err != nil {
-					GetLogEntry(c.Request().Context()).Errorf("Unable to get online for the opposite user %v: %v", participant.Id, err)
+					GetLogEntry(ctx).Errorf("Unable to get online for the opposite user %v: %v", participant.Id, err)
 					// nothing
 				} else {
 					if len(onlines) == 1 {
@@ -482,12 +482,12 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	}
 
-	chat, err := getChat(ch.db, ch.restClient, c, chatId, userPrincipalDto.UserId, participantsSize, participantsOffset)
+	chat, err := getChat(c.Request().Context(), ch.db, ch.restClient, chatId, userPrincipalDto.UserId, participantsSize, participantsOffset)
 	if err != nil {
 		return err
 	}
 	if chat == nil {
-		basic, err := ch.db.GetChatBasic(chatId)
+		basic, err := ch.db.GetChatBasic(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
@@ -569,13 +569,13 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, &utils.H{"error": err.Error()})
 	}
 
-	chatId, errOuter := db.TransactWithResult(ch.db, func(tx *db.Tx) (int64, error) {
-		id, _, err := tx.CreateChat(creatableChat)
+	chatId, errOuter := db.TransactWithResult(c.Request().Context(), ch.db, func(tx *db.Tx) (int64, error) {
+		id, _, err := tx.CreateChat(c.Request().Context(), creatableChat)
 		if err != nil {
 			return 0, err
 		}
 		// add admin
-		if err = tx.AddParticipant(userPrincipalDto.UserId, id, true); err != nil {
+		if err = tx.AddParticipant(c.Request().Context(), userPrincipalDto.UserId, id, true); err != nil {
 			return 0, err
 		}
 
@@ -586,7 +586,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 				if participantId == userPrincipalDto.UserId {
 					continue
 				}
-				if err = tx.AddParticipant(participantId, id, false); err != nil {
+				if err = tx.AddParticipant(c.Request().Context(), participantId, id, false); err != nil {
 					return 0, err
 				}
 			}
@@ -598,14 +598,14 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		return errOuter
 	}
 
-	errOuter = db.Transact(ch.db, func(tx *db.Tx) error {
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
 
-		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
+			areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, chatId)
 			if err != nil {
 				return err
 			}
@@ -655,14 +655,14 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
-		if admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId); err != nil {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		if admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 			return err
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, chatId))
 		}
 
-		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutDeleteChat(c.Request().Context(), chatId, participantIds, tx)
 			return nil
 		})
@@ -670,7 +670,7 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 			return err
 		}
 
-		if err := tx.DeleteChat(chatId); err != nil {
+		if err := tx.DeleteChat(c.Request().Context(), chatId); err != nil {
 			return err
 		}
 
@@ -710,19 +710,20 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, &utils.H{"error": err.Error()})
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
-		if admin, err := tx.IsAdmin(userPrincipalDto.UserId, bindTo.Id); err != nil {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		if admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, bindTo.Id); err != nil {
 			return err
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
 		}
 
-		chatBasicBefore, err := tx.GetChatBasic(bindTo.Id)
+		chatBasicBefore, err := tx.GetChatBasic(c.Request().Context(), bindTo.Id)
 		if err != nil {
 			return err
 		}
 
 		_, err = tx.EditChat(
+			c.Request().Context(),
 			bindTo.Id,
 			chatTitle,
 			TrimAmdSanitizeAvatar(c.Request().Context(), ch.policy, bindTo.Avatar),
@@ -737,13 +738,13 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(tx, ch.restClient, c, bindTo.Id, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, bindTo.Id, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
 
-		err = tx.IterateOverChatParticipantIds(bindTo.Id, func(participantIds []int64) error {
-			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, bindTo.Id)
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), bindTo.Id, func(participantIds []int64) error {
+			areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, bindTo.Id)
 			if err != nil {
 				return err
 			}
@@ -787,21 +788,21 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
-		if err = tx.DeleteParticipant(userPrincipalDto.UserId, chatId); err != nil {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		if err = tx.DeleteParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 			return err
 		}
 
-		firstUser, err := tx.GetFirstParticipant(chatId)
+		firstUser, err := tx.GetFirstParticipant(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
-		if chatDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0); err != nil {
+		if chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, firstUser, 0, 0); err != nil {
 			return err
 		} else {
 
-			err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-				areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
+			err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
+				areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, chatId)
 				if err != nil {
 					return err
 				}
@@ -843,8 +844,8 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 
 	isAdmin := false
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
-		chat, err := tx.GetChatBasic(chatId)
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		chat, err := tx.GetChatBasic(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
@@ -853,7 +854,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
-		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId, isAdmin); err != nil {
+		if err := tx.AddParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId, isAdmin); err != nil {
 			return err
 		}
 		return nil
@@ -863,18 +864,18 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		return errOuter
 	}
 
-	errOuter = db.Transact(ch.db, func(tx *db.Tx) error {
-		firstUser, err := tx.GetFirstParticipant(chatId)
+	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		firstUser, err := tx.GetFirstParticipant(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, firstUser, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, firstUser, 0, 0)
 		if err != nil {
 			return err
 		}
 
-		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
+			areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, chatId)
 			if err != nil {
 				return err
 			}
@@ -925,10 +926,10 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
 		// check that I am admin
-		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
@@ -936,7 +937,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
 		}
 		interestingUserId, err := GetPathParamAsInt64(c, "participantId")
-		participant, err := tx.IsParticipant(interestingUserId, chatId)
+		participant, err := tx.IsParticipant(c.Request().Context(), interestingUserId, chatId)
 		if err != nil {
 			return err
 		}
@@ -948,7 +949,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		err = tx.SetAdmin(interestingUserId, chatId, newAdmin)
+		err = tx.SetAdmin(c.Request().Context(), interestingUserId, chatId, newAdmin)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 			return err
@@ -960,7 +961,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return err
 		}
 
-		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
 			ch.notificator.NotifyAboutChangeParticipants(c.Request().Context(), participantIds, chatId, newUsersWithAdmin)
 			return nil
 		})
@@ -969,7 +970,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1002,24 +1003,24 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	return db.Transact(ch.db, func(tx *db.Tx) error {
-		if isParticipant, err := tx.IsParticipant(userPrincipalDto.UserId, chatId); err != nil {
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		if isParticipant, err := tx.IsParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
 			return err
 		} else if !isParticipant {
 			return errors.New(fmt.Sprintf("User %v is not isParticipant of chat %v", userPrincipalDto.UserId, chatId))
 		}
 
-		err = tx.PinChat(chatId, userPrincipalDto.UserId, pin)
+		err = tx.PinChat(c.Request().Context(), chatId, userPrincipalDto.UserId, pin)
 		if err != nil {
 			return err
 		}
 
-		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
 
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1047,9 +1048,9 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		return err
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		// check that I am admin
-		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
@@ -1057,7 +1058,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You have no access to this chat"})
 		}
 
-		err = tx.DeleteParticipant(interestingUserId, chatId)
+		err = tx.DeleteParticipant(c.Request().Context(), interestingUserId, chatId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 			return err
@@ -1068,13 +1069,13 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
 	}
-	errOuter = db.Transact(ch.db, func(tx *db.Tx) error {
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
-		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
+			areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, chatId)
 			if err != nil {
 				return err
 			}
@@ -1109,10 +1110,10 @@ func (ch *ChatHandler) getParticipantsWithAdmin(cdo db.CommonOperations, partici
 		GetLogEntry(ctx).Errorf("Error during getting users %v", err)
 		return nil, err
 	}
-	return ch.enrichWithAdmin(cdo, newUsers, chatId, ctx)
+	return ch.enrichWithAdmin(ctx, cdo, newUsers, chatId)
 }
 
-func (ch *ChatHandler) enrichWithAdmin(cdo db.CommonOperations, users []*dto.User, chatId int64, ctx context.Context) ([]*dto.UserWithAdmin, error) {
+func (ch *ChatHandler) enrichWithAdmin(ctx context.Context, cdo db.CommonOperations, users []*dto.User, chatId int64) ([]*dto.UserWithAdmin, error) {
 	newUsersWithAdmin := []*dto.UserWithAdmin{}
 
 	userIds := []int64{}
@@ -1120,7 +1121,7 @@ func (ch *ChatHandler) enrichWithAdmin(cdo db.CommonOperations, users []*dto.Use
 		userIds = append(userIds, anUser.Id)
 	}
 
-	areAdmins, err := cdo.IsAdminBatchByParticipants(userIds, chatId)
+	areAdmins, err := cdo.IsAdminBatchByParticipants(ctx, userIds, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during getting users %v", err)
 		return nil, err
@@ -1169,10 +1170,10 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		return err
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
 		// check that I am admin
-		admin, err := tx.IsAdmin(userPrincipalDto.UserId, chatId)
+		admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
 		if err != nil {
 			return err
 		}
@@ -1181,7 +1182,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		}
 
 		for _, participantId := range bindTo.ParticipantIds {
-			err = tx.AddParticipant(participantId, chatId, false)
+			err = tx.AddParticipant(c.Request().Context(), participantId, chatId, false)
 			if err != nil {
 				GetLogEntry(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 				return err
@@ -1194,19 +1195,19 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		return errOuter
 	}
 
-	errOuter = db.Transact(ch.db, func(tx *db.Tx) error {
+	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		newUsersWithAdmin, err := ch.getParticipantsWithAdmin(tx, bindTo.ParticipantIds, chatId, c.Request().Context())
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants aith admin %v", err)
 			return err
 		}
 
-		chatDto, err := getChat(tx, ch.restClient, c, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
-		err = tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
-			areAdmins, err := getAreAdminsOfUserIds(tx, participantIds, chatId)
+		err = tx.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
+			areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, chatId)
 			if err != nil {
 				return err
 			}
@@ -1240,7 +1241,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	admin, err := ch.db.IsAdmin(userPrincipalDto.UserId, chatId)
+	admin, err := ch.db.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1269,7 +1270,7 @@ func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string
 	totalCountInChat := 0
 	for page := 0; shouldContinue; page++ {
 		offset := utils.GetOffset(page, pageSize)
-		participantIds, err := ch.db.GetParticipantIds(chatId, pageSize, offset)
+		participantIds, err := ch.db.GetParticipantIds(c.Request().Context(), chatId, pageSize, offset)
 		if len(participantIds) == 0 {
 			break
 		}
@@ -1318,7 +1319,7 @@ func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString str
 			portionUserIds = append(portionUserIds, u.Id)
 		}
 
-		foundParticipantIds, err := ch.db.ParticipantsExistence(chatId, portionUserIds)
+		foundParticipantIds, err := ch.db.ParticipantsExistence(c.Request().Context(), chatId, portionUserIds)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Got error during getting ParticipantsNonExistence %v", err)
 			break
@@ -1364,13 +1365,13 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 	if userSearchString != "" {
 		var users []*dto.User
 		users, totalFoundInChatUserCount, err = ch.searchUsersContaining(c, userSearchString, chatId, participantsSize, participantsOffset)
-		usersWithAdmin, err = ch.enrichWithAdmin(ch.db, users, chatId, c.Request().Context())
+		usersWithAdmin, err = ch.enrichWithAdmin(c.Request().Context(), ch.db, users, chatId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
 			return err
 		}
 	} else {
-		participantIds, err := ch.db.GetParticipantIds(chatId, participantsSize, participantsOffset)
+		participantIds, err := ch.db.GetParticipantIds(c.Request().Context(), chatId, participantsSize, participantsOffset)
 		if err != nil {
 			return err
 		}
@@ -1381,7 +1382,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 			return err
 		}
 
-		count, err := ch.db.GetParticipantsCount(chatId)
+		count, err := ch.db.GetParticipantsCount(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
@@ -1427,7 +1428,7 @@ func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 		}
 		totalFoundUserCount = aCount
 	} else {
-		count, err := ch.db.GetParticipantsCount(chatId)
+		count, err := ch.db.GetParticipantsCount(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
@@ -1493,7 +1494,7 @@ func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 			}
 		}
 	} else {
-		foundParticipantIds, err := ch.db.ParticipantsExistence(chatId, requestedParticipantIds)
+		foundParticipantIds, err := ch.db.ParticipantsExistence(c.Request().Context(), chatId, requestedParticipantIds)
 		if err != nil {
 			return err
 		}
@@ -1518,7 +1519,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	participant, err := ch.db.IsParticipant(userPrincipalDto.UserId, chatId)
+	participant, err := ch.db.IsParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1551,7 +1552,7 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	chat, err := ch.db.GetChatBasic(chatId)
+	chat, err := ch.db.GetChatBasic(c.Request().Context(), chatId)
 	if err != nil {
 		return err
 	}
@@ -1561,7 +1562,7 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 
 	messageId, _ := GetQueryParamAsInt64(c, "messageId")
 	if messageId > 0 {
-		text, _, isBlogPostMessage, published, err := ch.db.GetMessageBasic(chatId, messageId)
+		text, _, isBlogPostMessage, published, err := ch.db.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {
 			return err
 		}
@@ -1580,7 +1581,7 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 		return err
 	}
 	useCanResend, _ := GetQueryParamAsBoolean(c, "considerCanResend")
-	participant, err := ch.db.IsParticipant(userId, chatId)
+	participant, err := ch.db.IsParticipant(c.Request().Context(), userId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1608,7 +1609,7 @@ func (ch *ChatHandler) IsAdmin(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	isAdmin, err := ch.db.IsAdmin(userId, chatId)
+	isAdmin, err := ch.db.IsAdmin(c.Request().Context(), userId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1635,9 +1636,9 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		return err
 	}
 
-	errOuter := db.Transact(ch.db, func(tx *db.Tx) error {
+	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		// check existing tet-a-tet chat
-		exists, chatId, err := tx.IsExistsTetATet(userPrincipalDto.UserId, toParticipantId)
+		exists, chatId, err := tx.IsExistsTetATet(c.Request().Context(), userPrincipalDto.UserId, toParticipantId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during checking exists tet-a-tet chat %v", err)
 			return err
@@ -1647,22 +1648,22 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		}
 
 		// create tet-a-tet chat
-		chatId2, err := tx.CreateTetATetChat(userPrincipalDto.UserId, toParticipantId)
+		chatId2, err := tx.CreateTetATetChat(c.Request().Context(), userPrincipalDto.UserId, toParticipantId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during creating tet-a-tet chat %v", err)
 			return err
 		}
 
-		if err := tx.AddParticipant(userPrincipalDto.UserId, chatId2, true); err != nil {
+		if err := tx.AddParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId2, true); err != nil {
 			return err
 		}
 		if userPrincipalDto.UserId != toParticipantId {
-			if err := tx.AddParticipant(toParticipantId, chatId2, true); err != nil {
+			if err := tx.AddParticipant(c.Request().Context(), toParticipantId, chatId2, true); err != nil {
 				return err
 			}
 		}
 
-		chatDto, err := getChat(tx, ch.restClient, c, chatId2, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), tx, ch.restClient, chatId2, userPrincipalDto.UserId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1700,13 +1701,13 @@ func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
 		return err
 	}
 
-	err = ch.db.InitUserChatNotificationSettings(userPrincipalDto.UserId, chatId)
+	err = ch.db.InitUserChatNotificationSettings(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
-	err = ch.db.PutUserChatNotificationSettings(bindTo.ConsiderMessagesOfThisChatAsUnread.Ptr(), userPrincipalDto.UserId, chatId)
+	err = ch.db.PutUserChatNotificationSettings(c.Request().Context(), bindTo.ConsiderMessagesOfThisChatAsUnread.Ptr(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1725,7 +1726,7 @@ func (ch *ChatHandler) GetUserChatNotificationSettings(c echo.Context) error {
 		return err
 	}
 
-	consider, err := ch.db.GetUserChatNotificationSettings(userPrincipalDto.UserId, chatId)
+	consider, err := ch.db.GetUserChatNotificationSettings(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1772,7 +1773,7 @@ func (ch *ChatHandler) IsExists(c echo.Context) error {
 		return c.JSON(http.StatusOK, responseList)
 	}
 
-	existsFromDb, err := ch.db.GetExistingChatIds(chatIds)
+	existsFromDb, err := ch.db.GetExistingChatIds(c.Request().Context(), chatIds)
 	if err != nil {
 		return err
 	}
@@ -1847,7 +1848,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 		return err
 	}
 
-	chat, err := ch.db.GetChat(behalfUserId, chatId)
+	chat, err := ch.db.GetChat(c.Request().Context(), behalfUserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1874,7 +1875,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 		return err
 	}
 
-	count, err := ch.db.GetParticipantsCount(chatId)
+	count, err := ch.db.GetParticipantsCount(c.Request().Context(), chatId)
 	if err != nil {
 		return err
 	}
@@ -1908,7 +1909,7 @@ func (ch *ChatHandler) GetBasicInfo(c echo.Context) error {
 		return err
 	}
 
-	chat, err := ch.db.GetChatWithParticipants(behalfUserId, chatId, utils.FixSize(0), utils.FixPage(0))
+	chat, err := ch.db.GetChatWithParticipants(c.Request().Context(), behalfUserId, chatId, utils.FixSize(0), utils.FixPage(0))
 	if err != nil {
 		return err
 	}
@@ -1922,7 +1923,7 @@ func (ch *ChatHandler) GetBasicInfo(c echo.Context) error {
 
 func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
 	GetLogEntry(c.Request().Context()).Warnf("Removing ALL participants")
-	return ch.db.DeleteAllParticipants()
+	return ch.db.DeleteAllParticipants(c.Request().Context())
 }
 
 func (ch *ChatHandler) GetChatParticipants(c echo.Context) error {
@@ -1935,7 +1936,7 @@ func (ch *ChatHandler) GetChatParticipants(c echo.Context) error {
 	participantsSize := utils.FixSizeString(c.QueryParam("size"))
 	participantsOffset := utils.GetOffset(participantsPage, participantsSize)
 
-	ids, err := ch.db.GetParticipantIds(chatId, participantsSize, participantsOffset)
+	ids, err := ch.db.GetParticipantIds(c.Request().Context(), chatId, participantsSize, participantsOffset)
 	if err != nil {
 		return err
 	}
@@ -1972,7 +1973,7 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 		users = append(users, belongs)
 	}
 
-	err = ch.db.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err = ch.db.IterateOverChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
 		for _, user := range users {
 			if utils.Contains(participantIds, user.UserId) {
 				user.Belongs = true

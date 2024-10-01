@@ -63,9 +63,9 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
 	offset := int64(0)
 	hasMoreElements := true
 	for hasMoreElements {
-		err := db.Transact(srv.database, func(tx *db.Tx) error {
+		err := db.Transact(ctx, srv.database, func(tx *db.Tx) error {
 			// here we use order by owner_id
-			batchUserStates, err := tx.GetAllUserStates(utils.DefaultSize, offset)
+			batchUserStates, err := tx.GetAllUserStates(ctx, utils.DefaultSize, offset)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
 				return err
@@ -102,19 +102,19 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 				GetLogEntry(ctx).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
 				// case 2.a user is owner of the call
 				// soft remove owned (callee, invitee) by user
-				invitedByMe, err := tx.GetBeingInvitedByOwnerId(userCallStateId, chatId)
+				invitedByMe, err := tx.GetBeingInvitedByOwnerId(ctx, userCallStateId, chatId)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to find owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
 				for _, invitee := range invitedByMe {
-					err = tx.SetRemoving(dto.UserCallStateId{invitee.TokenId, invitee.UserId}, db.CallStatusRemoving)
+					err = tx.SetRemoving(ctx, dto.UserCallStateId{invitee.TokenId, invitee.UserId}, db.CallStatusRemoving)
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 					}
 				}
 				// case 2.b user is just user
 				// soft remove the user
-				err = tx.SetRemoving(userCallStateId, db.CallStatusRemoving)
+				err = tx.SetRemoving(ctx, userCallStateId, db.CallStatusRemoving)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
@@ -141,7 +141,7 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 			if !srv.Contains(videoParticipants, userCallStateId) {
 				newAttempt := st.MarkedForOrphanRemoveAttempt + 1
 				GetLogEntry(ctx).Infof("Setting attempt %v on userCallState %v of user tokenId %v, userId %v because they aren't among video room participants", newAttempt, st.Status, st.TokenId, st.UserId)
-				err = tx.SetMarkedForOrphanRemoveAttempt(userCallStateId, newAttempt)
+				err = tx.SetMarkedForOrphanRemoveAttempt(ctx, userCallStateId, newAttempt)
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
 					continue
@@ -150,7 +150,7 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 				if st.MarkedForOrphanRemoveAttempt >= 1 {
 					GetLogEntry(ctx).Infof("Resetting attempt on userCallState %v of user tokenId %v, userId %v because they appeared among video room participants", st.Status, userCallStateId.TokenId, userCallStateId.UserId)
 
-					err = tx.SetMarkedForOrphanRemoveAttempt(userCallStateId, db.UserCallMarkedForOrphanRemoveAttemptNotSet)
+					err = tx.SetMarkedForOrphanRemoveAttempt(ctx, userCallStateId, db.UserCallMarkedForOrphanRemoveAttemptNotSet)
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
 						continue
@@ -185,8 +185,8 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 
 		// if no such users
 		for _, videoParticipant := range videoParticipants {
-			err = db.Transact(srv.database, func(tx *db.Tx) error {
-				userState, err := tx.Get(dto.UserCallStateId{
+			err = db.Transact(ctx, srv.database, func(tx *db.Tx) error {
+				userState, err := tx.Get(ctx, dto.UserCallStateId{
 					TokenId: videoParticipant.TokenId,
 					UserId:  videoParticipant.UserId,
 				})
@@ -205,7 +205,7 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 						return err
 					}
 
-					err = tx.AddAsEntered(videoParticipant.TokenId, videoParticipant.UserId, chatId, chatInfo.TetATet)
+					err = tx.AddAsEntered(ctx, videoParticipant.TokenId, videoParticipant.UserId, chatId, chatInfo.TetATet)
 					if err != nil {
 						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
 						return err

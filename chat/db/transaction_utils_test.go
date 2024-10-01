@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"nkonev.name/chat/config"
 	. "nkonev.name/chat/logger"
@@ -37,7 +38,7 @@ func setup() {
 }
 
 func TestTransactionPositive(t *testing.T) {
-	err := Transact(dbInstance, func(tx *Tx) error {
+	err := Transact(context.Background(), dbInstance, func(tx *Tx) error {
 		if _, err := tx.Exec("CREATE TABLE t1(a text UNIQUE)"); err != nil {
 			return err
 		}
@@ -59,7 +60,7 @@ func TestTransactionNegative(t *testing.T) {
 	_, err := dbInstance.Exec("CREATE TABLE t2(a text UNIQUE)")
 	assert.Nil(t, err)
 
-	err = Transact(dbInstance, func(tx *Tx) error {
+	err = Transact(context.Background(), dbInstance, func(tx *Tx) error {
 		if _, err := tx.Exec("insert into t2(a) VALUES ('lorem')"); err != nil {
 			return err
 		}
@@ -79,7 +80,7 @@ func TestTransactionNegative(t *testing.T) {
 }
 
 func TestTransactionWithResultPositive(t *testing.T) {
-	id, err := TransactWithResult(dbInstance, func(tx *Tx) (int64, error) {
+	id, err := TransactWithResult(context.Background(), dbInstance, func(tx *Tx) (int64, error) {
 		if _, err := tx.Exec("CREATE TABLE tr1(id BIGSERIAL PRIMARY KEY, a text UNIQUE)"); err != nil {
 			return 0, err
 		}
@@ -107,7 +108,7 @@ func TestTransactionWithResultNegative(t *testing.T) {
 	_, err := dbInstance.Exec("CREATE TABLE tr2(id BIGSERIAL PRIMARY KEY, a text UNIQUE)")
 	assert.Nil(t, err)
 
-	idRaw, err := TransactWithResult(dbInstance, func(tx *Tx) (int64, error) {
+	idRaw, err := TransactWithResult(context.Background(), dbInstance, func(tx *Tx) (int64, error) {
 		res := tx.QueryRow(`INSERT INTO tr2(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {

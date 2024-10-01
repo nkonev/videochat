@@ -24,11 +24,11 @@ import (
 )
 
 type FilesHandler struct {
-	minio        *s3.InternalMinioClient
-	awsS3        *awsS3.S3
-	restClient   *client.RestClient
-	minioConfig  *utils.MinioConfig
-	filesService *services.FilesService
+	minio            *s3.InternalMinioClient
+	awsS3            *awsS3.S3
+	restClient       *client.RestClient
+	minioConfig      *utils.MinioConfig
+	filesService     *services.FilesService
 	redisInfoService *services.RedisInfoService
 }
 
@@ -48,11 +48,11 @@ func NewFilesHandler(
 	redisInfoService *services.RedisInfoService,
 ) *FilesHandler {
 	return &FilesHandler{
-		minio:        minio,
-		awsS3: 		  awsS3,
-		restClient:   restClient,
-		minioConfig:  minioConfig,
-		filesService: filesService,
+		minio:            minio,
+		awsS3:            awsS3,
+		restClient:       restClient,
+		minioConfig:      minioConfig,
+		filesService:     filesService,
 		redisInfoService: redisInfoService,
 	}
 }
@@ -63,12 +63,12 @@ type EmbedDto struct {
 }
 
 type UploadRequest struct {
-	CorrelationId *string `json:"correlationId"`
-	FileItemUuid  *string `json:"fileItemUuid"`
-	FileSize      int64   `json:"fileSize"`
-	FileName      string  `json:"fileName"`
-	ShouldAddDateToTheFilename bool `json:"shouldAddDateToTheFilename"`
-	IsMessageRecording *bool `json:"isMessageRecording"`
+	CorrelationId              *string `json:"correlationId"`
+	FileItemUuid               *string `json:"fileItemUuid"`
+	FileSize                   int64   `json:"fileSize"`
+	FileName                   string  `json:"fileName"`
+	ShouldAddDateToTheFilename bool    `json:"shouldAddDateToTheFilename"`
+	IsMessageRecording         *bool   `json:"isMessageRecording"`
 }
 
 type UploadResponse struct {
@@ -81,14 +81,14 @@ type PresignedUrl struct {
 }
 
 type FinishMultipartRequest struct {
-	Key string `json:"key"`
-	Parts []MultipartFinishingPart `json:"parts"`
-	UploadId string `json:"uploadId"`
+	Key      string                   `json:"key"`
+	Parts    []MultipartFinishingPart `json:"parts"`
+	UploadId string                   `json:"uploadId"`
 }
 
 type MultipartFinishingPart struct {
-	Etag        string `json:"etag"`
-	PartNumber int64 `json:"partNumber"`
+	Etag       string `json:"etag"`
+	PartNumber int64  `json:"partNumber"`
 }
 
 func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
@@ -162,9 +162,9 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	expTime := time.Now().UTC().Add(expire)
 	converted := convertMetadata(&metadata)
 	mpu := awsS3.CreateMultipartUploadInput{
-		Expires: &expTime,
-		Bucket: &bucketName,
-		Key: &aKey,
+		Expires:  &expTime,
+		Bucket:   &bucketName,
+		Key:      &aKey,
 		Metadata: converted,
 	}
 	upload, err := h.awsS3.CreateMultipartUpload(&mpu)
@@ -176,7 +176,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	chunkSize := viper.GetInt64("minio.multipart.chunkSize")
 	chunksNum := int(reqDto.FileSize / chunkSize)
-	if reqDto.FileSize % chunkSize != 0 {
+	if reqDto.FileSize%chunkSize != 0 {
 		chunksNum++
 	}
 
@@ -192,7 +192,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 			return err
 		}
 
-		stringUrl, err :=  services.ChangeMinioUrl(u)
+		stringUrl, err := services.ChangeMinioUrl(u)
 		if err != nil {
 			return err
 		}
@@ -202,15 +202,15 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	existingCount := h.getCountFilesInFileItem(c.Request().Context(), bucketName, filenameChatPrefix)
 
 	return c.JSON(http.StatusOK, &utils.H{
-		"status": "ready",
-		"uploadId": upload.UploadId,
+		"status":        "ready",
+		"uploadId":      upload.UploadId,
 		"presignedUrls": presignedUrls,
-		"chunkSize": chunkSize,
-		"fileItemUuid": chatFileItemUuid,
+		"chunkSize":     chunkSize,
+		"fileItemUuid":  chatFileItemUuid,
 		"existingCount": existingCount,
-		"newFileName": filteredFilename,
-		"key": aKey,
-		"chatId": chatId,
+		"newFileName":   filteredFilename,
+		"key":           aKey,
+		"chatId":        chatId,
 	})
 }
 
@@ -252,14 +252,14 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	for _, part := range reqDto.Parts {
 		part := part
 		arr = append(arr, &awsS3.CompletedPart{
-			ETag: &part.Etag,
+			ETag:       &part.Etag,
 			PartNumber: &part.PartNumber,
 		})
 	}
 
 	input := awsS3.CompleteMultipartUploadInput{
-		Key: &reqDto.Key,
-		Bucket: &bucketName,
+		Key:      &reqDto.Key,
+		Bucket:   &bucketName,
 		UploadId: &reqDto.UploadId,
 		MultipartUpload: &awsS3.CompletedMultipartUpload{
 			Parts: arr,
@@ -336,7 +336,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil, nil)
 
-	if _, err := h.minio.PutObject(context.Background(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
+	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return err
 	}
@@ -346,7 +346,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 func (h *FilesHandler) getCountFilesInFileItem(ctx context.Context, bucketName string, filenameChatPrefix string) int {
 	var count = 0
-	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(ctx, bucketName, minio.ListObjectsOptions{
 		Prefix:    filenameChatPrefix,
 		Recursive: true,
 	})
@@ -406,11 +406,11 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 }
 
 type ViewItem struct {
-	Url string `json:"url"`
-	PreviewUrl *string `json:"previewUrl"`
-	This bool `json:"this"`
-	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
-	CanShowAsImage bool      `json:"canShowAsImage"`
+	Url            string  `json:"url"`
+	PreviewUrl     *string `json:"previewUrl"`
+	This           bool    `json:"this"`
+	CanPlayAsVideo bool    `json:"canPlayAsVideo"`
+	CanShowAsImage bool    `json:"canShowAsImage"`
 }
 
 type ListViewRequest struct {
@@ -519,7 +519,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 			retList = append(retList, ViewItem{
 				Url:            downloadUrl,
 				PreviewUrl:     previewUrl,
-				This: objInfo.Key == fileId,
+				This:           objInfo.Key == fileId,
 				CanPlayAsVideo: utils.IsVideo(objInfo.Key),
 				CanShowAsImage: utils.IsImage(objInfo.Key),
 			})
@@ -694,7 +694,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	bucketName := h.minioConfig.Files
 
 	// check this fileItem belongs to user
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, bindTo.Id, minio.StatObjectOptions{})
+	objectInfo, err := h.minio.StatObject(c.Request().Context(), bucketName, bindTo.Id, minio.StatObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -710,7 +710,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 	// end check
 
-	err = h.minio.RemoveObject(context.Background(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
+	err = h.minio.RemoveObject(c.Request().Context(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -720,7 +720,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 }
 
 func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -778,7 +778,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 
 	// check user is owner
 	fileId := bindTo.Id
-	objectInfo, err := h.minio.StatObject(context.Background(), bucketName, fileId, minio.StatObjectOptions{})
+	objectInfo, err := h.minio.StatObject(c.Request().Context(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -802,7 +802,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	err = h.minio.PutObjectTagging(context.Background(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
+	err = h.minio.PutObjectTagging(c.Request().Context(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during saving tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -818,12 +818,12 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 }
 
 type CountResponse struct {
-	Count  int  `json:"count"`
+	Count int  `json:"count"`
 	Found bool `json:"found"`
 }
 
 type CountRequest struct {
-	SearchString  string  `json:"searchString"`
+	SearchString string `json:"searchString"`
 	FileItemUuid string `json:"fileItemUuid"`
 }
 
@@ -870,7 +870,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 
 	filter := h.getFilterFunction(searchString)
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: false,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -893,9 +893,9 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 }
 
 type FilterRequest struct {
-	SearchString  string  `json:"searchString"`
+	SearchString string `json:"searchString"`
 	FileItemUuid string `json:"fileItemUuid"`
-	FileId string `json:"fileId"`
+	FileId       string `json:"fileId"`
 }
 
 type FilterResponseItem struct {
@@ -946,7 +946,7 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 
 	filter := h.getFilterFunction(searchString)
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: false,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -1154,7 +1154,7 @@ func (h *FilesHandler) getFilterByType(requestedMediaType string) func(info *min
 }
 
 type CandidatesFilterRequest struct {
-	Type  string  `json:"type"`
+	Type   string `json:"type"`
 	FileId string `json:"fileId"`
 }
 
@@ -1195,7 +1195,7 @@ func (h *FilesHandler) FilterEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(bindTo.Type)
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: false,
 		Prefix:       filenameChatPrefix,
 		Recursive:    true,
@@ -1266,7 +1266,7 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	object, e := h.minio.GetObject(c.Request().Context(), bucketName, fileId, minio.GetObjectOptions{})
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
@@ -1317,7 +1317,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	object, e := h.minio.GetObject(context.Background(), bucketName, fileId, minio.GetObjectOptions{})
+	object, e := h.minio.GetObject(c.Request().Context(), bucketName, fileId, minio.GetObjectOptions{})
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
@@ -1368,7 +1368,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), objectInfo.Key)
 	if err != nil {
 		return err
 	}
@@ -1405,7 +1405,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 
-	tagging, err := h.minio.GetObjectTagging(context.Background(), bucketName, fileId, minio.GetObjectTaggingOptions{})
+	tagging, err := h.minio.GetObjectTagging(c.Request().Context(), bucketName, fileId, minio.GetObjectTaggingOptions{})
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1447,7 +1447,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), objectInfo.Key)
 	if err != nil {
 		return err
 	}

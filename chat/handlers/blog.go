@@ -57,7 +57,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 	}
 
 	// get their message where blog_post=true for sake to make preview
-	posts, err := h.db.GetBlogPostsByChatIds(blogIds)
+	posts, err := h.db.GetBlogPostsByChatIds(ctx, blogIds)
 	if err != nil {
 		return response, err
 	}
@@ -132,12 +132,12 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 	if !isSearch {
 		portionOffset := utils.GetOffset(page, size)
-		blogs, err := h.db.GetBlogPostsByLimitOffset(false, size, portionOffset)
+		blogs, err := h.db.GetBlogPostsByLimitOffset(c.Request().Context(), false, size, portionOffset)
 		if err != nil {
 			return err
 		}
 
-		count, err = h.db.CountBlogs()
+		count, err = h.db.CountBlogs(c.Request().Context())
 		if err != nil {
 			return err
 		}
@@ -156,7 +156,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		for portionPage := 0; shouldIterate; portionPage++ {
 			portionOffset := utils.GetOffset(portionPage, size)
 			// get chats where blog=true
-			blogs, err := h.db.GetBlogPostsByLimitOffset(false, size, portionOffset)
+			blogs, err := h.db.GetBlogPostsByLimitOffset(c.Request().Context(), false, size, portionOffset)
 			if err != nil {
 				return err
 			}
@@ -193,7 +193,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			participantIdSet[*respDto.OwnerId] = true
 		}
 	}
-	var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+	var users = getUsersRemotelyOrEmpty(c.Request().Context(), participantIdSet, h.restClient)
 	for _, respDto := range response {
 		if respDto.OwnerId != nil {
 			respDto.Owner = users[*respDto.OwnerId]
@@ -201,25 +201,25 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 	}
 
 	pagesCount := count / int64(size)
-	if count % int64(size) > 0 {
+	if count%int64(size) > 0 {
 		pagesCount++
 	}
 
 	return c.JSON(http.StatusOK, &BlogPostsDTO{
-		Items: response,
-		Count: count,
+		Items:      response,
+		Count:      count,
 		PagesCount: pagesCount,
 	})
 }
 
 type BlogPostsDTO struct {
-	Items []*BlogPostPreviewDto `json:"items"`
-	Count int64 `json:"count"`
-	PagesCount int64 `json:"pagesCount"`
+	Items      []*BlogPostPreviewDto `json:"items"`
+	Count      int64                 `json:"count"`
+	PagesCount int64                 `json:"pagesCount"`
 }
 
 type BlogSeoItem struct {
-	ChatId int64 `json:"chatId"`
+	ChatId       int64     `json:"chatId"`
 	LastModified time.Time `json:"lastModified"`
 }
 
@@ -228,7 +228,7 @@ func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
 	page := utils.FixPageString(c.QueryParam("page"))
 	size := utils.FixSizeString(c.QueryParam("size"))
 
-	posts, err := h.db.GetBlogPostsByLimitOffset(false, size, page*size)
+	posts, err := h.db.GetBlogPostsByLimitOffset(c.Request().Context(), false, size, page*size)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
 		chatIds = append(chatIds, post.Id)
 	}
 
-	dates, err := h.db.GetBlobPostModifiedDates(chatIds)
+	dates, err := h.db.GetBlobPostModifiedDates(c.Request().Context(), chatIds)
 	if err != nil {
 		return err
 	}
@@ -256,24 +256,6 @@ func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
 	})
 
 	return c.JSON(http.StatusOK, res)
-}
-
-func appendKeepingN(input []*BlogPostPreviewDto, post *BlogPostPreviewDto, sizeToKeep int) ([]*BlogPostPreviewDto, int) {
-	var response []*BlogPostPreviewDto = make([]*BlogPostPreviewDto, 0)
-	if len(input) < sizeToKeep {
-		for _, pp := range input {
-			response = append(response, pp)
-		}
-	} else {
-		// copy last sizeToKeep - 1 items to response // + 1 gives us the space for post
-		leftIdx := len(input) + 1 - sizeToKeep
-		tmpResponse := input[leftIdx:]
-		for _, pp := range tmpResponse {
-			response = append(response, pp)
-		}
-	}
-	response = append(response, post)
-	return response, len(response)
 }
 
 func (h *BlogHandler) performSearch(searchString string, searchable []*BlogPostPreviewDto) ([]*BlogPostPreviewDto, error) {
@@ -323,15 +305,15 @@ func (h *BlogHandler) cutText(text string) *string {
 }
 
 type BlogPostResponse struct {
-	ChatId         int64     `json:"chatId"`
-	Title          string    `json:"title"`
-	OwnerId        *int64    `json:"ownerId"`
-	Owner          *dto.User `json:"owner"`
-	MessageId      *int64    `json:"messageId"`
-	Text           *string   `json:"text"`
-	CreateDateTime time.Time `json:"createDateTime"`
-	Reactions 	   []dto.Reaction `json:"reactions"`
-	Preview        *string   `json:"preview"`
+	ChatId         int64          `json:"chatId"`
+	Title          string         `json:"title"`
+	OwnerId        *int64         `json:"ownerId"`
+	Owner          *dto.User      `json:"owner"`
+	MessageId      *int64         `json:"messageId"`
+	Text           *string        `json:"text"`
+	CreateDateTime time.Time      `json:"createDateTime"`
+	Reactions      []dto.Reaction `json:"reactions"`
+	Preview        *string        `json:"preview"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -340,7 +322,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		return err
 	}
 
-	chatBasic, err := h.db.GetChatBasic(blogId)
+	chatBasic, err := h.db.GetChatBasic(c.Request().Context(), blogId)
 	if err != nil {
 		return err
 	}
@@ -359,7 +341,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	}
 
 	var post *db.BlogPost
-	posts, err := h.db.GetBlogPostsByChatIds([]int64{blogId})
+	posts, err := h.db.GetBlogPostsByChatIds(c.Request().Context(), []int64{blogId})
 	if err != nil {
 		return err
 	}
@@ -378,7 +360,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		var participantIdSet = map[int64]bool{}
 		participantIdSet[post.OwnerId] = true
 
-		reactions, err := h.db.GetReactionsOnMessage(chatBasic.Id, post.MessageId)
+		reactions, err := h.db.GetReactionsOnMessage(c.Request().Context(), chatBasic.Id, post.MessageId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Infof("For blog id %v unable to get reactions: %v", blogId, err)
 			return err
@@ -386,7 +368,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 
 		takeOnAccountReactions(participantIdSet, reactions) // adds reaction' users to participantIdSet
 
-		var users = getUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+		var users = getUsersRemotelyOrEmpty(c.Request().Context(), participantIdSet, h.restClient)
 
 		user := users[post.OwnerId]
 		response.Owner = user
@@ -407,7 +389,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 
 	messageDtos := make([]*dto.DisplayMessageDto, 0)
 
-	chatBasic, err := h.db.GetChatBasic(blogId)
+	chatBasic, err := h.db.GetChatBasic(c.Request().Context(), blogId)
 	if err != nil {
 		return err
 	}
@@ -423,18 +405,18 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	page := utils.FixPageString(c.QueryParam("page"))
 	portionOffset := utils.GetOffset(page, size)
 
-	postMessageId, err := h.db.GetBlogPostMessageId(blogId)
+	postMessageId, err := h.db.GetBlogPostMessageId(c.Request().Context(), blogId)
 	if err != nil {
 		return err
 	}
 
 	var count int64
-	count, err = h.db.CountComments(blogId, postMessageId)
+	count, err = h.db.CountComments(c.Request().Context(), blogId, postMessageId)
 	if err != nil {
 		return err
 	}
 
-	messages, err := h.db.GetComments(blogId, postMessageId, size, portionOffset, false)
+	messages, err := h.db.GetComments(c.Request().Context(), blogId, postMessageId, size, portionOffset, false)
 	if err != nil {
 		return err
 	}
@@ -444,11 +426,11 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	for _, message := range messages {
 		populateSets(message, ownersSet, chatsPreSet, true)
 	}
-	chatsSet, err := h.db.GetChatsBasic(chatsPreSet, NonExistentUser)
+	chatsSet, err := h.db.GetChatsBasic(c.Request().Context(), chatsPreSet, NonExistentUser)
 	if err != nil {
 		return err
 	}
-	var users = getUsersRemotelyOrEmpty(ownersSet, h.restClient, c)
+	var users = getUsersRemotelyOrEmpty(c.Request().Context(), ownersSet, h.restClient)
 	for _, cc := range messages {
 		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), cc, users, chatsSet)
 		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), msg.Text, msg.Id)
@@ -456,7 +438,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	}
 
 	pagesCount := count / int64(size)
-	if count % int64(size) > 0 {
+	if count%int64(size) > 0 {
 		pagesCount++
 	}
 

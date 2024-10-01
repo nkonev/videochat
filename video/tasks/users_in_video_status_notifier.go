@@ -36,8 +36,8 @@ func (srv *UsersInVideoStatusNotifierService) doJob() {
 
 	GetLogEntry(ctx).Debugf("Invoked periodic UsersInVideoStatusNotifier")
 
-	err := db.Transact(srv.database, func(tx *db.Tx) error {
-		srv.scheduleService.NotifyAllChatsAboutUsersInVideoStatus(ctx,  tx,nil)
+	err := db.Transact(ctx, srv.database, func(tx *db.Tx) error {
+		srv.scheduleService.NotifyAllChatsAboutUsersInVideoStatus(ctx, tx, nil)
 		return nil
 	})
 	if err != nil {

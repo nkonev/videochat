@@ -31,33 +31,33 @@ type MigrationsConfig struct {
 
 // enumerates common tx and non-tx operations
 type CommonOperations interface {
-	Query(query string, args ...interface{}) (*dbP.Rows, error)
-	QueryRow(query string, args ...interface{}) *dbP.Row
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
-func (dbR *DB) Query(query string, args ...interface{}) (*dbP.Rows, error) {
-	return dbR.DB.Query(query, args...)
+func (dbR *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
+	return dbR.DB.QueryContext(ctx, query, args...)
 }
 
-func (txR *Tx) Query(query string, args ...interface{}) (*dbP.Rows, error) {
-	return txR.Tx.Query(query, args...)
+func (txR *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
+	return txR.Tx.QueryContext(ctx, query, args...)
 }
 
-func (dbR *DB) QueryRow(query string, args ...interface{}) *dbP.Row {
-	return dbR.DB.QueryRow(query, args...)
+func (dbR *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row {
+	return dbR.DB.QueryRowContext(ctx, query, args...)
 }
 
-func (txR *Tx) QueryRow(query string, args ...interface{}) *dbP.Row {
-	return txR.Tx.QueryRow(query, args...)
+func (txR *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row {
+	return txR.Tx.QueryRowContext(ctx, query, args...)
 }
 
-func (dbR *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return dbR.DB.Exec(query, args...)
+func (dbR *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return dbR.DB.ExecContext(ctx, query, args...)
 }
 
-func (txR *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return txR.Tx.Exec(query, args...)
+func (txR *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return txR.Tx.ExecContext(ctx, query, args...)
 }
 
 const postgresDriverString = "pgx"
@@ -75,8 +75,8 @@ func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) 
 }
 
 // Begin starts an returns a new transaction.
-func (db *DB) Begin() (*Tx, error) {
-	if tx, err := db.DB.Begin(); err != nil {
+func (db *DB) Begin(ctx context.Context) (*Tx, error) {
+	if tx, err := db.DB.BeginTx(ctx, nil); err != nil {
 		return nil, err
 	} else {
 		return &Tx{tx}, nil

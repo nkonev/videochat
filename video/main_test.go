@@ -138,7 +138,7 @@ func waitForVideoServer() {
 		getChatRequest := &http.Request{
 			Method: "GET",
 			Header: requestHeaders1,
-			URL:    stringToUrl("http://localhost"+viper.GetString("server.apiAddress")+"/api/video/config"),
+			URL:    stringToUrl("http://localhost" + viper.GetString("server.apiAddress") + "/api/video/config"),
 		}
 		getChatResponse, err := restClient.GetClient().Do(getChatRequest)
 		if err != nil {
@@ -283,12 +283,11 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 	return app
 }
 
-func newMockLivekitRoomClient(t *testing.T) func () client.LivekitRoomClient {
+func newMockLivekitRoomClient(t *testing.T) func() client.LivekitRoomClient {
 	return func() client.LivekitRoomClient {
 		return client.NewMockLivekitRoomClient(t)
 	}
 }
-
 
 func getJsonPathResult(t *testing.T, body string, jsonpath0 string) interface{} {
 	res := getJsonPathRaw(t, body, jsonpath0)
@@ -340,7 +339,7 @@ func TestLivekitSynchronizeTaskIsGoingToCreateTheMissedEntries(t *testing.T) {
 	runTest(t, func(
 		database *db.DB,
 		task *tasks.SynchronizeWithLivekitService,
-		livekitRoomClient   	client.LivekitRoomClient,
+		livekitRoomClient client.LivekitRoomClient,
 	) {
 		mockLivekitRoomClient := livekitRoomClient.(*client.MockLivekitRoomClient)
 		var chatId int64 = 1
@@ -348,7 +347,7 @@ func TestLivekitSynchronizeTaskIsGoingToCreateTheMissedEntries(t *testing.T) {
 		mockLivekitRoomClient.On("ListRooms", mock.Anything, mock.Anything).Return(&livekit.ListRoomsResponse{
 			Rooms: []*livekit.Room{
 				{
-					Name:             roomName,
+					Name: roomName,
 				},
 			},
 		}, nil)
@@ -366,12 +365,12 @@ func TestLivekitSynchronizeTaskIsGoingToCreateTheMissedEntries(t *testing.T) {
 		mockLivekitRoomClient.On("ListParticipants",
 			mock.Anything,
 			&livekit.ListParticipantsRequest{Room: roomName}).
-		Return(&livekit.ListParticipantsResponse{Participants: []*livekit.ParticipantInfo{
-			{
-				Identity:    utils.Int64ToString(userId) + "_02e9d926-3291-43bb-bfb0-81be053705d9",
-				Metadata:    mdbs,
-			},
-		}}, nil)
+			Return(&livekit.ListParticipantsResponse{Participants: []*livekit.ParticipantInfo{
+				{
+					Identity: utils.Int64ToString(userId) + "_02e9d926-3291-43bb-bfb0-81be053705d9",
+					Metadata: mdbs,
+				},
+			}}, nil)
 
 		var numOfEntriesBefore int
 		rowBefore := database.QueryRow("select count (*) from user_call_state")
@@ -386,8 +385,8 @@ func TestLivekitSynchronizeTaskIsGoingToCreateTheMissedEntries(t *testing.T) {
 		assert.NoError(t, rowAfter.Scan(&numOfEntriesAfter))
 		assert.Equal(t, 1, numOfEntriesAfter)
 
-		userState, err := db.TransactWithResult(database, func(tx *db.Tx) (*dto.UserCallState, error) {
-			return tx.Get(dto.UserCallStateId{
+		userState, err := db.TransactWithResult(context.Background(), database, func(tx *db.Tx) (*dto.UserCallState, error) {
+			return tx.Get(context.Background(), dto.UserCallStateId{
 				TokenId: uuid.MustParse(tokenId),
 				UserId:  userId,
 			})
@@ -419,13 +418,13 @@ func TestItsImpossibleToMakeACallToUserWhoAlreadyInCall(t *testing.T) {
 		tokenId := "9449d926-3291-43bb-bfb0-81be053705d9"
 
 		// create an entry that represents calleeUserId is already in call
-		assert.NoError(t, db.Transact(database, func(tx *db.Tx) error {
-			return tx.Set(dto.UserCallState{
-				TokenId:                      uuid.MustParse(tokenId),
-				UserId:                       calleeUserId,
-				ChatId:                       chatId,
-				TokenTaken:                   true,
-				Status:                       db.CallStatusInCall,
+		assert.NoError(t, db.Transact(context.Background(), database, func(tx *db.Tx) error {
+			return tx.Set(context.Background(), dto.UserCallState{
+				TokenId:    uuid.MustParse(tokenId),
+				UserId:     calleeUserId,
+				ChatId:     chatId,
+				TokenTaken: true,
+				Status:     db.CallStatusInCall,
 			})
 		}))
 

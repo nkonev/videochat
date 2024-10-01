@@ -19,17 +19,17 @@ import (
 )
 
 type ChatDialerService struct {
-	database   			    *db.DB
-	conf                    *config.ExtendedConfig
-	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
-	dialStatusPublisher     *producer.RabbitDialStatusPublisher
-	chatClient              *client.RestClient
-	tracer             trace.Tracer
+	database                 *db.DB
+	conf                     *config.ExtendedConfig
+	rabbitMqInvitePublisher  *producer.RabbitInvitePublisher
+	dialStatusPublisher      *producer.RabbitDialStatusPublisher
+	chatClient               *client.RestClient
+	tracer                   trace.Tracer
 	stateChangedEventService *services.StateChangedEventService
 }
 
 func NewChatDialerService(
-	database   			  *db.DB,
+	database *db.DB,
 	conf *config.ExtendedConfig,
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher,
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
@@ -38,12 +38,12 @@ func NewChatDialerService(
 ) *ChatDialerService {
 	trcr := otel.Tracer("scheduler/chat-dialer")
 	return &ChatDialerService{
-		database:                database,
-		conf:                    conf,
-		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
-		dialStatusPublisher:     dialStatusPublisher,
-		chatClient:              chatClient,
-		tracer:             trcr,
+		database:                 database,
+		conf:                     conf,
+		rabbitMqInvitePublisher:  rabbitMqInvitePublisher,
+		dialStatusPublisher:      dialStatusPublisher,
+		chatClient:               chatClient,
+		tracer:                   trcr,
 		stateChangedEventService: stateChangedEventService,
 	}
 }
@@ -61,12 +61,12 @@ func (srv *ChatDialerService) doJob() {
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context) {
-	err := db.Transact(srv.database, func(tx *db.Tx) error {
+	err := db.Transact(ctx, srv.database, func(tx *db.Tx) error {
 		offset := int64(0)
 		hasMoreElements := true
 		for hasMoreElements {
 			// here we use order by owner_id
-			batchUserStates, err := tx.GetAllUserStatesOrderByOwnerAndChat(utils.DefaultSize, offset)
+			batchUserStates, err := tx.GetAllUserStatesOrderByOwnerAndChat(ctx, utils.DefaultSize, offset)
 			if err != nil {
 				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
 				continue
@@ -146,7 +146,7 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 			time.Now().UTC().Sub(*state.MarkedForRemoveAt) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
 
 			GetLogEntry(ctx).Infof("Removing temporary in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
-			err := tx.Remove(dto.UserCallStateId{
+			err := tx.Remove(ctx, dto.UserCallStateId{
 				TokenId: state.TokenId,
 				UserId:  state.UserId,
 			})
@@ -159,7 +159,7 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 		if time.Now().UTC().Sub(state.CreateDateTime) > viper.GetDuration("schedulers.chatDialerTask.removeDanglingCallStatusBeingInvitedAfter") {
 
 			GetLogEntry(ctx).Infof("Removing dangling in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
-			err := tx.Remove(dto.UserCallStateId{
+			err := tx.Remove(ctx, dto.UserCallStateId{
 				TokenId: state.TokenId,
 				UserId:  state.UserId,
 			})
@@ -171,7 +171,6 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 		}
 	}
 }
-
 
 type ChatDialerTask struct {
 	*gointerlock.GoInterval

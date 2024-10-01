@@ -17,7 +17,7 @@ import (
 type Events struct {
 	rabbitEventPublisher        *producer.RabbitEventsPublisher
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
-	tr trace.Tracer
+	tr                          trace.Tracer
 }
 
 func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher) *Events {
@@ -26,7 +26,7 @@ func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotif
 	return &Events{
 		rabbitEventPublisher:        rabbitEventPublisher,
 		rabbitNotificationPublisher: rabbitNotificationPublisher,
-		tr: tr,
+		tr:                          tr,
 	}
 }
 
@@ -41,11 +41,11 @@ func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatD
 	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDto, userIds []int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDto, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDto, userId int64,isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDto, userId int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
@@ -80,13 +80,13 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 		}
 	} else {
 
-		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, newChatDto.Id)
+		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(ctx, userIds, newChatDto.Id)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("error during get unread messages: %v", err)
 			return
 		}
 
-		isChatPinnedMap, err := tx.IsChatPinnedBatch(userIds, newChatDto.Id)
+		isChatPinnedMap, err := tx.IsChatPinnedBatch(ctx, userIds, newChatDto.Id)
 		if err != nil {
 			GetLogEntry(ctx).Errorf("error during get pinned: %v", err)
 			return
@@ -125,13 +125,13 @@ func (not *Events) ChatNotifyMessageCount(ctx context.Context, userIds []int64, 
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
 	defer messageSpan.End()
 
-	lastUpdated, err := tx.GetChatLastDatetimeChat(chatId)
+	lastUpdated, err := tx.GetChatLastDatetimeChat(ctx, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
 		return
 	}
 
-	unreadMessagesByUserId, err := tx.GetUnreadMessagesCountBatchByParticipants(userIds, chatId)
+	unreadMessagesByUserId, err := tx.GetUnreadMessagesCountBatchByParticipants(ctx, userIds, chatId)
 	if err != nil {
 		GetLogEntry(ctx).Errorf("error during get GetUnreadMessagesCountBatchByParticipants for chat=%v: %v", chatId, err)
 		return
@@ -160,10 +160,10 @@ func (not *Events) NotifyAboutHasNewMessagesChanged(ctx context.Context, partici
 	defer messageSpan.End()
 
 	err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
-		UserId:                     participantId,
-		EventType:                  eventType,
-		HasUnreadMessagesChanged:   &dto.HasUnreadMessagesChanged{
-			HasUnreadMessages:      hasNewMessages,
+		UserId:    participantId,
+		EventType: eventType,
+		HasUnreadMessagesChanged: &dto.HasUnreadMessagesChanged{
+			HasUnreadMessages: hasNewMessages,
 		},
 	})
 	if err != nil {
@@ -238,7 +238,7 @@ func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, u
 		ParticipantId: user.Id,
 	}
 
-	err := co.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err := co.IterateOverChatParticipantIds(ctx, chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			if participantId == user.Id {
 				continue
@@ -272,12 +272,12 @@ func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
 	defer messageSpan.End()
 
-	err := co.IterateOverCoChattedParticipantIds(user.Id, func(participantIds []int64) error {
+	err := co.IterateOverCoChattedParticipantIds(ctx, user.Id, func(participantIds []int64) error {
 		var internalErr error
 		for _, participantId := range participantIds {
 			internalErr = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
-				UserId:                  participantId,
-				EventType:               eventType,
+				UserId:                           participantId,
+				EventType:                        eventType,
 				CoChattedParticipantNotification: user,
 			})
 		}
@@ -299,7 +299,7 @@ func (not *Events) NotifyAboutMessageBroadcast(ctx context.Context, chatId, user
 		Text:   text,
 	}
 
-	err := co.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err := co.IterateOverChatParticipantIds(ctx, chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 				EventType:                    eventType,
@@ -372,7 +372,7 @@ func (not *Events) NotifyAddReply(ctx context.Context, reply *dto.ReplyDto, user
 		defer messageSpan.End()
 
 		err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
-			EventType:        eventType,
+			EventType:         eventType,
 			UserId:            *userId,
 			ChatId:            reply.ChatId,
 			ReplyNotification: reply,
@@ -584,7 +584,7 @@ func (not *Events) SendReactionEvent(ctx context.Context, wasChanged bool, chatI
 	aReaction := dto.Reaction{
 		Count:    int64(count),
 		Reaction: reaction,
-		Users: reactionUsers,
+		Users:    reactionUsers,
 	}
 
 	reactionChangedEvent := dto.ReactionChangedEvent{
@@ -592,13 +592,13 @@ func (not *Events) SendReactionEvent(ctx context.Context, wasChanged bool, chatI
 		Reaction:  aReaction,
 	}
 
-	err := tx.IterateOverChatParticipantIds(chatId, func(participantIds []int64) error {
+	err := tx.IterateOverChatParticipantIds(ctx, chatId, func(participantIds []int64) error {
 		for _, participantId := range participantIds {
 			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
-				EventType:                  eventType,
-				ReactionChangedEvent: 		&reactionChangedEvent,
-				UserId:                     participantId,
-				ChatId:                     chatId,
+				EventType:            eventType,
+				ReactionChangedEvent: &reactionChangedEvent,
+				UserId:               participantId,
+				ChatId:               chatId,
 			})
 			if err != nil {
 				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
@@ -624,20 +624,20 @@ func (not *Events) SendReactionOnYourMessage(ctx context.Context, wasAdded bool,
 	defer messageSpan.End()
 
 	event := dto.ReactionEvent{
-		UserId:   behalfUserId,
-		Reaction: reaction,
+		UserId:    behalfUserId,
+		Reaction:  reaction,
 		MessageId: messageId,
 	}
 
 	err := not.rabbitNotificationPublisher.Publish(ctx, dto.NotificationEvent{
-		EventType:                  eventType,
-		ReactionEvent: 				&event,
-		UserId:                     messageOwnerId,
-		ChatId:                     chatId,
-		ByUserId:          behalfUserId,
-		ByLogin:           behalfLogin,
-		ByAvatar:          behalfAvatar,
-		ChatTitle:         chatTitle,
+		EventType:     eventType,
+		ReactionEvent: &event,
+		UserId:        messageOwnerId,
+		ChatId:        chatId,
+		ByUserId:      behalfUserId,
+		ByLogin:       behalfLogin,
+		ByAvatar:      behalfAvatar,
+		ChatTitle:     chatTitle,
 	})
 	if err != nil {
 		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
@@ -652,9 +652,9 @@ func (not *Events) NotifyMessagesReloadCommand(ctx context.Context, chatId int64
 
 	for _, participantId := range participantIds {
 		err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
-			EventType:                  eventType,
-			UserId:                     participantId,
-			ChatId:                     chatId,
+			EventType: eventType,
+			UserId:    participantId,
+			ChatId:    chatId,
 		})
 		if err != nil {
 			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
@@ -673,8 +673,8 @@ func (not *Events) NotifyNewMessageBrowserNotification(ctx context.Context, add 
 	defer messageSpan.End()
 
 	err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
-		UserId:           participantId,
-		EventType:        eventType,
+		UserId:    participantId,
+		EventType: eventType,
 		BrowserNotification: &dto.BrowserNotification{
 			ChatId:      chatId,
 			ChatName:    chatName,

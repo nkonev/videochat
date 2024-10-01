@@ -153,7 +153,7 @@ func waitForChatServer() {
 		getChatRequest := &http.Request{
 			Method: "GET",
 			Header: requestHeaders1,
-			URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat"),
+			URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat"),
 		}
 		getChatResponse, err := restClient.Do(getChatRequest)
 		if err != nil {
@@ -411,11 +411,11 @@ func TestChatCrud(t *testing.T) {
 		c30, _, _ := request("GET", "/api/chat/50666", nil, e)
 		assert.Equal(t, http.StatusNoContent, c30)
 
-		chatsBefore, _ := db.CountChats()
+		chatsBefore, _ := db.CountChats(context.Background())
 		c, b, _ := request("POST", "/api/chat", strings.NewReader(`{"name": "Ultra new chat"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
-		chatsAfterCreate, _ := db.CountChats()
+		chatsAfterCreate, _ := db.CountChats(context.Background())
 		assert.Equal(t, chatsBefore+1, chatsAfterCreate)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
@@ -437,7 +437,7 @@ func TestChatCrud(t *testing.T) {
 
 		c1, _, _ := request("DELETE", "/api/chat/"+idString, nil, e)
 		assert.Equal(t, http.StatusAccepted, c1)
-		chatsAfterDelete, _ := db.CountChats()
+		chatsAfterDelete, _ := db.CountChats(context.Background())
 		assert.Equal(t, chatsBefore, chatsAfterDelete)
 	})
 }
@@ -474,7 +474,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]}`),
-		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat"),
+		URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat"),
 	}
 
 	cl := client.NewRestClient()
@@ -495,7 +495,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
-		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat/" + chatIdString + "/message"),
+		URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat/" + chatIdString + "/message"),
 	}
 	messageResponse, err := cl.Do(messageRequest)
 	assert.Nil(t, err)
@@ -506,7 +506,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"text": "Hello dude"}`),
-		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat/" + chatIdString + "/message"),
+		URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat/" + chatIdString + "/message"),
 	}
 	messageResponse2, err := cl.Do(messageRequest2)
 	assert.Nil(t, err)
@@ -536,7 +536,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 		Method: "POST",
 		Header: requestHeaders1,
 		Body:   stringToReadCloser(`{"name": "Chat for test the Centrifuge notifications about unread messages", "participantIds": [1, 2]`),
-		URL:    stringToUrl("http://localhost"+viper.GetString("server.address")+"/api/chat"),
+		URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat"),
 	}
 
 	cl := client.NewRestClient()
@@ -565,7 +565,6 @@ func TestGetMessagesPaginated(t *testing.T) {
 		assert.Equal(t, int64(7), firstPageResult[0].Id)
 		assert.Equal(t, int64(8), firstPageResult[1].Id)
 		assert.Equal(t, int64(9), firstPageResult[2].Id)
-
 
 		// get second page
 		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=9&size=3", nil, e)
@@ -604,7 +603,6 @@ func TestGetMessagesPaginatedSearch(t *testing.T) {
 		assert.Equal(t, int64(7), firstPageResult[0].Id)
 		assert.Equal(t, int64(8), firstPageResult[1].Id)
 		assert.Equal(t, int64(9), firstPageResult[2].Id)
-
 
 		// get second page
 		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=9&size=3", nil, e)
@@ -711,11 +709,11 @@ func TestMessageValidation(t *testing.T) {
 
 func TestMessageCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		messagesBefore, _ := db.CountMessages()
+		messagesBefore, _ := db.CountMessages(context.Background())
 		c, b, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": "Ultra new message"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
-		messagesAfterCreate, _ := db.CountMessages()
+		messagesAfterCreate, _ := db.CountMessages(context.Background())
 		assert.Equal(t, messagesBefore+1, messagesAfterCreate)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
@@ -741,7 +739,7 @@ func TestMessageCrud(t *testing.T) {
 
 		c1, _, _ := request("DELETE", "/api/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusAccepted, c1)
-		messagesAfterDelete, _ := db.CountMessages()
+		messagesAfterDelete, _ := db.CountMessages(context.Background())
 		assert.Equal(t, messagesBefore, messagesAfterDelete)
 	})
 }
