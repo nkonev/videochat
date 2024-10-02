@@ -63,7 +63,7 @@ type CommonOperations interface {
 	GetChatsBasic(ctx context.Context, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error)
 	GetBlogPostsByLimitOffset(ctx context.Context, reverse bool, limit int, offset int) ([]*Blog, error)
 	GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPost, error)
-	GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*string, *int64, *bool, *bool, error)
+	GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*MessageBasic, error)
 	GetChatsByLimitOffsetSearch(ctx context.Context, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
 	GetChatsByLimitOffset(ctx context.Context, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error)
 	GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)

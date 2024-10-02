@@ -414,7 +414,7 @@ func (tx *Tx) SetBlogPost(ctx context.Context, chatId int64, messageId int64) er
 	return nil
 }
 
-func getMessageBasicCommon(ctx context.Context, co CommonOperations, chatId int64, messageId int64) (*string, *int64, *bool, *bool, error) {
+func getMessageBasicCommon(ctx context.Context, co CommonOperations, chatId int64, messageId int64) (*MessageBasic, error) {
 	row := co.QueryRowContext(ctx, fmt.Sprintf(`SELECT 
     	m.text,
     	m.owner_id,
@@ -425,27 +425,31 @@ func getMessageBasicCommon(ctx context.Context, co CommonOperations, chatId int6
 	    m.id = $1 
 `, chatId),
 		messageId)
-	var result string
-	var owner int64
-	var blogPost bool
-	var published bool
-	err := row.Scan(&result, &owner, &blogPost, &published)
+	var mb = MessageBasic{}
+	err := row.Scan(&mb.Text, &mb.OwnerId, &mb.BlogPost, &mb.Published)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
-		return nil, nil, nil, nil, nil
+		return nil, nil
 	}
 	if err != nil {
-		return nil, nil, nil, nil, eris.Wrap(err, "error during interacting with db")
+		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
-		return &result, &owner, &blogPost, &published, nil
+		return &mb, nil
 	}
 }
 
-func (tx *Tx) GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*string, *int64, *bool, *bool, error) {
+type MessageBasic struct {
+	Text      string
+	OwnerId   int64
+	BlogPost  bool
+	Published bool
+}
+
+func (tx *Tx) GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*MessageBasic, error) {
 	return getMessageBasicCommon(ctx, tx, chatId, messageId)
 }
 
-func (db *DB) GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*string, *int64, *bool, *bool, error) {
+func (db *DB) GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*MessageBasic, error) {
 	return getMessageBasicCommon(ctx, db, chatId, messageId)
 }
 

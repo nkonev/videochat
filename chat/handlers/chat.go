@@ -1562,14 +1562,14 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 
 	messageId, _ := GetQueryParamAsInt64(c, "messageId")
 	if messageId > 0 {
-		text, _, isBlogPostMessage, published, err := ch.db.GetMessageBasic(c.Request().Context(), chatId, messageId)
+		m, err := ch.db.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {
 			return err
 		}
 		fileItemUuid := c.QueryParam("fileItemUuid")
-		if text != nil && (chat.IsBlog || (published != nil && *published) || (isBlogPostMessage != nil && *isBlogPostMessage)) {
+		if m != nil && (chat.IsBlog || m.Published || m.BlogPost) {
 			encodedFileItemUuid := utils.UrlEncode(fileItemUuid)
-			if strings.Contains(*text, encodedFileItemUuid) {
+			if strings.Contains(m.Text, encodedFileItemUuid) {
 				return c.NoContent(http.StatusOK)
 			}
 		}

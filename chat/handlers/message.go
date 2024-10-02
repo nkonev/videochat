@@ -348,15 +348,15 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return err
 		}
 
-		_, messageOwnerId, _, _, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
+		m, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants")
 			return err
 		}
 
 		// sends notification to the notification microservice
-		if *messageOwnerId != userPrincipalDto.UserId {
-			mc.notificator.SendReactionOnYourMessage(c.Request().Context(), wasAdded, chatId, messageId, *messageOwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+		if m != nil && m.OwnerId != userPrincipalDto.UserId {
+			mc.notificator.SendReactionOnYourMessage(c.Request().Context(), wasAdded, chatId, messageId, m.OwnerId, bindTo.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 		}
 
 		GetLogEntry(c.Request().Context()).Infof("Got reaction %v", bindTo.Reaction)
@@ -784,15 +784,15 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(ctx context.Cont
 			if !chat.CanResend {
 				return errors.New("Resending is forbidden for this chat")
 			}
-			messageText, messageOwnerId, _, _, err := tx.GetMessageBasic(ctx, input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
+			m, err := tx.GetMessageBasic(ctx, input.EmbedMessageRequest.ChatId, input.EmbedMessageRequest.Id)
 			if err != nil {
 				return err
 			}
-			if messageText == nil {
+			if m == nil {
 				return errors.New("Missing the message")
 			}
-			receiver.Text = *messageText
-			receiver.RequestEmbeddedMessageOwnerId = messageOwnerId
+			receiver.Text = m.Text
+			receiver.RequestEmbeddedMessageOwnerId = &m.OwnerId
 			receiver.RequestEmbeddedMessageChatId = &input.EmbedMessageRequest.ChatId
 			return nil
 		}
@@ -1040,11 +1040,11 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return err
 	}
 
-	_, ownerId, _, _, err := mc.db.GetMessageBasic(c.Request().Context(), chatId, bindTo.MessageId)
+	m, err := mc.db.GetMessageBasic(c.Request().Context(), chatId, bindTo.MessageId)
 	if err != nil {
 		return err
 	}
-	if ownerId == nil || *ownerId != userPrincipalDto.UserId {
+	if m == nil || m.OwnerId != userPrincipalDto.UserId {
 		msg := "user " + utils.Int64ToString(userPrincipalDto.UserId) + " is not owner of message " + utils.Int64ToString(bindTo.MessageId)
 		GetLogEntry(c.Request().Context()).Warnf(msg)
 		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
@@ -1219,13 +1219,13 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 
 		mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, userPrincipalDto.UserId, chatId, "", null.StringFromPtr(nil), messageId, "", NonExistentUser, "")
 
-		_, messageOwnerId, _, _, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
+		m, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {
 			return err
 		}
 
 		// remove notifications about reactions on my message on mousemove
-		if *messageOwnerId == userPrincipalDto.UserId {
+		if m != nil && m.OwnerId == userPrincipalDto.UserId {
 			chatNameForNotification, err := mc.getChatNameForNotification(c.Request().Context(), tx, chatId)
 			if err != nil {
 				return err
@@ -1237,7 +1237,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 			}
 
 			for _, reaction := range reactions {
-				mc.notificator.SendReactionOnYourMessage(c.Request().Context(), false, chatId, messageId, *messageOwnerId, reaction.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
+				mc.notificator.SendReactionOnYourMessage(c.Request().Context(), false, chatId, messageId, m.OwnerId, reaction.Reaction, userPrincipalDto.UserId, userPrincipalDto.UserLogin, userPrincipalDto.Avatar, chatNameForNotification)
 			}
 		}
 
@@ -1301,7 +1301,7 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 		return err
 	}
 
-	message, ownerId, _, _, err := mc.db.GetMessageBasic(c.Request().Context(), chatId, messageId)
+	m, err := mc.db.GetMessageBasic(c.Request().Context(), chatId, messageId)
 	if err != nil {
 		return err
 	}
@@ -1310,7 +1310,9 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 	for _, u := range userIds {
 		usersToGet[u] = true
 	}
-	usersToGet[*ownerId] = true
+	if m != nil {
+		usersToGet[m.OwnerId] = true
+	}
 
 	users, err := mc.restClient.GetUsers(c.Request().Context(), utils.SetToArray(usersToGet))
 	if err != nil {
@@ -1324,12 +1326,16 @@ func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 		if utils.Contains(userIds, us.Id) {
 			usersToReturn = append(usersToReturn, us)
 		}
-		if us.Id == *ownerId {
+		if m != nil && us.Id == m.OwnerId {
 			anOwnerLogin = us.Login
 		}
 	}
 
-	preview := createMessagePreview(mc.stripAllTags, *message, anOwnerLogin)
+	var text string
+	if m != nil {
+		text = m.Text
+	}
+	preview := createMessagePreview(mc.stripAllTags, text, anOwnerLogin)
 
 	return c.JSON(http.StatusOK, &MessageReadResponse{
 		ParticipantsWrapper: ParticipantsWrapper{
@@ -1672,15 +1678,15 @@ func (mc *MessageHandler) PublishMessage(c echo.Context) error {
 			return err
 		}
 
-		_, ownerId, _, _, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
+		m, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {
 			return err
 		}
-		if ownerId == nil {
+		if m == nil {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		if !dto.CanPublishMessage(chatBasic.RegularParticipantCanPublishMessage, isAdmin, *ownerId, userPrincipalDto.UserId) {
+		if !dto.CanPublishMessage(chatBasic.RegularParticipantCanPublishMessage, isAdmin, m.OwnerId, userPrincipalDto.UserId) {
 			return c.JSON(http.StatusUnauthorized, &utils.H{"message": "You cannot publish messages in this chat"})
 		}
 
@@ -1745,16 +1751,16 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 	}
 
 	return db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
-		_, ownerId, _, _, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
+		m, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {
 			return err
 		}
 
-		if ownerId == nil {
+		if m == nil {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		if *ownerId != userPrincipalDto.UserId {
+		if m.OwnerId != userPrincipalDto.UserId {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
