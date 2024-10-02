@@ -23,7 +23,6 @@ types:
     - ".gif"
   video:
     - ".mp4"
-    - ".mkv"
     - ".webm"
     - ".mov"
     - ".m4v"
