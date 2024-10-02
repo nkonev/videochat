@@ -49,25 +49,25 @@
     import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
-        CLOSE_SIMPLE_MODAL,
-        LOGGED_OUT,
-        MESSAGE_ADD,
-        MESSAGE_DELETED,
-        MESSAGE_EDITED,
-        OPEN_EDIT_MESSAGE,
-        OPEN_MESSAGE_READ_USERS_DIALOG,
-        OPEN_RESEND_TO_MODAL,
-        OPEN_SIMPLE_MODAL,
-        OPEN_VIEW_FILES_DIALOG,
-        PROFILE_SET,
-        REFRESH_ON_WEBSOCKET_RESTORED,
-        SCROLL_DOWN,
-        SET_EDIT_MESSAGE,
-        CO_CHATTED_PARTICIPANT_CHANGED,
-        OPEN_MESSAGE_EDIT_SMILEY,
-        REACTION_CHANGED,
-        REACTION_REMOVED,
-        MESSAGES_RELOAD, PLAYER_MODAL
+      CLOSE_SIMPLE_MODAL,
+      LOGGED_OUT,
+      MESSAGE_ADD,
+      MESSAGE_DELETED,
+      MESSAGE_EDITED,
+      OPEN_EDIT_MESSAGE,
+      OPEN_MESSAGE_READ_USERS_DIALOG,
+      OPEN_RESEND_TO_MODAL,
+      OPEN_SIMPLE_MODAL,
+      OPEN_VIEW_FILES_DIALOG,
+      PROFILE_SET,
+      REFRESH_ON_WEBSOCKET_RESTORED,
+      SCROLL_DOWN,
+      SET_EDIT_MESSAGE,
+      CO_CHATTED_PARTICIPANT_CHANGED,
+      OPEN_MESSAGE_EDIT_SMILEY,
+      REACTION_CHANGED,
+      REACTION_REMOVED,
+      MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED
     } from "@/bus/bus";
     import {
         checkUpByTree, checkUpByTreeObj,
@@ -93,6 +93,8 @@
     const SCROLLING_THRESHHOLD = 200; // px
 
     const scrollerName = 'MessageList';
+
+    const videoConvertingClass = "video-converting";
 
     export default {
       mixins: [
@@ -586,14 +588,19 @@
 
                                 spanContainer.removeChild(found);
 
-                                const replacement = document.createElement("VIDEO");
-                                replacement.src = original;
-                                replacement.poster = src;
-                                replacement.playsinline = true;
-                                replacement.controls = true;
-                                replacement.className = "video-custom-class";
-
-                                spanContainer.appendChild(replacement);
+                                axios.post(`/api/storage/view/status`, {
+                                  url: original
+                                }).then(res => {
+                                  if (res.data.status == "converting") {
+                                    const replacement = document.createElement("IMG");
+                                    replacement.src = res.data.statusImage;
+                                    replacement.className = "video-custom-class " + videoConvertingClass;
+                                    spanContainer.appendChild(replacement);
+                                  } else {
+                                    const replacement = this.createVideoReplacementElement(original, src);
+                                    spanContainer.appendChild(replacement);
+                                  }
+                                })
                             } else {
                                 console.info("video holder is not found")
                             }
@@ -602,6 +609,29 @@
                     }
                 }
             }
+        },
+        onFileCreatedEvent(dto) {
+          const message = this.items.find(item => dto.fileInfoDto.fileItemUuid == item.fileItemUuid);
+          if (message) {
+              const messageEl = document.getElementById(messageIdPrefix + message.id);
+              const convertingImages = messageEl.getElementsByClassName(videoConvertingClass);
+              for (const ci of convertingImages) {
+                const spanContainer = ci.parentElement;
+                spanContainer.removeChild(ci);
+
+                const replacement = this.createVideoReplacementElement(dto.fileInfoDto.url, dto.fileInfoDto.previewUrl);
+                spanContainer.appendChild(replacement);
+              }
+          }
+        },
+        createVideoReplacementElement(src, poster) {
+          const replacement = document.createElement("VIDEO");
+          replacement.src = src;
+          replacement.poster = poster;
+          replacement.playsinline = true;
+          replacement.controls = true;
+          replacement.className = "video-custom-class";
+          return replacement
         },
       },
       created() {
@@ -680,6 +710,7 @@
         bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
+        bus.on(FILE_CREATED, this.onFileCreatedEvent);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
@@ -705,6 +736,7 @@
         bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
+        bus.off(FILE_CREATED, this.onFileCreatedEvent);
       }
     }
 </script>
