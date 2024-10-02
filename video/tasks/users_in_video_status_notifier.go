@@ -2,8 +2,7 @@ package tasks
 
 import (
 	"context"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -48,20 +47,20 @@ func (srv *UsersInVideoStatusNotifierService) doJob() {
 }
 
 type UsersInVideoStatusNotifierTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func UsersInVideoStatusNotifierScheduler(
-	redisConnector *redisV8.Client,
 	service *UsersInVideoStatusNotifierService,
-	conf *config.ExtendedConfig,
 ) *UsersInVideoStatusNotifierTask {
-	var interv = viper.GetDuration("schedulers.usersInVideoStatusNotifierTask.notificationPeriod")
-	Logger.Infof("Created users video status periodic notificator with interval %v", interv)
-	return &UsersInVideoStatusNotifierTask{&gointerlock.GoInterval{
-		Name:           "usersInVideoStatusNotifierTask",
-		Interval:       interv,
-		Arg:            service.doJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "usersInVideoStatusNotifierTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	Logger.Infof("Created UsersInVideoStatusNotifierScheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.doJob()
+		return nil
+	})
+
+	return &UsersInVideoStatusNotifierTask{job}
 }

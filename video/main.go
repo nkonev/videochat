@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/nkonev/dcron"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -67,7 +68,9 @@ func main() {
 			services.NewUserService,
 			services.NewStateChangedEventService,
 			services.NewEgressService,
-			tasks.RedisV8,
+			tasks.RedisV9,
+			tasks.RedisLocker,
+			tasks.Scheduler,
 			tasks.NewVideoCallUsersCountNotifierService,
 			tasks.VideoCallUsersCountNotifierScheduler,
 			tasks.NewUsersInVideoStatusNotifierService,
@@ -257,57 +260,61 @@ func runApiEcho(e *ApiEcho, cfg *config.ExtendedConfig) {
 }
 
 func runScheduler(
+	scheduler *dcron.Cron,
 	chatNotifierTask *tasks.VideoCallUsersCountNotifierTask,
 	chatDialerTask *tasks.ChatDialerTask,
 	videoRecordingTask *tasks.RecordingNotifierTask,
 	usersInVideoStatusNotifierTask *tasks.UsersInVideoStatusNotifierTask,
 	synchronizeWithLivekitTask *tasks.SynchronizeWithLivekitTask,
-) {
-	if viper.GetBool("schedulers.videoCallUsersCountNotifierTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler videoCallUsersCountNotifierTask")
-			err := chatNotifierTask.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working videoCallUsersCountNotifierTask: %s", err)
-			}
-		}()
+	lc fx.Lifecycle,
+) error {
+	scheduler.Start()
+	Logger.Infof("Scheduler started")
+
+	if viper.GetBool("schedulers." + chatNotifierTask.Key() + ".enabled") {
+		Logger.Infof("Adding " + chatNotifierTask.Key() + " job to scheduler")
+		err := scheduler.AddJobs(chatNotifierTask)
+		if err != nil {
+			return err
+		}
 	}
-	if viper.GetBool("schedulers.chatDialerTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler chatDialerTask")
-			err := chatDialerTask.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working chatDialerTask: %s", err)
-			}
-		}()
+	if viper.GetBool("schedulers." + chatDialerTask.Key() + ".enabled") {
+		Logger.Infof("Adding " + chatDialerTask.Key() + " job to scheduler")
+		err := scheduler.AddJobs(chatDialerTask)
+		if err != nil {
+			return err
+		}
 	}
-	if viper.GetBool("schedulers.videoRecordingNotifierTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler videoRecordingNotifierTask")
-			err := videoRecordingTask.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working videoRecordingNotifierTask: %s", err)
-			}
-		}()
+	if viper.GetBool("schedulers." + videoRecordingTask.Key() + ".enabled") {
+		Logger.Infof("Adding " + videoRecordingTask.Key() + " job to scheduler")
+		err := scheduler.AddJobs(videoRecordingTask)
+		if err != nil {
+			return err
+		}
 	}
-	if viper.GetBool("schedulers.usersInVideoStatusNotifierTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler usersInVideoStatusNotifierTask")
-			err := usersInVideoStatusNotifierTask.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working usersInVideoStatusNotifierTask: %s", err)
-			}
-		}()
+	if viper.GetBool("schedulers." + usersInVideoStatusNotifierTask.Key() + ".enabled") {
+		Logger.Infof("Adding " + usersInVideoStatusNotifierTask.Key() + " job to scheduler")
+		err := scheduler.AddJobs(usersInVideoStatusNotifierTask)
+		if err != nil {
+			return err
+		}
 	}
-	if viper.GetBool("schedulers.synchronizeWithLivekitTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler synchronizeWithLivekitTask")
-			err := synchronizeWithLivekitTask.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working synchronizeWithLivekitTask: %s", err)
-			}
-		}()
+	if viper.GetBool("schedulers." + synchronizeWithLivekitTask.Key() + ".enabled") {
+		Logger.Infof("Adding " + synchronizeWithLivekitTask.Key() + " job to scheduler")
+		err := scheduler.AddJobs(synchronizeWithLivekitTask)
+		if err != nil {
+			return err
+		}
 	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			Logger.Infof("Stopping scheduler")
+			<-scheduler.Stop().Done()
+			return nil
+		},
+	})
+	return nil
 }
 
 func createTypedConfig() (*config.ExtendedConfig, error) {

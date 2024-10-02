@@ -2,15 +2,15 @@ package services
 
 import (
 	"context"
-	redisV8 "github.com/go-redis/redis/v8"
+	redisV9 "github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
 
 type RedisInfoService struct {
-	redisClient *redisV8.Client
+	redisClient *redisV9.Client
 }
 
-func NewRedisInfoService(redisClient *redisV8.Client) *RedisInfoService {
+func NewRedisInfoService(redisClient *redisV9.Client) *RedisInfoService {
 	return &RedisInfoService{
 		redisClient: redisClient,
 	}
@@ -22,7 +22,7 @@ const convertingConvertedPrefix = "converting:converted:"
 func (s *RedisInfoService) GetOriginalConverting(ctx context.Context, minioKeyOfOriginal string) (bool, error) {
 	value, err := s.redisClient.Get(ctx, convertingOriginalPrefix+minioKeyOfOriginal).Bool()
 	if err != nil {
-		if err == redisV8.Nil {
+		if err == redisV9.Nil {
 			return false, nil
 		} else {
 			return false, err
@@ -41,11 +41,10 @@ func (s *RedisInfoService) RemoveOriginalConverting(ctx context.Context, minioKe
 	s.redisClient.Del(ctx, convertingOriginalPrefix+minioKeyOfOriginal)
 }
 
-
 func (s *RedisInfoService) GetConvertedConverting(ctx context.Context, minioKeyOfConverted string) (bool, error) {
 	value, err := s.redisClient.Get(ctx, convertingConvertedPrefix+minioKeyOfConverted).Bool()
 	if err != nil {
-		if err == redisV8.Nil {
+		if err == redisV9.Nil {
 			return false, nil
 		} else {
 			return false, err

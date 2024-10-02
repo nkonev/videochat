@@ -3,9 +3,8 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -16,21 +15,22 @@ import (
 )
 
 type CleanFilesOfDeletedChatTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func CleanFilesOfDeletedChatScheduler(
-	redisConnector *redisV8.Client,
 	service *CleanFilesOfDeletedChatService,
 ) *CleanFilesOfDeletedChatTask {
-	var interv = viper.GetDuration("schedulers.cleanFilesOfDeletedChatTask.interval")
-	Logger.Infof("Created CleanFilesOfDeletedChatScheduler with interval %v", interv)
-	return &CleanFilesOfDeletedChatTask{&gointerlock.GoInterval{
-		Name:           "cleanFilesOfDeletedChatTask",
-		Interval:       interv,
-		Arg:            service.doJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "cleanFilesOfDeletedChatTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	Logger.Infof("Created CleanFilesOfDeletedChatScheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.doJob()
+		return nil
+	})
+
+	return &CleanFilesOfDeletedChatTask{job}
 }
 
 type CleanFilesOfDeletedChatService struct {
@@ -84,7 +84,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 	GetLogEntry(c).Infof("End of cleaning files of deleted chats job")
 }
 
-func(srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatIds []int64) {
+func (srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatIds []int64) {
 	// check chat's existence
 	chatsExists, err := srv.chatClient.CheckIsChatExists(c, chatIds)
 	if err != nil {

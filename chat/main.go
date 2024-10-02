@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/nkonev/dcron"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -53,7 +54,9 @@ func main() {
 			handlers.ConfigureAuthMiddleware,
 			configureMigrations,
 			db.ConfigureDb,
-			tasks.RedisV8,
+			tasks.RedisV9,
+			tasks.RedisLocker,
+			tasks.Scheduler,
 			tasks.CleanChatsOfDeletedUserScheduler,
 			tasks.NewCleanChatsOfDeletedUserService,
 			services.NewEvents,
@@ -280,14 +283,28 @@ func runEcho(e *echo.Echo) {
 	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func runScheduler(dt *tasks.CleanChatsOfDeletedUserTask) {
-	if viper.GetBool("schedulers.cleanChatsOfDeletedUserTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler cleanChatsOfDeletedUserTask")
-			err := dt.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working cleanChatsOfDeletedUserTask: %s", err)
-			}
-		}()
+func runScheduler(
+	scheduler *dcron.Cron,
+	ct *tasks.CleanChatsOfDeletedUserTask,
+	lc fx.Lifecycle,
+) error {
+	scheduler.Start()
+	Logger.Infof("Scheduler started")
+
+	if viper.GetBool("schedulers." + ct.Key() + ".enabled") {
+		Logger.Infof("Adding " + ct.Key() + " job to scheduler")
+		err := scheduler.AddJobs(ct)
+		if err != nil {
+			return err
+		}
 	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			Logger.Infof("Stopping scheduler")
+			<-scheduler.Stop().Done()
+			return nil
+		},
+	})
+	return nil
 }

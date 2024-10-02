@@ -80,19 +80,25 @@ redis:
 schedulers:
   videoCallUsersCountNotifierTask:
     enabled: true
-    notificationPeriod: 2s
+    cron: "*/2 * * * * *"
+    expiration: "30m"
   chatDialerTask:
     enabled: true
-    dialPeriod: 5s
+    cron: "*/5 * * * * *"
     removeTemporaryUserCallStatusAfter: 20s
     removeDanglingCallStatusBeingInvitedAfter: 5m
+    expiration: "30m"
   videoRecordingNotifierTask:
     enabled: true
-    notificationPeriod: 20s
+    cron: "*/10 * * * * *"
+    expiration: "30m"
   usersInVideoStatusNotifierTask:
     enabled: true
-    notificationPeriod: 7s # more or less close to aaa's user online and less than closing empty room timeout in livekit
+    # more or less close to aaa's user online and less than closing empty room timeout in livekit
+    cron: "*/5 * * * * *"
+    expiration: "30m"
   synchronizeWithLivekitTask:
     enabled: true
-    period: 10s
+    cron: "*/10 * * * * *"
     orphanUserIteration: 3 # how many iteration must it take on orphaned "inCall" user to assign "cancellig status" state
+    expiration: "30m"

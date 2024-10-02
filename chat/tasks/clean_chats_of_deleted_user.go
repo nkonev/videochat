@@ -2,8 +2,7 @@ package tasks
 
 import (
 	"context"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -14,21 +13,22 @@ import (
 )
 
 type CleanChatsOfDeletedUserTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func CleanChatsOfDeletedUserScheduler(
-	redisConnector *redisV8.Client,
 	service *CleanChatsOfDeletedUserService,
 ) *CleanChatsOfDeletedUserTask {
-	var interv = viper.GetDuration("schedulers.cleanChatsOfDeletedUserTask.interval")
-	logger.Logger.Infof("Created CleanChatsOfDeletedUserScheduler with interval %v", interv)
-	return &CleanChatsOfDeletedUserTask{&gointerlock.GoInterval{
-		Name:           "cleanChatsOfDeletedUserTask",
-		Interval:       interv,
-		Arg:            service.doJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "cleanChatsOfDeletedUserTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	logger.Logger.Infof("Created CleanChatsOfDeletedUserScheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.doJob()
+		return nil
+	})
+
+	return &CleanChatsOfDeletedUserTask{job}
 }
 
 type CleanChatsOfDeletedUserService struct {

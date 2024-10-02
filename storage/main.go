@@ -12,6 +12,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/notification"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -52,7 +53,9 @@ func main() {
 			configureAwsS3,
 			configureMinioEntities,
 			configureEcho,
-			tasks.RedisV8,
+			tasks.RedisV9,
+			tasks.RedisLocker,
+			tasks.Scheduler,
 			tasks.NewCleanFilesOfDeletedChatService,
 			tasks.CleanFilesOfDeletedChatScheduler,
 			tasks.NewActualizeGeneratedFilesService,
@@ -220,17 +223,16 @@ func configureAwsS3() *awsS3.S3 {
 
 	forcePath := true
 	cfg := aws.Config{
-		Endpoint:                          &endpoint,
-		Credentials: 					   creds,
-		S3ForcePathStyle:                  &forcePath,
-		Region: 						   &location,
-		DisableSSL: 					   &nonSecured,
+		Endpoint:         &endpoint,
+		Credentials:      creds,
+		S3ForcePathStyle: &forcePath,
+		Region:           &location,
+		DisableSSL:       &nonSecured,
 	}
 	sess := session.Must(session.NewSession(&cfg))
 	svc := awsS3.New(sess)
 	return svc
 }
-
 
 func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	Logger.Infof("Configuring Jaeger tracing")
@@ -349,23 +351,37 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 	}, nil
 }
 
-func runScheduler(dt *tasks.CleanFilesOfDeletedChatTask, a *tasks.ActualizeGeneratedFilesTask) {
-	if viper.GetBool("schedulers.cleanFilesOfDeletedChatTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler cleanFilesOfDeletedChatTask")
-			err := dt.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working cleanFilesOfDeletedChatTask: %s", err)
-			}
-		}()
+func runScheduler(
+	scheduler *dcron.Cron,
+	dt *tasks.CleanFilesOfDeletedChatTask,
+	a *tasks.ActualizeGeneratedFilesTask,
+	lc fx.Lifecycle,
+) error {
+	scheduler.Start()
+	Logger.Infof("Scheduler started")
+
+	if viper.GetBool("schedulers." + dt.Key() + ".enabled") {
+		Logger.Infof("Adding " + dt.Key() + " job to scheduler")
+		err := scheduler.AddJobs(dt)
+		if err != nil {
+			return err
+		}
 	}
-	if viper.GetBool("schedulers.actualizeGeneratedFilesTask.enabled") {
-		go func() {
-			Logger.Infof("Starting scheduler actualizeGeneratedFilesTask")
-			err := a.Run(context.Background())
-			if err != nil {
-				Logger.Errorf("Error during working actualizeGeneratedFilesTask: %s", err)
-			}
-		}()
+
+	if viper.GetBool("schedulers." + a.Key() + ".enabled") {
+		Logger.Infof("Adding " + a.Key() + " job to scheduler")
+		err := scheduler.AddJobs(a)
+		if err != nil {
+			return err
+		}
 	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			Logger.Infof("Stopping scheduler")
+			<-scheduler.Stop().Done()
+			return nil
+		},
+	})
+	return nil
 }

@@ -90,11 +90,13 @@ redis:
 schedulers:
   cleanFilesOfDeletedChatTask:
     enabled: true
-    interval: 60s
+    cron: "0 * * * * *"
     batchChats: 20
+    expiration: "30m"
   actualizeGeneratedFilesTask:
     enabled: true
-    interval: 60s
+    cron: "0 * * * * *"
+    expiration: "30m"
 
 response:
   cache:

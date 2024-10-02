@@ -2,14 +2,12 @@ package tasks
 
 import (
 	"context"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/livekit/protocol/livekit"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/client"
-	"nkonev.name/video/config"
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
@@ -231,20 +229,20 @@ func (srv *SynchronizeWithLivekitService) Contains(participants []dto.UserCallSt
 }
 
 type SynchronizeWithLivekitTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func SynchronizeWithLivekitSheduler(
-	redisConnector *redisV8.Client,
 	service *SynchronizeWithLivekitService,
-	conf *config.ExtendedConfig,
 ) *SynchronizeWithLivekitTask {
-	var interv = viper.GetDuration("schedulers.synchronizeWithLivekitTask.period")
-	Logger.Infof("Synchronize with livekit task with interval %v", interv)
-	return &SynchronizeWithLivekitTask{&gointerlock.GoInterval{
-		Name:           "synchronizeWithLivekitTask",
-		Interval:       interv,
-		Arg:            service.DoJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "synchronizeWithLivekitTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	Logger.Infof("Created SynchronizeWithLivekitSheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.DoJob()
+		return nil
+	})
+
+	return &SynchronizeWithLivekitTask{job}
 }

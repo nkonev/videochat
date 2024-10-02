@@ -2,8 +2,7 @@ package tasks
 
 import (
 	"context"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -173,20 +172,20 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 }
 
 type ChatDialerTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func ChatDialerScheduler(
-	redisConnector *redisV8.Client,
 	service *ChatDialerService,
-	conf *config.ExtendedConfig,
 ) *ChatDialerTask {
-	var interv = viper.GetDuration("schedulers.chatDialerTask.dialPeriod")
-	Logger.Infof("Created chats dialer with interval %v", interv)
-	return &ChatDialerTask{&gointerlock.GoInterval{
-		Name:           "chatDialerTask",
-		Interval:       interv,
-		Arg:            service.doJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "chatDialerTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	Logger.Infof("Created ChatDialerScheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.doJob()
+		return nil
+	})
+
+	return &ChatDialerTask{job}
 }

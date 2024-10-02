@@ -2,8 +2,7 @@ package tasks
 
 import (
 	"context"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -15,7 +14,7 @@ import (
 type VideoCallUsersCountNotifierService struct {
 	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
-	tracer             trace.Tracer
+	tracer          trace.Tracer
 }
 
 func NewVideoCallUsersCountNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *VideoCallUsersCountNotifierService {
@@ -38,20 +37,20 @@ func (srv *VideoCallUsersCountNotifierService) doJob() {
 }
 
 type VideoCallUsersCountNotifierTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func VideoCallUsersCountNotifierScheduler(
-	redisConnector *redisV8.Client,
 	service *VideoCallUsersCountNotifierService,
-	conf *config.ExtendedConfig,
 ) *VideoCallUsersCountNotifierTask {
-	var interv = viper.GetDuration("schedulers.videoCallUsersCountNotifierTask.notificationPeriod")
-	Logger.Infof("Created video call users count periodic notificator with interval %v", interv)
-	return &VideoCallUsersCountNotifierTask{&gointerlock.GoInterval{
-		Name:           "videoCallUsersCountNotifierTask",
-		Interval:       interv,
-		Arg:            service.doJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "videoCallUsersCountNotifierTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	Logger.Infof("Created VideoCallUsersCountNotifierScheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.doJob()
+		return nil
+	})
+
+	return &VideoCallUsersCountNotifierTask{job}
 }

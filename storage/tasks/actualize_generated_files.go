@@ -2,9 +2,8 @@ package tasks
 
 import (
 	"context"
-	"github.com/ehsaniara/gointerlock"
-	redisV8 "github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
+	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -16,21 +15,22 @@ import (
 )
 
 type ActualizeGeneratedFilesTask struct {
-	*gointerlock.GoInterval
+	dcron.Job
 }
 
 func ActualizeGeneratedFilesScheduler(
-	redisConnector *redisV8.Client,
 	service *ActualizeGeneratedFilesService,
 ) *ActualizeGeneratedFilesTask {
-	var interv = viper.GetDuration("schedulers.actualizeGeneratedFilesTask.interval")
-	Logger.Infof("Created ActualizeGeneratedFilesScheduler with interval %v", interv)
-	return &ActualizeGeneratedFilesTask{&gointerlock.GoInterval{
-		Name:           "actualizeGeneratedFilesTask",
-		Interval:       interv,
-		Arg:            service.doJob,
-		RedisConnector: redisConnector,
-	}}
+	const key = "actualizeGeneratedFilesTask"
+	var str = viper.GetString("schedulers." + key + ".cron")
+	Logger.Infof("Created ActualizeGeneratedFilesScheduler with cron %v", str)
+
+	job := dcron.NewJob(key, str, func(ctx context.Context) error {
+		service.doJob()
+		return nil
+	})
+
+	return &ActualizeGeneratedFilesTask{job}
 }
 
 type ActualizeGeneratedFilesService struct {
@@ -56,8 +56,8 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	// and create _converted.webm
 	GetLogEntry(c).Infof("Checking for missing previews and converted")
 	var fileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
-		Prefix:    filenameChatPrefix,
-		Recursive: true,
+		Prefix:       filenameChatPrefix,
+		Recursive:    true,
 		WithMetadata: true,
 	})
 	for fileOjInfo := range fileObjects {

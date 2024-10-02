@@ -65,6 +65,7 @@ redis:
 schedulers:
   cleanChatsOfDeletedUserTask:
     enabled: true
-    interval: 60s
+    cron: "0 * * * * *"
     batchChats: 20
     batchParticipants: 20
+    expiration: "30m"
