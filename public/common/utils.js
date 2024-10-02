@@ -105,6 +105,8 @@ const createVideoReplacementElement = (src, poster) => {
     return replacement
 }
 
+const videoConvertingClass = "video-converting";
+
 export const onClickTrap = (e) => {
     const foundElements = [
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
@@ -125,12 +127,14 @@ export const onClickTrap = (e) => {
                 if (found.classList?.contains("video-in-message-button")) { // "show in player" button
                     let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
                     if (videoHolder) {
-                        bus.emit(PLAYER_MODAL, {
-                            canPlayAsVideo: true,
-                            url: videoHolder.getAttribute('data-original'),
-                            previewUrl: videoHolder.src,
-                            canSwitch: true
-                        })
+                        if (!videoHolder.classList.contains(videoConvertingClass)) {
+                            bus.emit(PLAYER_MODAL, {
+                                canPlayAsVideo: true,
+                                url: videoHolder.getAttribute('data-original'),
+                                previewUrl: videoHolder.src,
+                                canSwitch: true
+                            })
+                        }
                     } else {
                         videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
                         if (videoHolder) {
@@ -157,7 +161,7 @@ export const onClickTrap = (e) => {
                             if (res.data.status == "converting") {
                                 const replacement = document.createElement("IMG");
                                 replacement.src = res.data.statusImage;
-                                replacement.className = "video-custom-class video-converting";
+                                replacement.className = "video-custom-class " + videoConvertingClass;
                                 spanContainer.appendChild(replacement);
                             } else {
                                 const replacement = createVideoReplacementElement(original, src);

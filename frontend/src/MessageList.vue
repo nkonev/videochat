@@ -562,12 +562,14 @@
                         if (found.classList?.contains("video-in-message-button")) { // "show in player" button
                             let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
                             if (videoHolder) {
+                              if (!videoHolder.classList.contains(videoConvertingClass)) {
                                 bus.emit(PLAYER_MODAL, {
-                                    canPlayAsVideo: true,
-                                    url: videoHolder.getAttribute('data-original'),
-                                    previewUrl: videoHolder.src,
-                                    canSwitch: true
+                                  canPlayAsVideo: true,
+                                  url: videoHolder.getAttribute('data-original'),
+                                  previewUrl: videoHolder.src,
+                                  canSwitch: true
                                 })
+                              }
                             } else {
                                 videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
                                 if (videoHolder) {
