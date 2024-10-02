@@ -1,6 +1,7 @@
 import { format, parseISO, differenceInDays } from 'date-fns';
 import {chat, messageIdHashPrefix} from "./router/routes.js";
 import bus, {PLAYER_MODAL} from "./bus.js";
+import axios from "axios";
 
 export const getHumanReadableDate = (timestamp) => {
     const parsedDate = parseISO(timestamp);
@@ -94,6 +95,16 @@ export const checkUpByTreeObj = (el, maxLevels, condition) => {
     };
 }
 
+const createVideoReplacementElement = (src, poster) => {
+    const replacement = document.createElement("VIDEO");
+    replacement.src = src;
+    replacement.poster = poster;
+    replacement.playsinline = true;
+    replacement.controls = true;
+    replacement.className = "video-custom-class";
+    return replacement
+}
+
 export const onClickTrap = (e) => {
     const foundElements = [
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
@@ -140,14 +151,19 @@ export const onClickTrap = (e) => {
 
                         spanContainer.removeChild(found);
 
-                        const replacement = document.createElement("VIDEO");
-                        replacement.src = original;
-                        replacement.poster = src;
-                        replacement.playsinline = true;
-                        replacement.controls = true;
-                        replacement.className = "video-custom-class";
-
-                        spanContainer.appendChild(replacement);
+                        axios.post(`/api/storage/public/view/status`, {
+                            url: original
+                        }).then(res => {
+                            if (res.data.status == "converting") {
+                                const replacement = document.createElement("IMG");
+                                replacement.src = res.data.statusImage;
+                                replacement.className = "video-custom-class video-converting";
+                                spanContainer.appendChild(replacement);
+                            } else {
+                                const replacement = createVideoReplacementElement(original, src);
+                                spanContainer.appendChild(replacement);
+                            }
+                        })
                     } else {
                         console.info("video holder is not found")
                     }
