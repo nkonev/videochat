@@ -26,6 +26,7 @@ types:
     - ".mkv"
     - ".webm"
     - ".mov"
+    - ".m4v"
   audio:
     - ".mp3"
     - ".m4a"
