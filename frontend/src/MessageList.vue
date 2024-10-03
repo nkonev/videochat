@@ -95,6 +95,7 @@
     const scrollerName = 'MessageList';
 
     const videoConvertingClass = "video-converting";
+    const dataForOriginal = "data-for-original";
 
     export default {
       mixins: [
@@ -601,6 +602,7 @@
 
                                     const imgReplacement = document.createElement("IMG");
                                     imgReplacement.src = res.data.statusImage;
+                                    imgReplacement.setAttribute(dataForOriginal, original);
                                     imgReplacement.className = "video-custom-class " + videoConvertingClass;
                                     spanContainer.appendChild(imgReplacement);
                                   }
@@ -621,11 +623,13 @@
               const messageEl = document.getElementById(messageIdPrefix + message.id);
               const convertingImages = messageEl.getElementsByClassName(videoConvertingClass);
               for (const ci of convertingImages) {
-                const spanContainer = ci.parentElement;
-                spanContainer.removeChild(ci);
+                if (ci.getAttribute(dataForOriginal) == dto.fileInfoDto.url) {
+                  const spanContainer = ci.parentElement;
+                  spanContainer.removeChild(ci);
 
-                const replacement = this.createVideoReplacementElement(dto.fileInfoDto.url, dto.fileInfoDto.previewUrl);
-                spanContainer.appendChild(replacement);
+                  const replacement = this.createVideoReplacementElement(dto.fileInfoDto.url, dto.fileInfoDto.previewUrl);
+                  spanContainer.appendChild(replacement);
+                }
               }
             }
           }
