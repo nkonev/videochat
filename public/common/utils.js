@@ -155,17 +155,19 @@ export const onClickTrap = (e) => {
 
                         spanContainer.removeChild(found);
 
+                        const videoReplacement = createVideoReplacementElement(original, src);
+                        spanContainer.appendChild(videoReplacement);
+
                         axios.post(`/api/storage/public/view/status`, {
                             url: original
                         }).then(res => {
                             if (res.data.status == "converting") {
-                                const replacement = document.createElement("IMG");
-                                replacement.src = res.data.statusImage;
-                                replacement.className = "video-custom-class " + videoConvertingClass;
-                                spanContainer.appendChild(replacement);
-                            } else {
-                                const replacement = createVideoReplacementElement(original, src);
-                                spanContainer.appendChild(replacement);
+                                spanContainer.removeChild(videoReplacement);
+
+                                const imgReplacement = document.createElement("IMG");
+                                imgReplacement.src = res.data.statusImage;
+                                imgReplacement.className = "video-custom-class " + videoConvertingClass;
+                                spanContainer.appendChild(imgReplacement);
                             }
                         })
                     } else {
