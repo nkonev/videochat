@@ -372,3 +372,7 @@ export const isStrippedUserLogin = (u) => {
     }
     return u.additionalData && (!u.additionalData.confirmed || u.additionalData.locked || !u.additionalData.enabled)
 }
+
+export const isConverted = (name) => {
+    return name != null && name.includes("_converted.")
+}

@@ -70,14 +70,14 @@
       MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED
     } from "@/bus/bus";
     import {
-        checkUpByTree, checkUpByTreeObj,
-        deepCopy, edit_message, embed_message_reply,
-        findIndex, getBlogLink, getPublicMessageLink,
-        hasLength, haveEmbed, isChatRoute,
-        replaceInArray,
-        replaceOrAppend,
-        replaceOrPrepend, reply_message,
-        setAnswerPreviewFields
+      checkUpByTree, checkUpByTreeObj,
+      deepCopy, edit_message, embed_message_reply,
+      findIndex, getBlogLink, getPublicMessageLink,
+      hasLength, haveEmbed, isChatRoute, isConverted,
+      replaceInArray,
+      replaceOrAppend,
+      replaceOrPrepend, reply_message,
+      setAnswerPreviewFields
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -617,7 +617,7 @@
             }
         },
         onFileCreatedEvent(dto) {
-          if (dto.fileInfoDto.canPlayAsVideo) {
+          if (dto.fileInfoDto.canPlayAsVideo && isConverted(dto.fileInfoDto.filename)) {
             const message = this.items.find(item => dto.fileInfoDto.fileItemUuid == item.fileItemUuid);
             if (message) {
               const messageEl = document.getElementById(messageIdPrefix + message.id);
