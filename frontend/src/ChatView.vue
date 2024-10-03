@@ -135,7 +135,9 @@ export default {
       writingUsers: [],
       showTooltip: true,
       broadcastMessage: null,
-      initialLoaded: false, // shows that all the possible PUT /join have happened and we can get ChatList. Intentionally doesn't reset on switching chat at left
+      // shows that all the possible PUT /join have happened and we can get ChatList. Intentionally doesn't reset on switching chat at left
+      // if we remove it (or replace with chatDtoIsReady) - there are going to be disappears of ChatList when user clicks on the different chat
+      initialLoaded: false,
     }
   },
   components: {
