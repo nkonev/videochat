@@ -615,8 +615,9 @@
             }
         },
         onFileCreatedEvent(dto) {
-          const message = this.items.find(item => dto.fileInfoDto.fileItemUuid == item.fileItemUuid);
-          if (message) {
+          if (dto.fileInfoDto.canPlayAsVideo) {
+            const message = this.items.find(item => dto.fileInfoDto.fileItemUuid == item.fileItemUuid);
+            if (message) {
               const messageEl = document.getElementById(messageIdPrefix + message.id);
               const convertingImages = messageEl.getElementsByClassName(videoConvertingClass);
               for (const ci of convertingImages) {
@@ -626,6 +627,7 @@
                 const replacement = this.createVideoReplacementElement(dto.fileInfoDto.url, dto.fileInfoDto.previewUrl);
                 spanContainer.appendChild(replacement);
               }
+            }
           }
         },
         createVideoReplacementElement(src, poster) {
