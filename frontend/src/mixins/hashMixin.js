@@ -64,10 +64,13 @@ export default () => {
                     return el
                 })
             },
-            async scrollToOrLoad(newValue) {
-                const res = await this.scrollTo(newValue);
+            async scrollToOrLoad(newValue, isTheSameQuery) {
+                let res;
+                if (isTheSameQuery) {
+                    res = await this.scrollTo(newValue);
+                }
                 if (!res) {
-                    console.log("Didn't scrolled, resetting");
+                    console.log("Didn't scrolled or different queries, resetting");
                     await this.initializeHashVariablesAndReloadItems();
                 }
             },

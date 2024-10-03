@@ -674,19 +674,20 @@
                 }
               }
 
+              const newQuery = newValue.query[SEARCH_MODE_MESSAGES];
+              const oldQuery = oldValue.query[SEARCH_MODE_MESSAGES];
+
               // reaction on setting hash
               if (isChatRoute(newValue)) {
                 // hash
                 if (hasLength(newValue.hash)) {
                   console.log("Changed route hash, going to scroll", newValue.hash)
-                  await this.scrollToOrLoad(newValue.hash);
+                  await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
                   return
                 }
               }
 
               // reaction on changing query
-              const newQuery = newValue.query[SEARCH_MODE_MESSAGES];
-              const oldQuery = oldValue.query[SEARCH_MODE_MESSAGES];
               if (newQuery != oldQuery) {
                 this.onSearchStringChangedDebounced();
                 return

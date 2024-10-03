@@ -665,10 +665,13 @@ export default {
       '$route': {
           handler: async function (newValue, oldValue) {
 
-              // reaction on setting hash
+            const newQuery = newValue.query[SEARCH_MODE_USERS];
+            const oldQuery = oldValue.query[SEARCH_MODE_USERS];
+
+            // reaction on setting hash
               if (hasLength(newValue.hash)) {
                   console.log("Changed route hash, going to scroll", newValue.hash)
-                  await this.scrollToOrLoad(newValue.hash);
+                  await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
                   return
               }
           }
