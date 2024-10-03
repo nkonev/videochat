@@ -9,6 +9,8 @@ import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.ConflictResolvingActions;
 import name.nkonev.aaa.services.ConflictService;
 import name.nkonev.aaa.services.EventService;
+import name.nkonev.aaa.tasks.SyncRolesService;
+import name.nkonev.aaa.utils.PageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +60,9 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
     @Autowired
     private ConflictService conflictService;
 
+    @Autowired
+    private SyncRolesService syncRolesService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapAuthenticationProvider.class);
 
     @Override
@@ -95,6 +100,17 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                             }
 
                             Set<String> rawRoles = new HashSet<>();
+                            if (aaaProperties.schedulers().syncLdap().syncRoles()) {
+                                var extAdminRole = syncRolesService.getNecessaryAdminRole();
+                                syncRolesService.processRoles(PageUtils.DEFAULT_SIZE, extAdminRole, batch -> {
+                                    for (var userRole : batch) {
+                                        if (userRole.id().equals(ldapUserId)) {
+                                            rawRoles.add(extAdminRole);
+                                            break;
+                                        }
+                                    }
+                                });
+                            }
                             var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
 
                             var userToInsert = UserAccountConverter.buildUserAccountEntityForLdapInsert(

@@ -571,21 +571,22 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertEquals(USER_BOB_LDAP_ID, gotBob.ldapId());
         Map<String, Session> bobRedisSessions = aaaUserDetailsService.getSessions(USER_BOB_LDAP);
         Assertions.assertEquals(1, bobRedisSessions.size());
-        Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_USER));
+        Assertions.assertTrue(Arrays.asList(gotBob.roles()).contains(UserRole.ROLE_ADMIN));
         Assertions.assertEquals(USER_BOB_LDAP_EMAIL, gotBob.email());
 
         userAccountRepository.save(gotBob
-            .withEmail("a@b.com")
+                .withEmail("a@b.com")
+                .withRoles(new UserRole[]{})
         );
 
         var overridedBob = userAccountRepository.findByUsername(USER_BOB_LDAP).get();
         Assertions.assertEquals("a@b.com", overridedBob.email());
+        Assertions.assertEquals(0, overridedBob.roles().length);
 
         syncLdapTask.doWork();
 
         var restoredBob = userAccountRepository.findByUsername(USER_BOB_LDAP).get();
         Assertions.assertEquals(USER_BOB_LDAP_EMAIL, restoredBob.email());
-        Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_USER));
         Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_ADMIN));
         Assertions.assertTrue(restoredBob.syncLdapDateTime().isAfter(gotBob.syncLdapDateTime()));
     }

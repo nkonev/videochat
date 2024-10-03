@@ -33,7 +33,6 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import static name.nkonev.aaa.Constants.LDAP_CONFLICT_PREFIX;
-import static name.nkonev.aaa.utils.ConvertUtils.extractExtId;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 @Service
@@ -46,6 +45,9 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
 
     @Autowired
     private AaaUserDetailsService aaaUserDetailsService;
+
+    @Autowired
+    private SyncRolesService syncRolesService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncLdapTask.class);
 
@@ -224,14 +226,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
 
     @Override
     protected String getNecessaryAdminRole() {
-         var list = aaaProperties.roleMappings().ldap().stream()
-                .filter(roleMapEntry -> UserRole.ROLE_ADMIN.name().equals(roleMapEntry.our()))
-                .map(RoleMapEntry::their)
-                .toList();
-        if (list.isEmpty()) {
-            throw new IllegalStateException("Admin role not found in mapping");
-        }
-        return list.getFirst();
+        return syncRolesService.getNecessaryAdminRole();
     }
 
     @Override
@@ -272,59 +267,10 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
 
     private void processRoles(int batchSize) {
         var extAdminRole = getNecessaryAdminRole();
-
-        var groupBase = aaaProperties.ldap().group().base();
-        var groupName = aaaProperties.ldap().group().filter();
-
-        var lq = LdapQueryBuilder.query().base(groupBase).filter(groupName, extAdminRole);
-        // partial copy-paste from LdapTemplate because of near Long.MAX_VALUE length of array in spliterator in Spliterators.spliteratorUnknownSize()
-        SearchControls controls = new SearchControls();
-        controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
-        if (lq.searchScope() != null) {
-            controls.setSearchScope(lq.searchScope().getId());
-        }
-        controls.setReturningObjFlag(true);
-        SearchExecutor se = (DirContext ctx) -> {
-            var filterValue = lq.filter().encode();
-            LOGGER.debug("Executing search with base [{}] and filter [{}]", lq.base(), filterValue);
-            return ctx.search(lq.base(), filterValue, controls);
-        };
-        var handler = new ConsumingCallbackHandler(a -> mapAttributesToInRoleEntity(batchSize, extAdminRole, a));
-        ldapOperations.search(se, handler);
+        syncRolesService.processRoles(batchSize, extAdminRole, batch -> processRolesBatch(extAdminRole, batch));
 
         // remove admin role
         processRemovingRolesFromUsers(batchSize);
-    }
-
-    private void mapAttributesToInRoleEntity(int batchSize, String extAdminRole, Attributes attributes) throws NamingException {
-        final List<LdapUserInRoleEntity> list = new ArrayList<>();
-
-        javax.naming.NamingEnumeration<?> iter = null;
-        try {
-            iter = attributes.get(aaaProperties.ldap().attributeNames().role()).getAll();
-            while (iter.hasMore()) {
-                var extIdInRole = iter.next();
-                var extId = extractExtId(aaaProperties.ldap().attributeNames(), extIdInRole);
-                if (StringUtils.hasLength(extId)) {
-                    list.add(new LdapUserInRoleEntity(extId));
-                }
-                if (list.size() == batchSize) {
-                    processRolesBatch(extAdminRole, list);
-                    list.clear();
-                }
-            }
-            // process leftovers
-            if (!list.isEmpty()) {
-                processRolesBatch(extAdminRole, list);
-                list.clear();
-            }
-        } catch (NamingException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (iter != null) {
-                iter.close();
-            }
-        }
     }
 
     private void processRolesBatch(String extAdminRole, List<LdapUserInRoleEntity> extUsersInRole) {
