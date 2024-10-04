@@ -1,5 +1,6 @@
 # Start the development
 
+## Install Docker
 https://docs.docker.com/engine/install/fedora/#install-using-the-repository
 
 ```bash
@@ -11,6 +12,12 @@ sudo systemctl start docker
 sudo systemctl enable docker
 ```
 
+## Install the developement software
+Also you can see versions [here](./.github/workflows/ci.yml)
+
+* Java (JDK) 21
+* Node.js 22
+* Golang 1.22
 
 # AAA
 
