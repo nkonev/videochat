@@ -601,7 +601,7 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484
 ```
 
 
-# LDAP
+# LDAP (Example with OpenDJ)
 1. Download and unzip [OpenDJ](https://github.com/OpenIdentityPlatform/OpenDJ/releases/tag/4.8.0)
 2. Run installation script
 ```bash
@@ -624,15 +624,15 @@ Open users
 ![3.1](./.markdown/opendj_3.1.png)
 
 
-Change password for an user
+Set the password for an user
 
 ![3.2](./.markdown/opendj_3.2.png)
 
-Add group `MyGroup` and add `user.0` and `user.1` there
+Add the group `MyGroup` and add `user.0` and `user.1` there
 
 ![3.3](./.markdown/opendj_3.3.png)
 
-3. Run
+3. Run `aaa` with ldap opendj config
 ```bash
 make run-with-ldap 
 ```
@@ -728,8 +728,6 @@ To prevent this just stop storage for the all period of maintenance.
 ```
 docker service scale VIDEOCHATSTACK_aaa=0
 docker service scale VIDEOCHATSTACK_chat=0
-docker service scale VIDEOCHATSTACK_notification=0
-docker service scale VIDEOCHATSTACK_video=0
 docker service scale VIDEOCHATSTACK_storage=0
 
 scp ~/blog/backup-2024-09-29_09-11-01/chat-aaa.sql THEUSER@nkonev.name:/tmp/chat-aaa.sql
@@ -746,8 +744,6 @@ rm -rf /tmp/chat.sql
 
 docker service scale VIDEOCHATSTACK_aaa=1
 docker service scale VIDEOCHATSTACK_chat=1
-docker service scale VIDEOCHATSTACK_notification=1
-docker service scale VIDEOCHATSTACK_video=1
 docker service scale VIDEOCHATSTACK_storage=1
 ```
 
