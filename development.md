@@ -48,7 +48,7 @@ export EDITOR=vim
 sudo dnf install ffmpeg-free
 ```
 
-## Environment (PostgreSQ, RabbitMQ, ...)
+## Environment (PostgreSQL, RabbitMQ, ...)
 To start the environment do
 ```
 docker compose up -d
