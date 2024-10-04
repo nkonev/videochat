@@ -1,7 +1,8 @@
 # Start the development
 
 ## Install Docker
-https://docs.docker.com/engine/install/fedora/#install-using-the-repository
+Install docker >= 27
+[using](https://docs.docker.com/engine/install/fedora/#install-using-the-repository) rpm repository
 
 ```bash
 sudo dnf -y install dnf-plugins-core
@@ -12,12 +13,40 @@ sudo systemctl start docker
 sudo systemctl enable docker
 ```
 
-## Install the developement software
-Also you can see versions [here](./.github/workflows/ci.yml)
+[Add](https://docs.docker.com/engine/install/linux-postinstall/) your user to the `docker` group:
+```
+sudo usermod -aG docker $USER
+```
 
-* Java (JDK) 21
-* Node.js 22
-* Golang 1.22
+## Install the developement software
+Also you can see versions [here](./.github/workflows/ci.yml).
+
+* Java (JDK) 21 [here](https://bell-sw.com/pages/downloads/#jdk-21-lts) or [here](https://axiomjdk.ru/pages/downloads/#/java-21-lts),
+set JAVA_HOME: to `~/.bashrc` just add
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-21
+```
+check:
+```bash
+$JAVA_HOME/bin/javac -version
+```
+* Node.js 22 [here](https://nodejs.org/en/download/package-manager) via `nvm` (Node Version Manager)
+* Golang 1.22 [here](https://go.dev/dl/)
+
+An example content of `~/.bashrc`:
+```bash
+export GOPATH=/home/nkonev/go
+export GOROOT=/home/nkonev/apps/go122/go
+export JAVA_HOME=/usr/lib/jvm/java-21
+export PATH="$PATH:$GOROOT/bin:$GOPATH/bin:$JAVA_HOME/bin"
+
+export EDITOR=vim
+```
+
+## Install ffmpeg
+```bash
+sudo dnf install ffmpeg-free
+```
 
 # AAA
 
