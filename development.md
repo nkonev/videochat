@@ -54,10 +54,41 @@ To start the environment do
 docker compose up -d
 ```
 
-Congrats! You've just finished all the preparations. Happy hacking.
+## How to run the code?
+**(Micro)Services**
+### Without IDE: 
+In general you can look at makefiles in the each (micro)services, they have `run-demo` target.
+- https://github.com/nkonev/videochat/blob/master/aaa/Makefile
+- https://github.com/nkonev/videochat/blob/master/chat/Makefile
+- https://github.com/nkonev/videochat/blob/master/event/Makefile
+- https://github.com/nkonev/videochat/blob/master/frontend/Makefile
+- https://github.com/nkonev/videochat/blob/master/notification/Makefile
+- https://github.com/nkonev/videochat/blob/master/public/Makefile
+- https://github.com/nkonev/videochat/blob/master/storage/Makefile
+- https://github.com/nkonev/videochat/blob/master/video/Makefile
+
+E. g. for each (micro)service
+```
+cd aaa
+make run-demo
+```
+
+```
+cd chat
+make run-demo
+```
+...
+
+### With IDE:
+Just run `AaaApplication.java` / `main.go`. Configs doesn't require a change for the development.
+`frontend` and `public`:  `npm run dev`.
 
 
+### Congrats!
+You've just finished all the preparations. Happy hacking.
 Below are just notes, some of the are't actual. The most useful are ones about configuring [Keycloak](/development.md#keycloak) and [LDAP](./development.md#ldap-example-with-opendj) (an example with OpenDJ).
+
+
 
 # AAA
 
