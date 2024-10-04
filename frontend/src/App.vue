@@ -191,8 +191,7 @@
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
 import {
     getBlogLink,
-    getMessageLink, getNotificationSubtitle, getNotificationTitle,
-    gotoMessageLink,
+    getNotificationSubtitle, getNotificationTitle,
     hasLength,
     isCalling,
     isChatRoute,
@@ -287,7 +286,6 @@ const getGlobalEventsData = (message) => {
 export default {
     mixins: [
         searchStringFacade(),
-        graphqlSubscriptionMixin('globalEvents'),
     ],
     data() {
         return {
@@ -297,6 +295,9 @@ export default {
             invitedVideoChatName: null,
             invitedVideoChatAlert: false,
             invitedVideoChatState: false,
+
+            globalEventsSubscription: null,
+            selfProfileEventsSubscription: null,
         }
     },
     computed: {
@@ -368,12 +369,14 @@ export default {
         onProfileSet(){
             this.chatStore.fetchNotificationsCount();
             this.chatStore.fetchHasNewMessages();
-            this.graphQlSubscribe();
             this.refreshInvitationCall();
+            this.globalEventsSubscription.graphQlSubscribe();
+            this.selfProfileEventsSubscription.graphQlSubscribe();
         },
         onLoggedOut() {
             this.resetVariables();
-            this.graphQlUnsubscribe();
+            this.globalEventsSubscription.graphQlUnsubscribe();
+            this.selfProfileEventsSubscription.graphQlUnsubscribe();
         },
         resetVariables() {
             this.resetVideoInvitation()
@@ -400,7 +403,7 @@ export default {
               return this.$vuetify.locale.t('$vuetify.search_by_users')
             }
         },
-        getGraphQlSubscriptionQuery() {
+        getGlobalGraphQlSubscriptionQuery() {
           return `
                   subscription {
                     globalEvents {
@@ -517,7 +520,7 @@ export default {
                   }
               `
         },
-        onNextSubscriptionElement(e) {
+        onNextGlobalSubscriptionElement(e) {
           if (getGlobalEventsData(e).eventType === 'chat_created') {
             const d = getGlobalEventsData(e).chatEvent;
             bus.emit(CHAT_ADD, d);
@@ -787,6 +790,68 @@ export default {
             removeBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
             removeBrowserNotification(NOTIFICATION_TYPE_CALL);
         },
+
+        getUserIdsSubscribeTo() {
+          const ret = [];
+          if (this.chatStore.currentUser) {
+            ret.push(this.chatStore.currentUser.id)
+          }
+          return ret;
+        },
+        getSelfGraphQlSubscriptionQuery() {
+          return `
+                    subscription {
+                      userAccountEvents(userIdsFilter: ${this.getUserIdsSubscribeTo()}) {
+                        userAccountEvent {
+                          ... on UserAccountExtendedDto {
+                            id
+                            login
+                            email
+                            awaitingForConfirmEmailChange
+                            avatar
+                            avatarBig
+                            shortInfo
+                            lastLoginDateTime
+                            oauth2Identifiers {
+                              facebookId
+                              vkontakteId
+                              googleId
+                              keycloakId
+                            }
+                            additionalData {
+                              enabled
+                              expired
+                              locked
+                              confirmed
+                              roles
+                            }
+                            canLock
+                            canDelete
+                            canChangeRole
+                            canConfirm
+                            loginColor
+                            canRemoveSessions
+                            ldap
+                          }
+                          ... on UserDeletedDto {
+                            id
+                          }
+                        }
+                        eventType
+                      }
+                    }
+                `
+        },
+        onSelfNextSubscriptionElement(e) {
+          const d = e.data?.userAccountEvents;
+          if (d.eventType === 'user_account_changed') {
+            this.onEditUser(d.userAccountEvent);
+          }
+        },
+        onEditUser(u) {
+          this.chatStore.currentUser = u;
+        },
+
     },
     components: {
         ChooseColorModal,
@@ -827,6 +892,10 @@ export default {
         addEventListener("focus", this.onFocus);
         window.addEventListener("resize", this.onWindowResized);
 
+        // create subscription object before ON_PROFILE_SET
+        this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setError, this.onNextGlobalSubscriptionElement);
+        this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setError, this.onSelfNextSubscriptionElement);
+
         // It's placed after each route in order not to have a race-condition
         this.afterRouteInitialized = once(this.afterRouteInitialized);
         this.$router.afterEach((to, from) => {
@@ -839,14 +908,18 @@ export default {
         window.removeEventListener("resize", this.onWindowResized);
         removeEventListener("focus", this.onFocus);
 
-        this.graphQlUnsubscribe();
-        destroyGraphqlClient();
-
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+
+        this.globalEventsSubscription.graphQlUnsubscribe();
+        this.selfProfileEventsSubscription.graphQlUnsubscribe();
+        this.globalEventsSubscription = null;
+        this.selfProfileEventsSubscription = null;
+
+        destroyGraphqlClient();
     },
 
     watch: {

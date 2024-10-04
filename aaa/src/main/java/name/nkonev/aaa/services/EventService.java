@@ -18,12 +18,15 @@ public class EventService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    private UserAccountConverter userAccountConverter;
+
     public EventWrapper<UserAccountEventCreatedDTO> convertProfileCreated(UserAccount userAccount) {
         return new EventWrapper<>(
                 new UserAccountEventCreatedDTO(
                         userAccount.id(),
                         "user_account_created",
-                        UserAccountConverter.convertToUserAccountDTO(userAccount)
+                        userAccountConverter.convertToUserAccountEventDTO(userAccount)
                 ),
                 "dto.UserAccountEventCreated"
         );
@@ -39,7 +42,7 @@ public class EventService {
                 new UserAccountEventChangedDTO(
                         userAccount.id(),
                         "user_account_changed",
-                        UserAccountConverter.convertToUserAccountDTO(userAccount)
+                        userAccountConverter.convertToUserAccountEventDTO(userAccount)
                 ),
                 "dto.UserAccountEventChanged"
         );

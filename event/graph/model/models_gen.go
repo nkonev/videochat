@@ -285,21 +285,23 @@ type UserAccountEvent struct {
 }
 
 type UserAccountExtendedDto struct {
-	ID                int64              `json:"id"`
-	Login             string             `json:"login"`
-	Avatar            *string            `json:"avatar"`
-	AvatarBig         *string            `json:"avatarBig"`
-	ShortInfo         *string            `json:"shortInfo"`
-	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
-	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
-	AdditionalData    *DataDto           `json:"additionalData"`
-	CanLock           bool               `json:"canLock"`
-	CanDelete         bool               `json:"canDelete"`
-	CanChangeRole     bool               `json:"canChangeRole"`
-	CanConfirm        bool               `json:"canConfirm"`
-	LoginColor        *string            `json:"loginColor"`
-	CanRemoveSessions bool               `json:"canRemoveSessions"`
-	Ldap              bool               `json:"ldap"`
+	ID                            int64              `json:"id"`
+	Login                         string             `json:"login"`
+	Email                         *string            `json:"email"`
+	AwaitingForConfirmEmailChange *bool              `json:"awaitingForConfirmEmailChange"`
+	Avatar                        *string            `json:"avatar"`
+	AvatarBig                     *string            `json:"avatarBig"`
+	ShortInfo                     *string            `json:"shortInfo"`
+	LastLoginDateTime             *time.Time         `json:"lastLoginDateTime"`
+	Oauth2Identifiers             *OAuth2Identifiers `json:"oauth2Identifiers"`
+	AdditionalData                *DataDto           `json:"additionalData"`
+	CanLock                       bool               `json:"canLock"`
+	CanDelete                     bool               `json:"canDelete"`
+	CanChangeRole                 bool               `json:"canChangeRole"`
+	CanConfirm                    bool               `json:"canConfirm"`
+	LoginColor                    *string            `json:"loginColor"`
+	CanRemoveSessions             bool               `json:"canRemoveSessions"`
+	Ldap                          bool               `json:"ldap"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

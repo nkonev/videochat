@@ -329,21 +329,23 @@ type ComplexityRoot struct {
 	}
 
 	UserAccountExtendedDto struct {
-		AdditionalData    func(childComplexity int) int
-		Avatar            func(childComplexity int) int
-		AvatarBig         func(childComplexity int) int
-		CanChangeRole     func(childComplexity int) int
-		CanConfirm        func(childComplexity int) int
-		CanDelete         func(childComplexity int) int
-		CanLock           func(childComplexity int) int
-		CanRemoveSessions func(childComplexity int) int
-		ID                func(childComplexity int) int
-		LastLoginDateTime func(childComplexity int) int
-		Ldap              func(childComplexity int) int
-		Login             func(childComplexity int) int
-		LoginColor        func(childComplexity int) int
-		Oauth2Identifiers func(childComplexity int) int
-		ShortInfo         func(childComplexity int) int
+		AdditionalData                func(childComplexity int) int
+		Avatar                        func(childComplexity int) int
+		AvatarBig                     func(childComplexity int) int
+		AwaitingForConfirmEmailChange func(childComplexity int) int
+		CanChangeRole                 func(childComplexity int) int
+		CanConfirm                    func(childComplexity int) int
+		CanDelete                     func(childComplexity int) int
+		CanLock                       func(childComplexity int) int
+		CanRemoveSessions             func(childComplexity int) int
+		Email                         func(childComplexity int) int
+		ID                            func(childComplexity int) int
+		LastLoginDateTime             func(childComplexity int) int
+		Ldap                          func(childComplexity int) int
+		Login                         func(childComplexity int) int
+		LoginColor                    func(childComplexity int) int
+		Oauth2Identifiers             func(childComplexity int) int
+		ShortInfo                     func(childComplexity int) int
 	}
 
 	UserDeletedDto struct {
@@ -1792,6 +1794,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountExtendedDto.AvatarBig(childComplexity), true
 
+	case "UserAccountExtendedDto.awaitingForConfirmEmailChange":
+		if e.complexity.UserAccountExtendedDto.AwaitingForConfirmEmailChange == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.AwaitingForConfirmEmailChange(childComplexity), true
+
 	case "UserAccountExtendedDto.canChangeRole":
 		if e.complexity.UserAccountExtendedDto.CanChangeRole == nil {
 			break
@@ -1826,6 +1835,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAccountExtendedDto.CanRemoveSessions(childComplexity), true
+
+	case "UserAccountExtendedDto.email":
+		if e.complexity.UserAccountExtendedDto.Email == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.Email(childComplexity), true
 
 	case "UserAccountExtendedDto.id":
 		if e.complexity.UserAccountExtendedDto.ID == nil {
@@ -11162,6 +11178,88 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_login(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _UserAccountExtendedDto_email(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_awaitingForConfirmEmailChange(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_awaitingForConfirmEmailChange(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AwaitingForConfirmEmailChange, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_awaitingForConfirmEmailChange(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserAccountExtendedDto_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserAccountExtendedDto_avatar(ctx, field)
 	if err != nil {
@@ -16425,6 +16523,10 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "email":
+			out.Values[i] = ec._UserAccountExtendedDto_email(ctx, field, obj)
+		case "awaitingForConfirmEmailChange":
+			out.Values[i] = ec._UserAccountExtendedDto_awaitingForConfirmEmailChange(ctx, field, obj)
 		case "avatar":
 			out.Values[i] = ec._UserAccountExtendedDto_avatar(ctx, field, obj)
 		case "avatarBig":

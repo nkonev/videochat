@@ -205,12 +205,12 @@ export default {
     hashMixin(),
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
-    graphqlSubscriptionMixin('userAccountEvents'), // subscription
     userStatusMixin('userStatusInUserList'), // another subscription
   ],
   data() {
     return {
         markInstance: null,
+        userEventsSubscription: null,
     }
   },
   computed: {
@@ -359,7 +359,7 @@ export default {
     },
     async onProfileSet() {
       await this.initializeHashVariablesAndReloadItems();
-      this.graphQlSubscribe();
+      this.userEventsSubscription.graphQlSubscribe();
     },
     conditionToSaveLastVisible() {
         return !this.isScrolledToTop();
@@ -380,7 +380,7 @@ export default {
     onLoggedOut() {
       this.reset();
       this.graphQlUserStatusUnsubscribe();
-      this.graphQlUnsubscribe();
+      this.userEventsSubscription.graphQlUnsubscribe();
       this.beforeUnload();
     },
 
@@ -683,6 +683,9 @@ export default {
     this.chatStore.isShowSearch = true;
     this.chatStore.searchType = SEARCH_MODE_USERS;
 
+    // create subscription object before ON_PROFILE_SET
+    this.userEventsSubscription = graphqlSubscriptionMixin('userAccountEvents', this.getGraphQlSubscriptionQuery, this.setError, this.onNextSubscriptionElement);
+
     if (this.canDrawUsers()) {
       await this.onProfileSet();
     }
@@ -696,6 +699,10 @@ export default {
   },
 
   beforeUnmount() {
+    this.graphQlUserStatusUnsubscribe();
+    this.userEventsSubscription.graphQlUnsubscribe();
+    this.userEventsSubscription = null;
+
     // an analogue of watch(effectively(chatId)) in MessageList.vue
     // used when the user presses Start in the RightPanel
     this.saveLastVisibleElement();
@@ -705,8 +712,6 @@ export default {
     removeEventListener("beforeunload", this.beforeUnload);
 
     this.uninstallScroller();
-    this.graphQlUserStatusUnsubscribe();
-    this.graphQlUnsubscribe();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);

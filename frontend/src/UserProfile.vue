@@ -170,7 +170,6 @@ export default {
       UserListContextMenu,
   },
   mixins: [
-      graphqlSubscriptionMixin('userAccountEventsInUserProfile'), // subscription
       userStatusMixin('userStatusInUserProfile'), // another subscription
   ],
   data() {
@@ -178,6 +177,7 @@ export default {
       viewableUser: null,
       online: false,
       isInVideo: false,
+      userProfileEventsSubscription: null,
     }
   },
   computed: {
@@ -314,12 +314,12 @@ export default {
     },
     onLoggedOut() {
       this.graphQlUserStatusUnsubscribe();
-      this.graphQlUnsubscribe();
+      this.userProfileEventsSubscription.graphQlUnsubscribe();
     },
     onProfileSet() {
       this.loadUser();
       this.graphQlUserStatusSubscribe();
-      this.graphQlSubscribe();
+      this.userProfileEventsSubscription.graphQlSubscribe();
       this.requestInVideo();
     },
     canDrawUsers() {
@@ -411,19 +411,24 @@ export default {
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(FOCUS, this.onFocus);
-    this.setMainTitle()
+    this.setMainTitle();
+
+    // create subscription object before ON_PROFILE_SET
+    this.userProfileEventsSubscription = graphqlSubscriptionMixin('userProfileEvents', this.getGraphQlSubscriptionQuery, this.setError, this.onNextSubscriptionElement);
 
     if (this.canDrawUsers()) {
       this.onProfileSet();
     }
   },
   beforeUnmount() {
+    this.graphQlUserStatusUnsubscribe();
+    this.userProfileEventsSubscription.graphQlUnsubscribe();
+    this.userProfileEventsSubscription = null;
+
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(FOCUS, this.onFocus);
 
-    this.graphQlUserStatusUnsubscribe();
-    this.graphQlUnsubscribe();
     this.unsetMainTitle();
 
     this.viewableUser = null;

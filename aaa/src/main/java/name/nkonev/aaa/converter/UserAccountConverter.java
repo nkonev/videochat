@@ -141,6 +141,24 @@ public class UserAccountConverter {
         );
     }
 
+    public name.nkonev.aaa.dto.UserAccountEventDTO convertToUserAccountEventDTO(UserAccount userAccount) {
+        if (userAccount == null) { return null; }
+        var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
+        return new name.nkonev.aaa.dto.UserAccountEventDTO(
+                userAccount.id(),
+                userAccount.username(),
+                userAccount.email(),
+                awaitingForConfirmEmailChange,
+                userAccount.avatar(),
+                userAccount.avatarBig(),
+                userAccount.shortInfo(),
+                userAccount.lastLoginDateTime(),
+                convertOAuth2(userAccount.oauth2Identifiers()),
+                userAccount.loginColor(),
+                userAccount.ldapId() != null
+        );
+    }
+
     public name.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) { return null; }
         name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;

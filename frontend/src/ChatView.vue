@@ -124,7 +124,6 @@ const emptyStoredPanes = () => {
 export default {
   mixins: [
     heightMixin(),
-    graphqlSubscriptionMixin('chatEvents'),
     videoPositionMixin(),
     searchString(SEARCH_MODE_CHATS),
   ],
@@ -138,6 +137,7 @@ export default {
       // shows that all the possible PUT /join have happened and we can get ChatList. Intentionally doesn't reset on switching chat at left
       // if we remove it (or replace with chatDtoIsReady) - there are going to be disappears of ChatList when user clicks on the different chat
       initialLoaded: false,
+      chatEventsSubscription: null,
     }
   },
   components: {
@@ -161,13 +161,13 @@ export default {
     onProfileSet() {
       return this.getInfo(this.chatId).then(()=>{
         this.chatStore.showCallManagement = true;
-        this.graphQlSubscribe();
+        this.chatEventsSubscription.graphQlSubscribe();
       })
     },
     onLogout() {
       this.partialReset();
       this.initialLoaded = false;
-      this.graphQlUnsubscribe();
+      this.chatEventsSubscription.graphQlUnsubscribe();
     },
     fetchAndSetChat(chatId) {
       return axios.get(`/api/chat/${chatId}`).then((response) => {
@@ -787,6 +787,9 @@ export default {
     this.chatStore.isShowSearch = true;
     this.chatStore.showChatEditButton = false;
 
+    // create subscription object before ON_PROFILE_SET
+    this.chatEventsSubscription = graphqlSubscriptionMixin('chatEvents', this.getGraphQlSubscriptionQuery, this.setError, this.onNextSubscriptionElement);
+
     if (this.chatStore.currentUser) {
       await this.onProfileSet();
     }
@@ -816,7 +819,8 @@ export default {
 
   },
   beforeUnmount() {
-    this.graphQlUnsubscribe();
+    this.chatEventsSubscription.graphQlUnsubscribe();
+    this.chatEventsSubscription = null;
 
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLogout);

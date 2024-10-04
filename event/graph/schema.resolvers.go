@@ -445,7 +445,7 @@ func filter(userFromBus int64, userIdsFilter []int64) bool {
 	}
 	return utils.Contains(userIdsFilter, userFromBus)
 }
-func (sr *subscriptionResolver) prepareUserAccountEvent(ctx context.Context, myUserId int64, eventType string, user *dto.User) *model.UserAccountEvent {
+func (sr *subscriptionResolver) prepareUserAccountEvent(ctx context.Context, myUserId int64, eventType string, user *dto.UserAccountEvent) *model.UserAccountEvent {
 	if user == nil {
 		logger.GetLogEntry(ctx).Errorf("Logical mistake")
 		return nil
@@ -459,7 +459,7 @@ func (sr *subscriptionResolver) prepareUserAccountEvent(ctx context.Context, myU
 
 	ret := model.UserAccountEvent{}
 	ret.EventType = eventType
-	ret.UserAccountEvent = convertUserAccountExtended(extended)
+	ret.UserAccountEvent = convertUserAccountExtended(myUserId, user, extended)
 	return &ret
 }
 func convertUserAccountDeletedEvent(eventType string, userId int64) *model.UserAccountEvent {
@@ -468,7 +468,7 @@ func convertUserAccountDeletedEvent(eventType string, userId int64) *model.UserA
 	ret.EventType = eventType
 	return &ret
 }
-func convertUserAccountExtended(aDto *dto.UserAccountExtended) *model.UserAccountExtendedDto {
+func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto *dto.UserAccountExtended) *model.UserAccountExtendedDto {
 	userAccountEvent := &model.UserAccountExtendedDto{
 		ID:                aDto.Id,
 		Login:             aDto.Login,
@@ -485,6 +485,10 @@ func convertUserAccountExtended(aDto *dto.UserAccountExtended) *model.UserAccoun
 		CanRemoveSessions: aDto.CanRemoveSessions,
 		Ldap:              aDto.Ldap,
 	}
+	if myUserId == aDto.Id {
+		userAccountEvent.Email = user.Email.Ptr()
+		userAccountEvent.AwaitingForConfirmEmailChange = &user.AwaitingForConfirmEmailChange
+	}
 	if aDto.AdditionalData != nil {
 		userAccountEvent.AdditionalData = &model.DataDto{
 			Enabled:   aDto.AdditionalData.Enabled,
@@ -496,15 +500,6 @@ func convertUserAccountExtended(aDto *dto.UserAccountExtended) *model.UserAccoun
 	}
 
 	return userAccountEvent
-}
-func convertUserAccountEventExtended(eventType string, aDto *dto.UserAccountExtended) *model.UserAccountEvent {
-	if aDto != nil {
-		ret := model.UserAccountEvent{}
-		ret.EventType = eventType
-		ret.UserAccountEvent = convertUserAccountExtended(aDto)
-		return &ret
-	}
-	return nil
 }
 func convertOauth2Identifiers(identifiers *dto.Oauth2Identifiers) *model.OAuth2Identifiers {
 	if identifiers == nil {

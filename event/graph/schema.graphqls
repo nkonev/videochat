@@ -325,6 +325,8 @@ type DataDTO {
 type UserAccountExtendedDto {
     id:         Int64!
     login:      String!
+    email:      String # not null only in case myself account
+    awaitingForConfirmEmailChange: Boolean # not null only in case myself account
     avatar:     String # url
     avatarBig:  String # url
     shortInfo: String

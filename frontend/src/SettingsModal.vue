@@ -6,7 +6,7 @@
     width="auto"
     scrollable
   >
-    <v-card>
+    <v-card :loading="loading">
         <v-sheet elevation="6">
           <v-tabs
             v-model="tab"
@@ -36,16 +36,16 @@
             <v-window-item value="choose_language">
                 <LanguageModalContent/>
             </v-window-item>
-            <v-window-item value="user_profile_self">
+            <v-window-item value="user_profile_self" v-if="this.chatStore.currentUser">
                 <UserSelfProfileModalContent/>
             </v-window-item>
-            <v-window-item value="a_video_settings">
+            <v-window-item value="a_video_settings" v-if="this.chatStore.currentUser">
                 <VideoGlobalSettingsModalContent/>
             </v-window-item>
-            <v-window-item value="the_notifications">
+            <v-window-item value="the_notifications" v-if="this.chatStore.currentUser">
                 <NotificationSettingsModalContent/>
             </v-window-item>
-            <v-window-item value="message_edit_settings">
+            <v-window-item value="message_edit_settings" v-if="this.chatStore.currentUser">
                 <MessageEditSettingsModalContent/>
             </v-window-item>
         </v-window>
@@ -95,6 +95,7 @@ export default {
       tab: null,
       show: false,
       fileInput: null,
+      loading: false,
     }
   },
   components: {
@@ -115,6 +116,7 @@ export default {
       this.$data.show = false;
     },
     setAvatarToProfile(file) {
+      this.loading = true;
       const config = {
         headers: { 'content-type': 'multipart/form-data' }
       }
@@ -122,15 +124,17 @@ export default {
       formData.append('data', file);
       return axios.post('/api/storage/avatar', formData, config)
         .then((res) => {
-          return axios.patch(`/api/aaa/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl}).then((response) => {
-              this.chatStore.currentUser = response.data;
-          })
-        })
+          return axios.patch(`/api/aaa/profile`, {avatar: res.data.relativeUrl, avatarBig: res.data.relativeBigUrl})
+        }).finally(()=>{
+          this.loading = false;
+        });
     },
     removeAvatarFromProfile() {
-      return axios.patch(`/api/aaa/profile`, {removeAvatar: true}).then((response) => {
-          this.chatStore.currentUser = response.data;
-      });
+      this.loading = true;
+      return axios.patch(`/api/aaa/profile`, {removeAvatar: true})
+          .finally(()=>{
+            this.loading = false;
+          });
     },
     openAvatarDialog() {
       this.fileInput.click();
