@@ -22,7 +22,7 @@ sudo usermod -aG docker $USER
 Also you can see versions [here](./.github/workflows/ci.yml).
 
 * Java (JDK) 21 [here](https://bell-sw.com/pages/downloads/#jdk-21-lts) or [here](https://axiomjdk.ru/pages/downloads/#/java-21-lts),
-set JAVA_HOME: to `~/.bashrc` just add
+set JAVA_HOME: into `~/.bashrc` just add
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21
 ```
@@ -80,13 +80,15 @@ make run-demo
 ...
 
 ### With IDE:
+I develop in IntelliJ IDEA with Golang and Vue plugins. I open the entire project folder, e.g. `videochat` in the one window.
 All the configs doesn't require a change for the development.
+
 #### Java (micro)service:
-Just run `AaaApplication.java`.
+Just run `AaaApplication.java` with IDE.
 #### Go (micro)services:
-Just run `main.go`.
+Just run `main.go` with IDE.
 #### Node.js (micro)services:
-Run `npm run dev`.
+Run `npm run dev` in the console.
 
 
 ### Congrats!
