@@ -48,6 +48,12 @@ export EDITOR=vim
 sudo dnf install ffmpeg-free
 ```
 
+## Environment (PostgreSQ, RabbitMQ, ...)
+To start the environment do
+```
+docker compose up -d
+```
+
 # AAA
 
 [Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
