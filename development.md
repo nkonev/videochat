@@ -515,7 +515,7 @@ curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:
 * https://medium.com/@imsanthiyag/introduction-to-keycloak-admin-api-44beb9011f7d
 * https://www.keycloak.org/docs-api/22.0.1/rest-api/index.html#_users
 
-#### 1. Using admin user
+#### 1. Using admin user (not recommended)
 1.1 Get access_token for admin
 ```bash
 curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/token' --header 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'username=keycloak_admin' --data-urlencode 'password=admin_password' --data-urlencode 'grant_type=password' --data-urlencode 'client_id=admin-cli' | jq 
@@ -527,7 +527,7 @@ curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/to
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
 
-#### 2. Using User Client Credentials Grant
+#### 2. Using User Client Credentials Grant (we go this way)
 
 2.1 How I changed my_client2 to make REST API working:
 
