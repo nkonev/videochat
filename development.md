@@ -80,8 +80,13 @@ make run-demo
 ...
 
 ### With IDE:
-Just run `AaaApplication.java` / `main.go`. Configs doesn't require a change for the development.
-`frontend` and `public`:  `npm run dev`.
+All the configs doesn't require a change for the development.
+#### Java (micro)service:
+Just run `AaaApplication.java`.
+#### Go (micro)services:
+Just run `main.go`.
+#### Node.js (micro)services:
+Run `npm run dev`.
 
 
 ### Congrats!
