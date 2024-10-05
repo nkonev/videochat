@@ -143,7 +143,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
         await().ignoreExceptions().until(() -> receiver.sizeChanged(), s -> s > 0);
         Assertions.assertEquals(1, receiver.sizeChanged());
-        final UserAccountDTO userAccountEvent = receiver.getLastChanged();
+        final var userAccountEvent = receiver.getLastChanged();
         Assertions.assertEquals(newLogin, userAccountEvent.login());
     }
 

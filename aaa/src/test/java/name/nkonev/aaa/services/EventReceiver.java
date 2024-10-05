@@ -3,6 +3,7 @@ package name.nkonev.aaa.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.dto.UserAccountDTO;
 import name.nkonev.aaa.dto.UserAccountEventChangedDTO;
+import name.nkonev.aaa.dto.UserAccountEventDTO;
 import name.nkonev.aaa.dto.UserAccountEventDeletedDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class EventReceiver {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final ConcurrentLinkedQueue<UserAccountDTO> changedQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<UserAccountEventDTO> changedQueue = new ConcurrentLinkedQueue<>();
 
     private final ConcurrentLinkedQueue<UserAccountEventDeletedDTO> deletedQueue = new ConcurrentLinkedQueue<>();
 
@@ -54,7 +55,7 @@ public class EventReceiver {
         return changedQueue.size();
     }
 
-    public UserAccountDTO getLastChanged() {
+    public UserAccountEventDTO getLastChanged() {
         return changedQueue.poll();
     }
 
