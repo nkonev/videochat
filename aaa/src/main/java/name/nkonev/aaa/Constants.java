@@ -76,7 +76,7 @@ public class Constants {
     public static final Set<String> FORBIDDEN_USERNAME_PREFIXES = Set.of(LDAP_CONFLICT_PREFIX, KEYCLOAK_CONFLICT_PREFIX);
 
     public static final int MIN_PASSWORD_LENGTH = 6;
-    public static final int MAX_PASSWORD_LENGTH = 30;
+    public static final int MAX_PASSWORD_LENGTH = 100;
     public static final int MAX_USERS_RESPONSE_LENGTH = 100;
 
     public static final int MAX_SMILEYS_LENGTH = 2048;
