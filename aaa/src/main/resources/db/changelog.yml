@@ -132,25 +132,4 @@ databaseChangeLog:
       author: nkonev
       changes:
         - sqlFile:
-            path: /db/migration/V19__sync_ldap.sql
-
-  - changeSet:
-      id: 20
-      author: nkonev
-      changes:
-        - sqlFile:
-            path: /db/migration/V20__sync_keycloak.sql
-
-  - changeSet:
-      id: 21
-      author: nkonev
-      changes:
-        - sqlFile:
-            path: /db/migration/V21__sync_ldap.sql
-
-  - changeSet:
-      id: 22
-      author: nkonev
-      changes:
-        - sqlFile:
-            path: /db/migration/V22__sync_ldap_roles.sql
+            path: db/migration/V19__sync_ldap_keycloak.sql
