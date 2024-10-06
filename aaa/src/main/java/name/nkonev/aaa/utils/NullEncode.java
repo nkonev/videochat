@@ -17,4 +17,14 @@ public abstract class NullEncode {
         return Encode.forHtml(input);
     }
 
+    public static String forHtmlAndFixQuotes(String input) {
+        var encoded = forHtml(input);
+        if (encoded == null) {
+            return encoded;
+        }
+        var t = encoded.replace("&#39;", "'");
+        t = t.replace("&#34;", "\"");
+        return t;
+    }
+
 }

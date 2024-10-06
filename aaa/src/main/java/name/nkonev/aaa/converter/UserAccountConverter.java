@@ -47,7 +47,7 @@ public class UserAccountConverter {
         userAccountDTO = userAccountDTO.withEmail(normalizeEmail(userAccountDTO.email()));
         userAccountDTO = userAccountDTO.withAvatar(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatar())));
         userAccountDTO = userAccountDTO.withAvatarBig(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig())));
-        userAccountDTO = userAccountDTO.withShortInfo(trimToNull(NullEncode.forHtml(userAccountDTO.shortInfo())));
+        userAccountDTO = userAccountDTO.withShortInfo(trimToNull(NullEncode.forHtmlAndFixQuotes(userAccountDTO.shortInfo())));
         userAccountDTO = userAccountDTO.withLoginColor(trimToNull(NullEncode.forHtml(userAccountDTO.loginColor())));
         return userAccountDTO;
     }
@@ -257,7 +257,7 @@ public class UserAccountConverter {
     private static String checkAndTrimLogin(String login, boolean isForOauth2) {
         login = login != null ? login.trim() : null;
         login = trimToNull(login);
-        login = NullEncode.forHtml(login);
+        login = NullEncode.forHtmlAndFixQuotes(login);
 
         if (login != null) {
             if (FORBIDDEN_USERNAMES.contains(login)) {
@@ -291,7 +291,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.FACEBOOK,
-                NullEncode.forHtml(login),
+                NullEncode.forHtmlAndFixQuotes(login),
                 null,
                 NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
@@ -325,7 +325,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.VKONTAKTE,
-                NullEncode.forHtml(login),
+                NullEncode.forHtmlAndFixQuotes(login),
                 null,
                 null,
                 null,
@@ -359,7 +359,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.GOOGLE,
-                NullEncode.forHtml(login),
+                NullEncode.forHtmlAndFixQuotes(login),
                 null,
                 NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
@@ -391,7 +391,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.KEYCLOAK,
-                NullEncode.forHtml(login),
+                NullEncode.forHtmlAndFixQuotes(login),
                 null,
                 NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
@@ -423,7 +423,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.LDAP,
-                NullEncode.forHtml(login),
+                NullEncode.forHtmlAndFixQuotes(login),
                 null,
                 null,
                 null,

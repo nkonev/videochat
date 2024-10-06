@@ -17,7 +17,7 @@
               <span :style="getLoginColoredStyle(chatStore.currentUser)" v-html="getUserNameOverride(chatStore.currentUser, userState)"></span>
           </template>
           <template v-slot:subtitle>
-              <span>{{ chatStore.currentUser.shortInfo }}</span>
+              <span v-html="chatStore.currentUser.shortInfo"></span>
           </template>
       </v-list-item>
     </v-list>
