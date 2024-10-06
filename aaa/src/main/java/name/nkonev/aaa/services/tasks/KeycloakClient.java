@@ -1,4 +1,4 @@
-package name.nkonev.aaa.tasks;
+package name.nkonev.aaa.services.tasks;
 
 import com.nimbusds.jwt.JWTParser;
 import name.nkonev.aaa.config.properties.AaaProperties;

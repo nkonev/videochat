@@ -9,8 +9,7 @@ import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.rest.KeycloakUserEntity;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.rest.KeycloakUserInRoleEntity;
-import name.nkonev.aaa.security.AaaUserDetailsService;
-import name.nkonev.aaa.security.RoleMapper;
+import name.nkonev.aaa.services.tasks.KeycloakClient;
 import name.nkonev.aaa.utils.Pair;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
@@ -19,15 +18,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.KEYCLOAK_CONFLICT_PREFIX;
-import static name.nkonev.aaa.dto.UserRole.ROLE_USER;
 import static name.nkonev.aaa.security.OAuth2Providers.KEYCLOAK;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 

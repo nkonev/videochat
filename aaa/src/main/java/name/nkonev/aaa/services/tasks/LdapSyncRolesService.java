@@ -1,4 +1,4 @@
-package name.nkonev.aaa.tasks;
+package name.nkonev.aaa.services.tasks;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.RoleMapEntry;
@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import static name.nkonev.aaa.utils.ConvertUtils.extractExtId;
 
 @Service
-public class SyncRolesService {
+public class LdapSyncRolesService {
 
     @Autowired
     private AaaProperties aaaProperties;
@@ -32,7 +32,7 @@ public class SyncRolesService {
     @Autowired
     private LdapOperations ldapOperations;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SyncRolesService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LdapSyncRolesService.class);
 
     public String getNecessaryAdminRole() {
         var list = aaaProperties.roleMappings().ldap().stream()
@@ -62,7 +62,7 @@ public class SyncRolesService {
             LOGGER.debug("Executing search with base [{}] and filter [{}]", lq.base(), filterValue);
             return ctx.search(lq.base(), filterValue, controls);
         };
-        var handler = new ConsumingCallbackHandler(a -> mapAttributesToInRoleEntity(batchSize, a, batchProcessor));
+        var handler = new LdapConsumingCallbackHandler(a -> mapAttributesToInRoleEntity(batchSize, a, batchProcessor));
         ldapOperations.search(se, handler);
     }
 

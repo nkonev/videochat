@@ -5,11 +5,12 @@ import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.config.properties.RoleMapEntry;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
-import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
 import name.nkonev.aaa.entity.ldap.LdapUserInRoleEntity;
 import name.nkonev.aaa.security.AaaUserDetailsService;
+import name.nkonev.aaa.services.tasks.LdapMappingConsumingCallbackHandler;
+import name.nkonev.aaa.services.tasks.LdapSyncRolesService;
 import name.nkonev.aaa.utils.Pair;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
@@ -18,19 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.*;
 import org.springframework.ldap.filter.WhitespaceWildcardsFilter;
 import org.springframework.ldap.query.LdapQueryBuilder;
-import org.springframework.ldap.support.LdapUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.function.Consumer;
-import javax.naming.NameClassPair;
-import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
 
 import static name.nkonev.aaa.Constants.LDAP_CONFLICT_PREFIX;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
@@ -47,7 +43,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     private AaaUserDetailsService aaaUserDetailsService;
 
     @Autowired
-    private SyncRolesService syncRolesService;
+    private LdapSyncRolesService ldapSyncRolesService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncLdapTask.class);
 
@@ -90,7 +86,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
             return ctx.search(lq.base(), filterValue, controls);
         };
         AttributesMapper<LdapEntity> mapper = (Attributes attributes) -> new LdapEntity(aaaProperties.ldap().attributeNames(), attributes);
-        MappingConsumingCallbackHandler<LdapEntity> handler = new MappingConsumingCallbackHandler<>(mapper, this::processUpsertBatch, batchSize);
+        LdapMappingConsumingCallbackHandler<LdapEntity> handler = new LdapMappingConsumingCallbackHandler<>(mapper, this::processUpsertBatch, batchSize);
         ldapOperations.search(se, handler);
         handler.processLeftovers();
 
@@ -226,7 +222,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
 
     @Override
     protected String getNecessaryAdminRole() {
-        return syncRolesService.getNecessaryAdminRole();
+        return ldapSyncRolesService.getNecessaryAdminRole();
     }
 
     @Override
@@ -267,7 +263,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
 
     private void processRoles(int batchSize) {
         var extAdminRole = getNecessaryAdminRole();
-        syncRolesService.processRoles(batchSize, extAdminRole, batch -> processRolesBatch(extAdminRole, batch));
+        ldapSyncRolesService.processRoles(batchSize, extAdminRole, batch -> processRolesBatch(extAdminRole, batch));
 
         // remove admin role
         processRemovingRolesFromUsers(batchSize);
@@ -281,105 +277,3 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 }
 
-class MappingConsumingCallbackHandler<T> implements NameClassPairCallbackHandler {
-
-    private final AttributesMapper<T> mapper;
-
-    private final Consumer<List<T>> consumer;
-
-    private final List<T> list = new ArrayList<>();
-
-    private final int batchSize;
-
-    /**
-     * Constructs a new instance around the specified {@link AttributesMapper}.
-     * @param mapper the target mapper.
-     */
-    public MappingConsumingCallbackHandler(AttributesMapper<T> mapper, Consumer<List<T>> consumer, int batchSize) {
-        this.mapper = mapper;
-        this.consumer = consumer;
-        this.batchSize = batchSize;
-    }
-
-    /**
-     * Cast the NameClassPair to a SearchResult and pass its attributes to the
-     * {@link AttributesMapper}.
-     * @param nameClassPair a <code> SearchResult</code> instance.
-     * @return the Object returned from the mapper.
-     */
-    public T getObjectFromNameClassPairInternal(NameClassPair nameClassPair) {
-        if (!(nameClassPair instanceof SearchResult)) {
-            throw new IllegalArgumentException("Parameter must be an instance of SearchResult");
-        }
-
-        SearchResult searchResult = (SearchResult) nameClassPair;
-        Attributes attributes = searchResult.getAttributes();
-        try {
-            return this.mapper.mapFromAttributes(attributes);
-        }
-        catch (javax.naming.NamingException ex) {
-            throw LdapUtils.convertLdapException(ex);
-        }
-    }
-
-    @Override
-    public final void handleNameClassPair(NameClassPair nameClassPair) throws NamingException {
-        this.list.add(getObjectFromNameClassPairInternal(nameClassPair));
-        if (list.size() == batchSize) {
-            this.consumer.accept(list);
-            list.clear();
-        }
-    }
-
-    public void processLeftovers() {
-        if (!list.isEmpty()) {
-            this.consumer.accept(list);
-            list.clear();
-        }
-    }
-}
-
-class ConsumingCallbackHandler implements NameClassPairCallbackHandler {
-
-    private final AttributesConsumer consumer;
-
-    /**
-     * Constructs a new instance around the specified {@link AttributesMapper}.
-     * @param consumer the target mapper.
-     */
-    public ConsumingCallbackHandler(AttributesConsumer consumer) {
-        this.consumer = consumer;
-    }
-
-    /**
-     * Cast the NameClassPair to a SearchResult and pass its attributes to the
-     * {@link AttributesMapper}.
-     * @param nameClassPair a <code> SearchResult</code> instance.
-     * @return the Object returned from the mapper.
-     */
-    public void getObjectFromNameClassPairInternal(NameClassPair nameClassPair) {
-        if (!(nameClassPair instanceof SearchResult)) {
-            throw new IllegalArgumentException("Parameter must be an instance of SearchResult");
-        }
-
-        SearchResult searchResult = (SearchResult) nameClassPair;
-        Attributes attributes = searchResult.getAttributes();
-        try {
-            this.consumer.consumeFromAttributes(attributes);
-            return;
-        }
-        catch (javax.naming.NamingException ex) {
-            throw LdapUtils.convertLdapException(ex);
-        }
-    }
-
-    @Override
-    public final void handleNameClassPair(NameClassPair nameClassPair) throws NamingException {
-        getObjectFromNameClassPairInternal(nameClassPair);
-    }
-
-}
-
-interface AttributesConsumer {
-    void consumeFromAttributes(Attributes attributes) throws NamingException;
-}

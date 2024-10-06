@@ -1,6 +1,6 @@
 package name.nkonev.aaa.entity.rest;
 
-import name.nkonev.aaa.tasks.ExternalSyncEntity;
+import name.nkonev.aaa.dto.ExternalSyncEntity;
 
 public record KeycloakUserInRoleEntity(
         String id,

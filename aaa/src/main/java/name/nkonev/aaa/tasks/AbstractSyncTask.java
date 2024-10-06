@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.config.properties.RoleMapEntry;
 import name.nkonev.aaa.dto.EventWrapper;
+import name.nkonev.aaa.dto.ExternalSyncEntity;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;

@@ -1,6 +1,6 @@
 package name.nkonev.aaa.entity.ldap;
 
-import name.nkonev.aaa.tasks.ExternalSyncEntity;
+import name.nkonev.aaa.dto.ExternalSyncEntity;
 
 public record LdapUserInRoleEntity(
     String id

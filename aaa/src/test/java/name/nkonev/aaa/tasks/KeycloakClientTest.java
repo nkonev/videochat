@@ -1,6 +1,7 @@
 package name.nkonev.aaa.tasks;
 
 import name.nkonev.aaa.AbstractMockMvcTestRunner;
+import name.nkonev.aaa.services.tasks.KeycloakClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
