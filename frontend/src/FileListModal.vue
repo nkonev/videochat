@@ -124,7 +124,7 @@ import bus, {
   FILE_CREATED,
   FILE_REMOVED,
   PLAYER_MODAL,
-  FILE_UPDATED, MESSAGE_EDIT_LOAD_FILES_COUNT, LOGGED_OUT
+  FILE_UPDATED, MESSAGE_EDIT_LOAD_FILES_COUNT, LOGGED_OUT, REFRESH_ON_WEBSOCKET_RESTORED
 } from "./bus/bus";
 import axios from "axios";
 import {
@@ -362,6 +362,14 @@ export default {
         shouldReactOnPageChange() {
             return this.show
         },
+        debouncedUpdate() {
+          this.updateItems();
+        },
+        onWsRestoredRefresh() {
+          if (this.dataLoaded) {
+            this.debouncedUpdate();
+          }
+        },
     },
     watch: {
         searchString(searchString) {
@@ -373,6 +381,7 @@ export default {
     },
     created() {
         this.doSearch = debounce(this.doSearch, 700);
+        this.debouncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
     },
     mounted() {
       bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
@@ -381,6 +390,7 @@ export default {
       bus.on(FILE_UPDATED, this.onItemUpdatedEvent);
       bus.on(FILE_REMOVED, this.onItemRemovedEvent);
       bus.on(LOGGED_OUT, this.onLogout);
+      bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
       this.markInstance = new Mark(".files-list");
     },
     beforeUnmount() {
@@ -390,6 +400,7 @@ export default {
         bus.off(FILE_UPDATED, this.onItemUpdatedEvent);
         bus.off(FILE_REMOVED, this.onItemRemovedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
+        bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         this.markInstance.unmark();
         this.markInstance = null;
     },

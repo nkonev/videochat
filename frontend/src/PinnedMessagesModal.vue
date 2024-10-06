@@ -80,14 +80,20 @@
 <script>
 
 import bus, {
-    LOGGED_OUT, MESSAGES_RELOAD,
-    OPEN_PINNED_MESSAGES_MODAL, PINNED_MESSAGE_EDITED, PINNED_MESSAGE_PROMOTED, PINNED_MESSAGE_UNPROMOTED,
+  LOGGED_OUT,
+  MESSAGES_RELOAD,
+  OPEN_PINNED_MESSAGES_MODAL,
+  PINNED_MESSAGE_EDITED,
+  PINNED_MESSAGE_PROMOTED,
+  PINNED_MESSAGE_UNPROMOTED,
+  REFRESH_ON_WEBSOCKET_RESTORED,
 } from "./bus/bus";
 import axios from "axios";
 import { hasLength } from "./utils";
 import { getHumanReadableDate } from "@/date.js";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
+import debounce from "lodash/debounce.js";
 
 export default {
     mixins: [
@@ -201,6 +207,17 @@ export default {
             this.reset();
             this.closeModal();
         },
+        debouncedUpdate() {
+          this.updateItems();
+        },
+        onWsRestoredRefresh() {
+          if (this.dataLoaded) {
+            this.debouncedUpdate();
+          }
+        },
+    },
+    created() {
+      this.debouncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
     },
     mounted() {
         bus.on(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
@@ -209,6 +226,7 @@ export default {
         bus.on(PINNED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.on(LOGGED_OUT, this.onLogout);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
+        bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     },
     beforeUnmount() {
         bus.off(OPEN_PINNED_MESSAGES_MODAL, this.showModal);
@@ -217,6 +235,7 @@ export default {
         bus.off(PINNED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
+        bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     },
 }
 </script>

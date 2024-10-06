@@ -520,7 +520,7 @@ export default {
         this.writingUsers.push({timestamp: +new Date(), login: data.login})
       }
 
-      this.chatStore.moreImportantSubtitleInfo = this.writingUsers.map(v=>v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
+      this.chatStore.usersWritingSubtitleInfo = this.writingUsers.map(v=>v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
     },
     onUserBroadcast(dto) {
       console.log("onUserBroadcast", dto);
@@ -788,7 +788,7 @@ export default {
     this.chatStore.showChatEditButton = false;
 
     // create subscription object before ON_PROFILE_SET
-    this.chatEventsSubscription = graphqlSubscriptionMixin('chatEvents', this.getGraphQlSubscriptionQuery, this.setError, this.onNextSubscriptionElement);
+    this.chatEventsSubscription = graphqlSubscriptionMixin('chatEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
     if (this.chatStore.currentUser) {
       await this.onProfileSet();
@@ -813,7 +813,7 @@ export default {
       const curr = + new Date();
       this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
       if (this.writingUsers.length == 0) {
-        this.chatStore.moreImportantSubtitleInfo = null;
+        this.chatStore.usersWritingSubtitleInfo = null;
       }
     }, 500);
 

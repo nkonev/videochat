@@ -312,4 +312,5 @@ export default {
     chat_link_copied: "Ссылка на чат скопирована в буфер обмена",
     published_file_link_copied: "Ссылка на опубликованный файл скопирована в буфер обмена",
     user_not_found: "Пользователь не найден",
+    connecting: "Подклбючение..."
 }

@@ -124,24 +124,6 @@
               </v-btn>
             </template>
           </v-snackbar>
-          <v-snackbar v-model="showWebsocketRestored" color="black" timeout="10000" timer :transition="false" @update:modelValue="onSnackbarWebsocketRestore">
-            {{ $vuetify.locale.t('$vuetify.websocket_restored') }}
-            <template v-slot:actions>
-                <v-btn
-                    text
-                    @click="onPressWebsocketRestoredCancel()"
-                >
-                    {{ $vuetify.locale.t('$vuetify.cancel') }}
-                </v-btn>
-                <v-btn
-                    text
-                    @click="onPressWebsocketRestoredRefresh()"
-                  >
-                    {{ $vuetify.locale.t('$vuetify.btn_update') }}
-                  </v-btn>
-
-            </template>
-          </v-snackbar>
 
           <!-- "if" is to fix rare issue with snackbar in case background tab in Firefox - it doesn't react on 'removing' or '' status -->
           <v-snackbar v-if="invitedVideoChatAlert" v-model="invitedVideoChatState" color="success" timeout="-1" :multi-line="true" :transition="false">
@@ -207,29 +189,29 @@ import {
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
-    ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
-    CHAT_ADD,
-    CHAT_DELETED,
-    CHAT_EDITED, CHAT_REDRAW,
-    FOCUS,
-    LOGGED_OUT,
-    NOTIFICATION_ADD,
-    NOTIFICATION_DELETE,
-    OPEN_FILE_UPLOAD_MODAL,
-    OPEN_PARTICIPANTS_DIALOG,
-    OPEN_PERMISSIONS_WARNING_MODAL,
-    PLAYER_MODAL,
-    PROFILE_SET,
-    REFRESH_ON_WEBSOCKET_RESTORED,
-    SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
-    UNREAD_MESSAGES_CHANGED,
-    CO_CHATTED_PARTICIPANT_CHANGED,
-    VIDEO_CALL_INVITED,
-    VIDEO_CALL_SCREEN_SHARE_CHANGED,
-    VIDEO_CALL_USER_COUNT_CHANGED,
-    VIDEO_DIAL_STATUS_CHANGED,
-    VIDEO_RECORDING_CHANGED,
-    WEBSOCKET_RESTORED, ON_WINDOW_RESIZED, NOTIFICATION_CLEAR_ALL,
+  ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
+  CHAT_ADD,
+  CHAT_DELETED,
+  CHAT_EDITED, CHAT_REDRAW,
+  FOCUS,
+  LOGGED_OUT,
+  NOTIFICATION_ADD,
+  NOTIFICATION_DELETE,
+  OPEN_FILE_UPLOAD_MODAL,
+  OPEN_PARTICIPANTS_DIALOG,
+  OPEN_PERMISSIONS_WARNING_MODAL,
+  PLAYER_MODAL,
+  PROFILE_SET,
+  REFRESH_ON_WEBSOCKET_RESTORED,
+  SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
+  UNREAD_MESSAGES_CHANGED,
+  CO_CHATTED_PARTICIPANT_CHANGED,
+  VIDEO_CALL_INVITED,
+  VIDEO_CALL_SCREEN_SHARE_CHANGED,
+  VIDEO_CALL_USER_COUNT_CHANGED,
+  VIDEO_DIAL_STATUS_CHANGED,
+  VIDEO_RECORDING_CHANGED,
+  WEBSOCKET_RESTORED, ON_WINDOW_RESIZED, NOTIFICATION_CLEAR_ALL, WEBSOCKET_LOST,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -290,7 +272,6 @@ export default {
     data() {
         return {
             showSearchButton: true,
-            showWebsocketRestored: false,
             invitedVideoChatId: 0,
             invitedVideoChatName: null,
             invitedVideoChatAlert: false,
@@ -617,7 +598,9 @@ export default {
         },
         getSubtitle() {
             if (!!this.chatStore.moreImportantSubtitleInfo) {
-                return this.chatStore.moreImportantSubtitleInfo
+              return this.chatStore.moreImportantSubtitleInfo
+            } if (!!this.chatStore.usersWritingSubtitleInfo) {
+              return this.chatStore.usersWritingSubtitleInfo
             } else if (this.chatStore.oppositeUserLastLoginDateTime) {
                 return this.$vuetify.locale.t('$vuetify.last_logged_in_at', getHumanReadableDate(this.chatStore.oppositeUserLastLoginDateTime));
             } else {
@@ -625,7 +608,7 @@ export default {
             }
         },
         shouldShowSubtitle() {
-            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo || this.chatStore.oppositeUserLastLoginDateTime
+            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo || !!this.chatStore.usersWritingSubtitleInfo || this.chatStore.oppositeUserLastLoginDateTime
         },
         afterRouteInitialized() {
             return this.chatStore.fetchAvailableOauth2Providers()
@@ -640,22 +623,13 @@ export default {
                 })
             }
         },
+        onWsLost() {
+          this.chatStore.moreImportantSubtitleInfo = this.$vuetify.locale.t('$vuetify.connecting');
+        },
         onWsRestored() {
-          this.showWebsocketRestored = true;
-        },
-        onSnackbarWebsocketRestore(value) {
-            if (!value ) {
-                console.warn("REFRESH_ON_WEBSOCKET_RESTORED auto");
-                bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
-            }
-        },
-        onPressWebsocketRestoredCancel() {
-            this.showWebsocketRestored = false;
-        },
-        onPressWebsocketRestoredRefresh() {
-          this.showWebsocketRestored = false;
-            console.warn("REFRESH_ON_WEBSOCKET_RESTORED manual");
-            bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+          this.chatStore.moreImportantSubtitleInfo = null;
+          console.warn("REFRESH_ON_WEBSOCKET_RESTORED auto");
+          bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
         resetVideoInvitation() {
             this.invitedVideoChatState = false;
@@ -883,6 +857,7 @@ export default {
 
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(WEBSOCKET_LOST, this.onWsLost);
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
@@ -893,8 +868,8 @@ export default {
         window.addEventListener("resize", this.onWindowResized);
 
         // create subscription object before ON_PROFILE_SET
-        this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setError, this.onNextGlobalSubscriptionElement);
-        this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setError, this.onSelfNextSubscriptionElement);
+        this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
+        this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
 
         // It's placed after each route in order not to have a race-condition
         this.afterRouteInitialized = once(this.afterRouteInitialized);
@@ -910,6 +885,7 @@ export default {
 
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(WEBSOCKET_LOST, this.onWsLost);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);

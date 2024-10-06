@@ -163,11 +163,11 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-    CHANGE_ROLE_DIALOG,
-    CLOSE_SIMPLE_MODAL, FOCUS,
-    LOGGED_OUT, OPEN_SIMPLE_MODAL,
-    PROFILE_SET,
-    SEARCH_STRING_CHANGED
+  CHANGE_ROLE_DIALOG,
+  CLOSE_SIMPLE_MODAL, FOCUS,
+  LOGGED_OUT, OPEN_SIMPLE_MODAL,
+  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
+  SEARCH_STRING_CHANGED
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -631,6 +631,10 @@ export default {
           })
       }
     },
+    onWsRestoredRefresh() {
+      this.saveLastVisibleElement();
+      this.initializeHashVariablesAndReloadItems();
+    },
     requestInVideo() {
       this.$nextTick(()=>{
           const list = this.items.map(item => item.id);
@@ -645,7 +649,8 @@ export default {
     }
   },
   created() {
-    this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true})
+    this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});
+    this.onWsRestoredRefresh = debounce(this.onWsRestoredRefresh, 300, {leading:false, trailing:true});
   },
   watch: {
       '$vuetify.locale.current': {
@@ -684,7 +689,7 @@ export default {
     this.chatStore.searchType = SEARCH_MODE_USERS;
 
     // create subscription object before ON_PROFILE_SET
-    this.userEventsSubscription = graphqlSubscriptionMixin('userAccountEvents', this.getGraphQlSubscriptionQuery, this.setError, this.onNextSubscriptionElement);
+    this.userEventsSubscription = graphqlSubscriptionMixin('userAccountEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
     if (this.canDrawUsers()) {
       await this.onProfileSet();
@@ -696,6 +701,7 @@ export default {
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(FOCUS, this.onFocus);
+    bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
   },
 
   beforeUnmount() {
@@ -717,6 +723,7 @@ export default {
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(FOCUS, this.onFocus);
+    bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     setTitle(null);
     this.chatStore.title = null;

@@ -83,9 +83,9 @@
 <script>
 
 import bus, {
-    LOGGED_OUT, MESSAGES_RELOAD,
-    OPEN_PUBLISHED_MESSAGES_MODAL,
-    PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED, PUBLISHED_MESSAGE_REMOVE,
+  LOGGED_OUT, MESSAGES_RELOAD,
+  OPEN_PUBLISHED_MESSAGES_MODAL,
+  PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED, PUBLISHED_MESSAGE_REMOVE, REFRESH_ON_WEBSOCKET_RESTORED,
 } from "./bus/bus";
 import axios from "axios";
 import {getPublicMessageLink, hasLength} from "./utils";
@@ -94,6 +94,7 @@ import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
+import debounce from "lodash/debounce.js";
 
 export default {
     mixins: [
@@ -195,9 +196,20 @@ export default {
             this.reset();
             this.closeModal();
         },
+        debouncedUpdate() {
+          this.updateItems();
+        },
+        onWsRestoredRefresh() {
+          if (this.dataLoaded) {
+            this.debouncedUpdate();
+          }
+        },
     },
     computed: {
         ...mapStores(useChatStore),
+    },
+    created() {
+      this.debouncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
     },
     mounted() {
         bus.on(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
@@ -206,6 +218,7 @@ export default {
         bus.on(PUBLISHED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.on(LOGGED_OUT, this.onLogout);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
+        bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     },
     beforeUnmount() {
         bus.off(OPEN_PUBLISHED_MESSAGES_MODAL, this.showModal);
@@ -214,6 +227,7 @@ export default {
         bus.off(PUBLISHED_MESSAGE_EDITED, this.onItemUpdatedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
+        bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     },
 }
 </script>

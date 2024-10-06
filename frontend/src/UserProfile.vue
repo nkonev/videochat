@@ -419,7 +419,7 @@ export default {
     this.setMainTitle();
 
     // create subscription object before ON_PROFILE_SET
-    this.userProfileEventsSubscription = graphqlSubscriptionMixin('userProfileEvents', this.getGraphQlSubscriptionQuery, this.setError, this.onNextSubscriptionElement);
+    this.userProfileEventsSubscription = graphqlSubscriptionMixin('userProfileEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
     if (this.canDrawUsers()) {
       this.onProfileSet();

@@ -151,16 +151,16 @@
 <script>
     import axios from "axios";
     import bus, {
-        CHAT_DELETED,
-        CLOSE_SIMPLE_MODAL,
-        OPEN_CHAT_EDIT,
-        OPEN_PARTICIPANTS_DIALOG,
-        OPEN_SIMPLE_MODAL,
-        PARTICIPANT_ADDED,
-        PARTICIPANT_DELETED,
-        PARTICIPANT_EDITED,
-        CO_CHATTED_PARTICIPANT_CHANGED,
-        VIDEO_DIAL_STATUS_CHANGED, LOGGED_OUT,
+      CHAT_DELETED,
+      CLOSE_SIMPLE_MODAL,
+      OPEN_CHAT_EDIT,
+      OPEN_PARTICIPANTS_DIALOG,
+      OPEN_SIMPLE_MODAL,
+      PARTICIPANT_ADDED,
+      PARTICIPANT_DELETED,
+      PARTICIPANT_EDITED,
+      CO_CHATTED_PARTICIPANT_CHANGED,
+      VIDEO_DIAL_STATUS_CHANGED, LOGGED_OUT, REFRESH_ON_WEBSOCKET_RESTORED,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
@@ -457,6 +457,15 @@
             shouldReactOnPageChange() {
                 return this.show
             },
+            debouncedUpdate() {
+              this.updateItems();
+            },
+            onWsRestoredRefresh() {
+              if (this.dataLoaded) {
+                this.debouncedUpdate();
+              }
+            },
+
         },
         watch: {
             userSearchString (searchString) {
@@ -480,6 +489,7 @@
 
         created() {
             this.doSearch = debounce(this.doSearch, 700);
+            this.debuncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
         },
         mounted() {
           bus.on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
@@ -490,6 +500,7 @@
           bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
           bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
           bus.on(LOGGED_OUT, this.onLogout);
+          bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
           this.markInstance = new Mark(".participants-list");
         },
@@ -502,6 +513,8 @@
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
             bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
             bus.off(LOGGED_OUT, this.onLogout);
+            bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
             this.markInstance.unmark();
             this.markInstance = null;
         },

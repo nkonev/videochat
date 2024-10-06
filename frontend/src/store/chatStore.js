@@ -51,6 +51,7 @@ export const useChatStore = defineStore('chat', {
         fileUploadingQueue: [],
         fileUploadingSessionType: null,
         moreImportantSubtitleInfo: null,
+        usersWritingSubtitleInfo: null,
         initializingStaringVideoRecord: false,
         initializingStoppingVideoRecord: false,
         canShowMicrophoneButton: false,

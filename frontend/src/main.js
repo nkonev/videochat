@@ -67,7 +67,7 @@ app.config.globalProperties.getIdFromRouteHash = (hash) => {
 };
 
 app.config.globalProperties.setError = (e, txt, traceId) => {
-    console.error(txt, e);
+    console.error(txt, e, "traceId=", traceId);
     let messageText = "";
     messageText += txt;
     if (e) {
@@ -81,6 +81,10 @@ app.config.globalProperties.setError = (e, txt, traceId) => {
     chatStore.lastError = messageText;
     chatStore.showAlert = true;
     chatStore.errorColor = "error";
+}
+
+app.config.globalProperties.setErrorSilent = (e, traceId) => {
+    console.error(e, "traceId=", traceId);
 }
 
 app.config.globalProperties.setWarning = (txt) => {
@@ -136,7 +140,11 @@ axios.interceptors.response.use((response) => {
         if (respHeaders) {
           traceId = respHeaders['trace-id']
         }
-        app.config.globalProperties.setError(maybeBusinessMessage, errorMessage, traceId);
+        if (error.response) {
+            app.config.globalProperties.setError(maybeBusinessMessage, errorMessage, traceId);
+        } else {
+            app.config.globalProperties.setErrorSilent(errorMessage, traceId);
+        }
         return Promise.reject(error)
     }
 });

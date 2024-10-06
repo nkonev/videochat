@@ -64,8 +64,8 @@
 <script>
 
 import bus, {
-    CHAT_ADD, CHAT_DELETED, CHAT_EDITED, LOGGED_OUT,
-    OPEN_RESEND_TO_MODAL,
+  CHAT_ADD, CHAT_DELETED, CHAT_EDITED, LOGGED_OUT,
+  OPEN_RESEND_TO_MODAL, REFRESH_ON_WEBSOCKET_RESTORED,
 } from "./bus/bus";
 import {findIndex, hasLength, replaceInArray, replaceOrPrepend} from "./utils";
 import axios from "axios";
@@ -229,6 +229,11 @@ export default {
         shouldReactOnPageChange() {
             return false
         },
+        onWsRestoredRefresh() {
+          if (this.dataLoaded) {
+            this.doSearch();
+          }
+        },
     },
     computed: {
         chatId() {
@@ -259,6 +264,7 @@ export default {
         bus.on(CHAT_ADD, this.addItem);
         bus.on(CHAT_EDITED, this.changeItem);
         bus.on(CHAT_DELETED, this.removeItem);
+        bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     },
     beforeUnmount() {
         this.markInstance.unmark();
@@ -269,6 +275,7 @@ export default {
         bus.off(CHAT_ADD, this.addItem);
         bus.off(CHAT_EDITED, this.changeItem);
         bus.off(CHAT_DELETED, this.removeItem);
+        bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     },
 }
 </script>
