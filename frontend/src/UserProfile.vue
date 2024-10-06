@@ -215,7 +215,12 @@ export default {
     loadUser() {
       this.viewableUser = null;
       axios.get(`/api/aaa/user/${this.userId}`).then((response) => {
-        this.viewableUser = response.data;
+            if (response.status == 204) {
+              this.$router.push(({name: profile_list_name}));
+              this.setWarning(this.$vuetify.locale.t('$vuetify.user_not_found'));
+            } else {
+              this.viewableUser = response.data;
+            }
       })
     },
     unlockUser(user) {

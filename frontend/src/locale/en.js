@@ -310,5 +310,6 @@ export default {
     video_call_link_copied: "The link to the video call copied to clipboard",
     message_link_copied: "The link to the message copied to clipboard",
     chat_link_copied: "The link to the chat copied to clipboard",
-    published_file_link_copied: "The link to the published file copied to clipboard"
+    published_file_link_copied: "The link to the published file copied to clipboard",
+    user_not_found: "User is not found",
 }

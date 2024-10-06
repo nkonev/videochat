@@ -7,6 +7,7 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.exception.DataNotFoundInternalException;
 import name.nkonev.aaa.exception.UnauthorizedException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
@@ -190,8 +191,8 @@ public class UserProfileService {
 
     @Transactional
     public UserAccountDTOExtended getUserExtendedInternal(long userId, long behalfUserId) {
-        final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
-        final UserAccount behalfUserAccountEntity = userAccountRepository.findById(behalfUserId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
+        final UserAccount userAccountEntity = userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundInternalException("User with id " + userId + " not found"));
+        final UserAccount behalfUserAccountEntity = userAccountRepository.findById(behalfUserId).orElseThrow(() -> new DataNotFoundInternalException("User with id " + userId + " not found"));
         var behalfUserAccountPrincipal = userAccountConverter.convertToUserAccountDetailsDTO(behalfUserAccountEntity);
         return userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(behalfUserAccountPrincipal, userRoleService), userAccountEntity);
     }

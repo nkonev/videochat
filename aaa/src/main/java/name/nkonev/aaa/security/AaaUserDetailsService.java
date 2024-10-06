@@ -4,7 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.dto.UserOnlineResponse;
-import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.exception.DataNotFoundInternalException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -99,7 +99,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     }
 
     public UserAccount getUserAccount(long userId){
-        return userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User with id " + userId + " not found"));
+        return userAccountRepository.findById(userId).orElseThrow(() -> new DataNotFoundInternalException("User with id " + userId + " not found"));
     }
 
     public void killSessions(long userId, ForceKillSessionsReasonType reasonType) {

@@ -80,9 +80,16 @@ public class AaaExceptionHandler {
 
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @org.springframework.web.bind.annotation.ExceptionHandler({DataNotFoundException.class, NoResourceFoundException.class})
-    public AaaError dataNotFound(Exception e) {
+    @org.springframework.web.bind.annotation.ExceptionHandler({DataNotFoundInternalException.class, NoResourceFoundException.class})
+    public AaaError dataNotFoundInternal(Exception e) {
         return new AaaError(HttpStatus.NOT_FOUND.value(), "data not found", e.getMessage(), new Date().toString());
+    }
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @org.springframework.web.bind.annotation.ExceptionHandler({DataNotFoundException.class})
+    public AaaError dataNotFound(DataNotFoundException e) {
+        return new AaaError(HttpStatus.NO_CONTENT.value(), "data not found", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody
