@@ -30,6 +30,7 @@ export default (name) => {
 
         scrollerProbeCurrent: 0,
         scrollerProbePrevious: 0,
+        scrollerProbePrevPrevious: 0,
 
         preservedScroll: 0,
         timeout: null,
@@ -59,17 +60,21 @@ export default (name) => {
           this.onScrollCallback();
         }
 
+        this.scrollerProbePrevPrevious = this.scrollerProbePrevious;
         this.scrollerProbePrevious = this.scrollerProbeCurrent;
         this.scrollerProbeCurrent = this.scrollerDiv.scrollTop;
-        // console.debug("onScroll in", name, " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
+        console.debug("onScroll in", name, "prevPrev=", this.scrollerProbePrevPrevious, " prev=", this.scrollerProbePrevious, "cur=", this.scrollerProbeCurrent);
 
         this.trySwitchDirection();
       },
+      isScrollingTop() {
+          return (this.scrollerProbeCurrent < this.scrollerProbePrevious) && (this.scrollerProbePrevious < this.scrollerProbePrevPrevious);
+      },
       trySwitchDirection() {
-        if (this.scrollerProbeCurrent != 0 && this.scrollerProbeCurrent > this.scrollerProbePrevious && this.isTopDirection()) {
+        if (this.scrollerProbeCurrent != 0 && (this.scrollerProbeCurrent > this.scrollerProbePrevious) && (this.scrollerProbePrevious > this.scrollerProbePrevPrevious) && this.isTopDirection()) {
           this.aDirection = directionBottom;
           // console.debug("Infinity scrolling direction has been changed to bottom");
-        } else if (this.scrollerProbeCurrent != 0 && this.scrollerProbePrevious > this.scrollerProbeCurrent && !this.isTopDirection()) {
+        } else if (this.scrollerProbeCurrent != 0 && (this.scrollerProbePrevPrevious > this.scrollerProbePrevious) && (this.scrollerProbePrevious > this.scrollerProbeCurrent) && !this.isTopDirection()) {
           this.aDirection = directionTop;
           // console.debug("Infinity scrolling direction has been changed to top");
         } else {
@@ -173,15 +178,17 @@ export default (name) => {
 
           console.log("Invoking callback in", name, mappedEntries);
 
+          const isScrollingTop = this.isScrollingTop();
+
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection(), "in", name);
-            if (!this.loadedTop && this.isTopDirection()) {
+            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection(), isScrollingTop, "in", name);
+            if (!this.loadedTop && this.isTopDirection() && isScrollingTop) {
               await this.loadTop();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection(), "in", name);
-            if (!this.loadedBottom && !this.isTopDirection()) {
+            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection(), !isScrollingTop, "in", name);
+            if (!this.loadedBottom && !this.isTopDirection() && !isScrollingTop) {
               await this.loadBottom();
             }
           }
