@@ -22,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -84,7 +85,7 @@ public class KeycloakClient {
 
     public List<KeycloakUserEntity> getUsers(int limit, int offset) {
         var token = getToken();
-        var reqEntity = RequestEntity.get(protocolHostPort + "/admin/realms/" + realm + "/users?first=" + offset + "&max=" + limit)
+        var reqEntity = RequestEntity.get(protocolHostPort + "/admin/realms/{realm}/users?first={offset}&max={limit}", realm, offset, limit)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token).build();
         var respEntity = restTemplate.exchange(reqEntity, new ParameterizedTypeReference<List<KeycloakUserEntity>>() {});
@@ -93,7 +94,7 @@ public class KeycloakClient {
 
     public List<KeycloakUserInRoleEntity> getUsersInRole(String role, int limit, int offset) {
         var token = getToken();
-        var reqEntity = RequestEntity.get(protocolHostPort + "/admin/realms/" + realm + "/roles/" + role + "/users?first=" + offset + "&max=" + limit)
+        var reqEntity = RequestEntity.get(protocolHostPort + "/admin/realms/{realm}/roles/{role}/users?first={offset}&max={limit}", realm, role, offset, limit)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token).build();
         var respEntity = restTemplate.exchange(reqEntity, new ParameterizedTypeReference<List<KeycloakUserInRoleEntity>>() {});
@@ -102,7 +103,7 @@ public class KeycloakClient {
 
     public List<KeycloakRoleEntity> getRoles(int limit, int offset) {
         var token = getToken();
-        var reqEntity = RequestEntity.get(protocolHostPort + "/admin/realms/" + realm + "/roles?first=" + offset + "&max=" + limit)
+        var reqEntity = RequestEntity.get(protocolHostPort + "/admin/realms/{realm}/roles?first={offset}&max={limit}", realm, offset, limit)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token).build();
         var respEntity = restTemplate.exchange(reqEntity, new ParameterizedTypeReference<List<KeycloakRoleEntity>>() {});
@@ -122,7 +123,7 @@ public class KeycloakClient {
             urlParams.set("grant_type", "client_credentials");
             urlParams.set("client_id", clientId);
             urlParams.set("client_secret", clientSecret);
-            var reqEntity = RequestEntity.post(protocolHostPort + "/realms/" + realm + "/protocol/openid-connect/token")
+            var reqEntity = RequestEntity.post(protocolHostPort + "/realms/{realm}/protocol/openid-connect/token", realm)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(urlParams);
             var respEntity = restTemplate.exchange(reqEntity, Map.class);
