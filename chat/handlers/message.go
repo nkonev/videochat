@@ -677,9 +677,14 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			}
 
 			mc.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
-			for _, participantId := range participantIds {
+			shouldSendHasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatchCommon(c.Request().Context(), chatId, participantIds) // required in irder not to send the notification in case "notify about new message" is disabled
+			if err != nil {
+				return err
+			}
+
+			for participantId, should := range shouldSendHasUnreadMessagesMap {
 				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
-					mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), participantId, true)
+					mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), participantId, should)
 
 					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: null.StringFromPtr(userPrincipalDto.Avatar)}
 					var sch dto.ChatDtoWithTetATet = &simpleChat{

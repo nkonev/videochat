@@ -824,6 +824,44 @@ func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId in
 	return false, nil
 }
 
+func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(ctx context.Context, chatId int64, userIds []int64) (map[int64]bool, error) {
+	res := map[int64]bool{}
+
+	if len(userIds) == 0 {
+		return res, nil
+	}
+
+	var builder = ""
+	var first = true
+	for _, userId := range userIds {
+		if !first {
+			builder += " UNION ALL "
+		}
+		builder += fmt.Sprintf(`SELECT %v, (%v)`, userId, getShouldConsiderMessagesAsUnread(chatId, userId))
+
+		first = false
+	}
+
+	var rows *sql.Rows
+	var err error
+	rows, err = tx.QueryContext(ctx, builder)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var userId int64
+			var should bool
+			if err := rows.Scan(&userId, &should); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				res[userId] = should
+			}
+		}
+		return res, nil
+	}
+}
+
 func (db *DB) HasUnreadMessages(ctx context.Context, userId int64) (bool, error) {
 	return hasUnreadMessagesCommon(ctx, db, userId)
 }
