@@ -74,7 +74,7 @@ func (db *DB) GetNotificationPerChatSettings(ctx context.Context, userId, chatId
 }
 
 func (db *DB) PutNotificationPerChatSettings(ctx context.Context, userId, chatId int64, to *dto.NotificationPerChatSettings) error {
-	if _, err := db.ExecContext(ctx, `update notification_settings_chat set mentions_enabled = $3, missed_calls_enabled = $4, answers_enabled = $5, reactions_enabled = $6 where user_id = $1 and chat_id = $2`, userId, chatId, to.MentionsEnabled, to.MissedCallsEnabled, to.AnswersEnabled, to.ReactionsEnabled); err != nil { // TODO
+	if _, err := db.ExecContext(ctx, `update notification_settings_chat set mentions_enabled = $3, missed_calls_enabled = $4, answers_enabled = $5, reactions_enabled = $6 where user_id = $1 and chat_id = $2`, userId, chatId, to.MentionsEnabled, to.MissedCallsEnabled, to.AnswersEnabled, to.ReactionsEnabled); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
