@@ -322,7 +322,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		return err
 	}
 
-	chatBasic, err := h.db.GetChatBasic(c.Request().Context(), blogId)
+	chatBasic, err := h.db.GetBlogBasic(c.Request().Context(), blogId)
 	if err != nil {
 		return err
 	}

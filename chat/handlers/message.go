@@ -734,7 +734,6 @@ func toChatBasic(chatDto *dto.ChatDto) *db.BasicChatDto {
 			CanResend:                           chatDto.CanResend,
 			AvailableToSearch:                   chatDto.AvailableToSearch,
 			IsBlog:                              chatDto.Blog,
-			CreateDateTime:                      chatDto.LastUpdateDateTime, // TODO
 			RegularParticipantCanPublishMessage: chatDto.RegularParticipantCanPublishMessage,
 			RegularParticipantCanPinMessage:     chatDto.RegularParticipantCanPinMessage,
 		}

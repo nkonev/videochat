@@ -528,14 +528,13 @@ func getChatBasicCommon(ctx context.Context, co CommonOperations, chatId int64) 
 				ch.can_resend,
 				ch.available_to_search,
 				ch.blog,
-				ch.create_date_time,
 				ch.regular_participant_can_publish_message,
 				ch.regular_participant_can_pin_message
 			FROM chat ch 
 			WHERE ch.id = $1
 `, chatId)
 	chat := BasicChatDto{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.CreateDateTime, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -553,6 +552,36 @@ func (db *DB) GetChatBasic(ctx context.Context, chatId int64) (*BasicChatDto, er
 
 func (tx *Tx) GetChatBasic(ctx context.Context, chatId int64) (*BasicChatDto, error) {
 	return getChatBasicCommon(ctx, tx, chatId)
+}
+
+func getBlogChatBasicCommon(ctx context.Context, co CommonOperations, chatId int64) (*BasicBlogDto, error) {
+	row := co.QueryRowContext(ctx, `SELECT 
+				ch.id, 
+				ch.title, 
+				ch.blog,
+				ch.create_date_time
+			FROM chat ch 
+			WHERE ch.id = $1
+`, chatId)
+	chat := BasicBlogDto{}
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsBlog, &chat.CreateDateTime)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	}
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		return &chat, nil
+	}
+}
+
+func (db *DB) GetBlogBasic(ctx context.Context, chatId int64) (*BasicBlogDto, error) {
+	return getBlogChatBasicCommon(ctx, db, chatId)
+}
+
+func (tx *Tx) GetBlogBasic(ctx context.Context, chatId int64) (*BasicBlogDto, error) {
+	return getBlogChatBasicCommon(ctx, tx, chatId)
 }
 
 func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[int64]bool, behalfParticipantId int64) (map[int64]*BasicChatDtoExtended, error) {
@@ -584,7 +613,6 @@ func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[i
 			c.can_resend,
 			c.available_to_search,
 			c.blog,
-			c.create_date_time,
 			c.regular_participant_can_publish_message,
 			c.regular_participant_can_pin_message
 		FROM chat c 
@@ -599,7 +627,7 @@ func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[i
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.CreateDateTime, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage); err != nil {
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, dto)
@@ -630,6 +658,13 @@ type BasicChatDto struct {
 	CreateDateTime                      time.Time
 	RegularParticipantCanPublishMessage bool
 	RegularParticipantCanPinMessage     bool
+}
+
+type BasicBlogDto struct {
+	Id             int64
+	Title          string
+	IsBlog         bool
+	CreateDateTime time.Time
 }
 
 type BasicChatDtoExtended struct {
