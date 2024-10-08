@@ -17,6 +17,10 @@ import (
 const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
 
 const order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
+const from = `
+FROM chat ch 
+LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
+`
 
 // db model
 type Chat struct {
@@ -103,9 +107,8 @@ func selectChatClause() string {
 				ch.blog,
 				ch.regular_participant_can_publish_message,
 				ch.regular_participant_can_pin_message
-			FROM chat ch 
-				LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
-`
+
+` + from
 }
 
 func provideScanToChat(chat *Chat) []any {
@@ -134,9 +137,7 @@ func (tx *Tx) GetChatRowNumber(ctx context.Context, itemId, userId int64, orderD
 			SELECT 
 				ch.id as cid,
 				ROW_NUMBER () OVER (` + order + " " + orderDirection + `) as nrow
-			FROM 
-				chat ch 
-				LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1)
+				` + from + `
 			WHERE ` + getChatSearchClause([]int64{}) + `
 		) al WHERE al.cid = $4
 	`
