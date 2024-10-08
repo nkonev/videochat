@@ -99,6 +99,10 @@ func provideScanToMessage(message *Message) []any {
 	}
 }
 
+func selectMessageReactionsClause(chatId int64) string {
+	return fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v ", chatId)
+}
+
 // see also its copy in aaa::UserListViewRepository
 func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	list := make([]*Message, 0)
@@ -1144,7 +1148,7 @@ func (tx *Tx) GetReactionUsers(ctx context.Context, chatId int64, messageId int6
 func getMessageReactionsCommon(ctx context.Context, co CommonOperations, chatId, messageId int64) ([]Reaction, error) {
 	var reactions []Reaction = make([]Reaction, 0)
 
-	rows, err := co.QueryContext(ctx, fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = $1", chatId), messageId)
+	rows, err := co.QueryContext(ctx, fmt.Sprintf("%s WHERE message_id = $1", selectMessageReactionsClause(chatId)), messageId)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -1175,7 +1179,7 @@ func enrichMessagesWithReactions(ctx context.Context, co CommonOperations, chatI
 		messageIds = append(messageIds, message.Id)
 	}
 
-	rows, err := co.QueryContext(ctx, fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v WHERE message_id = ANY ($1)", chatId), messageIds)
+	rows, err := co.QueryContext(ctx, fmt.Sprintf("%s WHERE message_id = ANY ($1)", selectMessageReactionsClause(chatId)), messageIds)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
