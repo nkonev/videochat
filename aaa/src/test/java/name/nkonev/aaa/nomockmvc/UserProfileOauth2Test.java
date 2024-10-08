@@ -1,6 +1,7 @@
 package name.nkonev.aaa.nomockmvc;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.Cookie;
@@ -105,7 +106,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
         private void login() throws IOException {
             ((HtmlInput)currentPage.querySelector("#kc-form-login input#username")).setValueAttribute(this.login);
             ((HtmlInput)currentPage.querySelector("#kc-form-login input#password")).setValueAttribute(this.password);
-            currentPage = ((HtmlInput)currentPage.querySelector("#kc-form-login input#kc-login")).click();
+            currentPage = ((HtmlButton)currentPage.querySelector("#kc-form-login button#kc-login")).click();
         }
     }
 
