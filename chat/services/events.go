@@ -12,6 +12,7 @@ import (
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/utils"
+	"time"
 )
 
 type Events struct {
@@ -121,9 +122,6 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 }
 
 func (not *Events) ChatNotifyMessageCount(ctx context.Context, userIds []int64, chatId int64, tx *db.Tx) {
-	eventType := "chat_unread_messages_changed"
-	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
-	defer messageSpan.End()
 
 	lastUpdated, err := tx.GetChatLastDatetimeChat(ctx, chatId)
 	if err != nil {
@@ -140,17 +138,28 @@ func (not *Events) ChatNotifyMessageCount(ctx context.Context, userIds []int64, 
 	for _, participantId := range userIds {
 		GetLogEntry(ctx).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
 
-		payload := &dto.ChatUnreadMessageChanged{
-			ChatId:             chatId,
-			UnreadMessages:     unreadMessagesByUserId[participantId],
-			LastUpdateDateTime: lastUpdated,
-		}
+		not.NotifyAboutUnreadMessage(ctx, chatId, participantId, unreadMessagesByUserId[participantId], lastUpdated)
+	}
+}
 
-		err = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
-			UserId:                     participantId,
-			EventType:                  eventType,
-			UnreadMessagesNotification: payload,
-		})
+func (not *Events) NotifyAboutUnreadMessage(ctx context.Context, chatId int64, participantId int64, unreadMessages int64, lastUpdateDateTime time.Time) {
+	eventType := "chat_unread_messages_changed"
+	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("global.user.%s", eventType))
+	defer messageSpan.End()
+
+	payload := &dto.ChatUnreadMessageChanged{
+		ChatId:             chatId,
+		UnreadMessages:     unreadMessages,
+		LastUpdateDateTime: lastUpdateDateTime,
+	}
+
+	err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
+		UserId:                     participantId,
+		EventType:                  eventType,
+		UnreadMessagesNotification: payload,
+	})
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error during sending: %v", err)
 	}
 }
 

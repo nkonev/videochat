@@ -820,46 +820,13 @@ func (tx *Tx) HasUnreadMessages(ctx context.Context, userId int64) (bool, error)
 	return hasUnreadMessagesCommon(ctx, tx, userId)
 }
 
-func getShouldConsiderMessagesAsUnread(chatId, userId int64) string {
-	return fmt.Sprintf(`SELECT COALESCE((SELECT consider_messages_as_unread FROM chat_participant_notification WHERE chat_id = %v AND user_id = %v), true)`, chatId, userId)
+func (tx *Tx) MarkAsRead(ctx context.Context, chatId int64, participantId int64) error {
+	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_read SET last_message_id = COALESCE((SELECT max(id) from message_chat_%v), 0) WHERE user_id = $1 AND chat_id = $2", chatId), participantId, chatId)
+	return err
 }
 
-func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(ctx context.Context, chatId int64, userIds []int64) (map[int64]bool, error) {
-	res := map[int64]bool{}
-
-	if len(userIds) == 0 {
-		return res, nil
-	}
-
-	var builder = ""
-	var first = true
-	for _, userId := range userIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf(`SELECT %v, (%v)`, userId, getShouldConsiderMessagesAsUnread(chatId, userId))
-
-		first = false
-	}
-
-	var rows *sql.Rows
-	var err error
-	rows, err = tx.QueryContext(ctx, builder)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var userId int64
-			var should bool
-			if err := rows.Scan(&userId, &should); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				res[userId] = should
-			}
-		}
-		return res, nil
-	}
+func getShouldConsiderMessagesAsUnread(chatId, userId int64) string {
+	return fmt.Sprintf(`SELECT COALESCE((SELECT consider_messages_as_unread FROM chat_participant_notification WHERE chat_id = %v AND user_id = %v), true)`, chatId, userId)
 }
 
 func (tx *Tx) PublishMessage(ctx context.Context, chatId, messageId int64, shouldPublish bool) error {

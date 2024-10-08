@@ -94,6 +94,8 @@ export default {
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_video_call_link'), icon: 'mdi-content-copy', action: () => this.copyCallLink(this.menuableItem) });
+                ret.push({title: this.$vuetify.locale.t('$vuetify.mark_as_read'), icon: 'mdi-read', action: () => this.$emit('markAsRead', this.menuableItem) });
+                ret.push({title: this.$vuetify.locale.t('$vuetify.mark_as_read_all'), icon: 'mdi-check-all', action: () => this.$emit('markAsReadAll', this.menuableItem) });
             }
             return ret;
         },

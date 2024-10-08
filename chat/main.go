@@ -198,6 +198,9 @@ func configureEcho(
 	e.GET("/api/chat/:id/message/publish", mc.GetPublishedMessages)
 	e.GET("/api/chat/public/:id/message/:messageId", mc.GetPublishedMessage)
 
+	e.PUT("/api/chat/:id/read", ch.MarkAsRead)
+	e.PUT("/api/chat/read", ch.MarkAsReadAll)
+
 	e.PUT("/api/chat/:id/message/:messageId/blog-post", mc.MakeBlogPost)
 	e.GET("/api/blog", bh.GetBlogPosts)
 	e.GET("/internal/blog/seo", bh.GetAllBlogPostsForSeo)

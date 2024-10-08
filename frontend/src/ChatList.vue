@@ -66,6 +66,8 @@
         @leaveChat="this.leaveChat"
         @pinChat="this.pinChat"
         @removedFromPinned="this.removedFromPinned"
+        @markAsRead="markAsRead"
+        @markAsReadAll="markAsReadAll"
       />
 
   </v-container>
@@ -112,6 +114,7 @@ import {
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
 import userStatusMixin from "@/mixins/userStatusMixin";
+import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
 
 const SCROLLING_THRESHHOLD = 200; // px
 
@@ -620,8 +623,15 @@ export default {
     hasItems() {
         return !!this.items?.length
     },
+    markAsRead(item) {
+      axios.put(`/api/chat/${item.id}/read`)
+    },
+    markAsReadAll(item) {
+      axios.put(`/api/chat/read`)
+    },
   },
   components: {
+    MessageItemContextMenu,
     ChatListContextMenu
   },
   created() {

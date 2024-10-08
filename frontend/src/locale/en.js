@@ -312,5 +312,7 @@ export default {
     chat_link_copied: "The link to the chat copied to clipboard",
     published_file_link_copied: "The link to the published file copied to clipboard",
     user_not_found: "User is not found",
-    connecting: "Connecting..."
+    connecting: "Connecting...",
+    mark_as_read: "Mark as read",
+    mark_as_read_all: "Mark as read all"
 }

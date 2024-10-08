@@ -2009,3 +2009,52 @@ func (ch *ChatHandler) CanCreateBlog(c echo.Context) error {
 	isBlog := true
 	return c.JSON(http.StatusOK, &utils.H{"canCreateBlog": ch.checkCanCreateBlog(userPrincipalDto, &isBlog)})
 }
+
+func (ch *ChatHandler) MarkAsRead(c echo.Context) error {
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		if isParticipant, err := tx.IsParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId); err != nil {
+			return err
+		} else if !isParticipant {
+			return errors.New(fmt.Sprintf("User %v is not isParticipant of chat %v", userPrincipalDto.UserId, chatId))
+		}
+
+		err = tx.MarkAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+
+		lastUpdated, err := tx.GetChatLastDatetimeChat(c.Request().Context(), chatId)
+		if err != nil {
+			return err
+		}
+		ch.notificator.NotifyAboutUnreadMessage(c.Request().Context(), chatId, userPrincipalDto.UserId, 0, lastUpdated)
+
+		hasUnreadMessages, err := tx.HasUnreadMessages(c.Request().Context(), userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		ch.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), userPrincipalDto.UserId, hasUnreadMessages)
+
+		return c.NoContent(http.StatusOK)
+	})
+}
+
+func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok || userPrincipalDto == nil {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+	return c.NoContent(http.StatusOK)
+}
