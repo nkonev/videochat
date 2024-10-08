@@ -16,6 +16,8 @@ import (
 
 const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
 
+const order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
+
 // db model
 type Chat struct {
 	Id                                  int64
@@ -131,7 +133,7 @@ func (tx *Tx) GetChatRowNumber(ctx context.Context, itemId, userId int64, orderD
 		SELECT al.nrow FROM (
 			SELECT 
 				ch.id as cid,
-				ROW_NUMBER () OVER (ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) ` + orderDirection + `) as nrow
+				ROW_NUMBER () OVER (` + order + " " + orderDirection + `) as nrow
 			FROM 
 				chat ch 
 				LEFT JOIN chat_pinned cp ON (ch.id = cp.chat_id AND cp.user_id = $1)
@@ -178,9 +180,9 @@ func getChatsByLimitOffsetCommon(ctx context.Context, co CommonOperations, parti
 	var err error
 	rows, err = co.QueryContext(ctx, fmt.Sprintf(selectChatClause()+`
 		WHERE ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 ) 
-		ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) %s 
+		%s %s 
 		LIMIT $2 OFFSET $3
-	`, orderDirection), participantId, limit, offset)
+	`, order, orderDirection), participantId, limit, offset)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -236,7 +238,7 @@ func getChatsByLimitOffsetSearchCommon(ctx context.Context, commonOps CommonOper
 	searchStringWithPercents := "%" + searchString + "%"
 
 	rows, err = commonOps.QueryContext(ctx, selectChatClause()+" WHERE "+getChatSearchClause(additionalFoundUserIds)+`
-			ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) `+orderDirection+` 
+			 `+order+" "+orderDirection+` 
 			LIMIT $4 OFFSET $5
 	`, participantId, searchStringWithPercents, searchString, limit, offset)
 	if err != nil {
