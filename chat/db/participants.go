@@ -194,6 +194,60 @@ func (db *DB) IterateOverAllParticipantIds(ctx context.Context, consumer func(pa
 	return getAllParticipantIdsCommon(ctx, db, consumer)
 }
 
+func getPortionOfAllChatIdsCommon(ctx context.Context, qq CommonOperations, participantId int64, chatsSize, chatsOffset int) ([]int64, error) {
+	if rows, err := qq.QueryContext(ctx, "SELECT chat_id FROM chat_participant WHERE user_id = $1 ORDER BY chat_id LIMIT $2 OFFSET $3", participantId, chatsSize, chatsOffset); err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		defer rows.Close()
+		list := make([]int64, 0)
+		for rows.Next() {
+			var chatId int64
+			if err := rows.Scan(&chatId); err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			} else {
+				list = append(list, chatId)
+			}
+		}
+		return list, nil
+	}
+}
+
+func getAllMyChatIdsCommon(ctx context.Context, qq CommonOperations, participantId int64, consumer func(chatIds []int64) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := 0; shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		chatIds, err := getPortionOfAllChatIdsCommon(ctx, qq, participantId, utils.DefaultSize, offset)
+		if err != nil {
+			logger.Logger.Errorf("Got error during getting portion %v", err)
+			lastError = err
+			break
+		}
+
+		if len(chatIds) == 0 {
+			return nil
+		}
+		if len(chatIds) < utils.DefaultSize {
+			shouldContinue = false
+		}
+		err = consumer(chatIds)
+		if err != nil {
+			logger.Logger.Errorf("Got error during invoking consumer portion %v", err)
+			lastError = err
+			break
+		}
+	}
+	return lastError
+}
+
+func (tx *Tx) IterateOverAllMyChatIds(ctx context.Context, participantId int64, consumer func(chatIds []int64) error) error {
+	return getAllMyChatIdsCommon(ctx, tx, participantId, consumer)
+}
+
+func (db *DB) IterateOverAllMyChatIds(ctx context.Context, participantId int64, consumer func(chatIds []int64) error) error {
+	return getAllMyChatIdsCommon(ctx, db, participantId, consumer)
+}
+
 func getParticipantsCountCommon(ctx context.Context, qq CommonOperations, chatId int64) (int, error) {
 	var count int
 	row := qq.QueryRowContext(ctx, "SELECT count(*) FROM chat_participant WHERE chat_id = $1", chatId)

@@ -2029,7 +2029,7 @@ func (ch *ChatHandler) MarkAsRead(c echo.Context) error {
 			return errors.New(fmt.Sprintf("User %v is not isParticipant of chat %v", userPrincipalDto.UserId, chatId))
 		}
 
-		err = tx.MarkAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
+		err = tx.MarkAllMessagesAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -2056,5 +2056,41 @@ func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
-	return c.NoContent(http.StatusOK)
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		err := tx.IterateOverAllMyChatIds(c.Request().Context(), userPrincipalDto.UserId, func(chatIds []int64) error {
+			chatsHasUnreadMessages, err := tx.HasUnreadMessagesByChatIdsBatch(c.Request().Context(), chatIds, userPrincipalDto.UserId)
+			if err != nil {
+				return err
+			}
+
+			for chatId, has := range chatsHasUnreadMessages {
+				if has {
+					err := tx.MarkAllMessagesAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
+					if err != nil {
+						GetLogEntry(c.Request().Context()).Errorf("Error during marking chat %v as read: %v", chatId, err)
+						continue
+					}
+
+					lastUpdated, err := tx.GetChatLastDatetimeChat(c.Request().Context(), chatId)
+					if err != nil {
+						GetLogEntry(c.Request().Context()).Errorf("Error during GetChatLastDatetimeChat chat %v: %v", chatId, err)
+						continue
+					}
+					ch.notificator.NotifyAboutUnreadMessage(c.Request().Context(), chatId, userPrincipalDto.UserId, 0, lastUpdated)
+				}
+			}
+			return nil
+		})
+
+		hasUnreadMessages, err := tx.HasUnreadMessages(c.Request().Context(), userPrincipalDto.UserId)
+		if err != nil {
+			return err
+		}
+		ch.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), userPrincipalDto.UserId, hasUnreadMessages)
+
+		if err != nil {
+			return err
+		}
+		return c.NoContent(http.StatusOK)
+	})
 }

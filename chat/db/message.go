@@ -480,6 +480,18 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 	}
 }
 
+func (tx *Tx) MarkAllMessagesAsRead(ctx context.Context, chatId int64, participantId int64) error {
+	_, err := tx.ExecContext(ctx, fmt.Sprintf(`
+		WITH calced_last_message_id AS (SELECT COALESCE((SELECT max(id) from message_chat_%v), 0))
+		INSERT INTO message_read (last_message_id, user_id, chat_id) 
+			VALUES((SELECT * FROM calced_last_message_id), $1, $2)
+		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (SELECT * FROM calced_last_message_id) 
+			WHERE message_read.user_id = $1 AND message_read.chat_id = $2
+		`, chatId),
+		participantId, chatId)
+	return err
+}
+
 func addMessageReadCommon(ctx context.Context, co CommonOperations, messageId, userId int64, chatId int64) (bool, error) {
 	res, err := co.ExecContext(ctx, `INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
 	if err != nil {
@@ -820,9 +832,12 @@ func (tx *Tx) HasUnreadMessages(ctx context.Context, userId int64) (bool, error)
 	return hasUnreadMessagesCommon(ctx, tx, userId)
 }
 
-func (tx *Tx) MarkAsRead(ctx context.Context, chatId int64, participantId int64) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_read SET last_message_id = COALESCE((SELECT max(id) from message_chat_%v), 0) WHERE user_id = $1 AND chat_id = $2", chatId), participantId, chatId)
-	return err
+func (db *DB) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
+	return hasUnreadMessagesBatchCommon(ctx, db, chatIds, userId)
+}
+
+func (tx *Tx) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
+	return hasUnreadMessagesBatchCommon(ctx, tx, chatIds, userId)
 }
 
 func getShouldConsiderMessagesAsUnread(chatId, userId int64) string {
