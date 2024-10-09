@@ -655,7 +655,13 @@ export default {
               },
           });
       })
-    }
+    },
+    getMaximumItemId() {
+      return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
+    },
+    getMinimumItemId() {
+      return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
+    },
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});

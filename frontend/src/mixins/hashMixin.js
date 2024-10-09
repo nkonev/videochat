@@ -74,12 +74,6 @@ export default () => {
                     await this.initializeHashVariablesAndReloadItems();
                 }
             },
-            getMaximumItemId() {
-                return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
-            },
-            getMinimumItemId() {
-                return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
-            },
             clearRouteHash() {
                 // console.log("Cleaning hash");
                 this.$router.push({ hash: null, query: this.$route.query })

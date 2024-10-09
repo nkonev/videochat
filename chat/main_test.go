@@ -316,10 +316,11 @@ func TestGetChatsPaginated(t *testing.T) {
 	defer emu.Close()
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat?size=40", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
-		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
+		typedResFirstPageIds := getJsonPathResult(t, bodyFirstPage, "$.id").([]interface{})
+		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.name").([]interface{})
 
 		assert.Equal(t, 40, len(typedResFirstPage))
 
@@ -329,19 +330,19 @@ func TestGetChatsPaginated(t *testing.T) {
 		assert.Equal(t, "generated_chat961", typedResFirstPage[39])
 
 		// also check get additional info from aaa emu
-		firstChatParticipantLogins := getJsonPathResult(t, bodyFirstPage, "$.data[0].participants.login").([]interface{})
+		firstChatParticipantLogins := getJsonPathResult(t, bodyFirstPage, "$[0].participants.login").([]interface{})
 		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
 
-		firstChatParticipantAvatars := getJsonPathResult(t, bodyFirstPage, "$.data[0].participants.avatar").([]interface{})
+		firstChatParticipantAvatars := getJsonPathResult(t, bodyFirstPage, "$[0].participants.avatar").([]interface{})
 		assert.Equal(t, "http://image.jpg", firstChatParticipantAvatars[0])
 
-		paginationToken := getJsonPathResult(t, bodyFirstPage, "$.paginationToken").(string)
+		lastId := typedResFirstPageIds[len(typedResFirstPageIds)-1].(float64)
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?paginationToken="+paginationToken, nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?size=40&startingFromItemId="+utils.Float64ToString(lastId), nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
-		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
+		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.name").([]interface{})
 
 		assert.Equal(t, 40, len(typedResSecondPage))
 
@@ -355,10 +356,11 @@ func TestGetChatsPaginated(t *testing.T) {
 func TestGetChatsPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat?searchString=gen", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat?size=40&searchString=gen", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
-		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.data.name").([]interface{})
+		typedResFirstPageIds := getJsonPathResult(t, bodyFirstPage, "$.id").([]interface{})
+		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.name").([]interface{})
 
 		assert.Equal(t, 40, len(typedResFirstPage))
 
@@ -367,13 +369,13 @@ func TestGetChatsPaginatedSearch(t *testing.T) {
 		assert.Equal(t, "generated_chat998", typedResFirstPage[2])
 		assert.Equal(t, "generated_chat961", typedResFirstPage[39])
 
-		paginationToken := getJsonPathResult(t, bodyFirstPage, "$.paginationToken").(string)
+		lastId := typedResFirstPageIds[len(typedResFirstPageIds)-1].(float64)
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?searchString=gen&paginationToken="+paginationToken, nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?size=40&startingFromItemId="+utils.Float64ToString(lastId), nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
-		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.data.name").([]interface{})
+		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.name").([]interface{})
 
 		assert.Equal(t, 40, len(typedResSecondPage))
 

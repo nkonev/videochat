@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"net/http"
-	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"time"
 )
@@ -64,9 +63,7 @@ type CommonOperations interface {
 	GetBlogPostsByLimitOffset(ctx context.Context, reverse bool, limit int, offset int) ([]*Blog, error)
 	GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPost, error)
 	GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*MessageBasic, error)
-	GetChatsByLimitOffsetSearch(ctx context.Context, participantId int64, limit int, offset int, orderDirection, searchString string, additionalFoundUserIds []int64) ([]*Chat, error)
-	GetChatsByLimitOffset(ctx context.Context, participantId int64, limit int, offset int, orderDirection string) ([]*Chat, error)
-	GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
+	GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
 	CountChatsPerUser(ctx context.Context, userId int64) (int64, error)
 	FlipReaction(ctx context.Context, userId int64, chatId int64, messageId int64, reaction string) (bool, error)
 	GetChatIds(ctx context.Context, chatsSize, chatsOffset int) ([]int64, error)

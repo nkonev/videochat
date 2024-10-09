@@ -7,7 +7,7 @@
                 v-for="(item, index) in items"
                 :key="item.id"
                 :id="getItemId(item.id)"
-                class="list-item-prepend-spacer-16 pb-2"
+                class="list-item-prepend-spacer-16 pb-2 chat-item-root"
                 @contextmenu.stop="onShowContextMenu($event, item)"
                 @click.prevent="openChat(item)"
                 :href="getLink(item)"
@@ -79,7 +79,13 @@ import axios from "axios";
 import infiniteScrollMixin, {
     directionBottom,
 } from "@/mixins/infiniteScrollMixin";
-import {chat, chat_list_name, chat_name, userIdHashPrefix, videochat_name} from "@/router/routes";
+import {
+  chat,
+  chat_list_name,
+  chat_name,
+  chatIdHashPrefix, chatIdPrefix,
+  videochat_name
+} from "@/router/routes";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
@@ -109,13 +115,20 @@ import {
     isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
     replaceOrAppend,
     replaceOrPrepend,
-    setTitle, getLoginColoredStyle
+    setTitle, getLoginColoredStyle,
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
 import userStatusMixin from "@/mixins/userStatusMixin";
 import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
+import hashMixin from "@/mixins/hashMixin.js";
+import {
+  getTopChatPosition,
+  removeTopChatPosition,
+  setTopChatPosition
+} from "@/store/localStore.js";
 
+const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
 
 const scrollerName = 'ChatList';
@@ -123,6 +136,7 @@ const scrollerName = 'ChatList';
 export default {
   mixins: [
     infiniteScrollMixin(scrollerName),
+    hashMixin(),
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
     userStatusMixin('tetATetInChatList'),
@@ -130,7 +144,6 @@ export default {
   props:['embedded'],
   data() {
     return {
-        paginationToken: "",
         markInstance: null,
         routeName: null,
     }
@@ -153,34 +166,25 @@ export default {
     getReduceToLength() {
         return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
     },
-    recreatePaginationToken() {
-      axios.get("/api/chat/recreate-pagination-token", {
-          params: {
-              paginationToken: this.paginationToken,
-              searchString: this.searchString,
-              direction: this.aDirection,
-              topElementId: this.findTopElementId(),
-              bottomElementId: this.findBottomElementId(),
-          },
-      }).then((res) => {
-          this.paginationToken = res.data.paginationToken;
-      })
-    },
     reduceBottom() {
         console.log("reduceBottom");
         this.items = this.items.slice(0, this.getReduceToLength());
-        this.recreatePaginationToken();
+        this.startingFromItemIdBottom = this.findBottomElementId();
     },
     reduceTop() {
         console.log("reduceTop");
         this.items = this.items.slice(-this.getReduceToLength());
-        this.recreatePaginationToken();
+        this.startingFromItemIdTop = this.findTopElementId();
     },
     findBottomElementId() {
         return this.items[this.items.length-1]?.id
     },
     findTopElementId() {
         return this.items[0]?.id
+    },
+    updateTopAndBottomIds() {
+      this.startingFromItemIdTop = this.findTopElementId();
+      this.startingFromItemIdBottom = this.findBottomElementId();
     },
     saveScroll(top) {
         this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
@@ -194,28 +198,31 @@ export default {
     initialDirection() {
       return directionBottom
     },
-    async onFirstLoad() {
-      this.loadedTop = true;
-      await this.scrollTop();
+    async onFirstLoad(loadedResult) {
+      await this.doScrollOnFirstLoad(chatIdHashPrefix);
+      if (loadedResult === true) {
+        removeTopChatPosition();
+      }
     },
     async load() {
       if (!this.canDrawChats()) {
         return Promise.resolve()
       }
 
+      const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
+
       this.chatStore.incrementProgressCount();
       return axios.get(`/api/chat`, {
         params: {
-          paginationToken: this.paginationToken,
+          startingFromItemId: startingFromItemId,
+          size: PAGE_SIZE,
+          reverse: this.isTopDirection(),
           searchString: this.searchString,
-          direction: this.aDirection,
-          topElementId: this.findTopElementId(),
-          bottomElementId: this.findBottomElementId(),
+          hasHash: hasHash
         },
       })
         .then((res) => {
-          this.paginationToken = res.data.paginationToken;
-          const items = res.data.data;
+          const items = res.data;
           console.log("Get items in ", scrollerName, items, "direction", this.aDirection);
           items.forEach((item) => {
                 this.transformItem(item);
@@ -232,15 +239,22 @@ export default {
               replaceOrAppend(this.items, items);
           }
 
-          if (items.length < res.data.pageSize) {
+          if (items.length < PAGE_SIZE) {
             if (this.isTopDirection()) {
               this.loadedTop = true;
             } else {
               this.loadedBottom = true;
             }
           }
+
+          this.updateTopAndBottomIds();
+          if (!this.isFirstLoad) {
+            this.clearRouteHash()
+          }
+
           this.performMarking();
           this.requestInVideo();
+          return Promise.resolve(true)
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
         })
@@ -260,7 +274,7 @@ export default {
     },
 
     getItemId(id) {
-      return 'chat-item-' + id
+      return chatIdPrefix + id
     },
 
     scrollerSelector() {
@@ -269,7 +283,8 @@ export default {
     reset() {
       this.resetInfiniteScrollVars();
 
-      this.paginationToken = "";
+      this.startingFromItemIdTop = null;
+      this.startingFromItemIdBottom = null;
     },
 
     async onSearchStringChangedDebounced() {
@@ -286,10 +301,11 @@ export default {
       }
     },
     onWsRestoredRefresh() {
-      this.onSearchStringChanged();
+      this.saveLastVisibleElement();
+      this.initializeHashVariablesAndReloadItems();
     },
     async onProfileSet() {
-      await this.reloadItems();
+      await this.initializeHashVariablesAndReloadItems();
     },
     onLoggedOut() {
       this.graphQlUserStatusUnsubscribe();
@@ -487,13 +503,29 @@ export default {
           }
     },
     addItem(dto) {
+      console.log("Adding item", dto);
+      this.transformItem(dto);
+      this.items.unshift(dto);
+      this.sort(this.items);
+      this.updateTopAndBottomIds();
+    },
+    changeItem(dto) {
+      console.log("Replacing item", dto);
+      replaceInArray(this.items, dto);
+      this.sort(this.items);
+      this.updateTopAndBottomIds();
+    },
+    removeItem(dto) {
+      console.log("Removing item", dto);
+      const idxToRemove = findIndex(this.items, dto);
+      this.items.splice(idxToRemove, 1);
+      this.updateTopAndBottomIds();
+    },
+    onNewChat(dto) {
         const isScrolledToTop = this.isScrolledToTop();
         const emptySearchString = !hasLength(this.searchString);
         if (isScrolledToTop && emptySearchString) {
-            console.log("Adding item", dto);
-            this.transformItem(dto);
-            this.items.unshift(dto);
-            this.sort(this.items);
+            this.addItem(dto);
             this.performMarking();
         } else if (isScrolledToTop) { // like in UserList.vue
             axios.post(`/api/chat/filter`, {
@@ -502,9 +534,7 @@ export default {
             }).then(({data}) => {
                 if (data.found) {
                     console.log("Adding item", dto);
-                    this.transformItem(dto);
-                    this.items.unshift(dto);
-                    this.sort(this.items);
+                    this.addItem(dto);
                     this.performMarking();
                 }
             })
@@ -512,34 +542,28 @@ export default {
             console.log("Skipping", dto, isScrolledToTop, emptySearchString)
         }
     },
-    changeItem(dto) {
-          console.log("Replacing item", dto);
-          this.transformItem(dto);
-
+    onEditChat(dto) {
           let idxOf = findIndex(this.items, dto);
           if (idxOf !== -1) { // hasItem()
-              const changedDto = this.applyState(this.items[idxOf], dto);
-              replaceInArray(this.items, changedDto);
+              const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
+              this.changeItem(changedDto);
           } else {
-              this.items.unshift(dto); // used to/along with redraw a public chat when user leaves from it
+              this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
           }
-          this.sort(this.items);
           this.performMarking();
     },
     redrawItem(dto) {
       if (this.searchString == publicallyAvailableForSearchChatsQuery) {
-          this.changeItem(dto)
+          this.onEditChat(dto)
       } else {
-          this.removeItem(dto)
+          this.onDeleteChat(dto)
       }
     },
-    removeItem(dto) {
+    onDeleteChat(dto) {
           if (this.hasItem(dto)) {
-              console.log("Removing item", dto);
-              const idxToRemove = findIndex(this.items, dto);
-              this.items.splice(idxToRemove, 1);
+              this.removeItem(dto);
           } else {
-              console.log("Item was not be removed", dto);
+              console.log("Item was not been removed", dto);
           }
     },
       // does should change items list (new item added to visible part or not for example)
@@ -629,6 +653,28 @@ export default {
     markAsReadAll(item) {
       axios.put(`/api/chat/read`)
     },
+    async doDefaultScroll() {
+      this.loadedTop = true;
+      await this.scrollTop(); // we need it to prevent browser's scrolling
+    },
+    getPositionFromStore() {
+      return getTopChatPosition()
+    },
+    conditionToSaveLastVisible() {
+      return !this.isScrolledToTop();
+    },
+    itemSelector() {
+      return '.chat-item-root'
+    },
+    doSaveTheFirstItem() {
+      return true
+    },
+    setPositionToStore(chatId) {
+      setTopChatPosition(chatId)
+    },
+    beforeUnload() {
+      this.saveLastVisibleElement(this.chatId);
+    },
   },
   components: {
     MessageItemContextMenu,
@@ -655,6 +701,21 @@ export default {
               }
           }
       },
+      '$route': {
+        handler: async function (newValue, oldValue) {
+
+          const newQuery = newValue.query[SEARCH_MODE_CHATS];
+          const oldQuery = oldValue.query[SEARCH_MODE_CHATS];
+
+          // reaction on setting hash
+          if (hasLength(newValue.hash)) {
+            console.log("Changed route hash, going to scroll", newValue.hash)
+            await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
+            return
+          }
+        }
+      }
+
   },
   async mounted() {
     this.markInstance = new Mark("div#chat-list-items .chat-name");
@@ -663,14 +724,16 @@ export default {
       await this.onProfileSet();
     }
 
+    addEventListener("beforeunload", this.beforeUnload);
+
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
-    bus.on(CHAT_ADD, this.addItem);
-    bus.on(CHAT_EDITED, this.changeItem);
+    bus.on(CHAT_ADD, this.onNewChat);
+    bus.on(CHAT_EDITED, this.onEditChat);
     bus.on(CHAT_REDRAW, this.redrawItem);
-    bus.on(CHAT_DELETED, this.removeItem);
+    bus.on(CHAT_DELETED, this.onDeleteChat);
     bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
@@ -688,14 +751,18 @@ export default {
     this.graphQlUserStatusUnsubscribe();
     this.uninstallScroller();
 
+    removeEventListener("beforeunload", this.beforeUnload);
+
+    this.saveLastVisibleElement(this.storedChatId);
+
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
-    bus.off(CHAT_ADD, this.addItem);
-    bus.off(CHAT_EDITED, this.changeItem);
+    bus.off(CHAT_ADD, this.onNewChat);
+    bus.off(CHAT_EDITED, this.onEditChat);
     bus.off(CHAT_REDRAW, this.redrawItem);
-    bus.off(CHAT_DELETED, this.removeItem);
+    bus.off(CHAT_DELETED, this.onDeleteChat);
     bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);

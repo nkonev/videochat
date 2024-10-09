@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
+	"math"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -156,7 +157,13 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 
 		if leftItemId == nil || rightItemId == nil {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
-			list, err = getMessagesSimple(ctx, co, chatId, limit, 0, reverse, searchString)
+			var startedFromItemIdSafe int64
+			if reverse {
+				startedFromItemIdSafe = math.MaxInt64
+			} else {
+				startedFromItemIdSafe = 0
+			}
+			list, err = getMessagesSimple(ctx, co, chatId, limit, startedFromItemIdSafe, reverse, searchString)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
@@ -804,7 +811,7 @@ func hasUnreadMessagesBatchCommon(ctx context.Context, co CommonOperations, chat
 func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId int64) (bool, error) {
 	shouldContinue := true
 	for i := 0; shouldContinue; i++ {
-		chatIds, err := getChatIdsByLimitOffsetCommon(ctx, co, userId, utils.DefaultSize, utils.DefaultSize*i)
+		chatIds, err := getChatIdsByParticipantIdCommon(ctx, co, userId, utils.DefaultSize, utils.DefaultSize*i)
 		if err != nil {
 			return false, err
 		}

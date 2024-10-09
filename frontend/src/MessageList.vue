@@ -77,7 +77,7 @@
       replaceInArray,
       replaceOrAppend,
       replaceOrPrepend, reply_message,
-      setAnswerPreviewFields
+      setAnswerPreviewFields,
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -643,6 +643,12 @@
           replacement.controls = true;
           replacement.className = "video-custom-class";
           return replacement
+        },
+        getMaximumItemId() {
+          return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
+        },
+        getMinimumItemId() {
+          return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
         },
       },
       created() {

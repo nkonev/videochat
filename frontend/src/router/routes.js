@@ -47,6 +47,9 @@ export const confirmation_pending_name = "registration_confirmation_pending";
 export const messageIdPrefix = "message-"
 export const messageIdHashPrefix = '#' + messageIdPrefix; // element id
 
+export const chatIdPrefix = "chat-"
+export const chatIdHashPrefix = '#' + chatIdPrefix; // element id
+
 export const userIdPrefix = "user-"
 export const userIdHashPrefix = '#' + userIdPrefix; // element id
 
