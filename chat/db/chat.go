@@ -8,7 +8,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
-	"nkonev.name/chat/auth"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 	"time"
@@ -339,15 +338,174 @@ func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*Participa
 	return ccc, nil
 }
 
-func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func getChatsSimple(ctx context.Context, co CommonOperations, limit int, startingFromItemId int64, reverse bool, searchString string) ([]*Chat, error) {
+	list := make([]*Message, 0)
+
+	order := "asc"
+	nonEquality := "m.id > $2"
+	if reverse {
+		order = "desc"
+		nonEquality = "m.id < $2"
+	}
+	var err error
+	var rows *sql.Rows
+	if searchString != "" {
+		searchStringPercents := "%" + searchString + "%"
+		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
+			WHERE 
+		    	    %s 
+				AND strip_tags(m.text) ILIKE $3 
+			ORDER BY m.id %s 
+			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
+			limit, startingFromItemId, searchStringPercents)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+		defer rows.Close()
+	} else {
+		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
+			WHERE 
+				  %s 
+			ORDER BY m.id %s 
+			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
+			limit, startingFromItemId)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+		defer rows.Close()
+	}
+
+	for rows.Next() {
+		message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
+		if err := rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			list = append(list, &message)
+		}
+	}
+
+	return list, nil
+}
+
+func getChatsCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+	list := make([]*Chat, 0)
+	var err error
+	if hasHash {
+		// has hash means that frontend's page has message hash
+		// it means we need to calculate page/2 to the top and to the bottom
+		// to respond page containing from two halves
+		leftLimit := limit / 2
+		rightLimit := limit / 2
+
+		if leftLimit == 0 {
+			leftLimit = 1
+		}
+		if rightLimit == 0 {
+			rightLimit = 1
+		}
+
+		var leftItemId, rightItemId *int64
+		var searchStringPercents = ""
+		if searchString != "" {
+			searchStringPercents = "%" + searchString + "%"
+		}
+
+		var limitRes *sql.Row
+		if searchString != "" {
+			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
+				select inner3.minid, inner3.maxid from (
+					select inner2.*, lag(id, $2, inner2.mmin) over() as minid, lead(id, $3, inner2.mmax) over() as maxid from (
+						select inn.*, id = $1 as central_element from (
+							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from message_chat_%v m where strip_tags(m.text) ilike $4 order by id
+					   	) inn
+				 	) inner2
+			  	) inner3 where central_element = true
+			`), startingFromItemId, leftLimit, rightLimit, searchStringPercents)
+		} else {
+			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
+				select inner3.minid, inner3.maxid from (
+					select inner2.*, lag(id, $2, inner2.mmin) over() as minid, lead(id, $3, inner2.mmax) over() as maxid from (
+						select inn.*, id = $1 as central_element from (
+							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from message_chat_%v order by id
+					   	) inn
+				 	) inner2
+			  	) inner3 where central_element = true
+			`), startingFromItemId, leftLimit, rightLimit)
+		}
+		err = limitRes.Scan(&leftItemId, &rightItemId)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+
+		if leftItemId == nil || rightItemId == nil {
+			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
+			list, err = getChatsSimple(ctx, co, limit, 0, reverse, searchString)
+			if err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
+		} else {
+
+			order := "asc"
+			if reverse {
+				order = "desc"
+			}
+
+			var rows *sql.Rows
+			if searchString != "" {
+				rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
+					WHERE 
+							m.id >= $2 
+						AND m.id <= $3 
+						AND strip_tags(m.text) ILIKE $4
+					ORDER BY m.id %s 
+					LIMIT $1`, selectMessageClause(chatId), order),
+					limit, *leftItemId, *rightItemId, searchStringPercents)
+				if err != nil {
+					return nil, eris.Wrap(err, "error during interacting with db")
+				}
+				defer rows.Close()
+			} else {
+				rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
+					WHERE 
+							m.id >= $2 
+						AND m.id <= $3 
+					ORDER BY m.id %s 
+					LIMIT $1`, selectMessageClause(chatId), order),
+					limit, *leftItemId, *rightItemId)
+				if err != nil {
+					return nil, eris.Wrap(err, "error during interacting with db")
+				}
+				defer rows.Close()
+			}
+			for rows.Next() {
+				message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
+				if err = rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
+					return nil, eris.Wrap(err, "error during interacting with db")
+				} else {
+					list = append(list, &message)
+				}
+			}
+		}
+	} else {
+		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
+		list, err = getChatsSimple(ctx, co, limit, startingFromItemId, reverse, searchString)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+	}
+}
+
+func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
-	if searchString == "" {
-		chats, err = commonOps.GetChatsByLimitOffset(ctx, participantId, limit, offset, orderDirection)
-	} else {
-		chats, err = commonOps.GetChatsByLimitOffsetSearch(ctx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
-	}
+	//if searchString == "" {
+	//	chats, err = commonOps.GetChatsByLimitOffset(ctx, participantId, limit, offset, orderDirection)
+	//} else {
+	//	chats, err = commonOps.GetChatsByLimitOffsetSearch(ctx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds)
+	//}
+
+	chats, err = getChatsCommon(ctx, commonOps, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
 
 	if err != nil {
 		return nil, err
@@ -363,7 +521,7 @@ func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperati
 			return nil, err
 		}
 
-		isAdminBatch, err := commonOps.IsAdminBatch(ctx, userPrincipalDto.UserId, chatIds)
+		isAdminBatch, err := commonOps.IsAdminBatch(ctx, participantId, chatIds)
 		if err != nil {
 			return nil, err
 		}
@@ -385,12 +543,12 @@ func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperati
 		return list, nil
 	}
 }
-func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
+func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit, offset int, orderDirection, searchString string, additionalFoundUserIds []int64, userPrincipalDto *auth.AuthResult, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, offset, orderDirection, searchString, additionalFoundUserIds, userPrincipalDto, participantsSize, participantsOffset)
+func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
 func (tx *Tx) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {

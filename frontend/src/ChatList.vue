@@ -154,17 +154,7 @@ export default {
         return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
     },
     recreatePaginationToken() {
-      axios.get("/api/chat/recreate-pagination-token", {
-          params: {
-              paginationToken: this.paginationToken,
-              searchString: this.searchString,
-              direction: this.aDirection,
-              topElementId: this.findTopElementId(),
-              bottomElementId: this.findBottomElementId(),
-          },
-      }).then((res) => {
-          this.paginationToken = res.data.paginationToken;
-      })
+      // TODO remove
     },
     reduceBottom() {
         console.log("reduceBottom");
