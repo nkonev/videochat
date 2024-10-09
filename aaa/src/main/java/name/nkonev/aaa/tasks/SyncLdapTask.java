@@ -151,7 +151,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
                 if (ldapEnabled != userAccount.enabled()) {
                     LOGGER.info("For userId={}, ldapId={}, setting enabled={}", userAccount.id(), ldapUserId, ldapEnabled);
                     if (!ldapEnabled) {
-                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_disabled);
                     }
                     userAccount = userAccount.withEnabled(ldapEnabled);
                     shouldUpdateInDb = true;

@@ -146,6 +146,8 @@
           @deleteUser="this.deleteUser"
           @changeRole="this.changeRole"
           @removeSessions="this.removeSessions"
+          @enableUser="this.enableUser"
+          @disableUser="this.disableUser"
       >
       </UserListContextMenu>
       <UserRoleModal/>
@@ -478,6 +480,7 @@ export default {
                           roles
                         }
                         canLock
+                        canEnable
                         canDelete
                         canChangeRole
                         canConfirm
@@ -574,6 +577,12 @@ export default {
     },
     lockUser(user) {
         axios.post('/api/aaa/user/lock', {userId: user.id, lock: true});
+    },
+    enableUser(user) {
+      axios.post('/api/aaa/user/enable', {userId: user.id, enable: true});
+    },
+    disableUser(user) {
+      axios.post('/api/aaa/user/enable', {userId: user.id, enable: false});
     },
     tetATet(user) {
         axios.put(`/api/chat/tet-a-tet/${user.id}`).then(response => {

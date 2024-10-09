@@ -314,5 +314,7 @@ export default {
     user_not_found: "Пользователь не найден",
     connecting: "Подклбючение...",
     mark_as_read: "Сделать прочитанным",
-    mark_as_read_all: "Сделать прочитанными все"
+    mark_as_read_all: "Сделать прочитанными все",
+    enable_user: "Включить пользователя",
+    disable_user: "Отключить пользователя"
 }

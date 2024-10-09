@@ -296,6 +296,7 @@ type UserAccountExtendedDto struct {
 	Oauth2Identifiers             *OAuth2Identifiers `json:"oauth2Identifiers"`
 	AdditionalData                *DataDto           `json:"additionalData"`
 	CanLock                       bool               `json:"canLock"`
+	CanEnable                     bool               `json:"canEnable"`
 	CanDelete                     bool               `json:"canDelete"`
 	CanChangeRole                 bool               `json:"canChangeRole"`
 	CanConfirm                    bool               `json:"canConfirm"`

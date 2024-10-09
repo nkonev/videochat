@@ -356,6 +356,7 @@ export default {
                           roles
                         }
                         canLock
+                        canEnable
                         canDelete
                         canChangeRole
                         canConfirm

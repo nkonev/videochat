@@ -31,7 +31,17 @@ public record UserAccountDTO (
     String loginColor,
     boolean ldap
 ) {
-    public UserAccountDTO(Long id, String login, String avatar, String avatarBig, String shortInfo, LocalDateTime lastLoginDateTime, OAuth2IdentifiersDTO oauth2Identifiers, String loginColor, boolean ldap) {
+    public UserAccountDTO(
+            Long id,
+            String login,
+            String avatar,
+            String avatarBig,
+            String shortInfo,
+            LocalDateTime lastLoginDateTime,
+            OAuth2IdentifiersDTO oauth2Identifiers,
+            String loginColor,
+            boolean ldap
+    ) {
         this.id = id;
         this.login = login;
         this.avatar = avatar;

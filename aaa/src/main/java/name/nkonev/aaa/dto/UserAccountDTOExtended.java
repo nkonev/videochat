@@ -15,6 +15,7 @@ public record UserAccountDTOExtended (
     DataDTO additionalData,
 
     boolean canLock,
+    boolean canEnable,
 
     boolean canDelete,
 
@@ -35,6 +36,7 @@ public record UserAccountDTOExtended (
         @JsonProperty("lastLoginDateTime") LocalDateTime lastLoginDateTime,
         @JsonProperty("oauth2Identifiers") OAuth2IdentifiersDTO oauthIdentifiers,
         @JsonProperty("canLock") boolean canLock,
+        @JsonProperty("canEnable") boolean canEnable,
         @JsonProperty("canDelete") boolean canDelete,
         @JsonProperty("canChangeRole") boolean canChangeRole,
         @JsonProperty("canConfirm") boolean canConfirm,
@@ -48,6 +50,7 @@ public record UserAccountDTOExtended (
             managementData,
             canDelete,
             canLock,
+            canEnable,
             canChangeRole,
             canConfirm,
             awaitingForConfirmEmailChange,

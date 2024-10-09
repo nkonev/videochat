@@ -193,6 +193,13 @@ public class UserProfileController {
     }
 
     @ResponseBody
+    @PreAuthorize("@aaaPermissionService.canEnable(#userAccountDetailsDTO, #enableDTO)")
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ENABLE)
+    public name.nkonev.aaa.dto.UserAccountDTOExtended setEnabled(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.EnabledDTO enableDTO){
+        return userProfileService.setEnabled(userAccountDetailsDTO, enableDTO);
+    }
+
+    @ResponseBody
     @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
     public void deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){

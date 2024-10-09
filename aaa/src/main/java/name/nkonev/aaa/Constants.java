@@ -36,6 +36,7 @@ public class Constants {
         public static final String SEARCH = "/search";
 
         public static final String LOCK = "/lock";
+        public static final String ENABLE = "/enable";
 
         public static final String CONFIRM = "/confirm";
         public static final String USER_ID = "/{"+PathVariables.USER_ID+"}";

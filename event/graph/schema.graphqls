@@ -334,6 +334,7 @@ type UserAccountExtendedDto {
     oauth2Identifiers: OAuth2Identifiers
     additionalData: DataDTO
     canLock: Boolean!
+    canEnable: Boolean!
     canDelete: Boolean!
     canChangeRole: Boolean!
     canConfirm: Boolean!

@@ -394,6 +394,23 @@ public class UserProfileService {
         return ret.b();
     }
 
+    public UserAccountDTOExtended setEnabled(UserAccountDetailsDTO userAccountDetailsDTO, EnabledDTO enabledDTO){
+        var ret = transactionTemplate.execute(status -> {
+            UserAccount userAccount = aaaUserDetailsService.getUserAccount(enabledDTO.userId());
+            if (!enabledDTO.enable()){
+                aaaUserDetailsService.killSessions(enabledDTO.userId(), ForceKillSessionsReasonType.user_disabled);
+            }
+            userAccount = userAccount.withEnabled(enabledDTO.enable());
+            userAccount = userAccountRepository.save(userAccount);
+            return new Pair<>(
+                    userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount),
+                    userAccount
+            );
+        });
+        notifier.notifyProfileUpdated(ret.b());
+        return ret.a();
+    }
+
     public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
         var ret = transactionTemplate.execute(status -> {
             Assert.isTrue(!roles.isEmpty(), "Role should be");

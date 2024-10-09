@@ -478,6 +478,7 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		LastLoginDateTime: aDto.LastLoginDateTime,
 		Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
 		CanLock:           aDto.CanLock,
+		CanEnable:         aDto.CanEnable,
 		CanDelete:         aDto.CanDelete,
 		CanChangeRole:     aDto.CanChangeRole,
 		CanConfirm:        aDto.CanConfirm,

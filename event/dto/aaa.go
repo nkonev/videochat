@@ -36,6 +36,7 @@ type UserAccountExtended struct {
 	UserAccount
 	AdditionalData    *DataDTO `json:"additionalData"`
 	CanLock           bool     `json:"canLock"`
+	CanEnable         bool     `json:"canEnable"`
 	CanDelete         bool     `json:"canDelete"`
 	CanChangeRole     bool     `json:"canChangeRole"`
 	CanConfirm        bool     `json:"canConfirm"`

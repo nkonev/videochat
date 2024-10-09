@@ -118,7 +118,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
             if (keycloakEnabled != userAccount.enabled()) {
                 LOGGER.info("For userId={}, keycloakId={}, setting enabled={}", userAccount.id(), keycloakUserId, keycloakEnabled);
                 if (!keycloakEnabled) {
-                    aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                    aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_disabled);
                 }
                 userAccount = userAccount.withEnabled(keycloakEnabled);
                 shouldUpdateInDb = true;
@@ -134,7 +134,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
                 if (keycloakEmailVerified != userAccount.confirmed()) {
                     LOGGER.info("For userId={}, keycloakId={}, setting confirmed={}", userAccount.id(), keycloakUserId, keycloakEmailVerified);
                     if (!keycloakEmailVerified) {
-                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_locked);
+                        aaaUserDetailsService.killSessions(userAccount.id(), ForceKillSessionsReasonType.user_unconfirmed);
                     }
                     userAccount = userAccount.withConfirmed(keycloakEmailVerified);
                     shouldUpdateInDb = true;

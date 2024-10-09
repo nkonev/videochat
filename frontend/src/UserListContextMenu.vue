@@ -77,6 +77,13 @@ export default {
                         ret.push({title: this.$vuetify.locale.t('$vuetify.lock_user'), icon: 'mdi-lock', action: () => this.$emit('lockUser', this.menuableItem) });
                     }
                 }
+                if (this.menuableItem.canEnable){
+                  if (!this.menuableItem?.additionalData.enabled) {
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.enable_user'), icon: 'mdi-power', action: () => this.$emit('enableUser', this.menuableItem) });
+                  } else {
+                    ret.push({title: this.$vuetify.locale.t('$vuetify.disable_user'), icon: 'mdi-power-off', action: () => this.$emit('disableUser', this.menuableItem) });
+                  }
+                }
                 if (this.menuableItem.canConfirm){
                     if (this.menuableItem?.additionalData.confirmed) {
                         ret.push({title: this.$vuetify.locale.t('$vuetify.unconfirm_user'), icon: 'mdi-close-thick', action: () => this.$emit('unconfirmUser', this.menuableItem) });

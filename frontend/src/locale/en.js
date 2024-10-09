@@ -314,5 +314,7 @@ export default {
     user_not_found: "User is not found",
     connecting: "Connecting...",
     mark_as_read: "Mark as read",
-    mark_as_read_all: "Mark as read all"
+    mark_as_read_all: "Mark as read all",
+    enable_user: "Enable user",
+    disable_user: "Disable user"
 }

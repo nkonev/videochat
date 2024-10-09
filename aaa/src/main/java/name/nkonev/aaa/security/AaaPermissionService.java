@@ -1,6 +1,7 @@
 package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.dto.ConfirmDTO;
+import name.nkonev.aaa.dto.EnabledDTO;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.LockDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -55,6 +56,16 @@ public class AaaPermissionService {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), confirmDTO.userId());
     }
 
+    public boolean canEnable(UserAccountDetailsDTO userAccount, EnabledDTO enableDTO) {
+        if (userAccount==null){
+            return false;
+        }
+        if (enableDTO==null){
+            return false;
+        }
+        return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), enableDTO.userId());
+    }
+
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), userIdToDelete);
     }
@@ -68,6 +79,13 @@ public class AaaPermissionService {
     }
 
     public boolean canLock(PrincipalToCheck currentUser, UserAccount userAccount) {
+        if (userAccount == null) {
+            return false;
+        }
+        return lockAndDelete(currentUser, userAccount.id());
+    }
+
+    public boolean canEnable(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) {
             return false;
         }

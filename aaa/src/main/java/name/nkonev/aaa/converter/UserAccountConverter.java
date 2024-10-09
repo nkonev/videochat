@@ -178,6 +178,7 @@ public class UserAccountConverter {
                 userAccount.lastLoginDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 aaaSecurityService.canLock(currentUser, userAccount),
+                aaaSecurityService.canEnable(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
                 aaaSecurityService.canChangeRole(currentUser, userAccount),
                 aaaSecurityService.canConfirm(currentUser, userAccount),
