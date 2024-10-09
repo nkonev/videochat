@@ -137,6 +137,8 @@
           @deleteUser="this.deleteUser"
           @changeRole="this.changeRole"
           @removeSessions="this.removeSessions"
+          @enableUser="this.enableUser"
+          @disableUser="this.disableUser"
     >
     </UserListContextMenu>
     <UserRoleModal/>
@@ -411,6 +413,12 @@ export default {
         if (this.chatStore.currentUser) {
             this.$refs.contextMenuRef.onShowContextMenu(e, this.viewableUser);
         }
+    },
+    enableUser(user) {
+      axios.post('/api/aaa/user/enable', {userId: user.id, enable: true});
+    },
+    disableUser(user) {
+      axios.post('/api/aaa/user/enable', {userId: user.id, enable: false});
     },
   },
   mounted() {
