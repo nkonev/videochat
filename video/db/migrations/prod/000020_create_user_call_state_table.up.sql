@@ -1,4 +1,4 @@
-create table user_call_state(
+create unlogged table user_call_state(
     token_id varchar(36) not null,
     user_id bigint not null,
 
