@@ -292,6 +292,13 @@ export default {
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
+                    if (fileToUpload.shouldSetFileUuidToMessage) {
+                      bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {
+                        fileItemUuid: fileToUpload.fileItemUuid,
+                        chatId: fileToUpload.chatId,
+                      });
+                    }
+
                     // [3/3] concatenate parts
                     await axios.put(`/api/storage/${fileToUpload.chatId}/upload/finish`, {
                       key: fileToUpload.key,
@@ -300,10 +307,6 @@ export default {
                     });
 
                     if (fileToUpload.shouldSetFileUuidToMessage) {
-                      bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {
-                        fileItemUuid: fileToUpload.fileItemUuid,
-                        chatId: fileToUpload.chatId,
-                      });
                       bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {
                         chatId: fileToUpload.chatId,
                       });
