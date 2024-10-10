@@ -211,7 +211,7 @@ import bus, {
   VIDEO_CALL_USER_COUNT_CHANGED,
   VIDEO_DIAL_STATUS_CHANGED,
   VIDEO_RECORDING_CHANGED,
-  WEBSOCKET_RESTORED, ON_WINDOW_RESIZED, NOTIFICATION_CLEAR_ALL, WEBSOCKET_LOST,
+  WEBSOCKET_RESTORED, ON_WINDOW_RESIZED, NOTIFICATION_CLEAR_ALL, WEBSOCKET_LOST, WEBSOCKET_CONNECTED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -626,8 +626,10 @@ export default {
         onWsLost() {
           this.chatStore.moreImportantSubtitleInfo = this.$vuetify.locale.t('$vuetify.connecting');
         },
-        onWsRestored() {
+        onWsConnected() {
           this.chatStore.moreImportantSubtitleInfo = null;
+        },
+        onWsRestored() {
           console.warn("REFRESH_ON_WEBSOCKET_RESTORED auto");
           bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
         },
@@ -858,6 +860,7 @@ export default {
 
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(WEBSOCKET_CONNECTED, this.onWsConnected);
         bus.on(WEBSOCKET_LOST, this.onWsLost);
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
@@ -886,6 +889,7 @@ export default {
 
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(WEBSOCKET_CONNECTED, this.onWsConnected);
         bus.off(WEBSOCKET_LOST, this.onWsLost);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);

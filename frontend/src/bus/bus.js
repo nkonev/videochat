@@ -58,6 +58,7 @@ export const NOTIFICATION_ADD = "notificationAdd";
 export const NOTIFICATION_DELETE = "notificationDelete";
 export const NOTIFICATION_CLEAR_ALL = "notificationClearAll";
 
+export const WEBSOCKET_CONNECTED = "wsConnected";
 export const WEBSOCKET_LOST = "wsLost";
 export const WEBSOCKET_RESTORED = "wsRestored";
 
