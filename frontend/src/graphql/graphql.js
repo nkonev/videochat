@@ -18,10 +18,11 @@ export const createGraphQlClient = () => {
         }
         initialized = true;
     });
-    graphQlClient.on('error', () => {
-        bus.emit(WEBSOCKET_LOST);
+    graphQlClient.on('error', (err) => {
+        console.info("Error in GraphQL client", err);
     });
-    graphQlClient.on('closed', () => {
+    graphQlClient.on('closed', (ev) => {
+        console.info("Close GraphQL", ev);
         bus.emit(WEBSOCKET_LOST);
     });
     bus.on(LOGGED_OUT, () => {initialized = false});
