@@ -804,7 +804,7 @@ func hasUnreadMessagesBatchCommon(ctx context.Context, co CommonOperations, chat
 func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId int64) (bool, error) {
 	shouldContinue := true
 	for i := 0; shouldContinue; i++ {
-		chatIds, err := getChatIdsByLimitOffsetCommon(ctx, co, userId, utils.DefaultSize, utils.DefaultSize*i)
+		chatIds, err := getChatIdsByParticipantIdCommon(ctx, co, userId, utils.DefaultSize, utils.DefaultSize*i)
 		if err != nil {
 			return false, err
 		}
