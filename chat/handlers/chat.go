@@ -8,7 +8,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"math"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
@@ -108,7 +107,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var startingFromItemId int64
 	startingFromItemIdString := c.QueryParam("startingFromItemId")
 	if startingFromItemIdString == "" {
-		startingFromItemId = math.MaxInt64
+		startingFromItemId = 0
 	} else {
 		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
 		if err != nil {

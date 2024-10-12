@@ -77,7 +77,8 @@
       replaceInArray,
       replaceOrAppend,
       replaceOrPrepend, reply_message,
-      setAnswerPreviewFields
+      setAnswerPreviewFields,
+      PAGE_SIZE
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -89,7 +90,6 @@
     import Mark from "mark.js";
     import hashMixin from "@/mixins/hashMixin";
 
-    const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
 
     const scrollerName = 'MessageList';
@@ -643,6 +643,12 @@
           replacement.controls = true;
           replacement.className = "video-custom-class";
           return replacement
+        },
+        getMaximumItemId() {
+          return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
+        },
+        getMinimumItemId() {
+          return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
         },
       },
       created() {

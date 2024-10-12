@@ -236,6 +236,21 @@ export const removeTopUserPosition = () => {
 }
 
 
+const KEY_TOP_CHAT = "topChat"
+
+export const setTopChatPosition = (chatId) => {
+    localStorage.setItem(KEY_TOP_CHAT, JSON.stringify(chatId));
+}
+
+export const getTopChatPosition = () => {
+    return JSON.parse(localStorage.getItem(KEY_TOP_CHAT));
+}
+
+export const removeTopChatPosition = () => {
+    localStorage.removeItem(KEY_TOP_CHAT);
+}
+
+
 const KEY_TOP_BLOG = "topBlog"
 
 export const setTopBlogPosition = (userId) => {
