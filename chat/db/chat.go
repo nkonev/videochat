@@ -252,9 +252,9 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 		}
 		defer rows.Close()
 	} else {
-		nonEquality := "m.id > $3"
+		nonEquality := "ch.id > $3"
 		if reverse {
-			nonEquality = "m.id < $3"
+			nonEquality = "ch.id < $3"
 		}
 		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
 			WHERE 
