@@ -78,7 +78,6 @@
       replaceOrAppend,
       replaceOrPrepend, reply_message,
       setAnswerPreviewFields,
-      PAGE_SIZE
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -90,6 +89,7 @@
     import Mark from "mark.js";
     import hashMixin from "@/mixins/hashMixin";
 
+    const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
 
     const scrollerName = 'MessageList';

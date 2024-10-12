@@ -116,7 +116,6 @@ import {
     replaceOrAppend,
     replaceOrPrepend,
     setTitle, getLoginColoredStyle,
-    PAGE_SIZE
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -126,10 +125,10 @@ import hashMixin from "@/mixins/hashMixin.js";
 import {
   getTopChatPosition,
   removeTopChatPosition,
-  removeTopMessagePosition,
-  setTopMessagePosition
+  setTopChatPosition
 } from "@/store/localStore.js";
 
+const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
 
 const scrollerName = 'ChatList';
