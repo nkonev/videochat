@@ -344,7 +344,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		}
 
 		if leftItemId == nil || rightItemId == nil {
-			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
+			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, 0, reverse, searchString, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
