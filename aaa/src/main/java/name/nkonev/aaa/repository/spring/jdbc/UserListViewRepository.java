@@ -111,7 +111,7 @@ public class UserListViewRepository {
 
             if (leftItemId == null || rightItemId == null) {
                 LOGGER.info("Got leftItemId={}, rightItemId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString);
-                list = getUsersSimple(limit, 0, reverse, searchString);
+                list = getUsersSimple(limit, 0, false, searchString);
             } else {
 
                 var order = "asc";

@@ -227,9 +227,9 @@ func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*Participa
 func getChatsSimple(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId int64, reverse bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	list := make([]*Chat, 0)
 
-	order := "asc"
+	order := "desc"
 	if reverse {
-		order = "desc"
+		order = "asc"
 	}
 	var err error
 	var rows *sql.Rows
@@ -299,9 +299,9 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 			rightLimit = 1
 		}
 
-		orderDirection := "asc"
+		orderDirection := "desc"
 		if reverse {
-			orderDirection = "desc"
+			orderDirection = "asc"
 		}
 
 		var leftItemId, rightItemId *int64
@@ -345,7 +345,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 
 		if leftItemId == nil || rightItemId == nil {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString)
-			list, err = getChatsSimple(ctx, co, participantId, limit, 0, reverse, searchString, additionalFoundUserIds)
+			list, err = getChatsSimple(ctx, co, participantId, limit, 0, false, searchString, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}

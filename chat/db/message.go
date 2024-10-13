@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
+	"math"
 	"nkonev.name/chat/dto"
 	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
@@ -156,7 +157,7 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 
 		if leftItemId == nil || rightItemId == nil {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
-			list, err = getMessagesSimple(ctx, co, chatId, limit, 0, reverse, searchString)
+			list, err = getMessagesSimple(ctx, co, chatId, limit, math.MaxInt, true, searchString)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
