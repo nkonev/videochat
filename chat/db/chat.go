@@ -305,7 +305,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 			orderDirection = "asc"
 		}
 
-		var leftItemId, rightItemId *int64
+		var leftRowNumber, rightRowNumber *int64
 		var searchStringPercents = ""
 		if searchString != "" {
 			searchStringPercents = "%" + searchString + "%"
@@ -314,38 +314,42 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		var limitRes *sql.Row
 		if searchString != "" {
 			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
-				select inner3.minid, inner3.maxid from (
-					select inner2.*, lag(id, $5, inner2.mmin) over() as minid, lead(id, $6, inner2.mmax) over() as maxid from (
-						select inn.*, id = $4 as central_element from (
-							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax %s
-							where %s
-							%s %s
-					   	) inn
-				 	) inner2
-			  	) inner3 where central_element = true
-			`, chat_from, getChatSearchClause(additionalFoundUserIds), chat_order, orderDirection),
+				select inn4.minrn, inn4.maxrn from (
+					select inn3.*, lag(rn, $5, inn3.mmin) over() as minrn, lead(rn, $6, inn3.mmax) over() as maxrn from (
+						select inn2.*, id = $4 as central_element from (
+							select id, rn, (min(inn.rn) over ()) as mmin, (max(inn.rn) over ()) as mmax FROM (
+								select id, row_number() over (%s %s) as rn 
+								%s
+								where %s
+							) inn
+						) inn2
+					) inn3
+				) inn4 where central_element = true
+			`, chat_order, orderDirection, chat_from, getChatSearchClause(additionalFoundUserIds)),
 				participantId, searchStringPercents, searchString, startingFromItemId, leftLimit, rightLimit)
 		} else {
 			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
-				select inner3.minid, inner3.maxid from (
-					select inner2.*, lag(id, $3, inner2.mmin) over() as minid, lead(id, $4, inner2.mmax) over() as maxid from (
-						select inn.*, id = $2 as central_element from (
-							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax %s 
-							where %s
-							%s %s
-					   	) inn
-				 	) inner2
-			  	) inner3 where central_element = true
-			`, chat_from, chat_where, chat_order, orderDirection),
+				select inn4.minrn, inn4.maxrn from (
+					select inn3.*, lag(rn, $3, inn3.mmin) over() as minrn, lead(rn, $4, inn3.mmax) over() as maxrn from (
+						select inn2.*, id = $2 as central_element from (
+							select id, rn, (min(inn.rn) over ()) as mmin, (max(inn.rn) over ()) as mmax FROM (
+								select id, row_number() over (%s %s) as rn 
+								%s
+								where %s
+							) inn
+						) inn2
+					) inn3
+				) inn4 where central_element = true
+			`, chat_order, orderDirection, chat_from, chat_where),
 				participantId, startingFromItemId, leftLimit, rightLimit)
 		}
-		err = limitRes.Scan(&leftItemId, &rightItemId)
+		err = limitRes.Scan(&leftRowNumber, &rightRowNumber)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
 		}
 
-		if leftItemId == nil || rightItemId == nil {
-			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString)
+		if leftRowNumber == nil || rightRowNumber == nil {
+			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, 0, false, searchString, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
@@ -361,7 +365,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 					%s %s
 					LIMIT $4`, selectChatClause(), getChatSearchClause(additionalFoundUserIds), chat_order, orderDirection),
 					participantId, searchStringPercents, searchString,
-					limit, *leftItemId, *rightItemId)
+					limit, *leftRowNumber, *rightRowNumber)
 				if err != nil {
 					return nil, eris.Wrap(err, "error during interacting with db")
 				}
@@ -375,7 +379,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 					%s %s
 					LIMIT $2`, selectChatClause(), chat_where, chat_order, orderDirection),
 					participantId,
-					limit, *leftItemId, *rightItemId)
+					limit, *leftRowNumber, *rightRowNumber)
 				if err != nil {
 					return nil, eris.Wrap(err, "error during interacting with db")
 				}
@@ -391,6 +395,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 			}
 		}
 	} else {
+		// TODO get start row number here
 		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
 		list, err = getChatsSimple(ctx, co, participantId, limit, startingFromItemId, reverse, searchString, additionalFoundUserIds)
 		if err != nil {
