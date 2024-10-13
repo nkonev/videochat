@@ -444,9 +444,17 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 			return nil, eris.Wrap(err, "error during interacting with db")
 		}
 
-		list, err = getChats(ctx, co, participantId, limit, *leftRowNumber, *rightRowNumber, orderDirection, searchString, searchStringPercents, additionalFoundUserIds)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
+		if leftRowNumber == nil || rightRowNumber == nil {
+			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
+			list, err = getChatsSimple(ctx, co, participantId, limit, false, searchString, searchStringPercents, additionalFoundUserIds)
+			if err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
+		} else {
+			list, err = getChats(ctx, co, participantId, limit, *leftRowNumber, *rightRowNumber, orderDirection, searchString, searchStringPercents, additionalFoundUserIds)
+			if err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
 		}
 	}
 
