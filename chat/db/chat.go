@@ -15,6 +15,37 @@ import (
 
 const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
 
+const real_chat_columns = `
+	id, 
+	title, 
+	avatar, 
+	avatar_big,
+	last_update_date_time,
+	tet_a_tet,
+	can_resend,
+	available_to_search,
+	pinned,
+	blog,
+	regular_participant_can_publish_message,
+	regular_participant_can_pin_message
+`
+
+const select_chat = `
+SELECT 
+	ch.id, 
+	ch.title, 
+	ch.avatar, 
+	ch.avatar_big,
+	ch.last_update_date_time,
+	ch.tet_a_tet,
+	ch.can_resend,
+	ch.available_to_search,
+	cp.user_id IS NOT NULL as pinned,
+	ch.blog,
+	ch.regular_participant_can_publish_message,
+	ch.regular_participant_can_pin_message
+
+`
 const chat_order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
 const chat_from = `
 FROM chat ch 
@@ -94,22 +125,15 @@ func (tx *Tx) IsExistsTetATet(ctx context.Context, participant1 int64, participa
 }
 
 // expects $1 is userId
-func selectChatClause() string {
-	return `SELECT 
-				ch.id, 
-				ch.title, 
-				ch.avatar, 
-				ch.avatar_big,
-				ch.last_update_date_time,
-				ch.tet_a_tet,
-				ch.can_resend,
-				ch.available_to_search,
-				cp.user_id IS NOT NULL as pinned,
-				ch.blog,
-				ch.regular_participant_can_publish_message,
-				ch.regular_participant_can_pin_message
-
+func selectChatWithRowNumbersClause(orderDirection string) string {
+	return select_chat + `
+			, row_number() over ( ` + chat_order + orderDirection + ` ) as rn		
 ` + chat_from
+}
+
+// expects $1 is userId
+func selectChatClause() string {
+	return select_chat + chat_from
 }
 
 func provideScanToChat(chat *Chat) []any {
@@ -231,15 +255,16 @@ func getChats(ctx context.Context, co CommonOperations, participantId int64, lim
 	var rows *sql.Rows
 	var err error
 
-	// TODO here instead of ch.id >= $5 AND ch.id <= $6 use row numbers
 	if searchString != "" {
-		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-					WHERE 
-							%s
-						AND	ch.id >= $5
-						AND ch.id <= $6 
-					%s %s
-					LIMIT $4`, selectChatClause(), getChatSearchClause(additionalFoundUserIds), chat_order, orderDirection),
+		rows, err = co.QueryContext(ctx, fmt.Sprintf(`
+					select %s from (
+						%v
+						WHERE 
+								%s
+					) inn
+					WHERE	inn.rn >= $5
+						AND inn.rn <= $6 
+					LIMIT $4`, real_chat_columns, selectChatWithRowNumbersClause(orderDirection), getChatSearchClause(additionalFoundUserIds)),
 			participantId, searchStringPercents, searchString,
 			limit, leftRowNumber, rightRowNumber)
 		if err != nil {
@@ -247,14 +272,15 @@ func getChats(ctx context.Context, co CommonOperations, participantId int64, lim
 		}
 		defer rows.Close()
 	} else {
-		// TODO here instead of ch.id >= $3 AND h.id <= $4 use row numbers
-		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-					WHERE 
-							%s
-						AND ch.id >= $3 
-						AND ch.id <= $4
-					%s %s
-					LIMIT $2`, selectChatClause(), chat_where, chat_order, orderDirection),
+		rows, err = co.QueryContext(ctx, fmt.Sprintf(`
+					select %s from (
+						%v
+						WHERE 
+								%s
+					) inn
+					WHERE	inn.rn >= $3 
+						AND inn.rn <= $4
+					LIMIT $2`, real_chat_columns, selectChatWithRowNumbersClause(orderDirection), chat_where),
 			participantId,
 			limit, leftRowNumber, rightRowNumber)
 		if err != nil {
