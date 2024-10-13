@@ -157,7 +157,13 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 
 		if leftItemId == nil || rightItemId == nil {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
-			list, err = getMessagesSimple(ctx, co, chatId, limit, math.MaxInt, true, searchString)
+			var startedFromItemIdSafe int64
+			if reverse {
+				startedFromItemIdSafe = math.MaxInt64
+			} else {
+				startedFromItemIdSafe = 0
+			}
+			list, err = getMessagesSimple(ctx, co, chatId, limit, startedFromItemIdSafe, reverse, searchString)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}

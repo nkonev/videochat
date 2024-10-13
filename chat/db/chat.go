@@ -384,6 +384,10 @@ func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64
 	}
 	err := limitRes.Scan(&leftRowNumber, &rightRowNumber)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// there were no rows, but otherwise no error occurred
+			return nil, nil, nil
+		}
 		return nil, nil, eris.Wrap(err, "error during interacting with db")
 	}
 	return leftRowNumber, rightRowNumber, nil
@@ -424,7 +428,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 
 		if leftRowNumber == nil || rightRowNumber == nil {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
-			list, err = getChatsSimple(ctx, co, participantId, limit, false, searchString, searchStringPercents, additionalFoundUserIds)
+			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
@@ -446,7 +450,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 
 		if leftRowNumber == nil || rightRowNumber == nil {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
-			list, err = getChatsSimple(ctx, co, participantId, limit, false, searchString, searchStringPercents, additionalFoundUserIds)
+			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
