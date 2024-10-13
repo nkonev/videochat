@@ -356,7 +356,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 				rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
 					WHERE 
 							%s
-							ch.id >= $5
+						AND	ch.id >= $5
 						AND ch.id <= $6 
 					%s %s
 					LIMIT $4`, selectChatClause(), getChatSearchClause(additionalFoundUserIds), chat_order, orderDirection),
