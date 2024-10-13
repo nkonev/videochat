@@ -236,7 +236,7 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 	if searchString != "" {
 		nonEquality := "ch.id > $5"
 		if reverse {
-			nonEquality = "ch.id < $5"
+			nonEquality = "ch.id < $5" // TODO виртуализировать это с учётом того, что startingFromItemId чата, который не обязательно находится вверху или внизу (из-за сортировки)
 		}
 		searchStringPercents := "%" + searchString + "%"
 		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
