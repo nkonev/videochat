@@ -20,7 +20,8 @@ const chat_from = `
 FROM chat ch 
 LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
 `
-const chat_where = "ch.id IN ( SELECT chat_id FROM chat_participant WHERE user_id = $1 )"
+const chat_of_participant = "SELECT chat_id FROM chat_participant WHERE user_id = $1"
+const chat_where = "ch.id IN ( " + chat_of_participant + " )"
 
 // db model
 type Chat struct {
@@ -555,7 +556,7 @@ func (tx *Tx) EditChat(ctx context.Context, id int64, newTitle string, avatar, a
 }
 
 func getChatCommon(ctx context.Context, co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRowContext(ctx, selectChatClause()+` WHERE ch.id in (SELECT chat_id FROM chat_participant WHERE user_id = $1 AND chat_id = $2)`, participantId, chatId)
+	row := co.QueryRowContext(ctx, selectChatClause()+` WHERE ch.id in (`+chat_of_participant+` AND chat_id = $2)`, participantId, chatId)
 	chat := Chat{}
 	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
