@@ -436,7 +436,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		}
 	} else {
 		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
-		leftLimit := 0
+		leftLimit := -1 // not to send the element with startingFromItemId to response
 		rightLimit := limit
 
 		leftRowNumber, rightRowNumber, err := getRowNumbers(ctx, co, participantId, orderDirection, startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
