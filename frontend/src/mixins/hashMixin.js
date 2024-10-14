@@ -86,7 +86,7 @@ export default () => {
                 console.log("saveLastVisibleElement", this.conditionToSaveLastVisible());
                 if (this.conditionToSaveLastVisible()) {
                     const elems = [...document.querySelectorAll(this.scrollerSelector() + " " + this.itemSelector())].map((item) => {
-                        const visible = item.getBoundingClientRect().top > 0
+                        const visible = item.getBoundingClientRect().top > 10 // 10 only for ChatList (on mobile Chrome), 0 is enough for UserList amd MessageList
                         return {item, visible}
                     });
 
