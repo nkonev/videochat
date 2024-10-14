@@ -1,6 +1,6 @@
 import {hasLength} from "@/utils";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore()
+// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore(), scrollerSelector(), itemSelector()
 // isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {
