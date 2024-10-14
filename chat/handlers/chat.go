@@ -104,16 +104,16 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	var startingFromItemId int64
+	var startingFromItemId *int64
 	startingFromItemIdString := c.QueryParam("startingFromItemId")
 	if startingFromItemIdString == "" {
-		startingFromItemId = 0
+		startingFromItemId = nil
 	} else {
 		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
 		if err != nil {
 			return err
 		}
-		startingFromItemId = startingFromItemId2
+		startingFromItemId = &startingFromItemId2
 	}
 
 	size := utils.FixSizeString(c.QueryParam("size"))

@@ -393,7 +393,7 @@ func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64
 	return leftRowNumber, rightRowNumber, nil
 }
 
-func getChatsCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+func getChatsCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	list := make([]*Chat, 0)
 	var err error
 	orderDirection := "desc"
@@ -421,12 +421,14 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 
 		var leftRowNumber, rightRowNumber *int64
 
-		leftRowNumber, rightRowNumber, err = getRowNumbers(ctx, co, participantId, orderDirection, startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
+		if startingFromItemId != nil {
+			leftRowNumber, rightRowNumber, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
+			if err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
 		}
 
-		if leftRowNumber == nil || rightRowNumber == nil {
+		if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
@@ -443,12 +445,16 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		leftLimit := -1 // not to send the element with startingFromItemId to response
 		rightLimit := limit
 
-		leftRowNumber, rightRowNumber, err := getRowNumbers(ctx, co, participantId, orderDirection, startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
+		var leftRowNumber, rightRowNumber *int64
+
+		if startingFromItemId != nil {
+			leftRowNumber, rightRowNumber, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
+			if err != nil {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
 		}
 
-		if leftRowNumber == nil || rightRowNumber == nil {
+		if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
@@ -465,7 +471,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 	return list, nil
 }
 
-func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
@@ -507,11 +513,11 @@ func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperati
 		return list, nil
 	}
 }
-func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
