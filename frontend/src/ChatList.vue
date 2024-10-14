@@ -684,7 +684,7 @@ export default {
       setTopChatPosition(chatId)
     },
     beforeUnload() {
-      this.saveLastVisibleElement(this.chatId);
+      this.saveLastVisibleElement();
     },
   },
   components: {
@@ -764,7 +764,7 @@ export default {
 
     removeEventListener("beforeunload", this.beforeUnload);
 
-    this.saveLastVisibleElement(this.storedChatId);
+    this.saveLastVisibleElement();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.off(PROFILE_SET, this.onProfileSet);
