@@ -369,9 +369,6 @@ export default {
     itemSelector() {
         return '.user-item-root'
     },
-    doSaveTheFirstItem() {
-        return true
-    },
     setPositionToStore(userId) {
         setTopUserPosition(userId)
     },

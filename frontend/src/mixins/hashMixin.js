@@ -1,6 +1,7 @@
 import {hasLength} from "@/utils";
+import {directionBottom} from "@/mixins/infiniteScrollMixin.js";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore(), scrollerSelector(), itemSelector()
+// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection()
 // isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {
@@ -106,6 +107,9 @@ export default () => {
                     console.log("Skipped saved desiredVisible because we are already scrolled")
                 }
             },
-        }
+            doSaveTheFirstItem() {
+                return this.initialDirection() == directionBottom
+            }
+        },
     }
 }

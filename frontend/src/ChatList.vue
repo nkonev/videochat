@@ -677,9 +677,6 @@ export default {
     itemSelector() {
       return '.chat-item-root'
     },
-    doSaveTheFirstItem() {
-      return true
-    },
     setPositionToStore(chatId) {
       setTopChatPosition(chatId)
     },

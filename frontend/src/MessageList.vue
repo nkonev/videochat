@@ -366,9 +366,6 @@
         itemSelector() {
             return '.message-item-root'
         },
-        doSaveTheFirstItem() {
-          return false
-        },
         setPositionToStore(messageId, chatId) {
             setTopMessagePosition(chatId, messageId)
         },
