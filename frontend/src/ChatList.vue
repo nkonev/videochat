@@ -254,6 +254,7 @@ export default {
 
           this.performMarking();
           this.requestInVideo();
+          return Promise.resolve(true)
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
         })
