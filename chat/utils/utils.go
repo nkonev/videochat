@@ -119,6 +119,10 @@ func Int64ToString(i int64) string {
 	return fmt.Sprintf("%v", i)
 }
 
+func Float64ToString(i float64) string {
+	return fmt.Sprintf("%v", i)
+}
+
 func InterfaceToString(i interface{}) string {
 	return fmt.Sprintf("%v", i)
 }
