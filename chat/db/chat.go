@@ -347,8 +347,9 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 	return list, nil
 }
 
-func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64, orderDirection string, startingFromItemId int64, leftLimit, rightLimit int, searchString, searchStringPercents string, additionalFoundUserIds []int64) (*int64, *int64, error) {
+func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64, orderDirection string, startingFromItemId int64, limit, leftLimit, rightLimit int, searchString, searchStringPercents string, additionalFoundUserIds []int64) (*int64, *int64, bool, error) {
 	var leftRowNumber, rightRowNumber *int64
+	var noData bool
 
 	var limitRes *sql.Row
 	if searchString != "" {
@@ -386,11 +387,19 @@ func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
-			return nil, nil, nil
+			return nil, nil, false, nil
 		}
-		return nil, nil, eris.Wrap(err, "error during interacting with db")
+		return nil, nil, false, eris.Wrap(err, "error during interacting with db")
 	}
-	return leftRowNumber, rightRowNumber, nil
+
+	// 1001 962 (39) = ok
+	// 1001 1   (1000) = not ok
+	// 414 454  (40)   = ok
+	if (rightRowNumber != nil && leftRowNumber != nil) && ((*rightRowNumber)-(*leftRowNumber) > int64(limit)) {
+		noData = true
+	}
+
+	return leftRowNumber, rightRowNumber, noData, nil
 }
 
 func getChatsCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
@@ -420,15 +429,17 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		}
 
 		var leftRowNumber, rightRowNumber *int64
-
+		var noData bool
 		if startingFromItemId != nil {
-			leftRowNumber, rightRowNumber, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
+			leftRowNumber, rightRowNumber, noData, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, limit, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
 		}
 
-		if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
+		if noData {
+			// leave empty list
+		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
@@ -446,15 +457,18 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		rightLimit := limit
 
 		var leftRowNumber, rightRowNumber *int64
+		var noData bool
 
 		if startingFromItemId != nil {
-			leftRowNumber, rightRowNumber, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
+			leftRowNumber, rightRowNumber, noData, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, limit, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			}
 		}
 
-		if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
+		if noData {
+			// leave empty list
+		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
 			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
