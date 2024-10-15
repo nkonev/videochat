@@ -1,12 +1,12 @@
 create unlogged table user_call_state(
-    token_id varchar(36) not null,
+    token_id uuid not null,
     user_id bigint not null,
 
     chat_id bigint not null,
 
     token_taken boolean not null,
 
-    owner_token_id varchar(36),
+    owner_token_id uuid,
     owner_user_id bigint,
 
     status varchar(32) not null,
