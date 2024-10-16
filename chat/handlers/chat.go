@@ -238,18 +238,6 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 	})
 }
 
-func getDirection(directionString string) string {
-	if directionString == directionTop || directionString == directionBottom {
-		return directionString
-	} else {
-		return defaultDirection
-	}
-}
-
-type NextTokenWrapper struct {
-	PaginationToken string `json:"paginationToken"`
-}
-
 func getChat(
 	ctx context.Context,
 	dbR db.CommonOperations,
