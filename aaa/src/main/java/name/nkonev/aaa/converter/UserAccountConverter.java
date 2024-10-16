@@ -42,6 +42,13 @@ public class UserAccountConverter {
         return trimToNull(NullEncode.forHtmlEmail(email));
     }
 
+    public static String normalizeLogin(String login) {
+        login = login != null ? login.trim() : null;
+        login = NullEncode.forHtmlLogin(login);
+        login = trimToNull(login);
+        return login;
+    }
+
     public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isForOauth2) {
         var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isForOauth2));
         userAccountDTO = userAccountDTO.withEmail(normalizeEmail(userAccountDTO.email()));
@@ -256,9 +263,7 @@ public class UserAccountConverter {
     }
 
     private static String checkAndTrimLogin(String login, boolean isForOauth2) {
-        login = login != null ? login.trim() : null;
-        login = trimToNull(login);
-        login = NullEncode.forHtmlLogin(login);
+        login = normalizeLogin(login);
 
         if (login != null) {
             if (FORBIDDEN_USERNAMES.contains(login)) {
@@ -292,7 +297,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.FACEBOOK,
-                NullEncode.forHtmlLogin(login),
+                normalizeLogin(login),
                 null,
                 NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
@@ -326,7 +331,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.VKONTAKTE,
-                NullEncode.forHtmlLogin(login),
+                normalizeLogin(login),
                 null,
                 null,
                 null,
@@ -360,7 +365,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.GOOGLE,
-                NullEncode.forHtmlLogin(login),
+                normalizeLogin(login),
                 null,
                 NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
@@ -392,7 +397,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.KEYCLOAK,
-                NullEncode.forHtmlLogin(login),
+                normalizeLogin(login),
                 null,
                 NullEncode.forHtmlAttribute(maybeImageUrl),
                 null,
@@ -402,7 +407,7 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 roles.toArray(UserRole[]::new),
-                NullEncode.forHtmlEmail(email),
+                normalizeEmail(email),
                 null,
                 null,
                 null,
@@ -424,7 +429,7 @@ public class UserAccountConverter {
         return new UserAccount(
                 null,
                 CreationType.LDAP,
-                NullEncode.forHtmlLogin(login),
+                normalizeLogin(login),
                 null,
                 null,
                 null,
@@ -434,7 +439,7 @@ public class UserAccountConverter {
                 enabled,
                 confirmed,
                 mappedRoles.toArray(UserRole[]::new),
-                NullEncode.forHtmlEmail(email),
+                normalizeEmail(email),
                 null,
                 null,
                 null,
