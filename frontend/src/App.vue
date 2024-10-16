@@ -856,26 +856,21 @@ export default {
         PublishedMessagesModal,
     },
     created() {
-        createGraphQlClient();
-
         this.onFocus = debounce(this.onFocus, 200, {leading:false, trailing:true});
 
+        this.afterRouteInitialized = once(this.afterRouteInitialized);
+    },
+    mounted() {
         addEventListener("focus", this.onFocus);
         window.addEventListener("resize", this.onWindowResized);
 
-        // create subscription object before ON_PROFILE_SET
+        createGraphQlClient();
+
+        // create subscription object before ON_PROFILE_SET (afterRouteInitialized())
         this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
         this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
 
-        // It's placed after each route in order not to have a race-condition
-        this.afterRouteInitialized = once(this.afterRouteInitialized);
-        this.$router.afterEach((to, from) => {
-            this.afterRouteInitialized().then(()=>{
-                this.fetchProfileIfNeed();
-            })
-        })
-    },
-    mounted() {
+        // place onProfileSet() before fetchProfileIfNeed() to start subscription in onProfileSet()
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(WEBSOCKET_CONNECTED, this.onWsConnected);
@@ -883,6 +878,14 @@ export default {
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+
+        // To tTrigger fetching profile that 's going to trigger starting subscriptions
+        // It's placed after each route in order not to have a race-condition
+        this.$router.afterEach((to, from) => {
+          this.afterRouteInitialized().then(()=>{
+            this.fetchProfileIfNeed();
+          })
+        })
     },
     beforeUnmount() {
         window.removeEventListener("resize", this.onWindowResized);
