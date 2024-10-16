@@ -299,11 +299,12 @@ import bus, {
             },
         },
         mounted() {
-            this.showModal()
-        },
-        created() {
             bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
             bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+
+            this.showModal();
+        },
+        created() {
         },
         beforeUnmount() {
             bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);

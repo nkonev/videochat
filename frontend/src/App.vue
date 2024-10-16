@@ -858,14 +858,6 @@ export default {
     created() {
         createGraphQlClient();
 
-        bus.on(PROFILE_SET, this.onProfileSet);
-        bus.on(LOGGED_OUT, this.onLoggedOut);
-        bus.on(WEBSOCKET_CONNECTED, this.onWsConnected);
-        bus.on(WEBSOCKET_LOST, this.onWsLost);
-        bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
-        bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
-        bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
-
         this.onFocus = debounce(this.onFocus, 200, {leading:false, trailing:true});
 
         addEventListener("focus", this.onFocus);
@@ -882,6 +874,15 @@ export default {
                 this.fetchProfileIfNeed();
             })
         })
+    },
+    mounted() {
+        bus.on(PROFILE_SET, this.onProfileSet);
+        bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(WEBSOCKET_CONNECTED, this.onWsConnected);
+        bus.on(WEBSOCKET_LOST, this.onWsLost);
+        bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
+        bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
+        bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
     },
     beforeUnmount() {
         window.removeEventListener("resize", this.onWindowResized);

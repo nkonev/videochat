@@ -148,9 +148,9 @@ export default {
     },
   },
   created() {
-    bus.on(OPEN_SETTINGS, this.showSettingsModal);
   },
   mounted() {
+    bus.on(OPEN_SETTINGS, this.showSettingsModal);
     this.fileInput = document.getElementById('image-input-profile-avatar');
     this.fileInput.onchange = (e) => {
       if (e.target.files.length) {

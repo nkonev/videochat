@@ -363,7 +363,6 @@
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
             this.doSearch = debounce(this.doSearch, 700);
-            bus.on(OPEN_CHAT_EDIT, this.showModal);
         },
         beforeUnmount() {
             if (this.fileInput) {
@@ -373,6 +372,7 @@
             bus.off(OPEN_CHAT_EDIT, this.showModal);
         },
         mounted() {
+          bus.on(OPEN_CHAT_EDIT, this.showModal);
           this.fileInput = document.getElementById('image-input-chat-avatar');
           this.fileInput.onchange = (e) => {
             if (e.target.files.length) {
