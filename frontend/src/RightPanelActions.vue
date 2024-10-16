@@ -211,7 +211,7 @@ export default {
       this.chatStore.incrementProgressCount();
       axios.post(`/api/aaa/logout`).then(() => {
         this.chatStore.unsetUser();
-        bus.emit(LOGGED_OUT, null);
+        bus.emit(LOGGED_OUT);
       }).finally(()=>{
           this.isLoggingOut = false
           this.chatStore.decrementProgressCount();

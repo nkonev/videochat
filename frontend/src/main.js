@@ -125,7 +125,7 @@ axios.interceptors.response.use((response) => {
     } else if (error && error.response && error.response.status == 401 ) {
         console.log("Catch 401 Unauthorized, emitting ", LOGGED_OUT);
         chatStore.unsetUser();
-        bus.emit(LOGGED_OUT, null);
+        bus.emit(LOGGED_OUT);
         return Promise.reject(error)
     }  else if (error.code == 'ECONNABORTED') { // removes error snackbar caused by cancelled message read request
         console.warn("Connection aborted")

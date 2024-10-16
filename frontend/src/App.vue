@@ -906,15 +906,6 @@ export default {
 
         destroyGraphqlClient();
     },
-
-    watch: {
-      'chatStore.currentUser': function(newUserValue, oldUserValue) {
-        console.debug("User new", newUserValue, "old" , oldUserValue);
-        if (newUserValue && !oldUserValue) {
-            bus.emit(PROFILE_SET);
-        }
-      },
-    }
 }
 </script>
 

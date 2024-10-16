@@ -4,6 +4,7 @@ import axios from "axios";
 import {isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import {setStoredLanguage} from "@/store/localStore";
+import bus, {PROFILE_SET} from "@/bus/bus.js";
 
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
@@ -78,6 +79,7 @@ export const useChatStore = defineStore('chat', {
         return axios.get(`/api/aaa/profile`).then(( {data} ) => {
             console.debug("fetched profile =", data);
             this.currentUser = data;
+            bus.emit(PROFILE_SET);
 
             return axios.get("/api/aaa/settings/init").then(({data}) => {
                 const lang = data.language;
