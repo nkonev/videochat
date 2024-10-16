@@ -73,7 +73,7 @@
       checkUpByTree, checkUpByTreeObj,
       deepCopy, edit_message, embed_message_reply,
       findIndex, getBlogLink, getPublicMessageLink,
-      hasLength, haveEmbed, isChatRoute, isConverted,
+      hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash,
       replaceInArray,
       replaceOrAppend,
       replaceOrPrepend, reply_message,
@@ -647,6 +647,9 @@
         getMinimumItemId() {
           return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
         },
+        isAppropriateHash(hash) {
+          return isMessageHash(hash)
+        },
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true});
@@ -685,7 +688,7 @@
               // reaction on setting hash
               if (isChatRoute(newValue)) {
                 // hash
-                if (hasLength(newValue.hash)) {
+                if (hasLength(newValue.hash) && this.isAppropriateHash(newValue.hash) && newValue.hash != oldValue.hash) {
                   console.log("Changed route hash, going to scroll", newValue.hash)
                   await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
                   return

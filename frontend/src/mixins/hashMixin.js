@@ -1,7 +1,7 @@
 import {hasLength} from "@/utils";
 import {directionBottom} from "@/mixins/infiniteScrollMixin.js";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection()
+// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection(), isAppropriateHash()
 // isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {
@@ -16,7 +16,11 @@ export default () => {
         },
         computed: {
             highlightItemId() {
-                return this.getIdFromRouteHash(this.$route.hash);
+                if (this.isAppropriateHash(this.$route.hash)) {
+                    return this.getIdFromRouteHash(this.$route.hash);
+                } else {
+                    return null
+                }
             },
         },
         methods: {

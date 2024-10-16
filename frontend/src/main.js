@@ -11,7 +11,7 @@ import App from './App.vue'
 import { createApp } from 'vue'
 
 // Plugins
-import {hasLength, isMobileBrowser} from "@/utils";
+import {getIdFromRouteHash, hasLength, isMobileBrowser} from "@/utils";
 import vuetify from "@/plugins/vuetify";
 import router from "@/router";
 import axios from "axios";
@@ -58,13 +58,7 @@ app.config.globalProperties.isMobile = () => {
     return isMobileBrowser()
 }
 
-app.config.globalProperties.getIdFromRouteHash = (hash) => {
-    if (!hash) {
-        return null;
-    }
-    const str = hash.replace(/\D/g, '');
-    return hasLength(str) ? str : null;
-};
+app.config.globalProperties.getIdFromRouteHash = getIdFromRouteHash;
 
 app.config.globalProperties.setError = (e, txt, traceId) => {
     console.error(txt, e, "traceId=", traceId);

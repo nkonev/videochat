@@ -108,14 +108,14 @@ import bus, {
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-    deepCopy,
-    dynamicSortMultiple,
-    findIndex,
-    hasLength,
-    isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
-    replaceOrAppend,
-    replaceOrPrepend,
-    setTitle, getLoginColoredStyle,
+  deepCopy,
+  dynamicSortMultiple,
+  findIndex,
+  hasLength,
+  isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
+  replaceOrAppend,
+  replaceOrPrepend,
+  setTitle, getLoginColoredStyle, isChatHash,
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -683,6 +683,9 @@ export default {
     beforeUnload() {
       this.saveLastVisibleElement();
     },
+    isAppropriateHash(hash) {
+      return isChatHash(hash)
+    },
   },
   components: {
     MessageItemContextMenu,
@@ -716,10 +719,13 @@ export default {
           const oldQuery = oldValue.query[SEARCH_MODE_CHATS];
 
           // reaction on setting hash
-          if (hasLength(newValue.hash)) {
-            console.log("Changed route hash, going to scroll", newValue.hash)
-            await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
-            return
+          if (isChatRoute(newValue)) {
+            // reaction on setting hash
+            if (hasLength(newValue.hash) && this.isAppropriateHash(newValue.hash) && newValue.hash != oldValue.hash) {
+              console.log("Changed route hash, going to scroll", newValue.hash)
+              await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
+              return
+            }
           }
         }
       }

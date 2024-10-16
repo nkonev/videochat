@@ -175,7 +175,7 @@ import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
   deepCopy, findIndex, getLoginColoredStyle,
-  hasLength, isSetEqual, isStrippedUserLogin, replaceInArray,
+  hasLength, isSetEqual, isStrippedUserLogin, isUserHash, replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
   setTitle
@@ -661,6 +661,9 @@ export default {
     getMinimumItemId() {
       return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
     },
+    isAppropriateHash(hash) {
+      return isUserHash(hash)
+    },
   },
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});
@@ -688,11 +691,11 @@ export default {
             const oldQuery = oldValue.query[SEARCH_MODE_USERS];
 
             // reaction on setting hash
-              if (hasLength(newValue.hash)) {
-                  console.log("Changed route hash, going to scroll", newValue.hash)
-                  await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
-                  return
-              }
+            if (hasLength(newValue.hash) && this.isAppropriateHash(newValue.hash) && newValue.hash != oldValue.hash) {
+                console.log("Changed route hash, going to scroll", newValue.hash)
+                await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
+                return
+            }
           }
       }
   },

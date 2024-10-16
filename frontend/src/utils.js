@@ -1,10 +1,10 @@
 import {
     blog_post,
     chat,
-    chat_name,
+    chat_name, chatIdHashPrefix,
     messageIdHashPrefix,
     prefix,
-    public_prefix,
+    public_prefix, userIdHashPrefix,
     video_suffix,
     videochat_name
 } from "@/router/routes";
@@ -285,6 +285,28 @@ export const copyCallLink = (chatId) => {
 export const isChatRoute = (route) => {
   return route.name == chat_name || route.name == videochat_name
 }
+
+// #message-1
+export const isMessageHash = (hash) => {
+    return hash?.startsWith(messageIdHashPrefix)
+}
+
+// #chat-1
+export const isChatHash = (hash) => {
+    hash?.startsWith(chatIdHashPrefix)
+}
+
+export const isUserHash = (hash) => {
+    hash?.startsWith(userIdHashPrefix)
+}
+
+export const getIdFromRouteHash = (hash) => {
+    if (!hash) {
+        return null;
+    }
+    const str = hash.replace(/\D/g, '');
+    return hasLength(str) ? str : null;
+};
 
 export const defaultAudioMute = true;
 
