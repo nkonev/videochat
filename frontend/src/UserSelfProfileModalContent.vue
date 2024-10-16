@@ -268,7 +268,7 @@
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {colorLogin, getLoginColoredStyle, hasLength} from "@/utils";
+import {colorLogin, getLoginColoredStyle, hasLength, unescapeHtml} from "@/utils";
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
 import bus, {COLOR_SET, OPEN_CHOOSE_COLOR} from "@/bus/bus";
 
@@ -516,7 +516,7 @@ export default {
               })
         },
         onStartShortInfoEditing() {
-          this.shortInfo = this.chatStore.currentUser.shortInfo;
+          this.shortInfo = unescapeHtml(this.chatStore.currentUser.shortInfo);
           this.showShortInfoInput = true;
         },
         onCancelShortInfoEditing() {

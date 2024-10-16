@@ -195,8 +195,6 @@ func TrimAmdSanitize(policy *services.SanitizerPolicy, input string) string {
 
 func TrimAmdSanitizeChatTitle(policy *services.StripTagsPolicy, title string) string {
 	t := Trim(policy.Sanitize(title))
-	t = strings.ReplaceAll(t, "&#39;", "'")
-	t = strings.ReplaceAll(t, "&#34;", "\"")
 	return t
 }
 

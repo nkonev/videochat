@@ -152,7 +152,7 @@
     import debounce from "lodash/debounce";
     import bus, {OPEN_CHAT_EDIT} from "./bus/bus";
     import {chat_name} from "@/router/routes";
-    import {hasLength} from "@/utils";
+    import {hasLength, unescapeHtml} from "@/utils";
     import {isNumber, isObject, isString} from "lodash";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore.js";
@@ -219,6 +219,7 @@
                 } else {
                   this.editDto = dtoFactory()
                 }
+                this.editDto.name = unescapeHtml(this.editDto.name);
 
                 this.loadCanCreateBlog();
             },

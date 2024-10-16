@@ -17,14 +17,24 @@ public abstract class NullEncode {
         return Encode.forHtml(input);
     }
 
-    public static String forHtmlAndFixQuotes(String input) {
-        var encoded = forHtml(input);
+    public static String forHtmlLogin(String input) {
+        if (input == null) {
+            return input;
+        }
+        var tinput = input.replace("'", "");
+        tinput = tinput.replace("\"", "");
+        tinput = tinput.replace("<", "");
+        tinput = tinput.replace(">", "");
+
+        var encoded = forHtml(tinput);
         if (encoded == null) {
             return encoded;
         }
-        var t = encoded.replace("&#39;", "'");
-        t = t.replace("&#34;", "\"");
+        var t = encoded;
         return t;
     }
 
+    public static String forHtmlEmail(String input) {
+        return forHtmlLogin(input);
+    }
 }
