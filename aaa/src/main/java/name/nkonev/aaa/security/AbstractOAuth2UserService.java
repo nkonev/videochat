@@ -1,30 +1,31 @@
 package name.nkonev.aaa.security;
 
+import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.exception.OAuth2IdConflictException;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
+import name.nkonev.aaa.services.ConflictResolvingActions;
+import name.nkonev.aaa.services.ConflictService;
 import name.nkonev.aaa.services.EventService;
 import name.nkonev.aaa.utils.Pair;
-import name.nkonev.aaa.utils.Triple;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
+import static name.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 
-public abstract class AbstractOAuth2UserService {
+public abstract class AbstractOAuth2UserService implements ConflictResolvingActions {
 
     @Autowired
     private AaaPreAuthenticationChecks aaaPreAuthenticationChecks;
@@ -40,6 +41,12 @@ public abstract class AbstractOAuth2UserService {
 
     @Autowired
     private UserAccountConverter userAccountConverter;
+
+    @Autowired
+    private ConflictService conflictService;
+
+    @Autowired
+    private UserAccountRepository userAccountRepository;
 
     private boolean isAlreadyAuthenticated(){
         return SecurityContextHolder.getContext().getAuthentication()!=null && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserAccountDetailsDTO;
@@ -59,16 +66,12 @@ public abstract class AbstractOAuth2UserService {
 
     protected abstract UserAccount setOAuth2IdToEntity(Long id, String oauthId);
 
-    protected abstract UserAccount insertEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles);
-
-    protected abstract String getLoginPrefix();
-
-    protected abstract Optional<UserAccount> findByUsername(String login);
+    protected abstract UserAccount buildEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles);
 
     // @return notnull UserAccountDetailsDTO if was merged - so we should return it immediately from Extractor
-    private Pair<UserAccountDetailsDTO, UserAccount> mergeOAuth2IdToExistsUser(String oauthId){
+    private UserAccountDetailsDTO mergeOAuth2IdToCurrentUser(String oauthId, List<EventWrapper<?>> eventsContainer) {
         if (isAlreadyAuthenticated()) {
-            // we already authenticated - so it' s binding
+            // we already authenticated - so it' s binding (setting oauth2_id)
             UserAccountDetailsDTO principal = getPrincipal();
             logger().info("Will merge {}Id to exists user '{}', id={}", getOAuth2Name(), principal.getUsername(), principal.getId());
 
@@ -80,15 +83,15 @@ public abstract class AbstractOAuth2UserService {
             }
 
             principal = setOAuth2IdToPrincipal(principal, oauthId);
-
             var userAccount = setOAuth2IdToEntity(principal.getId(), oauthId);
+            eventsContainer.add(eventService.convertProfileUpdated(userAccount));
 
             logger().info("{}Id successfully merged to exists user '{}', id={}", getOAuth2Name(), principal.getUsername(), principal.getId());
 
             boolean setToSession = false;
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attributes != null) {
-                var session = attributes.getRequest().getSession(false);
+            var request = getCurrentHttpRequest();
+            if (request != null) {
+                var session = request.getSession(false);
                 if (session != null) {
                     SecurityUtils.setToContext(session, principal);
                     setToSession = true;
@@ -98,33 +101,36 @@ public abstract class AbstractOAuth2UserService {
                 logger().warn("Unable to set changed principal to session");
             }
 
-            return new Pair<>(principal, userAccount);
+            return principal;
         } else {
             return null;
         }
     }
 
 
-    private Triple<UserAccountDetailsDTO, UserAccount, Boolean> createOrGetExistsUser(String oauthId, String login, Map<String, Object> attributes, Set<String> roles) {
+    private UserAccountDetailsDTO createOrGetExistingUser(String oauthId, String login0, Map<String, Object> attributes, Set<String> roles, List<EventWrapper<?>> eventsContainer) {
         UserAccount userAccount;
-        login = validateLengthAndTrimLogin(login, true);
         Optional<UserAccount> userAccountOpt = findByOAuth2Id(oauthId);
-        var created = false;
-        if (!userAccountOpt.isPresent()){
+        if (userAccountOpt.isEmpty()) { // we didn't find an user account by oauth_id
+            var login = validateLengthAndTrimLogin(login0, true);
+            var newUserAccount = buildEntity(oauthId, login, attributes, roles);
 
-            if (findByUsername(login).isPresent()){
-                logger().info("User with login '{}' ({}) already present in database, so we' ll generate login", login, getOAuth2Name());
-                login = getLoginPrefix()+oauthId;
-            }
-
-            userAccount = insertEntity(oauthId, login, attributes, roles);
-            created = true;
-        } else {
+            // insert (optionally with conflict solving)
+            conflictService.process(getConflictPrefix(), getConflictResolveStrategy(), newUserAccount, this, eventsContainer);
+            // due to conflict we can ignore the user and not to save him or we can create a new
+            // so we try to lookup him
+            userAccount = findByOAuth2Id(oauthId)
+                    .orElseThrow(() -> new OAuth2IdConflictException(("User with "+getOAuth2Name()+"Id = " + oauthId + " is not found after conflict solving")));
+        } else { // get existing
             userAccount = userAccountOpt.get();
         }
 
-        return new Triple<>(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccount, created);
+        return userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
     }
+
+    abstract String getConflictPrefix();
+
+    abstract ConflictResolveStrategy getConflictResolveStrategy();
 
     abstract protected String getLogin(Map<String, Object> map);
 
@@ -134,38 +140,64 @@ public abstract class AbstractOAuth2UserService {
         String oauth2userId = getId(map);
         Assert.hasLength(oauth2userId, getOAuth2Name() + " id cannot be empty");
 
-        Triple<UserAccountDetailsDTO, UserAccount, Boolean> processIntermediateDTO = transactionTemplate.execute(status -> {
+        List<EventWrapper<?>> eventsContainer = new ArrayList<>();
+        UserAccountDetailsDTO principal = transactionTemplate.execute(status -> {
             UserAccountDetailsDTO resultPrincipal;
-            UserAccount userAccount;
 
-            var created = false;
-            var mergeOAuthToUserResponse = mergeOAuth2IdToExistsUser(oauth2userId);
-            if (mergeOAuthToUserResponse != null) {
+            var mergeOAuthToUserResponse = mergeOAuth2IdToCurrentUser(oauth2userId, eventsContainer);
+            if (mergeOAuthToUserResponse != null) { // was authenticated and merge happened
                 // ok
-                resultPrincipal = mergeOAuthToUserResponse.a();
-                userAccount = mergeOAuthToUserResponse.b();
+                resultPrincipal = mergeOAuthToUserResponse;
             } else {
+                // wasn't authenticated so we return null and here we are going to create the new user account
                 String login = getLogin(map);
-                var createOrGetResponse = createOrGetExistsUser(oauth2userId, login, map, getRoles(userRequest));
-                created = createOrGetResponse.c();
-                resultPrincipal = createOrGetResponse.a();
-                userAccount = createOrGetResponse.b();
+                resultPrincipal = createOrGetExistingUser(oauth2userId, login, map, getRoles(userRequest), eventsContainer);
             }
 
             aaaPreAuthenticationChecks.check(resultPrincipal);
             aaaPostAuthenticationChecks.check(resultPrincipal);
-            return new Triple<>(resultPrincipal, userAccount, created);
+            return resultPrincipal;
         });
+        sendEvents(eventsContainer);
 
-        if (processIntermediateDTO.c()) {
-            eventService.notifyProfileCreated(processIntermediateDTO.b());
-        }
-
-        return processIntermediateDTO.a();
+        return principal;
     }
 
     protected Set<String> getRoles(OAuth2UserRequest userRequest) {
         return null;
+    }
+
+    @Override
+    public void insertUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        var saved = userAccountRepository.save(userAccount);
+        eventsContainer.add(eventService.convertProfileCreated(saved));
+    }
+
+    @Override
+    public void updateUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        var updated = userAccountRepository.save(userAccount);
+        eventsContainer.add(eventService.convertProfileUpdated(updated));
+    }
+
+    @Override
+    public void insertUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
+        var saved = userAccountRepository.saveAll(users);
+        for (UserAccount userAccount : saved) {
+            eventsContainer.add(eventService.convertProfileCreated(userAccount));
+        }
+    }
+
+    @Override
+    public void removeUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        userAccountRepository.deleteById(userAccount.id());
+        eventsContainer.add(eventService.convertProfileDeleted(userAccount.id()));
+    }
+
+    protected void sendEvents(List<EventWrapper<?>> events) {
+        for (EventWrapper<?> event : events) {
+            eventService.sendProfileEvent(event);
+        }
+        events.clear();
     }
 }
 

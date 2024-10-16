@@ -34,7 +34,7 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
 @ExtendWith(OutputCaptureExtension.class)
-public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
+public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -123,7 +123,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
     }
 
     @Test
-    public void testFacebookLoginAndMergeVkontakte(CapturedOutput output) throws InterruptedException, IOException {
+    public void testFacebookLoginAndAlsoBindVkontakte(CapturedOutput output) throws InterruptedException, IOException {
 
         openOauth2TestPage();
 
@@ -200,7 +200,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
     }
 
     @Test
-    public void testBindIdToAccountAndConflict() throws Exception {
+    public void testBindFacebookToTheCurrentAccountThenConflictOnTryingToBindForeignVkontakte() throws Exception {
         long countInitial = userAccountRepository.count();
 
         // login as regular user 600
@@ -287,7 +287,7 @@ public class UserProfileOauth2Test extends AbstractHtmlUnitRunner {
     }
 
     @Test
-    public void testGoogleLoginAndDelete() throws Exception {
+    public void testGoogleLoginAndSelfDelete() throws Exception {
         final String googlePassword = "dummy password";
 
         long countInitial = userAccountRepository.count();

@@ -2,9 +2,11 @@ package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
+import name.nkonev.aaa.exception.OAuth2IdConflictException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.ConflictResolvingActions;
 import name.nkonev.aaa.services.ConflictService;
@@ -26,9 +28,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static name.nkonev.aaa.Constants.LDAP_CONFLICT_PREFIX;
@@ -69,14 +69,13 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         if (aaaProperties.ldap().auth().enabled()) {
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) authentication;
-            var userName = validateLengthAndTrimLogin(usernamePasswordAuthenticationToken.getPrincipal().toString(), false);
+            var userName = validateLengthAndTrimLogin(usernamePasswordAuthenticationToken.getPrincipal().toString(), true);
             var password = usernamePasswordAuthenticationToken.getCredentials().toString();
 
             var encodedPassword = encodePassword(password);
 
-            AtomicBoolean created = new AtomicBoolean();
-
             try {
+                List<EventWrapper<?>> eventsContainer = new ArrayList<>();
                 var userAccount = transactionTemplate.execute(status -> {
                     var lq = LdapQueryBuilder.query().base(aaaProperties.ldap().auth().base()).filter(aaaProperties.ldap().auth().filter(), userName);
                     ldapOperations.authenticate(lq, encodedPassword);
@@ -123,15 +122,12 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                                     getNowUTC()
                             );
                             // check for conflicts by username or email and create the user if conflict resolution is not "ignore"
-                            conflictService.process(LDAP_CONFLICT_PREFIX, aaaProperties.ldap().resolveConflictsStrategy(), userToInsert, this);
-                            // due to conflict we can ignore the user and not to save him
+                            conflictService.process(LDAP_CONFLICT_PREFIX, aaaProperties.ldap().resolveConflictsStrategy(), userToInsert, this, eventsContainer);
+                            // due to conflict we can ignore the user and not to save him or we can create a new
                             // so we try to lookup him
-                            var foundNewUser = userAccountRepository.findByUsername(userName);
-
-                            if (foundNewUser.isPresent()) {
-                                created.set(true);
-                            }
-                            return foundNewUser.orElse(null);
+                            var foundNewUser = userAccountRepository.findByLdapId(ldapUserId)
+                                    .orElseThrow(() -> new OAuth2IdConflictException(("User with ldapId = " + ldapUserId + " is not found after conflict solving")));
+                            return foundNewUser;
                         });
                 });
                 if (userAccount == null) {
@@ -140,9 +136,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                 }
                 UserAccountDetailsDTO userDetails = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
 
-                if (created.get()) {
-                    eventService.notifyProfileCreated(userAccount);
-                }
+                sendEvents(eventsContainer);
 
                 return new AaaAuthenticationToken(userDetails);
             } catch (IncorrectResultSizeDataAccessException e) {
@@ -167,22 +161,35 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
     }
 
     @Override
-    public void insertUser(UserAccount userAccount) {
-        userAccountRepository.save(userAccount);
+    public void insertUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        var saved = userAccountRepository.save(userAccount);
+        eventsContainer.add(eventService.convertProfileCreated(saved));
     }
 
     @Override
-    public void updateUser(UserAccount userAccount) {
-        userAccountRepository.save(userAccount);
+    public void updateUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        var updated = userAccountRepository.save(userAccount);
+        eventsContainer.add(eventService.convertProfileUpdated(updated));
     }
 
     @Override
-    public void insertUsers(Collection<UserAccount> users) {
-        userAccountRepository.saveAll(users);
+    public void insertUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
+        var saved = userAccountRepository.saveAll(users);
+        for (UserAccount userAccount : saved) {
+            eventsContainer.add(eventService.convertProfileCreated(userAccount));
+        }
     }
 
     @Override
-    public void removeUser(UserAccount userAccount) {
+    public void removeUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
         userAccountRepository.deleteById(userAccount.id());
+        eventsContainer.add(eventService.convertProfileDeleted(userAccount.id()));
+    }
+
+    protected void sendEvents(List<EventWrapper<?>> events) {
+        for (EventWrapper<?> event : events) {
+            eventService.sendProfileEvent(event);
+        }
+        events.clear();
     }
 }

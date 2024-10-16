@@ -51,7 +51,7 @@ public abstract class ConvertUtils {
         }
         var ldapUsername = NullUtils.getOrNullWrapException(() -> ldapEntry.get(attributeNames.username()).get().toString());
 
-        return validateLengthAndTrimLogin(ldapUsername, false);
+        return validateLengthAndTrimLogin(ldapUsername, true);
     }
 
     public static String extractEmail(LdapAttributes attributeNames, Attributes ldapEntry) {

@@ -1,6 +1,8 @@
 package name.nkonev.aaa.security;
 
 
+import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -18,6 +20,8 @@ import org.springframework.util.Assert;
 
 import java.util.*;
 
+import static name.nkonev.aaa.Constants.VKONTAKTE_LOGIN_PREFIX;
+
 @Component
 public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
@@ -27,9 +31,10 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
     @Autowired
     private DefaultOAuth2UserService delegate;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VkontakteOAuth2UserService.class);
+    @Autowired
+    private AaaProperties aaaProperties;
 
-    public static final String LOGIN_PREFIX = OAuth2Providers.VKONTAKTE + "_";
+    private static final Logger LOGGER = LoggerFactory.getLogger(VkontakteOAuth2UserService.class);
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -105,22 +110,21 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles) {
+    protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles) {
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForVkontakteInsert(oauthId, login);
-        userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
+        LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 
         return userAccount;
 
     }
 
     @Override
-    protected String getLoginPrefix() {
-        return LOGIN_PREFIX;
+    protected String getConflictPrefix() {
+        return VKONTAKTE_LOGIN_PREFIX;
     }
 
     @Override
-    protected Optional<UserAccount> findByUsername(String login) {
-        return userAccountRepository.findByUsername(login);
+    protected ConflictResolveStrategy getConflictResolveStrategy() {
+        return aaaProperties.vkontakte().resolveConflictsStrategy();
     }
 }

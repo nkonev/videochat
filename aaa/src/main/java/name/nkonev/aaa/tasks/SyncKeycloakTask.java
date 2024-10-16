@@ -4,6 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.config.properties.RoleMapEntry;
 import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.rest.KeycloakUserEntity;
@@ -256,12 +257,13 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         var shouldContinue = new AtomicBoolean(true);
         for (int offset = 0; shouldContinue.get(); offset += batchSize) {
             final var theOffset = offset;
+            List<EventWrapper<?>> eventsContainer = new ArrayList<>();
             transactionTemplate.executeWithoutResult(s -> {
                 List<KeycloakUserInRoleEntity> extUsersInRole = this.keycloakClient.getUsersInRole(extAdminRole, batchSize, theOffset);
-                processAddingRoleToUsers(extUsersInRole, extAdminRole);
+                processAddingRoleToUsers(extUsersInRole, extAdminRole, eventsContainer);
                 shouldContinue.set(extUsersInRole.size() == batchSize);
             });
-            sendEvents();
+            sendEvents(eventsContainer);
         }
 
         // remove admin role

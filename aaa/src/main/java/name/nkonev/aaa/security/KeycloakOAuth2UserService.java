@@ -1,6 +1,7 @@
 package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -21,6 +22,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static name.nkonev.aaa.Constants.KEYCLOAK_CONFLICT_PREFIX;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 
@@ -31,8 +33,6 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-
-    public static final String LOGIN_PREFIX = OAuth2Providers.KEYCLOAK + "_";
 
     @Autowired
     private DefaultOAuth2UserService delegate;
@@ -98,26 +98,15 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
+    protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
 
         var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().keycloak(), roles);
 
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, mappedRoles, null, false, true, getNowUTC());
-        userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
+        LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 
         return userAccount;
-    }
-
-    @Override
-    protected String getLoginPrefix() {
-        return LOGIN_PREFIX;
-    }
-
-    @Override
-    protected Optional<UserAccount> findByUsername(String login) {
-        return userAccountRepository.findByUsername(login);
     }
 
     @Override
@@ -131,5 +120,15 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
             }
         }
         return roles;
+    }
+
+    @Override
+    protected String getConflictPrefix() {
+        return KEYCLOAK_CONFLICT_PREFIX;
+    }
+
+    @Override
+    protected ConflictResolveStrategy getConflictResolveStrategy() {
+        return aaaProperties.keycloak().resolveConflictsStrategy();
     }
 }

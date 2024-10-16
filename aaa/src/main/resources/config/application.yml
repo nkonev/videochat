@@ -161,6 +161,7 @@ management:
     add-application-context-header: false
 
 custom.ldap:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
   auth:
     base: ""
     enabled: false
@@ -176,9 +177,18 @@ custom.ldap:
     strength: 10
 
 custom.keycloak:
-  resolve-conflicts-strategy: WRITE_NEW_AND_REMOVE_OLD
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
   token-delta: 5s
   allow-unbind: false
+
+custom.vkontakte:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
+
+custom.google:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
+
+custom.facebook:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
 
 custom.http-client:
   connect-timeout: 3s

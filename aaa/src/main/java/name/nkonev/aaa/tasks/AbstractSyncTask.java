@@ -48,8 +48,6 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
     protected LocalDateTime currTime;
 
-    protected final List<EventWrapper<?>> events = new ArrayList<>();
-
     @PostConstruct
     public void validate() {
         if (!getEnabled()) {
@@ -71,7 +69,6 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
             this.doWork();
         } catch (Exception e) {
             getLogger().error("Unexpected exception during doWork()", e);
-            sendEvents(); // for the case
         }
     }
 
@@ -82,13 +79,12 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     public void doWork() {
         currTime = getNowUTC();
         doConcreteWork();
-        sendEvents(); // for the case
     }
 
     // should invoke processUpsertBatch() several times and processDeleted() one time
     protected abstract void doConcreteWork();
 
-    protected void sendEvents() {
+    protected void sendEvents(List<EventWrapper<?>> events) {
         for (EventWrapper<?> event : events) {
             eventService.sendProfileEvent(event);
         }
@@ -96,40 +92,41 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     }
 
     @Override
-    public void insertUser(UserAccount userAccount) {
+    public void insertUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
         var saved = userAccountRepository.save(userAccount);
-        events.add(eventService.convertProfileCreated(saved));
+        eventsContainer.add(eventService.convertProfileCreated(saved));
     }
 
     @Override
-    public void updateUser(UserAccount userAccount) {
-        events.add(eventService.convertProfileUpdated(userAccount));
+    public void updateUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        eventsContainer.add(eventService.convertProfileUpdated(userAccount));
         userAccountRepository.save(userAccount);
     }
 
     @Override
-    public void insertUsers(Collection<UserAccount> users) {
+    public void insertUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
         var saved = userAccountRepository.saveAll(users);
         for (UserAccount userAccount : saved) {
-            events.add(eventService.convertProfileCreated(userAccount));
+            eventsContainer.add(eventService.convertProfileCreated(userAccount));
         }
     }
 
-    public void updateUsers(Collection<UserAccount> users) {
+    public void updateUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
         for (UserAccount userAccount : users) {
-            events.add(eventService.convertProfileUpdated(userAccount));
+            eventsContainer.add(eventService.convertProfileUpdated(userAccount));
         }
         userAccountRepository.saveAll(users);
     }
 
     @Override
-    public void removeUser(UserAccount userAccount) {
-        events.add(eventService.convertProfileDeleted(userAccount.id()));
+    public void removeUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer) {
+        eventsContainer.add(eventService.convertProfileDeleted(userAccount.id()));
         userAccountRepository.deleteById(userAccount.id());
     }
 
     // processing resulting into (new users) inserts and (new users) updates
     protected void processUpsertBatch(List<T> entries) {
+        List<EventWrapper<?>> eventsContainer = new ArrayList<>();
         transactionTemplate.executeWithoutResult(s -> {
             Map<String, T> byExtIdId = new HashMap<>();
             for (var extEntry : entries) {
@@ -161,7 +158,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                             if (shouldUpdateInDb) {
                                 userAccount = setSyncTime(userAccount);
                                 getLogger().info("Updating userId={}, {}Id={}", userAccount.id(), getName(), extUserId);
-                                updateUser(userAccount);
+                                updateUser(userAccount, eventsContainer);
                             } else {
                                 toUpdateSetExtSyncTime.add(extUserId);
                             }
@@ -179,32 +176,34 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
             getLogger().info("Inserting {} users to database", toInsert.size());
             var convertedToInsert = toInsert.stream().map(this::prepareUserAccountForInsert).toList();
-            conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), convertedToInsert, this);
+            conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), convertedToInsert, this, eventsContainer);
 
             if (!toUpdateSetExtSyncTime.isEmpty()) {
                 getLogger().info("Updating {} sync time for {} untoucned users", getName(), toUpdateSetExtSyncTime.size());
                 batchSetSyncTime(toUpdateSetExtSyncTime);
             }
         });
-        sendEvents();
+
+        sendEvents(eventsContainer);
     }
 
     protected void processDeleted(int size) {
         var shouldContinue = new AtomicBoolean(true);
         for (int offset = 0; shouldContinue.get(); offset += size) {
+            List<EventWrapper<?>> eventsContainer = new ArrayList<>();
             final var theOffset = offset;
             transactionTemplate.executeWithoutResult(s -> {
                 var toDelete = findExtIdsElderThan(size, theOffset);
-                toDelete.forEach(userIdToDelete -> events.add(eventService.convertProfileDeleted(userIdToDelete)));
+                toDelete.forEach(userIdToDelete -> eventsContainer.add(eventService.convertProfileDeleted(userIdToDelete)));
                 userAccountRepository.deleteAllById(toDelete);
                 getLogger().info("Deleted users with ids {} from database which were removed from {}", toDelete, getName());
                 shouldContinue.set(toDelete.size() == size);
             });
-            sendEvents();
+            sendEvents(eventsContainer);
         }
     }
 
-    protected void processAddingRoleToUsers(List<TIR> extUsers, String extRole) {
+    protected void processAddingRoleToUsers(List<TIR> extUsers, String extRole, List<EventWrapper<?>> eventsContainer) {
         if (extUsers.isEmpty()) {
             return;
         }
@@ -233,7 +232,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
         }
 
         if (!toUpdateInDb.isEmpty()) {
-            updateUsers(toUpdateInDb);
+            updateUsers(toUpdateInDb, eventsContainer);
         }
 
         if (!toUpdateTimeInDb.isEmpty()) {
@@ -244,6 +243,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     protected void processRemovingRolesFromUsers(int batchSize) {
         var shouldContinue2 = new AtomicBoolean(true);
         for (var offset = 0; shouldContinue2.get(); offset += batchSize) {
+            List<EventWrapper<?>> eventsContainer = new ArrayList<>();
             final var theOffset = offset;
             transactionTemplate.executeWithoutResult(s -> {
                 var toMakeWithoutAdminRole = findExtIdsRolesElderThan(batchSize, theOffset); // process almost all users, because typically it's very low amount of admins
@@ -254,7 +254,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                             if (Arrays.stream(u.roles()).collect(Collectors.toSet()).contains(UserRole.ROLE_ADMIN)) {
                                 getLogger().info("Removing role {} from user id = {}, login = {}, {}Id = {}", UserRole.ROLE_ADMIN, u.id(), u.username(), getName(), getExtId(u));
                                 aaaUserDetailsService.killSessions(u.id(), ForceKillSessionsReasonType.user_roles_changed);
-                                events.add(eventService.convertProfileUpdated(u));
+                                eventsContainer.add(eventService.convertProfileUpdated(u));
                                 return setSyncExtRolesTime(u
                                         .withRoles(new UserRole[]{ROLE_USER}));
                             } else {
@@ -264,7 +264,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                         .toList();
                 userAccountRepository.saveAll(toSaveToDb);
             });
-            sendEvents();
+            sendEvents(eventsContainer);
         }
     }
 

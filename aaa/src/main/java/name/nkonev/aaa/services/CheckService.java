@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class CheckService {
@@ -34,7 +31,11 @@ public class CheckService {
 
     public Map<String, UserAccount> checkLogins(List<String> logins) {
         var res = new HashMap<String, UserAccount>();
-        var users = userAccountRepository.findByUsernameInOrderById(logins);
+        if (logins.isEmpty()) {
+            return res;
+        }
+        List<String> notNullLogins = logins.stream().filter(Objects::nonNull).toList();
+        var users = userAccountRepository.findByUsernameInOrderById(notNullLogins);
         for (var u : users) {
             res.put(u.username(), u);
         }
@@ -61,7 +62,11 @@ public class CheckService {
 
     public Map<String, UserAccount> checkEmails(List<String> emails) {
         var res = new HashMap<String, UserAccount>();
-        var users = userAccountRepository.findByEmailInOrderById(emails);
+        if (emails.isEmpty()) {
+            return res;
+        }
+        List<String> notNullEmails = emails.stream().filter(Objects::nonNull).toList();
+        var users = userAccountRepository.findByEmailInOrderById(notNullEmails);
         for (var u : users) {
             res.put(u.email(), u);
         }

@@ -187,6 +187,15 @@ custom.keycloak:
   token-delta: 5s
   allow-unbind: true
 
+custom.vkontakte:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
+
+custom.google:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
+
+custom.facebook:
+  resolve-conflicts-strategy: WRITE_NEW_AND_RENAME_OLD
+
 custom.http-client:
   connect-timeout: 3s
   read-timeout: 30s

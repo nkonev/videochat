@@ -1,5 +1,7 @@
 package name.nkonev.aaa.security;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -19,6 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static name.nkonev.aaa.Constants.FACEBOOK_LOGIN_PREFIX;
+
 
 @Component
 public class FacebookOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
@@ -28,10 +32,11 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-    public static final String LOGIN_PREFIX = OAuth2Providers.FACEBOOK + "_";
-
     @Autowired
     private DefaultOAuth2UserService delegate;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -92,23 +97,21 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
+    protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForFacebookInsert(oauthId, login, maybeImageUrl);
-        userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
-
+        LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
         return userAccount;
     }
 
     @Override
-    protected String getLoginPrefix() {
-        return LOGIN_PREFIX;
+    protected String getConflictPrefix() {
+        return FACEBOOK_LOGIN_PREFIX;
     }
 
     @Override
-    protected Optional<UserAccount> findByUsername(String login) {
-        return userAccountRepository.findByUsername(login);
+    protected ConflictResolveStrategy getConflictResolveStrategy() {
+        return aaaProperties.facebook().resolveConflictsStrategy();
     }
 
 }

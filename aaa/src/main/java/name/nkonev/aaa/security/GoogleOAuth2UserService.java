@@ -1,5 +1,7 @@
 package name.nkonev.aaa.security;
 
+import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -19,6 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static name.nkonev.aaa.Constants.GOOGLE_LOGIN_PREFIX;
+
 
 @Component
 public class GoogleOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
@@ -28,10 +32,11 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-    public static final String LOGIN_PREFIX = OAuth2Providers.GOOGLE + "_";
-
     @Autowired
     private OidcUserService oidcUserService;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
@@ -92,23 +97,21 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
     }
 
     @Override
-    protected UserAccount insertEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
+    protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
         UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForGoogleInsert(oauthId, login, maybeImageUrl);
-        userAccount = userAccountRepository.save(userAccount);
-        LOGGER.info("Created {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
-
+        LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
         return userAccount;
     }
 
     @Override
-    protected String getLoginPrefix() {
-        return LOGIN_PREFIX;
+    protected String getConflictPrefix() {
+        return GOOGLE_LOGIN_PREFIX;
     }
 
     @Override
-    protected Optional<UserAccount> findByUsername(String login) {
-        return userAccountRepository.findByUsername(login);
+    protected ConflictResolveStrategy getConflictResolveStrategy() {
+        return aaaProperties.google().resolveConflictsStrategy();
     }
 
 }

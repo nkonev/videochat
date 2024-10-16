@@ -4,6 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.config.properties.RoleMapEntry;
 import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
@@ -270,10 +271,11 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     private void processRolesBatch(String extAdminRole, List<LdapUserInRoleEntity> extUsersInRole) {
+        List<EventWrapper<?>> eventsContainer = new ArrayList<>();
         transactionTemplate.executeWithoutResult(s -> {
-            processAddingRoleToUsers(extUsersInRole, extAdminRole);
+            processAddingRoleToUsers(extUsersInRole, extAdminRole, eventsContainer);
         });
-        sendEvents();
+        sendEvents(eventsContainer);
     }
 }
 

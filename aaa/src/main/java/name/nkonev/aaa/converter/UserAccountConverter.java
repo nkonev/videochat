@@ -49,8 +49,8 @@ public class UserAccountConverter {
         return login;
     }
 
-    public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isForOauth2) {
-        var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isForOauth2));
+    public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isExternalIntegration) {
+        var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isExternalIntegration));
         userAccountDTO = userAccountDTO.withEmail(normalizeEmail(userAccountDTO.email()));
         userAccountDTO = userAccountDTO.withAvatar(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatar())));
         userAccountDTO = userAccountDTO.withAvatarBig(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatarBig())));
@@ -246,8 +246,8 @@ public class UserAccountConverter {
         );
     }
 
-    public static String validateLengthAndTrimLogin(String login, boolean isForOauth2) {
-        login = checkAndTrimLogin(login, isForOauth2);
+    public static String validateLengthAndTrimLogin(String login, boolean isExternalIntegration) {
+        login = checkAndTrimLogin(login, isExternalIntegration);
 
         if (!StringUtils.hasLength(login)) {
             throw new BadRequestException("login must be set");
@@ -262,26 +262,21 @@ public class UserAccountConverter {
         }
     }
 
-    private static String checkAndTrimLogin(String login, boolean isForOauth2) {
+    private static String checkAndTrimLogin(String login, boolean isExternalIntegration) {
         login = normalizeLogin(login);
 
         if (login != null) {
             if (FORBIDDEN_USERNAMES.contains(login)) {
                 throw new BadRequestException("forbidden login");
             }
-
-            for (var fp : FORBIDDEN_USERNAME_PREFIXES) {
-                if (login.startsWith(fp)) {
-                    throw new BadRequestException("forbidden login");
-                }
-            }
         }
 
-        if (login != null && !isForOauth2) {
-            Assert.isTrue(!login.startsWith(FacebookOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-            Assert.isTrue(!login.startsWith(VkontakteOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-            Assert.isTrue(!login.startsWith(GoogleOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
-            Assert.isTrue(!login.startsWith(KeycloakOAuth2UserService.LOGIN_PREFIX), "not allowed prefix");
+        if (login != null && !isExternalIntegration) {
+            for (var fp : FORBIDDEN_USERNAME_PREFIXES) {
+                if (login.startsWith(fp)) {
+                    throw new BadRequestException("not allowed prefix");
+                }
+            }
         }
 
         return login;
