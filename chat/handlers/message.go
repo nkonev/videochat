@@ -1261,6 +1261,16 @@ func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, c echo.Context, cha
 	return nil
 }
 
+type ParticipantsWrapper struct {
+	Data  []*dto.User `json:"participants"`
+	Count int         `json:"participantsCount"` // for paginating purposes
+}
+
+type MessageReadResponse struct {
+	ParticipantsWrapper
+	Text string `json:"text"`
+}
+
 func (mc *MessageHandler) GetReadMessageUsers(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {

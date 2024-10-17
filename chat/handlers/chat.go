@@ -27,16 +27,6 @@ type ParticipantsWithAdminWrapper struct {
 	Count int                  `json:"count"` // for paginating purposes
 }
 
-type ParticipantsWrapper struct {
-	Data  []*dto.User `json:"participants"`
-	Count int         `json:"participantsCount"` // for paginating purposes
-}
-
-type MessageReadResponse struct {
-	ParticipantsWrapper
-	Text string `json:"text"`
-}
-
 type EditChatDto struct {
 	Id int64 `json:"id"`
 	CreateChatDto
