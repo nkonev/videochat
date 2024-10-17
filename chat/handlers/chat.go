@@ -99,7 +99,6 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 	searchString := c.QueryParam("searchString")
-	searchString = strings.TrimSpace(searchString)
 	searchString = TrimAmdSanitize(ch.policy, searchString)
 
 	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
@@ -205,8 +204,7 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 		return err
 	}
 
-	searchString := strings.TrimSpace(bindTo.SearchString)
-	searchString = TrimAmdSanitize(ch.policy, searchString)
+	searchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
 
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		found, err := tx.ChatFilter(c.Request().Context(), searchString, bindTo.ChatId)
@@ -1071,7 +1069,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 	}
 
 	searchString := c.QueryParam("searchString")
-	searchString = strings.TrimSpace(searchString)
+	searchString = TrimAmdSanitize(ch.policy, searchString)
 
 	users, err := ch.searchUsersNotContaining(c, searchString, chatId, utils.DefaultSize)
 	if err != nil {
@@ -1173,7 +1171,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 	}
 
 	userSearchString := c.QueryParam("searchString")
-	userSearchString = strings.TrimSpace(userSearchString)
+	userSearchString = TrimAmdSanitize(ch.policy, userSearchString)
 
 	participantsPage := utils.FixPageString(c.QueryParam("page"))
 	participantsSize := utils.FixSizeString(c.QueryParam("size"))
@@ -1238,7 +1236,7 @@ func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 		GetLogEntry(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
-	userSearchString := strings.TrimSpace(bindTo.SearchString)
+	userSearchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
 
 	totalFoundUserCount := 0
 
@@ -1288,7 +1286,7 @@ func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 	}
 
 	userSearchString := bindTo.SearchString
-	userSearchString = strings.TrimSpace(userSearchString)
+	userSearchString = TrimAmdSanitize(ch.policy, userSearchString)
 
 	requestedParticipantIds := bindTo.UserId
 
@@ -1349,7 +1347,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 	}
 
 	searchString := c.QueryParam("searchString")
-	searchString = strings.TrimSpace(searchString)
+	searchString = TrimAmdSanitize(ch.policy, searchString)
 
 	users, _, err := ch.searchUsersContaining(c, searchString, chatId, utils.DefaultSize, utils.DefaultOffset)
 	if err != nil {
