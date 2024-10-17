@@ -22,16 +22,6 @@ import (
 const minChatNameLen = 1
 const maxChatNameLen = 256
 
-const chatPageSize = 40
-
-const desc = "desc"
-const asc = "asc"
-
-const directionTop = "top"
-const directionBottom = "bottom"
-
-const defaultDirection = directionBottom
-
 type ParticipantsWithAdminWrapper struct {
 	Data  []*dto.UserWithAdmin `json:"items"`
 	Count int                  `json:"count"` // for paginating purposes
