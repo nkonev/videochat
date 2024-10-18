@@ -108,6 +108,7 @@
         return {
           markInstance: null,
           storedChatId: null,
+          isBottomPageOnServer: null,
         }
       },
 
@@ -147,7 +148,7 @@
 
         onNewMessage(dto) {
           const chatIdsAreEqual = dto.chatId == this.chatId;
-          const isScrolledToBottom = this.isScrolledToBottom();
+          const isScrolledToBottom = this.isReallyScrolledToBottom();
           const emptySearchString = !hasLength(this.searchString);
           if (chatIdsAreEqual && isScrolledToBottom && emptySearchString) {
             this.addItem(dto);
@@ -340,8 +341,9 @@
         },
 
         onScrollCallback() {
-          this.chatStore.showScrollDown = !this.isScrolledToBottom();
-          if (this.chatStore.showScrollDown) {
+          this.chatStore.showScrollDown = !this.isReallyScrolledToBottom();
+          const notIsScrolledToBottom = !this.isScrolledToBottom();
+          if (notIsScrolledToBottom) {
             // during scrolling we disable adding new elements, so some messages can appear on server, so
             // we set loadedBottom to false in order to force infiniteScrollMixin to fetch new messages during scrollBottom()
             // also this setting loaded* to false helps to avoid non-loading new portion when response with hashHash=true returned less than PAGE_SIZE
@@ -355,6 +357,9 @@
           } else {
             return false
           }
+        },
+        isReallyScrolledToBottom() {
+          return this.isScrolledToBottom() && this.isBottomPageOnServer
         },
         updateTopAndBottomIds() {
           this.startingFromItemIdTop = this.getMinimumItemId();
@@ -742,6 +747,7 @@
         this.saveLastVisibleElement(this.storedChatId);
 
         this.storedChatId = null;
+        this.isBottomPageOnServer = null;
 
         this.uninstallScroller();
         bus.off(MESSAGE_ADD, this.onNewMessage);
