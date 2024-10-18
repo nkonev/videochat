@@ -146,6 +146,8 @@ export default {
     return {
         markInstance: null,
         routeName: null,
+        startingFromItemIdTop: null,
+        startingFromItemIdBottom: null
     }
   },
   computed: {
@@ -533,35 +535,51 @@ export default {
       this.updateTopAndBottomIds();
     },
     onNewChat(dto) {
-        const isScrolledToTop = this.isScrolledToTop();
-        const emptySearchString = !hasLength(this.searchString);
-        if (isScrolledToTop && emptySearchString) {
+        axios.post(`/api/chat/filter`, {
+          searchString: this.searchString,
+          pageSize: PAGE_SIZE,
+          chatId: dto.id,
+          edgeChatId: this.startingFromItemIdTop,
+        }, {
+          params: {
+            reverse: false
+          }
+        }).then(({data}) => {
+          if (data.found) {
+            console.log("Adding item", dto);
             this.addItem(dto);
             this.performMarking();
-        } else if (isScrolledToTop) { // like in UserList.vue
-            axios.post(`/api/chat/filter`, {
-                searchString: this.searchString,
-                chatId: dto.id
-            }).then(({data}) => {
-                if (data.found) {
-                    console.log("Adding item", dto);
-                    this.addItem(dto);
-                    this.performMarking();
-                }
-            })
-        } else {
-            console.log("Skipping", dto, isScrolledToTop, emptySearchString)
-        }
+          } else {
+            console.log("Skipping adding", dto)
+          }
+        })
     },
     onEditChat(dto) {
-          let idxOf = findIndex(this.items, dto);
-          if (idxOf !== -1) { // hasItem()
-              const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
-              this.changeItem(changedDto);
-          } else {
-              this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
-          }
-          this.performMarking();
+          axios.post(`/api/chat/filter`, {
+            searchString: this.searchString,
+            pageSize: PAGE_SIZE,
+            chatId: dto.id,
+            edgeChatId: this.startingFromItemIdTop,
+          }, {
+            params: {
+              reverse: false
+            }
+          }).then(({data}) => {
+            if (data.found) {
+              console.log("Changing item", dto);
+              let idxOf = findIndex(this.items, dto);
+              if (idxOf !== -1) { // hasItem()
+                const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
+                this.changeItem(changedDto);
+              } else {
+                this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
+              }
+              this.performMarking();
+            } else {
+              console.log("Not found for editing, removing from the current view", dto);
+              this.removeItem(dto);
+            }
+          })
     },
     redrawItem(dto) {
       if (this.searchString == publicallyAvailableForSearchChatsQuery) {

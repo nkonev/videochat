@@ -347,6 +347,7 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 	return list, nil
 }
 
+// see also ChatFilter
 func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64, orderDirection string, startingFromItemId int64, limit, leftLimit, rightLimit int, searchString, searchStringPercents string, additionalFoundUserIds []int64) (*int64, *int64, bool, error) {
 	var leftRowNumber, rightRowNumber *int64
 	var noData bool
@@ -1165,9 +1166,55 @@ func (db *DB) GetUserChatNotificationSettings(ctx context.Context, userId, chatI
 	return consider, nil
 }
 
-func (tx *Tx) ChatFilter(ctx context.Context, searchString string, chatId int64) (bool, error) {
-	searchStringWithPercents := "%" + searchString + "%"
-	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT * FROM chat ch WHERE ch.id = $1 AND strip_tags(ch.title) ILIKE $2)"), chatId, searchStringWithPercents)
+// see also getRowNumbers
+func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId, edgeChatId int64, pageSize int, reverse bool, searchString string, additionalFoundUserIds []int64) (bool, error) {
+
+	orderDirection := "desc"
+	if reverse {
+		orderDirection = "asc"
+	}
+
+	var searchStringWithPercents = ""
+	if searchString != "" {
+		searchStringWithPercents = "%" + searchString + "%"
+	}
+
+	var row *sql.Row
+	if searchString != "" {
+		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
+			with first_page as (
+				select inn3.* from (
+					select inn2.* from (
+						select id, rn FROM (
+							select id, row_number() over (%s %s) as rn 
+							%s
+							where %s
+						) inn
+					) inn2 limit $4
+				) inn3
+			)
+			select exists (select * from first_page where id = $5) -- chat id to probe
+				and exists (select * from first_page where id = $6 and rn in (1, 2)) -- edge on the screen - here we ensure that this is the first page, in (1, 2) means the first place for the toppest element or the second place after sorting
+		`, chat_order, orderDirection, chat_from, getChatSearchClause(additionalFoundUserIds)),
+			participantId, searchStringWithPercents, searchString, pageSize, chatId, edgeChatId)
+	} else {
+		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
+			with first_page as (
+				select inn3.* from (
+					select inn2.* from (
+						select id, rn FROM (
+							select id, row_number() over (%s %s) as rn 
+							%s
+							where %s
+						) inn
+					) inn2 limit $2
+			  	) inn3
+			)
+			select exists (select * from first_page where id = $3) -- chat id to probe
+				and exists (select * from first_page where id = $4 and rn in (1, 2)) -- edge on the screen - here we ensure that this is the first page, in (1, 2) means the first place for the toppest element or the second place after sorting
+		`, chat_order, orderDirection, chat_from, chat_where),
+			participantId, pageSize, chatId, edgeChatId)
+	}
 	if row.Err() != nil {
 		Logger.Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")

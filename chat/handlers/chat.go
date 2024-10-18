@@ -77,6 +77,21 @@ func (a *EditChatDto) Validate() error {
 	)
 }
 
+func (ch *ChatHandler) getAdditionalUserIds(ctx context.Context, searchString string) []int64 {
+	var additionalFoundUserIds = []int64{}
+
+	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
+		users, _, err := ch.restClient.SearchGetUsers(ctx, searchString, true, []int64{}, 0, 0)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error get users from aaa %v", err)
+		}
+		for _, u := range users {
+			additionalFoundUserIds = append(additionalFoundUserIds, u.Id)
+		}
+	}
+	return additionalFoundUserIds
+}
+
 func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -103,17 +118,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
 
-	var additionalFoundUserIds = []int64{}
-
-	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
-		users, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), searchString, true, []int64{}, 0, 0)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error get users from aaa %v", err)
-		}
-		for _, u := range users {
-			additionalFoundUserIds = append(additionalFoundUserIds, u.Id)
-		}
-	}
+	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
@@ -188,11 +193,13 @@ func (ch *ChatHandler) HasNewMessages(c echo.Context) error {
 
 type ChatFilterDto struct {
 	SearchString string `json:"searchString"`
-	ChatId       int64  `json:"chatId"`
+	PageSize     int    `json:"pageSize"`
+	ChatId       int64  `json:"chatId"`     // id of probe element
+	EdgeChatId   int64  `json:"edgeChatId"` // edge chatId on the this page on screen
 }
 
 func (ch *ChatHandler) Filter(c echo.Context) error {
-	var _, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
@@ -204,10 +211,12 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 		return err
 	}
 
+	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 	searchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
+	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		found, err := tx.ChatFilter(c.Request().Context(), searchString, bindTo.ChatId)
+		found, err := tx.ChatFilter(c.Request().Context(), userPrincipalDto.UserId, bindTo.ChatId, bindTo.EdgeChatId, bindTo.PageSize, reverse, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
 		}
