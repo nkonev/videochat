@@ -49,7 +49,6 @@ export const createGraphQlClient = () => {
     // url: getWebsocketUrlPrefix() + '/api/event/graphql',
     graphQlClient = createRestartableClient({
         url: getWebsocketUrlPrefix() + '/api/event/graphql',
-        shouldRetry: () => true,
         keepAlive: 10_000, // ping server every 10 seconds
         on: {
             ping: (received) => {

@@ -19,9 +19,14 @@ export default (nameForLog, getGraphQlSubscriptionQuery, setError, onNextSubscri
                 onNextSubscriptionElement(e);
             }
             const onError = (e) => {
-                console.error(`Got err in ${nameForLog} subscription`, e);
                 if (Array.isArray(e)) {
+                    console.error(`Got err in ${nameForLog} subscription`, e);
                     setError(null, `Error in onError ${nameForLog} subscription`);
+                } else {
+                    console.error(`Got connection err in ${nameForLog} subscription, reconnecting`, e);
+                    state.subscriptionTimeoutId = setTimeout(() => {
+                        this.graphQlSubscribe()
+                    }, 2000);
                 }
             }
             const onComplete = () => {
@@ -42,6 +47,10 @@ export default (nameForLog, getGraphQlSubscriptionQuery, setError, onNextSubscri
         },
         graphQlUnsubscribe() {
             console.log(`Unsubscribing from ${nameForLog}`);
+            if (state.subscriptionTimeoutId) {
+                clearInterval(state.subscriptionTimeoutId);
+                state.subscriptionTimeoutId = null;
+            }
             if (state.unsubscribe) {
                 state.unsubscribe();
             }
