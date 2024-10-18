@@ -2,6 +2,14 @@ import { createClient } from 'graphql-ws';
 import {getWebsocketUrlPrefix} from "@/utils";
 import bus, {LOGGED_OUT, WEBSOCKET_CONNECTED, WEBSOCKET_LOST, WEBSOCKET_RESTORED} from "@/bus/bus";
 
+// The "Client usage with retry on any connection problem" or "Client usage with graceful restart" or "Client usage with graceful restart"
+// recipes don't help for the testcase
+// Testcase:
+// 1. Pause event app
+// 2. wait roughly 20 sec
+// 3. restart event app
+// 4. it should be reconnected all the subscriptions
+
 let graphQlClient;
 export const createGraphQlClient = () => {
     let initialized = false;
