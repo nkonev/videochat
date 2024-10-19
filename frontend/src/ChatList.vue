@@ -662,8 +662,7 @@ export default {
 
 
         if (this.isScrolledToTop()) {
-          this.chatStore.incrementProgressCount();
-          const topChatId = this.findTopElementId();
+          const topChatId = this.findTopElementId();;
           axios.post(`/api/chat/edge`, {
             chatId: topChatId,
             searchString: this.searchString
@@ -671,8 +670,6 @@ export default {
             if (!res.data.ok) {
               this.reloadItems();
             }
-          }).finally(()=>{
-            this.chatStore.decrementProgressCount();
           })
         }
       }

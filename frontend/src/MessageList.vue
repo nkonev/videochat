@@ -652,7 +652,6 @@
         },
         onFocus() {
           if (this.chatStore.currentUser && this.items && this.isScrolledToBottom()) {
-            this.chatStore.incrementProgressCount();
             const edgeMessageId = this.getMaximumItemId();
             axios.post(`/api/chat/${this.chatId}/message/edge`, {
               messageId: edgeMessageId,
@@ -661,8 +660,6 @@
               if (!res.data.ok) {
                 this.reloadItems();
               }
-            }).finally(()=>{
-              this.chatStore.decrementProgressCount();
             })
           }
         },
