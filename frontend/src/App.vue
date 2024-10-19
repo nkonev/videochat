@@ -963,15 +963,6 @@ html {
   }
 }
 
-.chat-avatar {
-  display: block;
-  max-width: 36px;
-  max-height: 36px;
-  width: auto;
-  height: auto;
-  cursor: pointer
-}
-
 .v-card {
   .v-pagination__list {
     justify-content: start;
@@ -1018,4 +1009,15 @@ div .stop-scrolling {
     overflow: hidden !important;
 }
 
+</style>
+
+<style lang="stylus" scoped>
+.chat-avatar {
+  display: block;
+  max-width: 36px;
+  max-height: 36px;
+  width: auto;
+  height: auto;
+  cursor: pointer
+}
 </style>

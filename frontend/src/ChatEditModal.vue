@@ -4,7 +4,7 @@
 
         <v-dialog v-model="show" max-width="640" :persistent="isNew" scrollable>
             <v-card :title="getTitle()">
-                <v-card-text class="pb-0">
+                <v-card-text :class="isMobile() ? ['ma-0', 'mx-2', 'pa-0', 'pt-2'] : ['ma-0', 'mx-4', 'pa-0', 'pt-2']">
                     <v-form
                         v-if="!loading"
                         ref="form"
@@ -13,6 +13,7 @@
                         @keydown.native.enter.prevent="saveChat"
                     >
                         <v-text-field
+                            class="mx-1 mt-1"
                             id="test-chat-text"
                             :label="$vuetify.locale.t('$vuetify.chat_name')"
                             v-model="editDto.name"
@@ -20,6 +21,7 @@
                             :rules="chatNameRules"
                         ></v-text-field>
                         <v-autocomplete
+                                class="mx-1 mb-1"
                                 v-model="editDto.participantIds"
                                 :loading="searchLoading"
                                 :items="people"
@@ -55,6 +57,7 @@
                         </v-autocomplete>
 
                         <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
                             v-model="editDto.canResend"
                             :label="$vuetify.locale.t('$vuetify.can_resend')"
                             hide-details
@@ -63,6 +66,7 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
                             v-model="editDto.availableToSearch"
                             :label="$vuetify.locale.t('$vuetify.available_to_search')"
                             hide-details
@@ -71,6 +75,7 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
                             v-model="editDto.regularParticipantCanPublishMessage"
                             :label="$vuetify.locale.t('$vuetify.regular_participant_can_publish')"
                             hide-details
@@ -79,6 +84,7 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
                             v-model="editDto.regularParticipantCanPinMessage"
                             :label="$vuetify.locale.t('$vuetify.regular_participant_can_pin')"
                             hide-details
@@ -87,6 +93,7 @@
                         ></v-checkbox>
 
                         <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
                             v-if="canCreateBlog"
                             v-model="editDto.blog"
                             :label="$vuetify.locale.t('$vuetify.blog')"
@@ -97,14 +104,11 @@
 
                         <template v-if="!isNew">
                             <v-container class="pa-0 ma-0 mt-2">
-                                <v-img v-if="hasAva"
+                                <img v-if="hasAva"
+                                       class="pa-0 ma-0 chat-avatar"
                                        :src="ava"
-                                       :aspect-ratio="16/9"
-                                       :min-width="isMobile() ? null : 600"
-                                       :min-height="isMobile() ? null : 600"
-                                       :max-height="isMobile() ? null : 800"
                                 >
-                                </v-img>
+                                </img>
                             </v-container>
                         </template>
                     </v-form>
@@ -385,3 +389,9 @@
         }
     }
 </script>
+
+<style lang="stylus" scoped>
+.chat-avatar {
+  width 100%
+}
+</style>
