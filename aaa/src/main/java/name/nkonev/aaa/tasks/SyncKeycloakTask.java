@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -59,7 +60,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
     }
 
     @Override
-    protected void doConcreteWork() {
+    protected void doConcreteWork(LocalDateTime currTime) {
         var keycloakClient = keycloakClientProvider.getIfAvailable();
         if (keycloakClient == null) {
             LOGGER.error("Keycloak client is not configured, you must to add its OAuth provider and registration");
@@ -74,7 +75,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         var shouldContinue = true;
         for (int offset = 0; shouldContinue; offset += batchSize) {
             var users = this.keycloakClient.getUsers(batchSize, offset);
-            processUpsertBatch(users);
+            processUpsertBatch(users, currTime);
             if (users.size() < batchSize) {
                 shouldContinue = false;
             }
@@ -82,11 +83,11 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
 
         if (aaaProperties.schedulers().syncKeycloak().syncRoles()) {
             LOGGER.info("Syncing roles from Keycloak");
-            processRoles(batchSize);
+            processRoles(batchSize, currTime);
         }
 
         LOGGER.info("Deleting entries from database which were removed from Keycloak");
-        processDeleted(batchSize);
+        processDeleted(batchSize, currTime);
 
         LOGGER.info("Sync Keycloak task finish");
     }
@@ -149,7 +150,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
     }
 
     @Override
-    protected UserAccount prepareUserAccountForInsert(KeycloakUserEntity keycloakUserEntity) {
+    protected UserAccount prepareUserAccountForInsert(KeycloakUserEntity keycloakUserEntity, LocalDateTime currTime) {
         var roles = Set.of(DEFAULT_ROLE);
         boolean locked = false;
         boolean enabled = keycloakUserEntity.enabled();
@@ -176,12 +177,12 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
     }
 
     @Override
-    protected UserAccount setSyncTime(UserAccount userAccount) {
+    protected UserAccount setSyncTime(UserAccount userAccount, LocalDateTime currTime) {
         return userAccount.withSyncKeycloakTime(currTime);
     }
 
     @Override
-    protected void batchSetSyncTime(Set<String> toUpdateSetExtSyncTime) {
+    protected void batchSetSyncTime(Set<String> toUpdateSetExtSyncTime, LocalDateTime currTime) {
         userAccountRepository.updateSyncKeycloakTime(toUpdateSetExtSyncTime, currTime);
     }
 
@@ -191,7 +192,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
     }
 
     @Override
-    protected List<Long> findExtIdsElderThan(int limit, int theOffset) {
+    protected List<Long> findExtIdsElderThan(int limit, int theOffset, LocalDateTime currTime) {
         return userAccountRepository.findByKeycloakIdElderThan(currTime, limit, theOffset);
     }
 
@@ -238,21 +239,21 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
     }
 
     @Override
-    protected void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb) {
+    protected void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb, LocalDateTime currTime) {
         userAccountRepository.updateSyncKeycloakRolesTime(toUpdateTimeInDb, currTime);
     }
 
     @Override
-    protected UserAccount setSyncExtRolesTime(UserAccount userAccount) {
+    protected UserAccount setSyncExtRolesTime(UserAccount userAccount, LocalDateTime currTime) {
         return userAccount.withSyncKeycloakRolesTime(currTime);
     }
 
     @Override
-    protected List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset) {
+    protected List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset, LocalDateTime currTime) {
         return userAccountRepository.findByKeycloakIdRolesElderThan(currTime, limit, theOffset);
     }
 
-    private void processRoles(int batchSize) {
+    private void processRoles(int batchSize, LocalDateTime currTime) {
         var extAdminRole = getNecessaryAdminRole();
         var shouldContinue = new AtomicBoolean(true);
         for (int offset = 0; shouldContinue.get(); offset += batchSize) {
@@ -260,14 +261,14 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
             List<EventWrapper<?>> eventsContainer = new ArrayList<>();
             transactionTemplate.executeWithoutResult(s -> {
                 List<KeycloakUserInRoleEntity> extUsersInRole = this.keycloakClient.getUsersInRole(extAdminRole, batchSize, theOffset);
-                processAddingRoleToUsers(extUsersInRole, extAdminRole, eventsContainer);
+                processAddingRoleToUsers(extUsersInRole, extAdminRole, eventsContainer, currTime);
                 shouldContinue.set(extUsersInRole.size() == batchSize);
             });
             sendEvents(eventsContainer);
         }
 
         // remove admin role
-        processRemovingRolesFromUsers(batchSize);
+        processRemovingRolesFromUsers(batchSize, currTime);
     }
 }
 

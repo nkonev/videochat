@@ -24,6 +24,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
@@ -65,7 +66,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     @Override
-    protected void doConcreteWork() {
+    protected void doConcreteWork(LocalDateTime currTime) {
         final var batchSize = aaaProperties.schedulers().syncLdap().batchSize();
         LOGGER.info("Sync ldap task start, batchSize={}", batchSize);
 
@@ -87,17 +88,17 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
             return ctx.search(lq.base(), filterValue, controls);
         };
         AttributesMapper<LdapEntity> mapper = (Attributes attributes) -> new LdapEntity(aaaProperties.ldap().attributeNames(), attributes);
-        LdapMappingConsumingCallbackHandler<LdapEntity> handler = new LdapMappingConsumingCallbackHandler<>(mapper, this::processUpsertBatch, batchSize);
+        LdapMappingConsumingCallbackHandler<LdapEntity> handler = new LdapMappingConsumingCallbackHandler<>(mapper, entries -> this.processUpsertBatch(entries, currTime), batchSize);
         ldapOperations.search(se, handler);
         handler.processLeftovers();
 
         if (aaaProperties.schedulers().syncLdap().syncRoles()) {
             LOGGER.info("Syncing roles from LDAP");
-            processRoles(batchSize);
+            processRoles(batchSize, currTime);
         }
 
         LOGGER.info("Deleting entries from database which were removed from LDAP");
-        processDeleted(batchSize);
+        processDeleted(batchSize, currTime);
 
         LOGGER.info("Sync ldap task finish");
     }
@@ -166,7 +167,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     @Override
-    protected UserAccount prepareUserAccountForInsert(LdapEntity ldapEntry) {
+    protected UserAccount prepareUserAccountForInsert(LdapEntity ldapEntry, LocalDateTime currTime) {
         var mappedRoles = Set.of(DEFAULT_ROLE);
         boolean locked = ldapEntry.locked() == null ? false : ldapEntry.locked();
         boolean enabled = ldapEntry.enabled() == null ? true : ldapEntry.enabled();
@@ -192,12 +193,12 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     @Override
-    protected UserAccount setSyncTime(UserAccount userAccount) {
+    protected UserAccount setSyncTime(UserAccount userAccount, LocalDateTime currTime) {
         return userAccount.withSyncLdapTime(currTime);
     }
 
     @Override
-    protected void batchSetSyncTime(Set<String> toUpdateSetExtSyncTime) {
+    protected void batchSetSyncTime(Set<String> toUpdateSetExtSyncTime, LocalDateTime currTime) {
         userAccountRepository.updateSyncLdapTime(toUpdateSetExtSyncTime, currTime);
     }
 
@@ -207,7 +208,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     @Override
-    protected List<Long> findExtIdsElderThan(int limit, int theOffset) {
+    protected List<Long> findExtIdsElderThan(int limit, int theOffset, LocalDateTime currTime) {
         return userAccountRepository.findByLdapIdElderThan(currTime, limit, theOffset);
     }
 
@@ -242,17 +243,17 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
     }
 
     @Override
-    protected UserAccount setSyncExtRolesTime(UserAccount userAccount) {
+    protected UserAccount setSyncExtRolesTime(UserAccount userAccount, LocalDateTime currTime) {
         return userAccount.withSyncLdapRolesTime(currTime);
     }
 
     @Override
-    protected List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset) {
+    protected List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset, LocalDateTime currTime) {
         return userAccountRepository.findByLdapIdRolesElderThan(currTime, limit, theOffset);
     }
 
     @Override
-    protected void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb) {
+    protected void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb, LocalDateTime currTime) {
         userAccountRepository.updateSyncLdapRolesTime(toUpdateTimeInDb, currTime);
 
     }
@@ -262,18 +263,18 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
         return userAccountRepository.findByLdapIdInOrderById(extIds);
     }
 
-    private void processRoles(int batchSize) {
+    private void processRoles(int batchSize, LocalDateTime currTime) {
         var extAdminRole = getNecessaryAdminRole();
-        ldapSyncRolesService.processRoles(batchSize, extAdminRole, batch -> processRolesBatch(extAdminRole, batch));
+        ldapSyncRolesService.processRoles(batchSize, extAdminRole, batch -> processRolesBatch(extAdminRole, batch, currTime));
 
         // remove admin role
-        processRemovingRolesFromUsers(batchSize);
+        processRemovingRolesFromUsers(batchSize, currTime);
     }
 
-    private void processRolesBatch(String extAdminRole, List<LdapUserInRoleEntity> extUsersInRole) {
+    private void processRolesBatch(String extAdminRole, List<LdapUserInRoleEntity> extUsersInRole, LocalDateTime currTime) {
         List<EventWrapper<?>> eventsContainer = new ArrayList<>();
         transactionTemplate.executeWithoutResult(s -> {
-            processAddingRoleToUsers(extUsersInRole, extAdminRole, eventsContainer);
+            processAddingRoleToUsers(extUsersInRole, extAdminRole, eventsContainer, currTime);
         });
         sendEvents(eventsContainer);
     }

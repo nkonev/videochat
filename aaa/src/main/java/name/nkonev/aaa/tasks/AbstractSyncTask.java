@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import static name.nkonev.aaa.dto.UserRole.ROLE_USER;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
-// This service is designed for a single-thread using
 public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends ExternalSyncEntity> implements ConflictResolvingActions {
 
     @Autowired
@@ -45,8 +44,6 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
     @Autowired
     protected AaaUserDetailsService aaaUserDetailsService;
-
-    protected LocalDateTime currTime;
 
     @PostConstruct
     public void validate() {
@@ -77,12 +74,12 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     protected abstract Logger getLogger();
 
     public void doWork() {
-        currTime = getNowUTC();
-        doConcreteWork();
+        var currTime = getNowUTC();
+        doConcreteWork(currTime);
     }
 
     // should invoke processUpsertBatch() several times and processDeleted() one time
-    protected abstract void doConcreteWork();
+    protected abstract void doConcreteWork(LocalDateTime currTime);
 
     protected void sendEvents(List<EventWrapper<?>> events) {
         for (EventWrapper<?> event : events) {
@@ -126,7 +123,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     }
 
     // processing resulting into (new users) inserts and (new users) updates
-    protected void processUpsertBatch(List<T> entries) {
+    protected void processUpsertBatch(List<T> entries, LocalDateTime currTime) {
         List<EventWrapper<?>> eventsContainer = new ArrayList<>();
         transactionTemplate.executeWithoutResult(s -> {
             Map<String, T> byExtIdId = new HashMap<>();
@@ -157,7 +154,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                             boolean shouldUpdateInDb = p.b();
 
                             if (shouldUpdateInDb) {
-                                userAccount = setSyncTime(userAccount);
+                                userAccount = setSyncTime(userAccount, currTime);
                                 getLogger().info("Updating userId={}, {}Id={}", userAccount.id(), getName(), extUserId);
 
                                 conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), ConflictService.PotentiallyConflictingAction.UPDATE, userAccount, this, eventsContainer);
@@ -177,25 +174,25 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
             }
 
             getLogger().info("Inserting {} users to database", toInsert.size());
-            var convertedToInsert = toInsert.stream().map(this::prepareUserAccountForInsert).toList();
+            var convertedToInsert = toInsert.stream().map(entry -> this.prepareUserAccountForInsert(entry, currTime)).toList();
             conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), ConflictService.PotentiallyConflictingAction.INSERT, convertedToInsert, this, eventsContainer);
 
             if (!toUpdateSetExtSyncTime.isEmpty()) {
                 getLogger().info("Updating {} sync time for {} untoucned users", getName(), toUpdateSetExtSyncTime.size());
-                batchSetSyncTime(toUpdateSetExtSyncTime);
+                batchSetSyncTime(toUpdateSetExtSyncTime, currTime);
             }
         });
 
         sendEvents(eventsContainer);
     }
 
-    protected void processDeleted(int size) {
+    protected void processDeleted(int size, LocalDateTime currTime) {
         var shouldContinue = new AtomicBoolean(true);
         for (int offset = 0; shouldContinue.get(); offset += size) {
             List<EventWrapper<?>> eventsContainer = new ArrayList<>();
             final var theOffset = offset;
             transactionTemplate.executeWithoutResult(s -> {
-                var toDelete = findExtIdsElderThan(size, theOffset);
+                var toDelete = findExtIdsElderThan(size, theOffset, currTime);
                 toDelete.forEach(userIdToDelete -> eventsContainer.add(eventService.convertProfileDeleted(userIdToDelete)));
                 userAccountRepository.deleteAllById(toDelete);
                 getLogger().info("Deleted users with ids {} from database which were removed from {}", toDelete, getName());
@@ -205,7 +202,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
         }
     }
 
-    protected void processAddingRoleToUsers(List<TIR> extUsers, String extRole, List<EventWrapper<?>> eventsContainer) {
+    protected void processAddingRoleToUsers(List<TIR> extUsers, String extRole, List<EventWrapper<?>> eventsContainer, LocalDateTime currTime) {
         if (extUsers.isEmpty()) {
             return;
         }
@@ -225,7 +222,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                     aaaUserDetailsService.killSessions(dbUser.id(), ForceKillSessionsReasonType.user_roles_changed);
                     dbUserRoles.add(mappedToDbRole);
                     var changedDbUser = setSyncExtRolesTime(dbUser
-                            .withRoles(dbUserRoles.toArray(new UserRole[0])));
+                            .withRoles(dbUserRoles.toArray(new UserRole[0])), currTime);
                     toUpdateInDb.add(changedDbUser);
                 } else {
                     toUpdateTimeInDb.add(getExtId(dbUser));
@@ -238,17 +235,17 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
         }
 
         if (!toUpdateTimeInDb.isEmpty()) {
-            updateSyncExtRolesTime(toUpdateTimeInDb);
+            updateSyncExtRolesTime(toUpdateTimeInDb, currTime);
         }
     }
 
-    protected void processRemovingRolesFromUsers(int batchSize) {
+    protected void processRemovingRolesFromUsers(int batchSize, LocalDateTime currTime) {
         var shouldContinue2 = new AtomicBoolean(true);
         for (var offset = 0; shouldContinue2.get(); offset += batchSize) {
             List<EventWrapper<?>> eventsContainer = new ArrayList<>();
             final var theOffset = offset;
             transactionTemplate.executeWithoutResult(s -> {
-                var toMakeWithoutAdminRole = findExtIdsRolesElderThan(batchSize, theOffset); // process almost all users, because typically it's very low amount of admins
+                var toMakeWithoutAdminRole = findExtIdsRolesElderThan(batchSize, theOffset, currTime); // process almost all users, because typically it's very low amount of admins
                 shouldContinue2.set(toMakeWithoutAdminRole.size() == batchSize);
 
                 var toSaveToDb = toMakeWithoutAdminRole.stream()
@@ -258,9 +255,9 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                                 aaaUserDetailsService.killSessions(u.id(), ForceKillSessionsReasonType.user_roles_changed);
                                 eventsContainer.add(eventService.convertProfileUpdated(u));
                                 return setSyncExtRolesTime(u
-                                        .withRoles(new UserRole[]{ROLE_USER}));
+                                        .withRoles(new UserRole[]{ROLE_USER}), currTime);
                             } else {
-                                return setSyncExtRolesTime(u);
+                                return setSyncExtRolesTime(u, currTime);
                             }
                         })
                         .toList();
@@ -270,7 +267,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
         }
     }
 
-    protected abstract UserAccount prepareUserAccountForInsert(T t);
+    protected abstract UserAccount prepareUserAccountForInsert(T t, LocalDateTime currTime);
 
     protected abstract Pair<UserAccount, Boolean> applyUpdateToUserAccount(T entity, UserAccount userAccount);
 
@@ -278,13 +275,13 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
     protected abstract List<UserAccount> findByExtId(Collection<String> extIds);
 
-    protected abstract UserAccount setSyncTime(UserAccount userAccount);
+    protected abstract UserAccount setSyncTime(UserAccount userAccount, LocalDateTime currTime);
 
-    protected abstract void batchSetSyncTime(Set<String> toUpdateSetExtSyncTime);
+    protected abstract void batchSetSyncTime(Set<String> toUpdateSetExtSyncTime, LocalDateTime currTime);
 
     protected abstract Optional<UserAccount> findByExtUserId(List<UserAccount> dbChunk, String extUserId);
 
-    protected abstract List<Long> findExtIdsElderThan(int limit, int theOffset);
+    protected abstract List<Long> findExtIdsElderThan(int limit, int theOffset, LocalDateTime currTime);
 
     protected abstract ConflictResolveStrategy getConflictResolvingStrategy();
 
@@ -300,10 +297,10 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
     protected abstract String getExtId(UserAccount u);
 
-    protected abstract void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb);
+    protected abstract void updateSyncExtRolesTime(Set<String> toUpdateTimeInDb, LocalDateTime currTime);
 
-    protected abstract UserAccount setSyncExtRolesTime(UserAccount userAccount);
+    protected abstract UserAccount setSyncExtRolesTime(UserAccount userAccount, LocalDateTime currTime);
 
-    protected abstract List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset);
+    protected abstract List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset, LocalDateTime currTime);
 
 }
