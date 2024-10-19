@@ -879,7 +879,7 @@ export default {
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
 
-        // To tTrigger fetching profile that 's going to trigger starting subscriptions
+        // To trigger fetching profile that 's going to trigger starting subscriptions
         // It's placed after each route in order not to have a race-condition
         this.$router.afterEach((to, from) => {
           this.afterRouteInitialized().then(()=>{
