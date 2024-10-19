@@ -619,7 +619,7 @@ func (tx *Tx) EditChat(ctx context.Context, id int64, newTitle string, avatar, a
 		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	}
 	if err != nil {
-		Logger.Errorf("Error during editing chat id %v", err)
+		GetLogEntry(ctx).Errorf("Error during editing chat id %v", err)
 		return nil, err
 	} else {
 		affected, err := res.RowsAffected()
@@ -1198,14 +1198,14 @@ func (tx *Tx) IsEdgeChat(ctx context.Context, chatId, participantId int64, searc
 			participantId)
 	}
 	if row.Err() != nil {
-		Logger.Errorf("Error during get Search %v", row.Err())
+		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
 	var gotChatId int64
 	err := row.Scan(&gotChatId)
 	if err != nil {
-		return false, err
+		return false, eris.Wrap(err, "error during interacting with db")
 	}
 	return chatId == gotChatId, nil
 }
@@ -1260,7 +1260,7 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId, edgeC
 			participantId, pageSize, chatId, edgeChatId)
 	}
 	if row.Err() != nil {
-		Logger.Errorf("Error during get Search %v", row.Err())
+		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 

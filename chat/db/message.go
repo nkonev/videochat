@@ -117,10 +117,15 @@ func (tx *Tx) IsEdgeMessage(ctx context.Context, chatId int64, messageId int64, 
 	} else {
 		row = tx.QueryRowContext(ctx, fmt.Sprintf("select max(id) from message_chat_%v m", chatId))
 	}
+	if row.Err() != nil {
+		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
+		return false, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+
 	var gotMessageId int64
 	err := row.Scan(&gotMessageId)
 	if err != nil {
-		return false, err
+		return false, eris.Wrap(err, "error during interacting with db")
 	}
 	return messageId == gotMessageId, nil
 }
@@ -622,7 +627,7 @@ func (dbR *DB) SetFileItemUuidToNull(ctx context.Context, ownerId, chatId int64,
 	res := dbR.QueryRowContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), fileItemUuid, ownerId)
 
 	if res.Err() != nil {
-		Logger.Errorf("Error during nulling file_item_uuid message id %v", res.Err())
+		GetLogEntry(ctx).Errorf("Error during nulling file_item_uuid message id %v", res.Err())
 		return 0, false, eris.Wrap(res.Err(), "error during interacting with db")
 	}
 	var messageId int64
@@ -642,7 +647,7 @@ func (dbR *DB) SetFileItemUuidTo(ctx context.Context, ownerId, chatId, messageId
 	_, err := dbR.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = $1 WHERE id = $2 AND owner_id = $3`, chatId), fileItemUuid, messageId, ownerId)
 
 	if err != nil {
-		Logger.Errorf("Error during nulling file_item_uuid message id %v", err)
+		GetLogEntry(ctx).Errorf("Error during nulling file_item_uuid message id %v", err)
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
@@ -1039,7 +1044,7 @@ func (tx *Tx) GetPinnedPromoted(ctx context.Context, chatId int64) (*Message, er
 			LIMIT 1`, selectMessageClause(chatId)),
 	)
 	if row.Err() != nil {
-		Logger.Errorf("Error during get pinned messages %v", row.Err())
+		GetLogEntry(ctx).Errorf("Error during get pinned messages %v", row.Err())
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
@@ -1088,7 +1093,7 @@ func (db *DB) GetParticipantsReadCount(ctx context.Context, chatId, messageId in
 	),
 		chatId, messageId)
 	if row.Err() != nil {
-		Logger.Errorf("Error during get count of participants read the message %v", row.Err())
+		GetLogEntry(ctx).Errorf("Error during get count of participants read the message %v", row.Err())
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
@@ -1112,7 +1117,7 @@ func (db *DB) FindMessageByFileItemUuid(ctx context.Context, chatId int64, fileI
 	)
 	row := db.QueryRowContext(ctx, sqlFormatted, fileItemUuid, fileItemUuidWithPercents)
 	if row.Err() != nil {
-		Logger.Errorf("Error during get MessageByFileItemUuid %v", row.Err())
+		GetLogEntry(ctx).Errorf("Error during get MessageByFileItemUuid %v", row.Err())
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
@@ -1252,7 +1257,7 @@ func (tx *Tx) MessageFilter(ctx context.Context, chatId int64, searchString stri
 	searchStringWithPercents := "%" + searchString + "%"
 	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT * FROM message_chat_%v m WHERE m.id = $1 AND strip_tags(m.text) ILIKE $2)", chatId), messageId, searchStringWithPercents)
 	if row.Err() != nil {
-		Logger.Errorf("Error during get Search %v", row.Err())
+		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
