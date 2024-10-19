@@ -15,4 +15,6 @@ public interface ConflictResolvingActions {
     void removeUser(UserAccount userAccount, List<EventWrapper<?>> eventsContainer);
 
     void insertUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer);
+
+    void updateUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer);
 }

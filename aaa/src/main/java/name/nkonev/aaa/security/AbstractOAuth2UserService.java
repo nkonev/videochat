@@ -116,7 +116,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
             var newUserAccount = buildEntity(oauthId, login, attributes, roles);
 
             // insert (optionally with conflict solving)
-            conflictService.process(getConflictPrefix(), getConflictResolveStrategy(), newUserAccount, this, eventsContainer);
+            conflictService.process(getConflictPrefix(), getConflictResolveStrategy(), ConflictService.PotentiallyConflictingAction.INSERT, newUserAccount, this, eventsContainer);
             // due to conflict we can ignore the user and not to save him or we can create a new
             // so we try to lookup him
             userAccount = findByOAuth2Id(oauthId)
@@ -185,6 +185,14 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
         for (UserAccount userAccount : saved) {
             eventsContainer.add(eventService.convertProfileCreated(userAccount));
         }
+    }
+
+    @Override
+    public void updateUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
+        for (UserAccount userAccount : users) {
+            eventsContainer.add(eventService.convertProfileUpdated(userAccount));
+        }
+        userAccountRepository.saveAll(users);
     }
 
     @Override

@@ -16,6 +16,7 @@ public class TestConstants {
     public static final String USER_BOB_LDAP_EMAIL = "bham@sf.org";
 
     public static final String USER_BEN_LDAP = "Ben Alex"; // conflicting
+    public static final String USER_BEN_LDAP_ID = "ben"; // see in src/test/resources/test-server.ldif
     public static final String USER_BEN_LDAP_EMAIL = "ben@sf.org";
 
     public static final String USER_LOCKED = "generated_user_66";

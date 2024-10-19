@@ -10,8 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-import static name.nkonev.aaa.TestConstants.USER_BEN_LDAP;
-import static name.nkonev.aaa.TestConstants.USER_BEN_LDAP_EMAIL;
+import java.time.LocalDateTime;
+import java.time.Month;
+
+import static name.nkonev.aaa.TestConstants.*;
 
 @TestPropertySource(properties = {"custom.ldap.resolve-conflicts-strategy=WRITE_NEW_AND_REMOVE_OLD"})
 public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
@@ -23,7 +25,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
     private SyncLdapTask syncLdapTask;
 
     @Test
-    public void syncLdap() {
+    public void syncInsertFromLdapConflict() {
         var conflictingLogin = USER_BEN_LDAP;
         var nonConflictingEmail = conflictingLogin+"@example.com";
         UserAccount userAccount = new UserAccount(
@@ -47,5 +49,44 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
         Assertions.assertNotEquals(nonConflictingEmail, after.email());
         Assertions.assertEquals(USER_BEN_LDAP_EMAIL, after.email());
         Assertions.assertNotEquals(before.id(), after.id());
+    }
+
+    @Test
+    public void syncUpdateFromLdapConflict() {
+        var ldapLogin = USER_BEN_LDAP;
+        var oldLdapEmail = ldapLogin+"@example.com";
+
+        var ldt = LocalDateTime.of(2000, Month.APRIL, 1, 23, 0, 0);
+
+        UserAccount ldapUserAccount = new UserAccount(
+                null,
+                CreationType.LDAP,
+                ldapLogin, null, null, null, null,false, false, true, true,
+                new UserRole[]{UserRole.ROLE_USER}, oldLdapEmail, null, null, null, null, null, USER_BEN_LDAP_ID, null, ldt, null, null, ldt);
+        userAccountRepository.save(ldapUserAccount);
+
+        var ldapUsersBefore = userAccountRepository.countLdap();
+        Assertions.assertEquals(1L, ldapUsersBefore);
+
+        // somehow conflicting user with the actual ldap email has appeared
+        var nonConflictingLogin = "bbeenn";
+        var conflictingEmail = USER_BEN_LDAP_EMAIL;
+        UserAccount conflictingUserAccount = new UserAccount(
+                null,
+                CreationType.REGISTRATION,
+                nonConflictingLogin, null, null, null, null,false, false, true, true,
+                new UserRole[]{UserRole.ROLE_USER}, conflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
+        userAccountRepository.save(conflictingUserAccount);
+
+        syncLdapTask.doWork();
+
+        var ldapUsersAfter = userAccountRepository.countLdap();
+        Assertions.assertEquals(4L, ldapUsersAfter);
+
+        Assertions.assertTrue(userAccountRepository.findByUsername(nonConflictingLogin).isEmpty()); // removed because conflicted by email
+
+        var replace = userAccountRepository.findByUsername(ldapLogin);
+        Assertions.assertTrue(replace.isPresent());
+        Assertions.assertEquals(USER_BEN_LDAP_EMAIL, replace.get().email());
     }
 }

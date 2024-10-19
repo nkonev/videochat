@@ -111,6 +111,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
         }
     }
 
+    @Override
     public void updateUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
         for (UserAccount userAccount : users) {
             eventsContainer.add(eventService.convertProfileUpdated(userAccount));
@@ -158,7 +159,8 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                             if (shouldUpdateInDb) {
                                 userAccount = setSyncTime(userAccount);
                                 getLogger().info("Updating userId={}, {}Id={}", userAccount.id(), getName(), extUserId);
-                                updateUser(userAccount, eventsContainer);
+
+                                conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), ConflictService.PotentiallyConflictingAction.UPDATE, userAccount, this, eventsContainer);
                             } else {
                                 toUpdateSetExtSyncTime.add(extUserId);
                             }
@@ -176,7 +178,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
             getLogger().info("Inserting {} users to database", toInsert.size());
             var convertedToInsert = toInsert.stream().map(this::prepareUserAccountForInsert).toList();
-            conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), convertedToInsert, this, eventsContainer);
+            conflictService.process(getRenamingPrefix(), getConflictResolvingStrategy(), ConflictService.PotentiallyConflictingAction.INSERT, convertedToInsert, this, eventsContainer);
 
             if (!toUpdateSetExtSyncTime.isEmpty()) {
                 getLogger().info("Updating {} sync time for {} untoucned users", getName(), toUpdateSetExtSyncTime.size());

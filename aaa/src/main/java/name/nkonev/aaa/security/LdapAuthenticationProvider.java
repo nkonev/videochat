@@ -122,7 +122,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                                     getNowUTC()
                             );
                             // check for conflicts by username or email and create the user if conflict resolution is not "ignore"
-                            conflictService.process(LDAP_CONFLICT_PREFIX, aaaProperties.ldap().resolveConflictsStrategy(), userToInsert, this, eventsContainer);
+                            conflictService.process(LDAP_CONFLICT_PREFIX, aaaProperties.ldap().resolveConflictsStrategy(), ConflictService.PotentiallyConflictingAction.INSERT, userToInsert, this, eventsContainer);
                             // due to conflict we can ignore the user and not to save him or we can create a new
                             // so we try to lookup him
                             var foundNewUser = userAccountRepository.findByLdapId(ldapUserId)
@@ -178,6 +178,14 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
         for (UserAccount userAccount : saved) {
             eventsContainer.add(eventService.convertProfileCreated(userAccount));
         }
+    }
+
+    @Override
+    public void updateUsers(Collection<UserAccount> users, List<EventWrapper<?>> eventsContainer) {
+        for (UserAccount userAccount : users) {
+            eventsContainer.add(eventService.convertProfileUpdated(userAccount));
+        }
+        userAccountRepository.saveAll(users);
     }
 
     @Override

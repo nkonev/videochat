@@ -24,7 +24,7 @@ public class SyncKeycloakConflictRenameUserTest extends AbstractMockMvcTestRunne
     private SyncKeycloakTask syncKeycloakTask;
 
     @Test
-    public void syncKeycloak() {
+    public void syncInsertFromKeycloakConflict() {
         var conflictingLogin = keycloakLogin;
         var nonConflictingEmail = conflictingLogin+"@example1.com";
         UserAccount userAccount = new UserAccount(

@@ -24,7 +24,7 @@ public class SyncLdapConflictRenameUserTest extends AbstractMockMvcTestRunner {
     private SyncLdapTask syncLdapTask;
 
     @Test
-    public void syncLdap() {
+    public void syncInsertFromLdapConflict() {
         var conflictingLogin = USER_BEN_LDAP;
         var nonConflictingEmail = conflictingLogin+"@example.com";
         UserAccount userAccount = new UserAccount(

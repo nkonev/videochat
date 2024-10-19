@@ -17,19 +17,38 @@ public class ConflictService {
     @Autowired
     private CheckService checkService;
 
+    public enum PotentiallyConflictingAction {
+        INSERT,
+        UPDATE
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConflictService.class);
 
-    public void process(String renamingPrefix, ConflictResolveStrategy resolveConflictsStrategy, UserAccount newUser, ConflictResolvingActions conflictResolvingActions, List<EventWrapper<?>> eventsContainer) {
-        process(renamingPrefix, resolveConflictsStrategy, List.of(newUser), conflictResolvingActions, eventsContainer);
+    public void process(String renamingPrefix, ConflictResolveStrategy resolveConflictsStrategy, PotentiallyConflictingAction action, UserAccount newUser, ConflictResolvingActions conflictResolvingActions, List<EventWrapper<?>> eventsContainer) {
+        process(renamingPrefix, resolveConflictsStrategy, action, List.of(newUser), conflictResolvingActions, eventsContainer);
     }
 
     // we suppose that vast majority of users will not have any conflicts ...
-    public void process(String renamingPrefix, ConflictResolveStrategy resolveConflictsStrategy, Collection<UserAccount> newUsers, ConflictResolvingActions conflictResolvingActions, List<EventWrapper<?>> eventsContainer) {
+    public void process(String renamingPrefix, ConflictResolveStrategy resolveConflictsStrategy, PotentiallyConflictingAction action, Collection<UserAccount> newUsers, ConflictResolvingActions conflictResolvingActions, List<EventWrapper<?>> eventsContainer) {
         if (newUsers.isEmpty()) {
             return;
         }
         var conflictingByUsernamesOldUsers = checkService.checkLogins(newUsers.stream().map(UserAccount::username).toList());
         var conflictingEmailsOldUsers = checkService.checkEmails(newUsers.stream().map(UserAccount::email).toList());
+
+        if (action == PotentiallyConflictingAction.UPDATE) {
+            for (var nu : newUsers) {
+                var conflByUsername = conflictingByUsernamesOldUsers.get(nu.username());
+                if (conflByUsername != null && conflByUsername.id().equals(nu.id())) { // remove myself
+                    conflictingByUsernamesOldUsers.remove(nu.username());
+                }
+
+                var conflByEmail = conflictingEmailsOldUsers.get(nu.email());
+                if (conflByEmail != null && conflByEmail.id().equals(nu.id())) {
+                    conflictingEmailsOldUsers.remove(nu.email()); // remove myself
+                }
+            }
+        }
 
         var nonConflictingUsers = new ArrayList<>(newUsers);
         nonConflictingUsers.removeIf(u -> conflictingByUsernamesOldUsers.containsKey(u.username()));
@@ -37,7 +56,16 @@ public class ConflictService {
 
         // ... so we save them in batch
         if (!nonConflictingUsers.isEmpty()) {
-            conflictResolvingActions.insertUsers(nonConflictingUsers, eventsContainer);
+            switch (action) {
+                case INSERT:
+                    conflictResolvingActions.insertUsers(nonConflictingUsers, eventsContainer);
+                    break;
+                case UPDATE:
+                    conflictResolvingActions.updateUsers(nonConflictingUsers, eventsContainer);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + action);
+            }
         }
 
         if (nonConflictingUsers.size() == newUsers.size()) {
@@ -70,12 +98,12 @@ public class ConflictService {
                 conflictBy.put(ConflictBy.EMAIL, oldUserConflictingByEmail);
             }
 
-            solveConflict(renamingPrefix, resolveConflictsStrategy, conflictResolvingActions, newUser, conflictBy, eventsContainer);
+            solveConflict(renamingPrefix, resolveConflictsStrategy, action, conflictResolvingActions, newUser, conflictBy, eventsContainer);
         }
     }
 
 
-    private void solveConflict(String renamingPrefix, ConflictResolveStrategy resolveConflictsStrategy, ConflictResolvingActions conflictResolvingActions, UserAccount newUser, Map<ConflictBy, UserAccount> conflictBy, List<EventWrapper<?>> eventsContainer) {
+    private void solveConflict(String renamingPrefix, ConflictResolveStrategy resolveConflictsStrategy, PotentiallyConflictingAction action, ConflictResolvingActions conflictResolvingActions, UserAccount newUser, Map<ConflictBy, UserAccount> conflictBy, List<EventWrapper<?>> eventsContainer) {
         switch (resolveConflictsStrategy) {
             case IGNORE:
                 LOGGER.info("Skipping importing an user {} with conflicting by {}", newUser, conflictBy.keySet());
@@ -86,7 +114,16 @@ public class ConflictService {
                     conflictResolvingActions.removeUser(oldUser, eventsContainer);
                 });
                 LOGGER.info("Saving new user {}", newUser);
-                conflictResolvingActions.insertUser(newUser, eventsContainer);
+                switch (action) {
+                    case INSERT:
+                        conflictResolvingActions.insertUser(newUser, eventsContainer);
+                        break;
+                    case UPDATE:
+                        conflictResolvingActions.updateUser(newUser, eventsContainer);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + action);
+                }
                 return;
             case WRITE_NEW_AND_RENAME_OLD:
                 conflictBy.forEach((cb, oldUser) -> {
@@ -108,7 +145,16 @@ public class ConflictService {
                     }
                 });
                 LOGGER.info("Saving new user {}", newUser);
-                conflictResolvingActions.insertUser(newUser, eventsContainer);
+                switch (action) {
+                    case INSERT:
+                        conflictResolvingActions.insertUser(newUser, eventsContainer);
+                        break;
+                    case UPDATE:
+                        conflictResolvingActions.updateUser(newUser, eventsContainer);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + action);
+                }
                 return;
             default:
                 throw new IllegalStateException("Missed action for conflict strategy: " + resolveConflictsStrategy);

@@ -16,7 +16,7 @@ import static name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests.keycloakEmail;
 import static name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests.keycloakLogin;
 
 @TestPropertySource(properties = {"custom.keycloak.resolve-conflicts-strategy=IGNORE"})
-public class SyncKeycloakConflictRolesTest extends AbstractMockMvcTestRunner {
+public class SyncKeycloakRolesTest extends AbstractMockMvcTestRunner {
     @Autowired
     private UserAccountRepository userAccountRepository;
 
