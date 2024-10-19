@@ -24,7 +24,7 @@ const converted = "converted"
 const underscoreConverted = "_" + converted
 const ConvertedContentType = "video/webm"
 
-const maxFilenameLength = 255 // this allows filesystem
+const maxFilenameLength = 255                    // this allows filesystem
 const MaxFilenameLength = maxFilenameLength - 32 // =223. reserve 32 symbols for things like "_converted"
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
@@ -331,6 +331,27 @@ func nonLetterSplit(c rune) bool {
 	return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '.' && c != '-' && c != '+' && c != '_' && c != ' '
 }
 
+func rebuildName(parts []string, hasExt bool) string {
+	name := ""
+	for j, part := range parts {
+		if j != 0 {
+			name += " "
+		}
+		name += part
+
+		if !hasExt {
+			if j == len(parts)-1 {
+				break
+			}
+		} else {
+			if j == len(parts)-2 {
+				break
+			}
+		}
+	}
+	return name
+}
+
 // output of this fun eventually goes to sanitizer in chat
 func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename bool) string {
 	words := strings.FieldsFunc(input, nonLetterSplit)
@@ -338,10 +359,16 @@ func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename
 	trimmedFilename := strings.TrimSpace(tmp)
 
 	filenameParts := strings.Split(trimmedFilename, ".")
-	hasExt := len(filenameParts) == 2
+	hasExt := len(filenameParts) >= 2
 	newFileName := ""
+	ext := ""
+	if hasExt {
+		ext = filenameParts[len(filenameParts)-1]
+	}
 	if hasExt && shouldAddDateToTheFilename {
-		newFileName = filenameParts[0] + "_" + time.Now().UTC().Format("20060102150405") + "." + filenameParts[1]
+		newFileName = rebuildName(filenameParts, hasExt)
+
+		newFileName += ("_" + time.Now().UTC().Format("20060102150405") + "." + ext)
 	} else {
 		newFileName = trimmedFilename
 	}
@@ -352,13 +379,10 @@ func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename
 		GetLogEntry(ctx).Infof("Filename %v has more than %v bytes (%v), so we're going to strip it", newFileName, MaxFilenameLength, lenInBytes)
 		nameAndExt := strings.Split(newFileName, ".")
 
-		name := nameAndExt[0]
-		ext := ""
-		if hasExt {
-			ext = nameAndExt[1]
-		}
+		name := rebuildName(nameAndExt, hasExt)
+
 		newStrippedFileName := ""
-		for i:=1; i <= lenInBytes; i++{
+		for i := 1; i <= lenInBytes; i++ {
 			newStrippedFileName = firstN(name, MaxFilenameLength-i)
 			if hasExt {
 				newStrippedFileName += ("." + ext)
