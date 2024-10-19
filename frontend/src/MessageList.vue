@@ -67,7 +67,7 @@
       OPEN_MESSAGE_EDIT_SMILEY,
       REACTION_CHANGED,
       REACTION_REMOVED,
-      MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED
+      MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED, FOCUS
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -650,6 +650,19 @@
         isAppropriateHash(hash) {
           return isMessageHash(hash)
         },
+        onFocus() {
+          if (this.chatStore.currentUser && this.items && this.isScrolledToBottom()) {
+            const edgeMessageId = this.getMaximumItemId();
+            axios.post(`/api/chat/${this.chatId}/message/edge`, {
+              messageId: edgeMessageId,
+              searchString: this.searchString
+            }).then((res)=>{
+              if (!res.data.ok) {
+                this.reloadItems();
+              }
+            })
+          }
+        },
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true});
@@ -730,6 +743,7 @@
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
+        bus.on(FOCUS, this.onFocus);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
       },
@@ -756,6 +770,7 @@
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
+        bus.off(FOCUS, this.onFocus);
       }
     }
 </script>

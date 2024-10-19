@@ -331,6 +331,37 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
+type EdgeChatDto struct {
+	ChatId       int64  `json:"chatId"`
+	SearchString string `json:"searchString"`
+}
+
+func (ch *ChatHandler) IsEdgeChat(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	var bindTo = new(EdgeChatDto)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	searchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
+	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
+
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+		edge, err := tx.IsEdgeChat(c.Request().Context(), bindTo.ChatId, userPrincipalDto.UserId, searchString, false, additionalFoundUserIds)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &utils.H{"ok": edge})
+	})
+}
+
 func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
 	b := dto.BaseChatDto{
 		Id:                c.Id,

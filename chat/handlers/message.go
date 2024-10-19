@@ -397,6 +397,49 @@ func (mc *MessageHandler) GetMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, message)
 }
 
+type EdgeMessageDto struct {
+	MessageId    int64  `json:"messageId"`
+	SearchString string `json:"searchString"`
+}
+
+func (mc *MessageHandler) IsEdgeMessage(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	chatId, err := GetPathParamAsInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	var bindTo = new(EdgeMessageDto)
+	if err := c.Bind(bindTo); err != nil {
+		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
+	}
+
+	searchString := TrimAmdSanitize(mc.policy, bindTo.SearchString)
+
+	return db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
+		participant, err := tx.IsParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+		if !participant {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to search in this chat"})
+		}
+
+		edge, err := tx.IsEdgeMessage(c.Request().Context(), chatId, bindTo.MessageId, searchString)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &utils.H{"ok": edge})
+	})
+}
+
 func getDeletedUser(id int64) *dto.User {
 	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
 }

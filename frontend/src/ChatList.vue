@@ -658,7 +658,20 @@ export default {
               },
           }).then(()=>{
               this.requestInVideo();
+          });
+
+
+        if (this.isScrolledToTop()) {
+          const topChatId = this.findTopElementId();;
+          axios.post(`/api/chat/edge`, {
+            chatId: topChatId,
+            searchString: this.searchString
+          }).then((res)=>{
+            if (!res.data.ok) {
+              this.reloadItems();
+            }
           })
+        }
       }
     },
     requestInVideo() {

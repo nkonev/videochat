@@ -145,6 +145,7 @@ func configureEcho(
 	e.GET("/api/chat/has-new-messages", ch.HasNewMessages)
 	e.POST("/api/chat/filter", ch.Filter)
 	e.GET("/api/chat/:id", ch.GetChat)
+	e.POST("/api/chat/edge", ch.IsEdgeChat)
 	e.POST("/api/chat", ch.CreateChat)
 	e.DELETE("/api/chat/:id", ch.DeleteChat)
 	e.PUT("/api/chat", ch.EditChat)
@@ -175,6 +176,7 @@ func configureEcho(
 
 	e.GET("/api/chat/:id/message", mc.GetMessages)
 	e.GET("/api/chat/:id/message/:messageId", mc.GetMessage)
+	e.POST("/api/chat/:id/message/edge", mc.IsEdgeMessage)
 	e.PUT("/api/chat/:id/message/:messageId/reaction", mc.ReactionMessage)
 	e.POST("/api/chat/:id/message", mc.PostMessage)
 	e.PUT("/api/chat/:id/message", mc.EditMessage)
