@@ -585,6 +585,7 @@ export default {
                     this.refreshInvitationCall();
                 })
             }
+            console.info("Sending focus event");
             bus.emit(FOCUS);
         },
         refreshInvitationCall() {
