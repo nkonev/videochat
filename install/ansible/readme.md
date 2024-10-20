@@ -13,5 +13,9 @@ ansible-playbook -i ~/blog/inventory.ini --extra-vars "@~/blog/vars.yml" --tags 
 
 # Just update
 ```bash
+# services and videochat
 ansible-playbook -i ~/blog/inventory.ini --extra-vars "@~/blog/vars.yml" --extra-vars "image_install_tag=changing" --tags "services,videochat" playbook.yaml
+
+# only videochat
+ansible-playbook -i ~/blog/inventory.ini --extra-vars "@~/blog/vars.yml" --extra-vars "image_install_tag=changing" --tags "videochat" playbook.yaml
 ```

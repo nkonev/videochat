@@ -72,4 +72,4 @@ Click on image to open a screenshot gallery.
 Demo server [installation](https://chat.nkonev.name/)
 
 # Installation
-Currently, Ansible installation is available. See instructions in `./install/ansible/readme.md`.
+Currently, [Ansible](./install/ansible/readme.md) installation is available.
