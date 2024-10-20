@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="640" scrollable>
             <v-card>
-                <v-card-title class="d-flex align-center ml-2 my-2">
+                <v-card-title class="d-flex align-center ml-2 mt-2">
                     {{ $vuetify.locale.t('$vuetify.notifications') }}
                     <v-spacer/>
                     <v-btn v-if="itemsDto.items.length > 0" variant="outlined" @click="onClickClearAllNotifications()"><v-icon>mdi-delete</v-icon> {{ $vuetify.locale.t('$vuetify.clear') }} </v-btn>
