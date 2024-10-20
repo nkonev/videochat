@@ -10,7 +10,7 @@
                                     class="list-item-prepend-spacer-16"
                                     @contextmenu.stop="onShowContextMenu($event, item)"
                                 >
-                                    <template v-slot:prepend v-if="hasLength(item.owner?.avatar)">
+                                    <template v-slot:prepend v-if="hasLength(item.owner?.avatar) && !this.isMobile()">
                                         <v-avatar :image="item.owner?.avatar"></v-avatar>
                                     </template>
 
