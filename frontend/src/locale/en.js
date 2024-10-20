@@ -316,5 +316,6 @@ export default {
     mark_as_read: "Mark as read",
     mark_as_read_all: "Mark as read all",
     enable_user: "Enable user",
-    disable_user: "Disable user"
+    disable_user: "Disable user",
+    go_to_the_message: "Go to the message"
 }

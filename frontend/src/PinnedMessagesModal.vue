@@ -6,7 +6,10 @@
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="itemsDto.count > 0">
                             <template v-for="(item, index) in itemsDto.items">
-                                <v-list-item class="list-item-prepend-spacer-16">
+                                <v-list-item
+                                    class="list-item-prepend-spacer-16"
+                                    @contextmenu.stop="onShowContextMenu($event, item)"
+                                >
                                     <template v-slot:prepend v-if="hasLength(item.owner?.avatar)">
                                         <v-avatar :image="item.owner?.avatar"></v-avatar>
                                     </template>
@@ -20,7 +23,7 @@
                                         </router-link>
                                     </v-list-item-title>
 
-                                    <template v-slot:append v-if="canPin(item)">
+                                    <template v-slot:append v-if="canPin(item) && !this.isMobile()">
                                         <v-btn variant="flat" icon @click="promotePinMessage(item)">
                                             <v-icon color="primary" dark :title="$vuetify.locale.t('$vuetify.pin_message')">mdi-pin</v-icon>
                                         </v-btn>
@@ -36,9 +39,17 @@
                             <v-card-text>{{ $vuetify.locale.t('$vuetify.no_pin_messages') }}</v-card-text>
                         </template>
                     </v-list>
+
+                    <PinnedMessagesContextMenu
+                        ref="contextMenuRef"
+                        @gotoPinnedMessage="this.gotoPinnedMessage"
+                        @promotePinMessage="this.promotePinMessage"
+                        @unpinMessage="this.unpinMessage"
+                    />
+
                     <v-progress-circular
                         class="ma-4"
-                        v-else
+                        v-if="loading"
                         indeterminate
                         color="primary"
                     ></v-progress-circular>
@@ -94,8 +105,12 @@ import { getHumanReadableDate } from "@/date.js";
 import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 import debounce from "lodash/debounce.js";
+import PinnedMessagesContextMenu from "@/PinnedMessagesContextMenu.vue";
 
 export default {
+    components: {
+      PinnedMessagesContextMenu,
+    },
     mixins: [
         pageableModalMixin()
     ],
@@ -214,6 +229,13 @@ export default {
           if (this.dataLoaded) {
             this.debouncedUpdate();
           }
+        },
+        onShowContextMenu(e, menuableItem) {
+          this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+        },
+        gotoPinnedMessage(item) {
+          const routeObj = this.getPinnedRouteObject(item);
+          this.$router.push(routeObj)
         },
     },
     created() {

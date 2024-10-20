@@ -316,5 +316,6 @@ export default {
     mark_as_read: "Сделать прочитанным",
     mark_as_read_all: "Сделать прочитанными все",
     enable_user: "Включить пользователя",
-    disable_user: "Отключить пользователя"
+    disable_user: "Отключить пользователя",
+    go_to_the_message: "Перейти к сообщению"
 }
