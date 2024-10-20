@@ -6,7 +6,10 @@
                     <v-list class="pb-0" v-if="!loading">
                         <template v-if="itemsDto.count > 0">
                             <template v-for="(item, index) in itemsDto.items">
-                                <v-list-item class="list-item-prepend-spacer-16">
+                                <v-list-item
+                                    class="list-item-prepend-spacer-16"
+                                    @contextmenu.stop="onShowContextMenu($event, item)"
+                                >
                                     <template v-slot:prepend v-if="hasLength(item.owner?.avatar)">
                                         <v-avatar :image="item.owner?.avatar"></v-avatar>
                                     </template>
@@ -20,7 +23,7 @@
                                         </router-link>
                                     </v-list-item-title>
 
-                                    <template v-slot:append>
+                                    <template v-slot:append v-if="!this.isMobile()">
                                         <v-btn variant="flat" icon @click="openPublishedMessage(item)">
                                             <v-icon :title="$vuetify.locale.t('$vuetify.open_published_message')">mdi-eye</v-icon>
                                         </v-btn>
@@ -39,9 +42,17 @@
                             <v-card-text>{{ $vuetify.locale.t('$vuetify.no_published_messages') }}</v-card-text>
                         </template>
                     </v-list>
+
+                    <PublishedMessagesContextMenu
+                        ref="contextMenuRef"
+                        @openPublishedMessage="this.openPublishedMessage"
+                        @copyLinkToPublishedMessage="this.copyLinkToPublishedMessage"
+                        @unpublishMessage="this.unpublishMessage"
+                    />
+
                     <v-progress-circular
                         class="ma-4"
-                        v-else
+                        v-if="loading"
                         indeterminate
                         color="primary"
                     ></v-progress-circular>
@@ -95,8 +106,12 @@ import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import debounce from "lodash/debounce.js";
+import PublishedMessagesContextMenu from "@/PublishedMessagesContextMenu.vue";
 
 export default {
+    components: {
+      PublishedMessagesContextMenu,
+    },
     mixins: [
         pageableModalMixin()
     ],
@@ -203,6 +218,9 @@ export default {
           if (this.dataLoaded) {
             this.debouncedUpdate();
           }
+        },
+        onShowContextMenu(e, menuableItem) {
+          this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
         },
     },
     computed: {
