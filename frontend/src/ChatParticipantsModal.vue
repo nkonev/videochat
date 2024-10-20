@@ -79,13 +79,13 @@
                                             </template>
                                         </template>
                                         <template v-if="!isMobile()">
-                                            <template v-if="chatStore.chatDto.canEdit && item.id != chatStore.currentUser.id">
+                                            <template v-if="chatStore.canDeleteParticipant(item.id)">
                                                 <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
                                             </template>
-                                            <template v-if="chatStore.chatDto.canVideoKick && item.id != chatStore.currentUser.id && isVideo()">
+                                            <template v-if="chatStore.canVideoKickParticipant(item.id) && isVideo()">
                                                 <v-btn variant="flat" icon @click="kickFromVideoCall(item)" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon color="red">mdi-block-helper</v-icon></v-btn>
                                             </template>
-                                            <template v-if="chatStore.chatDto.canAudioMute && item.id != chatStore.currentUser.id && isVideo()">
+                                            <template v-if="chatStore.canAudioMuteParticipant(item.id) && isVideo()">
                                                 <v-btn variant="flat" icon @click="forceMute(item)" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon color="red">mdi-microphone-off</v-icon></v-btn>
                                             </template>
                                         </template>

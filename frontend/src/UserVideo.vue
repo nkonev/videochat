@@ -194,10 +194,10 @@ export default {
             return this.localVideoProperties && !this.localVideoProperties.screen;
         },
         canVideoKick() { // only on remote
-          return !this.isLocal && this.chatStore.chatDto.canVideoKick
+          return !this.isLocal && this.chatStore.canVideoKickParticipant(this.userId)
         },
         canAudioMute() { // only on remote
-          return !this.isLocal && this.chatStore.chatDto.canAudioMute
+          return !this.isLocal && this.chatStore.canAudioMuteParticipant(this.userId)
         },
     },
     mounted(){
