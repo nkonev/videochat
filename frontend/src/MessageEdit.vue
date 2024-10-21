@@ -609,6 +609,9 @@
               }
               this.$nextTick(()=>{
                 this.$refs.tipTapRef.setContent(this.editMessageDto.text);
+                if (hasLength(this.editMessageDto.fileItemUuid)) {
+                  this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid);
+                }
               }).then(()=>{
                 this.$refs.tipTapRef.setCursorToEnd();
               });
