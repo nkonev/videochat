@@ -8,6 +8,7 @@ import {
     video_suffix,
     videochat_name
 } from "@/router/routes";
+import he from "he";
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
@@ -39,7 +40,7 @@ export const isSet = (str) => {
 
 export const setTitle = (newTitle) => {
     if (hasLength(newTitle)) {
-        document.title = newTitle;
+        document.title = unescapeHtml(newTitle);
     } else {
         document.title = "VideoChat"
     }
@@ -404,7 +405,5 @@ export const unescapeHtml = (text) => {
     if (!text) {
         return text
     }
-    return domParser.parseFromString(text, 'text/html')
-        .documentElement
-        .textContent;
+    return he.decode(text);
 }

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { PAGE_SIZE } from "#root/common/utils";
 import { getChatApiUrl } from "#root/common/config";
+import { PAGE_SIZE, unescapeHtml } from "#root/common/utils.js";
 
 export { data };
 
@@ -58,7 +58,7 @@ async function data(pageContext) {
         items: commentResponse.data.items,
         commentsLoading: false,
         // see getPageTitle.js
-        title: blogResponse.data.title,
+        title: unescapeHtml(blogResponse.data.title),
         description: blogResponse.data.preview,
     }
 

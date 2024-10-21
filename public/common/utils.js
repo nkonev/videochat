@@ -2,6 +2,7 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import {chat, messageIdHashPrefix} from "./router/routes.js";
 import bus, {PLAYER_MODAL} from "./bus.js";
 import axios from "axios";
+import he from "he";
 
 export const getHumanReadableDate = (timestamp) => {
     const parsedDate = parseISO(timestamp);
@@ -182,4 +183,11 @@ export const onClickTrap = (e) => {
 
 export const getUrlPrefix = () => {
     return window.location.protocol + "//" + window.location.host
+}
+
+export const unescapeHtml = (text) => {
+    if (!text) {
+        return text
+    }
+    return he.decode(text);
 }
