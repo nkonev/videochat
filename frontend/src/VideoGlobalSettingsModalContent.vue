@@ -163,8 +163,6 @@ import bus, {
         mixins: [videoServerSettingsMixin()],
         data () {
             return {
-                changing: false,
-
                 audioPresents: null,
                 videoPresents: null,
                 videoPosition: null,
@@ -184,62 +182,35 @@ import bus, {
             isVideoRoute() {
                 return this.$route.name == videochat_name
             },
-            onVideoParametersChanged() {
-                this.changing = false;
-            },
             changeVideoResolution(newVideoResolution) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setVideoResolution(newVideoResolution);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeScreenResolution(newVideoResolution) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setScreenResolution(newVideoResolution);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeAudioPresents(v) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setStoredAudioPresents(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoPresents(v) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setStoredVideoPresents(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeVideoSimulcast(v) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setStoredVideoSimulcast(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeScreenSimulcast(v) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setStoredScreenSimulcast(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeRoomDynacast(v) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setStoredRoomDynacast(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
             changeRoomAdaptiveStream(v) {
-                if (this.isVideoRoute()) {
-                    this.changing = true;
-                }
                 setStoredRoomAdaptiveStream(v);
                 bus.emit(REQUEST_CHANGE_VIDEO_PARAMETERS);
             },
@@ -305,7 +276,6 @@ import bus, {
             },
         },
         mounted() {
-            bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
             bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
             bus.on(CHOOSING_VIDEO_SOURCE_CANCELED, this.onChoosingVideoSourceCanceled);
 
@@ -314,7 +284,6 @@ import bus, {
         created() {
         },
         beforeUnmount() {
-            bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
             bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
             bus.off(CHOOSING_VIDEO_SOURCE_CANCELED, this.onChoosingVideoSourceCanceled);
         },

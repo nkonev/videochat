@@ -78,7 +78,7 @@
 </template>
 
 <script>
-import bus, { OPEN_SETTINGS} from "@/bus/bus";
+import bus, {OPEN_SETTINGS, REQUEST_CHANGE_VIDEO_PARAMETERS, VIDEO_PARAMETERS_CHANGED} from "@/bus/bus";
 import LanguageModalContent from "@/LanguageModalContent.vue";
 import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.vue";
 import NotificationSettingsModalContent from "@/NotificationSettingsModalContent.vue";
@@ -88,6 +88,7 @@ import {hasLength} from "@/utils";
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import {videochat_name} from "@/router/routes.js";
 
 export default {
   data () {
@@ -139,6 +140,17 @@ export default {
     openAvatarDialog() {
       this.fileInput.click();
     },
+    onRequestVideoParametersChange() {
+      if (this.isVideoRoute()) {
+        this.loading = true;
+      }
+    },
+    onVideoParametersChanged() {
+      this.loading = false;
+    },
+    isVideoRoute() {
+      return this.$route.name == videochat_name
+    },
   },
   computed: {
     ...mapStores(useChatStore),
@@ -151,6 +163,8 @@ export default {
   },
   mounted() {
     bus.on(OPEN_SETTINGS, this.showSettingsModal);
+    bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onRequestVideoParametersChange);
+    bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
     this.fileInput = document.getElementById('image-input-profile-avatar');
     this.fileInput.onchange = (e) => {
       if (e.target.files.length) {
@@ -162,6 +176,8 @@ export default {
   },
   beforeUnmount() {
     bus.off(OPEN_SETTINGS, this.showSettingsModal);
+    bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.onRequestVideoParametersChange);
+    bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
     if (this.fileInput) {
       this.fileInput.onchange = null;
     }
