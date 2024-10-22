@@ -1,6 +1,6 @@
 <template>
     <!-- Used in Mobile Android -->
-    <v-dialog v-model="show" fullscreen persistent>
+    <v-dialog v-model="show" fullscreen>
         <v-card>
             <v-toolbar
                 dark
