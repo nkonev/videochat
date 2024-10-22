@@ -400,7 +400,6 @@ export const isConverted = (name) => {
     return name != null && name.includes("_converted.")
 }
 
-const domParser = new DOMParser();
 export const unescapeHtml = (text) => {
     if (!text) {
         return text
