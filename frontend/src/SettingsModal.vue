@@ -90,6 +90,8 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {videochat_name} from "@/router/routes.js";
 
+const LOADING_COLOR = 'white';
+
 export default {
   data () {
     return {
@@ -117,7 +119,7 @@ export default {
       this.$data.show = false;
     },
     setAvatarToProfile(file) {
-      this.loading = true;
+      this.loading = LOADING_COLOR;
       const config = {
         headers: { 'content-type': 'multipart/form-data' }
       }
@@ -131,7 +133,7 @@ export default {
         });
     },
     removeAvatarFromProfile() {
-      this.loading = true;
+      this.loading = LOADING_COLOR;
       return axios.patch(`/api/aaa/profile`, {removeAvatar: true})
           .finally(()=>{
             this.loading = false;
@@ -142,7 +144,7 @@ export default {
     },
     onRequestVideoParametersChange() {
       if (this.isVideoRoute()) {
-        this.loading = true;
+        this.loading = LOADING_COLOR;
       }
     },
     onVideoParametersChanged() {
