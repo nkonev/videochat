@@ -129,10 +129,10 @@
 
 <script>
 import bus, {
-    CHANGE_VIDEO_SOURCE,
-    CHANGE_VIDEO_SOURCE_DIALOG,
-    REQUEST_CHANGE_VIDEO_PARAMETERS,
-    VIDEO_PARAMETERS_CHANGED,
+  CHANGE_VIDEO_SOURCE,
+  CHANGE_VIDEO_SOURCE_DIALOG, CHOOSING_VIDEO_SOURCE_CANCELED,
+  REQUEST_CHANGE_VIDEO_PARAMETERS,
+  VIDEO_PARAMETERS_CHANGED,
 } from "./bus/bus";
     import {
         setVideoResolution,
@@ -256,11 +256,14 @@ import bus, {
                 this.tempStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
             },
             requestPermissionsClose() {
+                let i = 0;
                 if (this.tempStream) {
                     for (const track of this.tempStream.getTracks()) {
                         track.stop();
+                        i++;
                     }
                 }
+                console.info("Closed test "+ i +" tracks");
             },
             async openDevicesSettings() {
                 if (!this.isVideoRoute()) {
@@ -276,6 +279,9 @@ import bus, {
                         setStoredCallAudioDeviceId(audioId);
                     }
                 }
+            },
+            onChoosingVideoSourceCanceled() {
+              this.requestPermissionsClose();
             },
         },
         computed: {
@@ -301,6 +307,7 @@ import bus, {
         mounted() {
             bus.on(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
             bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+            bus.on(CHOOSING_VIDEO_SOURCE_CANCELED, this.onChoosingVideoSourceCanceled);
 
             this.showModal();
         },
@@ -309,6 +316,7 @@ import bus, {
         beforeUnmount() {
             bus.off(VIDEO_PARAMETERS_CHANGED, this.onVideoParametersChanged);
             bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+            bus.off(CHOOSING_VIDEO_SOURCE_CANCELED, this.onChoosingVideoSourceCanceled);
         },
     }
 </script>

@@ -36,8 +36,8 @@
 
 <script>
 import bus, {
-    ADD_VIDEO_SOURCE,
-    ADD_VIDEO_SOURCE_DIALOG, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG,
+  ADD_VIDEO_SOURCE,
+  ADD_VIDEO_SOURCE_DIALOG, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG, CHOOSING_VIDEO_SOURCE_CANCELED,
 } from "./bus/bus";
 
     export default {
@@ -63,7 +63,8 @@ import bus, {
                 this.purpose = purpose;
                 this.requestVideoDeviceItems()
             },
-            closeModal() {
+            closeModal(chosen) {
+                const wasShown = this.show;
                 this.show = false;
                 this.videoDevices = [];
                 this.videoDevice = null;
@@ -71,6 +72,9 @@ import bus, {
                 this.audioDevice = null;
                 this.change = false;
                 this.purpose = null;
+                if (!chosen && wasShown) {
+                  bus.emit(CHOOSING_VIDEO_SOURCE_CANCELED);
+                }
             },
             requestVideoDeviceItems() {
                 navigator.mediaDevices.enumerateDevices()
@@ -95,8 +99,15 @@ import bus, {
                 } else {
                     bus.emit(ADD_VIDEO_SOURCE, {videoId: this.videoDevice, audioId: this.audioDevice});
                 }
-                this.closeModal();
+                this.closeModal(true);
             }
+        },
+        watch: {
+          show(newValue) {
+            if (!newValue) {
+              this.closeModal();
+            }
+          }
         },
         mounted() {
             bus.on(ADD_VIDEO_SOURCE_DIALOG, this.showModalAdd);
