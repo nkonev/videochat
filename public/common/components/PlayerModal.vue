@@ -1,6 +1,7 @@
 <template>
-    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7">
-        <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
+    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7" class="player-modal">
+        <span class="d-flex flex-column justify-center align-center" style="width: 100%; height: 100%">
+            <div class="d-flex justify-center align-center flex-shrink-0 player-media-wrapper">
                 <template v-if="isCorrectStatus()">
                     <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                     <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
@@ -9,6 +10,10 @@
                 <template v-else>
                     <img class="image-custom-class-view" :src="statusImage"/>
                 </template>
+            </div>
+            <div v-if="filename" class="player-caption-placeholder flex-shrink-0 d-flex">
+              <span class="player-caption-text">{{filename}}</span>
+            </div>
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
         <template v-if="showArrows">
@@ -33,6 +38,7 @@ export default {
             thisIdx: 0,
             status: null,
             statusImage: null,
+            filename: null,
         }
     },
     computed: {
@@ -63,12 +69,14 @@ export default {
             window.removeEventListener("keydown", this.onKeyPress);
             this.$data.status = null;
             this.$data.statusImage = null;
+            this.$data.filename = null;
         },
         fetchStatus(url) {
             return axios.post(`/api/storage/public/view/status`, {
                 url: url
             }).then((res)=>{
-                this.$data.status = res.data.status
+                this.$data.status = res.data.status;
+                this.$data.filename = res.data.filename;
                 this.$data.statusImage = res.data.statusImage;
             })
         },
@@ -121,8 +129,9 @@ export default {
                 this.dto.previewUrl = el.previewUrl;
                 this.dto.canPlayAsVideo = el.canPlayAsVideo;
                 this.dto.canShowAsImage = el.canShowAsImage;
+                this.filename = el.filename;
             })
-        }
+        },
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
@@ -192,6 +201,26 @@ export default {
 .audio-custom-class-view {
     min-width: 600px
     max-width: 100% !important
+}
+
+.player-caption-placeholder {
+  background black
+  width 100%
+  height 1.4em
+}
+
+.player-media-wrapper {
+  width: 100%;
+  height: calc(100% - 1.4em)
+}
+
+.player-caption-text {
+  color white
+  // ellipsisis start
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  // ellipsisis end
 }
 
 </style>
