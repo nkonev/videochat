@@ -407,6 +407,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 
 type ViewItem struct {
 	Url            string  `json:"url"`
+	Filename       string  `json:"filename"`
 	PreviewUrl     *string `json:"previewUrl"`
 	This           bool    `json:"this"`
 	CanPlayAsVideo bool    `json:"canPlayAsVideo"`
@@ -516,8 +517,10 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 				}
 			}
 
+			filename := services.ReadFilename(objInfo.Key)
 			retList = append(retList, ViewItem{
 				Url:            downloadUrl,
+				Filename:       filename,
 				PreviewUrl:     previewUrl,
 				This:           objInfo.Key == fileId,
 				CanPlayAsVideo: utils.IsVideo(objInfo.Key),
@@ -590,26 +593,58 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, obj, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		GetLogEntry(c.Request().Context()).Errorf("Unable to check existence of %v: %v", fileId, err)
-		return c.JSON(http.StatusOK, &utils.H{"status": "error"})
+		return c.JSON(http.StatusOK, StatusItem{
+			Status:       "error",
+			FileItemUuid: &fileItemUuid,
+		})
 	}
 
+	filename := services.ReadFilename(obj.Key)
+
 	if exists {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "fileItemUuid": fileItemUuid})
+		return c.JSON(http.StatusOK, StatusItem{
+			Status:       "ok",
+			Filename:     filename,
+			FileItemUuid: &fileItemUuid,
+		})
 	} else {
 		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Unable to check converting of %v: %v", fileId, err)
-			return c.JSON(http.StatusOK, &utils.H{"status": "error", "fileItemUuid": fileItemUuid})
+			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
+				Status:       "error",
+				Filename:     filename,
+				FileItemUuid: &fileItemUuid,
+			}))
 		}
 		if converting {
-			return c.JSON(http.StatusOK, &utils.H{"status": "converting", "statusImage": ConvertingImage, "fileItemUuid": fileItemUuid})
+			i := ConvertingImage
+			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
+				Status:       "converting",
+				Filename:     filename,
+				StatusImage:  &i,
+				FileItemUuid: &fileItemUuid,
+			}))
 		} else {
-			return c.JSON(http.StatusOK, &utils.H{"status": "not_found", "statusImage": NotFoundImage, "fileItemUuid": fileItemUuid})
+			i := NotFoundImage
+			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
+				Status:       "not_found",
+				Filename:     filename,
+				StatusImage:  &i,
+				FileItemUuid: &fileItemUuid,
+			}))
 		}
 	}
+}
+
+type StatusItem struct {
+	Status       string  `json:"status"`
+	FileItemUuid *string `json:"fileItemUuid"`
+	Filename     string  `json:"filename"`
+	StatusImage  *string `json:"statusImage"`
 }
 
 func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {

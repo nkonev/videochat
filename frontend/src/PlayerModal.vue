@@ -1,5 +1,5 @@
 <template>
-    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7">
+    <v-overlay v-model="show" width="100%" height="100%" opacity="0.7" class="player-modal">
         <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
             <template v-if="isCorrectStatus()">
                 <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
@@ -9,6 +9,13 @@
             <template v-else>
                 <img class="image-custom-class-view" :src="statusImage"/>
             </template>
+            <div class="player-caption-placeholder" @mouseenter="onMouseEnter()" @mouseleave="onMouseLeave()"></div>
+            <v-tooltip v-if="filename"
+                :model-value="showTooltip"
+                location="bottom center"
+                activator=".player-caption-placeholder"
+                :text="filename"
+            />
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
         <template v-if="showArrows">
@@ -35,6 +42,8 @@ export default {
             status: null,
             statusImage: null,
             fileItemUuid: null,
+            showTooltip: false,
+            filename: null,
         }
     },
     computed: {
@@ -73,12 +82,15 @@ export default {
             this.$data.status = null;
             this.$data.statusImage = null;
             this.$data.fileItemUuid = null;
+            this.$data.showTooltip = false;
+            this.$data.filename = null;
         },
         fetchStatus(url) {
             return axios.post(`/api/storage/view/status`, {
                 url: url
             }).then((res)=>{
-                this.$data.status = res.data.status
+                this.$data.status = res.data.status;
+                this.$data.filename = res.data.filename;
                 this.$data.statusImage = res.data.statusImage;
                 this.$data.fileItemUuid = res.data.fileItemUuid;
             })
@@ -133,6 +145,7 @@ export default {
                     this.dto.previewUrl = el.previewUrl;
                     this.dto.canPlayAsVideo = el.canPlayAsVideo;
                     this.dto.canShowAsImage = el.canShowAsImage;
+                    this.filename = el.filename;
                 })
             })
         },
@@ -147,7 +160,13 @@ export default {
             if (this.show && this.fileItemUuid == dto.fileInfoDto.fileItemUuid) {
                 this.fetchMediaListView();
             }
-        }
+        },
+        onMouseEnter() {
+          this.$data.showTooltip = true;
+        },
+        onMouseLeave() {
+          this.$data.showTooltip = false;
+        },
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
@@ -223,4 +242,10 @@ export default {
     max-width: 100% !important
 }
 
+.player-caption-placeholder {
+  position absolute
+  bottom 0
+  width 100%
+  height 10%
+}
 </style>
