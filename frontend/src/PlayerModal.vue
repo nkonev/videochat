@@ -1,6 +1,6 @@
 <template>
     <v-overlay v-model="show" width="100%" height="100%" opacity="0.7" class="player-modal">
-        <span class="d-flex justify-center align-center" style="width: 100%; height: 100%">
+        <span class="d-flex justify-center align-center flex-column" style="width: 100%; height: 100%">
             <template v-if="isCorrectStatus()">
                 <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                 <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
@@ -9,13 +9,9 @@
             <template v-else>
                 <img class="image-custom-class-view" :src="statusImage"/>
             </template>
-            <div class="player-caption-placeholder" @mouseenter="onMouseEnter()" @mouseleave="onMouseLeave()"></div>
-            <v-tooltip v-if="filename"
-                :model-value="showTooltip"
-                location="bottom center"
-                activator=".player-caption-placeholder"
-                :text="filename"
-            />
+            <div v-if="filename" class="player-caption-placeholder flex-shrink-0 d-flex">
+              <span class="player-caption-text d-flex">{{filename}}</span>
+            </div>
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
         <template v-if="showArrows">
@@ -42,7 +38,6 @@ export default {
             status: null,
             statusImage: null,
             fileItemUuid: null,
-            showTooltip: false,
             filename: null,
         }
     },
@@ -82,7 +77,6 @@ export default {
             this.$data.status = null;
             this.$data.statusImage = null;
             this.$data.fileItemUuid = null;
-            this.$data.showTooltip = false;
             this.$data.filename = null;
         },
         fetchStatus(url) {
@@ -161,12 +155,6 @@ export default {
                 this.fetchMediaListView();
             }
         },
-        onMouseEnter() {
-          this.$data.showTooltip = true;
-        },
-        onMouseLeave() {
-          this.$data.showTooltip = false;
-        },
     },
     mounted() {
         bus.on(PLAYER_MODAL, this.showModal);
@@ -243,9 +231,12 @@ export default {
 }
 
 .player-caption-placeholder {
-  position absolute
-  bottom 0
+  background black
   width 100%
-  height 10%
+  height 3em
+}
+
+.player-caption-text {
+  color white
 }
 </style>
