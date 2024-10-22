@@ -240,5 +240,10 @@ export default {
 
 .player-caption-text {
   color white
+  // ellipsisis start
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  // ellipsisis end
 }
 </style>
