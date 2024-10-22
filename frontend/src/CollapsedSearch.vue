@@ -28,8 +28,7 @@
 
 
 <script>
-import {hasLength} from "@/utils";
-const VIEWPORT_VS_CLIENT_HEIGHT_RATIO = 0.75;
+import {hasLength, mobileKeyboardIsShown} from "@/utils";
 
 export default {
     props: [
@@ -46,10 +45,7 @@ export default {
             return hasLength(this.provider.getModelValue())
         },
         reactOnKeyboardChange(event) {
-            if (
-                (event.target.height * event.target.scale) / window.screen.height <
-                VIEWPORT_VS_CLIENT_HEIGHT_RATIO
-            ) {
+            if (mobileKeyboardIsShown(event)) {
                 console.log('keyboard is shown');
             } else {
                 console.log('keyboard is hidden');

@@ -406,3 +406,9 @@ export const unescapeHtml = (text) => {
     }
     return he.decode(text);
 }
+
+const VIEWPORT_VS_CLIENT_HEIGHT_RATIO = 0.75;
+export const mobileKeyboardIsShown = (event) => {
+    return (event.target.height * event.target.scale) / window.screen.height <
+        VIEWPORT_VS_CLIENT_HEIGHT_RATIO
+}
