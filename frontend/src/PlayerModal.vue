@@ -10,7 +10,7 @@
                 <img class="image-custom-class-view" :src="statusImage"/>
             </template>
             <div v-if="filename" class="player-caption-placeholder flex-shrink-0 d-flex">
-              <span class="player-caption-text d-flex">{{filename}}</span>
+              <span class="player-caption-text">{{filename}}</span>
             </div>
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
