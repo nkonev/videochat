@@ -36,7 +36,6 @@
     } from "./bus/bus";
     import MessageEdit from "@/MessageEdit.vue";
     import heightMixin from "@/mixins/heightMixin";
-    import {mobileKeyboardIsShown} from "@/utils.js";
 
     export default {
         data() {
@@ -62,15 +61,6 @@
             onSetEditingTitle() {
                 this.isEditing = true;
             },
-            reactOnKeyboardChange(event) {
-              if (mobileKeyboardIsShown(event)) {
-                console.log('keyboard is shown');
-              } else {
-                console.log('keyboard is hidden');
-                this.show = false;
-              }
-            },
-
         },
         watch: {
             show(newValue) {
@@ -90,16 +80,10 @@
         mounted() {
             bus.on(OPEN_EDIT_MESSAGE, this.showModal);
             bus.on(CLOSE_EDIT_MESSAGE, this.closeModal);
-            if ('visualViewport' in window && this.isMobile()) {
-              window.visualViewport.addEventListener('resize', this.reactOnKeyboardChange);
-            }
         },
         beforeUnmount() {
             bus.off(OPEN_EDIT_MESSAGE, this.showModal);
             bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
-            if ('visualViewport' in window && this.isMobile()) {
-              window.visualViewport.removeEventListener('resize', this.reactOnKeyboardChange);
-            }
         },
     }
 </script>
