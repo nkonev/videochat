@@ -1,7 +1,7 @@
 <template>
     <v-overlay v-model="show" width="100%" height="100%" opacity="0.7" class="player-modal">
         <span class="d-flex flex-column justify-center align-center" style="width: 100%; height: 100%">
-          <div class="d-flex justify-center align-center flex-shrink-0 media-wrapper">
+          <div class="d-flex justify-center align-center flex-shrink-0 player-media-wrapper">
             <template v-if="isCorrectStatus()">
                 <video class="video-custom-class-view" v-if="dto?.canPlayAsVideo" :src="dto.url" :poster="dto.previewUrl" playsInline controls/>
                 <img class="image-custom-class-view" v-if="dto?.canShowAsImage" :src="dto.url"/>
@@ -238,7 +238,7 @@ export default {
   height 1.4em
 }
 
-.media-wrapper {
+.player-media-wrapper {
   width: 100%;
   height: calc(100% - 1.4em)
 }
@@ -251,4 +251,5 @@ export default {
   overflow: hidden;
   // ellipsisis end
 }
+
 </style>
