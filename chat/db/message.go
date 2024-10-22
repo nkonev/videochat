@@ -122,12 +122,12 @@ func (tx *Tx) IsEdgeMessage(ctx context.Context, chatId int64, messageId int64, 
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
-	var gotMessageId int64
+	var gotMessageId *int64
 	err := row.Scan(&gotMessageId)
 	if err != nil {
 		return false, eris.Wrap(err, "error during interacting with db")
 	}
-	return messageId == gotMessageId, nil
+	return gotMessageId != nil && messageId == *gotMessageId, nil
 }
 
 // see also its copy in aaa::UserListViewRepository

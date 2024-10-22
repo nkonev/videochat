@@ -1202,12 +1202,12 @@ func (tx *Tx) IsEdgeChat(ctx context.Context, chatId, participantId int64, searc
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
-	var gotChatId int64
+	var gotChatId *int64
 	err := row.Scan(&gotChatId)
 	if err != nil {
 		return false, eris.Wrap(err, "error during interacting with db")
 	}
-	return chatId == gotChatId, nil
+	return gotChatId != nil && chatId == *gotChatId, nil
 }
 
 // see also getRowNumbers
