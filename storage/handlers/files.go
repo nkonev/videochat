@@ -601,10 +601,10 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 			FileItemUuid: &fileItemUuid,
 		})
 	}
-
-	filename := services.ReadFilename(obj.Key)
+	// obj is nil in case when video is still converting
 
 	if exists {
+		filename := services.ReadFilename(obj.Key)
 		return c.JSON(http.StatusOK, StatusItem{
 			Status:       "ok",
 			Filename:     filename,
@@ -616,7 +616,6 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Unable to check converting of %v: %v", fileId, err)
 			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
 				Status:       "error",
-				Filename:     filename,
 				FileItemUuid: &fileItemUuid,
 			}))
 		}
@@ -624,7 +623,6 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 			i := ConvertingImage
 			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
 				Status:       "converting",
-				Filename:     filename,
 				StatusImage:  &i,
 				FileItemUuid: &fileItemUuid,
 			}))
@@ -632,7 +630,6 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 			i := NotFoundImage
 			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
 				Status:       "not_found",
-				Filename:     filename,
 				StatusImage:  &i,
 				FileItemUuid: &fileItemUuid,
 			}))
