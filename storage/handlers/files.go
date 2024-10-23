@@ -614,25 +614,25 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
 		if err != nil {
 			GetLogEntry(c.Request().Context()).Errorf("Unable to check converting of %v: %v", fileId, err)
-			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
+			return c.JSON(http.StatusOK, StatusItem{
 				Status:       "error",
 				FileItemUuid: &fileItemUuid,
-			}))
+			})
 		}
 		if converting {
 			i := ConvertingImage
-			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
+			return c.JSON(http.StatusOK, StatusItem{
 				Status:       "converting",
 				StatusImage:  &i,
 				FileItemUuid: &fileItemUuid,
-			}))
+			})
 		} else {
 			i := NotFoundImage
-			return c.JSON(http.StatusOK, c.JSON(http.StatusOK, StatusItem{
+			return c.JSON(http.StatusOK, StatusItem{
 				Status:       "not_found",
 				StatusImage:  &i,
 				FileItemUuid: &fileItemUuid,
-			}))
+			})
 		}
 	}
 }
