@@ -339,7 +339,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-func (ch *ChatHandler) IsEdgeChat(c echo.Context) error {
+func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")

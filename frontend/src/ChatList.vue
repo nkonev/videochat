@@ -660,7 +660,7 @@ export default {
 
         if (this.isScrolledToTop()) {
           const topNElements = this.items.slice(0, PAGE_SIZE);
-          axios.post(`/api/chat/edge`, topNElements, {
+          axios.post(`/api/chat/fresh`, topNElements, {
             params: {
               size: PAGE_SIZE,
               searchString: this.searchString,
