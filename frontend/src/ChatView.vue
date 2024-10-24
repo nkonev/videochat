@@ -63,12 +63,11 @@ import {
     isCalling,
     isChatRoute,
     new_message,
-    publicallyAvailableForSearchChatsQuery,
     setTitle
 } from "@/utils";
 import bus, {
     CHAT_DELETED,
-    CHAT_EDITED, CHAT_REDRAW,
+    CHAT_EDITED,
     FILE_CREATED,
     FILE_REMOVED,
     FILE_UPDATED,
@@ -100,7 +99,7 @@ import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
-import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
+import {goToPreservingQuery, SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
 
 
 const getChatEventsData = (message) => {
@@ -545,7 +544,8 @@ export default {
     },
     onParticipantDeleted(dtos) { // also there is redraw/delete logic in ChatList::redrawItem
         if (dtos.find(p => p.id == this.chatStore.currentUser.id)) {
-            this.$router.push(({name: chat_list_name}))
+            const routerNewState = { name: chat_list_name};
+            goToPreservingQuery(this.$route, this.$router, routerNewState);
         }
     },
     isAllowedVideo() {
