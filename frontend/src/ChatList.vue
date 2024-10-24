@@ -546,7 +546,6 @@ export default {
           }
         }).then(({data}) => {
           if (data.found) {
-            console.log("Adding item", dto);
             this.addItem(dto);
             this.performMarking();
           } else {
@@ -566,7 +565,6 @@ export default {
             }
           }).then(({data}) => {
             if (data.found) {
-              console.log("Changing item", dto);
               let idxOf = findIndex(this.items, dto);
               if (idxOf !== -1) { // hasItem()
                 const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo

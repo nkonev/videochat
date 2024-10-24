@@ -674,6 +674,9 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 				GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
+			// also send to user himself
+			ch.notificator.NotifyAboutDeleteParticipants(c.Request().Context(), []int64{userPrincipalDto.UserId}, chatId, []int64{userPrincipalDto.UserId})
+
 			if chatDto.AvailableToSearch || chatDto.Blog {
 				// send duplicated event to the former user to re-draw chat on their search results
 				ch.notificator.NotifyAboutRedrawLeftChat(c.Request().Context(), chatDto, userPrincipalDto.UserId, len(chatDto.ParticipantIds) == 1, false, tx, map[int64]bool{userPrincipalDto.UserId: false}) // false because userPrincipalDto left the chat
@@ -947,6 +950,9 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			GetLogEntry(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 			return err
 		}
+
+		// also send to the user who we delete
+		ch.notificator.NotifyAboutDeleteParticipants(c.Request().Context(), []int64{interestingUserId}, chatId, []int64{interestingUserId})
 
 		if chatDto.AvailableToSearch || chatDto.Blog {
 			// send duplicated event to the former user to re-draw chat on their search results

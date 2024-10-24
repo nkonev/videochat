@@ -543,9 +543,9 @@ export default {
           this.$router.push(({name: chat_list_name}))
       }
     },
-    onChatRedraw(dto) { // copy from ChatList::redrawItem
-        if (this.searchString != publicallyAvailableForSearchChatsQuery) {
-            this.onChatDelete(dto)
+    onParticipantDeleted(dtos) { // also there is redraw/delete logic in ChatList::redrawItem
+        if (dtos.find(p => p.id == this.chatStore.currentUser.id)) {
+            this.$router.push(({name: chat_list_name}))
         }
     },
     isAllowedVideo() {
@@ -807,7 +807,7 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-    bus.on(CHAT_REDRAW, this.onChatRedraw);
+    bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
 
     writingUsersTimerId = setInterval(()=>{
       const curr = + new Date();
@@ -835,7 +835,7 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-    bus.off(CHAT_REDRAW, this.onChatRedraw);
+    bus.off(PARTICIPANT_DELETED, this.onParticipantDeleted);
 
     this.chatStore.isShowSearch = false;
 
