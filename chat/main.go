@@ -176,7 +176,7 @@ func configureEcho(
 
 	e.GET("/api/chat/:id/message", mc.GetMessages)
 	e.GET("/api/chat/:id/message/:messageId", mc.GetMessage)
-	e.POST("/api/chat/:id/message/edge", mc.IsEdgeMessage)
+	e.POST("/api/chat/:id/message/fresh", mc.IsFreshMessagesPage)
 	e.PUT("/api/chat/:id/message/:messageId/reaction", mc.ReactionMessage)
 	e.POST("/api/chat/:id/message", mc.PostMessage)
 	e.PUT("/api/chat/:id/message", mc.EditMessage)

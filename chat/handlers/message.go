@@ -97,6 +97,44 @@ func (mc *MessageHandler) FindMessageByFileItemUuid(c echo.Context) error {
 
 }
 
+func (mc *MessageHandler) getMessages(ctx context.Context, tx *db.Tx, chatId int64, userId int64, size int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*dto.DisplayMessageDto, bool, error) {
+	isParticipant, err := tx.IsParticipant(ctx, userId, chatId)
+	if err != nil {
+		return nil, false, err
+	}
+	if !isParticipant {
+		return nil, true, nil
+	}
+
+	messages, err := tx.GetMessages(ctx, chatId, size, startingFromItemId, reverse, hasHash, searchString)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error get messages from db %v", err)
+		return nil, false, err
+	}
+
+	var ownersSet = map[int64]bool{}
+	var chatsPreSet = map[int64]bool{}
+	for _, message := range messages {
+		populateSets(message, ownersSet, chatsPreSet, true)
+	}
+	chatsSet, err := tx.GetChatsBasic(ctx, chatsPreSet, userId)
+	if err != nil {
+		return nil, false, err
+	}
+	var users = getUsersRemotelyOrEmpty(ctx, ownersSet, mc.restClient)
+	areAdminsMap, err := getAreAdmins(ctx, tx, users, chatId)
+	if err != nil {
+		return nil, false, err
+	}
+
+	messageDtos := make([]*dto.DisplayMessageDto, 0)
+	for _, mm := range messages {
+		messageDtos = append(messageDtos, convertToMessageDto(ctx, mm, users, chatsSet, userId, areAdminsMap[userId]))
+	}
+
+	return messageDtos, false, nil
+}
+
 func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -128,48 +166,25 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	}
 
 	return db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
-		isParticipant, err := tx.IsParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId)
+
+		messageDtos, notAparticipant, err := mc.getMessages(c.Request().Context(), tx, chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString)
 		if err != nil {
 			return err
 		}
-		if !isParticipant {
+
+		if notAparticipant {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		if messages, err := tx.GetMessages(c.Request().Context(), chatId, size, startingFromItemId, reverse, hasHash, searchString); err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error get messages from db %v", err)
-			return err
-		} else {
-			if hasHash {
-				err := mc.addMessageReadAndSendIt(tx, c, chatId, startingFromItemId, userPrincipalDto.UserId)
-				if err != nil {
-					return err
-				}
-			}
-
-			var ownersSet = map[int64]bool{}
-			var chatsPreSet = map[int64]bool{}
-			for _, message := range messages {
-				populateSets(message, ownersSet, chatsPreSet, true)
-			}
-			chatsSet, err := tx.GetChatsBasic(c.Request().Context(), chatsPreSet, userPrincipalDto.UserId)
+		if hasHash {
+			err = mc.addMessageReadAndSendIt(tx, c.Request().Context(), chatId, startingFromItemId, userPrincipalDto.UserId)
 			if err != nil {
 				return err
 			}
-			var users = getUsersRemotelyOrEmpty(c.Request().Context(), ownersSet, mc.restClient)
-			areAdminsMap, err := getAreAdmins(c.Request().Context(), tx, users, chatId)
-			if err != nil {
-				return err
-			}
-
-			messageDtos := make([]*dto.DisplayMessageDto, 0)
-			for _, mm := range messages {
-				messageDtos = append(messageDtos, convertToMessageDto(c.Request().Context(), mm, users, chatsSet, userPrincipalDto.UserId, areAdminsMap[userPrincipalDto.UserId]))
-			}
-
-			GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
-			return c.JSON(http.StatusOK, messageDtos)
 		}
+
+		GetLogEntry(c.Request().Context()).Debugf("Successfully returning %v messages", len(messageDtos))
+		return c.JSON(http.StatusOK, messageDtos)
 	})
 }
 
@@ -402,38 +417,66 @@ type EdgeMessageDto struct {
 	SearchString string `json:"searchString"`
 }
 
-func (mc *MessageHandler) IsEdgeMessage(c echo.Context) error {
+func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
 		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
-	chatId, err := GetPathParamAsInt64(c, "id")
+	var startingFromItemId int64 = math.MaxInt64 // MaxInt64 for edge
+	size := utils.FixSizeString(c.QueryParam("size"))
+	reverse := true // true for edge
+	searchString := c.QueryParam("searchString")
+	searchString = TrimAmdSanitize(mc.policy, searchString)
+	hasHash := false // false for edge
+
+	chatIdString := c.Param("id")
+	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
 		return err
 	}
 
-	var bindTo = new(EdgeMessageDto)
-	if err := c.Bind(bindTo); err != nil {
+	var bindTo = make([]*dto.DisplayMessageDto, 0)
+	if err := c.Bind(&bindTo); err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
-	searchString := TrimAmdSanitize(mc.policy, bindTo.SearchString)
-
+	edge := true
 	return db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
-		participant, err := tx.IsParticipant(c.Request().Context(), userPrincipalDto.UserId, chatId)
+		messageDtos, notAparticipant, err := mc.getMessages(c.Request().Context(), tx, chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString)
 		if err != nil {
 			return err
-		}
-		if !participant {
-			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to search in this chat"})
 		}
 
-		edge, err := tx.IsEdgeMessage(c.Request().Context(), chatId, bindTo.MessageId, searchString)
-		if err != nil {
-			return err
+		if notAparticipant {
+			return c.NoContent(http.StatusNoContent)
+		}
+
+		if len(messageDtos) != len(bindTo) {
+			edge = false
+		} else {
+			for i := range messageDtos {
+				currentMessage := messageDtos[i]
+				gottenMessage := bindTo[i]
+				if currentMessage.Id != gottenMessage.Id {
+					edge = false
+					break
+				}
+				if currentMessage.Text != gottenMessage.Text {
+					edge = false
+					break
+				}
+				if len(currentMessage.Reactions) != len(gottenMessage.Reactions) {
+					edge = false
+					break
+				}
+				if currentMessage.BlogPost != gottenMessage.BlogPost {
+					edge = false
+					break
+				}
+			}
 		}
 
 		return c.JSON(http.StatusOK, &utils.H{"ok": edge})
@@ -1250,7 +1293,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 		// here we don't check message ownership because user can read foreign messages
 		// (any user has their own last read message per chat)
 
-		err := mc.addMessageReadAndSendIt(tx, c, chatId, messageId, userPrincipalDto.UserId)
+		err := mc.addMessageReadAndSendIt(tx, c.Request().Context(), chatId, messageId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -1288,18 +1331,18 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 	})
 }
 
-func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, c echo.Context, chatId int64, messageId int64, userId int64) error {
-	_, err := tx.AddMessageRead(c.Request().Context(), messageId, userId, chatId)
+func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, ctx context.Context, chatId int64, messageId int64, userId int64) error {
+	_, err := tx.AddMessageRead(ctx, messageId, userId, chatId)
 	if err != nil {
 		return err
 	}
-	mc.notificator.ChatNotifyMessageCount(c.Request().Context(), []int64{userId}, chatId, tx)
+	mc.notificator.ChatNotifyMessageCount(ctx, []int64{userId}, chatId, tx)
 
-	has, err := tx.HasUnreadMessages(c.Request().Context(), userId)
+	has, err := tx.HasUnreadMessages(ctx, userId)
 	if err != nil {
 		return err
 	}
-	mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), userId, has)
+	mc.notificator.NotifyAboutHasNewMessagesChanged(ctx, userId, has)
 
 	return nil
 }

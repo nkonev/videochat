@@ -652,13 +652,18 @@
         },
         onFocus() {
           if (this.chatStore.currentUser && this.items && this.isScrolledToBottom()) {
-            const edgeMessageId = this.getMaximumItemId();
-            axios.post(`/api/chat/${this.chatId}/message/edge`, {
-              messageId: edgeMessageId,
-              searchString: this.searchString
+            const bottomNElements = this.items.slice(-PAGE_SIZE);
+            axios.post(`/api/chat/${this.chatId}/message/fresh`, bottomNElements, {
+              params: {
+                size: PAGE_SIZE,
+                searchString: this.searchString,
+              },
             }).then((res)=>{
               if (!res.data.ok) {
+                console.log("Need to update messages");
                 this.reloadItems();
+              } else {
+                console.log("No need to update messages");
               }
             })
           }

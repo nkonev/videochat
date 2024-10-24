@@ -104,32 +104,6 @@ func selectMessageReactionsClause(chatId int64) string {
 	return fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v ", chatId)
 }
 
-func (tx *Tx) IsEdgeMessage(ctx context.Context, chatId int64, messageId int64, searchString string) (bool, error) {
-	var searchStringPercents = ""
-	if searchString != "" {
-		searchStringPercents = "%" + searchString + "%"
-	}
-
-	var row *sql.Row
-
-	if len(searchString) != 0 {
-		row = tx.QueryRowContext(ctx, fmt.Sprintf("select max(id) from message_chat_%v m where strip_tags(m.text) ilike $1", chatId), searchStringPercents)
-	} else {
-		row = tx.QueryRowContext(ctx, fmt.Sprintf("select max(id) from message_chat_%v m", chatId))
-	}
-	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
-		return false, eris.Wrap(row.Err(), "error during interacting with db")
-	}
-
-	var gotMessageId *int64
-	err := row.Scan(&gotMessageId)
-	if err != nil {
-		return false, eris.Wrap(err, "error during interacting with db")
-	}
-	return gotMessageId != nil && messageId == *gotMessageId, nil
-}
-
 // see also its copy in aaa::UserListViewRepository
 func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
 	list := make([]*Message, 0)
