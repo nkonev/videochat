@@ -454,28 +454,26 @@ func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		if len(messageDtos) != len(bindTo) {
-			edge = false
-		} else {
-			for i := range messageDtos {
-				currentMessage := messageDtos[i]
-				gottenMessage := bindTo[i]
-				if currentMessage.Id != gottenMessage.Id {
-					edge = false
-					break
-				}
-				if currentMessage.Text != gottenMessage.Text {
-					edge = false
-					break
-				}
-				if len(currentMessage.Reactions) != len(gottenMessage.Reactions) {
-					edge = false
-					break
-				}
-				if currentMessage.BlogPost != gottenMessage.BlogPost {
-					edge = false
-					break
-				}
+		aLen := min(len(messageDtos), len(bindTo))
+
+		for i := range aLen {
+			currentMessage := messageDtos[i]
+			gottenMessage := bindTo[i]
+			if currentMessage.Id != gottenMessage.Id {
+				edge = false
+				break
+			}
+			if currentMessage.Text != gottenMessage.Text {
+				edge = false
+				break
+			}
+			if len(currentMessage.Reactions) != len(gottenMessage.Reactions) {
+				edge = false
+				break
+			}
+			if currentMessage.BlogPost != gottenMessage.BlogPost {
+				edge = false
+				break
 			}
 		}
 

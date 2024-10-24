@@ -369,45 +369,43 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 			return err
 		}
 
-		if len(chatDtos) != len(bindTo) {
-			edge = false
-		} else {
-			for i := range chatDtos {
-				currentChat := chatDtos[i]
-				gottenChat := bindTo[i]
-				if currentChat.Id != gottenChat.Id {
-					edge = false
-					break
-				}
-				if currentChat.Name != gottenChat.Name {
-					edge = false
-					break
-				}
-				if currentChat.UnreadMessages != gottenChat.UnreadMessages {
-					edge = false
-					break
-				}
-				if currentChat.Avatar != gottenChat.Avatar {
-					edge = false
-					break
-				}
-				if currentChat.LoginColor != gottenChat.LoginColor {
-					edge = false
-					break
-				}
-				if currentChat.IsTetATet != gottenChat.IsTetATet {
-					edge = false
-					break
-				}
-				if currentChat.Blog != gottenChat.Blog {
-					edge = false
-					break
-				}
+		aLen := min(len(chatDtos), len(bindTo))
 
-				if currentChat.ParticipantsCount != gottenChat.ParticipantsCount {
-					edge = false
-					break
-				}
+		for i := range aLen {
+			currentChat := chatDtos[i]
+			gottenChat := bindTo[i]
+			if currentChat.Id != gottenChat.Id {
+				edge = false
+				break
+			}
+			if currentChat.Name != gottenChat.Name {
+				edge = false
+				break
+			}
+			if currentChat.UnreadMessages != gottenChat.UnreadMessages {
+				edge = false
+				break
+			}
+			if currentChat.Avatar != gottenChat.Avatar {
+				edge = false
+				break
+			}
+			if currentChat.LoginColor != gottenChat.LoginColor {
+				edge = false
+				break
+			}
+			if currentChat.IsTetATet != gottenChat.IsTetATet {
+				edge = false
+				break
+			}
+			if currentChat.Blog != gottenChat.Blog {
+				edge = false
+				break
+			}
+
+			if currentChat.ParticipantsCount != gottenChat.ParticipantsCount {
+				edge = false
+				break
 			}
 		}
 
