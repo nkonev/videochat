@@ -33,8 +33,8 @@
 
               <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog"/>
 
-              <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab" @click="openNewMessageDialog()"></v-btn>
-              <v-btn v-if="!isMobile() && chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" class="new-fab" @click="scrollDown()"></v-btn>
+            <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
+            <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab-b" @click="openNewMessageDialog()"></v-btn>
 
           </pane>
           <pane class="message-edit-pane" v-if="showBottomPane()" :size="bottomPaneSize()">
@@ -749,6 +749,13 @@ export default {
     scrollDown () {
       bus.emit(SCROLL_DOWN)
     },
+    scrollDownClass() {
+      if (this.isMobile()) {
+        return "new-fab-t"
+      } else {
+        return "new-fab-b"
+      }
+    },
   },
   watch: {
     '$route': {
@@ -865,9 +872,16 @@ export default {
     align-items: unset;
 }
 
-.new-fab {
+.new-fab-b {
   position: absolute
   bottom: 20px
+  right: 20px
+  z-index: 1000
+}
+
+.new-fab-t {
+  position: absolute
+  bottom: 90px
   right: 20px
   z-index: 1000
 }

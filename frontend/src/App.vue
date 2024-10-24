@@ -69,9 +69,6 @@
             <v-icon>mdi-postage-stamp</v-icon>
           </v-btn>
 
-          <v-btn v-if="isMobile() && chatStore.showScrollDown" icon @click="scrollDown()" :title="$vuetify.locale.t('$vuetify.scroll_down')">
-            <v-icon :x-large="isMobile()">mdi-arrow-down-thick</v-icon>
-          </v-btn>
           <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
               {{ chatStore.fileUploadOverallProgress + "%" }}
           </v-btn>
@@ -203,7 +200,7 @@ import bus, {
   PLAYER_MODAL,
   PROFILE_SET,
   REFRESH_ON_WEBSOCKET_RESTORED,
-  SCROLL_DOWN, SET_LOCAL_MICROPHONE_MUTED,
+  SET_LOCAL_MICROPHONE_MUTED,
   UNREAD_MESSAGES_CHANGED,
   CO_CHATTED_PARTICIPANT_CHANGED,
   VIDEO_CALL_INVITED,
@@ -368,9 +365,6 @@ export default {
         },
         switchSearchType() {
           this.chatStore.switchSearchType()
-        },
-        scrollDown () {
-          bus.emit(SCROLL_DOWN)
         },
         goToBlogLink() {
           return getBlogLink(this.chatId)
