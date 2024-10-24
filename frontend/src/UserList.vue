@@ -257,6 +257,7 @@ export default {
       return directionBottom
     },
     async scrollTop() {
+      removeTopUserPosition();
       return await this.$nextTick(() => {
           this.scrollerDiv.scrollTop = 0;
       });

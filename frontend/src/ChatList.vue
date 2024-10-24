@@ -192,6 +192,7 @@ export default {
         console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
     },
     async scrollTop() {
+      removeTopChatPosition();
       return await this.$nextTick(() => {
           this.scrollerDiv.scrollTop = 0;
       });
