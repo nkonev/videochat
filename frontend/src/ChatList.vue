@@ -659,13 +659,18 @@ export default {
 
 
         if (this.isScrolledToTop()) {
-          const topChatId = this.findTopElementId();;
-          axios.post(`/api/chat/edge`, {
-            chatId: topChatId,
-            searchString: this.searchString
+          const topNElements = this.items.slice(0, PAGE_SIZE);
+          axios.post(`/api/chat/edge`, topNElements, {
+            params: {
+              size: PAGE_SIZE,
+              searchString: this.searchString,
+            },
           }).then((res)=>{
             if (!res.data.ok) {
+              console.log("Need to update chats");
               this.reloadItems();
+            } else {
+              console.log("No need to update chats");
             }
           })
         }

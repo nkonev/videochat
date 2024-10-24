@@ -1166,50 +1166,6 @@ func (db *DB) GetUserChatNotificationSettings(ctx context.Context, userId, chatI
 	return consider, nil
 }
 
-func (tx *Tx) IsEdgeChat(ctx context.Context, chatId, participantId int64, searchString string, reverse bool, additionalFoundUserIds []int64) (bool, error) {
-	orderDirection := "desc"
-	if reverse {
-		orderDirection = "asc"
-	}
-
-	var searchStringWithPercents = ""
-	if searchString != "" {
-		searchStringWithPercents = "%" + searchString + "%"
-	}
-
-	var row *sql.Row
-	if searchString != "" {
-		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
-			select id
-			%s
-			where %s	
-			%s %s
-			limit 1
-		`, chat_from, getChatSearchClause(additionalFoundUserIds), chat_order, orderDirection),
-			participantId, searchStringWithPercents, searchString)
-	} else {
-		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
-			select id 
-			%s
-			where %s
-			%s %s 
-			limit 1
-		`, chat_from, chat_where, chat_order, orderDirection),
-			participantId)
-	}
-	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
-		return false, eris.Wrap(row.Err(), "error during interacting with db")
-	}
-
-	var gotChatId *int64
-	err := row.Scan(&gotChatId)
-	if err != nil {
-		return false, eris.Wrap(err, "error during interacting with db")
-	}
-	return gotChatId != nil && chatId == *gotChatId, nil
-}
-
 // see also getRowNumbers
 func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId, edgeChatId int64, pageSize int, reverse bool, searchString string, additionalFoundUserIds []int64) (bool, error) {
 

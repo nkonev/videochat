@@ -92,6 +92,57 @@ func (ch *ChatHandler) getAdditionalUserIds(ctx context.Context, searchString st
 	return additionalFoundUserIds
 }
 
+func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, size int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*dto.ChatDto, error) {
+	dbChats, err := tx.GetChatsWithParticipants(ctx, userId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, 0, 0)
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error get chats from db %v", err)
+		return nil, err
+	}
+
+	var chatIds []int64 = make([]int64, 0)
+	for _, cc := range dbChats {
+		chatIds = append(chatIds, cc.Id)
+	}
+	unreadMessageBatch, err := tx.GetUnreadMessagesCountBatch(ctx, chatIds, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	membership, err := tx.GetAmIParticipantBatch(ctx, chatIds, userId) // need to setting isResultFromSearch correctly
+	if err != nil {
+		GetLogEntry(ctx).Errorf("Error get chats with me from db %v", err)
+		return nil, err
+	}
+
+	chatDtos := make([]*dto.ChatDto, 0)
+	for _, cc := range dbChats {
+		messages := unreadMessageBatch[cc.Id]
+		isParticipant := membership[cc.Id]
+
+		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
+
+		chatDtos = append(chatDtos, cd)
+	}
+
+	var participantIdSet = map[int64]bool{}
+	for _, chatDto := range chatDtos {
+		for _, participantId := range chatDto.ParticipantIds {
+			participantIdSet[participantId] = true
+		}
+	}
+	var users = getUsersRemotelyOrEmpty(ctx, participantIdSet, ch.restClient)
+	for _, chatDto := range chatDtos {
+		for _, participantId := range chatDto.ParticipantIds {
+			user := users[participantId]
+			if user != nil {
+				chatDto.Participants = append(chatDto.Participants, user)
+				utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userId, len(chatDto.ParticipantIds) == 1)
+			}
+		}
+	}
+	return chatDtos, nil
+}
+
 func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -122,55 +173,12 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
-		dbChats, err := tx.GetChatsWithParticipants(c.Request().Context(), userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, 0, 0)
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error get chats from db %v", err)
-			return err
-		}
-
-		var chatIds []int64 = make([]int64, 0)
-		for _, cc := range dbChats {
-			chatIds = append(chatIds, cc.Id)
-		}
-		unreadMessageBatch, err := tx.GetUnreadMessagesCountBatch(c.Request().Context(), chatIds, userPrincipalDto.UserId)
+		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
 		}
 
-		membership, err := tx.GetAmIParticipantBatch(c.Request().Context(), chatIds, userPrincipalDto.UserId) // need to setting isResultFromSearch correctly
-		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error get chats with me from db %v", err)
-			return err
-		}
-
-		chatDtos := make([]*dto.ChatDto, 0)
-		for _, cc := range dbChats {
-			messages := unreadMessageBatch[cc.Id]
-			isParticipant := membership[cc.Id]
-
-			cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
-
-			chatDtos = append(chatDtos, cd)
-		}
-
-		var participantIdSet = map[int64]bool{}
-		for _, chatDto := range chatDtos {
-			for _, participantId := range chatDto.ParticipantIds {
-				participantIdSet[participantId] = true
-			}
-		}
-		var users = getUsersRemotelyOrEmpty(c.Request().Context(), participantIdSet, ch.restClient)
-		for _, chatDto := range chatDtos {
-			for _, participantId := range chatDto.ParticipantIds {
-				user := users[participantId]
-				if user != nil {
-					chatDto.Participants = append(chatDto.Participants, user)
-					utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userPrincipalDto.UserId, len(chatDto.ParticipantIds) == 1)
-				}
-			}
-		}
-
-		GetLogEntry(c.Request().Context()).Infof("Successfully returning %v chats", len(chatDtos))
+		GetLogEntry(c.Request().Context()).Debugf("Successfully returning %v chats", len(chatDtos))
 		return c.JSON(http.StatusOK, chatDtos)
 	})
 }
@@ -331,11 +339,6 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
-type EdgeChatDto struct {
-	ChatId       int64  `json:"chatId"`
-	SearchString string `json:"searchString"`
-}
-
 func (ch *ChatHandler) IsEdgeChat(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -343,19 +346,69 @@ func (ch *ChatHandler) IsEdgeChat(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	var bindTo = new(EdgeChatDto)
-	if err := c.Bind(bindTo); err != nil {
+	var bindTo = make([]*dto.ChatDto, 0)
+	if err := c.Bind(&bindTo); err != nil {
 		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
-	searchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
+	var startingFromItemId *int64 = nil // nil for edge
+	size := utils.FixSizeString(c.QueryParam("size"))
+	reverse := false // false for edge chat
+	searchString := c.QueryParam("searchString")
+	searchString = TrimAmdSanitize(ch.policy, searchString)
+
+	hasHash := false // false for edge
+
 	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
+	edge := true
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		edge, err := tx.IsEdgeChat(c.Request().Context(), bindTo.ChatId, userPrincipalDto.UserId, searchString, false, additionalFoundUserIds)
+		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
+		}
+
+		if len(chatDtos) != len(bindTo) {
+			edge = false
+		} else {
+			for i := range chatDtos {
+				currentChat := chatDtos[i]
+				gottenChat := bindTo[i]
+				if currentChat.Id != gottenChat.Id {
+					edge = false
+					break
+				}
+				if currentChat.Name != gottenChat.Name {
+					edge = false
+					break
+				}
+				if currentChat.UnreadMessages != gottenChat.UnreadMessages {
+					edge = false
+					break
+				}
+				if currentChat.Avatar != gottenChat.Avatar {
+					edge = false
+					break
+				}
+				if currentChat.LoginColor != gottenChat.LoginColor {
+					edge = false
+					break
+				}
+				if currentChat.IsTetATet != gottenChat.IsTetATet {
+					edge = false
+					break
+				}
+				if currentChat.Blog != gottenChat.Blog {
+					edge = false
+					break
+				}
+
+				if currentChat.ParticipantsCount != gottenChat.ParticipantsCount {
+					edge = false
+					break
+				}
+			}
 		}
 
 		return c.JSON(http.StatusOK, &utils.H{"ok": edge})
