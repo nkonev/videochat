@@ -171,10 +171,13 @@ export default {
     fetchAndSetChat(chatId) {
       return axios.get(`/api/chat/${chatId}`).then((response) => {
         if (response.status == 205) {
+          this.chatStore.incrementProgressCount();
           return axios.put(`/api/chat/${chatId}/join`).then((response)=>{
               return axios.get(`/api/chat/${chatId}`).then((response)=>{
                   return this.processNormalInfoResponse(response)
               })
+          }).finally(()=>{
+            this.chatStore.decrementProgressCount();
           })
         } else if (response.status == 204) {
           this.goToChatList();
