@@ -67,12 +67,13 @@ import bus, {
   CHAT_ADD, CHAT_DELETED, CHAT_EDITED, LOGGED_OUT,
   OPEN_RESEND_TO_MODAL, REFRESH_ON_WEBSOCKET_RESTORED,
 } from "./bus/bus";
-import {findIndex, hasLength, replaceInArray, replaceOrPrepend} from "./utils";
+import {findIndex, hasLength, replaceOrPrepend} from "./utils";
 import axios from "axios";
 import debounce from "lodash/debounce";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
-import {pageSize} from "@/mixins/pageableModalMixin.js";
+
+const PAGE_SIZE = 40;
 
 export default {
     data () {
@@ -85,8 +86,6 @@ export default {
             showSearchButton: true,
             markInstance: null,
             dataLoaded: false,
-            pageSize: 0,
-            totalCount: 0,
         }
     },
 
@@ -112,12 +111,11 @@ export default {
             }
             axios.get('/api/chat', {
                 params: {
-                    searchString: this.searchString,
+                  size: PAGE_SIZE,
+                  searchString: this.searchString,
                 },
             }).then(({data}) => {
-                this.chats = data.data;
-                this.pageSize = data.pageSize;
-                this.totalCount = data.totalCount;
+                this.chats = data;
             }).finally(()=>{
                 if (!silent) {
                     this.loading = false;
@@ -184,7 +182,7 @@ export default {
                     console.log("Adding item", dto);
                     this.markInstance.unmark();
                     replaceOrPrepend(this.chats, [dto]);
-                    if (this.chats.length > this.pageSize) {
+                    if (this.chats.length > PAGE_SIZE) {
                         this.chats.splice(this.chats.length - 1, 1);
                     }
                     this.performMarking();
@@ -203,7 +201,8 @@ export default {
                 this.chats.splice(idxToRemove, 1);
             }
 
-            const notEnoughItemsOnPage = this.totalCount > this.pageSize && this.chats.length < this.pageSize;
+            // yes, we neglect checking `this.totalCount > PAGE_SIZE &&`
+            const notEnoughItemsOnPage = this.chats.length < PAGE_SIZE;
             if (notEnoughItemsOnPage) {
                 this.loadData(true);
             }
@@ -223,8 +222,6 @@ export default {
             this.chats = [];
             this.loading = false;
             this.searchString = null;
-            this.pageSize = 0;
-            this.totalCount = 0;
         },
         shouldReactOnPageChange() {
             return false
