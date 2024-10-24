@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="360" persistent>
+        <v-dialog v-model="show" max-width="480" persistent>
             <v-card :title="title" :disabled="loading">
                 <v-progress-linear
                   :active="loading"
@@ -10,7 +10,7 @@
                   color="primary"
                 ></v-progress-linear>
 
-                <v-card-text>{{text}}</v-card-text>
+                <v-card-text v-html="text"></v-card-text>
 
                 <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>

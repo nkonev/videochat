@@ -36,7 +36,7 @@
       </v-card-subtitle>
 
       <template v-if="displayShortInfo(viewableUser)">
-          <span class="mx-0 my-1 force-wrap">{{ viewableUser.shortInfo }}</span>
+          <span class="mx-0 my-1 force-wrap" v-html="viewableUser.shortInfo"></span>
       </template>
 
       <v-container class="ma-0 pa-0 pt-1">

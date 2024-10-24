@@ -37,8 +37,7 @@
                         <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
                         <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.blog')"/>
                     </v-list-item-title>
-                    <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}">
-                        {{ printParticipants(item) }}
+                    <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}" v-html="printParticipants(item)">
                     </v-list-item-subtitle>
                 </template>
 
