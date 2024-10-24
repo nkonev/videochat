@@ -292,7 +292,6 @@
         },
 
         async scrollDown() {
-          removeTopMessagePosition(this.chatId);
           return await this.$nextTick(() => {
             this.scrollerDiv.scrollTop = 0;
           });
