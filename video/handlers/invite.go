@@ -697,7 +697,7 @@ func (vh *InviteHandler) GetMyBeingInvitedStatus(c echo.Context) error {
 
 	invitation, err := db.TransactWithResult(c.Request().Context(), vh.database, func(tx *db.Tx) (dto.VideoCallInvitation, error) {
 
-		myStates, err := tx.GetBeingInvitedByCalleeId(c.Request().Context(), userPrincipalDto.UserId)
+		myStates, err := tx.GetMyBeingInvitedStatus(c.Request().Context(), userPrincipalDto.UserId)
 		if err != nil {
 			return dto.VideoCallInvitation{}, err
 		}

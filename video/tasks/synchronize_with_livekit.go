@@ -83,6 +83,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
 	}
 }
 
+// see also user_service::ProcessCallOnDisabling
 func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *db.Tx, batchUserStates []dto.UserCallState) {
 
 	// move orphaned users in "inCall" status to "cancelling"

@@ -7,6 +7,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/client"
+	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
@@ -14,15 +15,17 @@ import (
 
 type UserService struct {
 	livekitRoomClient client.LivekitRoomClient
-	tr trace.Tracer
+	tr                trace.Tracer
+	database          *db.DB
 }
 
-func NewUserService(livekitRoomClient client.LivekitRoomClient) *UserService {
+func NewUserService(livekitRoomClient client.LivekitRoomClient, database *db.DB) *UserService {
 	tr := otel.Tracer("userService")
 
 	return &UserService{
 		livekitRoomClient: livekitRoomClient,
-		tr: tr,
+		tr:                tr,
+		database:          database,
 	}
 }
 
@@ -73,7 +76,7 @@ func (vh *UserService) GetVideoParticipants(ctx context.Context, chatId int64) (
 			continue
 		}
 		set[dto.UserCallStateId{
-			UserId: metadata.UserId,
+			UserId:  metadata.UserId,
 			TokenId: metadata.TokenId,
 		}] = true
 	}
@@ -170,4 +173,41 @@ func (vh *UserService) KickUser(ctx context.Context, userId int64) {
 			}
 		}
 	}
+}
+
+// roughly the equal in synchronize_with_livekit::processBatch
+// the difference is that we don't know tokenId (to construct userCallStateId) here, here we know only userId
+func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) {
+	db.Transact(ctx, h.database, func(tx *db.Tx) error {
+		// case 2.a user is owner of the call
+		// soft remove owned (callee, invitee) by user
+		ownedByMe, err := tx.GetByOwnerUserIdFromAllChats(ctx, userId)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Unable to find owned by user userId %v, error: %v", userId, err)
+		}
+		for _, owned := range ownedByMe {
+			if owned.Status == db.CallStatusBeingInvited {
+				err = tx.SetRemoving(ctx, dto.UserCallStateId{owned.TokenId, owned.UserId}, db.CallStatusRemoving)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", owned.TokenId, owned.UserId, err)
+				}
+			}
+		}
+
+		// case 2.b user is just user
+		// soft remove the user
+		myStates, err := tx.GetByCalleeUserIdFromAllChats(ctx, userId)
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Unable to find states of user userId %v, error: %v", userId, err)
+		}
+		for _, mySt := range myStates {
+			if mySt.Status == db.CallStatusInCall || mySt.Status == db.CallStatusBeingInvited {
+				err = tx.SetRemoving(ctx, dto.UserCallStateId{UserId: mySt.UserId, TokenId: mySt.TokenId}, db.CallStatusRemoving)
+				if err != nil {
+					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", mySt.TokenId, mySt.UserId, err)
+				}
+			}
+		}
+		return nil
+	})
 }
