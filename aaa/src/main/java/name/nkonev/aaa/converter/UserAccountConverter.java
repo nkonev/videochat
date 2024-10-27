@@ -269,6 +269,30 @@ public class UserAccountConverter {
             if (FORBIDDEN_USERNAMES.contains(login)) {
                 throw new BadRequestException("forbidden login");
             }
+
+            for (var c: login.chars().toArray()) {
+                if (
+                    !Character.isLetterOrDigit(c) &&
+                    c != '_' &&
+                    c != ' ' &&
+                    c != '-' &&
+                    c != '+' &&
+                    c != '/' &&
+                    c != '*' &&
+                    c != '=' &&
+                    c != '!' &&
+                    c != '?' &&
+                    c != '$' &&
+                    c != '^' &&
+                    c != '&' &&
+                    c != '@' &&
+                    c != '.' &&
+                    c != ',' &&
+                    c != '#'
+                ) {
+                    throw new BadRequestException("login contains invalid character");
+                }
+            }
         }
 
         if (login != null && !isExternalIntegration) {
