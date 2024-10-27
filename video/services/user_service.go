@@ -10,22 +10,27 @@ import (
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
+	"nkonev.name/video/producer"
 	"nkonev.name/video/utils"
 )
 
 type UserService struct {
-	livekitRoomClient client.LivekitRoomClient
-	tr                trace.Tracer
-	database          *db.DB
+	livekitRoomClient       client.LivekitRoomClient
+	tr                      trace.Tracer
+	database                *db.DB
+	rabbitUserIdsPublisher  *producer.RabbitUserIdsPublisher
+	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
 }
 
-func NewUserService(livekitRoomClient client.LivekitRoomClient, database *db.DB) *UserService {
+func NewUserService(livekitRoomClient client.LivekitRoomClient, database *db.DB, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher, rabbitMqInvitePublisher *producer.RabbitInvitePublisher) *UserService {
 	tr := otel.Tracer("userService")
 
 	return &UserService{
-		livekitRoomClient: livekitRoomClient,
-		tr:                tr,
-		database:          database,
+		livekitRoomClient:       livekitRoomClient,
+		tr:                      tr,
+		database:                database,
+		rabbitUserIdsPublisher:  rabbitUserIdsPublisher,
+		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
 	}
 }
 
@@ -191,6 +196,15 @@ func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) 
 				if err != nil {
 					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", owned.TokenId, owned.UserId, err)
 				}
+
+				invitation := dto.VideoCallInvitation{
+					ChatId: owned.ChatId,
+					Status: db.CallStatusRemoving,
+				}
+				err = h.rabbitMqInvitePublisher.Publish(ctx, &invitation, owned.UserId)
+				if err != nil {
+					GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
+				}
 			}
 		}
 
@@ -207,6 +221,15 @@ func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) 
 					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", mySt.TokenId, mySt.UserId, err)
 				}
 			}
+		}
+		err = h.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
+			{
+				UserId:    userId,
+				IsInVideo: false,
+			},
+		}})
+		if err != nil {
+			GetLogEntry(ctx).Errorf("Error during notifying about user is in video, userId=%v, error=%v", userId, err)
 		}
 		return nil
 	})
