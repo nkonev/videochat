@@ -340,6 +340,14 @@ export default {
         })
       ;
 
+      // regardless we can pass retryNum to Room constructor, it actually doesn't work
+      //
+      // testcase:
+      // setup ssh-vpn socks 5 on Firefox 131
+      // connect to the video call
+      // it takes 1 or some retries
+      //
+      // without this retry it's going to just return the error to user
       const retryOptions = {
         delay: 200,
         maxAttempts: 5,
