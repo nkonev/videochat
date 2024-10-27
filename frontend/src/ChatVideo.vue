@@ -340,7 +340,7 @@ export default {
         })
       ;
 
-      // regardless we can pass retryNum to Room constructor, it actually doesn't work
+      // although we can pass retryNum to Room constructor, actually it doesn't work
       //
       // testcase:
       // setup ssh-vpn socks 5 on Firefox 131
