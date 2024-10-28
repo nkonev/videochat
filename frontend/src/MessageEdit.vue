@@ -2,7 +2,7 @@
     <v-container class="ma-0 pa-0" style="height: 100%" fluid>
       <v-container id="sendButtonContainer" class="py-0 px-0 d-flex flex-column" fluid>
         <div class="answer-wrapper" v-if="showAnswer">
-            <div class="answer-text"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon>{{answerOnPreview}}</div>
+          <div class="answer-text"><v-icon @click="resetAnswer()" :title="$vuetify.locale.t('$vuetify.remove_answer')">mdi-close</v-icon><span v-html="answerOnPreview"></span></div>
         </div>
         <tiptap
             ref="tipTapRef"
@@ -807,7 +807,7 @@
 
 .floating-menu {
     display: flex;
-    background-color: #0D0D0D10;
+    background-color: #f1f1f1;
     padding: 0.2rem;
     border-radius: 0.5rem;
 
