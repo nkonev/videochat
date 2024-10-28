@@ -103,7 +103,7 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 	for _, cc := range dbChats {
 		chatIds = append(chatIds, cc.Id)
 	}
-	unreadMessageBatch, err := tx.GetUnreadMessagesCountBatch(ctx, chatIds, userId)
+	unreadMessageBatch, err := tx.GetUnreadMessagesCountByChatsBatch(ctx, chatIds, userId)
 	if err != nil {
 		return nil, err
 	}

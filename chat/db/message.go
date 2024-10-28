@@ -499,27 +499,37 @@ func (tx *Tx) MarkAllMessagesAsRead(ctx context.Context, chatId int64, participa
 	return err
 }
 
-func addMessageReadCommon(ctx context.Context, co CommonOperations, messageId, userId int64, chatId int64) (bool, error) {
-	res, err := co.ExecContext(ctx, `INSERT INTO message_read (last_message_id, user_id, chat_id) VALUES ($1, $2, $3) ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1  WHERE $1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3)`, messageId, userId, chatId)
+func addMessageReadCommon(ctx context.Context, co CommonOperations, messageId, userId int64, chatId int64) error {
+	row := co.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT id FROM message_chat_%v WHERE id = $1)", chatId), messageId)
+	if row.Err() != nil {
+		return eris.Wrap(row.Err(), "error during interacting with db")
+	}
+	exists := true
+	err := row.Scan(&exists)
 	if err != nil {
-		return false, eris.Wrap(err, "error during interacting with db")
+		return eris.Wrap(err, "error during interacting with db")
 	}
-	affected, err := res.RowsAffected()
+	if !exists {
+		GetLogEntry(ctx).Infof("Message with id %v doesn't exists in chat %v", messageId, chatId)
+		return nil
+	}
+	_, err = co.ExecContext(ctx, `
+		INSERT INTO message_read (last_message_id, user_id, chat_id) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1 
+			WHERE ($1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3))
+	`, messageId, userId, chatId)
 	if err != nil {
-		return false, eris.Wrap(err, "error during interacting with db")
+		return eris.Wrap(err, "error during interacting with db")
 	}
-	if affected > 0 {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return nil
 }
 
-func (db *DB) AddMessageRead(ctx context.Context, messageId, userId int64, chatId int64) (bool, error) {
+func (db *DB) AddMessageRead(ctx context.Context, messageId, userId int64, chatId int64) error {
 	return addMessageReadCommon(ctx, db, messageId, userId, chatId)
 }
 
-func (tx *Tx) AddMessageRead(ctx context.Context, messageId, userId int64, chatId int64) (bool, error) {
+func (tx *Tx) AddMessageRead(ctx context.Context, messageId, userId int64, chatId int64) error {
 	return addMessageReadCommon(ctx, tx, messageId, userId, chatId)
 }
 
@@ -628,15 +638,15 @@ func (dbR *DB) SetFileItemUuidTo(ctx context.Context, ownerId, chatId, messageId
 }
 
 func getUnreadMessagesCountCommon(ctx context.Context, co CommonOperations, chatId int64, userId int64) (int64, error) {
-	var count int64
-	var unusedChatId int64
-	row := co.QueryRowContext(ctx, getCountUnreadMessages(chatId, chatId, userId))
-	err := row.Scan(&unusedChatId, &count)
+	aMap, err := getUnreadMessagesCountByChatsBatchCommon(ctx, co, []int64{chatId}, userId)
 	if err != nil {
-		return 0, eris.Wrap(err, "error during interacting with db")
-	} else {
-		return count, nil
+		return 0, err
 	}
+	count, ok := aMap[chatId]
+	if !ok {
+		return 0, errors.New("something wrong with getting from map by chat id")
+	}
+	return count, nil
 }
 
 func (db *DB) GetUnreadMessagesCount(ctx context.Context, chatId int64, userId int64) (int64, error) {
@@ -647,63 +657,125 @@ func (tx *Tx) GetUnreadMessagesCount(ctx context.Context, chatId int64, userId i
 	return getUnreadMessagesCountCommon(ctx, tx, chatId, userId)
 }
 
-func getCountUnreadMessages(marker, chatId, userId int64) string {
-	return fmt.Sprintf(`SELECT 
-									%v, 
-									CASE 
-									WHEN (%v) THEN (SELECT COUNT(1) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0))
-									ELSE 0
-									END		
-	`, marker, getShouldConsiderMessagesAsUnread(chatId, userId), chatId, userId, chatId)
+func getNotificationSettingsByChatsBatch(ctx context.Context, co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
+	res := map[int64]bool{}
+
+	if len(chatIds) == 0 {
+		return res, nil
+	}
+
+	for _, chatId := range chatIds {
+		res[chatId] = true // default value
+	}
+
+	// true is a default value
+	rows, err := co.QueryContext(ctx, "select chat_id, coalesce(consider_messages_as_unread, true) from chat_participant_notification where user_id = $1 and chat_id = any($2)", userId, chatIds)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var chatId int64
+		var consider bool
+		if err := rows.Scan(&chatId, &consider); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+		res[chatId] = consider
+	}
+	return res, nil
 }
 
-func getUnreadMessagesCountBatchCommon(ctx context.Context, co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
+func getNotificationSettingsByUsersBatch(ctx context.Context, co CommonOperations, chatId int64, userIds []int64) (map[int64]bool, error) {
+	res := map[int64]bool{}
+
+	if len(userIds) == 0 {
+		return res, nil
+	}
+
+	for _, userId := range userIds {
+		res[userId] = true // default value
+	}
+
+	// true is a default value
+	rows, err := co.QueryContext(ctx, "select user_id, coalesce(consider_messages_as_unread, true) from chat_participant_notification where chat_id = $1 and user_id = any($2)", chatId, userIds)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userId int64
+		var consider bool
+		if err := rows.Scan(&userId, &consider); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		}
+		res[userId] = consider
+	}
+	return res, nil
+}
+
+func getCountUnreadMessages(marker, chatId, userId int64) string {
+	return fmt.Sprintf(`SELECT %v, COUNT(1) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)`, marker, chatId, userId, chatId)
+}
+
+func getHasUnreadMessages(marker, chatId, userId int64) string {
+	return fmt.Sprintf(`SELECT %v, EXISTS(SELECT 1 FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn`, marker, chatId, userId, chatId)
+}
+
+func getUnreadMessagesCountByChatsBatchCommon(ctx context.Context, co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
 	res := map[int64]int64{}
 
 	if len(chatIds) == 0 {
 		return res, nil
 	}
 
+	for _, cid := range chatIds {
+		res[cid] = 0
+	}
+
+	chatAllowCounting, err := getNotificationSettingsByChatsBatch(ctx, co, chatIds, userId)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+
 	var builder = ""
 	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += getCountUnreadMessages(chatId, chatId, userId)
+	for chatId, allow := range chatAllowCounting {
+		if allow {
+			if !first {
+				builder += " UNION ALL "
+			}
+			builder += getCountUnreadMessages(chatId, chatId, userId)
 
-		first = false
+			first = false
+		}
 	}
 
 	var rows *sql.Rows
-	var err error
 	rows, err = co.QueryContext(ctx, builder)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
-	} else {
-		defer rows.Close()
-		for _, cid := range chatIds {
-			res[cid] = 0
-		}
-		for rows.Next() {
-			var chatId int64
-			var count int64
-			if err := rows.Scan(&chatId, &count); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				res[chatId] = count
-			}
-		}
-		return res, nil
 	}
+	defer rows.Close()
+	for rows.Next() {
+		var chatId int64
+		var count int64
+		if err := rows.Scan(&chatId, &count); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			res[chatId] = count
+		}
+	}
+	return res, nil
 }
 
-func (db *DB) GetUnreadMessagesCountBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]int64, error) {
-	return getUnreadMessagesCountBatchCommon(ctx, db, chatIds, userId)
+func (db *DB) GetUnreadMessagesCountByChatsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]int64, error) {
+	return getUnreadMessagesCountByChatsBatchCommon(ctx, db, chatIds, userId)
 }
 
-func (tx *Tx) GetUnreadMessagesCountBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]int64, error) {
-	return getUnreadMessagesCountBatchCommon(ctx, tx, chatIds, userId)
+func (tx *Tx) GetUnreadMessagesCountByChatsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]int64, error) {
+	return getUnreadMessagesCountByChatsBatchCommon(ctx, tx, chatIds, userId)
 }
 
 func getUnreadMessagesCountBatchByParticipantsCommon(ctx context.Context, co CommonOperations, userIds []int64, chatId int64) (map[int64]int64, error) {
@@ -713,38 +785,44 @@ func getUnreadMessagesCountBatchByParticipantsCommon(ctx context.Context, co Com
 		return res, nil
 	}
 
+	for _, uid := range userIds {
+		res[uid] = 0
+	}
+
+	userAllowCounting, err := getNotificationSettingsByUsersBatch(ctx, co, chatId, userIds)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+
 	var builder = ""
 	var first = true
-	for _, userId := range userIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += getCountUnreadMessages(userId, chatId, userId)
+	for userId, allow := range userAllowCounting {
+		if allow {
+			if !first {
+				builder += " UNION ALL "
+			}
+			builder += getCountUnreadMessages(userId, chatId, userId)
 
-		first = false
+			first = false
+		}
 	}
 
 	var rows *sql.Rows
-	var err error
 	rows, err = co.QueryContext(ctx, builder)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
-	} else {
-		defer rows.Close()
-		for _, uid := range userIds {
-			res[uid] = 0
-		}
-		for rows.Next() {
-			var userId int64
-			var count int64
-			if err := rows.Scan(&userId, &count); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				res[userId] = count
-			}
-		}
-		return res, nil
 	}
+	defer rows.Close()
+	for rows.Next() {
+		var userId int64
+		var count int64
+		if err := rows.Scan(&userId, &count); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			res[userId] = count
+		}
+	}
+	return res, nil
 }
 
 func (db *DB) GetUnreadMessagesCountBatchByParticipants(ctx context.Context, userIds []int64, chatId int64) (map[int64]int64, error) {
@@ -755,57 +833,59 @@ func (tx *Tx) GetUnreadMessagesCountBatchByParticipants(ctx context.Context, use
 	return getUnreadMessagesCountBatchByParticipantsCommon(ctx, tx, userIds, chatId)
 }
 
-func hasUnreadMessages(chatId, userId int64) string {
-	return fmt.Sprintf(`SELECT 
-									%v, 
-									EXISTS (
-										SELECT 1 
-											FROM message_chat_%v 
-											WHERE ( %v ) 
-											AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)
-									) inn`, chatId, chatId, getShouldConsiderMessagesAsUnread(chatId, userId), userId, chatId,
-	)
-}
-
-func hasUnreadMessagesBatchCommon(ctx context.Context, co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
+func hasUnreadMessagesBatchByChatIdsCommon(ctx context.Context, co CommonOperations, chatIds []int64, userId int64) (map[int64]bool, error) {
 	res := map[int64]bool{}
 
 	if len(chatIds) == 0 {
 		return res, nil
 	}
 
+	for _, cid := range chatIds {
+		res[cid] = false
+	}
+
+	chatAllowCounting, err := getNotificationSettingsByChatsBatch(ctx, co, chatIds, userId)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+
 	var builder = ""
 	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += hasUnreadMessages(chatId, userId)
+	for chatId, allow := range chatAllowCounting {
+		if allow {
+			if !first {
+				builder += " UNION ALL "
+			}
+			builder += getHasUnreadMessages(chatId, chatId, userId)
 
-		first = false
+			first = false
+		}
 	}
 
 	var rows *sql.Rows
-	var err error
 	rows, err = co.QueryContext(ctx, builder)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
-	} else {
-		defer rows.Close()
-		for _, cid := range chatIds {
-			res[cid] = false
-		}
-		for rows.Next() {
-			var chatId int64
-			var exists bool
-			if err := rows.Scan(&chatId, &exists); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				res[chatId] = exists
-			}
-		}
-		return res, nil
 	}
+	defer rows.Close()
+	for rows.Next() {
+		var chatId int64
+		var has bool
+		if err := rows.Scan(&chatId, &has); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else {
+			res[chatId] = has
+		}
+	}
+	return res, nil
+}
+
+func (db *DB) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
+	return hasUnreadMessagesBatchByChatIdsCommon(ctx, db, chatIds, userId)
+}
+
+func (tx *Tx) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
+	return hasUnreadMessagesBatchByChatIdsCommon(ctx, tx, chatIds, userId)
 }
 
 func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId int64) (bool, error) {
@@ -818,7 +898,7 @@ func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId in
 		if len(chatIds) < utils.DefaultSize {
 			shouldContinue = false
 		}
-		messageUnreads, err := hasUnreadMessagesBatchCommon(ctx, co, chatIds, userId)
+		messageUnreads, err := hasUnreadMessagesBatchByChatIdsCommon(ctx, co, chatIds, userId)
 		if err != nil {
 			return false, err
 		}
@@ -831,44 +911,6 @@ func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId in
 	return false, nil
 }
 
-func (tx *Tx) ShouldSendHasUnreadMessagesCountBatchCommon(ctx context.Context, chatId int64, userIds []int64) (map[int64]bool, error) {
-	res := map[int64]bool{}
-
-	if len(userIds) == 0 {
-		return res, nil
-	}
-
-	var builder = ""
-	var first = true
-	for _, userId := range userIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf(`SELECT %v, (%v)`, userId, getShouldConsiderMessagesAsUnread(chatId, userId))
-
-		first = false
-	}
-
-	var rows *sql.Rows
-	var err error
-	rows, err = tx.QueryContext(ctx, builder)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var userId int64
-			var should bool
-			if err := rows.Scan(&userId, &should); err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			} else {
-				res[userId] = should
-			}
-		}
-		return res, nil
-	}
-}
-
 func (db *DB) HasUnreadMessages(ctx context.Context, userId int64) (bool, error) {
 	return hasUnreadMessagesCommon(ctx, db, userId)
 }
@@ -877,16 +919,14 @@ func (tx *Tx) HasUnreadMessages(ctx context.Context, userId int64) (bool, error)
 	return hasUnreadMessagesCommon(ctx, tx, userId)
 }
 
-func (db *DB) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
-	return hasUnreadMessagesBatchCommon(ctx, db, chatIds, userId)
-}
+func (tx *Tx) ShouldSendHasUnreadMessagesCountBatch(ctx context.Context, chatId int64, userIds []int64) (map[int64]bool, error) {
 
-func (tx *Tx) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int64, userId int64) (map[int64]bool, error) {
-	return hasUnreadMessagesBatchCommon(ctx, tx, chatIds, userId)
-}
+	userAllowCounting, err := getNotificationSettingsByUsersBatch(ctx, tx, chatId, userIds)
+	if err != nil {
+		return nil, err
+	}
 
-func getShouldConsiderMessagesAsUnread(chatId, userId int64) string {
-	return fmt.Sprintf(`SELECT COALESCE((SELECT consider_messages_as_unread FROM chat_participant_notification WHERE chat_id = %v AND user_id = %v), true)`, chatId, userId)
+	return userAllowCounting, err
 }
 
 func (tx *Tx) PublishMessage(ctx context.Context, chatId, messageId int64, shouldPublish bool) error {

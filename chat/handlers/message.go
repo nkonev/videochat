@@ -714,7 +714,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return 0, err
 		}
-		_, err = tx.AddMessageRead(c.Request().Context(), messageId, userPrincipalDto.UserId, chatId) // not to send to myself (1/2)
+		err = tx.AddMessageRead(c.Request().Context(), messageId, userPrincipalDto.UserId, chatId) // not to send to myself (1/2)
 		if err != nil {
 			return 0, err
 		}
@@ -764,14 +764,17 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			}
 
 			mc.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
-			shouldSendHasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatchCommon(c.Request().Context(), chatId, participantIds) // required in irder not to send the notification in case "notify about new message" is disabled
+			// it is an optimisation - instead of actually checking unread messages, we just get the setting "consider_messages_as_unread"
+			// because all the users got the new message and still not 've read it
+			// and only thing is to check if they ignore this chat or not by checking consider_messages_as_unread
+			hasUnreadMessagesMap, err := tx.ShouldSendHasUnreadMessagesCountBatch(c.Request().Context(), chatId, participantIds) // required in order not to send the notification in case "notify about new message" is disabled
 			if err != nil {
 				return err
 			}
 
-			for participantId, should := range shouldSendHasUnreadMessagesMap {
+			for participantId, hasUnread := range hasUnreadMessagesMap {
 				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
-					mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), participantId, should)
+					mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), participantId, hasUnread)
 
 					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: null.StringFromPtr(userPrincipalDto.Avatar)}
 					var sch dto.ChatDtoWithTetATet = &simpleChat{
@@ -1333,7 +1336,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 }
 
 func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, ctx context.Context, chatId int64, messageId int64, userId int64) error {
-	_, err := tx.AddMessageRead(ctx, messageId, userId, chatId)
+	err := tx.AddMessageRead(ctx, messageId, userId, chatId)
 	if err != nil {
 		return err
 	}
