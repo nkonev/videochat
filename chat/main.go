@@ -163,7 +163,7 @@ func configureEcho(
 	e.GET("/api/chat/:id/user-candidate", ch.SearchForUsersToAdd)
 	e.DELETE("/internal/delete-all-participants", ch.RemoveAllParticipants)
 	e.GET("/internal/does-participant-belong-to-chat", ch.DoesParticipantBelongToChat)
-	e.GET("/api/chat/:id/suggest-participants", ch.SearchForUsersToMention)
+	e.GET("/api/chat/:id/mention/suggest", ch.SearchForUsersToMention)
 	e.GET("/api/chat/can-create-blog", ch.CanCreateBlog)
 	e.PUT("/api/chat/tet-a-tet/:participantId", ch.TetATet)
 	e.PUT("/api/chat/public/preview-without-html", ch.CreatePreview)

@@ -9,7 +9,7 @@ export default (tipTapEditorVue) => {
     return {
         items: ({query}) => {
             const chatId = tipTapEditorVue.$route.params.id;
-            return axios.get(`/api/chat/${chatId}/suggest-participants`, {
+            return axios.get(`/api/chat/${chatId}/mention/suggest`, {
                 params: {
                     searchString: query,
                 },

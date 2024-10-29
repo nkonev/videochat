@@ -84,7 +84,7 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
-    import {messageIdHashPrefix, messageIdPrefix} from "@/router/routes";
+    import {messageIdHashPrefix, messageIdPrefix, profile_name} from "@/router/routes";
     import { getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition } from "@/store/localStore";
     import Mark from "mark.js";
     import hashMixin from "@/mixins/hashMixin";
@@ -547,6 +547,7 @@
                 checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
                 checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-button")),
                 checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-button-replace")),
+                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a" && el?.classList?.contains("mention")),
             ].filter(r => r.found);
             if (foundElements.length) {
                 e.preventDefault();
@@ -609,6 +610,14 @@
                             } else {
                                 console.info("video holder is not found")
                             }
+                        }
+                        break;
+                    }
+                    case "a": {
+                        const userId = found.getAttribute('data-id');
+                        if (hasLength(userId)) {
+                          const route = { name: profile_name, params: { id: userId }};
+                          this.$router.push(route);
                         }
                         break;
                     }
