@@ -4,9 +4,11 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:v2.11.6
+    image: traefik:v3.2.0
     hostname: traefik
     restart: unless-stopped
+    environment:
+      - OTEL_PROPAGATORS=jaeger
     # The Static Configuration
     command: --configFile=/etc/traefik/traefik.yml
     ports:
@@ -139,10 +141,9 @@ services:
     restart: unless-stopped
     ports:
       # https://www.jaegertracing.io/docs/1.54/deployment/
-      - 4318:4318 # OTLP GRPC over HTTP (aaa)
+      - 4318:4318 # OTLP GRPC over HTTP (aaa, traefik)
       - 4317:4317 # OTLP GRPC (other microservices)
       - 16686:16686 # web ui
-      - 6831:6831/udp # jaeger thrift (traefik)
     networks:
       backend:
     logging:

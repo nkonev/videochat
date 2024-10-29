@@ -159,6 +159,7 @@ http:
     auth-middleware:
       forwardAuth:
         address: "http://host.docker.internal:8060/internal/profile/auth"
+        headerField: "X-Auth-UserId"
         authRequestHeaders:
           - "Cookie"
           - "uber-trace-id"

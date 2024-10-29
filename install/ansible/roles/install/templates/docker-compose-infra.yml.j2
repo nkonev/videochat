@@ -2,8 +2,10 @@ version: '3.9'
 
 services:
   traefik:
-    image: traefik:v2.11.6
+    image: traefik:v3.2.0
     hostname: traefik
+    environment:
+      - OTEL_PROPAGATORS=jaeger
     # The Static Configuration
     command: --configFile=/etc/traefik/traefik.yml
     ports:

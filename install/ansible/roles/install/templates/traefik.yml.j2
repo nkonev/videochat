@@ -1,6 +1,4 @@
 # https://docs.traefik.io/reference/static-configuration/file/
-pilot:
-  dashboard: false
 global:
   checkNewVersion: false
   sendAnonymousUsage: false
@@ -18,8 +16,8 @@ entryPoints:
     address: :8080
 providers:
   providersThrottleDuration: 2s
-  docker:
-    swarmMode: true
+  swarm:
+    endpoint: "unix:///var/run/docker.sock"
     watch: true
     exposedByDefault: false
   file:
@@ -29,7 +27,7 @@ api:
   insecure: true
   dashboard: true
 log:
-  level: WARN
+  level: INFO
 accessLog:
   format: json
   fields:
@@ -40,14 +38,10 @@ accessLog:
         User-Agent: keep
         uber-trace-id: keep
 tracing:
-  spanNameLimit: 150
-  jaeger:
-    samplingType: const
-    samplingParam: 1
-    localAgentHostPort: jaeger:6831
-    propagation: jaeger
-    disableAttemptReconnecting: false
-    gen128Bit: true
+  sampleRate: 1.0
+  otlp:
+    http:
+      endpoint: http://jaeger:4318/v1/traces
 
 certificatesResolvers:
   myresolver:
