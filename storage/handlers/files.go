@@ -748,6 +748,20 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	if utils.IsVideo(objectInfo.Key) {
+		previewToCheck := utils.SetVideoPreviewExtension(objectInfo.Key)
+		err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
+		}
+	} else if utils.IsImage(objectInfo.Key) {
+		previewToCheck := utils.SetImagePreviewExtension(objectInfo.Key)
+		err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+		if err != nil {
+			GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
+		}
+	}
+
 	return c.NoContent(http.StatusOK)
 }
 
