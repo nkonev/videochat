@@ -10,6 +10,7 @@
 
     <v-card v-if="!provider.getShowSearchButton() || !isMobile()" variant="plain" :class="isMobile() ? 'search-card-mobile' : 'search-card'">
         <v-text-field density="compact"
+                      @focusout="onFocusOut"
                       :variant="provider.textFieldVariant"
                       :autofocus="isMobile()"
                       hide-details
@@ -28,7 +29,7 @@
 
 
 <script>
-import {hasLength, mobileKeyboardIsShown} from "@/utils";
+import {hasLength} from "@/utils";
 
 export default {
     props: [
@@ -44,25 +45,15 @@ export default {
         hasSearchString() {
             return hasLength(this.provider.getModelValue())
         },
-        reactOnKeyboardChange(event) {
-            if (mobileKeyboardIsShown(event)) {
-                console.log('keyboard is shown');
-            } else {
-                console.log('keyboard is hidden');
-                // close search line when user on mobile presses Back button
-                this.provider.setShowSearchButton(true);
-            }
+        onFocusOut() {
+          if (this.isMobile()) {
+            this.provider.setShowSearchButton(true);
+          }
         },
     },
     mounted() {
-        if ('visualViewport' in window && this.isMobile()) {
-            window.visualViewport.addEventListener('resize', this.reactOnKeyboardChange);
-        }
     },
     beforeUnmount() {
-        if ('visualViewport' in window && this.isMobile()) {
-            window.visualViewport.removeEventListener('resize', this.reactOnKeyboardChange);
-        }
     },
 }
 </script>
