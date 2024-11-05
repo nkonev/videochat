@@ -1,14 +1,15 @@
 <template>
     <v-app>
         <v-app-bar color='indigo' dark :density="getDensity()">
-            <v-breadcrumbs
-                :items="getBreadcrumbs()"
-            />
-            <v-spacer/>
-            <span v-if="shouldShowTitle()" class="app-title-text">{{chatTitle}}</span>
-            <v-spacer/>
-            <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
-
+            <template v-if="getShowSearchButton()">
+                <v-breadcrumbs
+                    :items="getBreadcrumbs()"
+                />
+                <v-spacer/>
+                <span v-if="shouldShowTitle()" class="app-title-text">{{chatTitle}}</span>
+                <v-spacer/>
+                <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
+            </template>
             <template v-if="isShowSearch()">
                 <CollapsedSearch :provider="getProvider()"/>
             </template>
