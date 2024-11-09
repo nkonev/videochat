@@ -54,5 +54,5 @@ func RedisLocker(redisClient *redisV9.Client) (*RedisAtomic, error) {
 }
 
 func Scheduler(locker *RedisAtomic) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithKey("Cron"), dcron.WithAtomic(locker)), nil
+	return dcron.NewCron(dcron.WithAtomic(locker)), nil
 }

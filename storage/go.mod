@@ -6,7 +6,7 @@ require (
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/minio/minio-go/v7 v7.0.66
-	github.com/nkonev/dcron v1.5.4
+	github.com/nkonev/dcron v1.6.1
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/common v0.55.0
 	github.com/redis/go-redis/v9 v9.6.1
