@@ -25,11 +25,11 @@ func RedisV9(lc fx.Lifecycle) *redisV9.Client {
 	return rv8
 }
 
-type RedisAtomic struct {
+type RedisLock struct {
 	client *redisV9.Client
 }
 
-func (m *RedisAtomic) SetIfNotExists(ctx context.Context, key, value string) bool {
+func (m *RedisLock) Lock(ctx context.Context, key, value string) bool {
 	exp := viper.GetDuration("schedulers." + key + ".expiration")
 	if exp == 0 {
 		GetLogEntry(ctx).Errorf("not set expiring duration")
@@ -45,14 +45,14 @@ func (m *RedisAtomic) SetIfNotExists(ctx context.Context, key, value string) boo
 	return locked
 }
 
-func (m *RedisAtomic) UnsetIfExists(ctx context.Context, key, value string) {
+func (m *RedisLock) Unlock(ctx context.Context, key, value string) {
 	m.client.Del(ctx, key)
 }
 
-func RedisLocker(redisClient *redisV9.Client) (*RedisAtomic, error) {
-	return &RedisAtomic{client: redisClient}, nil
+func RedisLocker(redisClient *redisV9.Client) (*RedisLock, error) {
+	return &RedisLock{client: redisClient}, nil
 }
 
-func Scheduler(locker *RedisAtomic) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithAtomic(locker)), nil
+func Scheduler(locker *RedisLock) (*dcron.Cron, error) {
+	return dcron.NewCron(dcron.WithLock(locker)), nil
 }
