@@ -455,9 +455,6 @@ func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 		}
 
 		aLen := min(len(messageDtos), len(bindTo))
-		if aLen == 0 {
-			edge = false
-		}
 
 		for i := range aLen {
 			currentMessage := messageDtos[i]
