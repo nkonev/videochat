@@ -220,6 +220,9 @@ export default {
       });
     },
     getInfo(chatId) {
+      const  err = new Error();
+      console.warn(err.stack);
+
       return this.fetchAndSetChat(chatId).then(() => {
         // async call
         this.fetchPromotedMessage(chatId);
