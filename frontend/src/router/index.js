@@ -121,6 +121,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  // why pinia is here https://github.com/vuejs/pinia/discussions/723#discussioncomment-3432229
   const chatStore = useChatStore();
 
   if (from.name == videochat_name && to.name != videochat_name && chatStore.leavingVideoAcceptableParam != true) {
