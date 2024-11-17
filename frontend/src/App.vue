@@ -571,16 +571,18 @@ export default {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
         },
         onFocus(e) {
-            // console.log("Focus", e);
-            if (this.chatStore.currentUser) {
-                this.$nextTick(()=>{
-                    this.chatStore.fetchNotificationsCount();
-                    this.chatStore.fetchHasNewMessages();
-                    this.refreshInvitationCall();
-                })
-            }
-            console.info("Sending focus event");
-            bus.emit(FOCUS);
+          this.$nextTick(()=> {
+            setTimeout(()=>{
+              // console.log("Focus", e);
+              if (this.chatStore.currentUser) {
+                this.chatStore.fetchNotificationsCount();
+                this.chatStore.fetchHasNewMessages();
+                this.refreshInvitationCall();
+              }
+              console.info("Sending focus event");
+              bus.emit(FOCUS);
+            }, 1000)
+          })
         },
         refreshInvitationCall() {
           axios.get(`/api/video/user/being-invited-status`, {
@@ -851,8 +853,6 @@ export default {
         PublishedMessagesModal,
     },
     created() {
-        this.onFocus = debounce(this.onFocus, 200, {leading:false, trailing:true});
-
         this.afterRouteInitialized = once(this.afterRouteInitialized);
     },
     mounted() {
