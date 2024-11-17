@@ -390,7 +390,7 @@ export default {
         this.viewableUser = u;
     },
     onFocus() {
-          if (!!this.$el && this.chatStore.currentUser) {
+          if (this.chatStore.currentUser) {
               axios.put(`/api/aaa/user/request-for-online`, null, {
                   params: {
                       userId: this.userId
