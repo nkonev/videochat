@@ -498,7 +498,7 @@ export default {
         }
     },
     onFocus() {
-        if (this.chatStore.currentUser && this.chatId) {
+        if (!!this.$el && this.chatStore.currentUser && this.chatId) {
             this.getInfo(this.chatId);
         }
     },

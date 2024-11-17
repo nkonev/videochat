@@ -623,7 +623,7 @@ export default {
         });
     },
     onFocus() {
-      if (this.chatStore.currentUser) {
+      if (!!this.$el && this.chatStore.currentUser) {
           const list = this.items.map(item => item.id);
 
           if (!list.length) {
