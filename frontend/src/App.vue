@@ -571,16 +571,24 @@ export default {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
         },
         onFocus(e) {
+          const routeNameBefore = this.$route.name;
+          const routeIdBefore = this.$route.params.id;
           this.$nextTick(()=> {
             setTimeout(()=>{
-              // console.log("Focus", e);
               if (this.chatStore.currentUser) {
                 this.chatStore.fetchNotificationsCount();
                 this.chatStore.fetchHasNewMessages();
                 this.refreshInvitationCall();
               }
-              console.info("Sending focus event");
-              bus.emit(FOCUS);
+
+              const routeNameAfter = this.$route.name;
+              const routeIdAfter = this.$route.params.id;
+              if (routeNameBefore === routeNameAfter && routeIdBefore === routeIdAfter) {
+                console.info("Sending focus event");
+                bus.emit(FOCUS);
+              } else {
+                console.info("Skip sending focus event");
+              }
             }, 1000)
           })
         },
