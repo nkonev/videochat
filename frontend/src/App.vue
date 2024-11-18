@@ -589,7 +589,7 @@ export default {
               } else {
                 console.info("Skip sending focus event");
               }
-            }, 1000)
+            }, 2000)
           })
         },
         refreshInvitationCall() {
