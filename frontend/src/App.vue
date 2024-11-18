@@ -571,25 +571,24 @@ export default {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
         },
         onFocus(e) {
+          console.info("onFocus");
           const routeNameBefore = this.$route.name;
           const routeIdBefore = this.$route.params.id;
           this.$nextTick(()=> {
-            setTimeout(()=>{
-              if (this.chatStore.currentUser) {
-                this.chatStore.fetchNotificationsCount();
-                this.chatStore.fetchHasNewMessages();
-                this.refreshInvitationCall();
-              }
+            if (this.chatStore.currentUser) {
+              this.chatStore.fetchNotificationsCount();
+              this.chatStore.fetchHasNewMessages();
+              this.refreshInvitationCall();
+            }
 
-              const routeNameAfter = this.$route.name;
-              const routeIdAfter = this.$route.params.id;
-              if (routeNameBefore === routeNameAfter && routeIdBefore === routeIdAfter) {
-                console.info("Sending focus event");
-                bus.emit(FOCUS);
-              } else {
-                console.info("Skip sending focus event");
-              }
-            }, 2000)
+            const routeNameAfter = this.$route.name;
+            const routeIdAfter = this.$route.params.id;
+            if (routeNameBefore === routeNameAfter && routeIdBefore === routeIdAfter) {
+              console.info("Sending focus event");
+              bus.emit(FOCUS);
+            } else {
+              console.info("Skip sending focus event");
+            }
           })
         },
         refreshInvitationCall() {
@@ -862,6 +861,7 @@ export default {
     },
     created() {
         this.afterRouteInitialized = once(this.afterRouteInitialized);
+        this.onFocus = debounce(this.onFocus, 2000, {leading:false, trailing:true});
     },
     mounted() {
         addEventListener("focus", this.onFocus);
