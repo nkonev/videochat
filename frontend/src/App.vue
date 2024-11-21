@@ -190,7 +190,6 @@ import bus, {
   CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED, CHAT_REDRAW,
-  FOCUS,
   LOGGED_OUT,
   NOTIFICATION_ADD,
   NOTIFICATION_DELETE,
@@ -253,8 +252,8 @@ import {
 import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
 import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@/browserNotifications.js";
-import debounce from "lodash/debounce.js";
 import {getHumanReadableDate} from "@/date.js";
+import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -265,6 +264,7 @@ const getGlobalEventsData = (message) => {
 export default {
     mixins: [
         searchStringFacade(),
+        onFocusMixin(),
     ],
     data() {
         return {
@@ -570,26 +570,12 @@ export default {
         onShowFileUploadClicked() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
         },
-        onFocus(e) {
-          console.info("onFocus");
-          const routeNameBefore = this.$route.name;
-          const routeIdBefore = this.$route.params.id;
-          this.$nextTick(()=> {
-            if (this.chatStore.currentUser) {
-              this.chatStore.fetchNotificationsCount();
-              this.chatStore.fetchHasNewMessages();
-              this.refreshInvitationCall();
-            }
-
-            const routeNameAfter = this.$route.name;
-            const routeIdAfter = this.$route.params.id;
-            if (routeNameBefore === routeNameAfter && routeIdBefore === routeIdAfter) {
-              console.info("Sending focus event");
-              bus.emit(FOCUS);
-            } else {
-              console.info("Skip sending focus event");
-            }
-          })
+        onFocus() {
+          if (this.chatStore.currentUser) {
+            this.chatStore.fetchNotificationsCount();
+            this.chatStore.fetchHasNewMessages();
+            this.refreshInvitationCall();
+          }
         },
         refreshInvitationCall() {
           axios.get(`/api/video/user/being-invited-status`, {
@@ -861,10 +847,8 @@ export default {
     },
     created() {
         this.afterRouteInitialized = once(this.afterRouteInitialized);
-        this.onFocus = debounce(this.onFocus, 2000, {leading:false, trailing:true});
     },
     mounted() {
-        addEventListener("focus", this.onFocus);
         window.addEventListener("resize", this.onWindowResized);
 
         createGraphQlClient();
@@ -888,11 +872,13 @@ export default {
           this.afterRouteInitialized().then(()=>{
             this.fetchProfileIfNeed();
           })
-        })
+        });
+
+        this.installOnFocus();
     },
     beforeUnmount() {
+        this.uninstallOnFocus();
         window.removeEventListener("resize", this.onWindowResized);
-        removeEventListener("focus", this.onFocus);
 
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);

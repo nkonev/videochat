@@ -67,7 +67,7 @@
       OPEN_MESSAGE_EDIT_SMILEY,
       REACTION_CHANGED,
       REACTION_REMOVED,
-      MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED, FOCUS
+      MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED,
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -88,6 +88,7 @@
     import { getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition } from "@/store/localStore";
     import Mark from "mark.js";
     import hashMixin from "@/mixins/hashMixin";
+    import onFocusMixin from "@/mixins/onFocusMixin.js";
 
     const PAGE_SIZE = 40;
     const SCROLLING_THRESHHOLD = 200; // px
@@ -102,6 +103,7 @@
         infiniteScrollMixin(scrollerName),
         hashMixin(),
         searchString(SEARCH_MODE_MESSAGES),
+        onFocusMixin(),
       ],
       props: ['canResend', 'blog'],
       data() {
@@ -758,12 +760,15 @@
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
-        bus.on(FOCUS, this.onFocus);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
+
+        this.installOnFocus();
       },
 
       beforeUnmount() {
+        this.uninstallOnFocus();
+
         this.markInstance.unmark();
         this.markInstance = null;
         removeEventListener("beforeunload", this.beforeUnload);
@@ -785,7 +790,6 @@
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
-        bus.off(FOCUS, this.onFocus);
       }
     }
 </script>

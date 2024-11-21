@@ -156,7 +156,6 @@ import userStatusMixin from "@/mixins/userStatusMixin";
 import bus, {
     CHANGE_ROLE_DIALOG,
     CLOSE_SIMPLE_MODAL,
-    FOCUS,
     LOGGED_OUT,
     OPEN_SIMPLE_MODAL,
     PROFILE_SET
@@ -165,6 +164,7 @@ import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
+import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 export default {
   components: {
@@ -173,6 +173,7 @@ export default {
   },
   mixins: [
       userStatusMixin('userStatusInUserProfile'), // another subscription
+      onFocusMixin(),
   ],
   data() {
     return {
@@ -424,7 +425,6 @@ export default {
   mounted() {
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(PROFILE_SET, this.onProfileSet);
-    bus.on(FOCUS, this.onFocus);
     this.setMainTitle();
 
     // create subscription object before ON_PROFILE_SET
@@ -433,15 +433,18 @@ export default {
     if (this.canDrawUsers()) {
       this.onProfileSet();
     }
+
+    this.installOnFocus();
   },
   beforeUnmount() {
+    this.uninstallOnFocus();
+
     this.graphQlUserStatusUnsubscribe();
     this.userProfileEventsSubscription.graphQlUnsubscribe();
     this.userProfileEventsSubscription = null;
 
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(PROFILE_SET, this.onProfileSet);
-    bus.off(FOCUS, this.onFocus);
 
     this.unsetMainTitle();
 

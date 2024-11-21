@@ -102,7 +102,7 @@ import bus, {
     UNREAD_MESSAGES_CHANGED,
     CO_CHATTED_PARTICIPANT_CHANGED,
     VIDEO_CALL_SCREEN_SHARE_CHANGED,
-    VIDEO_CALL_USER_COUNT_CHANGED, FOCUS
+    VIDEO_CALL_USER_COUNT_CHANGED
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -126,6 +126,7 @@ import {
   removeTopChatPosition,
   setTopChatPosition
 } from "@/store/localStore.js";
+import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -139,6 +140,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
     userStatusMixin('tetATetInChatList'),
+    onFocusMixin(),
   ],
   props:['embedded'],
   data() {
@@ -786,16 +788,18 @@ export default {
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
-    bus.on(FOCUS, this.onFocus);
 
     if (this.routeName == chat_list_name) {
       this.setTopTitle();
       this.chatStore.isShowSearch = true;
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
+    this.installOnFocus();
   },
 
   beforeUnmount() {
+    this.uninstallOnFocus();
+
     this.graphQlUserStatusUnsubscribe();
     this.uninstallScroller();
 
@@ -815,7 +819,6 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
-    bus.off(FOCUS, this.onFocus);
 
     if (this.routeName == chat_list_name) {
       setTitle(null);

@@ -166,7 +166,7 @@ import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
   CHANGE_ROLE_DIALOG,
-  CLOSE_SIMPLE_MODAL, FOCUS,
+  CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SIMPLE_MODAL,
   PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED
@@ -191,6 +191,7 @@ import {
 } from "@/store/localStore";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
+import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -208,6 +209,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
     userStatusMixin('userStatusInUserList'), // another subscription
+    onFocusMixin(),
   ],
   data() {
     return {
@@ -718,11 +720,14 @@ export default {
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.on(PROFILE_SET, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
-    bus.on(FOCUS, this.onFocus);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
+    this.installOnFocus();
   },
 
   beforeUnmount() {
+    this.uninstallOnFocus();
+
     this.graphQlUserStatusUnsubscribe();
     this.userEventsSubscription.graphQlUnsubscribe();
     this.userEventsSubscription = null;
@@ -740,7 +745,6 @@ export default {
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
     bus.off(PROFILE_SET, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
-    bus.off(FOCUS, this.onFocus);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     setTitle(null);

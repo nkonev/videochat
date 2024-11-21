@@ -70,7 +70,6 @@ import bus, {
     FILE_CREATED,
     FILE_REMOVED,
     FILE_UPDATED,
-    FOCUS,
     LOGGED_OUT,
     MESSAGE_ADD,
     MESSAGE_BROADCAST,
@@ -99,7 +98,7 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 import {goToPreservingQuery, SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
-
+import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
@@ -124,6 +123,7 @@ export default {
     heightMixin(),
     videoPositionMixin(),
     searchString(SEARCH_MODE_CHATS),
+    onFocusMixin(),
   ],
   data() {
     return {
@@ -805,7 +805,6 @@ export default {
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.on(PINNED_MESSAGE_EDITED, this.onPinnedMessageChanged);
-    bus.on(FOCUS, this.onFocus);
     bus.on(USER_TYPING, this.onUserTyping);
     bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.on(CHAT_EDITED, this.onChatChange);
@@ -823,8 +822,11 @@ export default {
       }
     }, 500);
 
+    this.installOnFocus();
   },
   beforeUnmount() {
+    this.uninstallOnFocus();
+
     this.chatEventsSubscription.graphQlUnsubscribe();
     this.chatEventsSubscription = null;
 
@@ -833,7 +835,6 @@ export default {
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.off(PINNED_MESSAGE_EDITED, this.onPinnedMessageChanged);
-    bus.off(FOCUS, this.onFocus);
     bus.off(USER_TYPING, this.onUserTyping);
     bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.off(CHAT_EDITED, this.onChatChange);
