@@ -168,10 +168,16 @@ export default {
       this.chatEventsSubscription.graphQlUnsubscribe();
     },
     fetchAndSetChat(chatId) {
-      return axios.get(`/api/chat/${chatId}`).then((response) => {
+      return axios.get(`/api/chat/${chatId}`, {
+        signal: this.requestAbortController.signal
+      }).then((response) => {
         if (response.status == 205) {
-          return axios.put(`/api/chat/${chatId}/join`).then((response)=>{
-              return axios.get(`/api/chat/${chatId}`).then((response)=>{
+          return axios.put(`/api/chat/${chatId}/join`, null, {
+            signal: this.requestAbortController.signal
+          }).then((response)=>{
+              return axios.get(`/api/chat/${chatId}`, {
+                signal: this.requestAbortController.signal
+              }).then((response)=>{
                   return this.processNormalInfoResponse(response)
               })
           })
@@ -210,7 +216,9 @@ export default {
         }
     },
     fetchPromotedMessage(chatId) {
-      axios.get(`/api/chat/${chatId}/message/pin/promoted`).then((response) => {
+      axios.get(`/api/chat/${chatId}/message/pin/promoted`, {
+        signal: this.requestAbortController.signal
+      }).then((response) => {
         if (response.status != 204) {
           this.pinnedPromoted = response.data;
           this.pinnedPromotedKey++
@@ -223,7 +231,9 @@ export default {
       return this.fetchAndSetChat(chatId).then(() => {
         // async call
         this.fetchPromotedMessage(chatId);
-        axios.get(`/api/video/${chatId}/users`)
+        axios.get(`/api/video/${chatId}/users`, {
+          signal: this.requestAbortController.signal
+        })
           .then(response => response.data)
           .then(data => {
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
@@ -232,7 +242,9 @@ export default {
         return Promise.resolve();
       }).then(() => {
         // async call
-        axios.get(`/api/video/${chatId}/record/status`).then(({data}) => {
+        axios.get(`/api/video/${chatId}/record/status`, {
+          signal: this.requestAbortController.signal
+        }).then(({data}) => {
           this.chatStore.canMakeRecord = data.canMakeRecord;
           if (data.canMakeRecord) {
             const record = data.recordInProcess;

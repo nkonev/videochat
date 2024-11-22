@@ -159,6 +159,8 @@
               axios.post(`/api/chat/${this.chatId}/message/filter`, {
                   searchString: this.searchString,
                   messageId: dto.id
+              }, {
+                signal: this.requestAbortController.signal
               }).then(({data}) => {
                   if (data.found) {
                       this.addItem(dto);
@@ -238,6 +240,7 @@
               searchString: this.searchString,
               hasHash: hasHash
             },
+            signal: this.requestAbortController.signal
           })
           .then((response) => {
             if (response.status == 204) {
@@ -264,7 +267,9 @@
             this.updateTopAndBottomIds();
 
             if (this.isMobile() && this.items.length) {
-                axios.put(`/api/chat/${this.chatId}/message/read/${this.startingFromItemIdBottom}`)
+                axios.put(`/api/chat/${this.chatId}/message/read/${this.startingFromItemIdBottom}`, null, {
+                  signal: this.requestAbortController.signal
+                })
             }
 
             if (!this.isFirstLoad) {
@@ -391,7 +396,9 @@
             text:  this.$vuetify.locale.t('$vuetify.delete_message_text'),
             actionFunction: (that)=> {
               that.loading = true;
-              axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`)
+              axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`, {
+                signal: this.requestAbortController.signal
+              })
                 .then(() => {
                   bus.emit(CLOSE_SIMPLE_MODAL);
                 })
@@ -444,6 +451,7 @@
             params: {
               pin: true
             },
+            signal: this.requestAbortController.signal
           });
         },
         removedFromPinned(dto) {
@@ -451,6 +459,7 @@
             params: {
               pin: false
             },
+            signal: this.requestAbortController.signal
           });
         },
         shareMessage(dto) {
@@ -459,6 +468,8 @@
         onExistingReactionClick(dto) {
           axios.put(`/api/chat/${this.chatId}/message/${dto.id}/reaction`, {
             reaction: dto.reaction,
+          }, {
+            signal: this.requestAbortController.signal
           })
         },
         addReaction(dto) {
@@ -467,6 +478,8 @@
               addSmileyCallback: (smiley) => {
                 axios.put(`/api/chat/${this.chatId}/message/${dto.id}/reaction`, {
                   reaction: smiley,
+                }, {
+                  signal: this.requestAbortController.signal
                 })
               },
               title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message')
@@ -499,7 +512,9 @@
           return getBlogLink(this.chatId);
         },
         makeBlogPost(dto) {
-          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/blog-post`);
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/blog-post`, null, {
+            signal: this.requestAbortController.signal
+          });
         },
         goToBlog() {
           window.location.href = this.getBlogLink();
@@ -531,6 +546,7 @@
                 params: {
                     publish: true
                 },
+                signal: this.requestAbortController.signal
             }).then(()=>{
                 const link = getPublicMessageLink(this.chatId, dto.id);
                 navigator.clipboard.writeText(link);
@@ -542,6 +558,7 @@
                 params: {
                     publish: false
                 },
+                signal: this.requestAbortController.signal
             });
         },
         onClickTrap(e) {
@@ -598,6 +615,8 @@
 
                                 axios.post(`/api/storage/view/status`, {
                                   url: original
+                                }, {
+                                  signal: this.requestAbortController.signal
                                 }).then(res => {
                                   if (res.data.status == "converting") {
                                     spanContainer.removeChild(videoReplacement);
@@ -670,6 +689,7 @@
                 size: PAGE_SIZE,
                 searchString: this.searchString,
               },
+              signal: this.requestAbortController.signal
             }).then((res)=>{
               if (!res.data.ok) {
                 console.log("Need to update messages");

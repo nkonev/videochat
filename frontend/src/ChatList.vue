@@ -224,6 +224,7 @@ export default {
           searchString: this.searchString,
           hasHash: hasHash
         },
+        signal: this.requestAbortController.signal
       })
         .then((res) => {
           const items = res.data;
@@ -379,6 +380,7 @@ export default {
               params: {
                   pin: true
               },
+              signal: this.requestAbortController.signal
           });
     },
     removedFromPinned(chat) {
@@ -386,6 +388,7 @@ export default {
               params: {
                   pin: false
               },
+              signal: this.requestAbortController.signal
           });
     },
     editChat(chat) {
@@ -399,7 +402,9 @@ export default {
               text: this.$vuetify.locale.t('$vuetify.delete_chat_text', chat.name),
               actionFunction: (that) => {
                   that.loading = true;
-                  axios.delete(`/api/chat/${chat.id}`)
+                  axios.delete(`/api/chat/${chat.id}`, {
+                    signal: this.requestAbortController.signal
+                  })
                       .then(() => {
                           bus.emit(CLOSE_SIMPLE_MODAL);
                       }).finally(()=>{
@@ -415,7 +420,9 @@ export default {
               text: this.$vuetify.locale.t('$vuetify.leave_chat_text', chat.name),
               actionFunction: (that) => {
                   that.loading = true;
-                  axios.put(`/api/chat/${chat.id}/leave`)
+                  axios.put(`/api/chat/${chat.id}/leave`, null, {
+                    signal: this.requestAbortController.signal
+                  })
                       .then(() => {
                           bus.emit(CLOSE_SIMPLE_MODAL);
                       }).finally(()=>{
@@ -545,7 +552,8 @@ export default {
         }, {
           params: {
             reverse: false
-          }
+          },
+          signal: this.requestAbortController.signal
         }).then(({data}) => {
           if (data.found) {
             this.addItem(dto);
@@ -564,7 +572,8 @@ export default {
           }, {
             params: {
               reverse: false
-            }
+            },
+            signal: this.requestAbortController.signal
           }).then(({data}) => {
             if (data.found) {
               let idxOf = findIndex(this.items, dto);
@@ -656,6 +665,7 @@ export default {
               params: {
                   userId: joined
               },
+              signal: this.requestAbortController.signal
           }).then(()=>{
               this.requestInVideo();
           });
@@ -668,6 +678,7 @@ export default {
               size: PAGE_SIZE,
               searchString: this.searchString,
             },
+            signal: this.requestAbortController.signal
           }).then((res)=>{
             if (!res.data.ok) {
               console.log("Need to update chats");
@@ -688,6 +699,7 @@ export default {
                 params: {
                     userId: joined
                 },
+                signal: this.requestAbortController.signal
             });
         })
     },
@@ -695,10 +707,14 @@ export default {
         return !!this.items?.length
     },
     markAsRead(item) {
-      axios.put(`/api/chat/${item.id}/read`)
+      axios.put(`/api/chat/${item.id}/read`, null, {
+        signal: this.requestAbortController.signal
+      })
     },
     markAsReadAll(item) {
-      axios.put(`/api/chat/read`)
+      axios.put(`/api/chat/read`, null, {
+        signal: this.requestAbortController.signal
+      })
     },
     async doDefaultScroll() {
       this.loadedTop = true;

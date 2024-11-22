@@ -293,6 +293,8 @@ export default {
           reverse: this.isTopDirection(),
           searchString: this.searchString,
           hasHash: hasHash,
+        }, {
+          signal: this.requestAbortController.signal
         })
         .then((res) => {
           const items = res.data;
@@ -551,6 +553,8 @@ export default {
           axios.post(`/api/aaa/user/filter`, {
               searchString: this.searchString,
               userId: dto.id
+          }, {
+            signal: this.requestAbortController.signal
           }).then(({data}) => {
               if (data.found) {
                   this.addItem(dto);
@@ -575,27 +579,41 @@ export default {
       this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
     },
     unlockUser(user) {
-        axios.post('/api/aaa/user/lock', {userId: user.id, lock: false});
+        axios.post('/api/aaa/user/lock', {userId: user.id, lock: false}, {
+          signal: this.requestAbortController.signal
+        });
     },
     lockUser(user) {
-        axios.post('/api/aaa/user/lock', {userId: user.id, lock: true});
+        axios.post('/api/aaa/user/lock', {userId: user.id, lock: true}, {
+          signal: this.requestAbortController.signal
+        });
     },
     enableUser(user) {
-      axios.post('/api/aaa/user/enable', {userId: user.id, enable: true});
+      axios.post('/api/aaa/user/enable', {userId: user.id, enable: true}, {
+        signal: this.requestAbortController.signal
+      });
     },
     disableUser(user) {
-      axios.post('/api/aaa/user/enable', {userId: user.id, enable: false});
+      axios.post('/api/aaa/user/enable', {userId: user.id, enable: false}, {
+        signal: this.requestAbortController.signal
+      });
     },
     tetATet(user) {
-        axios.put(`/api/chat/tet-a-tet/${user.id}`).then(response => {
+        axios.put(`/api/chat/tet-a-tet/${user.id}`, null, {
+          signal: this.requestAbortController.signal
+        }).then(response => {
             this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
         })
     },
     unconfirmUser(user) {
-        axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: false});
+        axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: false}, {
+          signal: this.requestAbortController.signal
+        });
     },
     confirmUser(user) {
-        axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: true});
+        axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: true}, {
+          signal: this.requestAbortController.signal
+        });
     },
     deleteUser(user) {
         bus.emit(OPEN_SIMPLE_MODAL, {
@@ -604,9 +622,12 @@ export default {
             text: this.$vuetify.locale.t('$vuetify.delete_user_text', user.login),
             actionFunction: (that) => {
                 that.loading = true;
-                axios.delete('/api/aaa/user', { params: {
-                        userId: user.id
-                    }}).then(() => {
+                axios.delete('/api/aaa/user', {
+                      params: {
+                          userId: user.id
+                      },
+                      signal: this.requestAbortController.signal
+                    }).then(() => {
                         bus.emit(CLOSE_SIMPLE_MODAL);
                     }).finally(()=>{
                     that.loading = false;
@@ -621,7 +642,8 @@ export default {
         axios.delete('/api/aaa/sessions', {
             params: {
                 userId: user.id
-            }
+            },
+            signal: this.requestAbortController.signal
         });
     },
     onFocus() {
@@ -637,6 +659,7 @@ export default {
               params: {
                   userId: joined
               },
+              signal: this.requestAbortController.signal
           }).then(()=>{
               this.requestInVideo();
           })
@@ -655,6 +678,7 @@ export default {
               params: {
                   userId: joined
               },
+              signal: this.requestAbortController.signal
           });
       })
     },

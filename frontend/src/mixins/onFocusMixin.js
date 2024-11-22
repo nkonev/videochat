@@ -2,6 +2,11 @@ import debounce from "lodash/debounce.js";
 
 export default () => {
     return {
+        data() {
+            return {
+                requestAbortController: new AbortController(),
+            }
+        },
         methods: {
             doOnFocus() {
                 this.$nextTick(() => {
@@ -17,6 +22,8 @@ export default () => {
                 window.addEventListener("focus", this.doOnFocus);
             },
             uninstallOnFocus() {
+                this.requestAbortController.abort(); // abort requests
+
                 this.doOnFocus.cancel(); // cancel the debounced function in order tot to execute it with the disposed resources
 
                 window.removeEventListener("focus", this.doOnFocus);
