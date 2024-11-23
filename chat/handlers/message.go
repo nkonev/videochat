@@ -463,7 +463,13 @@ func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 				edge = false
 				break
 			}
-			if currentMessage.Text != gottenMessage.Text {
+
+			// we strip tags because a (public) video link has "live" time parameter, which is changed between requests
+			// it leads us to the false comparison
+			// so we remove all the tags to mitigate this issue
+			currentMsgText := mc.stripAllTags.Sanitize(currentMessage.Text)
+			gottenMsgText := mc.stripAllTags.Sanitize(gottenMessage.Text)
+			if currentMsgText != gottenMsgText {
 				edge = false
 				break
 			}
