@@ -68,8 +68,8 @@ Click on image to open a screenshot gallery.
 * Send the message when finishing media (image, video) or file has been uploaded.
 * Simple SEO-friendly blog, based on chats.
 
-# Try
-Demo server [installation](https://chat.nkonev.name/)
+# Demo
+Try server [installation](https://chat.nkonev.name/)
 
 # Installation
-Currently, [Ansible](./install/ansible/readme.md) installation is available.
+[Ansible](./install/ansible/readme.md)
