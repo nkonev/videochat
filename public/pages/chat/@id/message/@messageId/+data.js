@@ -35,6 +35,7 @@ async function data(pageContext) {
         chatTitle: title,
         title: title,
         description: publishedMessageResponse.data.preview,
+        showSearchButton: true,
         chatMessageHref,
     }
 
