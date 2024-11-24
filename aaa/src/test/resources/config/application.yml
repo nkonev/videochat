@@ -67,17 +67,22 @@ custom:
       enabled: false
       batch-size: 20
       cron: "*/20 * * * * *"
+      expiration: "30m"
     sync-ldap:
       enabled: false
       batch-size: 20
       sync-roles: true
       cron: "*/20 * * * * *"
+      expiration: "30m"
     sync-keycloak:
       enabled: false
       sync-email-verified: false
       batch-size: 20
       sync-roles: true
       cron: "*/20 * * * * *"
+      expiration: "30m"
+    await-for-termination: "5m"
+    pool-size: 5
 
 server.port: 9080
 

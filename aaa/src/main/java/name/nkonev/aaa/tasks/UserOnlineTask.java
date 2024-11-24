@@ -4,38 +4,48 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
 import name.nkonev.aaa.security.AaaUserDetailsService;
 import name.nkonev.aaa.services.EventService;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import name.nkonev.aaa.services.LockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserOnlineTask {
 
-    @Autowired
-    private UserListViewRepository userListViewRepository;
+    private final UserListViewRepository userListViewRepository;
 
-    @Autowired
-    private AaaUserDetailsService aaaUserDetailsService;
+    private final AaaUserDetailsService aaaUserDetailsService;
 
-    @Autowired
-    private EventService eventService;
+    private final EventService eventService;
 
-    @Autowired
-    private AaaProperties aaaProperties;
+    private final AaaProperties aaaProperties;
+
+    private final LockService lockService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserOnlineTask.class);
 
+    private static final String LOCK_NAME = "userOnlineTask";
+
+    public UserOnlineTask(UserListViewRepository userListViewRepository, AaaUserDetailsService aaaUserDetailsService, EventService eventService, AaaProperties aaaProperties, LockService lockService) {
+        this.userListViewRepository = userListViewRepository;
+        this.aaaUserDetailsService = aaaUserDetailsService;
+        this.eventService = eventService;
+        this.aaaProperties = aaaProperties;
+        this.lockService = lockService;
+    }
+
     @Scheduled(cron = "${custom.schedulers.user-online.cron}")
-    @SchedulerLock(name = "userOnlineTask")
     public void scheduledTask() {
         if (!aaaProperties.schedulers().userOnline().enabled()) {
             return;
         }
 
-        this.doWork();
+        try (var l = lockService.lock(LOCK_NAME, aaaProperties.schedulers().userOnline().expiration())) {
+            if (l.isWasSet()) {
+                this.doWork();
+            }
+        }
     }
 
     public void doWork() {

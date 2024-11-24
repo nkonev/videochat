@@ -10,13 +10,12 @@ import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
 import name.nkonev.aaa.entity.ldap.LdapUserInRoleEntity;
 import name.nkonev.aaa.security.AaaUserDetailsService;
+import name.nkonev.aaa.services.LockService;
 import name.nkonev.aaa.services.tasks.LdapMappingConsumingCallbackHandler;
 import name.nkonev.aaa.services.tasks.LdapSyncRolesService;
 import name.nkonev.aaa.utils.Pair;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.*;
 import org.springframework.ldap.filter.WhitespaceWildcardsFilter;
 import org.springframework.ldap.query.LdapQueryBuilder;
@@ -35,24 +34,39 @@ import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 
 @Service
 public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEntity> {
-    @Autowired
-    private AaaProperties aaaProperties;
+    private final AaaProperties aaaProperties;
 
-    @Autowired
-    private LdapOperations ldapOperations;
+    private final LdapOperations ldapOperations;
 
-    @Autowired
-    private AaaUserDetailsService aaaUserDetailsService;
+    private final AaaUserDetailsService aaaUserDetailsService;
 
-    @Autowired
-    private LdapSyncRolesService ldapSyncRolesService;
+    private final LdapSyncRolesService ldapSyncRolesService;
+
+    private final LockService lockService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncLdapTask.class);
 
+    private static final String LOCK_NAME = "syncLdapTask";
+
+    public SyncLdapTask(AaaProperties aaaProperties, LdapOperations ldapOperations, AaaUserDetailsService aaaUserDetailsService, LdapSyncRolesService ldapSyncRolesService, LockService lockService) {
+        this.aaaProperties = aaaProperties;
+        this.ldapOperations = ldapOperations;
+        this.aaaUserDetailsService = aaaUserDetailsService;
+        this.ldapSyncRolesService = ldapSyncRolesService;
+        this.lockService = lockService;
+    }
+
     @Scheduled(cron = "${custom.schedulers.sync-ldap.cron}")
-    @SchedulerLock(name = "syncLdapTask")
     public void scheduledTask() {
-        super.scheduledTask();
+        if (!getEnabled()) {
+            return;
+        }
+
+        try (var l = lockService.lock(LOCK_NAME, aaaProperties.schedulers().syncLdap().expiration())) {
+            if (l.isWasSet()) {
+                super.scheduledTask();
+            }
+        }
     }
 
     @Override

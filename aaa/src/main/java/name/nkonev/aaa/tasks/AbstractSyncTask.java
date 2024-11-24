@@ -58,10 +58,6 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     }
 
     public void scheduledTask() {
-        if (!getEnabled()) {
-            return;
-        }
-
         try {
             this.doWork();
         } catch (Exception e) {

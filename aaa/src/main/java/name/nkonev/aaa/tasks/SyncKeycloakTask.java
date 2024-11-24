@@ -10,13 +10,12 @@ import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.rest.KeycloakUserEntity;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.rest.KeycloakUserInRoleEntity;
+import name.nkonev.aaa.services.LockService;
 import name.nkonev.aaa.services.tasks.KeycloakClient;
 import name.nkonev.aaa.utils.Pair;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -33,20 +32,36 @@ import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
 @Service
 public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, KeycloakUserInRoleEntity> {
 
-    @Autowired
-    private AaaProperties aaaProperties;
+    private final AaaProperties aaaProperties;
 
-    @Autowired
-    private ObjectProvider<KeycloakClient> keycloakClientProvider;
+    private final ObjectProvider<KeycloakClient> keycloakClientProvider;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SyncKeycloakTask.class);
+    private final LockService lockService;
+
 
     private KeycloakClient keycloakClient;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SyncKeycloakTask.class);
+
+    private static final String LOCK_NAME = "syncKeycloakTask";
+
+    public SyncKeycloakTask(AaaProperties aaaProperties, ObjectProvider<KeycloakClient> keycloakClientProvider, LockService lockService) {
+        this.aaaProperties = aaaProperties;
+        this.keycloakClientProvider = keycloakClientProvider;
+        this.lockService = lockService;
+    }
+
     @Scheduled(cron = "${custom.schedulers.sync-keycloak.cron}")
-    @SchedulerLock(name = "syncKeycloakTask")
     public void scheduledTask() {
-        super.scheduledTask();
+        if (!getEnabled()) {
+            return;
+        }
+
+        try (var l = lockService.lock(LOCK_NAME, aaaProperties.schedulers().syncKeycloak().expiration())) {
+            if (l.isWasSet()) {
+                super.scheduledTask();
+            }
+        }
     }
 
     @Override

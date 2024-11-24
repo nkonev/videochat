@@ -67,17 +67,22 @@ custom:
       enabled: true
       batch-size: 20
       cron: "*/20 * * * * *"
+      expiration: "30m"
     sync-ldap:
       enabled: false
       batch-size: 20
       sync-roles: true
       cron: "*/20 * * * * *"
+      expiration: "30m"
     sync-keycloak:
       enabled: false
       batch-size: 20
       sync-email-verified: false
       sync-roles: true
       cron: "*/20 * * * * *"
+      expiration: "30m"
+    await-for-termination: "5m"
+    pool-size: 5
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'
