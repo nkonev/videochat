@@ -93,7 +93,7 @@ Run `npm run dev` in the console.
 
 ### Congrats!
 You've just finished all the preparations. Happy hacking.
-Below are just notes, some of the are't actual. The most useful are ones about configuring [Keycloak](./development.md#keycloak) and [LDAP](./development.md#ldap-example-with-opendj) (an example with OpenDJ).
+Below are just notes, some of them aren't actual. The most useful are ones about configuring [Keycloak](./development.md#keycloak) and [LDAP](./development.md#ldap-example-with-opendj) (an example with OpenDJ).
 
 
 
