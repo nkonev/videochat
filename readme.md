@@ -55,7 +55,7 @@ Click on image to open a screenshot gallery.
 * Pinned chats.
 * Reactions.
 * Supports [login](./screenshots.md#login) through OpedID Connect providers: Facebook, VK.com, Google, Keycloak. Not required can be disabled.
-* Synchronizing users with LDAP and Keycloak with conflict resolving strategies.
+* Synchronizing users with [Keycloak](./development.md#keycloak) and [LDAP](./development.md#ldap-example-with-opendj) with conflict resolving strategies.
 * Internationalization: English and Russian UI.
 * Firewall friendly: only two ports for WebRTC are needed (TURN, WebRTC).
 * Loadbalancer friendly: No sticky sessions required.
