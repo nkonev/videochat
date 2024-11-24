@@ -709,7 +709,7 @@ Open users
 ![3.1](./.markdown/opendj_3.1.png)
 
 
-Set the password for an user
+Set the password `password` for an user `Aaccf Amar`
 
 ![3.2](./.markdown/opendj_3.2.png)
 
@@ -725,6 +725,29 @@ Full configuration is here: `src/test/resources/config/demo-ldap-opendj.yml`.
 
 4. Login in videochat
 ![4](./.markdown/opendj_4.png)
+
+
+## Exporting
+Firstly, export ldif to /home/nkonev/example2.ldif
+
+Then add read permission
+```bash
+chmod a+r /home/nkonev/example2.ldif
+```
+
+Then remove excess attributes
+```bash
+grep -v "entryUUID" /home/nkonev/example2.ldif > /tmp/temp && mv /tmp/temp /home/nkonev/example2.ldif
+grep -v "pwdChangedTime" /home/nkonev/example2.ldif > /tmp/temp && mv /tmp/temp /home/nkonev/example2.ldif
+grep -v "modifyTimestamp" /home/nkonev/example2.ldif > /tmp/temp && mv /tmp/temp /home/nkonev/example2.ldif
+grep -v "modifiersName" /home/nkonev/example2.ldif > /tmp/temp && mv /tmp/temp /home/nkonev/example2.ldif
+grep -v "createTimestamp" /home/nkonev/example2.ldif > /tmp/temp && mv /tmp/temp /home/nkonev/example2.ldif
+grep -v "creatorsName" /home/nkonev/example2.ldif > /tmp/temp && mv /tmp/temp /home/nkonev/example2.ldif
+```
+
+```bash
+docker run -it --rm -p 1389:1389 -p 1636:1636 -p 4444:4444 -e ROOT_PASSWORD=password2 -e ROOT_USER_DN='cn=Directory Manager' -e ADD_BASE_ENTRY='' -v /home/nkonev/example2.ldif:/opt/opendj/bootstrap/data/data.ldif openidentityplatform/opendj:4.8.0
+```
 
 # Test in browser
 Open `http://localhost:8081/chat` in Firefox main and an Anonymous window;

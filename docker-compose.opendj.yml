@@ -1,0 +1,19 @@
+# This file used for both developer and demo purposes.
+# It contains environment
+version: '3.7'
+
+services:
+  opendj:
+    image: openidentityplatform/opendj:4.8.0
+    restart: unless-stopped
+    volumes:
+      - ./docker/opendj/example2.ldif:/opt/opendj/bootstrap/data/data.ldif:ro,z
+    # https://hub.docker.com/r/openidentityplatform/opendj
+    environment:
+      - ROOT_USER_DN=cn=Directory Manager
+      - ROOT_PASSWORD=password2
+      - ADD_BASE_ENTRY=
+    ports:
+      - "1389:1389"
+      - "1636:1636"
+      - "4444:4444"
