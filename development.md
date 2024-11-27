@@ -1128,3 +1128,9 @@ mockery --all
 go generate ./...
 ```
 
+# Admin's corner
+* [jaeger](https://www.jaegertracing.io/docs/1.31/deployment/#ui-base-path)
+* [rabbitmq](https://www.rabbitmq.com/docs/management#path-prefix)
+* [minio](https://github.com/minio/minio/discussions/15551)
+* [pgadmin](https://stackoverflow.com/questions/72567935/run-pgadmin4-on-a-custom-path-with-docker/72694786#72694786)
+* [traefik](https://github.com/traefik/traefik/commit/0ec12c7aa7b1344648e8789c489e14ee6063dafc) starting from 3.3
