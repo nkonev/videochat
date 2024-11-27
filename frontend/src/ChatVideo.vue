@@ -349,7 +349,7 @@ export default {
       // without this retry it's going to just return the error to user
       const retryOptions = {
         delay: 200,
-        maxAttempts: 5,
+        maxAttempts: 10,
       };
       try {
         this.inRestarting = true;
