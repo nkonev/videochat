@@ -58,7 +58,7 @@
 
                         <v-alert
                                 dismissible
-                                v-model="showAlert"
+                                v-model="isShowAlert"
                                 type="error"
                                 class="mb-4"
                         >
@@ -125,7 +125,7 @@ import {getStoredLanguage} from "@/store/localStore";
             return {
                 showInputablePassword: false,
                 show: false,
-                showAlert: false,
+                isShowAlert: false,
                 loginError: "",
 
                 disable: false,
@@ -229,7 +229,7 @@ import {getStoredLanguage} from "@/store/localStore";
                         .catch((error) => {
                             // handle error
                             console.log("Handling error on login", error.response);
-                            this.$data.showAlert = true;
+                            this.$data.isShowAlert = true;
                             if (error.response.status === 401) {
                                 this.$data.loginError = "Wrong login or password";
                             } else {
@@ -253,7 +253,7 @@ import {getStoredLanguage} from "@/store/localStore";
               this.$router.push({name: forgot_password_name} )
             },
             hideAlert() {
-                this.$data.showAlert = false;
+                this.$data.isShowAlert = false;
                 this.$data.loginError = "";
             },
             onLanguageClick() {

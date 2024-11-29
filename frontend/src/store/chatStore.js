@@ -29,6 +29,7 @@ export const useChatStore = defineStore('chat', {
         availableOAuth2Providers: [],
         OAuth2ProvidersAllowUnbind: {},
         showAlert: false,
+        showAlertDebounced: false,
         alertTimeout: null,
         lastError: "",
         errorColor: "",

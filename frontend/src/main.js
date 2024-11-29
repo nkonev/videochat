@@ -19,6 +19,7 @@ import bus, {LOGGED_OUT} from "@/bus/bus";
 import {useChatStore} from "@/store/chatStore";
 import pinia from "@/store/index";
 import FontAwesomeIcon from "@/plugins/faIcons";
+import debounce from "lodash/debounce.js";
 
 axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
 axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
@@ -74,6 +75,7 @@ app.config.globalProperties.setError = (e, txt, traceId) => {
     }
     chatStore.lastError = messageText;
     chatStore.showAlert = true;
+    chatStore.showAlertDebounced = true;
     chatStore.errorColor = "error";
 }
 
@@ -85,6 +87,7 @@ app.config.globalProperties.setWarning = (txt) => {
     console.warn(txt);
     chatStore.lastError = txt;
     chatStore.showAlert = true;
+    chatStore.showAlertDebounced = true;
     chatStore.errorColor = "warning";
 }
 
@@ -92,6 +95,7 @@ app.config.globalProperties.setOk = (txt) => {
     console.info(txt);
     chatStore.lastError = txt;
     chatStore.showAlert = true;
+    chatStore.showAlertDebounced = true;
     chatStore.errorColor = "green";
 }
 
@@ -99,13 +103,28 @@ app.config.globalProperties.setTempNotification = (txt) => {
     console.info(txt);
     chatStore.lastError = txt;
     chatStore.showAlert = true;
+    chatStore.showAlertDebounced = true;
     chatStore.errorColor = "black";
     chatStore.alertTimeout = 10000;
 }
 
+// fixes https://stackoverflow.com/questions/49627750/vuetify-closing-snackbar-without-closing-dialog
+// testcase
+// user 1 enters creates a video call
+// user 2 from the different chat tries to call user 1
+// user 2 will have an orange snackbar "user 1 is busy"
+// user 2 closes the snackbar
+// ChatParticipantsModal shouldn't disappear for user 2
+const hideAlert = () => {
+    chatStore.showAlertDebounced = false;
+}
+
+const debouncedHideAlert = debounce(hideAlert, 3000);
+
 app.config.globalProperties.closeError = () => {
     chatStore.lastError = "";
     chatStore.showAlert = false;
+    debouncedHideAlert();
     chatStore.errorColor = "";
 }
 
