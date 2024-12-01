@@ -188,14 +188,19 @@ export default {
       return profiles;
     },
     goChats() {
-      goToPreservingQuery(this.$route, this.$router, { name: chat_list_name});
+      // we don't store query here because
+      // user on mobile searches by messages and typed "ololo"
+      // then user clicks Chats
+      // then user enter into the different chat
+      // due to "ololo" the user will see 0 messages
+      this.$router.push({name: chat_list_name} )
     },
     goBlogs() {
       window.location.href = blog
     },
     openUsers() {
       this.chatStore.incrementProgressCount();
-      goToPreservingQuery(this.$route, this.$router, { name: profile_list_name}).finally(()=>{
+      this.$router.push({name: profile_list_name}).finally(()=>{
         this.chatStore.decrementProgressCount();
       })
     },
