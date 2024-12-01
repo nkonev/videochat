@@ -212,6 +212,9 @@ export default {
       }
       return ret;
     },
+    getEditor() {
+      return this.editor
+    },
   },
   mounted() {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);

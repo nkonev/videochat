@@ -115,11 +115,11 @@
               <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="sendMessageBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
-        <template v-else-if="this.$refs.tipTapRef">
+        <template v-else-if="shouldShowBubbleMenu">
             <bubble-menu
                 class="bubble-menu"
                 :tippy-options="{ duration: 0 }"
-                :editor="this.$refs.tipTapRef?.$data.editor"
+                :editor="this.$refs.tipTapRef.getEditor()"
             >
                 <button @click="boldClick" :class="{ 'is-active': boldValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
@@ -135,7 +135,7 @@
             <floating-menu
                 class="floating-menu"
                 :tippy-options="{ duration: 0, zIndex: 200, interactive: true, appendTo: documentBody }"
-                :editor="this.$refs.tipTapRef?.$data.editor"
+                :editor="this.$refs.tipTapRef.getEditor()"
             >
                 <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
                     {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
@@ -674,6 +674,9 @@
         },
         computed: {
           ...mapStores(useChatStore),
+          shouldShowBubbleMenu() {
+            return this.$refs.tipTapRef && this.$refs.tipTapRef.getEditor()
+          },
         },
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
