@@ -60,6 +60,7 @@ async function data(pageContext) {
         // see getPageTitle.js
         title: unescapeHtml(blogResponse.data.title),
         description: blogResponse.data.preview,
+        showSearchButton: true,
     }
 
 }
