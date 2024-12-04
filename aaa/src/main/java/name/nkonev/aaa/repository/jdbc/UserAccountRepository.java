@@ -82,4 +82,8 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
 
     @Query("select * from user_account where ldap_id is not null and sync_ldap_roles_date_time < :currTime limit :limit offset :offset")
     List<UserAccount> findByLdapIdRolesElderThan(LocalDateTime currTime, int limit, int offset);
+
+    @Modifying
+    @Query("update user_account set password = :newEncodedPassword where id = :userId")
+    void updatePassword(long userId, String newEncodedPassword);
 }

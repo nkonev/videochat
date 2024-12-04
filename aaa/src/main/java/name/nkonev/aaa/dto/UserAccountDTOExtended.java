@@ -14,6 +14,7 @@ public record UserAccountDTOExtended (
 
     DataDTO additionalData,
 
+    // can I as an user / admin lock him ?
     boolean canLock,
     boolean canEnable,
 
@@ -22,7 +23,8 @@ public record UserAccountDTOExtended (
     boolean canChangeRole,
     boolean canConfirm,
     boolean awaitingForConfirmEmailChange,
-    boolean canRemoveSessions
+    boolean canRemoveSessions,
+    boolean canSetPassword
 ) {
 
     @JsonCreator
@@ -43,7 +45,8 @@ public record UserAccountDTOExtended (
         @JsonProperty("awaitingForConfirmEmailChange") boolean awaitingForConfirmEmailChange,
         @JsonProperty("loginColor") String loginColor,
         @JsonProperty("canRemoveSessions") boolean canRemoveSessions,
-        @JsonProperty("ldap") boolean ldap
+        @JsonProperty("ldap") boolean ldap,
+        @JsonProperty("canSetPassword") boolean canSetPassword
     ) {
         this(
             new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor, ldap),
@@ -54,7 +57,8 @@ public record UserAccountDTOExtended (
             canChangeRole,
             canConfirm,
             awaitingForConfirmEmailChange,
-            canRemoveSessions
+            canRemoveSessions,
+            canSetPassword
         );
     }
 

@@ -341,6 +341,7 @@ type UserAccountExtendedDto {
     loginColor:  String
     canRemoveSessions: Boolean!
     ldap: Boolean!
+    canSetPassword: Boolean!
 }
 
 union UserAccountEventDto = UserAccountExtendedDto | UserDeletedDto

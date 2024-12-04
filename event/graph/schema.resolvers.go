@@ -485,6 +485,7 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		LoginColor:        aDto.LoginColor,
 		CanRemoveSessions: aDto.CanRemoveSessions,
 		Ldap:              aDto.Ldap,
+		CanSetPassword:    aDto.CanSetPassword,
 	}
 	if myUserId == aDto.Id {
 		userAccountEvent.Email = user.Email.Ptr()

@@ -252,4 +252,14 @@ public class UserProfileController {
 
         return userProfileService.getUsersExistInternal(requestedUserIds);
     }
+
+    @ResponseBody
+    @PreAuthorize("@aaaPermissionService.canSetPassword(#userAccount, #userId)")
+    @PutMapping(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.USER_ID + Constants.Urls.PASSWORD)
+    public void setPassword(@AuthenticationPrincipal UserAccountDetailsDTO userAccount,
+                            @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
+                            @RequestBody SetPasswordDTO setPasswordDTO){
+        userProfileService.setPassword(setPasswordDTO, userId);
+    }
+
 }

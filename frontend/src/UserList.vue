@@ -148,6 +148,7 @@
           @removeSessions="this.removeSessions"
           @enableUser="this.enableUser"
           @disableUser="this.disableUser"
+          @setPassword="this.setPassword"
       >
       </UserListContextMenu>
       <UserRoleModal/>
@@ -174,7 +175,7 @@ import bus, {
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-  deepCopy, findIndex, getLoginColoredStyle,
+  deepCopy, findIndex, getExtendedUserFragment, getLoginColoredStyle,
   hasLength, isSetEqual, isStrippedUserLogin, isUserHash, replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
@@ -463,35 +464,7 @@ export default {
                 subscription {
                   userAccountEvents {
                     userAccountEvent {
-                      ... on UserAccountExtendedDto {
-                        id
-                        login
-                        avatar
-                        avatarBig
-                        shortInfo
-                        lastLoginDateTime
-                        oauth2Identifiers {
-                          facebookId
-                          vkontakteId
-                          googleId
-                          keycloakId
-                        }
-                        additionalData {
-                          enabled
-                          expired
-                          locked
-                          confirmed
-                          roles
-                        }
-                        canLock
-                        canEnable
-                        canDelete
-                        canChangeRole
-                        canConfirm
-                        loginColor
-                        canRemoveSessions
-                        ldap
-                      }
+                      ${getExtendedUserFragment()},
                       ... on UserDeletedDto {
                         id
                       }
@@ -595,6 +568,11 @@ export default {
     },
     disableUser(user) {
       axios.post('/api/aaa/user/enable', {userId: user.id, enable: false}, {
+        signal: this.requestAbortController.signal
+      });
+    },
+    setPassword(user) {
+      axios.put(`/api/aaa/user/${user.id}/password`, {password: "password"}, {
         signal: this.requestAbortController.signal
       });
     },

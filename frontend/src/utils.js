@@ -406,3 +406,44 @@ export const unescapeHtml = (text) => {
     }
     return he.decode(text);
 }
+
+export const getExtendedUserFragment = (reqEmail) => {
+    const email = `
+email,
+awaitingForConfirmEmailChange,
+`;
+
+    return `
+... on UserAccountExtendedDto {
+  id,
+  login,
+  ${reqEmail ? email : ""}
+  avatar,
+  avatarBig,
+  shortInfo,
+  lastLoginDateTime,
+  oauth2Identifiers {
+    facebookId,
+    vkontakteId,
+    googleId,
+    keycloakId,
+  },
+  additionalData, {
+    enabled,
+    expired,
+    locked,
+    confirmed,
+    roles,
+  },
+  canLock,
+  canEnable,
+  canDelete,
+  canChangeRole,
+  canConfirm,
+  loginColor,
+  canRemoveSessions,
+  ldap,
+  canSetPassword
+}
+`
+}

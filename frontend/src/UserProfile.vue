@@ -139,6 +139,7 @@
           @removeSessions="this.removeSessions"
           @enableUser="this.enableUser"
           @disableUser="this.disableUser"
+          @setPassword="this.setPassword"
     >
     </UserListContextMenu>
     <UserRoleModal/>
@@ -149,7 +150,14 @@
 
 import axios from "axios";
 import {chat_name, profile_list_name} from "./router/routes";
-import {deepCopy, getLoginColoredStyle, hasLength, isStrippedUserLogin, setTitle} from "@/utils";
+import {
+  deepCopy,
+  getExtendedUserFragment,
+  getLoginColoredStyle,
+  hasLength,
+  isStrippedUserLogin,
+  setTitle
+} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
@@ -354,35 +362,7 @@ export default {
                 subscription {
                   userAccountEvents(userIdsFilter: ${this.getUserIdsSubscribeTo()}) {
                     userAccountEvent {
-                      ... on UserAccountExtendedDto {
-                        id
-                        login
-                        avatar
-                        avatarBig
-                        shortInfo
-                        lastLoginDateTime
-                        oauth2Identifiers {
-                          facebookId
-                          vkontakteId
-                          googleId
-                          keycloakId
-                        }
-                        additionalData {
-                          enabled
-                          expired
-                          locked
-                          confirmed
-                          roles
-                        }
-                        canLock
-                        canEnable
-                        canDelete
-                        canChangeRole
-                        canConfirm
-                        loginColor
-                        canRemoveSessions
-                        ldap
-                      }
+                      ${getExtendedUserFragment()},
                       ... on UserDeletedDto {
                         id
                       }
@@ -440,6 +420,11 @@ export default {
     },
     disableUser(user) {
       axios.post('/api/aaa/user/enable', {userId: user.id, enable: false}, {
+        signal: this.requestAbortController.signal
+      });
+    },
+    setPassword(user) {
+      axios.put(`/api/aaa/user/${user.id}/password`, {password: "password"}, {
         signal: this.requestAbortController.signal
       });
     },

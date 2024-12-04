@@ -17,6 +17,7 @@ public class Constants {
         public static final String PROFILE = "/profile";
         public static final String SETTINGS = "/settings";
         public static final String SMILEYS = "/smileys";
+        public static final String PASSWORD = "/password";
 
         public static final String LANGUAGE = "/language";
 

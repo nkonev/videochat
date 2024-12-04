@@ -303,6 +303,7 @@ type UserAccountExtendedDto struct {
 	LoginColor                    *string            `json:"loginColor"`
 	CanRemoveSessions             bool               `json:"canRemoveSessions"`
 	Ldap                          bool               `json:"ldap"`
+	CanSetPassword                bool               `json:"canSetPassword"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

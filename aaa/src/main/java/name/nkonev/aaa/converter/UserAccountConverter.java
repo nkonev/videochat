@@ -197,7 +197,8 @@ public class UserAccountConverter {
                 awaitingForConfirmEmailChange,
                 userAccount.loginColor(),
                 aaaSecurityService.canRemoveSessions(currentUser, userAccount.id()),
-                userAccount.ldapId() != null
+                userAccount.ldapId() != null,
+                aaaSecurityService.canSetPassword(currentUser, userAccount.id())
         );
     }
 

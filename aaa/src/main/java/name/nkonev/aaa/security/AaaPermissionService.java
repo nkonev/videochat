@@ -168,4 +168,22 @@ public class AaaPermissionService {
     public boolean canAccessToManagementUrlPath(Collection<UserRole> roles) {
         return canAccessToAdminsCorner(roles);
     }
+
+    public boolean canSetPassword(PrincipalToCheck userAccount, Long userId) {
+        if (userAccount==null){
+            return false;
+        }
+        if (userId==null){
+            return false;
+        }
+        if (userId.equals(userAccount.getId())){
+            return false;
+        }
+        return userAccount.isAdmin();
+    }
+
+    public boolean canSetPassword(UserAccountDetailsDTO userAccount, Long userId) {
+        return canSetPassword(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), userId);
+    }
+
 }

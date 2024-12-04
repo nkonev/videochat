@@ -29,7 +29,7 @@ public record UserAccountDTO (
 
     OAuth2IdentifiersDTO oauth2Identifiers,
     String loginColor,
-    boolean ldap
+    boolean ldap // has ldap
 ) {
     public UserAccountDTO(
             Long id,

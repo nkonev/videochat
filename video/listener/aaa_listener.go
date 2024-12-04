@@ -46,11 +46,9 @@ func CreateAaaUserSessionsKilledListener(userService *services.UserService, type
 			}
 			if bindTo.EventType == "user_sessions_killed" {
 				userService.KickUser(ctx, bindTo.UserId)
-			}
-
-			if bindTo.ReasonType == "user_deleted" || bindTo.ReasonType == "user_locked" || bindTo.ReasonType == "user_disabled" || bindTo.ReasonType == "user_unconfirmed" {
 				userService.ProcessCallOnDisabling(ctx, bindTo.UserId)
 			}
+
 		default:
 			Logger.Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))

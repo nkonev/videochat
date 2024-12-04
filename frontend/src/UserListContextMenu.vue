@@ -97,6 +97,9 @@ export default {
                 if (this.menuableItem.canChangeRole){
                     ret.push({title: this.$vuetify.locale.t('$vuetify.change_roles'), icon: 'mdi-account-edit', action: () => this.$emit('changeRole', this.menuableItem) });
                 }
+                if (this.menuableItem.canSetPassword){
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.set_password'), icon: 'mdi-lock-reset', action: () => this.$emit('setPassword', this.menuableItem) });
+                }
             }
             return ret;
         },

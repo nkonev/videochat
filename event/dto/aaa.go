@@ -41,6 +41,7 @@ type UserAccountExtended struct {
 	CanChangeRole     bool     `json:"canChangeRole"`
 	CanConfirm        bool     `json:"canConfirm"`
 	CanRemoveSessions bool     `json:"canRemoveSessions"`
+	CanSetPassword    bool     `json:"canSetPassword"`
 }
 
 type UserAccountEventChanged struct {

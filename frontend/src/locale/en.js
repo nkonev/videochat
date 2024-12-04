@@ -322,5 +322,6 @@ export default {
     tracing: "Tracing",
     object_storage: "S3 storage",
     queue_broker: "Queue broker",
-    database: "Database"
+    database: "Database",
+    set_password: "Set password"
 }

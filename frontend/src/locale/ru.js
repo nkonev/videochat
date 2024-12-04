@@ -322,5 +322,6 @@ export default {
     tracing: "Трассировка",
     object_storage: "S3-хранилище",
     queue_broker: "Брокер очередей",
-    database: "База данных"
+    database: "База данных",
+    set_password: "Задать пароль"
 }

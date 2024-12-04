@@ -169,12 +169,12 @@
 <script>
 import 'typeface-roboto'; // More modern versions turn out into almost non-bold font in Firefox
 import {
-    getBlogLink,
-    getNotificationSubtitle, getNotificationTitle,
-    hasLength,
-    isCalling,
-    isChatRoute,
-    setLanguageToVuetify
+  getBlogLink, getExtendedUserFragment,
+  getNotificationSubtitle, getNotificationTitle,
+  hasLength,
+  isCalling,
+  isChatRoute,
+  setLanguageToVuetify
 } from "@/utils";
 import {
     chat_list_name,
@@ -769,37 +769,7 @@ export default {
                     subscription {
                       userAccountEvents(userIdsFilter: ${this.getUserIdsSubscribeTo()}) {
                         userAccountEvent {
-                          ... on UserAccountExtendedDto {
-                            id
-                            login
-                            email
-                            awaitingForConfirmEmailChange
-                            avatar
-                            avatarBig
-                            shortInfo
-                            lastLoginDateTime
-                            oauth2Identifiers {
-                              facebookId
-                              vkontakteId
-                              googleId
-                              keycloakId
-                            }
-                            additionalData {
-                              enabled
-                              expired
-                              locked
-                              confirmed
-                              roles
-                            }
-                            canLock
-                            canEnable
-                            canDelete
-                            canChangeRole
-                            canConfirm
-                            loginColor
-                            canRemoveSessions
-                            ldap
-                          }
+                          ${getExtendedUserFragment(true)},
                           ... on UserDeletedDto {
                             id
                           }
