@@ -166,6 +166,6 @@ public class AaaPermissionService {
     }
 
     public boolean canAccessToManagementUrlPath(Collection<UserRole> roles) {
-        return roles.contains(UserRole.ROLE_ADMIN);
+        return canAccessToAdminsCorner(roles);
     }
 }
