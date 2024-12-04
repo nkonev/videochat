@@ -43,6 +43,9 @@ export const VIDEO_PARAMETERS_CHANGED = "videoParametersChanged";
 
 export const OPEN_SIMPLE_MODAL = "openSimpleModal";
 export const CLOSE_SIMPLE_MODAL = "closeSimpleModal";
+
+export const OPEN_SET_PASSWORD_MODAL = "openSetPassword";
+
 export const VIDEO_CALL_USER_COUNT_CHANGED = "videoCallUserCountChanged";
 export const VIDEO_CALL_SCREEN_SHARE_CHANGED = "videoCallScreenShareChanged";
 

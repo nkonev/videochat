@@ -162,11 +162,11 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
 import bus, {
-    CHANGE_ROLE_DIALOG,
-    CLOSE_SIMPLE_MODAL,
-    LOGGED_OUT,
-    OPEN_SIMPLE_MODAL,
-    PROFILE_SET
+  CHANGE_ROLE_DIALOG,
+  CLOSE_SIMPLE_MODAL,
+  LOGGED_OUT, OPEN_SET_PASSWORD_MODAL,
+  OPEN_SIMPLE_MODAL,
+  PROFILE_SET
 } from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
@@ -424,9 +424,7 @@ export default {
       });
     },
     setPassword(user) {
-      axios.put(`/api/aaa/user/${user.id}/password`, {password: "password"}, {
-        signal: this.requestAbortController.signal
-      });
+      bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id})
     },
   },
   mounted() {

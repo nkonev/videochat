@@ -158,6 +158,7 @@
         <ChooseSmileyModal/>
         <ChooseColorModal/>
         <PublishedMessagesModal/>
+        <SetPasswordModal/>
       </v-main>
 
     <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
@@ -254,6 +255,7 @@ import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
 import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@/browserNotifications.js";
 import {getHumanReadableDate} from "@/date.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
+import SetPasswordModal from "@/SetPasswordModal.vue";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -814,6 +816,7 @@ export default {
         CollapsedSearch,
         ChooseSmileyModal,
         PublishedMessagesModal,
+        SetPasswordModal,
     },
     created() {
         this.afterRouteInitialized = once(this.afterRouteInitialized);

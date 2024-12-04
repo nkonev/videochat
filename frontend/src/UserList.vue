@@ -168,7 +168,7 @@ import heightMixin from "@/mixins/heightMixin";
 import bus, {
   CHANGE_ROLE_DIALOG,
   CLOSE_SIMPLE_MODAL,
-  LOGGED_OUT, OPEN_SIMPLE_MODAL,
+  LOGGED_OUT, OPEN_SET_PASSWORD_MODAL, OPEN_SIMPLE_MODAL,
   PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED
 } from "@/bus/bus";
@@ -572,9 +572,7 @@ export default {
       });
     },
     setPassword(user) {
-      axios.put(`/api/aaa/user/${user.id}/password`, {password: "password"}, {
-        signal: this.requestAbortController.signal
-      });
+      bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id})
     },
     tetATet(user) {
         axios.put(`/api/chat/tet-a-tet/${user.id}`, null, {
