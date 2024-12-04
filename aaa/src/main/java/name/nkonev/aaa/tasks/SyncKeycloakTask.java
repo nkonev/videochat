@@ -36,7 +36,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
 
     private final LockService lockService;
 
-    private KeycloakClient keycloakClient;
+    private final KeycloakClient keycloakClient;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncKeycloakTask.class);
 
@@ -49,6 +49,9 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         if (keycloakClient != null) {
             this.keycloakClient = keycloakClient;
             LOGGER.info("Keycloak client was configured");
+        } else {
+            this.keycloakClient = null;
+            LOGGER.info("Keycloak client wasn't configured");
         }
     }
 
@@ -76,7 +79,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
     }
 
     private boolean checkKeycloak() {
-        if (keycloakClient == null) {
+        if (this.keycloakClient == null) {
             LOGGER.error("Keycloak client is not configured, you must to add its OAuth provider and registration");
             return false;
         }
