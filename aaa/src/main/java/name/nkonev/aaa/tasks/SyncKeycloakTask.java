@@ -34,10 +34,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
 
     private final AaaProperties aaaProperties;
 
-    private final ObjectProvider<KeycloakClient> keycloakClientProvider;
-
     private final LockService lockService;
-
 
     private KeycloakClient keycloakClient;
 
@@ -47,8 +44,12 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
 
     public SyncKeycloakTask(AaaProperties aaaProperties, ObjectProvider<KeycloakClient> keycloakClientProvider, LockService lockService) {
         this.aaaProperties = aaaProperties;
-        this.keycloakClientProvider = keycloakClientProvider;
         this.lockService = lockService;
+        var keycloakClient = keycloakClientProvider.getIfAvailable();
+        if (keycloakClient != null) {
+            this.keycloakClient = keycloakClient;
+            LOGGER.info("Keycloak client was configured");
+        }
     }
 
     @Scheduled(cron = "${custom.schedulers.sync-keycloak.cron}")
@@ -74,17 +75,22 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         return LOGGER;
     }
 
-    @Override
-    protected void doConcreteWork(LocalDateTime currTime) {
-        var keycloakClient = keycloakClientProvider.getIfAvailable();
+    private boolean checkKeycloak() {
         if (keycloakClient == null) {
             LOGGER.error("Keycloak client is not configured, you must to add its OAuth provider and registration");
-            return;
+            return false;
         }
-        this.keycloakClient = keycloakClient;
+        return true;
+    }
 
+    @Override
+    protected void doConcreteWork(LocalDateTime currTime) {
         final var batchSize = aaaProperties.schedulers().syncKeycloak().batchSize();
         LOGGER.info("Sync Keycloak task start, batchSize={}", batchSize);
+
+        if (!checkKeycloak()) {
+            return;
+        }
 
         LOGGER.info("Upserting entries from Keycloak");
         var shouldContinue = true;
