@@ -21,7 +21,7 @@ public class LockService {
 
     public static class LockInstance implements AutoCloseable {
 
-        private boolean wasSet;
+        private final boolean wasSet;
 
         private final String lockKey;
 
