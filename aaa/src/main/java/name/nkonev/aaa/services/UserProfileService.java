@@ -422,9 +422,9 @@ public class UserProfileService {
         return ret.a();
     }
 
-    public UserAccountDTOExtended setRole(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
+    public UserAccountDTOExtended setRoles(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<UserRole> roles){
         var ret = transactionTemplate.execute(status -> {
-            Assert.isTrue(!roles.isEmpty(), "Role should be");
+            Assert.isTrue(!roles.isEmpty(), "Roles should be set");
             UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
             userAccount = userAccount.withRoles(roles.toArray(new UserRole[0]));
             userAccount = userAccountRepository.save(userAccount);
