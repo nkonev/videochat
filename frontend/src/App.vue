@@ -979,10 +979,10 @@ html {
     text-overflow: ellipsis;
 }
 
-.list-item-prepend-spacer-16 {
+.list-item-prepend-spacer {
     .v-list-item__prepend {
         .v-list-item__spacer {
-            width: 16px
+            width: 12px
         }
     }
 }

@@ -23,7 +23,7 @@
                         <v-list v-if="itemsDto.items && itemsDto.count > 0">
                             <template v-for="(item, index) in itemsDto.items">
                                 <v-list-item
-                                  class="list-item-prepend-spacer-16"
+                                  class="list-item-prepend-spacer"
                                   @contextmenu.stop="onShowContextMenu($event, item)"
                                 >
                                     <template v-slot:prepend v-if="hasLength(item.avatar)">

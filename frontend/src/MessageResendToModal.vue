@@ -23,7 +23,7 @@
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
                                 <v-hover v-slot="{ isHovering, props }">
-                                    <v-list-item @click="resendMessageTo(item.id)" v-bind="props" class="list-item-prepend-spacer-16">
+                                    <v-list-item @click="resendMessageTo(item.id)" v-bind="props" class="list-item-prepend-spacer">
                                         <template v-slot:prepend v-if="hasLength(item.avatar)">
                                             <v-avatar :image="item.avatar"></v-avatar>
                                         </template>

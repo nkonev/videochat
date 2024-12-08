@@ -1,6 +1,6 @@
 <template>
-    <div class="pr-1 mr-1 mt-4 message-item-root" :class="isMobile() ? ['pl-2'] : ['pl-4', 'pr-2']" :id="id">
-        <div v-if="hasLength(item?.owner?.avatar)" class="item-avatar mt-2" :class="isMobile() ? 'mr-2' : 'mr-3'">
+    <div class="px-1 mx-1 mt-4 message-item-root" :id="id">
+        <div v-if="hasLength(item?.owner?.avatar)" class="item-avatar ml-1 mr-2 mt-1">
           <a :href="getOwnerLink(item)" class="user-link" >
             <img :src="item.owner?.avatar">
           </a>

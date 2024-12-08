@@ -113,8 +113,8 @@ const emptyStoredPanes = () => {
   return {
     topPane: 60, // ChatVideo mobile
     leftPane: 20, // ChatList
-    rightPane: 40, // ChatVideo desktop
-    bottomPane: 20, // MessageEdit in case desktop (!isMobile())
+    rightPane: 70, // ChatVideo desktop
+    bottomPane: 15, // MessageEdit in case desktop (!isMobile())
     bottomPaneBig: 60, // MessageEdit in case desktop (!isMobile()) and a text containing a newline
   }
 }
