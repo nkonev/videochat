@@ -24,3 +24,4 @@ ansible-playbook -i ~/videochat/inventory.ini --extra-vars "@~/videochat/vars.ym
 # only videochat
 ansible-playbook -i ~/videochat/inventory.ini --extra-vars "@~/videochat/vars.yml" --extra-vars "image_install_tag=changing" --tags "videochat" playbook.yaml
 ```
+
