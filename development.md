@@ -97,6 +97,138 @@ Below are just notes, some of them aren't actual. The most useful are ones about
 
 
 
+# Deploying
+## Saving and loading docker images
+```
+docker save nkonev/chat-frontend:latest -o /tmp/frontend.tar
+scp /tmp/frontend.tar root@nkonev.name:/tmp
+ssh ...
+docker load -i /tmp/frontend.tar
+```
+
+## Deploy to server from a local machine
+```
+cd aaa
+export CONNECT_LINE=user@api.site.local
+make clean package push-docker-image-to-server deploy-docker-image
+```
+
+## Ansible
+* https://medium.com/@knoldus/how-to-install-docker-on-rhel-using-ansible-role-62728c098351
+* https://www.digitalocean.com/community/tutorials/how-to-create-and-use-templates-in-ansible-playbooks
+* https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
+
+### Get [facts](https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks)
+```bash
+ansible all -i hosts.ini -m setup -a "filter=*ipv4*" -u root
+```
+
+### Dry-run
+```bash
+ansible-playbook -i hosts.ini playbook.yaml --check
+```
+
+### Manual apply docker swarm docker compose
+```bash
+docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
+journalctl -n 200 -f CONTAINER_TAG=chat-minio
+```
+
+### Variables
+
+https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
+
+## Generate password
+```bash
+# https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt.html
+python
+import passlib
+from passlib.hash import bcrypt
+bcrypt.using(rounds=10, salt="salt012345678901234567").hash("admin")
+```
+
+## check for community.docker
+```
+ansible-galaxy collection list
+```
+
+## Rsyslog
+https://unix.stackexchange.com/questions/599812/is-rsyslog-a-mandatory-requirement-in-linux-with-journald
+
+
+## Restore data
+Be careful! During a short period while videochat uses an empty database, the scheduler in storage microservice can remove files because chats aren't exists.
+To prevent this just stop storage for the all period of maintenance.
+```
+docker service scale VIDEOCHATSTACK_aaa=0
+docker service scale VIDEOCHATSTACK_chat=0
+docker service scale VIDEOCHATSTACK_storage=0
+
+scp ~/videochat/backup-2024-12-10_00-02-36/chat-aaa.sql THEUSER@nkonev.name:/tmp/chat-aaa.sql
+scp ~/videochat/backup-2024-12-10_00-02-36/chat.sql THEUSER@nkonev.name:/tmp/chat.sql
+
+echo 'drop database aaa;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+
+cat /tmp/chat-aaa.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+cat /tmp/chat.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+
+rm -rf /tmp/chat-aaa.sql
+rm -rf /tmp/chat.sql
+
+docker service scale VIDEOCHATSTACK_aaa=1
+docker service scale VIDEOCHATSTACK_chat=1
+
+# copy from old S3 to the new
+# on the new minio (target) temporarily publish minio
+vim /opt/videochat/docker-compose-infra.yml
+# into minio add
+    ports:
+    - target: 9000
+      published: 9000
+      protocol: tcp
+      mode: host
+docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
+
+# on the old minio (source)
+docker exec -u root -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_minio --filter desired-state=running -q)) bash
+apt update && apt install vim
+vim ~/.mc/config.json
+# add (by copying from local)
+
+		"new": {
+			"url": "http://new_ip:9000",
+			"accessKey": "the_same_key_",
+			"secretKey": "the_same_secret_",
+			"api": "s3v4",
+			"path": "auto"
+		},
+
+# test
+mc ls new/
+
+# copy
+mc cp --recursive local/chat-avatar/ new/chat-avatar
+mc cp --recursive local/user-avatar/ new/user-avatar
+mc cp --recursive local/files-preview/ new/files-preview
+mc cp --recursive local/files/ new/files
+
+# on the new minio (target) remove temporarily published minio
+vim /opt/videochat/docker-compose-infra.yml
+# from minio remove
+    ports:
+    - target: 9000
+      published: 9000
+      protocol: tcp
+      mode: host
+docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
+
+docker service scale VIDEOCHATSTACK_storage=1
+```
+
+
+
+
 # AAA
 
 [Error:java: invalid source release: 8](https://stackoverflow.com/a/26009627)
@@ -830,30 +962,6 @@ mc rm --recursive --force --dangerous --incomplete local/files
 docker run --network=videochat_backend -it --rm lesovsky/pgcenter:latest pgcenter top -h videochat_postgresql_1 -U chat -d chat
 ```
 
-## Restore data
-Be careful! During a short period while videochat uses an empty database, the scheduler in storage microservice can remove files because chats aren't exists.
-To prevent this just stop storage for the all period of maintenance.
-```
-docker service scale VIDEOCHATSTACK_aaa=0
-docker service scale VIDEOCHATSTACK_chat=0
-docker service scale VIDEOCHATSTACK_storage=0
-
-scp ~/blog/backup-2024-09-29_09-11-01/chat-aaa.sql THEUSER@nkonev.name:/tmp/chat-aaa.sql
-scp ~/blog/backup-2024-09-29_09-11-01/chat.sql THEUSER@nkonev.name:/tmp/chat.sql
-
-echo 'drop database aaa;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
-echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
-
-cat /tmp/chat-aaa.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
-cat /tmp/chat.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
-
-rm -rf /tmp/chat-aaa.sql
-rm -rf /tmp/chat.sql
-
-docker service scale VIDEOCHATSTACK_aaa=1
-docker service scale VIDEOCHATSTACK_chat=1
-docker service scale VIDEOCHATSTACK_storage=1
-```
 
 ## Pgadmin
 https://hub.docker.com/r/dcagatay/pwless-pgadmin4
@@ -1031,21 +1139,6 @@ SADD dials_of_user:1 2
 HSET user_call_state:2 userCallOwner 1
 ```
 
-# Saving and loading docker images
-```
-docker save nkonev/chat-frontend:latest -o /tmp/frontend.tar
-scp /tmp/frontend.tar root@nkonev.name:/tmp
-ssh ...
-docker load -i /tmp/frontend.tar
-```
-
-# Deploy to server from a local machine
-```
-cd aaa
-export CONNECT_LINE=user@api.site.local
-make clean package push-docker-image-to-server deploy-docker-image
-```
-
 # Switching aaa onto JWT
 * https://www.bezkoder.com/spring-boot-jwt-authentication/ (with changes 2->3)
 * https://www.toptal.com/spring/spring-security-tutorial
@@ -1057,48 +1150,6 @@ still [does not support](https://stackoverflow.com/questions/76639412/freemarker
 It exists a resolved issue for that [FREEMARKER-218](https://issues.apache.org/jira/browse/FREEMARKER-218). It is solved but it is unknown then version 2.3.33 is released
 
 having this, [spring security taglibs](https://docs.spring.io/spring-security/reference/servlet/integrations/jsp-taglibs.html) were removed
-
-# Ansible
-* https://medium.com/@knoldus/how-to-install-docker-on-rhel-using-ansible-role-62728c098351
-* https://www.digitalocean.com/community/tutorials/how-to-create-and-use-templates-in-ansible-playbooks
-* https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
-
-Get [facts](https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks)
-```bash
-ansible all -i hosts.ini -m setup -a "filter=*ipv4*" -u root
-```
-
-Dry-run
-```bash
-ansible-playbook -i hosts.ini playbook.yaml --check
-```
-
-Manual apply
-```bash
-docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEOCHATSTACK
-journalctl -n 200 -f CONTAINER_TAG=chat-minio
-```
-
-Variables
-
-https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
-
-Generate password
-```bash
-# https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt.html
-python
-import passlib
-from passlib.hash import bcrypt
-bcrypt.using(rounds=10, salt="salt012345678901234567").hash("admin")
-```
-
-check for community.docker
-```
-ansible-galaxy collection list
-```
-
-# Rsyslog
-https://unix.stackexchange.com/questions/599812/is-rsyslog-a-mandatory-requirement-in-linux-with-journald
 
 
 # Testing transfer ownership
