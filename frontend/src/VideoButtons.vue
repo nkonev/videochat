@@ -150,7 +150,7 @@ export default {
   .v-field__input {
     min-height: unset;
     min-width: unset;
-    padding 0 !important
+    padding 0 0 0 4px !important
     margin 0 !important
     position: relative;
   }
