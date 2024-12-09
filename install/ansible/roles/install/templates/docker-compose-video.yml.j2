@@ -7,9 +7,9 @@ services:
       backend:
     deploy:
       replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 20s
+#      update_config:
+#        parallelism: 1
+#        delay: 20s
       labels:
         - "traefik.enable=true"
         - "traefik.http.services.video-service.loadbalancer.server.port=1237"
