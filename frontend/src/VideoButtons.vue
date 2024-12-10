@@ -1,31 +1,44 @@
 <template>
   <div :class="videoButtonsControlClass">
-    <template v-if="chatStore.showCallManagement && chatStore.isInCall()">
-      <v-btn variant="plain" tile icon :loading="chatStore.initializingVideoCall" @click.stop.prevent="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
-        <v-icon size="x-large" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
+    <v-slide-group>
+      <template v-if="chatStore.showCallManagement && chatStore.isInCall()">
+        <v-btn :class="isMobile() ? 'ml-8' : ''" variant="plain" tile icon :loading="chatStore.initializingVideoCall" @click.stop.prevent="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+          <v-icon size="x-large" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
+        </v-btn>
+      </template>
+      <v-btn variant="plain" tile icon v-if="chatStore.canShowMicrophoneButton" @click.stop.prevent="doMuteAudio(!chatStore.localMicrophoneEnabled)" :title="!chatStore.localMicrophoneEnabled ? $vuetify.locale.t('$vuetify.unmute_audio') : $vuetify.locale.t('$vuetify.mute_audio')"><v-icon size="x-large">{{ !chatStore.localMicrophoneEnabled ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
+      <v-btn variant="plain" tile icon v-if="chatStore.canShowVideoButton" @click.stop.prevent="doMuteVideo(!chatStore.localVideoEnabled)" :title="!chatStore.localVideoEnabled ? $vuetify.locale.t('$vuetify.unmute_video') : $vuetify.locale.t('$vuetify.mute_video')"><v-icon size="x-large">{{ !chatStore.localVideoEnabled ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
+      <template v-if="!isMobile()">
+        <v-btn variant="plain" tile icon @click.stop.prevent="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
+          <v-icon size="x-large">mdi-monitor-screenshot</v-icon>
+        </v-btn>
+      </template>
+      <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
+
+      <v-btn :disabled="videoIsGallery()" tile icon :input-value="presenterValue()" @click="presenterClick" :variant="presenterValue() ? 'tonal' : 'plain'" :title="presenterValue() ? $vuetify.locale.t('$vuetify.video_presenter_disable') : $vuetify.locale.t('$vuetify.video_presenter_enable')"><v-icon size="x-large">mdi-presentation</v-icon></v-btn>
+
+      <v-select
+          class="video-position-select"
+          :items="positionItems"
+          density="compact"
+          hide-details
+          @update:modelValue="changeVideoPosition"
+          v-model="chatStore.videoPosition"
+          variant="plain"
+      ></v-select>
+
+      <v-btn variant="plain" tile icon @click="addVideoSource()" :title="$vuetify.locale.t('$vuetify.source_add')">
+        <v-icon size="x-large">mdi-video-plus</v-icon>
       </v-btn>
-    </template>
-    <v-btn variant="plain" tile icon v-if="chatStore.canShowMicrophoneButton" @click.stop.prevent="doMuteAudio(!chatStore.localMicrophoneEnabled)" :title="!chatStore.localMicrophoneEnabled ? $vuetify.locale.t('$vuetify.unmute_audio') : $vuetify.locale.t('$vuetify.mute_audio')"><v-icon size="x-large">{{ !chatStore.localMicrophoneEnabled ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-    <v-btn variant="plain" tile icon v-if="chatStore.canShowVideoButton" @click.stop.prevent="doMuteVideo(!chatStore.localVideoEnabled)" :title="!chatStore.localVideoEnabled ? $vuetify.locale.t('$vuetify.unmute_video') : $vuetify.locale.t('$vuetify.mute_video')"><v-icon size="x-large">{{ !chatStore.localVideoEnabled ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
-    <template v-if="!isMobile()">
-      <v-btn variant="plain" tile icon @click.stop.prevent="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
-        <v-icon size="x-large">mdi-monitor-screenshot</v-icon>
+
+      <v-btn variant="plain" tile icon v-if="chatStore.showRecordStartButton" @click="startRecord()" :loading="chatStore.initializingStaringVideoRecord" :title="$vuetify.locale.t('$vuetify.start_record')">
+        <v-icon size="x-large">mdi-record-rec</v-icon>
       </v-btn>
-    </template>
-    <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
+      <v-btn variant="plain" tile icon v-if="chatStore.showRecordStopButton" @click="stopRecord()" :loading="chatStore.initializingStoppingVideoRecord" :title="$vuetify.locale.t('$vuetify.stop_record')">
+        <v-icon size="x-large" color="red">mdi-stop</v-icon>
+      </v-btn>
 
-    <v-btn :disabled="videoIsGallery()" tile icon :input-value="presenterValue()" @click="presenterClick" :variant="presenterValue() ? 'tonal' : 'plain'" :title="presenterValue() ? $vuetify.locale.t('$vuetify.video_presenter_disable') : $vuetify.locale.t('$vuetify.video_presenter_enable')"><v-icon size="x-large">mdi-presentation</v-icon></v-btn>
-
-    <v-select
-        class="video-position-select"
-        :items="positionItems"
-        density="compact"
-        hide-details
-        @update:modelValue="changeVideoPosition"
-        v-model="chatStore.videoPosition"
-        variant="plain"
-    ></v-select>
-
+    </v-slide-group>
   </div>
 </template>
 
@@ -34,12 +47,13 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 import {stopCall} from "@/utils.js";
-import bus, {ADD_SCREEN_SOURCE} from "@/bus/bus.js";
+import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG} from "@/bus/bus.js";
 import {
   positionItems,
   setStoredPresenter,
   setStoredVideoPosition,
 } from "@/store/localStore.js";
+import axios from "axios";
 
 export default {
   mixins: [
@@ -68,6 +82,9 @@ export default {
     },
     positionItems() {
       return positionItems()
+    },
+    chatId() {
+      return this.$route.params.id
     },
   },
   methods: {
@@ -99,6 +116,18 @@ export default {
       this.chatStore.presenterEnabled = v;
       setStoredPresenter(v);
     },
+    addVideoSource() {
+      bus.emit(ADD_VIDEO_SOURCE_DIALOG);
+    },
+    startRecord() {
+      axios.put(`/api/video/${this.chatId}/record/start`);
+      this.chatStore.initializingStaringVideoRecord = true;
+    },
+    stopRecord() {
+      axios.put(`/api/video/${this.chatId}/record/stop`);
+      this.chatStore.initializingStoppingVideoRecord = true;
+    },
+
   }
 }
 </script>

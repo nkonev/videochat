@@ -40,29 +40,6 @@
                     </v-btn>
                 </v-badge>
             </template>
-
-            <template v-if="!isMobile()">
-              <template v-if="chatStore.isInCall()">
-                <template v-if="chatStore.canShowMicrophoneButton">
-                  <v-btn v-if="chatStore.localMicrophoneEnabled" icon @click="offMicrophone()" :title="$vuetify.locale.t('$vuetify.mute_audio')"><v-icon>mdi-microphone</v-icon></v-btn>
-                  <v-btn v-if="!chatStore.localMicrophoneEnabled" icon @click="onMicrophone()" :title="$vuetify.locale.t('$vuetify.unmute_audio')"><v-icon>mdi-microphone-off</v-icon></v-btn>
-                </template>
-
-                <v-btn icon @click="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
-                  <v-icon>mdi-monitor-screenshot</v-icon>
-                </v-btn>
-                <v-btn icon @click="addVideoSource()" :title="$vuetify.locale.t('$vuetify.source_add')">
-                  <v-icon>mdi-video-plus</v-icon>
-                </v-btn>
-              </template>
-
-              <v-btn v-if="chatStore.showRecordStartButton" icon @click="startRecord()" :loading="chatStore.initializingStaringVideoRecord" :title="$vuetify.locale.t('$vuetify.start_record')">
-                <v-icon>mdi-record-rec</v-icon>
-              </v-btn>
-              <v-btn v-if="chatStore.showRecordStopButton" icon @click="stopRecord()" :loading="chatStore.initializingStoppingVideoRecord" :title="$vuetify.locale.t('$vuetify.stop_record')">
-                <v-icon color="red">mdi-stop</v-icon>
-              </v-btn>
-            </template>
           </template>
 
           <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
@@ -187,7 +164,6 @@ import {
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
-  ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG,
   CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED, CHAT_REDRAW,
@@ -658,18 +634,6 @@ export default {
             this.resetVideoInvitation();
           });
         },
-        onMicrophone() {
-          this.chatStore.localMicrophoneEnabled = true
-        },
-        offMicrophone() {
-          this.chatStore.localMicrophoneEnabled = false
-        },
-        addVideoSource() {
-          bus.emit(ADD_VIDEO_SOURCE_DIALOG);
-        },
-        addScreenSource() {
-          bus.emit(ADD_SCREEN_SOURCE);
-        },
         onVideRecordingChanged(e) {
           if (this.isVideoRoute()) {
             this.chatStore.showRecordStartButton = !e.recordInProgress;
@@ -684,14 +648,6 @@ export default {
           if (this.chatStore.initializingStoppingVideoRecord && !e.recordInProgress) {
             this.chatStore.initializingStoppingVideoRecord = false;
           }
-        },
-        startRecord() {
-          axios.put(`/api/video/${this.chatId}/record/start`);
-          this.chatStore.initializingStaringVideoRecord = true;
-        },
-        stopRecord() {
-          axios.put(`/api/video/${this.chatId}/record/stop`);
-          this.chatStore.initializingStoppingVideoRecord = true;
         },
         isVideoRoute() {
           return this.$route.name == videochat_name
