@@ -27,10 +27,7 @@
     <v-list density="compact" nav>
       <v-list-item v-if="shouldShowUpperChats()" @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item v-if="shouldDisplayCopyCallLink()" @click.prevent="copyCallLink()" prepend-icon="mdi-content-copy" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')"></v-list-item>
-      <v-list-item v-if="shouldDisplayAddVideoSource()" @click.prevent="addVideoSource()" prepend-icon="mdi-video-plus" :title="$vuetify.locale.t('$vuetify.source_add')"></v-list-item>
       <v-list-item v-if="shouldShowHome()" @click.prevent="goHome()" :href="getRouteRoot()" prepend-icon="mdi-home" :title="$vuetify.locale.t('$vuetify.start')"></v-list-item>
-      <v-list-item v-if="isMobile() && chatStore.showRecordStartButton" prepend-icon="mdi-record-rec" @click="startRecord()" :disabled="chatStore.initializingStaringVideoRecord" :title="$vuetify.locale.t('$vuetify.start_record')"></v-list-item>
-      <v-list-item v-if="isMobile() && chatStore.showRecordStopButton" prepend-icon="mdi-stop" @click="stopRecord()" :disabled="chatStore.initializingStoppingVideoRecord" :title="$vuetify.locale.t('$vuetify.stop_record')"></v-list-item>
       <v-list-item v-if="shouldShowLowerChats()" @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item @click.prevent="goBlogs()" :href="getRouteBlogs()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.blogs')"></v-list-item>
       <v-list-item v-if="shouldDisplayCreateChat()" @click="createChat()" prepend-icon="mdi-plus" id="test-new-chat-dialog-button" :title="$vuetify.locale.t('$vuetify.new_chat')"></v-list-item>
@@ -78,7 +75,6 @@ import {
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
-    ADD_VIDEO_SOURCE_DIALOG,
     LOGGED_OUT, OPEN_CHAT_EDIT,
     OPEN_NOTIFICATIONS_DIALOG,
     OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
@@ -155,9 +151,6 @@ export default {
     shouldDisplayCopyCallLink() {
       return (this.chatStore.showCallManagement) && this.isMobile()
     },
-    shouldDisplayAddVideoSource() {
-      return this.$route.name == videochat_name && this.isMobile()
-    },
     shouldDisplayCreateChat() {
       return this.chatStore.currentUser
     },
@@ -173,9 +166,6 @@ export default {
     copyCallLink() {
       copyCallLink(this.chatId);
       this.setTempNotification(this.$vuetify.locale.t('$vuetify.video_call_link_copied'));
-    },
-    addVideoSource() {
-          bus.emit(ADD_VIDEO_SOURCE_DIALOG);
     },
     getRouteChats() {
       return chats
@@ -267,14 +257,6 @@ export default {
         } else {
             return !isChatRoute(this.$route)
         }
-    },
-    startRecord() {
-        axios.put(`/api/video/${this.chatId}/record/start`);
-        this.chatStore.initializingStaringVideoRecord = true;
-    },
-    stopRecord() {
-        axios.put(`/api/video/${this.chatId}/record/stop`);
-        this.chatStore.initializingStoppingVideoRecord = true;
     },
     onProfileSet() {
         this.graphQlUserStatusSubscribe();
