@@ -179,7 +179,6 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "constants.styl"
 
 .close-button {
     position absolute
@@ -213,18 +212,6 @@ export default {
 .video-custom-class-view {
     max-width: 100% !important
     max-height: 100% !important
-}
-
-@media screen and (max-width: $mobileWidth) {
-    .image-custom-class-view {
-        max-width: 100% !important
-        height: 360px !important
-    }
-
-    .video-custom-class-view {
-        max-width: 100% !important
-        height: 360px !important
-    }
 }
 
 .audio-custom-class-view {
