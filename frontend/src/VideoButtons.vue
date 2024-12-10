@@ -38,6 +38,10 @@
         <v-icon size="x-large" color="red">mdi-stop</v-icon>
       </v-btn>
 
+      <v-btn variant="plain" tile icon @click="openSettings()" :title="$vuetify.locale.t('$vuetify.video_settings')">
+        <v-icon size="x-large">mdi-cog</v-icon>
+      </v-btn>
+
     </v-slide-group>
   </div>
 </template>
@@ -47,7 +51,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 import {stopCall} from "@/utils.js";
-import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG} from "@/bus/bus.js";
+import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS} from "@/bus/bus.js";
 import {
   positionItems,
   setStoredPresenter,
@@ -127,7 +131,9 @@ export default {
       axios.put(`/api/video/${this.chatId}/record/stop`);
       this.chatStore.initializingStoppingVideoRecord = true;
     },
-
+    openSettings() {
+      bus.emit(OPEN_SETTINGS, 'a_video_settings') // value matches with SettingsModal.vue :: v-window-item
+    },
   }
 }
 </script>
