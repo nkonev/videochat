@@ -1,5 +1,7 @@
 # Start the development
 
+I develop on Fedora Linux 39, 40.
+
 ## Install Docker
 Install docker >= 27
 [using](https://docs.docker.com/engine/install/fedora/#install-using-the-repository) rpm repository

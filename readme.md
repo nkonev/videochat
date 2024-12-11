@@ -48,7 +48,7 @@ Click on image to open a screenshot gallery.
 * [Muting, kicking](./screenshots.md#videoconference-and-participant-management) video participants.
 * Calling to user to [invite](./screenshots.md#inviting-user-to-videoconference) his or her to video conference.
 * User is [speaking indication](./screenshots.md#user-is-speaking-indication-green-nickname-and-microphone).
-* Persistent text chats with simple formatting. Messages are persisted in the chat.
+* Persistent messages: they remain after you exit from the video conference.
 * [Tet-a-tet](./screenshots.md#open-tet-a-tet-chat) private chats for two.
 * Notifications about `@mention`, `@all`, `@here` and missed video calls.
 * Pinned messages.
@@ -67,6 +67,7 @@ Click on image to open a screenshot gallery.
 * No need to edit `/etc/hosts` for local demo installation or development.
 * Send the message when finishing media (image, video) or file has been uploaded.
 * Simple SEO-friendly blog, based on chats.
+* No tracking - we don't track your activities.
 
 # Demo
 Try server [installation](https://chat.nkonev.name/)
