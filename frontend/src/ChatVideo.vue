@@ -1090,6 +1090,8 @@ export default {
 .pane-videos-vertical {
   display: flex;
   align-items center
+  justify-content center
+  position relative // for mobile
 }
 
 .presenter-element-caption {

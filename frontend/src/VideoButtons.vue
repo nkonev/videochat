@@ -75,8 +75,7 @@ export default {
         return ["video-buttons-control", "video-buttons-control-horizontal"]
       } else if (this.videoIsVertical())  {
         if (!this.chatStore.presenterEnabled) {
-          const vbcv = this.isMobile() ? "video-buttons-control-vertical-mobile" : "video-buttons-control-vertical";
-          return ["video-buttons-control", vbcv]
+          return ["video-buttons-control", "video-buttons-control-vertical"];
         } else {
           return ["video-buttons-control", "video-buttons-control-horizontal"]
         }
@@ -157,19 +156,12 @@ export default {
 }
 
 .video-buttons-control-vertical {
-  margin-left: 10px;
   position: absolute;
+  align-self end
   display: flex;
   flex-direction: column;
   z-index 20
-}
-
-.video-buttons-control-vertical-mobile {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  z-index 20
-  left: 10px;
+  bottom 16px
 }
 
 .video-position-select {
