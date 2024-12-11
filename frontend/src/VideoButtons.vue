@@ -1,8 +1,8 @@
 <template>
   <div :class="videoButtonsControlClass">
-    <v-slide-group>
+    <v-slide-group show-arrows>
       <template v-if="chatStore.showCallManagement && chatStore.isInCall()">
-        <v-btn :class="isMobile() ? 'ml-8' : ''" variant="plain" tile icon :loading="chatStore.initializingVideoCall" @click.stop.prevent="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+        <v-btn variant="plain" tile icon :loading="chatStore.initializingVideoCall" @click.stop.prevent="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
           <v-icon size="x-large" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
         </v-btn>
       </template>
@@ -147,6 +147,7 @@ export default {
   padding-right 0.3em
   border-radius 4px
   display: flex;
+  max-width 100% // needed for v-slide-group
 }
 
 .video-buttons-control-horizontal {
