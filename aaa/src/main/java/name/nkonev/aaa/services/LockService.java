@@ -35,7 +35,9 @@ public class LockService {
 
         @Override
         public void close() {
-            stringRedisTemplate.delete(lockKey);
+            if (this.wasSet) {
+                stringRedisTemplate.delete(lockKey);
+            }
         }
 
         public boolean isWasSet() {
