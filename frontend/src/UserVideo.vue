@@ -1,14 +1,7 @@
 <template>
     <div :class="videoContainerElementClass" ref="containerRef" @contextmenu.stop="onShowContextMenu($event, this)">
-        <div class="video-container-element-control" v-show="showControls && !this.isMobile()">
-            <v-btn variant="plain" icon v-if="shouldShowMuteAudio()" @click="doMuteAudio(!audioMute)" :title="audioMute ? $vuetify.locale.t('$vuetify.unmute_audio') : $vuetify.locale.t('$vuetify.mute_audio')"><v-icon size="x-large" class="video-container-element-control-item">{{ audioMute ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon></v-btn>
-            <v-btn variant="plain" icon v-if="shouldShowMuteVideo()" @click="doMuteVideo(!videoMute)" :title="videoMute ? $vuetify.locale.t('$vuetify.unmute_video') : $vuetify.locale.t('$vuetify.mute_video')"><v-icon size="x-large" class="video-container-element-control-item">{{ videoMute ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
-            <v-btn variant="plain" icon v-if="shouldShowClose()" @click="onClose()" :title="$vuetify.locale.t('$vuetify.close_video')"><v-icon size="x-large" class="video-container-element-control-item">mdi-close</v-icon></v-btn>
-            <v-btn variant="plain" icon v-if="shouldShowVideoKick()" @click="kickRemote()" :title="$vuetify.locale.t('$vuetify.kick')"><v-icon size="x-large" class="video-container-element-control-item">mdi-block-helper</v-icon></v-btn>
-            <v-btn variant="plain" icon v-if="shouldShowAudioMute()" @click="forceMuteRemote()" :title="$vuetify.locale.t('$vuetify.force_mute')"><v-icon size="x-large" class="video-container-element-control-item">mdi-microphone-off</v-icon></v-btn>
-        </div>
-        <img v-show="avatarIsSet && videoMute" @click="onClick" :class="videoElementClass" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" @click="onClick" :class="videoElementClass" :id="id" autoPlay playsInline ref="videoRef"/>
+        <img v-show="avatarIsSet && videoMute" :class="videoElementClass" :src="avatar"/>
+        <video v-show="!videoMute || !avatarIsSet" :class="videoElementClass" :id="id" autoPlay playsInline ref="videoRef"/>
         <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption', 'inline-caption-base']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
 
         <UserVideoContextMenu
@@ -57,7 +50,6 @@ export default {
             avatar: "",
             videoMute: true,
             userId: null,
-            showControls: false,
             audioPublication: null,
             videoPublication: null,
       }
@@ -69,9 +61,6 @@ export default {
         },
         localVideoProperties: {
             type: Object
-        },
-        initialShowControls: {
-            type: Boolean
         },
     },
 
@@ -168,24 +157,11 @@ export default {
         getVideoSource() {
           return this.videoPublication?.source
         },
-        onMouseEnter() {
-            if (!this.isMobile()) {
-                this.showControls = true;
-            }
-        },
-        onMouseLeave() {
-            if (!this.isMobile()) {
-                this.showControls = false;
-            }
-        },
         kickRemote() {
             axios.put(`/api/video/${this.chatStore.chatDto.id}/kick?userId=${this.userId}`)
         },
         forceMuteRemote() {
             axios.put(`/api/video/${this.chatStore.chatDto.id}/mute?userId=${this.userId}`)
-        },
-        onClick(e) {
-          this.showControls =! this.showControls
         },
         shouldShowMuteAudio() {
             return this.isLocal && this.audioPublication != null
@@ -247,9 +223,6 @@ export default {
           return ret;
         },
     },
-    mounted(){
-        this.showControls = this.initialShowControls;
-    },
 };
 </script>
 
@@ -307,17 +280,6 @@ export default {
     .video-element-gallery {
       height: 100%;
       width: 100%;
-    }
-
-    .video-container-element-control {
-        width 100%
-        z-index 3
-        position: absolute
-    }
-
-    .video-container-element-control-item {
-        z-index 4
-        text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;
     }
 
     .video-container-element-caption {

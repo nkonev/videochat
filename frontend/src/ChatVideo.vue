@@ -113,7 +113,6 @@ export default {
       const app = createApp(UserVideo, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
-        initialShowControls: localVideoProperties != null && this.isMobile()
       });
       app.config.globalProperties.isMobile = () => {
         return isMobileBrowser()
