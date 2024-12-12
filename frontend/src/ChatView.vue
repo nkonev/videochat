@@ -14,8 +14,8 @@
             <v-tooltip
                 v-if="broadcastMessage"
                 :model-value="showTooltip"
-                activator=".message-edit-pane"
-                location="bottom start"
+                :activator="showBottomPane() ? '.message-edit-pane' : '.message-pane-mobile'"
+                location="bottom center"
             >
               <span v-html="broadcastMessage"></span>
             </v-tooltip>
