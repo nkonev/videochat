@@ -780,6 +780,7 @@
     display: block
 }
 .answer-text {
+    font-size: $messageFontSize;
     background: $embedMessageColor;
     white-space: nowrap;
     text-overflow: ellipsis;

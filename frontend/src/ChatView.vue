@@ -886,6 +886,7 @@ export default {
 @import "pinned.styl"
 
 .pinned-promoted {
+  font-size: $messageFontSize;
   position: absolute
   left 0
   margin-right 2em

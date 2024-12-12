@@ -961,12 +961,7 @@ div .stop-scrolling {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media screen and (max-width: $mobileWidth) {
-  .inline-caption-base {
-    font-size 0.6em
-  }
+  font-size: .875rem;
 }
 
 </style>
