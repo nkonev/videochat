@@ -1,6 +1,6 @@
 import {getBrowserNotification, getGlobalBrowserNotification} from "@/store/localStore.js";
 import {chat_name, messageIdHashPrefix} from "@/router/routes.js";
-import {hasLength} from "@/utils.js";
+import {hasLength, unescapeHtml} from "@/utils.js";
 
 export const createBrowserNotification = (title, body, type) => {
     new Notification(title, { body: body, icon: "/favicon_new.svg", tag: type });
@@ -19,10 +19,10 @@ export const createBrowserNotificationIfPermitted = (router, chatId, chatName, c
     if (Notification?.permission === "granted" && decision) {
         const notificationObject = { icon: hasLength(chatAvatar) ? chatAvatar : "/favicon_new.svg", tag: type };
         if (hasLength(chatName)) {
-            notificationObject.body = chatName
+            notificationObject.body = unescapeHtml(chatName)
         }
         const notification = new Notification(
-            messageText,
+            unescapeHtml(messageText),
             notificationObject,
         );
 

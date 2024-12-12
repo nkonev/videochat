@@ -338,30 +338,30 @@ export const getLoginColoredStyle = (item, defaultLinkColor) => {
 export const getNotificationSubtitle = (vuetify, item) => {
     switch (item.notificationType) {
         case "missed_call":
-            return vuetify.locale.t('$vuetify.notification_missed_call', item.byLogin)
+            return vuetify.locale.t('$vuetify.notification_missed_call', unescapeHtml(item.byLogin))
         case "mention":
-            let builder1 = vuetify.locale.t('$vuetify.notification_mention', item.byLogin)
+            let builder1 = vuetify.locale.t('$vuetify.notification_mention', unescapeHtml(item.byLogin))
             if (hasLength(item.chatTitle)) {
-                builder1 += (vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'");
+                builder1 += (vuetify.locale.t('$vuetify.in') + "'" + unescapeHtml(item.chatTitle) + "'");
             }
             return builder1
         case "reply":
-            let builder2 = vuetify.locale.t('$vuetify.notification_reply', item.byLogin)
+            let builder2 = vuetify.locale.t('$vuetify.notification_reply', unescapeHtml(item.byLogin))
             if (hasLength(item.chatTitle)) {
-                builder2 += (vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                builder2 += (vuetify.locale.t('$vuetify.in') + "'" + unescapeHtml(item.chatTitle) + "'")
             }
             return builder2
         case "reaction":
-            let builder3 = vuetify.locale.t('$vuetify.notification_reaction', item.byLogin)
+            let builder3 = vuetify.locale.t('$vuetify.notification_reaction', unescapeHtml(item.byLogin))
             if (hasLength(item.chatTitle)) {
-                builder3 += (vuetify.locale.t('$vuetify.in') + "'" + item.chatTitle + "'")
+                builder3 += (vuetify.locale.t('$vuetify.in') + "'" + unescapeHtml(item.chatTitle) + "'")
             }
             return builder3
     }
 }
 
 export const getNotificationTitle = (item) => {
-    return item.description
+    return unescapeHtml(item.description)
 }
 
 export const checkUpByTree = (el, maxLevels, condition) => {
