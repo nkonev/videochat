@@ -118,7 +118,7 @@ export default {
     btn_update: "Update",
     websocket_not_connected: "Websocket is not connected",
     cancel: "Cancel",
-    source_add: "Add media source",
+    source_add: "Add a media source",
     screen_share: "Screen sharing",
     apply: "Apply",
     enter_into_call: "Enter into video conference",
