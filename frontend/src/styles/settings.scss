@@ -4,5 +4,11 @@
  * Configures SASS variables and Vuetify overwrites
  */
 
-// https://vuetifyjs.com/features/sass-variables/`
-@forward 'vuetify/settings';
+// https://vuetifyjs.com/features/sass-variables/
+// in case irrelevant errors after changing this file just restart your `npm run dev`
+@forward 'vuetify/settings' with (
+  // restores vuetify 3.5.x behaviour
+  // partially reverts https://github.com/vuetifyjs/vuetify/commit/383bbdc2e642922ac50de1b88b4be156510b8b2d to have good look of top label "Chat name" on ChatEditModal
+  $dialog-card-header-padding: 14px 24px 0 !default,
+  $dialog-card-header-text-padding-top: 10px !default,
+);

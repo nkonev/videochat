@@ -215,7 +215,7 @@
         BubbleMenu,
         FloatingMenu,
     } from '@tiptap/vue-3';
-    import chroma from "chroma-js/chroma-light.js";
+    import chroma from "chroma-js";
     import RecordingModal from "@/RecordingModal.vue";
     import {v4 as uuidv4} from "uuid";
 

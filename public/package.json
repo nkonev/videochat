@@ -8,30 +8,29 @@
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "@vue/compiler-sfc": "^3.4.27",
-    "@vue/server-renderer": "^3.4.27",
-    "axios": "^1.6.7",
-    "compression": "^1.7.4",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/server-renderer": "^3.5.13",
+    "axios": "^1.7.9",
+    "compression": "^1.7.5",
     "cross-env": "^7.0.3",
-    "date-fns": "^3.3.1",
-    "express": "^4.18.2",
+    "date-fns": "^4.1.0",
+    "express": "^4.21.2",
     "he": "^1.2.0",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
-    "sirv": "^2.0.4",
-    "sitemap": "^7.1.1",
+    "sirv": "^3.0.0",
+    "sitemap": "^8.0.0",
     "typeface-roboto": "^1.1.13",
-    "vike": "^0.4.191",
-    "vite": "^5.2.11",
-    "vite-plugin-vuetify": "^2.0.3",
-    "vue": "3.4.27",
-    "vuetify": "3.5.6"
+    "vike": "^0.4.209",
+    "vite": "^6.0.3",
+    "vite-plugin-vuetify": "^2.0.4",
+    "vue": "3.5.13",
+    "vuetify": "3.6.15"
   },
   "type": "module",
   "devDependencies": {
-    "sass": "^1.72.0",
-    "stylus": "^0.62.0"
+    "sass": "1.71.1",
+    "stylus": "^0.64.0"
   }
 }
