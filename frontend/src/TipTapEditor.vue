@@ -382,7 +382,6 @@ export default {
     height: 100%;
 }
 .richText {
-  font-size: $messageFontSize;
   display: flex;
   flex-direction: column;
   color: #0d0d0d;
