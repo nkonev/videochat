@@ -167,7 +167,7 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "../../../../common/styles/common.styl"
+@import "../../../../common/styles/constants.styl"
 @import "../../../../common/styles/messageWrapper.styl"
 @import "../../../../common/styles/itemAvatar.styl"
 

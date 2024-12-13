@@ -185,6 +185,14 @@ html {
     position: absolute
 }
 
+.caption-small {
+  color:rgba(0, 0, 0, .6);
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1rem;
+  display: inherit
+}
+
 </style>
 
 <style lang="stylus" scoped>

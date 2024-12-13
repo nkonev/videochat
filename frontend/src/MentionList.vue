@@ -2,7 +2,7 @@
     <div class="mention-items">
         <template v-if="items.length">
             <button
-                class="list-item-head mention-item"
+                class="caption-small mention-item"
                 :class="{ 'is-selected': index === selectedIndex }"
                 v-for="(item, index) in items"
                 :key="index"
@@ -11,7 +11,7 @@
                 {{ item.label }}
             </button>
         </template>
-        <div class="list-item-head mention-item" v-else>
+        <div class="caption-small mention-item" v-else>
             No result
         </div>
     </div>
@@ -87,7 +87,7 @@ export default {
 </script>
 
 <style lang="stylus">
-@import "common.styl"
+@import "constants.styl"
 
 .mention-items {
     padding: 0.2rem;

@@ -761,7 +761,7 @@
 </script>
 
 <style lang="stylus">
-@import "common.styl"
+@import "constants.styl"
 
 #sendButtonContainer {
     background white

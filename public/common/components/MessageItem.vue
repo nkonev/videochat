@@ -6,7 +6,7 @@
           </a>
         </div>
         <div class="message-item-with-buttons-wrapper">
-            <v-container class="ma-0 pa-0 d-flex list-item-head">
+            <v-container class="ma-0 pa-0 d-flex caption-small">
                 <a :href="getOwnerLink(item)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{getOwner(item.owner)}}</a>
                 <span class="with-space"> at </span>
                 <span class="mr-1">{{getDate(item)}}</span>
@@ -14,10 +14,10 @@
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
-                        <a class="list-item-head">{{getEmbedHead(item)}}</a>
+                        <a class="caption-small">{{getEmbedHead(item)}}</a>
                     </template>
                     <template v-else>
-                        <div class="list-item-head">
+                        <div class="caption-small">
                             {{getEmbedHeadLite(item)}}
                         </div>
                     </template>
@@ -135,9 +135,9 @@
 </script>
 
 <style lang="stylus" scoped>
-  @import "../styles/common.styl"
+  @import "../styles/constants.styl"
 
-  .list-item-head {
+  .caption-small {
     text-decoration none
     a {
       text-decoration none

@@ -6,7 +6,7 @@
           </a>
         </div>
         <div class="message-item-with-buttons-wrapper">
-            <v-container class="ma-0 pa-0 d-flex list-item-head">
+            <v-container class="ma-0 pa-0 d-flex caption-small">
                 <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)" :title="getDate(item)">{{getOwner(item.owner)}}</a>
                 <span class="with-space" v-if="!isCompact"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
                 <router-link v-if="!isCompact" class="gray-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')"><span class="mr-1">{{getDate(item)}}</span></router-link>
@@ -22,10 +22,10 @@
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick($event, item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
-                        <router-link class="list-item-head" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
+                        <router-link class="caption-small" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
                     </template>
                     <template v-else>
-                        <div class="list-item-head">
+                        <div class="caption-small">
                             {{getEmbedHeadLite(item)}}
                         </div>
                     </template>
@@ -211,9 +211,9 @@
 </script>
 
 <style lang="stylus" scoped>
-  @import "common.styl"
+  @import "constants.styl"
 
-  .list-item-head {
+  .caption-small {
     text-decoration none
     a {
       text-decoration none
