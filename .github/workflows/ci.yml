@@ -69,7 +69,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22.1.0
+          node-version: 22.12.0
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
       - name: Build with npm run
@@ -105,7 +105,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22.1.0
+          node-version: 22.12.0
           cache: 'npm'
           cache-dependency-path: 'public/package-lock.json'
       - name: Build with npm run
@@ -339,7 +339,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: env.SHOULD_RUN == 'true'
         with:
-          node-version: 22.1.0
+          node-version: 22.12.0
           cache: 'npm'
           cache-dependency-path: |
             frontend/package-lock.json

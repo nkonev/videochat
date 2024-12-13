@@ -196,6 +196,7 @@ html {
 </style>
 
 <style lang="stylus" scoped>
+
 .app-title-text {
     font-size: .875rem;
     font-weight: 500;

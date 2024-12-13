@@ -988,4 +988,5 @@ div .stop-scrolling {
   height: auto;
   cursor: pointer
 }
+
 </style>
