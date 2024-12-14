@@ -23,7 +23,7 @@
                     ></v-select>
                 </v-card-text>
 
-                <v-card-actions class="my-actions">
+                <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn variant="flat" v-if="videoDevice != null || audioDevice != null" color="primary" @click="onChosen()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn variant="flat" color="red" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>

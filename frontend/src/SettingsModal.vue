@@ -51,7 +51,7 @@
         </v-window>
       </v-card-text>
 
-      <v-card-actions class="my-actions">
+      <v-card-actions>
         <template v-if="tab == 'user_profile_self'">
           <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromProfile()">
             <template v-slot:prepend>

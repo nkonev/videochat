@@ -42,11 +42,10 @@
                     </template>
                 </v-card-text>
 
-                <v-card-actions class="my-actions">
+                <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-checkbox
                         v-if="shouldShowSendMessageAfterMediaInsert()"
-                        class="mr-2"
                         density="comfortable"
                         color="primary"
                         hide-details
