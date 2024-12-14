@@ -741,11 +741,10 @@ export default {
         onEditUser(u) {
           this.chatStore.currentUser = u;
         },
-        updateNotificationBadgeDebounced() {
+        updateNotificationBadge() {
           this.showNotificationBadge = this.chatStore.notificationsCount != 0 && !this.chatStore.showDrawer
         },
-        // debounce fixes a dangling badge with 0 value
-        updateVideoBadgeDebounced() {
+        updateVideoBadge() {
           this.showVideoBadge = !!this.chatStore.videoChatUsersCount
         },
     },
@@ -778,25 +777,23 @@ export default {
     watch: {
       'chatStore.notificationsCount': {
         handler: function (newValue, oldValue) {
-            this.updateNotificationBadgeDebounced()
+            this.updateNotificationBadge()
         }
       },
       'chatStore.showDrawer': {
         handler: function (newValue, oldValue) {
-          this.updateNotificationBadgeDebounced()
+          this.updateNotificationBadge()
         }
       },
       'chatStore.videoChatUsersCount': {
         handler: function (newValue, oldValue) {
-          this.updateVideoBadgeDebounced()
+          this.updateVideoBadge()
         }
       },
     },
 
     created() {
         this.afterRouteInitialized = once(this.afterRouteInitialized);
-        this.updateNotificationBadgeDebounced = debounce(this.updateNotificationBadgeDebounced, 1000);
-        this.updateVideoBadgeDebounced = debounce(this.updateVideoBadgeDebounced, 1000)
     },
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
