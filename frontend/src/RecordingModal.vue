@@ -39,7 +39,7 @@
                   </v-window-item>
               </v-window>
           </v-card-text>
-          <v-card-actions>
+          <v-card-actions class="my-actions">
               <v-spacer/>
               <v-btn variant="outlined" @click="openSettings()" :disabled="isRecording" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>
               <v-btn v-if="mediaDevicesGotten" :color="blob ? null : 'primary'" :variant="blob ? 'outlined' : 'flat'" @click="onClick()"><v-icon size="x-large">{{isRecording ? 'mdi-stop' : 'mdi-record'}}</v-icon> {{ isRecording ? $vuetify.locale.t('$vuetify.stop_recording') : $vuetify.locale.t('$vuetify.start_recording') }} </v-btn>

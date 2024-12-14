@@ -88,7 +88,7 @@
                 v-if="shouldShowBoundVkontakte()"
                 min-width="80px"
                 label
-                class="c-btn-vk py-5 mr-2"
+                class="c-btn-vk py-5"
                 text-color="white"
                 :closable="shouldShowUnbindVkontakte()"
                 close-icon="mdi-delete"
@@ -101,7 +101,7 @@
                 v-if="shouldShowBoundFacebook()"
                 min-width="80px"
                 label
-                class="c-btn-fb py-5 mr-2"
+                class="c-btn-fb py-5"
                 text-color="white"
                 :closable="shouldShowUnbindFacebook()"
                 close-icon="mdi-delete"
@@ -114,7 +114,7 @@
                 v-if="shouldShowBoundGoogle()"
                 min-width="80px"
                 label
-                class="c-btn-google py-5 mr-2"
+                class="c-btn-google py-5"
                 text-color="white"
                 :closable="shouldShowUnbindGoogle()"
                 close-icon="mdi-delete"
@@ -127,7 +127,7 @@
                 v-if="shouldShowBoundKeycloak()"
                 min-width="80px"
                 label
-                class="c-btn-keycloak py-5 mr-2"
+                class="c-btn-keycloak py-5"
                 text-color="white"
                 :closable="shouldShowUnbindKeycloak()"
                 close-icon="mdi-delete"
@@ -146,7 +146,7 @@
                 @click="submitOauthVkontakte"
                 min-width="80px"
                 label
-                class="c-btn-vk py-5 mr-2"
+                class="c-btn-vk py-5"
                 text-color="white"
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
@@ -157,7 +157,7 @@
                 @click="submitOauthFacebook"
                 min-width="80px"
                 label
-                class="c-btn-fb py-5 mr-2"
+                class="c-btn-fb py-5"
                 text-color="white"
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
@@ -168,7 +168,7 @@
                 @click="submitOauthGoogle"
                 min-width="80px"
                 label
-                class="c-btn-google py-5 mr-2"
+                class="c-btn-google py-5"
                 text-color="white"
             >
                 <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
@@ -179,7 +179,7 @@
                 @click="submitOauthKeycloak"
                 min-width="80px"
                 label
-                class="c-btn-keycloak py-5 mr-2"
+                class="c-btn-keycloak py-5"
                 text-color="white"
             >
                 <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}" :size="'2x'"></font-awesome-icon>

@@ -45,7 +45,7 @@
                         color="primary"
                     ></v-progress-circular>
                 </v-card-text>
-                <v-card-actions class="d-flex flex-wrap flex-row">
+                <v-card-actions class="my-actions d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
                     <v-btn
                         variant="elevated"

@@ -4,7 +4,7 @@
             <v-card :title="$vuetify.locale.t('$vuetify.audio_autoplay_permissions_title')">
                 <v-card-text>{{ $vuetify.locale.t('$vuetify.audio_autoplay_permissions_text') }}</v-card-text>
 
-                <v-card-actions class="pa-4">
+                <v-card-actions class="my-actions pa-4">
                     <v-btn class="mr-4" @click="show=false">
                         {{ $vuetify.locale.t('$vuetify.close') }}
                     </v-btn>

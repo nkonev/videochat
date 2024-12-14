@@ -20,7 +20,7 @@
                     ></v-progress-circular>
                 </v-card-text>
 
-                <v-card-actions>
+                <v-card-actions class="my-actions">
                     <v-spacer></v-spacer>
                     <v-btn variant="flat" v-if="chosenRoles.length" color="primary" @click="changeRole()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn variant="flat" color="red" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>

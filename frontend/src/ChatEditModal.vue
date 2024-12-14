@@ -121,7 +121,7 @@
                     ></v-progress-circular>
                 </v-card-text>
 
-                <v-card-actions class="d-flex flex-wrap flex-row">
+                <v-card-actions class="my-actions d-flex flex-wrap flex-row">
                     <template v-if="!isNew && !loading">
                       <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()">
                         <template v-slot:prepend>

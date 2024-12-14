@@ -31,7 +31,7 @@
 
                 </v-card-text>
 
-                <v-card-actions>
+                <v-card-actions class="my-actions">
                     <v-spacer/>
                     <v-btn v-if="showSettings" color="primary" variant="flat" @click="closeSettings()" :title="$vuetify.locale.t('$vuetify.ok')">{{$vuetify.locale.t('$vuetify.ok')}}</v-btn>
                     <v-btn v-if="!showSettings" variant="outlined" @click="openSettings()" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>

@@ -55,7 +55,6 @@
     <v-card-actions class="mx-2 nominheight">
         <v-chip v-for="(role, index) in viewableUser?.additionalData?.roles"
           density="comfortable"
-          class="mr-1"
           text-color="white"
         >
           <template v-slot:default>
@@ -77,7 +76,7 @@
               <font-awesome-icon :icon="{ prefix: 'fas', iconName: 'database'}"></font-awesome-icon>
           </template>
           <template v-slot:default>
-              <span class="ml-1">
+              <span>
                 Ldap
               </span>
           </template>
@@ -89,7 +88,7 @@
         v-if="viewableUser.oauth2Identifiers.vkontakteId"
         min-width="80px"
         label
-        class="c-btn-vk py-5 mr-2"
+        class="c-btn-vk py-5"
         text-color="white"
       >
         <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'vk'}" :size="'2x'"></font-awesome-icon>
@@ -99,7 +98,7 @@
         v-if="viewableUser.oauth2Identifiers.facebookId"
         min-width="80px"
         label
-        class="c-btn-fb py-5 mr-2"
+        class="c-btn-fb py-5"
         text-color="white"
       >
         <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'facebook'}" :size="'2x'"></font-awesome-icon>
@@ -109,7 +108,7 @@
         v-if="viewableUser.oauth2Identifiers.googleId"
         min-width="80px"
         label
-        class="c-btn-google py-5 mr-2"
+        class="c-btn-google py-5"
         text-color="white"
       >
         <font-awesome-icon :icon="{ prefix: 'fab', iconName: 'google'}" :size="'2x'"></font-awesome-icon>
@@ -119,7 +118,7 @@
         v-if="viewableUser.oauth2Identifiers.keycloakId"
         min-width="80px"
         label
-        class="c-btn-keycloak py-5 mr-2"
+        class="c-btn-keycloak py-5"
         text-color="white"
       >
         <font-awesome-icon :icon="{ prefix: 'fa', iconName: 'key'}" :size="'2x'"></font-awesome-icon>

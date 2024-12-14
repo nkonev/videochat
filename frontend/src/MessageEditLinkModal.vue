@@ -6,7 +6,7 @@
                     <v-text-field density="comfortable" autofocus hide-details variant="underlined" v-model="link" :placeholder="placeHolder()" @keyup.native.enter="accept()"/>
                 </v-card-text>
 
-                <v-card-actions>
+                <v-card-actions class="my-actions">
                     <v-spacer/>
                     <v-btn color="primary" @click="accept()" variant="flat">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn v-if="shouldShowClearButton()" variant="outlined" @click="clear()">{{ $vuetify.locale.t('$vuetify.clear') }}</v-btn>

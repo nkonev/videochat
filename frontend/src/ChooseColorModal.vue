@@ -15,7 +15,7 @@
                         width="100%"
                     ></v-color-picker>
                 </v-card-text>
-                <v-card-actions>
+                <v-card-actions class="my-actions">
                     <v-spacer/>
                     <v-btn color="primary" variant="flat" @click="accept()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
                     <v-btn @click="clear()" variant="outlined">{{ $vuetify.locale.t('$vuetify.clear') }}</v-btn>
