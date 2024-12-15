@@ -24,7 +24,7 @@
 
                 </v-card-title>
 
-                <v-card-text :class="isMobile() ? 'pa-4 pt-0' : 'pl-4 pt-0'">
+                <v-card-text :class="isMobile() ? 'pa-4 pt-0 pb-2' : 'pl-4 pt-0 pb-2'">
                     <v-form
                         ref="form"
                         v-model="valid"
