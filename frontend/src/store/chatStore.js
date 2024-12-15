@@ -4,7 +4,7 @@ import axios from "axios";
 import {isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import {setStoredLanguage} from "@/store/localStore";
-import bus, {PROFILE_SET} from "@/bus/bus.js";
+import bus, {NOTIFICATION_COUNT_CHANGED, PROFILE_SET} from "@/bus/bus.js";
 
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
@@ -112,6 +112,7 @@ export const useChatStore = defineStore('chat', {
       axios.get(`/api/notification/count`).then(( {data} ) => {
         console.debug("fetched notifications =", data);
         this.setNotificationCount(data.totalCount);
+        bus.emit(NOTIFICATION_COUNT_CHANGED);
       });
     },
     fetchHasNewMessages() {

@@ -237,8 +237,8 @@ export default {
         })
           .then(response => response.data)
           .then(data => {
-            bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
             this.chatStore.videoChatUsersCount = data.usersCount;
+            bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
           })
         return Promise.resolve();
       }).then(() => {

@@ -165,7 +165,8 @@ import axios from "axios";
 import bus, {
   CHAT_ADD,
   CHAT_DELETED,
-  CHAT_EDITED, CHAT_REDRAW,
+  CHAT_EDITED,
+  CHAT_REDRAW,
   LOGGED_OUT,
   NOTIFICATION_ADD,
   NOTIFICATION_DELETE,
@@ -182,7 +183,12 @@ import bus, {
   VIDEO_CALL_USER_COUNT_CHANGED,
   VIDEO_DIAL_STATUS_CHANGED,
   VIDEO_RECORDING_CHANGED,
-  WEBSOCKET_RESTORED, ON_WINDOW_RESIZED, NOTIFICATION_CLEAR_ALL, WEBSOCKET_LOST, WEBSOCKET_CONNECTED,
+  WEBSOCKET_RESTORED,
+  ON_WINDOW_RESIZED,
+  NOTIFICATION_CLEAR_ALL,
+  WEBSOCKET_LOST,
+  WEBSOCKET_CONNECTED,
+  NOTIFICATION_COUNT_CHANGED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -745,6 +751,13 @@ export default {
         updateVideoBadge() {
           this.showVideoBadge = !!this.chatStore.videoChatUsersCount
         },
+        // needed to update video badge after /api/video/${chatId}/users was called by FOCUS event
+        onVideoCallChanged() {
+          this.updateVideoBadge();
+        },
+        onNotificationCountChanged() {
+          this.updateNotificationBadge();
+        },
     },
     components: {
         ChooseColorModal,
@@ -810,6 +823,8 @@ export default {
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+        bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+        bus.on(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
 
         // To trigger fetching profile that 's going to trigger starting subscriptions
         // It's placed after each route in order not to have a race-condition
@@ -832,6 +847,8 @@ export default {
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+        bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
+        bus.off(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
 
         this.globalEventsSubscription.graphQlUnsubscribe();
         this.selfProfileEventsSubscription.graphQlUnsubscribe();

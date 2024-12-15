@@ -46,6 +46,8 @@ export const CLOSE_SIMPLE_MODAL = "closeSimpleModal";
 
 export const OPEN_SET_PASSWORD_MODAL = "openSetPassword";
 
+export const NOTIFICATION_COUNT_CHANGED = "notificationCountChanged";
+
 export const VIDEO_CALL_USER_COUNT_CHANGED = "videoCallUserCountChanged";
 export const VIDEO_CALL_SCREEN_SHARE_CHANGED = "videoCallScreenShareChanged";
 
