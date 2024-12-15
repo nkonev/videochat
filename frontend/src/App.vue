@@ -156,7 +156,6 @@ import {
 } from "@/utils";
 import {
     chat_list_name,
-    chat_name,
     confirmation_pending_name,
     forgot_password_name, check_email_name, password_restore_enter_new_name,
     registration_name,
@@ -230,7 +229,6 @@ import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@
 import {getHumanReadableDate} from "@/date.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 import SetPasswordModal from "@/SetPasswordModal.vue";
-import debounce from "lodash/debounce.js";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
