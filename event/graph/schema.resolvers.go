@@ -286,8 +286,6 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 		}
 	}()
 
-	r.HttpClient.AskForUserOnline(ctx, userIds)
-
 	return cam, nil
 }
 

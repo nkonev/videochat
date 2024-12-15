@@ -630,15 +630,7 @@ export default {
               return
           }
 
-          const joined = list.join(",");
-          axios.put(`/api/aaa/user/request-for-online`, null, {
-              params: {
-                  userId: joined
-              },
-              signal: this.requestAbortController.signal
-          }).then(()=>{
-              this.requestInVideo();
-          })
+          this.requestInVideo();
       }
     },
     onWsRestoredRefresh() {
@@ -656,6 +648,14 @@ export default {
               },
               signal: this.requestAbortController.signal
           });
+
+          axios.put(`/api/aaa/user/request-for-online`, null, {
+            params: {
+              userId: joined
+            },
+            signal: this.requestAbortController.signal
+          })
+
       })
     },
     getMaximumItemId() {
