@@ -28,7 +28,8 @@ public class EventService {
                         "user_account_created",
                         userAccountConverter.convertToUserAccountEventDTO(userAccount)
                 ),
-                "dto.UserAccountEventCreated"
+                "dto.UserAccountEventCreated",
+                false
         );
     }
 
@@ -44,7 +45,8 @@ public class EventService {
                         "user_account_changed",
                         userAccountConverter.convertToUserAccountEventDTO(userAccount)
                 ),
-                "dto.UserAccountEventChanged"
+                "dto.UserAccountEventChanged",
+                false
         );
     }
 
@@ -59,7 +61,8 @@ public class EventService {
                         userId,
                         "user_account_deleted"
                 ),
-                "dto.UserAccountEventDeleted"
+                "dto.UserAccountEventDeleted",
+                false
         );
     }
 
@@ -71,6 +74,9 @@ public class EventService {
     public <E> void sendProfileEvent(EventWrapper<E> eventWrapper) {
         rabbitTemplate.convertAndSend(EXCHANGE_PROFILE_EVENTS_NAME, "", eventWrapper.event(), message -> {
             message.getMessageProperties().setType(eventWrapper.type());
+            if (eventWrapper.canThrottle()) {
+                message.getMessageProperties().setHeader("canThrottle", true);
+            }
             return message;
         });
     }

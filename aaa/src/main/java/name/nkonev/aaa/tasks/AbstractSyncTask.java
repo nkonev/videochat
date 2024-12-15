@@ -78,8 +78,16 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
     protected abstract void doConcreteWork(LocalDateTime currTime);
 
     protected void sendEvents(List<EventWrapper<?>> events) {
+        final int maxEventsBeforeCanThrottle = getMaxEventsBeforeCanThrottle();
+
+        int counter = 0;
         for (EventWrapper<?> event : events) {
+            if (counter >= maxEventsBeforeCanThrottle) {
+                event = event.withCanThrottle(true);
+            }
             eventService.sendProfileEvent(event);
+
+            counter++;
         }
         events.clear();
     }
@@ -299,4 +307,5 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
 
     protected abstract List<UserAccount> findExtIdsRolesElderThan(int limit, int theOffset, LocalDateTime currTime);
 
+    protected abstract int getMaxEventsBeforeCanThrottle();
 }

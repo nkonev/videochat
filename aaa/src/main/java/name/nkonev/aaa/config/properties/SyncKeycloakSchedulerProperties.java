@@ -7,6 +7,7 @@ public record SyncKeycloakSchedulerProperties(
     boolean syncEmailVerified,
     boolean syncRoles,
     int batchSize,
-    Duration expiration
+    Duration expiration,
+    int maxEventsBeforeCanThrottle
 ) {
 }

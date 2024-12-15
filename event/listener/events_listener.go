@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/montag451/go-eventbus"
+	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/event/dto"
@@ -29,6 +30,12 @@ func CreateEventsListener(bus *eventbus.Bus, typeRegistry *type_registry.TypeReg
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
+
+		if viper.GetBool("throttling") && msg.Headers["canThrottle"] == true {
+			Logger.Infof("Skipping a message %v with type %v", strData, aType)
+			return nil
+		}
+
 		Logger.Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {

@@ -294,5 +294,10 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         // remove admin role
         processRemovingRolesFromUsers(batchSize, currTime);
     }
+
+    @Override
+    protected int getMaxEventsBeforeCanThrottle() {
+        return aaaProperties.schedulers().syncKeycloak().maxEventsBeforeCanThrottle();
+    }
 }
 

@@ -292,5 +292,10 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
         });
         sendEvents(eventsContainer);
     }
+
+    @Override
+    protected int getMaxEventsBeforeCanThrottle() {
+        return aaaProperties.schedulers().syncLdap().maxEventsBeforeCanThrottle();
+    }
 }
 

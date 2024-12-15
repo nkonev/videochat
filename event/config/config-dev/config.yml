@@ -30,3 +30,6 @@ rabbitmq:
 
 otlp:
   endpoint: "localhost:4317"
+
+# on order not to overwhelm frontend in case syncing with Ldap / Keycloak with many users
+throttling: true

@@ -74,6 +74,7 @@ custom:
       sync-roles: true
       cron: "*/20 * * * * *"
       expiration: "30m"
+      max-events-before-can-throttle: 10
     sync-keycloak:
       enabled: false
       sync-email-verified: false
@@ -81,6 +82,7 @@ custom:
       sync-roles: true
       cron: "*/20 * * * * *"
       expiration: "30m"
+      max-events-before-can-throttle: 10
     await-for-termination: "5m"
     pool-size: 5
 
