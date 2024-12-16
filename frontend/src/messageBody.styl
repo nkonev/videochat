@@ -19,8 +19,19 @@
 }
 
 .audio-custom-class {
-  min-width: 600px
   max-width: 100% !important
+}
+
+@media (min-width: $mobileWidth) {
+  .audio-custom-class {
+    min-width: 600px
+  }
+}
+
+.message-item-root-compact {
+  .audio-custom-class {
+    min-width: unset
+  }
 }
 
 .iframe-custom-class {

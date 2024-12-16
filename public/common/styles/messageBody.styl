@@ -19,8 +19,13 @@
 }
 
 .audio-custom-class {
-  min-width: 600px
   max-width: 100% !important
+}
+
+@media (min-width: $mobileWidth) {
+  .audio-custom-class {
+    min-width: 600px
+  }
 }
 
 .iframe-custom-class {

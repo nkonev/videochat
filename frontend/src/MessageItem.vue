@@ -1,5 +1,5 @@
 <template>
-    <div class="px-1 mx-1 mt-4 message-item-root" :id="id">
+    <div class="px-1 mx-1 mt-4 message-item-root" :class="isCompact ? 'message-item-root-compact' : ''" :id="id">
         <div v-if="hasLength(item?.owner?.avatar)" class="item-avatar ml-1 mr-2 mt-1">
           <a :href="getOwnerLink(item)" class="user-link" @click.prevent.stop="onProfileClick(item)">
             <img :src="item.owner?.avatar">
