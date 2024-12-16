@@ -115,7 +115,7 @@
               <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="sendMessageBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
-        <template v-else-if="shouldShowBubbleMenu">
+        <template v-else-if="shouldShowButtons">
             <bubble-menu
                 class="bubble-menu"
                 :tippy-options="{ duration: 0 }"
@@ -630,22 +630,21 @@
                 removeStoredChatEditMessageDto(this.chatId);
             },
             setShouldShowSendMessageButtons() {
+              this.$nextTick(()=> {
                 const type = getStoredMessageEditSendButtonsType('auto');
                 switch (type) { // see MessageEditSettingsModalContent
-                    case 'auto':
-                        const width = this.targetElement?.offsetWidth;
-                        this.chatStore.shouldShowSendMessageButtons = this.isMobile() ? true : !isMobileWidth(width);
-                        break;
-                    case 'full':
-                        this.chatStore.shouldShowSendMessageButtons = true;
-                        break;
-                    case 'compact':
-                        this.chatStore.shouldShowSendMessageButtons = false;
-                        break;
+                  case 'auto':
+                    const width = this.targetElement?.offsetWidth;
+                    this.chatStore.shouldShowSendMessageButtons = this.isMobile() ? true : !isMobileWidth(width);
+                    break;
+                  case 'full':
+                    this.chatStore.shouldShowSendMessageButtons = true;
+                    break;
+                  case 'compact':
+                    this.chatStore.shouldShowSendMessageButtons = false;
+                    break;
                 }
-            },
-            updateShouldShowSendMessageButtons() {
-                this.setShouldShowSendMessageButtons();
+              })
             },
             reloadTipTap() {
                 // reload
@@ -671,12 +670,12 @@
             documentBody() {
               return document.body
             },
+            shouldShowButtons() {
+              return this.$refs.tipTapRef?.getEditor()
+            },
         },
         computed: {
           ...mapStores(useChatStore),
-          shouldShowBubbleMenu() {
-            return this.$refs.tipTapRef && this.$refs.tipTapRef.getEditor()
-          },
         },
         mounted() {
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
@@ -687,15 +686,11 @@
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.on(FILE_CREATED, this.onFileCreatedEvent);
-
             this.targetElement = document.getElementById('sendButtonContainer')
-            this.$nextTick(()=>{
-                this.setShouldShowSendMessageButtons();
-            })
-            bus.on(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
+            this.setShouldShowSendMessageButtons();
             bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
 
-            this.resizeObserver = new ResizeObserver(this.updateShouldShowSendMessageButtons);
+            this.resizeObserver = new ResizeObserver(this.setShouldShowSendMessageButtons);
             this.resizeObserver.observe(this.targetElement);
         },
         beforeUnmount() {
@@ -706,7 +701,6 @@
             bus.off(COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
-            bus.off(ON_WINDOW_RESIZED, this.updateShouldShowSendMessageButtons);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
             bus.off(FILE_CREATED, this.onFileCreatedEvent);
 
@@ -717,7 +711,7 @@
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
             this.notifyAboutBroadcast = debounce(this.notifyAboutBroadcast, 100, {leading:true, trailing:true});
-            this.updateShouldShowSendMessageButtons = debounce(this.updateShouldShowSendMessageButtons, 100);
+            this.setShouldShowSendMessageButtons = debounce(this.setShouldShowSendMessageButtons, 100, {leading:false, trailing:true});
         },
         watch: {
             sendBroadcast: {
