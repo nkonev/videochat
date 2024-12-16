@@ -100,6 +100,9 @@ Below are just notes, some of them aren't actual. The most useful are ones about
 
 
 # Deploying
+
+For the actual deployment options see [here](https://github.com/nkonev/videochat/tree/master/install). Below are some (outdated / useless) notes.
+
 ## Saving and loading docker images
 ```
 docker save nkonev/chat-frontend:latest -o /tmp/frontend.tar
