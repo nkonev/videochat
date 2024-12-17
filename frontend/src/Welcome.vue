@@ -3,8 +3,8 @@
     <v-row align="center" justify="center" style="height: 100%">
       <v-card>
         <v-card-title class="d-flex justify-center with-space">{{$vuetify.locale.t('$vuetify.welcome_participant')}}<span :style="getLoginColoredStyle(chatStore.currentUser)">{{chatStore.currentUser?.login}}</span>!</v-card-title>
-        <v-card-actions class="d-flex justify-space-around flex-wrap flex-row pb-0">
-          <v-btn :size="getBtnSize()" @click.prevent="findUser()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getUser()">
+        <v-card-actions class="d-flex justify-space-around flex-wrap flex-row">
+          <v-btn :size="getBtnSize()" @click.prevent="findUser()" text variant="outlined" :href="getUser()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-account-group</v-icon>
             </template>
@@ -12,7 +12,7 @@
               {{ $vuetify.locale.t('$vuetify.users') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" color="primary" @click.prevent="createChat()" text :class="isMobile() ? 'my-2' : ''" variant="outlined">
+          <v-btn :size="getBtnSize()" color="primary" @click.prevent="createChat()" text variant="outlined">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-plus</v-icon>
             </template>
@@ -20,7 +20,7 @@
               {{ $vuetify.locale.t('$vuetify.new_chat') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click.prevent="chats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getChats()">
+          <v-btn :size="getBtnSize()" @click.prevent="chats()" text variant="outlined" :href="getChats()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-forum</v-icon>
             </template>
@@ -28,7 +28,7 @@
               {{ $vuetify.locale.t('$vuetify.chats') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click.prevent="availableForSearchChats()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getAvailableForSearchChats()">
+          <v-btn :size="getBtnSize()" @click.prevent="availableForSearchChats()" text variant="outlined" :href="getAvailableForSearchChats()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-forum</v-icon>
             </template>
@@ -36,7 +36,7 @@
               {{ $vuetify.locale.t('$vuetify.public_chats') }}
             </template>
           </v-btn>
-          <v-btn :size="getBtnSize()" @click.prevent="goBlog()" text :class="isMobile() ? 'my-2' : ''" variant="outlined" :href="getBlog()">
+          <v-btn :size="getBtnSize()" @click.prevent="goBlog()" text variant="outlined" :href="getBlog()">
             <template v-slot:prepend>
               <v-icon :size="getIconSize()">mdi-postage-stamp</v-icon>
             </template>
