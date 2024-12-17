@@ -50,7 +50,7 @@
                                     </v-img>
                                     <v-card-actions>
                                         <v-spacer></v-spacer>
-                                        <a :href="item.url" download class="colored-link mr-4"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
+                                        <a :href="item.url" download class="colored-link mx-2"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
 
                                         <v-btn size="medium" :disabled="item.hasNoMessage" :loading="item.loadingHasNoMessage" @click="fireSearchMessage(item)" :title="$vuetify.locale.t('$vuetify.search_related_message')"><v-icon size="large">mdi-note-search-outline</v-icon></v-btn>
 
