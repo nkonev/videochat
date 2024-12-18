@@ -27,11 +27,6 @@ axios.defaults.timeout = getHttpClientTimeout();
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-const tracer = opentelemetry.trace.getTracer(
-    'public-handlers',
-    '0.0.0',
-);
-
 startServer()
 
 const pathPrefixAndBlog = path_prefix + blog;

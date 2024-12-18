@@ -6,15 +6,11 @@ import {
     ATTR_HTTP_ROUTE,
 } from '@opentelemetry/semantic-conventions';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-// const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
-// const { SEMRESATTRS_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
-// const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-// import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { AlwaysOnSampler } from '@opentelemetry/sdk-trace-base';
 import { SamplingDecision, SpanKind } from '@opentelemetry/api';
-// import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 
 const collectorOptions = {
     // use an env var OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://trace-service:4318/v1/traces
@@ -27,27 +23,6 @@ const collectorOptions = {
 const exporter = new OTLPTraceExporter(collectorOptions);
 
 // https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/examples/express/src/tracer.ts
-
-// const provider = new NodeTracerProvider({
-//     resource: new Resource({
-//         [ATTR_SERVICE_NAME]: 'public',
-//         [ATTR_SERVICE_VERSION]: '0.0.0',
-//     }),
-//     spanProcessors: [new SimpleSpanProcessor(exporter)],
-//     sampler: filterSampler(ignoreHealthCheck, new AlwaysOnSampler()),
-// });
-// registerInstrumentations({
-//     tracerProvider: provider,
-//     instrumentations: [
-//         // Express instrumentation expects HTTP layer to be instrumented
-//         new HttpInstrumentation(),
-//         new ExpressInstrumentation(),
-//     ],
-// });
-//
-// // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
-// provider.register();
-
 // https://github.com/open-telemetry/opentelemetry-js/issues/2936
 // https://www.freecodecamp.org/news/how-to-use-opentelementry-to-trace-node-js-applications/
 // https://opentelemetry.io/docs/languages/js/instrumentation/
@@ -66,6 +41,8 @@ const sdk = new NodeSDK({
         new HttpInstrumentation(),
         new ExpressInstrumentation(),
     ],
+    // https://www.npmjs.com/package/@opentelemetry/propagator-jaeger
+    textMapPropagator: new JaegerPropagator(),
 });
 
 sdk.start();
