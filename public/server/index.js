@@ -10,6 +10,7 @@
 //  - vite-node (https://github.com/antfu/vite-node)
 //  - HatTip (https://github.com/hattipjs/hattip)
 //    - You can use Bati (https://batijs.dev/) to scaffold a Vike + HatTip app. Note that Bati generates apps that use the V1 design (https://vike.dev/migration/v1-design) and Vike packages (https://vike.dev/vike-packages)
+import "./instrumentation.js";
 
 import express from 'express'
 import compression from 'compression'
@@ -19,10 +20,16 @@ import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
 import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort} from "../common/config.js";
 import axios from "axios";
+import opentelemetry from '@opentelemetry/api';
 
 axios.defaults.timeout = getHttpClientTimeout();
 
 const isProduction = process.env.NODE_ENV === 'production'
+
+const tracer = opentelemetry.trace.getTracer(
+    'public-handlers',
+    '0.0.0',
+);
 
 startServer()
 
@@ -63,36 +70,42 @@ async function startServer() {
   }
 
   const sitemapHandler = async function(req, res) {
-      res.header('Content-Type', 'application/xml');
+      tracer.startActiveSpan('sitemapXml', async (span) => {
+          res.header('Content-Type', 'application/xml');
+          res.header('trace-id', span.spanContext().traceId);
 
-      try {
-          const smStream = new SitemapStream({ hostname: getFrontendUrl() });
+          try {
+              const smStream = new SitemapStream({hostname: getFrontendUrl()});
 
-          // index page
-          smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
+              // index page
+              smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
 
-          const apiHost = getChatApiUrl();
-          const PAGE_SIZE = 40;
-          for (let page = 0; ; page++) {
-              const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
-              const data = response.data;
-              if (data.length == 0) {
-                  break
+              const apiHost = getChatApiUrl();
+              const PAGE_SIZE = 40;
+              for (let page = 0; ; page++) {
+                  const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
+                  const data = response.data;
+                  if (data.length == 0) {
+                      break
+                  }
+                  for (const item of data) {
+                      smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
+                  }
               }
-              for (const item of data) {
-                  smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
-              }
+
+              // stream write the response
+              smStream.pipe(res).on('error', (e) => {
+                  throw e
+              })
+
+              // make sure to attach a write stream such as streamToPromise before ending
+              smStream.end()
+          } catch (e) {
+              console.error(e)
+              res.status(500).end()
           }
-
-          // stream write the response
-          smStream.pipe(res).on('error', (e) => {throw e})
-
-          // make sure to attach a write stream such as streamToPromise before ending
-          smStream.end()
-      } catch (e) {
-          console.error(e)
-          res.status(500).end()
-      }
+          span.end();
+      })
   }
 
   app.get('/sitemap.xml', sitemapHandler);
