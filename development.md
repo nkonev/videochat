@@ -981,6 +981,11 @@ curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
 curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```
 
+# Tracing
+```
+curl -i 'http://localhost:3100/sitemap.xml'
+```
+
 # Playwright
 https://playwright.dev/docs/intro
 ```

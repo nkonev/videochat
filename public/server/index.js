@@ -10,6 +10,7 @@
 //  - vite-node (https://github.com/antfu/vite-node)
 //  - HatTip (https://github.com/hattipjs/hattip)
 //    - You can use Bati (https://batijs.dev/) to scaffold a Vike + HatTip app. Note that Bati generates apps that use the V1 design (https://vike.dev/migration/v1-design) and Vike packages (https://vike.dev/vike-packages)
+import "./instrumentation.js";
 
 import express from 'express'
 import compression from 'compression'
@@ -19,10 +20,17 @@ import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
 import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort} from "../common/config.js";
 import axios from "axios";
+import opentelemetry from '@opentelemetry/api';
+import * as api from '@opentelemetry/api';
 
 axios.defaults.timeout = getHttpClientTimeout();
 
 const isProduction = process.env.NODE_ENV === 'production'
+
+const tracer = opentelemetry.trace.getTracer(
+    'public-handlers',
+    '0.0.0',
+);
 
 startServer()
 
@@ -32,6 +40,21 @@ async function startServer() {
   const app = express()
   app.disable('x-powered-by')
   app.use(compression())
+
+  const traceHeader = function (req, res, next) {
+        // https://opentelemetry.io/docs/languages/js/context/
+        const ctx = api.context.active();
+        // https://opentelemetry.io/docs/languages/js/instrumentation/#get-a-span-from-context
+        const span = opentelemetry.trace.getSpan(ctx);
+        if (span) {
+            const traceId = span.spanContext().traceId;
+            // console.log("processing traceId", traceId);
+            res.header('trace-id', traceId);
+        }
+        next()
+  }
+
+  app.use(traceHeader)
 
   // Vite integration
   if (isProduction) {
@@ -63,36 +86,42 @@ async function startServer() {
   }
 
   const sitemapHandler = async function(req, res) {
-      res.header('Content-Type', 'application/xml');
+      tracer.startActiveSpan('sitemapXmlHandler', async (span) => {
+          res.header('Content-Type', 'application/xml');
 
-      try {
-          const smStream = new SitemapStream({ hostname: getFrontendUrl() });
+          try {
+              const smStream = new SitemapStream({hostname: getFrontendUrl()});
 
-          // index page
-          smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
+              // index page
+              smStream.write({url: pathPrefixAndBlog + "/", lastmod: new Date()})
 
-          const apiHost = getChatApiUrl();
-          const PAGE_SIZE = 40;
-          for (let page = 0; ; page++) {
-              const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
-              const data = response.data;
-              if (data.length == 0) {
-                  break
+              const apiHost = getChatApiUrl();
+              const PAGE_SIZE = 40;
+              for (let page = 0; ; page++) {
+                  const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
+                  const data = response.data;
+                  if (data.length == 0) {
+                      break
+                  }
+                  for (const item of data) {
+                      smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
+                  }
               }
-              for (const item of data) {
-                  smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
-              }
+
+              // stream write the response
+              smStream.pipe(res).on('error', (e) => {
+                  throw e
+              })
+
+              // make sure to attach a write stream such as streamToPromise before ending
+              smStream.end()
+          } catch (e) {
+              console.error(e)
+              res.status(500).end()
+          } finally {
+              span.end();
           }
-
-          // stream write the response
-          smStream.pipe(res).on('error', (e) => {throw e})
-
-          // make sure to attach a write stream such as streamToPromise before ending
-          smStream.end()
-      } catch (e) {
-          console.error(e)
-          res.status(500).end()
-      }
+      })
   }
 
   app.get('/sitemap.xml', sitemapHandler);
@@ -111,30 +140,37 @@ Sitemap: ${sitemapUrl}`);
   // Vike middleware. It should always be our last middleware (because it's a
   // catch-all middleware superseding any middleware placed after it).
   app.get('*', async (req, res, next) => {
-    const pageContextInit = {
-      urlOriginal: req.originalUrl,
-      userAgent: req.headers["user-agent"]
-    }
-    const pageContext = await renderPage(pageContextInit)
-    if (pageContext.errorWhileRendering) {
-      // Install error tracking here, see https://vike.dev/errors
-    }
-    const { httpResponse } = pageContext
-    let overrideStatus = null;
-    if (pageContext.httpStatus) {
-        overrideStatus = pageContext.httpStatus;
-    }
-    if (!httpResponse) {
-      return next()
-    } else {
-      const { body, statusCode, headers, earlyHints } = httpResponse
-      // to help YandexBot to get the page
-      // if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
-      headers.forEach(([name, value]) => res.setHeader(name, value))
-      res.status(overrideStatus ? overrideStatus : statusCode)
-      // For HTTP streams use httpResponse.pipe() instead, see https://vike.dev/streaming
-      res.send(body)
-    }
+      tracer.startActiveSpan('ssrHandler', async (span) => {
+        try {
+          const pageContextInit = {
+              urlOriginal: req.originalUrl,
+              userAgent: req.headers["user-agent"]
+          }
+          const pageContext = await renderPage(pageContextInit)
+          if (pageContext.errorWhileRendering) {
+              // Install error tracking here, see https://vike.dev/errors
+          }
+          const {httpResponse} = pageContext
+          let overrideStatus = null;
+          if (pageContext.httpStatus) {
+              overrideStatus = pageContext.httpStatus;
+          }
+          if (!httpResponse) {
+              return next()
+          } else {
+              const {body, statusCode, headers, earlyHints} = httpResponse
+              // to help YandexBot to get the page
+              // if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
+              headers.forEach(([name, value]) => res.setHeader(name, value))
+              res.status(overrideStatus ? overrideStatus : statusCode)
+              // For HTTP streams use httpResponse.pipe() instead, see https://vike.dev/streaming
+              res.send(body)
+          }
+        } finally {
+            span.end()
+        }
+      })
+
   })
 
   const port = getPort()
