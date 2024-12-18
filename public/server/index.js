@@ -36,6 +36,21 @@ async function startServer() {
   app.disable('x-powered-by')
   app.use(compression())
 
+  const traceHeader = function (req, res, next) {
+        // https://opentelemetry.io/docs/languages/js/context/
+        const ctx = api.context.active();
+        // https://opentelemetry.io/docs/languages/js/instrumentation/#get-a-span-from-context
+        const span = opentelemetry.trace.getSpan(ctx);
+        const traceId = span.spanContext().traceId;
+        // console.log("processing traceId", traceId);
+
+        res.header('trace-id', traceId);
+
+        next()
+  }
+
+  app.use(traceHeader)
+
   // Vite integration
   if (isProduction) {
     app.get('/*',function (req, res, next) {
@@ -66,15 +81,8 @@ async function startServer() {
   }
 
   const sitemapHandler = async function(req, res) {
-          // https://opentelemetry.io/docs/languages/js/context/
-          const ctx = api.context.active();
-          // https://opentelemetry.io/docs/languages/js/instrumentation/#get-a-span-from-context
-          const span = opentelemetry.trace.getSpan(ctx);
-          const traceId = span.spanContext().traceId;
-          console.log("processing traceId", traceId);
 
           res.header('Content-Type', 'application/xml');
-          res.header('trace-id', traceId);
 
           try {
               const smStream = new SitemapStream({hostname: getFrontendUrl()});
