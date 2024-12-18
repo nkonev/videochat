@@ -7,13 +7,16 @@ import {
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
 const collectorOptions = {
-    url: 'http://localhost:4318/v1/traces', // url is optional and can be omitted - default is http://localhost:4318/v1/traces
+    // use an env var OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://trace-service:4318/v1/traces
+    // url: 'http://localhost:4318/v1/traces', // url is optional and can be omitted - default is http://localhost:4318/v1/traces
     headers: { }, // an optional object containing custom headers to be sent with each request will only work with http
     concurrencyLimit: 10, // an optional limit on pending requests
 };
 
+// https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http
 const exporter = new OTLPTraceExporter(collectorOptions);
 
+// https://opentelemetry.io/docs/languages/js/instrumentation/
 const sdk = new NodeSDK({
     resource: new Resource({
         [ATTR_SERVICE_NAME]: 'public',
