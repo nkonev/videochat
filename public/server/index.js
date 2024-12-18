@@ -27,6 +27,11 @@ axios.defaults.timeout = getHttpClientTimeout();
 
 const isProduction = process.env.NODE_ENV === 'production'
 
+const tracer = opentelemetry.trace.getTracer(
+    'public-handlers',
+    '0.0.0',
+);
+
 startServer()
 
 const pathPrefixAndBlog = path_prefix + blog;
@@ -41,11 +46,11 @@ async function startServer() {
         const ctx = api.context.active();
         // https://opentelemetry.io/docs/languages/js/instrumentation/#get-a-span-from-context
         const span = opentelemetry.trace.getSpan(ctx);
-        const traceId = span.spanContext().traceId;
-        // console.log("processing traceId", traceId);
-
-        res.header('trace-id', traceId);
-
+        if (span) {
+            const traceId = span.spanContext().traceId;
+            // console.log("processing traceId", traceId);
+            res.header('trace-id', traceId);
+        }
         next()
   }
 
@@ -81,7 +86,7 @@ async function startServer() {
   }
 
   const sitemapHandler = async function(req, res) {
-
+      tracer.startActiveSpan('sitemapXmlHandler', async (span) => {
           res.header('Content-Type', 'application/xml');
 
           try {
@@ -113,7 +118,10 @@ async function startServer() {
           } catch (e) {
               console.error(e)
               res.status(500).end()
+          } finally {
+              span.end();
           }
+      })
   }
 
   app.get('/sitemap.xml', sitemapHandler);
@@ -132,30 +140,37 @@ Sitemap: ${sitemapUrl}`);
   // Vike middleware. It should always be our last middleware (because it's a
   // catch-all middleware superseding any middleware placed after it).
   app.get('*', async (req, res, next) => {
-    const pageContextInit = {
-      urlOriginal: req.originalUrl,
-      userAgent: req.headers["user-agent"]
-    }
-    const pageContext = await renderPage(pageContextInit)
-    if (pageContext.errorWhileRendering) {
-      // Install error tracking here, see https://vike.dev/errors
-    }
-    const { httpResponse } = pageContext
-    let overrideStatus = null;
-    if (pageContext.httpStatus) {
-        overrideStatus = pageContext.httpStatus;
-    }
-    if (!httpResponse) {
-      return next()
-    } else {
-      const { body, statusCode, headers, earlyHints } = httpResponse
-      // to help YandexBot to get the page
-      // if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
-      headers.forEach(([name, value]) => res.setHeader(name, value))
-      res.status(overrideStatus ? overrideStatus : statusCode)
-      // For HTTP streams use httpResponse.pipe() instead, see https://vike.dev/streaming
-      res.send(body)
-    }
+      tracer.startActiveSpan('ssrHandler', async (span) => {
+        try {
+          const pageContextInit = {
+              urlOriginal: req.originalUrl,
+              userAgent: req.headers["user-agent"]
+          }
+          const pageContext = await renderPage(pageContextInit)
+          if (pageContext.errorWhileRendering) {
+              // Install error tracking here, see https://vike.dev/errors
+          }
+          const {httpResponse} = pageContext
+          let overrideStatus = null;
+          if (pageContext.httpStatus) {
+              overrideStatus = pageContext.httpStatus;
+          }
+          if (!httpResponse) {
+              return next()
+          } else {
+              const {body, statusCode, headers, earlyHints} = httpResponse
+              // to help YandexBot to get the page
+              // if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
+              headers.forEach(([name, value]) => res.setHeader(name, value))
+              res.status(overrideStatus ? overrideStatus : statusCode)
+              // For HTTP streams use httpResponse.pipe() instead, see https://vike.dev/streaming
+              res.send(body)
+          }
+        } finally {
+            span.end()
+        }
+      })
+
   })
 
   const port = getPort()
