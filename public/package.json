@@ -8,6 +8,11 @@
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.47.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.1",
+    "@opentelemetry/sdk-node": "^0.52.1",
+    "@opentelemetry/sdk-trace-node": "^1.25.1",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/server-renderer": "^3.5.13",
     "axios": "^1.7.9",

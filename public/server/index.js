@@ -11,6 +11,8 @@
 //  - HatTip (https://github.com/hattipjs/hattip)
 //    - You can use Bati (https://batijs.dev/) to scaffold a Vike + HatTip app. Note that Bati generates apps that use the V1 design (https://vike.dev/migration/v1-design) and Vike packages (https://vike.dev/vike-packages)
 
+import "./instrumentation.js";
+
 import express from 'express'
 import compression from 'compression'
 import { renderPage } from 'vike/server'
