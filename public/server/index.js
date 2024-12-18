@@ -21,6 +21,7 @@ import { SitemapStream } from 'sitemap'
 import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort} from "../common/config.js";
 import axios from "axios";
 import opentelemetry from '@opentelemetry/api';
+import * as api from '@opentelemetry/api';
 
 axios.defaults.timeout = getHttpClientTimeout();
 
@@ -70,9 +71,15 @@ async function startServer() {
   }
 
   const sitemapHandler = async function(req, res) {
-      tracer.startActiveSpan('sitemapXml', async (span) => {
+          // https://opentelemetry.io/docs/languages/js/context/
+          const ctx = api.context.active();
+          // https://opentelemetry.io/docs/languages/js/instrumentation/#get-a-span-from-context
+          const span = opentelemetry.trace.getSpan(ctx);
+          const traceId = span.spanContext().traceId;
+          console.log("processing traceId", traceId);
+
           res.header('Content-Type', 'application/xml');
-          res.header('trace-id', span.spanContext().traceId);
+          res.header('trace-id', traceId);
 
           try {
               const smStream = new SitemapStream({hostname: getFrontendUrl()});
@@ -104,8 +111,6 @@ async function startServer() {
               console.error(e)
               res.status(500).end()
           }
-          span.end();
-      })
   }
 
   app.get('/sitemap.xml', sitemapHandler);
