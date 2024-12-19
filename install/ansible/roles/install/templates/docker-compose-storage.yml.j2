@@ -25,6 +25,12 @@ services:
         - "traefik.http.routers.storage-public-router.tls=true"
         - "traefik.http.routers.storage-public-router.tls.certresolver=myresolver"
 
+        - "traefik.http.routers.storage-assets-router.rule=PathPrefix(`/api/storage/assets`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.storage-assets-router.entrypoints=https"
+        - "traefik.http.routers.storage-assets-router.middlewares=retry-middleware@file"
+        - "traefik.http.routers.storage-assets-router.tls=true"
+        - "traefik.http.routers.storage-assets-router.tls.certresolver=myresolver"
+
         - "traefik.http.middlewares.storage-stripprefix-middleware.stripprefix.prefixes=/storage"
         - "traefik.http.routers.storage-version-router.rule=Path(`/storage/git.json`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.storage-version-router.entrypoints=https"

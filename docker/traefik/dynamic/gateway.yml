@@ -126,6 +126,11 @@ http:
       service: storage-service
       middlewares:
         - "retry-middleware"
+    storage-assets-router:
+      rule: "PathPrefix(`/api/storage/assets`)"
+      service: storage-service
+      middlewares:
+        - "retry-middleware"
     livekit-router:
       rule: "PathPrefix(`/api/livekit`)"
       service: livekit-service
