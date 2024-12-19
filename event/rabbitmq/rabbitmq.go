@@ -4,34 +4,34 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
-	. "nkonev.name/event/logger"
 )
 
-func CreateRabbitMqConnection() *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
 	rabbitmq.Debug = true
 
 	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
 	if err != nil {
-		Logger.Panic(err)
+		lgr.Panic(err)
 	}
 	return conn
 }
 
-func CreateRabbitMqChannel(connection *rabbitmq.Connection) *rabbitmq.Channel {
+func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(nil)
 	if err != nil {
-		Logger.Panic(err)
+		lgr.Panic(err)
 	}
 	return consumeCh
 }
 
-func CreateRabbitMqChannelWithCallback(connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *log.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
-		Logger.Panic(err)
+		lgr.Panic(err)
 	}
 	return consumeCh
 }
@@ -74,25 +74,25 @@ func ExtractAMQPHeaders(ctx context.Context, headers map[string]interface{}) con
 	return otel.GetTextMapPropagator().Extract(ctx, AmqpHeadersCarrier(headers))
 }
 
-func SerializeValues(spanContext context.Context) string {
+func SerializeValues(spanContext context.Context, lgr *log.Logger) string {
 	carrier := propagation.MapCarrier{}
 	propagator := otel.GetTextMapPropagator()
 	propagator.Inject(spanContext, carrier)
 	marshal, err := json.Marshal(carrier)
 	if err != nil {
-		Logger.Infof("Unable to marshall")
+		lgr.Infof("Unable to marshall")
 		return ""
 	}
 	return string(marshal)
 }
 
-func DeserializeValues(input string) context.Context {
+func DeserializeValues(lgr *log.Logger, input string) context.Context {
 	propagator := otel.GetTextMapPropagator()
 	carrier := propagation.MapCarrier{}
 
 	err := json.Unmarshal([]byte(input), &carrier)
 	if err != nil {
-		Logger.Infof("Unable to unmarshall")
+		lgr.Infof("Unable to unmarshall")
 		return context.Background()
 	}
 

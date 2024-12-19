@@ -2,13 +2,12 @@ package utils
 
 import (
 	"fmt"
-	. "nkonev.name/event/logger"
+	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strconv"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
-const PersonalChannelPrefix = "#"
 
 type H map[string]interface{}
 
@@ -25,10 +24,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			Logger.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			lgr.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}

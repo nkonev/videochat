@@ -35,27 +35,27 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 
 	hasAccess, err := r.HttpClient.CheckAccess(ctx, authResult.UserId, chatID)
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during checking participant user %v, chat %v", authResult.UserId, chatID)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during checking participant user %v, chat %v", authResult.UserId, chatID)
 		return nil, err
 	}
 	if !hasAccess {
-		logger.GetLogEntry(ctx).Infof("User %v is not participant of chat %v", authResult.UserId, chatID)
+		logger.GetLogEntry(ctx, r.Lgr).Infof("User %v is not participant of chat %v", authResult.UserId, chatID)
 		return nil, errors.New("Unauthorized")
 	}
-	logger.GetLogEntry(ctx).Infof("Subscribing to chatEvents channel as user %v", authResult.UserId)
+	logger.GetLogEntry(ctx, r.Lgr).Infof("Subscribing to chatEvents channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.ChatEvent)
 	subscribeHandler, err := r.Bus.Subscribe(dto.CHAT_EVENTS, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing ChatEvents panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing ChatEvents panic recovered: %v", err)
 			}
 		}()
 
 		switch typedEvent := event.(type) {
 		case dto.ChatEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) && typedEvent.ChatId == chatID {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 				defer span.End()
 				span.SetAttributes(
 					attribute.Int64("userId", typedEvent.UserId),
@@ -66,11 +66,11 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v, chat %v", typedEvent, authResult.UserId, chatID)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v, chat %v", typedEvent, authResult.UserId, chatID)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v, chat %v", authResult.UserId, chatID)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v, chat %v", authResult.UserId, chatID)
 		return nil, err
 	}
 
@@ -78,10 +78,10 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		for {
 			select {
 			case <-ctx.Done():
-				logger.GetLogEntry(ctx).Infof("Closing chatEvents channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing chatEvents channel for user %v", authResult.UserId)
 				err := r.Bus.Unsubscribe(subscribeHandler)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in chatEvents channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in chatEvents channel for user %v", authResult.UserId)
 				}
 				close(cam)
 				return
@@ -98,20 +98,20 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
 	}
-	logger.GetLogEntry(ctx).Infof("Subscribing to globalEvents channel as user %v", authResult.UserId)
+	logger.GetLogEntry(ctx, r.Lgr).Infof("Subscribing to globalEvents channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.GlobalEvent)
 	globalSubscribeHandler, err := r.Bus.Subscribe(dto.GLOBAL_USER_EVENTS, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing GlobalEvents panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing GlobalEvents panic recovered: %v", err)
 			}
 		}()
 
 		switch typedEvent := event.(type) {
 		case dto.GlobalUserEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 				defer span.End()
 				span.SetAttributes(
 					attribute.Int64("userId", typedEvent.UserId),
@@ -121,24 +121,24 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 	killSessionsSubscribeHandler, err := r.Bus.Subscribe(dto.AAA_KILL_SESSIONS, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing GlobalEvents panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing GlobalEvents panic recovered: %v", err)
 			}
 		}()
 
 		switch typedEvent := event.(type) {
 		case dto.UserSessionsKilledEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 				defer span.End()
 				span.SetAttributes(
 					attribute.Int64("userId", typedEvent.UserId),
@@ -148,11 +148,11 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 
@@ -161,16 +161,16 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 			select {
 			case <-ctx.Done():
 
-				logger.GetLogEntry(ctx).Infof("Closing globalEvents channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing globalEvents channel for user %v", authResult.UserId)
 				err := r.Bus.Unsubscribe(globalSubscribeHandler)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in globalEvents channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in globalEvents channel for user %v", authResult.UserId)
 				}
 
-				logger.GetLogEntry(ctx).Infof("Closing killSessionsSubscribeHandler channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing killSessionsSubscribeHandler channel for user %v", authResult.UserId)
 				err = r.Bus.Unsubscribe(killSessionsSubscribeHandler)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserVideoStatus channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in UserVideoStatus channel for user %v", authResult.UserId)
 				}
 
 				close(cam)
@@ -189,14 +189,14 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
 	}
-	logger.GetLogEntry(ctx).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
+	logger.GetLogEntry(ctx, r.Lgr).Infof("Subscribing to UserOnline channel as user %v", authResult.UserId)
 
 	var cam = make(chan []*model.UserStatusEvent)
 
 	subscribeHandlerUserOnline, err := r.Bus.Subscribe(dto.USER_ONLINE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing UserOnline panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing UserOnline panic recovered: %v", err)
 			}
 		}()
 
@@ -205,7 +205,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 			var batch = []*model.UserStatusEvent{}
 			for _, userOnline := range typedEvent.UserOnlines {
 				if utils.Contains(userIds, userOnline.UserId) {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", "user_online"))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", "user_online"))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", userOnline.UserId),
@@ -219,18 +219,18 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 
 	subscribeHandlerVideoCallStatus, err := r.Bus.Subscribe(dto.GENERAL, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing UserVideoStatus panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing UserVideoStatus panic recovered: %v", err)
 			}
 		}()
 
@@ -241,7 +241,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 				var batch = []*model.UserStatusEvent{}
 				for _, userCallStatus := range videoCallUsersCallStatusChangedEvent.Users {
 					if utils.Contains(userIds, userCallStatus.UserId) {
-						_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+						_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 						defer span.End()
 						span.SetAttributes(
 							attribute.Int64("userId", userCallStatus.UserId),
@@ -256,11 +256,11 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 
@@ -268,16 +268,16 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 		for {
 			select {
 			case <-ctx.Done():
-				logger.GetLogEntry(ctx).Infof("Closing UserOnline channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing UserOnline channel for user %v", authResult.UserId)
 				err := r.Bus.Unsubscribe(subscribeHandlerUserOnline)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserOnline channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in UserOnline channel for user %v", authResult.UserId)
 				}
 
-				logger.GetLogEntry(ctx).Infof("Closing UserVideoStatus channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing UserVideoStatus channel for user %v", authResult.UserId)
 				err = r.Bus.Unsubscribe(subscribeHandlerVideoCallStatus)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserVideoStatus channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in UserVideoStatus channel for user %v", authResult.UserId)
 				}
 
 				close(cam)
@@ -295,14 +295,14 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 	if !ok {
 		return nil, errors.New("Unable to get auth context")
 	}
-	logger.GetLogEntry(ctx).Infof("Subscribing to UserAccount channel as user %v", authResult.UserId)
+	logger.GetLogEntry(ctx, r.Lgr).Infof("Subscribing to UserAccount channel as user %v", authResult.UserId)
 
 	var cam = make(chan *model.UserAccountEvent)
 
 	subscribeHandlerAaaChange, err := r.Bus.Subscribe(dto.AAA_CHANGE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing UserAccount panic recovered: %v", err)
 			}
 		}()
 
@@ -311,7 +311,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			if filter(typedEvent.UserId, userIdsFilter) {
 				var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
 				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", typedEvent.UserId),
@@ -322,18 +322,18 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 
 	subscribeHandlerAaaCreate, err := r.Bus.Subscribe(dto.AAA_CREATE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing UserAccount panic recovered: %v", err)
 			}
 		}()
 
@@ -342,7 +342,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			if filter(typedEvent.UserId, userIdsFilter) {
 				var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
 				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", typedEvent.UserId),
@@ -353,18 +353,18 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			}
 			break
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 
 	subscribeHandlerAaaDelete, err := r.Bus.Subscribe(dto.AAA_DELETE, func(event eventbus.Event, t time.Time) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.GetLogEntry(ctx).Errorf("In processing UserAccount panic recovered: %v", err)
+				logger.GetLogEntry(ctx, r.Lgr).Errorf("In processing UserAccount panic recovered: %v", err)
 			}
 		}()
 
@@ -373,7 +373,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			if filter(typedEvent.UserId, userIdsFilter) {
 				var anEvent = convertUserAccountDeletedEvent(typedEvent.EventType, typedEvent.UserId)
 				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", typedEvent.UserId),
@@ -383,11 +383,11 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 				}
 			}
 		default:
-			logger.GetLogEntry(ctx).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
+			logger.GetLogEntry(ctx, r.Lgr).Debugf("Skipping %v as is no mapping here for this type, user %v", typedEvent, authResult.UserId)
 		}
 	})
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
+		logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during creating eventbus subscription user %v", authResult.UserId)
 		return nil, err
 	}
 
@@ -395,22 +395,22 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 		for {
 			select {
 			case <-ctx.Done():
-				logger.GetLogEntry(ctx).Infof("Closing UserAccount change channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing UserAccount change channel for user %v", authResult.UserId)
 				err := r.Bus.Unsubscribe(subscribeHandlerAaaChange)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount change channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in UserAccount change channel for user %v", authResult.UserId)
 				}
 
-				logger.GetLogEntry(ctx).Infof("Closing UserAccount create channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing UserAccount create channel for user %v", authResult.UserId)
 				err = r.Bus.Unsubscribe(subscribeHandlerAaaCreate)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount create channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in UserAccount create channel for user %v", authResult.UserId)
 				}
 
-				logger.GetLogEntry(ctx).Infof("Closing UserAccount delete channel for user %v", authResult.UserId)
+				logger.GetLogEntry(ctx, r.Lgr).Infof("Closing UserAccount delete channel for user %v", authResult.UserId)
 				err = r.Bus.Unsubscribe(subscribeHandlerAaaDelete)
 				if err != nil {
-					logger.GetLogEntry(ctx).Errorf("Error during unsubscribing from bus in UserAccount delete channel for user %v", authResult.UserId)
+					logger.GetLogEntry(ctx, r.Lgr).Errorf("Error during unsubscribing from bus in UserAccount delete channel for user %v", authResult.UserId)
 				}
 
 				close(cam)
@@ -445,13 +445,13 @@ func filter(userFromBus int64, userIdsFilter []int64) bool {
 }
 func (sr *subscriptionResolver) prepareUserAccountEvent(ctx context.Context, myUserId int64, eventType string, user *dto.UserAccountEvent) *model.UserAccountEvent {
 	if user == nil {
-		logger.GetLogEntry(ctx).Errorf("Logical mistake")
+		logger.GetLogEntry(ctx, sr.Lgr).Errorf("Logical mistake")
 		return nil
 	}
 
 	extended, err := sr.HttpClient.GetUserExtended(ctx, user.Id, myUserId)
 	if err != nil {
-		logger.GetLogEntry(ctx).Errorf("error during getting user extended: %v", err)
+		logger.GetLogEntry(ctx, sr.Lgr).Errorf("error during getting user extended: %v", err)
 		return nil
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/montag451/go-eventbus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	gqlgen_opentelemetry "github.com/zhevron/gqlgen-opentelemetry/v2"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -42,9 +43,11 @@ const GRAPHQL_PLAYGROUND = "/event/playground"
 
 func main() {
 	config.InitViper()
+	lgr := NewLogger()
 
 	app := fx.New(
-		fx.Logger(Logger),
+		fx.Logger(lgr),
+		fx.Supply(lgr),
 		fx.Provide(
 			configureTracer,
 			configureGraphQlServer,
@@ -66,7 +69,7 @@ func main() {
 	)
 	app.Run()
 
-	Logger.Infof("Exit program")
+	lgr.Infof("Exit program")
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
@@ -94,10 +97,10 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 	return mw
 }
 
-func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
+func createCustomHTTPErrorHandler(lgr *log.Logger, e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
-		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", err)
+		GetLogEntry(c.Request().Context(), lgr).Errorf("Unhandled error: %v", err)
 		originalHandler(err, c)
 	}
 }
@@ -109,21 +112,22 @@ func configureEcho(
 	tp *sdktrace.TracerProvider,
 	graphQlServer *handler.Server,
 	graphQlPlayground *GraphQlPlayground,
+	lgr *log.Logger,
 ) *echo.Echo {
 
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
-	e.Logger.SetOutput(Logger.Writer())
+	e.Logger.SetOutput(lgr.Writer())
 
-	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(lgr, e)
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpentelemetryMiddleware(tp))
 	e.Use(configureWriteHeaderMiddleware())
 	e.Use(echo.MiddlewareFunc(authMiddleware))
 	accessLoggerConfig := middleware.LoggerConfig{
-		Output: Logger.Writer(),
+		Output: lgr.Writer(),
 		Format: `"remote_ip":"${remote_ip}",` +
 			`"method":"${method}","uri":"${uri}",` +
 			`"status":${status},` +
@@ -139,7 +143,7 @@ func configureEcho(
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)
-			Logger.Infof("Stopping http server")
+			lgr.Infof("Stopping http server")
 			return e.Shutdown(ctx)
 		},
 	})
@@ -147,9 +151,9 @@ func configureEcho(
 	return e
 }
 
-func configureGraphQlServer(bus *eventbus.Bus, httpClient *client.RestClient, tp *sdktrace.TracerProvider) *handler.Server {
+func configureGraphQlServer(lgr *log.Logger, bus *eventbus.Bus, httpClient *client.RestClient, tp *sdktrace.TracerProvider) *handler.Server {
 	tr := otel.Tracer("graphql")
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient, tr}}))
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient, tr, lgr}}))
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
@@ -174,8 +178,8 @@ func configureGraphQlPlayground() *GraphQlPlayground {
 	return &GraphQlPlayground{playground.Handler("GraphQL playground", GRAPHQL_PATH)}
 }
 
-func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
-	Logger.Infof("Configuring Jaeger tracing")
+func configureTracer(lgr *log.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
+	lgr.Infof("Configuring Jaeger tracing")
 	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		return nil, err
@@ -201,9 +205,9 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	otel.SetTextMapPropagator(aJaegerPropagator)
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping tracer")
+			lgr.Infof("Stopping tracer")
 			if err := tp.Shutdown(context.Background()); err != nil {
-				Logger.Printf("Error shutting down tracer provider: %v", err)
+				lgr.Printf("Error shutting down tracer provider: %v", err)
 			}
 			return nil
 		},
@@ -212,12 +216,12 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	return tp, nil
 }
 
-func configureEventBus(lc fx.Lifecycle) *eventbus.Bus {
+func configureEventBus(lgr *log.Logger, lc fx.Lifecycle) *eventbus.Bus {
 	b := eventbus.New()
-	Logger.Infof("Starting event bus")
+	lgr.Infof("Starting event bus")
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping event bus")
+			lgr.Infof("Stopping event bus")
 			b.Close()
 			return nil
 		},
@@ -226,15 +230,15 @@ func configureEventBus(lc fx.Lifecycle) *eventbus.Bus {
 }
 
 // rely on viper import and it's configured by
-func runEcho(e *echo.Echo) {
+func runEcho(lgr *log.Logger, e *echo.Echo) {
 	address := viper.GetString("server.address")
 
-	Logger.Info("Starting server...")
+	lgr.Info("Starting server...")
 	// Start server in another goroutine
 	go func() {
 		if err := e.Start(address); err != nil {
-			Logger.Infof("server shut down: %v", err)
+			lgr.Infof("server shut down: %v", err)
 		}
 	}()
-	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }

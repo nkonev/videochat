@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
-	. "nkonev.name/event/logger"
 	myRabbit "nkonev.name/event/rabbitmq"
 )
 
@@ -18,7 +18,7 @@ type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 
-func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -30,13 +30,13 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 		nil,   // arguments
 	)
 	if err != nil {
-		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
+		lgr.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
+		lgr.Panic(err)
 	}
 	return &q
 }
 
-func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createAndBind(lgr *log.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -48,26 +48,27 @@ func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq
 		nil,   // arguments
 	)
 	if err != nil {
-		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
+		lgr.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
+		lgr.Panic(err)
 	}
 	err = consumeCh.QueueBind(q.Name, key, exchange, false, nil)
 	if err != nil {
-		Logger.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
+		lgr.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
+		lgr.Panic(err)
 	}
 	return &q
 }
 
-func CreateEventsChannel(connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+func CreateEventsChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
 	var fanoutQueueName = "async-events-" + uuid.New().String()
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		lgr,
 		connection,
 		func(channel *rabbitmq.Channel) error {
 			lc.Append(fx.Hook{
 				OnStop: func(ctx context.Context) error {
-					Logger.Infof("Stopping queue listening '%v'", fanoutQueueName)
+					lgr.Infof("Stopping queue listening '%v'", fanoutQueueName)
 					return channel.Close()
 				},
 			})
@@ -77,22 +78,23 @@ func CreateEventsChannel(connection *rabbitmq.Connection, onMessage EventsListen
 				return err
 			}
 
-			tempQueue := createAndBind(fanoutQueueName, "", AsyncEventsFanoutExchange, channel)
-			listen(channel, tempQueue, onMessage, lc)
+			tempQueue := createAndBind(lgr, fanoutQueueName, "", AsyncEventsFanoutExchange, channel)
+			listen(lgr, channel, tempQueue, onMessage, lc)
 			return nil
 		},
 	)}
 }
 
-func CreateAaaChannel(connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) *AaaEventsChannel {
+func CreateAaaChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) *AaaEventsChannel {
 	var fanoutQueueName = "event-aaa-profile-events-" + uuid.New().String()
 
 	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		lgr,
 		connection,
 		func(channel *rabbitmq.Channel) error {
 			lc.Append(fx.Hook{
 				OnStop: func(ctx context.Context) error {
-					Logger.Infof("Stopping queue listening '%v'", fanoutQueueName)
+					lgr.Infof("Stopping queue listening '%v'", fanoutQueueName)
 					return channel.Close()
 				},
 			})
@@ -102,45 +104,46 @@ func CreateAaaChannel(connection *rabbitmq.Connection, onMessage EventsListener,
 				return err
 			}
 
-			tempQueue := createAndBind(fanoutQueueName, "", AaaEventsExchange, channel)
-			listen(channel, tempQueue, onMessage, lc)
+			tempQueue := createAndBind(lgr, fanoutQueueName, "", AaaEventsExchange, channel)
+			listen(lgr, channel, tempQueue, onMessage, lc)
 			return nil
 		},
 	)}
 }
 
 func listen(
+	lgr *log.Logger,
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,
 	lc fx.Lifecycle) {
-	Logger.Infof("Listening queue %v", queue.Name)
+	lgr.Infof("Listening queue %v", queue.Name)
 	go func() {
 		var deliveries <-chan amqp.Delivery
 		var err error
 		deliveries, err = channel.Consume(queue.Name, "", false, false, false, false, nil)
 		if err != nil {
-			Logger.Warnf("Unable to connect to queue %v, restarting. error %v", queue.Name, err)
-			Logger.Panic(err)
+			lgr.Warnf("Unable to connect to queue %v, restarting. error %v", queue.Name, err)
+			lgr.Panic(err)
 		} else {
-			Logger.Infof("Successfully connected to queue %v", queue.Name)
+			lgr.Infof("Successfully connected to queue %v", queue.Name)
 		}
 
 		for msg := range deliveries {
 			func() {
 				defer func() {
 					if err := recover(); err != nil {
-						Logger.Errorf("In processing queue %v panic recovered: %v", queue.Name, err)
+						lgr.Errorf("In processing queue %v panic recovered: %v", queue.Name, err)
 					}
 				}()
 
 				err := onMessage(&msg)
 				if err != nil {
-					Logger.Errorf("In processing queue %v error: %v", queue.Name, err)
+					lgr.Errorf("In processing queue %v error: %v", queue.Name, err)
 				}
 				err = msg.Ack(false)
 				if err != nil {
-					Logger.Errorf("In acking delivery for queue %v error: %v", queue.Name, err)
+					lgr.Errorf("In acking delivery for queue %v error: %v", queue.Name, err)
 				}
 			}()
 		}
