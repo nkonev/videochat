@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
 	"net/url"
@@ -30,6 +31,7 @@ type FilesHandler struct {
 	minioConfig      *utils.MinioConfig
 	filesService     *services.FilesService
 	redisInfoService *services.RedisInfoService
+	lgr              *log.Logger
 }
 
 type RenameDto struct {
@@ -40,6 +42,7 @@ const NotFoundImage = "/api/storage/assets/not_found.png"
 const ConvertingImage = "/api/storage/assets/ffmpeg_converting.jpg"
 
 func NewFilesHandler(
+	lgr *log.Logger,
 	minio *s3.InternalMinioClient,
 	awsS3 *awsS3.S3,
 	restClient *client.RestClient,
@@ -48,6 +51,7 @@ func NewFilesHandler(
 	redisInfoService *services.RedisInfoService,
 ) *FilesHandler {
 	return &FilesHandler{
+		lgr:              lgr,
 		minio:            minio,
 		awsS3:            awsS3,
 		restClient:       restClient,
@@ -94,7 +98,7 @@ type MultipartFinishingPart struct {
 func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -132,23 +136,23 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 	// end check
 
-	filteredFilename := utils.CleanFilename(c.Request().Context(), reqDto.FileName, reqDto.ShouldAddDateToTheFilename)
+	filteredFilename := utils.CleanFilename(c.Request().Context(), h.lgr, reqDto.FileName, reqDto.ShouldAddDateToTheFilename)
 
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
 	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, aKey)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf(err.Error())
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf(err.Error())
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "error", "message": err.Error()})
 	}
 	if exists {
-		GetLogEntry(c.Request().Context()).Infof("Conflict for: %v", aKey)
+		GetLogEntry(c.Request().Context(), h.lgr).Infof("Conflict for: %v", aKey)
 		return c.JSON(http.StatusConflict, &utils.H{"status": "error", "message": err.Error()})
 	}
 
 	// check enough size taking on account free disk space probe (see LimitsHandler)
-	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.minio, bucketName, userPrincipalDto, reqDto.FileSize, h.restClient)
+	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, reqDto.FileSize, h.restClient)
 	if err != nil {
 		return err
 	}
@@ -188,7 +192,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 		u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting downlad url %v", err)
 			return err
 		}
 
@@ -227,7 +231,7 @@ func convertMetadata(urlValues *map[string]string) map[string]*string {
 func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -283,7 +287,7 @@ type ReplaceTextFileDto struct {
 func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -298,7 +302,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	var bindTo = new(ReplaceTextFileDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -318,7 +322,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	// end check
 
 	fileSize := int64(len(bindTo.Text))
-	userLimitOk, _, _, err := checkUserLimit(c.Request().Context(), h.minio, bucketName, userPrincipalDto, fileSize, h.restClient)
+	userLimitOk, _, _, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, fileSize, h.restClient)
 	if err != nil {
 		return err
 	}
@@ -328,7 +332,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	contentType := bindTo.ContentType
 
-	GetLogEntry(c.Request().Context()).Debugf("Determined content type: %v", contentType)
+	GetLogEntry(c.Request().Context(), h.lgr).Debugf("Determined content type: %v", contentType)
 
 	src := strings.NewReader(bindTo.Text)
 
@@ -337,7 +341,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil, nil)
 
 	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during upload object: %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during upload object: %v", err)
 		return err
 	}
 
@@ -352,7 +356,7 @@ func (h *FilesHandler) getCountFilesInFileItem(ctx context.Context, bucketName s
 	})
 	count = len(objectsNew)
 	for oi := range objectsNew {
-		GetLogEntry(ctx).Debugf("Processing %v", oi.Key)
+		GetLogEntry(ctx, h.lgr).Debugf("Processing %v", oi.Key)
 		count++
 	}
 	return count
@@ -366,7 +370,7 @@ func getFileItemUuid(fileId string) string {
 func (h *FilesHandler) ListHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -391,7 +395,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	GetLogEntry(c.Request().Context()).Debugf("Listing bucket '%v':", bucketName)
+	GetLogEntry(c.Request().Context(), h.lgr).Debugf("Listing bucket '%v':", bucketName)
 
 	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
 
@@ -436,7 +440,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	var retList = []ViewItem{}
 
-	if !utils.ContainsUrl(selfUrls, reqDto.Url) {
+	if !utils.ContainsUrl(h.lgr, selfUrls, reqDto.Url) {
 		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
 	}
 
@@ -499,20 +503,20 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 			if !isAnonymous {
 				downloadUrl, err = h.filesService.GetConstantDownloadUrl(objInfo.Key)
 				if err != nil {
-					GetLogEntry(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
+					GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting downlad url %v", err)
 					continue
 				}
 				previewUrl = h.filesService.GetPreviewUrlSmart(c.Request().Context(), objInfo.Key)
 			} else {
 				downloadUrl, err = h.filesService.GetAnonymousUrl(objInfo.Key, messageId)
 				if err != nil {
-					GetLogEntry(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
+					GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting public downlad url %v", err)
 					continue
 				}
 
 				previewUrl, err = h.filesService.GetAnonymousPreviewUrl(c.Request().Context(), objInfo.Key, messageId)
 				if err != nil {
-					GetLogEntry(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
+					GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting public downlad url %v", err)
 					continue
 				}
 			}
@@ -553,7 +557,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 
 	selfUrls := strings.Split(viper.GetString("selfUrls"), ",")
 
-	if !utils.ContainsUrl(selfUrls, reqDto.Url) {
+	if !utils.ContainsUrl(h.lgr, selfUrls, reqDto.Url) {
 		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
 	}
 
@@ -595,7 +599,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 
 	exists, obj, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Unable to check existence of %v: %v", fileId, err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Unable to check existence of %v: %v", fileId, err)
 		return c.JSON(http.StatusOK, StatusItem{
 			Status:       "error",
 			FileItemUuid: &fileItemUuid,
@@ -613,7 +617,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 	} else {
 		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Unable to check converting of %v: %v", fileId, err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Unable to check converting of %v: %v", fileId, err)
 			return c.JSON(http.StatusOK, StatusItem{
 				Status:       "error",
 				FileItemUuid: &fileItemUuid,
@@ -668,7 +672,7 @@ func (h *FilesHandler) getFilterFunction(searchString string) func(info *minio.O
 func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -704,13 +708,13 @@ type DeleteObjectDto struct {
 func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	var bindTo = new(DeleteObjectDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -728,23 +732,23 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	// check this fileItem belongs to user
 	objectInfo, err := h.minio.StatObject(c.Request().Context(), bucketName, bindTo.Id, minio.StatObjectOptions{})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	belongs, err := h.checkFileBelongsToUser(c.Request().Context(), objectInfo, chatId, userPrincipalDto, false)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking belong object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking belong object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
 
 	err = h.minio.RemoveObject(c.Request().Context(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during removing object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -752,13 +756,13 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		previewToCheck := utils.SetVideoPreviewExtension(objectInfo.Key)
 		err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during removing object %v", err)
 		}
 	} else if utils.IsImage(objectInfo.Key) {
 		previewToCheck := utils.SetImagePreviewExtension(objectInfo.Key)
 		err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during removing object %v", err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during removing object %v", err)
 		}
 	}
 
@@ -786,17 +790,17 @@ func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c e
 func (h *FilesHandler) checkFileBelongsToUser(ctx context.Context, objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
 	gotChatId, gotOwnerId, _, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error deserializeMetadata: %v", err)
+		GetLogEntry(ctx, h.lgr).Errorf("Error deserializeMetadata: %v", err)
 		return false, err
 	}
 
 	if gotChatId != chatId {
-		GetLogEntry(ctx).Infof("Wrong chatId: expected %v but got %v", chatId, gotChatId)
+		GetLogEntry(ctx, h.lgr).Infof("Wrong chatId: expected %v but got %v", chatId, gotChatId)
 		return false, nil
 	}
 
 	if gotOwnerId != userPrincipalDto.UserId {
-		GetLogEntry(ctx).Infof("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
+		GetLogEntry(ctx, h.lgr).Infof("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
 		return false, nil
 	}
 	return true, nil
@@ -810,7 +814,7 @@ type PublishRequest struct {
 func (h *FilesHandler) SetPublic(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -818,7 +822,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 
 	var bindTo = new(PublishRequest)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -826,17 +830,17 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	fileId := bindTo.Id
 	objectInfo, err := h.minio.StatObject(c.Request().Context(), bucketName, fileId, minio.StatObjectOptions{})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	_, ownerId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	if ownerId != userPrincipalDto.UserId {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not owner of file %v", userPrincipalDto.UserId, fileId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not owner of file %v", userPrincipalDto.UserId, fileId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -844,19 +848,19 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	tagsMap := services.SerializeTags(bindTo.Public)
 	objectTags, err := tags.MapToObjectTags(tagsMap)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during mapping tags %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during mapping tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	err = h.minio.PutObjectTagging(c.Request().Context(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during saving tags %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during saving tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	publicUrl, err := h.filesService.GetPublicUrl(bindTo.Public, objectInfo.Key)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error get public url: %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error get public url: %v", err)
 		return err
 	}
 
@@ -876,13 +880,13 @@ type CountRequest struct {
 func (h *FilesHandler) CountHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = new(CountRequest)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -897,17 +901,17 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	chatIdString := c.Param("chatId")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during parsing chatId %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -951,13 +955,13 @@ type FilterResponseItem struct {
 func (h *FilesHandler) FilterHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = new(FilterRequest)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -972,18 +976,18 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 	chatIdString := c.Param("chatId")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during parsing chatId %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	fileId := bindTo.FileId
 
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -1015,7 +1019,7 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -1034,7 +1038,7 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.minio, bucketName, userPrincipalDto, desiredSize, h.restClient)
+	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, desiredSize, h.restClient)
 	if err != nil {
 		return err
 	}
@@ -1065,7 +1069,7 @@ type S3Request struct {
 func (h *FilesHandler) S3Handler(c echo.Context) error {
 	bindTo := new(S3Request)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -1103,7 +1107,7 @@ type MediaDto struct {
 func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1121,11 +1125,11 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 	}
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
@@ -1150,7 +1154,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 func (h *FilesHandler) CountEmbed(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1164,11 +1168,11 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 	}
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
@@ -1207,24 +1211,24 @@ type CandidatesFilterRequest struct {
 func (h *FilesHandler) FilterEmbed(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	chatIdString := c.Param("chatId")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during parsing chatId %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -1233,7 +1237,7 @@ func (h *FilesHandler) FilterEmbed(c echo.Context) error {
 
 	var bindTo = new(CandidatesFilterRequest)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -1277,7 +1281,7 @@ func convert(item *dto.FileInfoDto) *MediaDto {
 func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1288,7 +1292,7 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 
 	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
@@ -1297,17 +1301,17 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 
 	chatId, err := utils.ParseChatId(fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -1331,7 +1335,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 	fileId := c.QueryParam(utils.FileParam)
 	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
@@ -1340,7 +1344,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	chatId, err := utils.ParseChatId(fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -1348,17 +1352,17 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting file item uuid %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting file item uuid %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileItemUuid)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("Chat %v is not public", chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Chat %v is not public", chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -1379,7 +1383,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1390,7 +1394,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 
 	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
@@ -1398,17 +1402,17 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	}
 	chatId, _, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		GetLogEntry(c.Request().Context()).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("User %v is not belongs to chat %v", userPrincipalDto.UserId, chatId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
@@ -1444,7 +1448,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	fileId := c.QueryParam(utils.FileParam)
 	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting object %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
@@ -1453,22 +1457,22 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 
 	tagging, err := h.minio.GetObjectTagging(c.Request().Context(), bucketName, fileId, minio.GetObjectTaggingOptions{})
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	isPublic, err := services.DeserializeTags(tagging)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
+		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	if !isPublic {
-		GetLogEntry(c.Request().Context()).Infof("File %v is not public, checking is chat blog", fileId)
+		GetLogEntry(c.Request().Context(), h.lgr).Infof("File %v is not public, checking is chat blog", fileId)
 
 		chatId, err := utils.ParseChatId(objectInfo.Key)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during parsing chatId: %v", err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during parsing chatId: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
@@ -1476,17 +1480,17 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 
 		fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during getting file item uuid %v", err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting file item uuid %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
 		belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileItemUuid)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Errorf("Error during checking user auth to chat %v", err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 		if !belongs {
-			GetLogEntry(c.Request().Context()).Errorf("File %v is not public", fileId)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("File %v is not public", fileId)
 			return c.NoContent(http.StatusUnauthorized)
 		}
 	}

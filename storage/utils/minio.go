@@ -4,17 +4,17 @@ import (
 	"context"
 	"errors"
 	"github.com/minio/minio-go/v7"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	. "nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"strings"
 )
 
-func ensureBucket(minioClient *s3.InternalMinioClient, bucketName, location string) error {
+func ensureBucket(lgr *log.Logger, minioClient *s3.InternalMinioClient, bucketName, location string) error {
 	// Check to see if we already own this bucket (which happens if you run this twice)
 	exists, err := minioClient.BucketExists(context.Background(), bucketName)
 	if err == nil && exists {
-		Logger.Infof("Bucket '%s' already present", bucketName)
+		lgr.Infof("Bucket '%s' already present", bucketName)
 		return nil
 	} else if err != nil {
 		return err
@@ -23,40 +23,40 @@ func ensureBucket(minioClient *s3.InternalMinioClient, bucketName, location stri
 			Region:        location,
 			ObjectLocking: false,
 		}); err != nil {
-			Logger.Errorf("Error during creating bucket '%s'", bucketName)
+			lgr.Errorf("Error during creating bucket '%s'", bucketName)
 			return err
 		} else {
-			Logger.Infof("Successfully created bucket '%s'", bucketName)
+			lgr.Infof("Successfully created bucket '%s'", bucketName)
 			return nil
 		}
 	}
 }
 
-func EnsureAndGetUserAvatarBucket(minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetUserAvatarBucket(lgr *log.Logger, minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.userAvatar")
 	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(minioClient, bucketName, bucketLocation)
+	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 
-func EnsureAndGetChatAvatarBucket(minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetChatAvatarBucket(lgr *log.Logger, minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.chatAvatar")
 	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(minioClient, bucketName, bucketLocation)
+	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesBucket(minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetFilesBucket(lgr *log.Logger, minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.files")
 	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(minioClient, bucketName, bucketLocation)
+	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesPreviewBucket(minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetFilesPreviewBucket(lgr *log.Logger, minioClient *s3.InternalMinioClient) (string, error) {
 	bucketName := viper.GetString("minio.bucket.filesPreview")
 	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(minioClient, bucketName, bucketLocation)
+	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
 	return bucketName, err
 }
 

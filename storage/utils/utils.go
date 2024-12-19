@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/oklog/ulid/v2"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/url"
 	. "nkonev.name/storage/logger"
@@ -40,10 +41,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			Logger.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			lgr.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}
@@ -307,16 +308,16 @@ func GetFileItemId() string {
 	return id.String()
 }
 
-func ContainsUrl(elems []string, elem string) bool {
+func ContainsUrl(lgr *log.Logger, elems []string, elem string) bool {
 	parsedUrlToTest, err := url.Parse(elem)
 	if err != nil {
-		Logger.Infof("Unable to parse urlToTest %v", elem)
+		lgr.Infof("Unable to parse urlToTest %v", elem)
 		return false
 	}
 	for i := 0; i < len(elems); i++ {
 		parsedAllowedUrl, err := url.Parse(elems[i])
 		if err != nil {
-			Logger.Infof("Unable to parse allowedUrl %v", elems[i])
+			lgr.Infof("Unable to parse allowedUrl %v", elems[i])
 			return false
 		}
 
@@ -353,7 +354,7 @@ func rebuildName(parts []string, hasExt bool) string {
 }
 
 // output of this fun eventually goes to sanitizer in chat
-func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename bool) string {
+func CleanFilename(ctx context.Context, lgr *log.Logger, input string, shouldAddDateToTheFilename bool) string {
 	words := strings.FieldsFunc(input, nonLetterSplit)
 	tmp := strings.Join(words, "")
 	trimmedFilename := strings.TrimSpace(tmp)
@@ -376,7 +377,7 @@ func CleanFilename(ctx context.Context, input string, shouldAddDateToTheFilename
 	lenInBytes := len(newFileName)
 	if lenInBytes > MaxFilenameLength {
 		// https://github.com/minio/minio/discussions/18571
-		GetLogEntry(ctx).Infof("Filename %v has more than %v bytes (%v), so we're going to strip it", newFileName, MaxFilenameLength, lenInBytes)
+		GetLogEntry(ctx, lgr).Infof("Filename %v has more than %v bytes (%v), so we're going to strip it", newFileName, MaxFilenameLength, lenInBytes)
 		nameAndExt := strings.Split(newFileName, ".")
 
 		name := rebuildName(nameAndExt, hasExt)

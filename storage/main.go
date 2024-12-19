@@ -13,6 +13,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/notification"
 	"github.com/nkonev/dcron"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -44,9 +45,11 @@ const TRACE_RESOURCE = "storage"
 
 func main() {
 	config.InitViper()
+	lgr := NewLogger()
 
 	app := fx.New(
-		fx.Logger(Logger),
+		fx.Logger(lgr),
+		fx.Supply(lgr),
 		fx.Provide(
 			configureTracer,
 			configureInternalMinio,
@@ -83,7 +86,7 @@ func main() {
 	)
 	app.Run()
 
-	Logger.Infof("Exit program")
+	lgr.Infof("Exit program")
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
@@ -111,15 +114,16 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 	return mw
 }
 
-func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
+func createCustomHTTPErrorHandler(lgr *log.Logger, e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
-		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", err)
+		GetLogEntry(c.Request().Context(), lgr).Errorf("Unhandled error: %v", err)
 		originalHandler(err, c)
 	}
 }
 
 func configureEcho(
+	lgr *log.Logger,
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
@@ -132,16 +136,16 @@ func configureEcho(
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
-	e.Logger.SetOutput(Logger.Writer())
+	e.Logger.SetOutput(lgr.Writer())
 
-	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(lgr, e)
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpentelemetryMiddleware(tp))
 	e.Use(configureWriteHeaderMiddleware())
 	e.Use(echo.MiddlewareFunc(authMiddleware))
 	accessLoggerConfig := middleware.LoggerConfig{
-		Output: Logger.Writer(),
+		Output: lgr.Writer(),
 		Format: `"remote_ip":"${remote_ip}",` +
 			`"method":"${method}","uri":"${uri}",` +
 			`"status":${status},` +
@@ -181,7 +185,7 @@ func configureEcho(
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)
-			Logger.Infof("Stopping http server")
+			lgr.Infof("Stopping http server")
 			return e.Shutdown(ctx)
 		},
 	})
@@ -234,8 +238,8 @@ func configureAwsS3() *awsS3.S3 {
 	return svc
 }
 
-func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
-	Logger.Infof("Configuring Jaeger tracing")
+func configureTracer(lgr *log.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
+	lgr.Infof("Configuring Jaeger tracing")
 	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		return nil, err
@@ -261,9 +265,9 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	otel.SetTextMapPropagator(aJaegerPropagator)
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping tracer")
+			lgr.Infof("Stopping tracer")
 			if err := tp.Shutdown(context.Background()); err != nil {
-				Logger.Printf("Error shutting down tracer provider: %v", err)
+				lgr.Printf("Error shutting down tracer provider: %v", err)
 			}
 			return nil
 		},
@@ -273,32 +277,32 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 }
 
 // rely on viper import and it's configured by
-func runEcho(e *echo.Echo) {
+func runEcho(lgr *log.Logger, e *echo.Echo) {
 	address := viper.GetString("server.address")
 
-	Logger.Info("Starting server...")
+	lgr.Info("Starting server...")
 	// Start server in another goroutine
 	go func() {
 		if err := e.Start(address); err != nil {
-			Logger.Infof("server shut down: %v", err)
+			lgr.Infof("server shut down: %v", err)
 		}
 	}()
-	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
+func configureMinioEntities(lgr *log.Logger, client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
-	if ua, err = utils.EnsureAndGetUserAvatarBucket(client); err != nil {
+	if ua, err = utils.EnsureAndGetUserAvatarBucket(lgr, client); err != nil {
 		return nil, err
 	}
-	if ca, err = utils.EnsureAndGetChatAvatarBucket(client); err != nil {
+	if ca, err = utils.EnsureAndGetChatAvatarBucket(lgr, client); err != nil {
 		return nil, err
 	}
-	if f, err = utils.EnsureAndGetFilesBucket(client); err != nil {
+	if f, err = utils.EnsureAndGetFilesBucket(lgr, client); err != nil {
 		return nil, err
 	}
-	if p, err = utils.EnsureAndGetFilesPreviewBucket(client); err != nil {
+	if p, err = utils.EnsureAndGetFilesPreviewBucket(lgr, client); err != nil {
 		return nil, err
 	}
 	bucketNotification, err := client.GetBucketNotification(context.Background(), f)
@@ -325,7 +329,7 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 		}
 	}
 	if shouldCreateSubscription {
-		Logger.Infof("Will create subscription for bucket %v to arn %v", f, arn)
+		lgr.Infof("Will create subscription for bucket %v to arn %v", f, arn)
 		err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
 			QueueConfigs: []notification.QueueConfig{
 				notification.QueueConfig{
@@ -352,16 +356,17 @@ func configureMinioEntities(client *s3.InternalMinioClient) (*utils.MinioConfig,
 }
 
 func runScheduler(
+	lgr *log.Logger,
 	scheduler *dcron.Cron,
 	dt *tasks.CleanFilesOfDeletedChatTask,
 	a *tasks.ActualizeGeneratedFilesTask,
 	lc fx.Lifecycle,
 ) error {
 	scheduler.Start()
-	Logger.Infof("Scheduler started")
+	lgr.Infof("Scheduler started")
 
 	if viper.GetBool("schedulers." + dt.Key() + ".enabled") {
-		Logger.Infof("Adding " + dt.Key() + " job to scheduler")
+		lgr.Infof("Adding " + dt.Key() + " job to scheduler")
 		err := scheduler.AddJobs(dt)
 		if err != nil {
 			return err
@@ -369,7 +374,7 @@ func runScheduler(
 	}
 
 	if viper.GetBool("schedulers." + a.Key() + ".enabled") {
-		Logger.Infof("Adding " + a.Key() + " job to scheduler")
+		lgr.Infof("Adding " + a.Key() + " job to scheduler")
 		err := scheduler.AddJobs(a)
 		if err != nil {
 			return err
@@ -378,7 +383,7 @@ func runScheduler(
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping scheduler")
+			lgr.Infof("Stopping scheduler")
 			<-scheduler.Stop().Done()
 			return nil
 		},

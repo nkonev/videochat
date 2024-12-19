@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
@@ -27,7 +28,7 @@ func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chat
 
 	bytea, err := json.Marshal(event)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during marshal PreviewCreatedEvent")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal PreviewCreatedEvent")
 		return err
 	}
 
@@ -41,7 +42,7 @@ func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chat
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-		GetLogEntry(ctx).Error(err, "Error during publishing")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 		return err
 	}
 
@@ -60,7 +61,7 @@ func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, use
 	case utils.FILE_UPDATED:
 		outputEventType = "file_updated"
 	default:
-		GetLogEntry(ctx).Errorf("Error during determining rabbitmq output event type")
+		GetLogEntry(ctx, rp.lgr).Errorf("Error during determining rabbitmq output event type")
 		return errors.New("Unknown type")
 	}
 
@@ -73,7 +74,7 @@ func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, use
 
 	bytea, err := json.Marshal(event)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during marshal FileInfoDto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal FileInfoDto")
 		return err
 	}
 
@@ -87,7 +88,7 @@ func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, use
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-		GetLogEntry(ctx).Error(err, "Error during publishing")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 		return err
 	}
 
@@ -96,10 +97,11 @@ func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, use
 
 type RabbitFileUploadedPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitFileUploadedPublisher(connection *rabbitmq.Connection) *RabbitFileUploadedPublisher {
+func NewRabbitFileUploadedPublisher(connection *rabbitmq.Connection, lgr *log.Logger) *RabbitFileUploadedPublisher {
 	return &RabbitFileUploadedPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
 	}
 }

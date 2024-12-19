@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/url"
 	"nkonev.name/storage/client"
@@ -21,9 +22,11 @@ type FilesService struct {
 	minio       *s3.InternalMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
+	lgr         *log.Logger
 }
 
 func NewFilesService(
+	lgr *log.Logger,
 	minio *s3.InternalMinioClient,
 	chatClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
@@ -32,6 +35,7 @@ func NewFilesService(
 		minio:       minio,
 		restClient:  chatClient,
 		minioConfig: minioConfig,
+		lgr:         lgr,
 	}
 }
 
@@ -55,20 +59,20 @@ func (h *FilesService) GetListFilesInFileItem(
 	var respCounter = 0
 
 	for objInfo := range objects {
-		GetLogEntry(c).Debugf("Object '%v'", objInfo.Key)
+		GetLogEntry(c, h.lgr).Debugf("Object '%v'", objInfo.Key)
 		if (filter != nil && filter(&objInfo)) || filter == nil {
 			if offsetCounter >= offset {
 
 				if respCounter < size {
 					tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
 					if err != nil {
-						GetLogEntry(c).Errorf("Error during getting tags %v", err)
+						GetLogEntry(c, h.lgr).Errorf("Error during getting tags %v", err)
 						continue
 					}
 
 					info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
 					if err != nil {
-						GetLogEntry(c).Errorf("Error get file info: %v, skipping", err)
+						GetLogEntry(c, h.lgr).Errorf("Error get file info: %v, skipping", err)
 						continue
 					}
 
@@ -85,7 +89,7 @@ func (h *FilesService) GetListFilesInFileItem(
 		for _, fileDto := range list {
 			participantIdSet[fileDto.OwnerId] = true
 		}
-		var users = GetUsersRemotelyOrEmpty(participantIdSet, h.restClient, c)
+		var users = GetUsersRemotelyOrEmpty(h.lgr, participantIdSet, h.restClient, c)
 		for _, fileDto := range list {
 			user := users[fileDto.OwnerId]
 			if user != nil {
@@ -127,7 +131,7 @@ func (h *FilesService) GetListFilesItemUuids(
 	for m := range objects {
 		itemUuid, err := utils.ParseFileItemUuid(m.Key)
 		if err != nil {
-			GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
+			GetLogEntry(c, h.lgr).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
 			continue
 		}
 
@@ -174,7 +178,7 @@ func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) 
 
 	var count int = 0
 	for objInfo := range objects {
-		GetLogEntry(ctx).Debugf("Object '%v'", objInfo.Key)
+		GetLogEntry(ctx, h.lgr).Debugf("Object '%v'", objInfo.Key)
 		count++
 	}
 	return count, nil
@@ -269,7 +273,7 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 
 	_, fileOwnerId, correlationId, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
-		GetLogEntry(c).Errorf("Error get metadata: %v", err)
+		GetLogEntry(c, h.lgr).Errorf("Error get metadata: %v", err)
 		return nil, err
 	}
 
@@ -277,25 +281,25 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 
 	public, err := DeserializeTags(tagging)
 	if err != nil {
-		GetLogEntry(c).Errorf("Error get tags: %v", err)
+		GetLogEntry(c, h.lgr).Errorf("Error get tags: %v", err)
 		return nil, err
 	}
 
 	publicUrl, err := h.GetPublicUrl(public, objInfo.Key)
 	if err != nil {
-		GetLogEntry(c).Errorf("Error get public url: %v", err)
+		GetLogEntry(c, h.lgr).Errorf("Error get public url: %v", err)
 		return nil, err
 	}
 
 	downloadUrl, err := h.GetConstantDownloadUrl(objInfo.Key)
 	if err != nil {
-		GetLogEntry(c).Errorf("Error during getting downlad url %v", err)
+		GetLogEntry(c, h.lgr).Errorf("Error during getting downlad url %v", err)
 		return nil, err
 	}
 
 	itemUuid, err := utils.ParseFileItemUuid(objInfo.Key)
 	if err != nil {
-		GetLogEntry(c).Errorf("Unable for %v to get fileItemUuid '%v'", objInfo.Key, err)
+		GetLogEntry(c, h.lgr).Errorf("Unable for %v to get fileItemUuid '%v'", objInfo.Key, err)
 	}
 	var theCorrelationId *string
 	if len(correlationId) > 0 {
@@ -324,7 +328,6 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 
 const Media_image = "image"
 const Media_video = "video"
-
 const Media_audio = "audio"
 
 func (h *FilesService) GetPreviewUrlSmart(c context.Context, aKey string) *string {
@@ -390,7 +393,7 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 		tmp := respUrl.String()
 		previewUrl = &tmp
 	} else {
-		GetLogEntry(c).Errorf("Unknown requested type %v", requestedMediaType)
+		GetLogEntry(c, h.lgr).Errorf("Unknown requested type %v", requestedMediaType)
 	}
 
 	return previewUrl
@@ -550,19 +553,19 @@ func DeserializeTags(tagging *tags.Tags) (bool, error) {
 	return utils.ParseBoolean(publicString)
 }
 
-func GetUsersRemotelyOrEmpty(userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {
-	if remoteUsers, err := getUsersRemotely(userIdSet, restClient, c); err != nil {
-		GetLogEntry(c).Warn("Error during getting users from aaa")
+func GetUsersRemotelyOrEmpty(lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {
+	if remoteUsers, err := getUsersRemotely(lgr, userIdSet, restClient, c); err != nil {
+		GetLogEntry(c, lgr).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
 	} else {
 		return remoteUsers
 	}
 }
 
-func getUsersRemotely(userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) (map[int64]*dto.User, error) {
+func getUsersRemotely(lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	GetLogEntry(c).Infof("Requested user length is %v", length)
+	GetLogEntry(c, lgr).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}

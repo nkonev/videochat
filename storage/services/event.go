@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
+	log "github.com/sirupsen/logrus"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	. "nkonev.name/storage/logger"
@@ -13,13 +14,14 @@ import (
 	"time"
 )
 
-func NewEventService(client *client.RestClient, minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
+func NewEventService(lgr *log.Logger, client *client.RestClient, minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
 	return &EventService{
 		client:       client,
 		minio:        minio,
 		minioConfig:  minioConfig,
 		filesService: filesService,
 		publisher:    publisher,
+		lgr:          lgr,
 	}
 }
 
@@ -29,10 +31,11 @@ type EventService struct {
 	minioConfig  *utils.MinioConfig
 	filesService *FilesService
 	publisher    *producer.RabbitFileUploadedPublisher
+	lgr          *log.Logger
 }
 
-func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) (*HandleEventResponse) {
-	GetLogEntry(ctx).Debugf("Got %v %v", normalizedKey, eventType)
+func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) *HandleEventResponse {
+	GetLogEntry(ctx, s.lgr).Debugf("Got %v %v", normalizedKey, eventType)
 
 	var err error
 
@@ -41,13 +44,13 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during stat %v", err)
+			GetLogEntry(ctx, s.lgr).Errorf("Error during stat %v", err)
 			return nil
 		}
 
 		tagging, err = s.minio.GetObjectTagging(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectTaggingOptions{})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during getting tags %v", err)
+			GetLogEntry(ctx, s.lgr).Errorf("Error during getting tags %v", err)
 			return nil
 		}
 	}
@@ -57,13 +60,13 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 		_, fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error get metadata: %v", err)
+			GetLogEntry(ctx, s.lgr).Errorf("Error get metadata: %v", err)
 			return nil
 		}
 
 		var participantIdSet = map[int64]bool{}
 		participantIdSet[fileOwnerId] = true
-		users = GetUsersRemotelyOrEmpty(participantIdSet, s.client, ctx)
+		users = GetUsersRemotelyOrEmpty(s.lgr, participantIdSet, s.client, ctx)
 	}
 	return &HandleEventResponse{
 		objectInfo:  &objectInfo,
@@ -74,9 +77,9 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 }
 
 type HandleEventResponse struct {
-	objectInfo *minio.ObjectInfo
-	tagging *tags.Tags
-	users map[int64]*dto.User
+	objectInfo  *minio.ObjectInfo
+	tagging     *tags.Tags
+	users       map[int64]*dto.User
 	fileOwnerId int64
 }
 
@@ -90,12 +93,12 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 				if response.objectInfo != nil {
 					fileInfo, err = s.filesService.GetFileInfo(ctx, participantId, *response.objectInfo, chatId, response.tagging, false)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Error get file info: %v, skipping", err)
+						GetLogEntry(ctx, s.lgr).Errorf("Error get file info: %v, skipping", err)
 						continue
 					}
 					fileInfo.Owner = response.users[response.fileOwnerId]
 				} else {
-					GetLogEntry(ctx).Errorf("Missed objectInfo")
+					GetLogEntry(ctx, s.lgr).Errorf("Missed objectInfo")
 					continue
 				}
 			} else if eventType == utils.FILE_DELETED {

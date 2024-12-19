@@ -7,6 +7,7 @@ import (
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/common/expfmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"math/big"
 	"net/http"
@@ -21,10 +22,10 @@ import (
 
 type AuthMiddleware echo.MiddlewareFunc
 
-func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
+func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
-	GetLogEntry(request.Context()).Infof("Extracted session expiration time: %v", t)
+	GetLogEntry(request.Context(), lgr).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
@@ -64,27 +65,27 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 //   - *AuthResult pointer or nil
 //   - is whitelisted
 //   - error
-func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
+func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
-	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
+	if utils.CheckUrlInWhitelist(lgr, whitelist, request.RequestURI) {
 		return nil, true, nil
 	}
-	auth, err := ExtractAuth(request)
+	auth, err := ExtractAuth(request, lgr)
 	if err != nil {
-		GetLogEntry(request.Context()).Infof("Error during extract AuthResult: %v", err)
+		GetLogEntry(request.Context(), lgr).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request.Context()).Infof("Success AuthResult: %v", *auth)
+	GetLogEntry(request.Context(), lgr).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 
-func ConfigureAuthMiddleware() AuthMiddleware {
+func ConfigureAuthMiddleware(lgr *log.Logger) AuthMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			authResult, whitelist, err := authorize(c.Request())
+			authResult, whitelist, err := authorize(c.Request(), lgr)
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during authorize: %v", err)
+				GetLogEntry(c.Request().Context(), lgr).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)
@@ -105,20 +106,20 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func getMaxAllowedConsumption(ctx context.Context, restClient *client.RestClient, isUnlimited bool) (int64, error) {
+func getMaxAllowedConsumption(ctx context.Context, lgr *log.Logger, restClient *client.RestClient, isUnlimited bool) (int64, error) {
 	if isUnlimited {
-		return calcTotalSize(ctx, restClient)
+		return calcTotalSize(ctx, lgr, restClient)
 	} else {
 		return viper.GetInt64("limits.default.all.users.limit"), nil
 	}
 }
 
-func calcTotalSize(ctx context.Context, restClient *client.RestClient) (int64, error) {
+func calcTotalSize(ctx context.Context, lgr *log.Logger, restClient *client.RestClient) (int64, error) {
 	var totalClusterSize = big.NewFloat(0)
 
 	clusterMetrics, err := restClient.GetMinioMetricsCluster(ctx)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting bucket consumption %v", err)
+		GetLogEntry(ctx, lgr).Errorf("Error during getting bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -126,7 +127,7 @@ func calcTotalSize(ctx context.Context, restClient *client.RestClient) (int64, e
 
 	mf, err := parser.TextToMetricFamilies(strings.NewReader(clusterMetrics))
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during parsing bucket consumption %v", err)
+		GetLogEntry(ctx, lgr).Errorf("Error during parsing bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -146,12 +147,12 @@ func calcTotalSize(ctx context.Context, restClient *client.RestClient) (int64, e
 	return resV, nil
 }
 
-func calcBucketsConsumption(ctx context.Context, restClient *client.RestClient) (int64, error) {
+func calcBucketsConsumption(ctx context.Context, lgr *log.Logger, restClient *client.RestClient) (int64, error) {
 	var totalBucketConsumption = big.NewFloat(0)
 
 	bucketMetrics, err := restClient.GetMinioMetricsBucket(ctx)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting bucket consumption %v", err)
+		GetLogEntry(ctx, lgr).Errorf("Error during getting bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -159,7 +160,7 @@ func calcBucketsConsumption(ctx context.Context, restClient *client.RestClient) 
 
 	mf, err := parser.TextToMetricFamilies(strings.NewReader(bucketMetrics))
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during parsing bucket consumption %v", err)
+		GetLogEntry(ctx, lgr).Errorf("Error during parsing bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -179,27 +180,27 @@ func calcBucketsConsumption(ctx context.Context, restClient *client.RestClient) 
 	return resV, nil
 }
 
-func checkUserLimit(ctx context.Context, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64, restClient *client.RestClient) (bool, int64, int64, error) {
+func checkUserLimit(ctx context.Context, lgr *log.Logger, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64, restClient *client.RestClient) (bool, int64, int64, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
 	// TODO take into account userId
-	consumption, err := calcBucketsConsumption(ctx, restClient)
+	consumption, err := calcBucketsConsumption(ctx, lgr, restClient)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting consumption %v", err)
+		GetLogEntry(ctx, lgr).Errorf("Error during getting consumption %v", err)
 		return false, 0, 0, err
 	}
 
 	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")) || !limitsEnabled
 
-	maxAllowed, err := getMaxAllowedConsumption(ctx, restClient, isUnlimited)
+	maxAllowed, err := getMaxAllowedConsumption(ctx, lgr, restClient, isUnlimited)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during calculating max allowed %v", err)
+		GetLogEntry(ctx, lgr).Errorf("Error during calculating max allowed %v", err)
 		return false, 0, 0, err
 	}
 	available := maxAllowed - consumption
-	GetLogEntry(ctx).Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
+	GetLogEntry(ctx, lgr).Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
 
 	if desiredSize > available {
-		GetLogEntry(ctx).Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
+		GetLogEntry(ctx, lgr).Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
 		return false, consumption, available, nil
 	}
 	return true, consumption, available, nil

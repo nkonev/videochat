@@ -3,9 +3,9 @@ package listener
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
-	. "nkonev.name/storage/logger"
 	myRabbit "nkonev.name/storage/rabbitmq"
 )
 
@@ -14,7 +14,7 @@ const MinioEventsExchange = "minio-events"
 
 type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
-func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -26,13 +26,13 @@ func create(name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 		nil,   // arguments
 	)
 	if err != nil {
-		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
+		lgr.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
+		lgr.Panic(err)
 	}
 	return &q
 }
 
-func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createAndBind(lgr *log.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -44,26 +44,27 @@ func createAndBind(name string, key string, exchange string, consumeCh *rabbitmq
 		nil,   // arguments
 	)
 	if err != nil {
-		Logger.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
+		lgr.Warnf("Unable to declare to queue %v, restarting. error %v", name, err)
+		lgr.Panic(err)
 	}
 	err = consumeCh.QueueBind(q.Name, key, exchange, false, nil)
 	if err != nil {
-		Logger.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
-		Logger.Panic(err)
+		lgr.Warnf("Unable to bind to queue %v, restarting. error %v", name, err)
+		lgr.Panic(err)
 	}
 	return &q
 }
 
-func CreateMinioEventsChannel(connection *rabbitmq.Connection, onMessage MinioEventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+func CreateMinioEventsChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage MinioEventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
 	var queueName = "storage-minio-file-bucket"
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		lgr,
 		connection,
 		func(channel *rabbitmq.Channel) error {
 			lc.Append(fx.Hook{
 				OnStop: func(ctx context.Context) error {
-					Logger.Infof("Stopping queue listening '%v'", queueName)
+					lgr.Infof("Stopping queue listening '%v'", queueName)
 					return channel.Close()
 				},
 			})
@@ -73,45 +74,46 @@ func CreateMinioEventsChannel(connection *rabbitmq.Connection, onMessage MinioEv
 				return err
 			}
 
-			aQueue := createAndBind(queueName, "", MinioEventsExchange, channel)
-			listen(channel, aQueue, onMessage, lc)
+			aQueue := createAndBind(lgr, queueName, "", MinioEventsExchange, channel)
+			listen(lgr, channel, aQueue, onMessage, lc)
 			return nil
 		},
 	)}
 }
 
 func listen(
+	lgr *log.Logger,
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,
 	lc fx.Lifecycle) {
-	Logger.Infof("Listening queue %v", queue.Name)
+	lgr.Infof("Listening queue %v", queue.Name)
 	go func() {
 		var deliveries <-chan amqp.Delivery
 		var err error
 		deliveries, err = channel.Consume(queue.Name, "", false, false, false, false, nil)
 		if err != nil {
-			Logger.Warnf("Unable to connect to queue %v, restarting. error %v", queue.Name, err)
-			Logger.Panic(err)
+			lgr.Warnf("Unable to connect to queue %v, restarting. error %v", queue.Name, err)
+			lgr.Panic(err)
 		} else {
-			Logger.Infof("Successfully connected to queue %v", queue.Name)
+			lgr.Infof("Successfully connected to queue %v", queue.Name)
 		}
 
 		for msg := range deliveries {
 			func() {
 				defer func() {
 					if err := recover(); err != nil {
-						Logger.Errorf("In processing queue %v panic recovered: %v", queue.Name, err)
+						lgr.Errorf("In processing queue %v panic recovered: %v", queue.Name, err)
 					}
 				}()
 
 				err := onMessage(&msg)
 				if err != nil {
-					Logger.Errorf("In processing queue %v error: %v", queue.Name, err)
+					lgr.Errorf("In processing queue %v error: %v", queue.Name, err)
 				}
 				err = msg.Ack(false)
 				if err != nil {
-					Logger.Errorf("In acking delivery for queue %v error: %v", queue.Name, err)
+					lgr.Errorf("In acking delivery for queue %v error: %v", queue.Name, err)
 				}
 			}()
 		}
