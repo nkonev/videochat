@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/getlantern/deepcopy"
 	"github.com/guregu/null"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/chat/db"
@@ -19,15 +20,17 @@ type Events struct {
 	rabbitEventPublisher        *producer.RabbitEventsPublisher
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
 	tr                          trace.Tracer
+	lgr                         *log.Logger
 }
 
-func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher) *Events {
+func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, lgr *log.Logger) *Events {
 	tr := otel.Tracer("event")
 
 	return &Events{
 		rabbitEventPublisher:        rabbitEventPublisher,
 		rabbitNotificationPublisher: rabbitNotificationPublisher,
 		tr:                          tr,
+		lgr:                         lgr,
 	}
 }
 
@@ -63,7 +66,7 @@ func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, user
  * isSingleParticipant should be taken from responseDto or count. using len(participants) where participants are a portion from Iterate...() is incorrect because we can get only one user in the last iteration
  */
 func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDto, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	GetLogEntry(ctx).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
+	GetLogEntry(ctx, not.lgr).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
 	defer messageSpan.End()
@@ -76,27 +79,27 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 				ChatDeletedDto: &dto.ChatDeletedDto{Id: newChatDto.Id},
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 	} else {
 
 		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(ctx, userIds, newChatDto.Id)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("error during get unread messages: %v", err)
+			GetLogEntry(ctx, not.lgr).Errorf("error during get unread messages: %v", err)
 			return
 		}
 
 		isChatPinnedMap, err := tx.IsChatPinnedBatch(ctx, userIds, newChatDto.Id)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("error during get pinned: %v", err)
+			GetLogEntry(ctx, not.lgr).Errorf("error during get pinned: %v", err)
 			return
 		}
 
 		for _, participantId := range userIds {
 			var copied *dto.ChatDto = &dto.ChatDto{}
 			if err := deepcopy.Copy(copied, newChatDto); err != nil {
-				GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
@@ -115,7 +118,7 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 				ChatNotification: copied,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 	}
@@ -125,18 +128,18 @@ func (not *Events) ChatNotifyMessageCount(ctx context.Context, userIds []int64, 
 
 	lastUpdated, err := tx.GetChatLastDatetimeChat(ctx, chatId)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
+		GetLogEntry(ctx, not.lgr).Errorf("error during get ChatLastDatetime for chat=%v: %s", chatId, err)
 		return
 	}
 
 	unreadMessagesByUserId, err := tx.GetUnreadMessagesCountBatchByParticipants(ctx, userIds, chatId)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("error during get GetUnreadMessagesCountBatchByParticipants for chat=%v: %v", chatId, err)
+		GetLogEntry(ctx, not.lgr).Errorf("error during get GetUnreadMessagesCountBatchByParticipants for chat=%v: %v", chatId, err)
 		return
 	}
 
 	for _, participantId := range userIds {
-		GetLogEntry(ctx).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
+		GetLogEntry(ctx, not.lgr).Debugf("Sending notification about unread messages to participantChannel: %v", participantId)
 
 		not.NotifyAboutUnreadMessage(ctx, chatId, participantId, unreadMessagesByUserId[participantId], lastUpdated)
 	}
@@ -159,7 +162,7 @@ func (not *Events) NotifyAboutUnreadMessage(ctx context.Context, chatId int64, p
 		UnreadMessagesNotification: payload,
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during sending: %v", err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during sending: %v", err)
 	}
 }
 
@@ -176,7 +179,7 @@ func (not *Events) NotifyAboutHasNewMessagesChanged(ctx context.Context, partici
 		},
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 }
 
@@ -196,12 +199,12 @@ func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, cha
 				ChatId: chatId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		} else {
 			var copied *dto.DisplayMessageDto = &dto.DisplayMessageDto{}
 			if err := deepcopy.Copy(copied, message); err != nil {
-				GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
@@ -214,7 +217,7 @@ func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, cha
 				ChatId:              chatId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 	}
@@ -234,7 +237,7 @@ func (not *Events) NotifyAboutEditMessage(ctx context.Context, userIds []int64, 
 
 func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, user *dto.User, co db.CommonOperations) {
 	if user == nil {
-		GetLogEntry(ctx).Errorf("user cannot be null")
+		GetLogEntry(ctx, not.lgr).Errorf("user cannot be null")
 		return
 	}
 
@@ -260,20 +263,20 @@ func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, u
 				ChatId:                 chatId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting chat participants")
+		GetLogEntry(ctx, not.lgr).Errorf("Error during getting chat participants")
 		return
 	}
 }
 
 func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User, co db.CommonOperations) {
 	if user == nil {
-		GetLogEntry(ctx).Errorf("user cannot be null")
+		GetLogEntry(ctx, not.lgr).Errorf("user cannot be null")
 		return
 	}
 
@@ -293,7 +296,7 @@ func (not *Events) NotifyAboutProfileChanged(ctx context.Context, user *dto.User
 		return internalErr
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during get co-chatters for %v, error: %v", user.Id, err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during get co-chatters for %v, error: %v", user.Id, err)
 	}
 }
 
@@ -317,13 +320,13 @@ func (not *Events) NotifyAboutMessageBroadcast(ctx context.Context, chatId, user
 				ChatId:                       chatId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting chat participants")
+		GetLogEntry(ctx, not.lgr).Errorf("Error during getting chat participants")
 		return
 	}
 }
@@ -348,7 +351,7 @@ func (not *Events) NotifyAddMention(ctx context.Context, userIds []int64, chatId
 			ChatTitle: chatTitle,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 
@@ -369,7 +372,7 @@ func (not *Events) NotifyRemoveMention(ctx context.Context, userIds []int64, cha
 			},
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -391,7 +394,7 @@ func (not *Events) NotifyAddReply(ctx context.Context, reply *dto.ReplyDto, user
 			ChatTitle:         chatTitle,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -409,7 +412,7 @@ func (not *Events) NotifyRemoveReply(ctx context.Context, reply *dto.ReplyDto, u
 			ReplyNotification: reply,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -427,7 +430,7 @@ func (not *Events) NotifyAboutNewParticipants(ctx context.Context, userIds []int
 			Participants: &users,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -452,7 +455,7 @@ func (not *Events) NotifyAboutDeleteParticipants(ctx context.Context, userIds []
 			Participants: &pseudoUsers,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -470,7 +473,7 @@ func (not *Events) NotifyAboutChangeParticipants(ctx context.Context, userIds []
 			Participants: &participantIdsToChange,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -494,7 +497,7 @@ func (not *Events) NotifyAboutPromotePinnedMessage(ctx context.Context, chatId i
 		ChatId:                     chatId,
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 }
 
@@ -512,7 +515,7 @@ func (not *Events) NotifyAboutPromotePinnedMessageEdit(ctx context.Context, chat
 		ChatId:                     chatId,
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 }
 
@@ -532,7 +535,7 @@ func (not *Events) NotifyAboutPublishedMessage(ctx context.Context, chatId int64
 
 		var copied *dto.PublishedMessageEvent = &dto.PublishedMessageEvent{}
 		if err := deepcopy.Copy(copied, msg); err != nil {
-			GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("error during performing deep copy: %s", err)
 			continue
 		}
 
@@ -545,7 +548,7 @@ func (not *Events) NotifyAboutPublishedMessage(ctx context.Context, chatId int64
 			ChatId:                       chatId,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -561,7 +564,7 @@ func (not *Events) NotifyAboutPublishedMessageEdit(ctx context.Context, chatId i
 
 		var copied *dto.PublishedMessageEvent = &dto.PublishedMessageEvent{}
 		if err := deepcopy.Copy(copied, msg); err != nil {
-			GetLogEntry(ctx).Errorf("error during performing deep copy: %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("error during performing deep copy: %s", err)
 			continue
 		}
 
@@ -574,7 +577,7 @@ func (not *Events) NotifyAboutPublishedMessageEdit(ctx context.Context, chatId i
 			ChatId:                       chatId,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 }
@@ -610,13 +613,13 @@ func (not *Events) SendReactionEvent(ctx context.Context, wasChanged bool, chatI
 				ChatId:               chatId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+				GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during getting chat participants")
+		GetLogEntry(ctx, not.lgr).Errorf("Error during getting chat participants")
 		return
 	}
 }
@@ -649,7 +652,7 @@ func (not *Events) SendReactionOnYourMessage(ctx context.Context, wasAdded bool,
 		ChatTitle:     chatTitle,
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 
 }
@@ -666,7 +669,7 @@ func (not *Events) NotifyMessagesReloadCommand(ctx context.Context, chatId int64
 			ChatId:    chatId,
 		})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+			GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 		}
 	}
 
@@ -695,7 +698,7 @@ func (not *Events) NotifyNewMessageBrowserNotification(ctx context.Context, add 
 		},
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during sending to rabbitmq : %s", err)
+		GetLogEntry(ctx, not.lgr).Errorf("Error during sending to rabbitmq : %s", err)
 	}
 
 }

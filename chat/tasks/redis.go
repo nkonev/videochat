@@ -4,12 +4,13 @@ import (
 	"context"
 	"github.com/nkonev/dcron"
 	redisV9 "github.com/redis/go-redis/v9"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	. "nkonev.name/chat/logger"
 )
 
-func RedisV9(lc fx.Lifecycle) *redisV9.Client {
+func RedisV9(lc fx.Lifecycle, lgr *log.Logger) *redisV9.Client {
 	rv8 := redisV9.NewClient(&redisV9.Options{
 		Addr:       viper.GetString("redis.address"),
 		Password:   viper.GetString("redis.password"),
@@ -18,7 +19,7 @@ func RedisV9(lc fx.Lifecycle) *redisV9.Client {
 	})
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping redis scheduling connection")
+			lgr.Infof("Stopping redis scheduling connection")
 			return rv8.Close()
 		},
 	})
@@ -27,18 +28,19 @@ func RedisV9(lc fx.Lifecycle) *redisV9.Client {
 
 type RedisLock struct {
 	client *redisV9.Client
+	lgr    *log.Logger
 }
 
 func (m *RedisLock) Lock(ctx context.Context, key, value string) bool {
 	exp := viper.GetDuration("schedulers." + key + ".expiration")
 	if exp == 0 {
-		GetLogEntry(ctx).Errorf("not set expiring duration")
+		GetLogEntry(ctx, m.lgr).Errorf("not set expiring duration")
 		return false
 	}
 
 	locked, err := m.client.SetNX(ctx, key, value, exp).Result()
 	if err != nil {
-		GetLogEntry(ctx).Errorf("unable to invoke redis: %v", err)
+		GetLogEntry(ctx, m.lgr).Errorf("unable to invoke redis: %v", err)
 		return false
 	}
 
@@ -49,8 +51,8 @@ func (m *RedisLock) Unlock(ctx context.Context, key, value string) {
 	m.client.Del(ctx, key)
 }
 
-func RedisLocker(redisClient *redisV9.Client) (*RedisLock, error) {
-	return &RedisLock{client: redisClient}, nil
+func RedisLocker(redisClient *redisV9.Client, lgr *log.Logger) (*RedisLock, error) {
+	return &RedisLock{client: redisClient, lgr: lgr}, nil
 }
 
 func Scheduler(locker *RedisLock) (*dcron.Cron, error) {

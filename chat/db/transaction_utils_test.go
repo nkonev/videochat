@@ -23,15 +23,16 @@ func shutdown() {
 }
 
 var dbInstance *DB
+var lgr = NewLogger()
 
 func setup() {
 	config.InitViper()
 
-	d, err := ConfigureDb(nil)
+	d, err := ConfigureDb(lgr, nil)
 	dbInstance = d
 
 	if err != nil {
-		Logger.Panicf("Error during getting db connection for test: %v", err)
+		lgr.Panicf("Error during getting db connection for test: %v", err)
 	} else {
 		d.RecreateDb()
 	}
@@ -87,7 +88,7 @@ func TestTransactionWithResultPositive(t *testing.T) {
 		res := tx.QueryRow(`INSERT INTO tr1(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
-			Logger.Errorf("Error during getting chat id %v", err)
+			lgr.Errorf("Error during getting chat id %v", err)
 			return 0, err
 		}
 
@@ -112,7 +113,7 @@ func TestTransactionWithResultNegative(t *testing.T) {
 		res := tx.QueryRow(`INSERT INTO tr2(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
-			Logger.Errorf("Error during getting chat id %v", err)
+			lgr.Errorf("Error during getting chat id %v", err)
 			return 0, err
 		}
 		if _, err := tx.Exec("insert into tr2(a) VALUES ('lorem')"); err != nil {

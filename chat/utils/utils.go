@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 	"github.com/rotisserie/eris"
+	log "github.com/sirupsen/logrus"
 	"net/url"
 	"nkonev.name/chat/dto"
-	. "nkonev.name/chat/logger"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,10 +28,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			Logger.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			lgr.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}
@@ -158,16 +158,16 @@ func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
 }
 
-func ContainsUrl(elems []string, elem string) bool {
+func ContainsUrl(lgr *log.Logger, elems []string, elem string) bool {
 	parsedUrlToTest, err := url.Parse(elem)
 	if err != nil {
-		Logger.Infof("Unable to parse urlToTest %v", elem)
+		lgr.Infof("Unable to parse urlToTest %v", elem)
 		return false
 	}
 	for i := 0; i < len(elems); i++ {
 		parsedAllowedUrl, err := url.Parse(elems[i])
 		if err != nil {
-			Logger.Infof("Unable to parse allowedUrl %v", elems[i])
+			lgr.Infof("Unable to parse allowedUrl %v", elems[i])
 			return false
 		}
 

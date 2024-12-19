@@ -3,7 +3,7 @@ package db
 import "context"
 
 func TransactWithResult[T any](ctx context.Context, db *DB, txFunc func(*Tx) (T, error)) (ret T, err error) {
-	tx, err := db.Begin(ctx)
+	tx, err := db.Begin(ctx, db.lgr)
 	if err != nil {
 		return
 	}
@@ -22,7 +22,7 @@ func TransactWithResult[T any](ctx context.Context, db *DB, txFunc func(*Tx) (T,
 }
 
 func Transact(ctx context.Context, db *DB, txFunc func(*Tx) error) (err error) {
-	tx, err := db.Begin(ctx)
+	tx, err := db.Begin(ctx, db.lgr)
 	if err != nil {
 		return
 	}

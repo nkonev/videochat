@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
 	"net/url"
@@ -24,15 +25,17 @@ type BlogHandler struct {
 	policy          *services.SanitizerPolicy
 	stripTagsPolicy *services.StripTagsPolicy
 	restClient      *client.RestClient
+	lgr             *log.Logger
 }
 
-func NewBlogHandler(db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
+func NewBlogHandler(lgr *log.Logger, db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
 	return &BlogHandler{
 		db:              db,
 		notificator:     notificator,
 		policy:          policy,
 		stripTagsPolicy: stripTagsPolicy,
 		restClient:      restClient,
+		lgr:             lgr,
 	}
 }
 
@@ -75,7 +78,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 				if mbImage != nil {
 					fileParam, err := h.getFileParam(*mbImage)
 					if err != nil {
-						GetLogEntry(ctx).Warnf("Unagle to get file key: %v", err)
+						GetLogEntry(ctx, h.lgr).Warnf("Unagle to get file key: %v", err)
 						break
 					}
 					if len(fileParam) > 0 {
@@ -86,7 +89,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 
 						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.MessageId)
 						if err != nil {
-							GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+							GetLogEntry(ctx, h.lgr).Warnf("Unagle to change url: %v", err)
 							break
 						}
 						blogPost.ImageUrl = &publicPreviewUrl
@@ -193,7 +196,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 			participantIdSet[*respDto.OwnerId] = true
 		}
 	}
-	var users = getUsersRemotelyOrEmpty(c.Request().Context(), participantIdSet, h.restClient)
+	var users = getUsersRemotelyOrEmpty(c.Request().Context(), h.lgr, participantIdSet, h.restClient)
 	for _, respDto := range response {
 		if respDto.OwnerId != nil {
 			respDto.Owner = users[*respDto.OwnerId]
@@ -277,7 +280,7 @@ func (h *BlogHandler) tryGetFirstImage(ctx context.Context, text string) *string
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		GetLogEntry(ctx).Warnf("Unagle to get image: %v", err)
+		GetLogEntry(ctx, h.lgr).Warnf("Unagle to get image: %v", err)
 		return nil
 	}
 
@@ -330,7 +333,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	}
 	if !chatBasic.IsBlog {
-		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)
+		GetLogEntry(c.Request().Context(), h.lgr).Infof("This chat %v is not blog", blogId)
 		return c.NoContent(http.StatusNoContent)
 	}
 
@@ -348,13 +351,13 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	if len(posts) == 1 {
 		post = posts[0]
 	} else {
-		GetLogEntry(c.Request().Context()).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
+		GetLogEntry(c.Request().Context(), h.lgr).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
 	}
 
 	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
-		patchedText := PatchStorageUrlToPublic(c.Request().Context(), post.Text, post.MessageId)
+		patchedText := PatchStorageUrlToPublic(c.Request().Context(), h.lgr, post.Text, post.MessageId)
 		response.Text = &patchedText
 
 		var participantIdSet = map[int64]bool{}
@@ -362,13 +365,13 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 
 		reactions, err := h.db.GetReactionsOnMessage(c.Request().Context(), chatBasic.Id, post.MessageId)
 		if err != nil {
-			GetLogEntry(c.Request().Context()).Infof("For blog id %v unable to get reactions: %v", blogId, err)
+			GetLogEntry(c.Request().Context(), h.lgr).Infof("For blog id %v unable to get reactions: %v", blogId, err)
 			return err
 		}
 
 		takeOnAccountReactions(participantIdSet, reactions) // adds reaction' users to participantIdSet
 
-		var users = getUsersRemotelyOrEmpty(c.Request().Context(), participantIdSet, h.restClient)
+		var users = getUsersRemotelyOrEmpty(c.Request().Context(), h.lgr, participantIdSet, h.restClient)
 
 		user := users[post.OwnerId]
 		response.Owner = user
@@ -397,7 +400,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	}
 	if !chatBasic.IsBlog {
-		GetLogEntry(c.Request().Context()).Infof("This chat %v is not blog", blogId)
+		GetLogEntry(c.Request().Context(), h.lgr).Infof("This chat %v is not blog", blogId)
 		return c.NoContent(http.StatusNoContent)
 	}
 
@@ -430,10 +433,10 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var users = getUsersRemotelyOrEmpty(c.Request().Context(), ownersSet, h.restClient)
+	var users = getUsersRemotelyOrEmpty(c.Request().Context(), h.lgr, ownersSet, h.restClient)
 	for _, cc := range messages {
-		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), cc, users, chatsSet)
-		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), msg.Text, msg.Id)
+		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), h.lgr, cc, users, chatsSet)
+		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.Text, msg.Id)
 		messageDtos = append(messageDtos, msg)
 	}
 
@@ -442,16 +445,16 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		pagesCount++
 	}
 
-	GetLogEntry(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
+	GetLogEntry(c.Request().Context(), h.lgr).Infof("Successfully returning %v messages", len(messageDtos))
 	return c.JSON(http.StatusOK, &utils.H{"items": messageDtos, "count": count, "pagesCount": pagesCount})
 }
 
 // see also message.go :: patchStorageUrlToPreventCachingVideo
-func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) string {
+func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, messageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		GetLogEntry(ctx).Warnf("Unagle to read html: %v", err)
+		GetLogEntry(ctx, lgr).Warnf("Unagle to read html: %v", err)
 		return ""
 	}
 
@@ -462,30 +465,30 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 		if maybeImage != nil {
 			original, originalExists := maybeImage.Attr("data-original")
 			if originalExists { // we have 2 tags - preview (small, tag attr) and original (data-original attr)
-				if utils.ContainsUrl(wlArr, original) { // original
+				if utils.ContainsUrl(lgr, wlArr, original) { // original
 					newurl, err := makeUrlPublic(original, "", false, messageId)
 					if err != nil {
-						GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 						return
 					}
 					maybeImage.SetAttr("data-original", newurl)
 				}
 
 				src, srcExists := maybeImage.Attr("src") // preview
-				if srcExists && utils.ContainsUrl(wlArr, src) {
+				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, false, messageId)
 					if err != nil {
-						GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 						return
 					}
 					maybeImage.SetAttr("src", newurl)
 				}
 			} else { // we have only original // legacy
 				src, srcExists := maybeImage.Attr("src") // original
-				if srcExists && utils.ContainsUrl(wlArr, src) {
+				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 					newurl, err := makeUrlPublic(src, "", false, messageId)
 					if err != nil {
-						GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 						return
 					}
 					maybeImage.SetAttr("src", newurl)
@@ -498,20 +501,20 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 		maybeVideo := s.First()
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
-			if srcExists && utils.ContainsUrl(wlArr, src) {
+			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", true, messageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
 				if err != nil {
-					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
 			}
 
 			poster, posterExists := maybeVideo.Attr("poster")
-			if posterExists && utils.ContainsUrl(wlArr, src) {
+			if posterExists && utils.ContainsUrl(lgr, wlArr, src) {
 				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, messageId)
 				if err != nil {
-					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("poster", newurl)
@@ -523,10 +526,10 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 		maybeVideo := s.First()
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
-			if srcExists && utils.ContainsUrl(wlArr, src) {
+			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", true, messageId)
 				if err != nil {
-					GetLogEntry(ctx).Warnf("Unagle to change url: %v", err)
+					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
@@ -536,7 +539,7 @@ func PatchStorageUrlToPublic(ctx context.Context, text string, messageId int64) 
 
 	ret, err := doc.Find("html").Find("body").Html()
 	if err != nil {
-		GetLogEntry(ctx).Warnf("Unagle to write html: %v", err)
+		GetLogEntry(ctx, lgr).Warnf("Unagle to write html: %v", err)
 		return ""
 	}
 	return ret

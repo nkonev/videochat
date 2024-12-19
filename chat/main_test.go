@@ -9,6 +9,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
@@ -31,6 +32,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+
 	"time"
 )
 
@@ -49,16 +51,18 @@ const aaaEmuPort = "8061"
 
 var userTester = base64.StdEncoding.EncodeToString([]byte("tester"))
 var userTester2 = base64.StdEncoding.EncodeToString([]byte("tester2"))
+var lgr *log.Logger
 
 func setup() {
 	config.InitViper()
+	lgr = NewLogger()
 
 	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 
-	d, err := db.ConfigureDb(nil)
+	d, err := db.ConfigureDb(lgr, nil)
 	defer d.Close()
 	if err != nil {
-		Logger.Panicf("Error during getting db connection for test: %v", err)
+		lgr.Panicf("Error during getting db connection for test: %v", err)
 	}
 	d.RecreateDb()
 }
@@ -72,7 +76,7 @@ func TestExtractAuth(t *testing.T) {
 	}
 	req.Header = headers
 
-	auth, err := handlers.ExtractAuth(req)
+	auth, err := handlers.ExtractAuth(req, lgr)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), auth.UserId)
 	assert.Equal(t, "tester", auth.UserLogin)
@@ -104,7 +108,7 @@ func (receiver AaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var users = []*dto.User{u1, u2}
 	out, err := json.Marshal(users)
 	if err != nil {
-		Logger.Errorln("Failed to encode get users request:", err)
+		lgr.Errorln("Failed to encode get users request:", err)
 		return
 	}
 
@@ -112,14 +116,14 @@ func (receiver AaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 }
 
 func waitForAaaEmu() {
-	restClient := client.NewRestClient()
+	restClient := client.NewRestClient(lgr)
 	i := 0
 	const maxAttempts = 60
 	success := false
 	for ; i <= maxAttempts; i++ {
 		_, err := restClient.GetUsers(context.Background(), []int64{0})
 		if err != nil {
-			Logger.Infof("Awaiting while emulator have been started")
+			lgr.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
@@ -128,15 +132,15 @@ func waitForAaaEmu() {
 		}
 	}
 	if !success {
-		Logger.Panicf("Cannot await for aaa emu will be started")
+		lgr.Panicf("Cannot await for aaa emu will be started")
 	}
-	Logger.Infof("Aaa emu have started")
+	lgr.Infof("Aaa emu have started")
 	restClient.CloseIdleConnections()
 }
 
 // it's requires to call this method every time when we create real app with startAppFull()
 func waitForChatServer() {
-	restClient := client.NewRestClient()
+	restClient := client.NewRestClient(lgr)
 	i := 0
 	const maxAttempts = 60
 	success := false
@@ -157,11 +161,11 @@ func waitForChatServer() {
 		}
 		getChatResponse, err := restClient.Do(getChatRequest)
 		if err != nil {
-			Logger.Infof("Awaiting while chat have been started - transport error")
+			lgr.Infof("Awaiting while chat have been started - transport error")
 			time.Sleep(time.Second * 1)
 			continue
 		} else if !(getChatResponse.StatusCode >= 200 && getChatResponse.StatusCode < 300) {
-			Logger.Infof("Awaiting while chat have been started - non-2xx code")
+			lgr.Infof("Awaiting while chat have been started - non-2xx code")
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
@@ -170,9 +174,9 @@ func waitForChatServer() {
 		}
 	}
 	if !success {
-		Logger.Panicf("Cannot await for chat will be started")
+		lgr.Panicf("Cannot await for chat will be started")
 	}
-	Logger.Infof("chat have started")
+	lgr.Infof("chat have started")
 	restClient.CloseIdleConnections()
 }
 
@@ -183,7 +187,7 @@ func startAaaEmu() *http.Server {
 	}
 
 	go func() {
-		Logger.Info(s.ListenAndServe())
+		lgr.Info(s.ListenAndServe())
 	}()
 
 	waitForAaaEmu()
@@ -209,7 +213,8 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 	var s fx.Shutdowner
 	app := fxtest.New(
 		t,
-		fx.Logger(Logger),
+		fx.Logger(lgr),
+		fx.Supply(lgr),
 		fx.Populate(&s),
 		fx.Provide(
 			configureTracer,
@@ -245,7 +250,8 @@ func startAppFull(t *testing.T) (*fxtest.App, fx.Shutdowner) {
 	var s fx.Shutdowner
 	app := fxtest.New(
 		t,
-		fx.Logger(Logger),
+		fx.Logger(lgr),
+		fx.Supply(lgr),
 		fx.Populate(&s),
 		fx.Provide(
 			configureTracer,
@@ -479,7 +485,7 @@ func TestCreateNewMessageMakesNotificationToOtherParticipant(t *testing.T) {
 		URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat"),
 	}
 
-	cl := client.NewRestClient()
+	cl := client.NewRestClient(lgr)
 	createChatResponse, err := cl.Do(createChatRequest)
 	assert.Nil(t, err)
 	assert.Equal(t, 201, createChatResponse.StatusCode)
@@ -541,7 +547,7 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 		URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat"),
 	}
 
-	cl := client.NewRestClient()
+	cl := client.NewRestClient(lgr)
 	createChatResponse, err := cl.Do(createChatRequest)
 	assert.Nil(t, err)
 	assert.Equal(t, 400, createChatResponse.StatusCode)

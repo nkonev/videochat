@@ -156,7 +156,7 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 		}
 
 		if leftItemId == nil || rightItemId == nil {
-			Logger.Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
+			co.logger().Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
 			var startedFromItemIdSafe int64
 			if reverse {
 				startedFromItemIdSafe = math.MaxInt64
@@ -510,7 +510,7 @@ func addMessageReadCommon(ctx context.Context, co CommonOperations, messageId, u
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	if !exists {
-		GetLogEntry(ctx).Infof("Message with id %v doesn't exists in chat %v", messageId, chatId)
+		GetLogEntry(ctx, co.logger()).Infof("Message with id %v doesn't exists in chat %v", messageId, chatId)
 		return nil
 	}
 	_, err = co.ExecContext(ctx, `
@@ -611,7 +611,7 @@ func (dbR *DB) SetFileItemUuidToNull(ctx context.Context, ownerId, chatId int64,
 	res := dbR.QueryRowContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), fileItemUuid, ownerId)
 
 	if res.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during nulling file_item_uuid message id %v", res.Err())
+		GetLogEntry(ctx, dbR.lgr).Errorf("Error during nulling file_item_uuid message id %v", res.Err())
 		return 0, false, eris.Wrap(res.Err(), "error during interacting with db")
 	}
 	var messageId int64
@@ -631,7 +631,7 @@ func (dbR *DB) SetFileItemUuidTo(ctx context.Context, ownerId, chatId, messageId
 	_, err := dbR.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = $1 WHERE id = $2 AND owner_id = $3`, chatId), fileItemUuid, messageId, ownerId)
 
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during nulling file_item_uuid message id %v", err)
+		GetLogEntry(ctx, dbR.lgr).Errorf("Error during nulling file_item_uuid message id %v", err)
 		return eris.Wrap(err, "error during interacting with db")
 	}
 	return nil
@@ -1058,7 +1058,7 @@ func (tx *Tx) GetPinnedPromoted(ctx context.Context, chatId int64) (*Message, er
 			LIMIT 1`, selectMessageClause(chatId)),
 	)
 	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get pinned messages %v", row.Err())
+		GetLogEntry(ctx, tx.lgr).Errorf("Error during get pinned messages %v", row.Err())
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
@@ -1107,7 +1107,7 @@ func (db *DB) GetParticipantsReadCount(ctx context.Context, chatId, messageId in
 	),
 		chatId, messageId)
 	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get count of participants read the message %v", row.Err())
+		GetLogEntry(ctx, db.lgr).Errorf("Error during get count of participants read the message %v", row.Err())
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
@@ -1131,7 +1131,7 @@ func (db *DB) FindMessageByFileItemUuid(ctx context.Context, chatId int64, fileI
 	)
 	row := db.QueryRowContext(ctx, sqlFormatted, fileItemUuid, fileItemUuidWithPercents)
 	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get MessageByFileItemUuid %v", row.Err())
+		GetLogEntry(ctx, db.lgr).Errorf("Error during get MessageByFileItemUuid %v", row.Err())
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
@@ -1271,7 +1271,7 @@ func (tx *Tx) MessageFilter(ctx context.Context, chatId int64, searchString stri
 	searchStringWithPercents := "%" + searchString + "%"
 	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT * FROM message_chat_%v m WHERE m.id = $1 AND strip_tags(m.text) ILIKE $2)", chatId), messageId, searchStringWithPercents)
 	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
+		GetLogEntry(ctx, tx.lgr).Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 

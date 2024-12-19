@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -24,9 +25,10 @@ import (
 type RestClient struct {
 	*http.Client
 	tracer trace.Tracer
+	lgr    *log.Logger
 }
 
-func NewRestClient() *RestClient {
+func NewRestClient(lgr *log.Logger) *RestClient {
 	tr := &http.Transport{
 		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
 		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),
@@ -37,7 +39,7 @@ func NewRestClient() *RestClient {
 	client := &http.Client{Transport: trR}
 	trcr := otel.Tracer("rest/client")
 
-	return &RestClient{client, trcr}
+	return &RestClient{client, trcr, lgr}
 }
 
 func (rc RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, error) {
@@ -61,7 +63,7 @@ func (rc RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -75,24 +77,24 @@ func (rc RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request get users response:", err)
+		GetLogEntry(c, rc.lgr).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c, rc.lgr).Warningln("Users response responded non-200 code: ", code)
 		return nil, errors.New("Users response responded non-200 code")
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse users:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil
@@ -119,7 +121,7 @@ func (rc RestClient) GetOnlines(c context.Context, userIds []int64) ([]*dto.User
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -133,24 +135,24 @@ func (rc RestClient) GetOnlines(c context.Context, userIds []int64) ([]*dto.User
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request get users response:", err)
+		GetLogEntry(c, rc.lgr).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c, rc.lgr).Warningln("Users response responded non-200 code: ", code)
 		return nil, errors.New("Users response responded non-200 code")
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.UserOnline{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse users:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil
@@ -183,7 +185,7 @@ func (rc RestClient) SearchGetUsers(c context.Context, searchString string, incl
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed during parse aaa url:", err)
 		return nil, 0, err
 	}
 
@@ -197,7 +199,7 @@ func (rc RestClient) SearchGetUsers(c context.Context, searchString string, incl
 
 	bytesData, err := json.Marshal(req)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during marshalling:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed during marshalling:", err)
 		return nil, 0, err
 	}
 	reader := bytes.NewReader(bytesData)
@@ -216,24 +218,24 @@ func (rc RestClient) SearchGetUsers(c context.Context, searchString string, incl
 	request = request.WithContext(ctx)
 	resp, err := rc.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request get users response:", err)
+		GetLogEntry(c, rc.lgr).Warningln("Failed to request get users response:", err)
 		return nil, 0, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c, rc.lgr).Warningln("Users response responded non-200 code: ", code)
 		return nil, 0, errors.New("Users response responded non-200 code")
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to decode get users response:", err)
 		return nil, 0, err
 	}
 
 	respDto := &searchUsersResponseDto{}
 	if err := json.Unmarshal(bodyBytes, respDto); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse users:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to parse users:", err)
 		return nil, 0, err
 	}
 	return respDto.Users, respDto.Count, nil
@@ -243,7 +245,6 @@ type UserExists struct {
 	Exists bool  `json:"exists"`
 	UserId int64 `json:"userId"`
 }
-
 
 func (rc RestClient) CheckAreUsersExists(c context.Context, userIds []int64) (*[]UserExists, error) {
 
@@ -257,11 +258,11 @@ func (rc RestClient) CheckAreUsersExists(c context.Context, userIds []int64) (*[
 	url0 := viper.GetString("aaa.url.base")
 	url1 := viper.GetString("aaa.url.checkUsersExistsPath")
 
-	fullUrl := fmt.Sprintf("%v?userId=%v", url0 + url1, join)
+	fullUrl := fmt.Sprintf("%v?userId=%v", url0+url1, join)
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 
@@ -279,7 +280,7 @@ func (rc RestClient) CheckAreUsersExists(c context.Context, userIds []int64) (*[
 
 	response, err := rc.Do(request)
 	if err != nil {
-		GetLogEntry(c).Error(err, "Transport error during checking user presence")
+		GetLogEntry(c, rc.lgr).Error(err, "Transport error during checking user presence")
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -290,13 +291,13 @@ func (rc RestClient) CheckAreUsersExists(c context.Context, userIds []int64) (*[
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode get user presence response:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to decode get user presence response:", err)
 		return nil, err
 	}
 
 	resultMap := new([]UserExists)
 	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse result:", err)
+		GetLogEntry(c, rc.lgr).Errorln("Failed to parse result:", err)
 		return nil, err
 	}
 	return resultMap, nil

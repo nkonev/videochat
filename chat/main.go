@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nkonev/dcron"
 	"github.com/rotisserie/eris"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -37,9 +38,11 @@ const TRACE_RESOURCE = "chat"
 
 func main() {
 	config.InitViper()
+	lgr := NewLogger()
 
 	app := fx.New(
-		fx.Logger(Logger),
+		fx.Logger(lgr),
+		fx.Supply(lgr),
 		fx.Provide(
 			configureTracer,
 			client.NewRestClient,
@@ -75,7 +78,7 @@ func main() {
 	)
 	app.Run()
 
-	Logger.Infof("Exit program")
+	lgr.Infof("Exit program")
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
@@ -103,16 +106,17 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 	return mw
 }
 
-func createCustomHTTPErrorHandler(e *echo.Echo) func(err error, c echo.Context) {
+func createCustomHTTPErrorHandler(lgr *log.Logger, e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
 		formattedStr := eris.ToString(err, true)
-		GetLogEntry(c.Request().Context()).Errorf("Unhandled error: %v", formattedStr)
+		GetLogEntry(c.Request().Context(), lgr).Errorf("Unhandled error: %v", formattedStr)
 		originalHandler(err, c)
 	}
 }
 
 func configureEcho(
+	lgr *log.Logger,
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
@@ -125,16 +129,16 @@ func configureEcho(
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
-	e.Logger.SetOutput(Logger.Writer())
+	e.Logger.SetOutput(lgr.Writer())
 
-	e.HTTPErrorHandler = createCustomHTTPErrorHandler(e)
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(lgr, e)
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpentelemetryMiddleware(tp))
 	e.Use(configureWriteHeaderMiddleware())
 	e.Use(echo.MiddlewareFunc(authMiddleware))
 	accessLoggerConfig := middleware.LoggerConfig{
-		Output: Logger.Writer(),
+		Output: lgr.Writer(),
 		Format: `"remote_ip":"${remote_ip}",` +
 			`"method":"${method}","uri":"${uri}",` +
 			`"status":${status},` +
@@ -214,7 +218,7 @@ func configureEcho(
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)
-			Logger.Infof("Stopping http server")
+			lgr.Infof("Stopping http server")
 			return e.Shutdown(ctx)
 		},
 	})
@@ -222,8 +226,8 @@ func configureEcho(
 	return e
 }
 
-func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
-	Logger.Infof("Configuring Jaeger tracing")
+func configureTracer(lgr *log.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
+	lgr.Infof("Configuring Jaeger tracing")
 
 	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
@@ -250,9 +254,9 @@ func configureTracer(lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	otel.SetTextMapPropagator(aJaegerPropagator)
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping tracer")
+			lgr.Infof("Stopping tracer")
 			if err := tp.Shutdown(context.Background()); err != nil {
-				Logger.Printf("Error shutting down tracer provider: %v", err)
+				lgr.Errorf("Error shutting down tracer provider: %v", err)
 			}
 			return nil
 		},
@@ -270,29 +274,30 @@ func runMigrations(db *db.DB, migrationsConfig *db.MigrationsConfig) {
 }
 
 // rely on viper import and it's configured by
-func runEcho(e *echo.Echo) {
+func runEcho(lgr *log.Logger, e *echo.Echo) {
 	address := viper.GetString("server.address")
 
-	Logger.Info("Starting server...")
+	lgr.Info("Starting server...")
 	// Start server in another goroutine
 	go func() {
 		if err := e.Start(address); err != nil {
-			Logger.Infof("server shut down: %v", err)
+			lgr.Infof("server shut down: %v", err)
 		}
 	}()
-	Logger.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
+	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
 func runScheduler(
+	lgr *log.Logger,
 	scheduler *dcron.Cron,
 	ct *tasks.CleanChatsOfDeletedUserTask,
 	lc fx.Lifecycle,
 ) error {
 	scheduler.Start()
-	Logger.Infof("Scheduler started")
+	lgr.Infof("Scheduler started")
 
 	if viper.GetBool("schedulers." + ct.Key() + ".enabled") {
-		Logger.Infof("Adding " + ct.Key() + " job to scheduler")
+		lgr.Infof("Adding " + ct.Key() + " job to scheduler")
 		err := scheduler.AddJobs(ct)
 		if err != nil {
 			return err
@@ -301,7 +306,7 @@ func runScheduler(
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			Logger.Infof("Stopping scheduler")
+			lgr.Infof("Stopping scheduler")
 			<-scheduler.Stop().Done()
 			return nil
 		},

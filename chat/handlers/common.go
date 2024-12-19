@@ -10,6 +10,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
 	"net/url"
@@ -23,10 +24,10 @@ import (
 	"time"
 )
 
-func getUsersRemotely(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
+func getUsersRemotely(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	GetLogEntry(ctx).Infof("Requested user length is %v", length)
+	GetLogEntry(ctx, lgr).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.User{}, nil
 	}
@@ -41,10 +42,10 @@ func getUsersRemotely(ctx context.Context, userIdSet map[int64]bool, restClient 
 	return ownersObjects, nil
 }
 
-func getUserOnlinesRemotely(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.UserOnline, error) {
+func getUserOnlinesRemotely(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.UserOnline, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
-	GetLogEntry(ctx).Infof("Requested user length is %v", length)
+	GetLogEntry(ctx, lgr).Infof("Requested user length is %v", length)
 	if length == 0 {
 		return map[int64]*dto.UserOnline{}, nil
 	}
@@ -59,26 +60,26 @@ func getUserOnlinesRemotely(ctx context.Context, userIdSet map[int64]bool, restC
 	return ownersObjects, nil
 }
 
-func getUsersRemotelyOrEmptyFromSlice(ctx context.Context, userIds []int64, restClient *client.RestClient) map[int64]*dto.User {
-	return getUsersRemotelyOrEmpty(ctx, utils.ArrayToSet(userIds), restClient)
+func getUsersRemotelyOrEmptyFromSlice(ctx context.Context, lgr *log.Logger, userIds []int64, restClient *client.RestClient) map[int64]*dto.User {
+	return getUsersRemotelyOrEmpty(ctx, lgr, utils.ArrayToSet(userIds), restClient)
 }
 
-func getUserOnlinesRemotelyOrEmptyFromSlice(ctx context.Context, userIds []int64, restClient *client.RestClient) map[int64]*dto.UserOnline {
-	return getUserOnlinesRemotelyOrEmpty(ctx, utils.ArrayToSet(userIds), restClient)
+func getUserOnlinesRemotelyOrEmptyFromSlice(ctx context.Context, lgr *log.Logger, userIds []int64, restClient *client.RestClient) map[int64]*dto.UserOnline {
+	return getUserOnlinesRemotelyOrEmpty(ctx, lgr, utils.ArrayToSet(userIds), restClient)
 }
 
-func getUsersRemotelyOrEmpty(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
-	if remoteUsers, err := getUsersRemotely(ctx, userIdSet, restClient); err != nil {
-		GetLogEntry(ctx).Warn("Error during getting users from aaa")
+func getUsersRemotelyOrEmpty(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
+	if remoteUsers, err := getUsersRemotely(ctx, lgr, userIdSet, restClient); err != nil {
+		GetLogEntry(ctx, lgr).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
 	} else {
 		return remoteUsers
 	}
 }
 
-func getUserOnlinesRemotelyOrEmpty(ctx context.Context, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.UserOnline {
-	if remoteUsers, err := getUserOnlinesRemotely(ctx, userIdSet, restClient); err != nil {
-		GetLogEntry(ctx).Warn("Error during getting users from aaa")
+func getUserOnlinesRemotelyOrEmpty(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.UserOnline {
+	if remoteUsers, err := getUserOnlinesRemotely(ctx, lgr, userIdSet, restClient); err != nil {
+		GetLogEntry(ctx, lgr).Warn("Error during getting users from aaa")
 		return map[int64]*dto.UserOnline{}
 	} else {
 		return remoteUsers
@@ -87,10 +88,10 @@ func getUserOnlinesRemotelyOrEmpty(ctx context.Context, userIdSet map[int64]bool
 
 type AuthMiddleware echo.MiddlewareFunc
 
-func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
+func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
-	GetLogEntry(request.Context()).Infof("Extracted session expiration time: %v", t)
+	GetLogEntry(request.Context(), lgr).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
@@ -137,27 +138,27 @@ func ExtractAuth(request *http.Request) (*auth.AuthResult, error) {
 //   - *AuthResult pointer or nil
 //   - is whitelisted
 //   - error
-func authorize(request *http.Request) (*auth.AuthResult, bool, error) {
+func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
-	if utils.CheckUrlInWhitelist(whitelist, request.RequestURI) {
+	if utils.CheckUrlInWhitelist(lgr, whitelist, request.RequestURI) {
 		return nil, true, nil
 	}
-	auth, err := ExtractAuth(request)
+	auth, err := ExtractAuth(request, lgr)
 	if err != nil {
-		GetLogEntry(request.Context()).Infof("Error during extract AuthResult: %v", err)
+		GetLogEntry(request.Context(), lgr).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request.Context()).Infof("Success AuthResult: %v", *auth)
+	GetLogEntry(request.Context(), lgr).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 
-func ConfigureAuthMiddleware() AuthMiddleware {
+func ConfigureAuthMiddleware(lgr *log.Logger) AuthMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			authResult, whitelist, err := authorize(c.Request())
+			authResult, whitelist, err := authorize(c.Request(), lgr)
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during authorize: %v", err)
+				GetLogEntry(c.Request().Context(), lgr).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)
@@ -207,7 +208,7 @@ func (s *MediaUrlErr) Error() string {
 	return fmt.Sprintf("Media url is not allowed in %v: %v", s.where, s.url)
 }
 
-func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolicy, input string) (string, error) {
+func TrimAmdSanitizeMessage(ctx context.Context, lgr *log.Logger, policy *services.SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
 
 	whitelist := viper.GetString("message.allowedMediaUrls")
@@ -222,7 +223,7 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(sanitizedHtml))
 	if err != nil {
-		GetLogEntry(ctx).Warnf("Unable to read html: %v", err)
+		GetLogEntry(ctx, lgr).Warnf("Unable to read html: %v", err)
 		return "", errors.New("Unable to read html")
 	}
 
@@ -234,8 +235,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 		maybeImage := s.First()
 		if maybeImage != nil {
 			src, exists := maybeImage.Attr("src")
-			if exists && !utils.ContainsUrl(wlArr, src) {
-				GetLogEntry(ctx).Infof("Filtered not allowed url in image src %v", src)
+			if exists && !utils.ContainsUrl(lgr, wlArr, src) {
+				GetLogEntry(ctx, lgr).Infof("Filtered not allowed url in image src %v", src)
 				retErr = &MediaUrlErr{src, "image src"}
 			}
 			if exists {
@@ -247,8 +248,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 			}
 
 			original, originalExists := maybeImage.Attr("data-original")
-			if originalExists && !utils.ContainsUrl(wlArr, original) {
-				GetLogEntry(ctx).Infof("Filtered not allowed url in image src %v", original)
+			if originalExists && !utils.ContainsUrl(lgr, wlArr, original) {
+				GetLogEntry(ctx, lgr).Infof("Filtered not allowed url in image src %v", original)
 				retErr = &MediaUrlErr{original, "image src"}
 			}
 			if originalExists {
@@ -270,8 +271,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 		maybeVideo := s.First()
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
-			if srcExists && !utils.ContainsUrl(wlArr, src) {
-				GetLogEntry(ctx).Infof("Filtered not allowed url in video src %v", src)
+			if srcExists && !utils.ContainsUrl(lgr, wlArr, src) {
+				GetLogEntry(ctx, lgr).Infof("Filtered not allowed url in video src %v", src)
 				retErr = &MediaUrlErr{src, "video src"}
 			}
 			if srcExists {
@@ -283,8 +284,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 			}
 
 			poster, posterExists := maybeVideo.Attr("poster")
-			if posterExists && !utils.ContainsUrl(wlArr, poster) {
-				GetLogEntry(ctx).Infof("Filtered not allowed url in video poster %v", poster)
+			if posterExists && !utils.ContainsUrl(lgr, wlArr, poster) {
+				GetLogEntry(ctx, lgr).Infof("Filtered not allowed url in video poster %v", poster)
 				retErr = &MediaUrlErr{src, "video poster"}
 			}
 			if posterExists {
@@ -306,8 +307,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 		maybeIframe := s.First()
 		if maybeIframe != nil {
 			src, exists := maybeIframe.Attr("src")
-			if exists && !utils.ContainsUrl(iframeWlArr, src) {
-				GetLogEntry(ctx).Infof("Filtered not allowed url in iframe src %v", src)
+			if exists && !utils.ContainsUrl(lgr, iframeWlArr, src) {
+				GetLogEntry(ctx, lgr).Infof("Filtered not allowed url in iframe src %v", src)
 				retErr = &MediaUrlErr{src, "iframe src"}
 			}
 			mediaCount++
@@ -321,8 +322,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 		maybeAudio := s.First()
 		if maybeAudio != nil {
 			src, exists := maybeAudio.Attr("src")
-			if exists && !utils.ContainsUrl(wlArr, src) {
-				GetLogEntry(ctx).Infof("Filtered not allowed url in audio src %v", src)
+			if exists && !utils.ContainsUrl(lgr, wlArr, src) {
+				GetLogEntry(ctx, lgr).Infof("Filtered not allowed url in audio src %v", src)
 				retErr = &MediaUrlErr{src, "audio src"}
 			}
 			if exists {
@@ -362,7 +363,7 @@ func TrimAmdSanitizeMessage(ctx context.Context, policy *services.SanitizerPolic
 
 	ret, err := doc.Find("html").Find("body").Html()
 	if err != nil {
-		GetLogEntry(ctx).Warnf("Unagle to write html: %v", err)
+		GetLogEntry(ctx, lgr).Warnf("Unagle to write html: %v", err)
 		return "", err
 	}
 
@@ -388,7 +389,7 @@ func removeProtocolHostPortIfNeed(src, frontendUrl string) (string, error) {
 	return parsed.String(), nil
 }
 
-func TrimAmdSanitizeAvatar(ctx context.Context, policy *services.SanitizerPolicy, input null.String) null.String {
+func TrimAmdSanitizeAvatar(ctx context.Context, lgr *log.Logger, policy *services.SanitizerPolicy, input null.String) null.String {
 	if input.IsZero() {
 		return input
 	}
@@ -404,17 +405,17 @@ func TrimAmdSanitizeAvatar(ctx context.Context, policy *services.SanitizerPolicy
 	whitelist := viper.GetString("chat.allowedAvatarUrls")
 	wlArr := strings.Split(whitelist, ",")
 
-	if !utils.ContainsUrl(wlArr, sanitizedHtml) {
-		GetLogEntry(ctx).Infof("Filtered chat avatar not allowed url in chat avatar src %v", sanitizedHtml)
+	if !utils.ContainsUrl(lgr, wlArr, sanitizedHtml) {
+		GetLogEntry(ctx, lgr).Infof("Filtered chat avatar not allowed url in chat avatar src %v", sanitizedHtml)
 		return null.StringFromPtr(nil)
 	}
 
 	return null.StringFrom(sanitizedHtml)
 }
 
-func ValidateAndRespondError(c echo.Context, v validation.Validatable) (bool, error) {
+func ValidateAndRespondError(c echo.Context, lgr *log.Logger, v validation.Validatable) (bool, error) {
 	if err := v.Validate(); err != nil {
-		GetLogEntry(c.Request().Context()).Debugf("Error during validation: %v", err)
+		GetLogEntry(c.Request().Context(), lgr).Debugf("Error during validation: %v", err)
 		return false, c.JSON(http.StatusBadRequest, err)
 	}
 	return true, nil

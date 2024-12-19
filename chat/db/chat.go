@@ -441,7 +441,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		if noData {
 			// leave empty list
 		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
-			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
+			co.logger().Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
@@ -470,7 +470,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		if noData {
 			// leave empty list
 		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
-			Logger.Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
+			co.logger().Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
@@ -619,7 +619,7 @@ func (tx *Tx) EditChat(ctx context.Context, id int64, newTitle string, avatar, a
 		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	}
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during editing chat id %v", err)
+		GetLogEntry(ctx, tx.lgr).Errorf("Error during editing chat id %v", err)
 		return nil, err
 	} else {
 		affected, err := res.RowsAffected()
@@ -1216,7 +1216,7 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId, edgeC
 			participantId, pageSize, chatId, edgeChatId)
 	}
 	if row.Err() != nil {
-		GetLogEntry(ctx).Errorf("Error during get Search %v", row.Err())
+		GetLogEntry(ctx, tx.lgr).Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 

@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
-	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/type_registry"
@@ -17,7 +17,7 @@ import (
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type_registry.TypeRegistryInstance, db *db.DB) AaaUserProfileUpdateListener {
+func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, typeRegistry *type_registry.TypeRegistryInstance, db *db.DB) AaaUserProfileUpdateListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -28,11 +28,11 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		Logger.Debugf("Received %v with type %v", strData, aType)
+		lgr.Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
 			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			Logger.Debugf(errStr)
+			lgr.Debugf(errStr)
 			return nil
 		}
 
@@ -42,7 +42,7 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				Logger.Errorf("Error during deserialize notification %v", err)
+				lgr.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			if bindTo.EventType == "user_account_changed" {
@@ -50,9 +50,8 @@ func CreateAaaUserProfileUpdateListener(not *services.Events, typeRegistry *type
 			}
 
 		default:
-			Logger.Errorf("Unexpected type : %v", anInstance)
+			lgr.Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
-
 		}
 
 		return nil
