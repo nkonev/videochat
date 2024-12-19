@@ -3,17 +3,17 @@ package listener
 import (
 	"context"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/notification/dto"
-	. "nkonev.name/notification/logger"
 	"nkonev.name/notification/rabbitmq"
 	"nkonev.name/notification/services"
 )
 
 type NotificationsListener func(*amqp.Delivery) error
 
-func CreateNotificationsListener(service *services.NotificationService) NotificationsListener {
+func CreateNotificationsListener(service *services.NotificationService, lgr *log.Logger) NotificationsListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -23,12 +23,12 @@ func CreateNotificationsListener(service *services.NotificationService) Notifica
 
 		bytesData := msg.Body
 		strData := string(bytesData)
-		Logger.Debugf("Received %v", strData)
+		lgr.Debugf("Received %v", strData)
 
 		var bindTo = new(dto.NotificationEvent)
 		err := json.Unmarshal(msg.Body, bindTo)
 		if err != nil {
-			Logger.Errorf("Unable to unmarshall notification %v", err)
+			lgr.Errorf("Unable to unmarshall notification %v", err)
 			return err
 		}
 

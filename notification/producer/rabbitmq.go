@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"nkonev.name/notification/dto"
 	. "nkonev.name/notification/logger"
@@ -25,7 +26,7 @@ func (rp *RabbitEventPublisher) Publish(ctx context.Context, participantId int64
 
 	bytea, err := json.Marshal(event)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during marshal NotificationDto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal NotificationDto")
 		return err
 	}
 
@@ -39,7 +40,7 @@ func (rp *RabbitEventPublisher) Publish(ctx context.Context, participantId int64
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-		GetLogEntry(ctx).Error(err, "Error during publishing")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 		return err
 	}
 
@@ -48,10 +49,11 @@ func (rp *RabbitEventPublisher) Publish(ctx context.Context, participantId int64
 
 type RabbitEventPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbiEventPublisher(connection *rabbitmq.Connection) *RabbitEventPublisher {
+func NewRabbiEventPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitEventPublisher {
 	return &RabbitEventPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
 	}
 }
