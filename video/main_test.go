@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	"github.com/oliveagle/jsonpath"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -54,19 +55,21 @@ const chatEmuPort = "8062"
 var userTester = base64.StdEncoding.EncodeToString([]byte("tester"))
 
 var theConfig *config.ExtendedConfig
+var lgr *log.Logger
 
 func setup() {
 	config.InitViper()
+	lgr = NewLogger()
 
 	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 	viper.Set("chat.url.base", "http://localhost:"+chatEmuPort)
 
 	theConfig, _ = createTypedConfig()
 
-	d, err := db.ConfigureDb(nil)
+	d, err := db.ConfigureDb(lgr, nil)
 	defer d.Close()
 	if err != nil {
-		Logger.Panicf("Error during getting db connection for test: %v", err)
+		lgr.Panicf("Error during getting db connection for test: %v", err)
 	}
 	d.RecreateDb()
 }
@@ -89,7 +92,7 @@ func (receiver AaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var users = []*dto.User{u1, u2}
 	out, err := json.Marshal(users)
 	if err != nil {
-		Logger.Errorln("Failed to encode get users request:", err)
+		lgr.Errorln("Failed to encode get users request:", err)
 		return
 	}
 
@@ -97,14 +100,14 @@ func (receiver AaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 }
 
 func waitForAaaEmu() {
-	restClient := client.NewRestClient(theConfig)
+	restClient := client.NewRestClient(theConfig, lgr)
 	i := 0
 	const maxAttempts = 60
 	success := false
 	for ; i <= maxAttempts; i++ {
 		_, err := restClient.GetUsers(context.Background(), []int64{0})
 		if err != nil {
-			Logger.Infof("Awaiting while emulator have been started")
+			lgr.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
@@ -113,15 +116,15 @@ func waitForAaaEmu() {
 		}
 	}
 	if !success {
-		Logger.Panicf("Cannot await for aaa emu will be started")
+		lgr.Panicf("Cannot await for aaa emu will be started")
 	}
-	Logger.Infof("Aaa emu have started")
+	lgr.Infof("Aaa emu have started")
 	restClient.CloseIdleConnections()
 }
 
 // it's requires to call this method every time when we create real app with startAppFull()
 func waitForVideoServer() {
-	restClient := client.NewRestClient(theConfig)
+	restClient := client.NewRestClient(theConfig, lgr)
 	i := 0
 	const maxAttempts = 60
 	success := false
@@ -142,11 +145,11 @@ func waitForVideoServer() {
 		}
 		getChatResponse, err := restClient.GetClient().Do(getChatRequest)
 		if err != nil {
-			Logger.Infof("Awaiting while chat have been started - transport error")
+			lgr.Infof("Awaiting while chat have been started - transport error")
 			time.Sleep(time.Second * 1)
 			continue
 		} else if !(getChatResponse.StatusCode >= 200 && getChatResponse.StatusCode < 300) {
-			Logger.Infof("Awaiting while chat have been started - non-2xx code")
+			lgr.Infof("Awaiting while chat have been started - non-2xx code")
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
@@ -155,9 +158,9 @@ func waitForVideoServer() {
 		}
 	}
 	if !success {
-		Logger.Panicf("Cannot await for chat will be started")
+		lgr.Panicf("Cannot await for chat will be started")
 	}
-	Logger.Infof("chat have started")
+	lgr.Infof("chat have started")
 	restClient.CloseIdleConnections()
 }
 
@@ -168,7 +171,7 @@ func startAaaEmu() *http.Server {
 	}
 
 	go func() {
-		Logger.Info(s.ListenAndServe())
+		lgr.Info(s.ListenAndServe())
 	}()
 
 	waitForAaaEmu()
@@ -188,7 +191,7 @@ func (receiver ChatEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	out, err := json.Marshal(bci)
 	if err != nil {
-		Logger.Errorln("Failed to encode get users request:", err)
+		lgr.Errorln("Failed to encode get users request:", err)
 		return
 	}
 
@@ -196,14 +199,14 @@ func (receiver ChatEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 }
 
 func waitForChatEmu() {
-	restClient := client.NewRestClient(theConfig)
+	restClient := client.NewRestClient(theConfig, lgr)
 	i := 0
 	const maxAttempts = 60
 	success := false
 	for ; i <= maxAttempts; i++ {
 		_, err := restClient.GetBasicChatInfo(context.Background(), -1, -1)
 		if err != nil {
-			Logger.Infof("Awaiting while emulator have been started")
+			lgr.Infof("Awaiting while emulator have been started")
 			time.Sleep(time.Second * 1)
 			continue
 		} else {
@@ -212,9 +215,9 @@ func waitForChatEmu() {
 		}
 	}
 	if !success {
-		Logger.Panicf("Cannot await for aaa emu will be started")
+		lgr.Panicf("Cannot await for aaa emu will be started")
 	}
-	Logger.Infof("Aaa emu have started")
+	lgr.Infof("Aaa emu have started")
 	restClient.CloseIdleConnections()
 }
 
@@ -225,7 +228,7 @@ func startChatEmu() *http.Server {
 	}
 
 	go func() {
-		Logger.Info(s.ListenAndServe())
+		lgr.Info(s.ListenAndServe())
 	}()
 
 	waitForChatEmu()
@@ -237,7 +240,8 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 	var s fx.Shutdowner
 	app := fxtest.New(
 		t,
-		fx.Logger(Logger),
+		fx.Logger(lgr),
+		fx.Supply(lgr),
 		fx.Populate(&s),
 		fx.Provide(
 			createTypedConfig,

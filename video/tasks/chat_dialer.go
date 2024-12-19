@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"github.com/nkonev/dcron"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -18,6 +19,7 @@ import (
 )
 
 type ChatDialerService struct {
+	lgr                      *log.Logger
 	database                 *db.DB
 	conf                     *config.ExtendedConfig
 	rabbitMqInvitePublisher  *producer.RabbitInvitePublisher
@@ -34,6 +36,7 @@ func NewChatDialerService(
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
 	chatClient *client.RestClient,
 	stateChangedEventService *services.StateChangedEventService,
+	lgr *log.Logger,
 ) *ChatDialerService {
 	trcr := otel.Tracer("scheduler/chat-dialer")
 	return &ChatDialerService{
@@ -44,6 +47,7 @@ func NewChatDialerService(
 		chatClient:               chatClient,
 		tracer:                   trcr,
 		stateChangedEventService: stateChangedEventService,
+		lgr:                      lgr,
 	}
 }
 
@@ -52,11 +56,11 @@ func (srv *ChatDialerService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ChatDialer")
 	defer span.End()
 
-	GetLogEntry(ctx).Debugf("Invoked periodic ChatDialer")
+	GetLogEntry(ctx, srv.lgr).Debugf("Invoked periodic ChatDialer")
 
 	srv.makeDial(ctx)
 
-	GetLogEntry(ctx).Debugf("End of ChatNotifier")
+	GetLogEntry(ctx, srv.lgr).Debugf("End of ChatNotifier")
 }
 
 func (srv *ChatDialerService) makeDial(ctx context.Context) {
@@ -67,7 +71,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context) {
 			// here we use order by owner_id
 			batchUserStates, err := tx.GetAllUserStatesOrderByOwnerAndChat(ctx, utils.DefaultSize, offset)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
+				GetLogEntry(ctx, srv.lgr).Errorf("error during reading user states %v", err)
 				continue
 			}
 
@@ -96,7 +100,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context) {
 		return nil
 	})
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Error during processing: %v", err)
+		GetLogEntry(ctx, srv.lgr).Errorf("Error during processing: %v", err)
 	}
 }
 
@@ -112,7 +116,7 @@ func (srv *ChatDialerService) processBatch(ctx context.Context, tx *db.Tx, chatI
 
 	inviteNames, err := srv.chatClient.GetChatNameForInvite(ctx, chatId, ownerId, userIds)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during getting chat invite names")
+		GetLogEntry(ctx, srv.lgr).Error(err, "Failed during getting chat invite names")
 	}
 
 	// we can do it, because
@@ -144,26 +148,26 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 		if state.MarkedForRemoveAt != nil &&
 			time.Now().UTC().Sub(*state.MarkedForRemoveAt) > viper.GetDuration("schedulers.chatDialerTask.removeTemporaryUserCallStatusAfter") {
 
-			GetLogEntry(ctx).Infof("Removing temporary in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
+			GetLogEntry(ctx, srv.lgr).Infof("Removing temporary in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
 			err := tx.Remove(ctx, dto.UserCallStateId{
 				TokenId: state.TokenId,
 				UserId:  state.UserId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user tokenId %v, userId %v, chat %v, error %v", state.TokenId, state.UserId, chatId, err)
+				GetLogEntry(ctx, srv.lgr).Errorf("Unable invoke RemoveFromDialList, user tokenId %v, userId %v, chat %v, error %v", state.TokenId, state.UserId, chatId, err)
 				return
 			}
 		}
 	} else if state.Status == db.CallStatusBeingInvited { // clean "dangling" beingInvited
 		if time.Now().UTC().Sub(state.CreateDateTime) > viper.GetDuration("schedulers.chatDialerTask.removeDanglingCallStatusBeingInvitedAfter") {
 
-			GetLogEntry(ctx).Infof("Removing dangling in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
+			GetLogEntry(ctx, srv.lgr).Infof("Removing dangling in status %v of user tokenId %v, userId %v, chat %v", state.Status, state.TokenId, state.UserId, chatId)
 			err := tx.Remove(ctx, dto.UserCallStateId{
 				TokenId: state.TokenId,
 				UserId:  state.UserId,
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Unable invoke RemoveFromDialList, user tokenId %v, userId %v, chat %v, error %v", state.TokenId, state.UserId, chatId, err)
+				GetLogEntry(ctx, srv.lgr).Errorf("Unable invoke RemoveFromDialList, user tokenId %v, userId %v, chat %v, error %v", state.TokenId, state.UserId, chatId, err)
 				return
 			}
 
@@ -176,11 +180,12 @@ type ChatDialerTask struct {
 }
 
 func ChatDialerScheduler(
+	lgr *log.Logger,
 	service *ChatDialerService,
 ) *ChatDialerTask {
 	const key = "chatDialerTask"
 	var str = viper.GetString("schedulers." + key + ".cron")
-	Logger.Infof("Created ChatDialerScheduler with cron %v", str)
+	lgr.Infof("Created ChatDialerScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.doJob()

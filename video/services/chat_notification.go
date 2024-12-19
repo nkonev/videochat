@@ -2,16 +2,18 @@ package services
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 )
 
 type NotificationService struct {
-	rabbitMqUserCountPublisher *producer.RabbitUserCountPublisher
-	rabbitMqRecordPublisher    *producer.RabbitRecordingPublisher
+	rabbitMqUserCountPublisher   *producer.RabbitUserCountPublisher
+	rabbitMqRecordPublisher      *producer.RabbitRecordingPublisher
 	rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher
-	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
+	rabbitUserIdsPublisher       *producer.RabbitUserIdsPublisher
+	lgr                          *log.Logger
 }
 
 func NewNotificationService(
@@ -19,12 +21,14 @@ func NewNotificationService(
 	rabbitMqRecordPublisher *producer.RabbitRecordingPublisher,
 	rabbitMqScreenSharePublisher *producer.RabbitScreenSharePublisher,
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
+	lgr *log.Logger,
 ) *NotificationService {
 	return &NotificationService{
-		rabbitMqUserCountPublisher: producer,
+		rabbitMqUserCountPublisher:   producer,
 		rabbitMqScreenSharePublisher: rabbitMqScreenSharePublisher,
-		rabbitMqRecordPublisher:    rabbitMqRecordPublisher,
-		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
+		rabbitMqRecordPublisher:      rabbitMqRecordPublisher,
+		rabbitUserIdsPublisher:       rabbitUserIdsPublisher,
+		lgr:                          lgr,
 	}
 }
 
@@ -32,7 +36,7 @@ func NewNotificationService(
 // as a small handset in ChatList
 // and as a number of video users in badge near call button
 func (h *NotificationService) NotifyVideoUserCountChanged(ctx context.Context, participantIds []int64, chatId, usersCount int64) error {
-	GetLogEntry(ctx).Debugf("Notifying video call chat_id=%v", chatId)
+	GetLogEntry(ctx, h.lgr).Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallUserCountChangedDto{
 		UsersCount: usersCount,
@@ -43,19 +47,18 @@ func (h *NotificationService) NotifyVideoUserCountChanged(ctx context.Context, p
 }
 
 func (h *NotificationService) NotifyVideoScreenShareChanged(ctx context.Context, participantIds []int64, chatId int64, hasScreenShares bool) error {
-	GetLogEntry(ctx).Debugf("Notifying video call chat_id=%v", chatId)
+	GetLogEntry(ctx, h.lgr).Debugf("Notifying video call chat_id=%v", chatId)
 
 	var chatNotifyDto = dto.VideoCallScreenShareChangedDto{
 		HasScreenShares: hasScreenShares,
-		ChatId:     chatId,
+		ChatId:          chatId,
 	}
 
 	return h.rabbitMqScreenSharePublisher.Publish(ctx, participantIds, &chatNotifyDto)
 }
 
-
 func (h *NotificationService) NotifyRecordingChanged(ctx context.Context, chatId int64, recordInProgressByOwner map[int64]bool) error {
-	GetLogEntry(ctx).Debugf("Notifying video call chat_id=%v", chatId)
+	GetLogEntry(ctx, h.lgr).Debugf("Notifying video call chat_id=%v", chatId)
 
 	return h.rabbitMqRecordPublisher.Publish(ctx, recordInProgressByOwner, chatId)
 }

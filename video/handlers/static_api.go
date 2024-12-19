@@ -3,9 +3,9 @@ package handlers
 import (
 	"embed"
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"net/http"
-	. "nkonev.name/video/logger"
 	"strings"
 )
 
@@ -14,10 +14,10 @@ var embeddedFiles embed.FS
 
 type ApiStaticMiddleware echo.MiddlewareFunc
 
-func ConfigureApiStaticMiddleware() ApiStaticMiddleware {
+func ConfigureApiStaticMiddleware(lgr *log.Logger) ApiStaticMiddleware {
 	fsys, err := fs.Sub(embeddedFiles, "static-api")
 	if err != nil {
-		Logger.Panicf("Cannot open static embedded dir")
+		lgr.Panicf("Cannot open static embedded dir")
 	}
 	staticDir := http.FS(fsys)
 

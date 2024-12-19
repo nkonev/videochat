@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go/v2"
+	log "github.com/sirupsen/logrus"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 )
@@ -14,10 +15,11 @@ const ownerIdMetadataKey = "ownerid"
 
 type EgressService struct {
 	egressClient *lksdk.EgressClient
+	lgr          *log.Logger
 }
 
-func NewEgressService(egressClient *lksdk.EgressClient) *EgressService {
-	return &EgressService{egressClient: egressClient}
+func NewEgressService(egressClient *lksdk.EgressClient, lgr *log.Logger) *EgressService {
+	return &EgressService{egressClient: egressClient, lgr: lgr}
 }
 
 func (rh *EgressService) GetActiveEgresses(ctx context.Context, chatId int64) (map[string]int64, error) {
@@ -28,7 +30,7 @@ func (rh *EgressService) GetActiveEgresses(ctx context.Context, chatId int64) (m
 	}
 	egresses, err := rh.egressClient.ListEgress(ctx, &listRequest)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Unable to get egresses")
+		GetLogEntry(ctx, rh.lgr).Errorf("Unable to get egresses")
 		return nil, errors.New("Unable to get egresses")
 	}
 
@@ -37,7 +39,7 @@ func (rh *EgressService) GetActiveEgresses(ctx context.Context, chatId int64) (m
 		if egress.Status == livekit.EgressStatus_EGRESS_ACTIVE && egress.EndedAt == 0 {
 			ownerId, err := rh.GetOwnerId(ctx, egress)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Unable to get ownerId of %v: %v", egress.EgressId, err)
+				GetLogEntry(ctx, rh.lgr).Errorf("Unable to get ownerId of %v: %v", egress.EgressId, err)
 			} else {
 				ret[egress.EgressId] = ownerId
 			}
@@ -62,7 +64,7 @@ func (rh *EgressService) GetOwnerId(ctx context.Context, egress *livekit.EgressI
 				if ok {
 					anOwnerId, err := utils.ParseInt64(ownerIdString)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to parse owner id: %v", err)
+						GetLogEntry(ctx, rh.lgr).Errorf("Unable to parse owner id: %v", err)
 					} else {
 						ownerId = anOwnerId
 						wasSet = true

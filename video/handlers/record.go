@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go/v2"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
@@ -23,9 +24,10 @@ type RecordHandler struct {
 	egressService *services.EgressService
 	conf          *config.ExtendedConfig
 	recordPreset  livekit.EncodingOptionsPreset
+	lgr           *log.Logger
 }
 
-func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestClient, egressService *services.EgressService, conf *config.ExtendedConfig) (*RecordHandler, error) {
+func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestClient, egressService *services.EgressService, conf *config.ExtendedConfig, lgr *log.Logger) (*RecordHandler, error) {
 	var recordPreset livekit.EncodingOptionsPreset
 	switch conf.RecordPreset {
 	case "H264_720P_30":
@@ -49,7 +51,7 @@ func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestC
 		return nil, errors.New("Unexpected value of recordPreset")
 	}
 
-	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService, conf: conf, recordPreset: recordPreset}, nil
+	return &RecordHandler{egressClient: egressClient, restClient: restClient, egressService: egressService, conf: conf, recordPreset: recordPreset, lgr: lgr}, nil
 }
 
 func (rh *RecordHandler) canRecord(ctx context.Context, chatId int64, userPrincipalDto *auth.AuthResult) (bool, error) {
@@ -66,7 +68,7 @@ func (rh *RecordHandler) canRecord(ctx context.Context, chatId int64, userPrinci
 func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("id"))
@@ -75,11 +77,11 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	}
 	canRecord, err := rh.canRecord(c.Request().Context(), chatId, userPrincipalDto)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking can record: %v", err)
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during checking can record: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !canRecord {
-		GetLogEntry(c.Request().Context()).Errorf("Only admin car record with this configuration")
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Only admin car record with this configuration")
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
@@ -87,7 +89,7 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 	fileName := fmt.Sprintf("recording_%v.mp4", time.Now().UTC().Format("20060102150405"))
 	s3, err := rh.restClient.GetS3(c.Request().Context(), fileName, chatId, userPrincipalDto.UserId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during gettting s3 %v", err)
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during gettting s3 %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -123,18 +125,18 @@ func (rh *RecordHandler) StartRecording(c echo.Context) error {
 
 	info, err := rh.egressClient.StartRoomCompositeEgress(c.Request().Context(), streamRequest)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during starting recording %v", err)
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during starting recording %v", err)
 		return err
 	}
 	egressId := info.EgressId
-	GetLogEntry(c.Request().Context()).Infof("Starting recording %v", egressId)
+	GetLogEntry(c.Request().Context(), rh.lgr).Infof("Starting recording %v", egressId)
 	return c.JSON(http.StatusAccepted, utils.H{"egressId": egressId})
 }
 
 func (rh *RecordHandler) StopRecording(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("id"))
@@ -143,11 +145,11 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 	}
 	canRecord, err := rh.canRecord(c.Request().Context(), chatId, userPrincipalDto)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking can record: %v", err)
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during checking can record: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !canRecord {
-		GetLogEntry(c.Request().Context()).Errorf("Only admin car record with this configuration")
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Only admin car record with this configuration")
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
@@ -160,10 +162,10 @@ func (rh *RecordHandler) StopRecording(c echo.Context) error {
 		if ownerId == userPrincipalDto.UserId {
 			_, err := rh.egressClient.StopEgress(c.Request().Context(), &livekit.StopEgressRequest{EgressId: egressId})
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Error during stoppping recording %v", err)
+				GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during stoppping recording %v", err)
 			}
 		} else {
-			GetLogEntry(c.Request().Context()).Warnf("Attempt to stop not own egress %v", egressId)
+			GetLogEntry(c.Request().Context(), rh.lgr).Warnf("Attempt to stop not own egress %v", egressId)
 		}
 	}
 
@@ -178,7 +180,7 @@ type StatusResponse struct {
 func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context()).Errorf("Error during getting auth context")
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("id"))
@@ -188,7 +190,7 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 
 	canRecord, err := rh.canRecord(c.Request().Context(), chatId, userPrincipalDto)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during checking can record: %v", err)
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during checking can record: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -201,7 +203,7 @@ func (rh *RecordHandler) StatusRecording(c echo.Context) error {
 
 	egresses, err := rh.egressService.GetActiveEgresses(c.Request().Context(), chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context()).Errorf("Error during get active egresses: %v", err)
+		GetLogEntry(c.Request().Context(), rh.lgr).Errorf("Error during get active egresses: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 

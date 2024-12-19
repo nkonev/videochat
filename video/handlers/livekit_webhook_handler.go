@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/webhook"
+	log "github.com/sirupsen/logrus"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
@@ -20,9 +21,10 @@ type LivekitWebhookHandler struct {
 	egressService          *services.EgressService
 	restClient             *client.RestClient
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher
+	lgr                    *log.Logger
 }
 
-func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService, restClient *client.RestClient, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher) *LivekitWebhookHandler {
+func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService *services.NotificationService, userService *services.UserService, egressService *services.EgressService, restClient *client.RestClient, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher, lgr *log.Logger) *LivekitWebhookHandler {
 	return &LivekitWebhookHandler{
 		config:                 config,
 		notificationService:    notificationService,
@@ -30,6 +32,7 @@ func NewLivekitWebhookHandler(config *config.ExtendedConfig, notificationService
 		egressService:          egressService,
 		restClient:             restClient,
 		rabbitUserIdsPublisher: rabbitUserIdsPublisher,
+		lgr:                    lgr,
 	}
 }
 
@@ -44,18 +47,18 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 		event, err := webhook.ReceiveWebhookEvent(c.Request(), authProvider)
 		if err != nil {
 			// could not validate, handle error
-			Logger.Errorf("got error during webhook.ReceiveWebhookEvent %v %v", event, err)
+			GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during webhook.ReceiveWebhookEvent %v %v", event, err)
 			return err
 		}
 
 		// consume WebhookEvent
-		Logger.Debugf("got %v", event)
+		GetLogEntry(c.Request().Context(), h.lgr).Debugf("got %v", event)
 
 		if event.Event == "participant_joined" || event.Event == "participant_left" {
 
 			chatId, err := utils.GetRoomIdFromName(event.Room.Name)
 			if err != nil {
-				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
+				GetLogEntry(c.Request().Context(), h.lgr).Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
 				return nil
 			}
 
@@ -64,21 +67,21 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 			err = h.restClient.GetChatParticipantIds(c.Request().Context(), chatId, func(participantIds []int64) error {
 				internalErr := h.notificationService.NotifyVideoUserCountChanged(c.Request().Context(), participantIds, chatId, usersCount)
 				if internalErr != nil {
-					Logger.Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, internalErr)
+					GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during notificationService.NotifyVideoUserCountChanged event=%v, %v", event, internalErr)
 					return nil
 				} else {
 					return internalErr
 				}
 			})
 			if err != nil {
-				Logger.Error(err, "Failed during getting chat participantIds")
+				GetLogEntry(c.Request().Context(), h.lgr).Error(err, "Failed during getting chat participantIds")
 				return err
 			}
 
 			if event.Event == "participant_joined" {
 				metadata, err := utils.ParseParticipantMetadataOrNull(event.Participant)
 				if err != nil {
-					Logger.Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", event.Participant, chatId, err)
+					GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", event.Participant, chatId, err)
 				} else if metadata != nil {
 					err = h.rabbitUserIdsPublisher.Publish(c.Request().Context(), &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
 						{
@@ -87,7 +90,7 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 						},
 					}})
 					if err != nil {
-						Logger.Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", metadata.UserId, chatId, err)
+						GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", metadata.UserId, chatId, err)
 					}
 				}
 			}
@@ -95,32 +98,32 @@ func (h *LivekitWebhookHandler) GetLivekitWebhookHandler() echo.HandlerFunc {
 
 			chatId, err := utils.GetRoomIdFromName(event.EgressInfo.RoomName)
 			if err != nil {
-				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
+				GetLogEntry(c.Request().Context(), h.lgr).Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
 				return nil
 			}
 
 			ownerId, err := h.egressService.GetOwnerId(c.Request().Context(), event.EgressInfo)
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
+				GetLogEntry(c.Request().Context(), h.lgr).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
 			}
 			err = h.notificationService.NotifyRecordingChanged(c.Request().Context(), chatId, map[int64]bool{ownerId: true})
 			if err != nil {
-				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+				GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}
 		} else if event.Event == "egress_ended" {
 
 			chatId, err := utils.GetRoomIdFromName(event.EgressInfo.RoomName)
 			if err != nil {
-				Logger.Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
+				GetLogEntry(c.Request().Context(), h.lgr).Error(err, "error during reading chat id from room name event=%v, %v", event, event.Room.Name)
 				return nil
 			}
 			ownerId, err := h.egressService.GetOwnerId(c.Request().Context(), event.EgressInfo)
 			if err != nil {
-				GetLogEntry(c.Request().Context()).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
+				GetLogEntry(c.Request().Context(), h.lgr).Errorf("Unable to get ownerId of %v: %v", event.EgressInfo.EgressId, err)
 			}
 			err = h.notificationService.NotifyRecordingChanged(c.Request().Context(), chatId, map[int64]bool{ownerId: false})
 			if err != nil {
-				Logger.Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+				GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 			}
 		}
 

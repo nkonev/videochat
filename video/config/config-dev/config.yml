@@ -3,6 +3,9 @@ server:
   shutdownTimeout: "10s"
   bodyLimit: "100G"
 
+logger:
+  level: INFO
+
 # Rest client
 http:
   maxIdleConns: 2

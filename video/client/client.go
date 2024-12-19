@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -34,9 +35,10 @@ type RestClient struct {
 	storageBaseUrl                  string
 	storageS3Path                   string
 	tracer                          trace.Tracer
+	lgr                             *log.Logger
 }
 
-func NewRestClient(config *config.ExtendedConfig) *RestClient {
+func NewRestClient(config *config.ExtendedConfig, lgr *log.Logger) *RestClient {
 	tr := &http.Transport{
 		MaxIdleConns:       config.RestClientConfig.MaxIdleConns,
 		IdleConnTimeout:    config.RestClientConfig.IdleConnTimeout,
@@ -61,6 +63,7 @@ func NewRestClient(config *config.ExtendedConfig) *RestClient {
 		storageBaseUrl:                  config.StorageConfig.StorageUrlConfig.Base,
 		storageS3Path:                   config.StorageConfig.StorageUrlConfig.S3,
 		tracer:                          trcr,
+		lgr:                             lgr,
 	}
 }
 
@@ -69,7 +72,7 @@ func (h *RestClient) CheckAccess(c context.Context, userId int64, chatId int64) 
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		GetLogEntry(c).Error(err, "Error during create GET")
+		GetLogEntry(c, h.lgr).Error(err, "Error during create GET")
 		return false, err
 	}
 
@@ -79,7 +82,7 @@ func (h *RestClient) CheckAccess(c context.Context, userId int64, chatId int64) 
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		GetLogEntry(c).Error(err, "Transport error during checking access")
+		GetLogEntry(c, h.lgr).Error(err, "Transport error during checking access")
 		return false, err
 	}
 	defer response.Body.Close()
@@ -89,7 +92,7 @@ func (h *RestClient) CheckAccess(c context.Context, userId int64, chatId int64) 
 		return false, nil
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
-		GetLogEntry(c).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		GetLogEntry(c, h.lgr).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -99,7 +102,7 @@ func (h *RestClient) IsAdmin(c context.Context, userId int64, chatId int64) (boo
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		GetLogEntry(c).Error(err, "Error during create GET")
+		GetLogEntry(c, h.lgr).Error(err, "Error during create GET")
 		return false, err
 	}
 
@@ -109,7 +112,7 @@ func (h *RestClient) IsAdmin(c context.Context, userId int64, chatId int64) (boo
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		GetLogEntry(c).Error(err, "Transport error during checking access")
+		GetLogEntry(c, h.lgr).Error(err, "Transport error during checking access")
 		return false, err
 	}
 	defer response.Body.Close()
@@ -119,7 +122,7 @@ func (h *RestClient) IsAdmin(c context.Context, userId int64, chatId int64) (boo
 		return false, nil
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
-		GetLogEntry(c).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		GetLogEntry(c, h.lgr).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -143,7 +146,7 @@ func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse aaa url:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -158,24 +161,24 @@ func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request get users response:", err)
+		GetLogEntry(c, h.lgr).Warningln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Users response responded non-200 code: ", code)
+		GetLogEntry(c, h.lgr).Warningln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode get users response:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse users:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil
@@ -205,7 +208,7 @@ func (h *RestClient) DoesParticipantBelongToChat(c context.Context, chatId int64
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join + "&chatId=" + fmt.Sprintf("%v", chatId))
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse chat url:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during parse chat url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -220,24 +223,24 @@ func (h *RestClient) DoesParticipantBelongToChat(c context.Context, chatId int64
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request DoesParticipantBelongToChat response:", err)
+		GetLogEntry(c, h.lgr).Warningln("Failed to request DoesParticipantBelongToChat response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("DoesParticipantBelongToChat response responded non-200 code: ", code)
+		GetLogEntry(c, h.lgr).Warningln("DoesParticipantBelongToChat response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode DoesParticipantBelongToChat response:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to decode DoesParticipantBelongToChat response:", err)
 		return nil, err
 	}
 
 	users := &dto.ParticipantsBelongToChat{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse DoesParticipantBelongToChat:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to parse DoesParticipantBelongToChat:", err)
 		return nil, err
 	}
 	return users.Users, nil
@@ -253,9 +256,9 @@ func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64
 		"Content-Type":    {contentType},
 	}
 
-	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId) + "&page="+utils.IntToString(page)+"&size="+utils.IntToString(size))
+	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId) + "&page=" + utils.IntToString(page) + "&size=" + utils.IntToString(size))
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse chat participant ids url:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during parse chat participant ids url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -270,30 +273,30 @@ func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request chat participant ids response:", err)
+		GetLogEntry(c, h.lgr).Warningln("Failed to request chat participant ids response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Chat response responded non-200 code: ", code)
+		GetLogEntry(c, h.lgr).Warningln("Chat response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode chat participant ids response:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to decode chat participant ids response:", err)
 		return nil, err
 	}
 
 	userIds := new([]int64)
 	if err := json.Unmarshal(bodyBytes, userIds); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse chat participant ids:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to parse chat participant ids:", err)
 		return nil, err
 	}
 	return *userIds, nil
 }
 
-func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, consumer func(participantIds []int64) error) (error) {
+func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, consumer func(participantIds []int64) error) error {
 	var lastError error
 	shouldContinue := true
 	for page := 0; shouldContinue; page++ {
@@ -302,13 +305,13 @@ func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, cons
 			shouldContinue = false
 		}
 		if err != nil {
-			GetLogEntry(c).Warningf("got error %v", err)
+			GetLogEntry(c, h.lgr).Warningf("got error %v", err)
 			lastError = err
 			continue
 		}
 		err = consumer(portion)
 		if err != nil {
-			GetLogEntry(c).Errorf("Got error during invoking consumer portion %v", err)
+			GetLogEntry(c, h.lgr).Errorf("Got error during invoking consumer portion %v", err)
 			lastError = err
 			continue
 		}
@@ -335,7 +338,7 @@ func (h *RestClient) GetChatNameForInvite(c context.Context, chatId int64, behal
 
 	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId) + "&behalfUserId=" + utils.Int64ToString(behalfUserId) + "&userIds=" + joinedParticipantIds)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse name for invite url:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during parse name for invite url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -350,24 +353,24 @@ func (h *RestClient) GetChatNameForInvite(c context.Context, chatId int64, behal
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request name for invite response:", err)
+		GetLogEntry(c, h.lgr).Warningln("Failed to request name for invite response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Chat name for invite response responded non-200 code: ", code)
+		GetLogEntry(c, h.lgr).Warningln("Chat name for invite response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode name for invite response:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to decode name for invite response:", err)
 		return nil, err
 	}
 
 	ret := new([]*dto.ChatName)
 	if err := json.Unmarshal(bodyBytes, ret); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse name for invite:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to parse name for invite:", err)
 		return nil, err
 	}
 	return *ret, nil
@@ -391,7 +394,7 @@ func (h *RestClient) GetS3(c context.Context, filename string, chatId int64, use
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse storage s3 url:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during parse storage s3 url:", err)
 		return nil, err
 	}
 
@@ -403,7 +406,7 @@ func (h *RestClient) GetS3(c context.Context, filename string, chatId int64, use
 
 	bytesData, err := json.Marshal(req)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during marshalling:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during marshalling:", err)
 		return nil, err
 	}
 	reader := bytes.NewReader(bytesData)
@@ -423,24 +426,24 @@ func (h *RestClient) GetS3(c context.Context, filename string, chatId int64, use
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request s3 response:", err)
+		GetLogEntry(c, h.lgr).Warningln("Failed to request s3 response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Chat name for s3 response responded non-200 code: ", code)
+		GetLogEntry(c, h.lgr).Warningln("Chat name for s3 response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode s3 response:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to decode s3 response:", err)
 		return nil, err
 	}
 
 	ret := new(dto.S3Response)
 	if err := json.Unmarshal(bodyBytes, ret); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse s3:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to parse s3:", err)
 		return nil, err
 	}
 	return ret, nil
@@ -458,7 +461,7 @@ func (h *RestClient) GetBasicChatInfo(c context.Context, chatId int64, userId in
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed during parse BasicChatInfo for invite url:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed during parse BasicChatInfo for invite url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -473,24 +476,24 @@ func (h *RestClient) GetBasicChatInfo(c context.Context, chatId int64, userId in
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c).Warningln("Failed to request BasicChatInfo for invite response:", err)
+		GetLogEntry(c, h.lgr).Warningln("Failed to request BasicChatInfo for invite response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c).Warningln("Chat BasicChatInfo for invite response responded non-200 code: ", code)
+		GetLogEntry(c, h.lgr).Warningln("Chat BasicChatInfo for invite response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c).Errorln("Failed to decode BasicChatInfo for invite response:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to decode BasicChatInfo for invite response:", err)
 		return nil, err
 	}
 
 	ret := new(dto.BasicChatDto)
 	if err := json.Unmarshal(bodyBytes, ret); err != nil {
-		GetLogEntry(c).Errorln("Failed to parse BasicChatInfo for invite:", err)
+		GetLogEntry(c, h.lgr).Errorln("Failed to parse BasicChatInfo for invite:", err)
 		return nil, err
 	}
 	return ret, nil

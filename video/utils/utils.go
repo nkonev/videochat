@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/livekit"
+	log "github.com/sirupsen/logrus"
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
-	. "nkonev.name/video/logger"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,10 +31,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			Logger.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			lgr.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}
@@ -150,7 +150,6 @@ func GetIndexOfString(ids []string, elem string) int {
 	return -1
 }
 
-
 func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
 }
@@ -197,11 +196,11 @@ func IsNotHumanUser(identity string) bool {
 	return split[0] == "EG"
 }
 
-func MakeMetadata(userId int64, userLogin string, avatar string, tokenId uuid.UUID ) (string, error) {
+func MakeMetadata(userId int64, userLogin string, avatar string, tokenId uuid.UUID) (string, error) {
 	md := &dto.MetadataDto{
-		UserId: userId,
-		Login:  userLogin,
-		Avatar: avatar,
+		UserId:  userId,
+		Login:   userLogin,
+		Avatar:  avatar,
 		TokenId: tokenId,
 	}
 

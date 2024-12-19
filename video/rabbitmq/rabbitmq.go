@@ -3,19 +3,19 @@ package rabbitmq
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/video/config"
-	. "nkonev.name/video/logger"
 )
 
 type VideoListenerFunction func(data []byte) error
 
-func CreateRabbitMqConnection(conf *config.ExtendedConfig) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *log.Logger, conf *config.ExtendedConfig) *rabbitmq.Connection {
 	rabbitmq.Debug = conf.RabbitMqConfig.Debug
 
 	conn, err := rabbitmq.Dial(conf.RabbitMqConfig.Url)
 	if err != nil {
-		Logger.Error(err, "Unable to connect to rabbitmq")
+		lgr.Error(err, "Unable to connect to rabbitmq")
 		panic(err)
 	}
 
@@ -23,34 +23,36 @@ func CreateRabbitMqConnection(conf *config.ExtendedConfig) *rabbitmq.Connection 
 }
 
 func CreateRabbitMqChannelWithRecreate(
+	lgr *log.Logger,
 	connection *rabbitmq.Connection,
 	callback func(argChannel *rabbitmq.Channel) error,
 ) *rabbitmq.Channel {
 	channel, err := connection.Channel(callback)
 	if err != nil {
-		Logger.Error(err, "Unable to create channel")
+		lgr.Error(err, "Unable to create channel")
 		panic(err)
 	}
 	return channel
 }
 
 func CreateRabbitMqChannel(
+	lgr *log.Logger,
 	connection *rabbitmq.Connection,
 ) *rabbitmq.Channel {
 	channel, err := connection.Channel(func(argChannel *rabbitmq.Channel) error {
 		return nil
 	})
 	if err != nil {
-		Logger.Error(err, "Unable to create channel")
+		lgr.Error(err, "Unable to create channel")
 		panic(err)
 	}
 	return channel
 }
 
-func CreateRabbitMqChannelWithCallback(connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *log.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
-		Logger.Panic(err)
+		lgr.Panic(err)
 	}
 	return consumeCh
 }

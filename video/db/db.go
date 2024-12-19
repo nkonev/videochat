@@ -9,20 +9,30 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"net/http"
-	. "nkonev.name/video/logger"
 	"time"
 )
 
 // https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
 type DB struct {
 	*sql.DB
+	lgr *log.Logger
 }
 
 type Tx struct {
 	*sql.Tx
+	lgr *log.Logger
+}
+
+func (dbR *DB) logger() *log.Logger {
+	return dbR.lgr
+}
+
+func (tx *Tx) logger() *log.Logger {
+	return tx.lgr
 }
 
 type MigrationsConfig struct {
@@ -34,6 +44,7 @@ type CommonOperations interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	logger() *log.Logger
 }
 
 func (dbR *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
@@ -63,14 +74,14 @@ func (txR *Tx) ExecContext(ctx context.Context, query string, args ...interface{
 const postgresDriverString = "pgx"
 
 // Open returns a DB reference for a data source.
-func Open(conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
+func Open(lgr *log.Logger, conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
 	if db, err := sql.Open(postgresDriverString, conninfo); err != nil {
 		return nil, err
 	} else {
 		db.SetConnMaxLifetime(maxLifetime)
 		db.SetMaxIdleConns(maxIdle)
 		db.SetMaxOpenConns(maxOpen)
-		return &DB{db}, nil
+		return &DB{db, lgr}, nil
 	}
 }
 
@@ -79,29 +90,29 @@ func (db *DB) Begin(ctx context.Context) (*Tx, error) {
 	if tx, err := db.DB.BeginTx(ctx, nil); err != nil {
 		return nil, err
 	} else {
-		return &Tx{tx}, nil
+		return &Tx{tx, db.lgr}, nil
 	}
 }
 
 func (tx *Tx) SafeRollback() {
 	if err0 := tx.Rollback(); err0 != nil {
-		Logger.Errorf("Error during rollback tx %v", err0)
+		tx.lgr.Errorf("Error during rollback tx %v", err0)
 	}
 }
 
 //go:embed migrations
 var embeddedFiles embed.FS
 
-func migrateInternal(db *sql.DB, path, migrationTable string) {
+func migrateInternal(lgr *log.Logger, db *sql.DB, path, migrationTable string) {
 	staticDir := http.FS(embeddedFiles)
 	src, err := httpfs.New(staticDir, "migrations"+path)
 	if err != nil {
-		Logger.Fatal(err)
+		lgr.Fatal(err)
 	}
 
 	d, err := time.ParseDuration("15m")
 	if err != nil {
-		Logger.Fatal(err)
+		lgr.Fatal(err)
 	}
 
 	pgInstance, err := postgres.WithInstance(db, &postgres.Config{
@@ -109,42 +120,42 @@ func migrateInternal(db *sql.DB, path, migrationTable string) {
 		StatementTimeout: d,
 	})
 	if err != nil {
-		Logger.Fatal(err)
+		lgr.Fatal(err)
 	}
 
 	m, err := migrate.NewWithInstance("httpfs", src, "", pgInstance)
 	if err != nil {
-		Logger.Fatal(err)
+		lgr.Fatal(err)
 	}
 	//defer m.Close()
 	if err := m.Up(); err != nil && err.Error() != "no change" {
-		Logger.Fatal(err)
+		lgr.Fatal(err)
 	}
 }
 
-func (db *DB) Migrate(migrationsConfig *MigrationsConfig) {
-	Logger.Infof("Starting prod migration")
-	migrateInternal(db.DB, "/prod", "go_migrate")
-	Logger.Infof("Migration successful prod completed")
+func (db *DB) Migrate(lgr *log.Logger, migrationsConfig *MigrationsConfig) {
+	lgr.Infof("Starting prod migration")
+	migrateInternal(lgr, db.DB, "/prod", "go_migrate")
+	lgr.Infof("Migration successful prod completed")
 
 	if migrationsConfig.AppendTestData {
-		Logger.Infof("Starting test migration")
-		migrateInternal(db.DB, "/test", "go_migrate_test")
-		Logger.Infof("Migration successful test completed")
+		lgr.Infof("Starting test migration")
+		migrateInternal(lgr, db.DB, "/test", "go_migrate_test")
+		lgr.Infof("Migration successful test completed")
 	}
 }
 
-func ConfigureDb(lc fx.Lifecycle) (*DB, error) {
+func ConfigureDb(lgr *log.Logger, lc fx.Lifecycle) (*DB, error) {
 	dbConnectionString := viper.GetString("postgresql.url")
 	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
 	maxIdle := viper.GetInt("postgresql.maxIdleConnections")
 	maxLifeTime := viper.GetDuration("postgresql.maxLifetime")
-	dbInstance, err := Open(dbConnectionString, maxOpen, maxIdle, maxLifeTime)
+	dbInstance, err := Open(lgr, dbConnectionString, maxOpen, maxIdle, maxLifeTime)
 
 	if lc != nil {
 		lc.Append(fx.Hook{
 			OnStop: func(ctx context.Context) error {
-				Logger.Infof("Stopping db connection")
+				lgr.Infof("Stopping db connection")
 				return dbInstance.Close()
 			},
 		})
@@ -161,8 +172,8 @@ func (db *DB) RecreateDb() {
     GRANT ALL ON SCHEMA public TO public;
     COMMENT ON SCHEMA public IS 'standard public schema';
 `)
-	Logger.Warn("Recreating database")
+	db.lgr.Warn("Recreating database")
 	if err != nil {
-		Logger.Panicf("Error during dropping db: %v", err)
+		db.lgr.Panicf("Error during dropping db: %v", err)
 	}
 }

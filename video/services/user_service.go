@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/livekit/protocol/livekit"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -20,9 +21,10 @@ type UserService struct {
 	database                *db.DB
 	rabbitUserIdsPublisher  *producer.RabbitUserIdsPublisher
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
+	lgr                     *log.Logger
 }
 
-func NewUserService(livekitRoomClient client.LivekitRoomClient, database *db.DB, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher, rabbitMqInvitePublisher *producer.RabbitInvitePublisher) *UserService {
+func NewUserService(livekitRoomClient client.LivekitRoomClient, database *db.DB, rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher, rabbitMqInvitePublisher *producer.RabbitInvitePublisher, lgr *log.Logger) *UserService {
 	tr := otel.Tracer("userService")
 
 	return &UserService{
@@ -31,6 +33,7 @@ func NewUserService(livekitRoomClient client.LivekitRoomClient, database *db.DB,
 		database:                database,
 		rabbitUserIdsPublisher:  rabbitUserIdsPublisher,
 		rabbitMqInvitePublisher: rabbitMqInvitePublisher,
+		lgr:                     lgr,
 	}
 }
 
@@ -67,14 +70,14 @@ func (vh *UserService) GetVideoParticipants(ctx context.Context, chatId int64) (
 	lpr := &livekit.ListParticipantsRequest{Room: roomName}
 	participants, err := vh.livekitRoomClient.ListParticipants(ctx, lpr)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Unable to get participants %v", err)
+		GetLogEntry(ctx, vh.lgr).Errorf("Unable to get participants %v", err)
 		return ret, err
 	}
 
 	for _, participant := range participants.Participants {
 		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
+			GetLogEntry(ctx, vh.lgr).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 			continue
 		}
 		if metadata == nil {
@@ -101,14 +104,14 @@ func (vh *UserService) KickUserHavingChatId(ctx context.Context, chatId, userId 
 	lpr := &livekit.ListParticipantsRequest{Room: roomName}
 	participants, err := vh.livekitRoomClient.ListParticipants(ctx, lpr)
 	if err != nil {
-		GetLogEntry(ctx).Errorf("Unable to get participants %v", err)
+		GetLogEntry(ctx, vh.lgr).Errorf("Unable to get participants %v", err)
 		return
 	}
 
 	for _, participant := range participants.Participants {
 		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
+			GetLogEntry(ctx, vh.lgr).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 			continue
 		}
 		if metadata == nil {
@@ -119,10 +122,10 @@ func (vh *UserService) KickUserHavingChatId(ctx context.Context, chatId, userId 
 				Room:     roomName,
 				Identity: participant.Identity,
 			}
-			GetLogEntry(ctx).Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
+			GetLogEntry(ctx, vh.lgr).Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
 			_, err := vh.livekitRoomClient.RemoveParticipant(ctx, removeReq)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("got error during kicking userId=%v, %v", userId, err)
+				GetLogEntry(ctx, vh.lgr).Errorf("got error during kicking userId=%v, %v", userId, err)
 				continue
 			}
 		}
@@ -137,28 +140,28 @@ func (vh *UserService) KickUser(ctx context.Context, userId int64) {
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := vh.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "error during reading rooms %v", err)
+		GetLogEntry(ctx, vh.lgr).Error(err, "error during reading rooms %v", err)
 		return
 	}
 
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx, vh.lgr).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
 		lpr := &livekit.ListParticipantsRequest{Room: room.Name}
 		participants, err := vh.livekitRoomClient.ListParticipants(ctx, lpr)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable to get participants %v", err)
+			GetLogEntry(ctx, vh.lgr).Errorf("Unable to get participants %v", err)
 			continue
 		}
 
 		for _, participant := range participants.Participants {
 			metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
+				GetLogEntry(ctx, vh.lgr).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 				continue
 			}
 			if metadata == nil {
@@ -169,10 +172,10 @@ func (vh *UserService) KickUser(ctx context.Context, userId int64) {
 					Room:     room.Name,
 					Identity: participant.Identity,
 				}
-				GetLogEntry(ctx).Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
+				GetLogEntry(ctx, vh.lgr).Infof("Kicking userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
 				_, err := vh.livekitRoomClient.RemoveParticipant(ctx, removeReq)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("got error during kicking userId=%v, %v", userId, err)
+					GetLogEntry(ctx, vh.lgr).Errorf("got error during kicking userId=%v, %v", userId, err)
 					continue
 				}
 			}
@@ -188,13 +191,13 @@ func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) 
 		// soft remove owned (callee, invitee) by user
 		ownedByMe, err := tx.GetByOwnerUserIdFromAllChats(ctx, userId)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable to find owned by user userId %v, error: %v", userId, err)
+			GetLogEntry(ctx, h.lgr).Errorf("Unable to find owned by user userId %v, error: %v", userId, err)
 		}
 		for _, owned := range ownedByMe {
 			if owned.Status == db.CallStatusBeingInvited {
 				err = tx.SetRemoving(ctx, dto.UserCallStateId{owned.TokenId, owned.UserId}, db.CallStatusRemoving)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", owned.TokenId, owned.UserId, err)
+					GetLogEntry(ctx, h.lgr).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", owned.TokenId, owned.UserId, err)
 				}
 
 				invitation := dto.VideoCallInvitation{
@@ -203,7 +206,7 @@ func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) 
 				}
 				err = h.rabbitMqInvitePublisher.Publish(ctx, &invitation, owned.UserId)
 				if err != nil {
-					GetLogEntry(ctx).Error(err, "Error during sending VideoInviteDto")
+					GetLogEntry(ctx, h.lgr).Error(err, "Error during sending VideoInviteDto")
 				}
 			}
 		}
@@ -212,13 +215,13 @@ func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) 
 		// soft remove the user
 		myStates, err := tx.GetByCalleeUserIdFromAllChats(ctx, userId)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Unable to find states of user userId %v, error: %v", userId, err)
+			GetLogEntry(ctx, h.lgr).Errorf("Unable to find states of user userId %v, error: %v", userId, err)
 		}
 		for _, mySt := range myStates {
 			if mySt.Status == db.CallStatusInCall || mySt.Status == db.CallStatusBeingInvited {
 				err = tx.SetRemoving(ctx, dto.UserCallStateId{UserId: mySt.UserId, TokenId: mySt.TokenId}, db.CallStatusRemoving)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", mySt.TokenId, mySt.UserId, err)
+					GetLogEntry(ctx, h.lgr).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, error: %v", mySt.TokenId, mySt.UserId, err)
 				}
 			}
 		}
@@ -229,7 +232,7 @@ func (h *UserService) ProcessCallOnDisabling(ctx context.Context, userId int64) 
 			},
 		}})
 		if err != nil {
-			GetLogEntry(ctx).Errorf("Error during notifying about user is in video, userId=%v, error=%v", userId, err)
+			GetLogEntry(ctx, h.lgr).Errorf("Error during notifying about user is in video, userId=%v, error=%v", userId, err)
 		}
 		return nil
 	})

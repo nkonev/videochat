@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/livekit/protocol/livekit"
 	"github.com/nkonev/dcron"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -24,6 +25,7 @@ type SynchronizeWithLivekitService struct {
 	restClient                *client.RestClient
 	rabbitUserIdsPublisher    *producer.RabbitUserIdsPublisher
 	rabbitUserInvitePublisher *producer.RabbitInvitePublisher
+	lgr                       *log.Logger
 }
 
 func NewSynchronizeWithLivekitService(
@@ -33,6 +35,7 @@ func NewSynchronizeWithLivekitService(
 	restClient *client.RestClient,
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
 	rabbitUserInvitePublisher *producer.RabbitInvitePublisher,
+	lgr *log.Logger,
 ) *SynchronizeWithLivekitService {
 	trcr := otel.Tracer("scheduler/synchronize-with-livekit")
 	return &SynchronizeWithLivekitService{
@@ -43,6 +46,7 @@ func NewSynchronizeWithLivekitService(
 		restClient:                restClient,
 		rabbitUserIdsPublisher:    rabbitUserIdsPublisher,
 		rabbitUserInvitePublisher: rabbitUserInvitePublisher,
+		lgr:                       lgr,
 	}
 }
 
@@ -50,7 +54,7 @@ func (srv *SynchronizeWithLivekitService) DoJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.SynchronizeWithLivekit")
 	defer span.End()
 
-	GetLogEntry(ctx).Debugf("Invoked periodic SynchronizeWithLivekit")
+	GetLogEntry(ctx, srv.lgr).Debugf("Invoked periodic SynchronizeWithLivekit")
 
 	srv.cleanOrphans(ctx)
 
@@ -65,7 +69,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
 			// here we use order by owner_id
 			batchUserStates, err := tx.GetAllUserStates(ctx, utils.DefaultSize, offset)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("error during reading user states %v", err)
+				GetLogEntry(ctx, srv.lgr).Errorf("error during reading user states %v", err)
 				return err
 			}
 			srv.processBatch(ctx, tx, batchUserStates)
@@ -77,7 +81,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
 		})
 
 		if err != nil {
-			GetLogEntry(ctx).Errorf("error during processing: %v", err)
+			GetLogEntry(ctx, srv.lgr).Errorf("error during processing: %v", err)
 			continue
 		}
 	}
@@ -98,24 +102,24 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 		if st.Status == db.CallStatusInCall {
 			// 2. removing
 			if st.MarkedForOrphanRemoveAttempt >= viper.GetInt("schedulers.synchronizeWithLivekitTask.orphanUserIteration") {
-				GetLogEntry(ctx).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
+				GetLogEntry(ctx, srv.lgr).Warnf("Removing owned call by user tokenId %v, userId %v because attempts were exhausted", st.TokenId, st.UserId)
 				// case 2.a user is owner of the call
 				// soft remove owned (callee, invitee) by user
 				invitedByMe, err := tx.GetBeingInvitedByOwnerId(ctx, userCallStateId, chatId)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to find owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
+					GetLogEntry(ctx, srv.lgr).Errorf("Unable to find owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
 				for _, invitee := range invitedByMe {
 					err = tx.SetRemoving(ctx, dto.UserCallStateId{invitee.TokenId, invitee.UserId}, db.CallStatusRemoving)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
+						GetLogEntry(ctx, srv.lgr).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 					}
 				}
 				// case 2.b user is just user
 				// soft remove the user
 				err = tx.SetRemoving(ctx, userCallStateId, db.CallStatusRemoving)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
+					GetLogEntry(ctx, srv.lgr).Errorf("Unable to move invitee to remoning status owned by user tokenId %v, userId %v, chatId %v, error: %v", st.TokenId, st.UserId, chatId, err)
 				}
 
 				err = srv.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: []dto.VideoCallUserCallStatusChangedDto{
@@ -125,7 +129,7 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 					},
 				}})
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", st.UserId, chatId, err)
+					GetLogEntry(ctx, srv.lgr).Errorf("Error during notifying about user is in video, userId=%v, chatId=%v, error=%v", st.UserId, chatId, err)
 				}
 
 				continue // because we don't need increment an attempt
@@ -134,24 +138,24 @@ func (srv *SynchronizeWithLivekitService) processBatch(ctx context.Context, tx *
 			// 1. changing attempt number
 			videoParticipants, err := srv.userService.GetVideoParticipants(ctx, chatId)
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Unable to get video participants of %v", chatId)
+				GetLogEntry(ctx, srv.lgr).Errorf("Unable to get video participants of %v", chatId)
 				continue
 			}
 			if !srv.Contains(videoParticipants, userCallStateId) {
 				newAttempt := st.MarkedForOrphanRemoveAttempt + 1
-				GetLogEntry(ctx).Infof("Setting attempt %v on userCallState %v of user tokenId %v, userId %v because they aren't among video room participants", newAttempt, st.Status, st.TokenId, st.UserId)
+				GetLogEntry(ctx, srv.lgr).Infof("Setting attempt %v on userCallState %v of user tokenId %v, userId %v because they aren't among video room participants", newAttempt, st.Status, st.TokenId, st.UserId)
 				err = tx.SetMarkedForOrphanRemoveAttempt(ctx, userCallStateId, newAttempt)
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
+					GetLogEntry(ctx, srv.lgr).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
 					continue
 				}
 			} else {
 				if st.MarkedForOrphanRemoveAttempt >= 1 {
-					GetLogEntry(ctx).Infof("Resetting attempt on userCallState %v of user tokenId %v, userId %v because they appeared among video room participants", st.Status, userCallStateId.TokenId, userCallStateId.UserId)
+					GetLogEntry(ctx, srv.lgr).Infof("Resetting attempt on userCallState %v of user tokenId %v, userId %v because they appeared among video room participants", st.Status, userCallStateId.TokenId, userCallStateId.UserId)
 
 					err = tx.SetMarkedForOrphanRemoveAttempt(ctx, userCallStateId, db.UserCallMarkedForOrphanRemoveAttemptNotSet)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
+						GetLogEntry(ctx, srv.lgr).Errorf("Unable to set user markedForChangeStatusAttempt user tokenId %v, userId %v", st.TokenId, st.UserId)
 						continue
 					}
 				}
@@ -165,20 +169,20 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := srv.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "error during reading rooms %v", err)
+		GetLogEntry(ctx, srv.lgr).Error(err, "error during reading rooms %v", err)
 		return
 	}
 
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx, srv.lgr).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
 		videoParticipants, err := srv.userService.GetVideoParticipants(ctx, chatId)
 		if err != nil {
-			GetLogEntry(ctx).Errorf("got error during getting videoParticipants from roomName %v %v", room.Name, err)
+			GetLogEntry(ctx, srv.lgr).Errorf("got error during getting videoParticipants from roomName %v %v", room.Name, err)
 			continue
 		}
 
@@ -190,30 +194,30 @@ func (srv *SynchronizeWithLivekitService) createParticipants(ctx context.Context
 					UserId:  videoParticipant.UserId,
 				})
 				if err != nil {
-					GetLogEntry(ctx).Errorf("Unable to get user call state %v", err)
+					GetLogEntry(ctx, srv.lgr).Errorf("Unable to get user call state %v", err)
 					return err
 				}
 
 				// if there is no status in redis, but we have it in livekit - then create
 				if userState.Status == db.CallStatusNotFound {
-					GetLogEntry(ctx).Warnf("Populating user with tokenId %v userId %v from livekit to redis in chat %v", videoParticipant.TokenId, videoParticipant.UserId, chatId)
+					GetLogEntry(ctx, srv.lgr).Warnf("Populating user with tokenId %v userId %v from livekit to redis in chat %v", videoParticipant.TokenId, videoParticipant.UserId, chatId)
 
 					chatInfo, err := srv.restClient.GetBasicChatInfo(ctx, chatId, videoParticipant.UserId)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to GetBasicChatInfo %v", err)
+						GetLogEntry(ctx, srv.lgr).Errorf("Unable to GetBasicChatInfo %v", err)
 						return err
 					}
 
 					err = tx.AddAsEntered(ctx, videoParticipant.TokenId, videoParticipant.UserId, chatId, chatInfo.TetATet)
 					if err != nil {
-						GetLogEntry(ctx).Errorf("Unable to AddToDialList %v", err)
+						GetLogEntry(ctx, srv.lgr).Errorf("Unable to AddToDialList %v", err)
 						return err
 					}
 				}
 				return nil
 			})
 			if err != nil {
-				GetLogEntry(ctx).Errorf("Error: %v", err)
+				GetLogEntry(ctx, srv.lgr).Errorf("Error: %v", err)
 				continue
 			}
 		}
@@ -235,10 +239,11 @@ type SynchronizeWithLivekitTask struct {
 
 func SynchronizeWithLivekitSheduler(
 	service *SynchronizeWithLivekitService,
+	lgr *log.Logger,
 ) *SynchronizeWithLivekitTask {
 	const key = "synchronizeWithLivekitTask"
 	var str = viper.GetString("schedulers." + key + ".cron")
-	Logger.Infof("Created SynchronizeWithLivekitSheduler with cron %v", str)
+	lgr.Infof("Created SynchronizeWithLivekitSheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.DoJob()

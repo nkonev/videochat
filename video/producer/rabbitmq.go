@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
@@ -27,7 +28,7 @@ func (rp *RabbitUserCountPublisher) Publish(ctx context.Context, participantIds 
 
 		bytea, err := json.Marshal(event)
 		if err != nil {
-			GetLogEntry(ctx).Error(err, "Failed during marshal chatNotifyDto")
+			GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal chatNotifyDto")
 			continue
 		}
 
@@ -41,7 +42,7 @@ func (rp *RabbitUserCountPublisher) Publish(ctx context.Context, participantIds 
 		}
 
 		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-			GetLogEntry(ctx).Error(err, "Error during publishing")
+			GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 			continue
 		}
 	}
@@ -50,33 +51,28 @@ func (rp *RabbitUserCountPublisher) Publish(ctx context.Context, participantIds 
 
 type RabbitUserCountPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitUserCountPublisher(connection *rabbitmq.Connection) *RabbitUserCountPublisher {
+func NewRabbitUserCountPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitUserCountPublisher {
 	return &RabbitUserCountPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }
-
-
-
-
-
-
-
 
 // in_video = red dot
 func (rp *RabbitUserIdsPublisher) Publish(ctx context.Context, videoCallUsersCallStatusChanged *dto.VideoCallUsersCallStatusChangedDto) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
 	event := dto.GeneralEvent{
-		EventType:               "user_in_video_call_changed",
+		EventType:                            "user_in_video_call_changed",
 		VideoCallUsersCallStatusChangedEvent: videoCallUsersCallStatusChanged,
 	}
 
 	bytea, err := json.Marshal(event)
 	if err != nil {
-		GetLogEntry(ctx).Error(err, "Failed during marshal chatNotifyDto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal chatNotifyDto")
 		return err
 	}
 
@@ -90,7 +86,7 @@ func (rp *RabbitUserIdsPublisher) Publish(ctx context.Context, videoCallUsersCal
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-		GetLogEntry(ctx).Error(err, "Error during publishing")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 		return err
 	}
 	return nil
@@ -98,19 +94,15 @@ func (rp *RabbitUserIdsPublisher) Publish(ctx context.Context, videoCallUsersCal
 
 type RabbitUserIdsPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitUserIdsPublisher(connection *rabbitmq.Connection) *RabbitUserIdsPublisher {
+func NewRabbitUserIdsPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitUserIdsPublisher {
 	return &RabbitUserIdsPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }
-
-
-
-
-
-
 
 // sends "you are invited"
 func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto.VideoCallInvitation, toUserId int64) error {
@@ -124,7 +116,7 @@ func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto
 
 	bytea, err := json.Marshal(event)
 	if err != nil {
-		Logger.Error(err, "Failed during marshal videoChatInvitationDto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal videoChatInvitationDto")
 		return err
 	}
 
@@ -134,29 +126,31 @@ func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto
 		ContentType:  "application/json",
 		Body:         bytea,
 		Type:         utils.GetType(event),
-		Headers: 	  headers,
+		Headers:      headers,
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-		Logger.Error(err, "Error during publishing")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 	}
 	return err
 }
 
 type RabbitInvitePublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitInvitePublisher(connection *rabbitmq.Connection) *RabbitInvitePublisher {
+func NewRabbitInvitePublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitInvitePublisher {
 	return &RabbitInvitePublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }
 
 // send info about user being invited, used in ChatParticipants (blinking green tube) and ChatView (blinking it tet-a-tet)
 func (rp *RabbitDialStatusPublisher) Publish(
 	ctx context.Context,
-	chatId       int64,
+	chatId int64,
 	userStatuses map[int64]string,
 	toUserId int64,
 ) {
@@ -184,7 +178,7 @@ func (rp *RabbitDialStatusPublisher) Publish(
 
 	bytea, err := json.Marshal(event)
 	if err != nil {
-		Logger.Error(err, "Failed during marshal videoChatInvitationDto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal videoChatInvitationDto")
 		return
 	}
 
@@ -198,17 +192,19 @@ func (rp *RabbitDialStatusPublisher) Publish(
 	}
 
 	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-		Logger.Error(err, "Error during publishing")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 	}
 }
 
 type RabbitDialStatusPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitDialStatusPublisher(connection *rabbitmq.Connection) *RabbitDialStatusPublisher {
+func NewRabbitDialStatusPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitDialStatusPublisher {
 	return &RabbitDialStatusPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }
 
@@ -229,7 +225,7 @@ func (rp *RabbitRecordingPublisher) Publish(ctx context.Context, recordInProgres
 
 		bytea, err := json.Marshal(event)
 		if err != nil {
-			GetLogEntry(ctx).Error(err, "Failed during marshal chatNotifyDto")
+			GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal chatNotifyDto")
 			continue
 		}
 
@@ -243,7 +239,7 @@ func (rp *RabbitRecordingPublisher) Publish(ctx context.Context, recordInProgres
 		}
 
 		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-			GetLogEntry(ctx).Error(err, "Error during publishing")
+			GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 			continue
 		}
 	}
@@ -252,11 +248,13 @@ func (rp *RabbitRecordingPublisher) Publish(ctx context.Context, recordInProgres
 
 type RabbitRecordingPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitRecordingPublisher(connection *rabbitmq.Connection) *RabbitRecordingPublisher {
+func NewRabbitRecordingPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitRecordingPublisher {
 	return &RabbitRecordingPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }
 
@@ -265,7 +263,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, notificatio
 
 	bytea, err := json.Marshal(notification)
 	if err != nil {
-		Logger.Error(err, "Failed during marshal dto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal dto")
 		return err
 	}
 
@@ -278,7 +276,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, notificatio
 	}
 
 	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
-		Logger.Error(err, "Error during publishing dto")
+		GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing dto")
 		return err
 	} else {
 		return nil
@@ -287,11 +285,13 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, notificatio
 
 type RabbitNotificationsPublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitNotificationsPublisher(connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
+func NewRabbitNotificationsPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
 	return &RabbitNotificationsPublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }
 
@@ -300,14 +300,14 @@ func (rp *RabbitScreenSharePublisher) Publish(ctx context.Context, participantId
 
 	for _, participantId := range participantIds {
 		event := dto.GlobalUserEvent{
-			EventType:               "video_screenshare_changed",
-			UserId:                  participantId,
+			EventType:                      "video_screenshare_changed",
+			UserId:                         participantId,
 			VideoCallScreenShareChangedDto: chatNotifyDto,
 		}
 
 		bytea, err := json.Marshal(event)
 		if err != nil {
-			GetLogEntry(ctx).Error(err, "Failed during marshal chatNotifyDto")
+			GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal chatNotifyDto")
 			continue
 		}
 
@@ -321,7 +321,7 @@ func (rp *RabbitScreenSharePublisher) Publish(ctx context.Context, participantId
 		}
 
 		if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
-			GetLogEntry(ctx).Error(err, "Error during publishing")
+			GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing")
 			continue
 		}
 	}
@@ -330,10 +330,12 @@ func (rp *RabbitScreenSharePublisher) Publish(ctx context.Context, participantId
 
 type RabbitScreenSharePublisher struct {
 	channel *rabbitmq.Channel
+	lgr     *log.Logger
 }
 
-func NewRabbitScreenSharePublisher(connection *rabbitmq.Connection) *RabbitScreenSharePublisher {
+func NewRabbitScreenSharePublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitScreenSharePublisher {
 	return &RabbitScreenSharePublisher{
-		channel: myRabbitmq.CreateRabbitMqChannel(connection),
+		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
+		lgr:     lgr,
 	}
 }

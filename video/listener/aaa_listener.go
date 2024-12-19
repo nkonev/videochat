@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/video/dto"
-	. "nkonev.name/video/logger"
 	"nkonev.name/video/rabbitmq"
 	"nkonev.name/video/services"
 	"nkonev.name/video/type_registry"
@@ -16,7 +16,7 @@ import (
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserSessionsKilledListener(userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
+func CreateAaaUserSessionsKilledListener(lgr *log.Logger, userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -27,11 +27,11 @@ func CreateAaaUserSessionsKilledListener(userService *services.UserService, type
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		Logger.Debugf("Received %v with type %v", strData, aType)
+		lgr.Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
 			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			Logger.Debugf(errStr)
+			lgr.Debugf(errStr)
 			return nil
 		}
 
@@ -41,7 +41,7 @@ func CreateAaaUserSessionsKilledListener(userService *services.UserService, type
 		case dto.UserSessionsKilledEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				Logger.Errorf("Error during deserialize notification %v", err)
+				lgr.Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			if bindTo.EventType == "user_sessions_killed" {
@@ -50,7 +50,7 @@ func CreateAaaUserSessionsKilledListener(userService *services.UserService, type
 			}
 
 		default:
-			Logger.Errorf("Unexpected type : %v", anInstance)
+			lgr.Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 
 		}
