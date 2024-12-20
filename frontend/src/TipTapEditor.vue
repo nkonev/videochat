@@ -2,7 +2,7 @@
   <div class="richText">
     <input id="file-input" type="file" style="display: none;" accept="image/*,video/*,audio/*" multiple="multiple" />
     <div :class="editorContainer()">
-      <template v-if="!chatStore.shouldShowSendMessageButtons">
+      <div v-if="editor">
         <bubble-menu
             :updateDelay="0"
             :resizeDelay="0"
@@ -43,7 +43,7 @@
             </button>
           </div>
         </floating-menu>
-      </template>
+      </div>
 
       <editor-content :editor="editor" class="editorContent" />
     </div>
