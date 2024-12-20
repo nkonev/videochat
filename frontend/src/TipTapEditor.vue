@@ -4,6 +4,7 @@
     <div :class="editorContainer()">
       <div v-if="editor">
         <bubble-menu
+            :should-show="shouldShowBubbleMenu"
             :updateDelay="0"
             :resizeDelay="0"
             :editor="editor"
@@ -23,6 +24,7 @@
 
         <floating-menu
             :editor="editor"
+            :should-show="shouldShowFloatingMenu"
         >
           <div class="floating-menu">
             <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
@@ -53,7 +55,8 @@
 <script>
 import "prosemirror-view/style/prosemirror.css";
 import "./messageBody.styl";
-import { Editor, EditorContent, BubbleMenu, FloatingMenu } from "@tiptap/vue-3";
+import {Editor, EditorContent, BubbleMenu, FloatingMenu, isTextSelection} from "@tiptap/vue-3";
+import { getText, getTextSerializersFromSchema } from '@tiptap/core';
 import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -316,6 +319,68 @@ export default {
     },
     embedClick() {
       bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
+    },
+    // patched version of https://github.com/ueberdosis/tiptap/blob/a6919e60a089227a63b667a3460adfd9e8dac1f8/packages/extension-bubble-menu/src/bubble-menu-plugin.ts#L132
+    shouldShowBubbleMenu({
+      editor,
+      element,
+      view,
+      state,
+      from,
+      to,
+    }) {
+      if (this.chatStore.shouldShowSendMessageButtons) {
+        return false
+      }
+
+      const { doc, selection } = state
+      const { empty } = selection
+
+      // Sometime check for `empty` is not enough.
+      // Doubleclick an empty paragraph returns a node size of 2.
+      // So we check also for an empty text size.
+      const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(state.selection)
+
+      // When clicking on a element inside the bubble menu the editor "blur" event
+      // is called and the bubble menu item is focussed. In this case we should
+      // consider the menu as part of the editor and keep showing the menu
+      const isChildOfMenu = element.contains(document.activeElement)
+
+      const hasEditorFocus = view.hasFocus() || isChildOfMenu
+
+      if (!hasEditorFocus || empty || isEmptyTextBlock || !editor.isEditable) {
+        return false
+      }
+
+      return true
+    },
+
+    getTextContent(node) {
+      return getText(node, { textSerializers: getTextSerializersFromSchema(this.editor.schema) })
+    },
+    // patched version of https://github.com/ueberdosis/tiptap/blob/a6919e60a089227a63b667a3460adfd9e8dac1f8/packages/extension-floating-menu/src/floating-menu-plugin.ts#L88
+    shouldShowFloatingMenu({ editor, view, state }) {
+      if (this.chatStore.shouldShowSendMessageButtons) {
+          return false
+      }
+
+      const { selection } = state
+      const { $anchor, empty } = selection
+      const isRootDepth = $anchor.depth === 1
+
+      const isEmptyTextBlock = $anchor.parent.isTextblock && !$anchor.parent.type.spec.code && !$anchor.parent.textContent && $anchor.parent.childCount === 0 && !this.getTextContent($anchor.parent)
+
+      if (
+          !view.hasFocus()
+          || !empty
+          || !isRootDepth
+          || !isEmptyTextBlock
+          || !editor.isEditable
+      ) {
+        return false
+      }
+
+      return true
     },
   },
   mounted() {
