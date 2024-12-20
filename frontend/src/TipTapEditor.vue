@@ -2,6 +2,49 @@
   <div class="richText">
     <input id="file-input" type="file" style="display: none;" accept="image/*,video/*,audio/*" multiple="multiple" />
     <div :class="editorContainer()">
+      <template v-if="!chatStore.shouldShowSendMessageButtons">
+        <bubble-menu
+            :updateDelay="0"
+            :resizeDelay="0"
+            :editor="editor"
+        >
+          <div class="bubble-menu">
+            <button @click="boldClick" :class="{ 'is-active': boldValue() }">
+              {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
+            </button>
+            <button @click="italicClick" :class="{ 'is-active': italicValue() }">
+              {{ $vuetify.locale.t('$vuetify.message_edit_italic_short') }}
+            </button>
+            <button @click="underlineClick" :class="{ 'is-active': underlineValue() }">
+              {{ $vuetify.locale.t('$vuetify.message_edit_underline_short') }}
+            </button>
+          </div>
+        </bubble-menu>
+
+        <floating-menu
+            :editor="editor"
+        >
+          <div class="floating-menu">
+            <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
+              {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
+            </button>
+            <button @click="orderedListClick" :class="{ 'is-active': orderedListValue() }">
+              {{ $vuetify.locale.t('$vuetify.message_edit_ordered_list_short') }}
+            </button>
+
+            <button @click="imageClick">
+              {{ $vuetify.locale.t('$vuetify.message_edit_image_short') }}
+            </button>
+            <button @click="videoClick">
+              {{ $vuetify.locale.t('$vuetify.message_edit_video_short') }}
+            </button>
+            <button @click="embedClick">
+              {{ $vuetify.locale.t('$vuetify.message_edit_embed_short') }}
+            </button>
+          </div>
+        </floating-menu>
+      </template>
+
       <editor-content :editor="editor" class="editorContent" />
     </div>
   </div>
@@ -10,7 +53,7 @@
 <script>
 import "prosemirror-view/style/prosemirror.css";
 import "./messageBody.styl";
-import { Editor, EditorContent } from "@tiptap/vue-3";
+import { Editor, EditorContent, BubbleMenu, FloatingMenu } from "@tiptap/vue-3";
 import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -33,13 +76,13 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {hasLength, media_audio, media_image, media_video} from "@/utils";
+import {embed, hasLength, link_dialog_type_add_media_embed, media_audio, media_image, media_video} from "@/utils";
 import bus, {
-    FILE_UPLOAD_MODAL_START_UPLOADING,
-    PREVIEW_CREATED,
-    OPEN_FILE_UPLOAD_MODAL,
-    MEDIA_LINK_SET,
-    EMBED_LINK_SET,
+  FILE_UPLOAD_MODAL_START_UPLOADING,
+  PREVIEW_CREATED,
+  OPEN_FILE_UPLOAD_MODAL,
+  MEDIA_LINK_SET,
+  EMBED_LINK_SET, OPEN_MESSAGE_EDIT_MEDIA, OPEN_MESSAGE_EDIT_LINK,
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
@@ -63,6 +106,10 @@ const domParser = new DOMParser();
 export default {
   components: {
     EditorContent,
+    // https://github.com/ueberdosis/tiptap/pull/5398/files
+    // https://github.com/ueberdosis/tiptap/blob/next/demos/src/Examples/Menus/Vue/index.vue
+    BubbleMenu,
+    FloatingMenu,
   },
 
   data() {
@@ -214,6 +261,61 @@ export default {
     },
     getEditor() {
       return this.editor
+    },
+    boldValue() {
+      return this.editor.isActive('bold')
+    },
+    boldClick() {
+      this.editor.chain().focus().toggleBold().run()
+    },
+    italicValue() {
+      return this.editor.isActive('italic')
+    },
+    italicClick() {
+      this.editor.chain().focus().toggleItalic().run()
+    },
+    underlineValue() {
+      return this.editor.isActive('underline')
+    },
+    underlineClick() {
+      this.editor.chain().focus().toggleUnderline().run()
+    },
+    bulletListClick() {
+      this.editor.chain().focus().toggleBulletList().run()
+    },
+    orderedListClick() {
+      this.editor.chain().focus().toggleOrderedList().run()
+    },
+    bulletListValue() {
+      return this.editor.isActive('bulletList')
+    },
+    orderedListValue() {
+      return this.editor.isActive('orderedList')
+    },
+    imageClick() {
+      bus.emit(
+          OPEN_MESSAGE_EDIT_MEDIA,
+          {
+            chatId: this.chatId,
+            type: media_image,
+            fromDiskCallback: () => this.addImage(),
+            setExistingMediaCallback: this.setImage
+          }
+      );
+    },
+    videoClick() {
+      bus.emit(
+          OPEN_MESSAGE_EDIT_MEDIA,
+          {
+            chatId: this.chatId,
+            type: media_video,
+            fromDiskCallback: () => this.addVideo(),
+            setExistingMediaCallback: this.setVideo
+          },
+      );
+    },
+    embedClick() {
+      bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
     },
   },
   mounted() {

@@ -115,48 +115,6 @@
               <v-btn color="primary" @click="sendMessageToChat" rounded="0" class="mr-0 ml-2 send" density="comfortable" icon="mdi-send" :width="sendMessageBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_send')" :disabled="sending" :loading="sending"></v-btn>
           </div>
         </div>
-        <template v-else-if="shouldShowButtons">
-            <bubble-menu
-                :updateDelay="0"
-                :resizeDelay="0"
-                :editor="this.$refs.tipTapRef.getEditor()"
-            >
-              <div class="bubble-menu">
-                <button @click="boldClick" :class="{ 'is-active': boldValue() }">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
-                </button>
-                <button @click="italicClick" :class="{ 'is-active': italicValue() }">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_italic_short') }}
-                </button>
-                <button @click="underlineClick" :class="{ 'is-active': underlineValue() }">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_underline_short') }}
-                </button>
-              </div>
-            </bubble-menu>
-
-            <floating-menu
-                :editor="this.$refs.tipTapRef.getEditor()"
-            >
-              <div class="floating-menu">
-                <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
-                </button>
-                <button @click="orderedListClick" :class="{ 'is-active': orderedListValue() }">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_ordered_list_short') }}
-                </button>
-
-                <button @click="imageClick">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_image_short') }}
-                </button>
-                <button @click="videoClick">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_video_short') }}
-                </button>
-                <button @click="embedClick">
-                    {{ $vuetify.locale.t('$vuetify.message_edit_embed_short') }}
-                </button>
-              </div>
-            </floating-menu>
-        </template>
       </v-container>
 
       <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
@@ -211,12 +169,6 @@
     import {mapStores} from "pinia";
     import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
-    // https://github.com/ueberdosis/tiptap/pull/5398/files
-    // https://github.com/ueberdosis/tiptap/blob/next/demos/src/Examples/Menus/Vue/index.vue
-    import {
-        BubbleMenu,
-        FloatingMenu,
-    } from '@tiptap/vue-3';
     import chroma from "chroma-js";
     import RecordingModal from "@/RecordingModal.vue";
     import {v4 as uuidv4} from "uuid";
@@ -749,8 +701,6 @@
             Tiptap,
             MessageEditLinkModal,
             MessageEditMediaModal,
-            BubbleMenu,
-            FloatingMenu,
             RecordingModal,
         }
     }
