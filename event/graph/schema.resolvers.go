@@ -55,7 +55,7 @@ func (r *subscriptionResolver) ChatEvents(ctx context.Context, chatID int64) (<-
 		switch typedEvent := event.(type) {
 		case dto.ChatEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) && typedEvent.ChatId == chatID {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 				defer span.End()
 				span.SetAttributes(
 					attribute.Int64("userId", typedEvent.UserId),
@@ -111,7 +111,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		switch typedEvent := event.(type) {
 		case dto.GlobalUserEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 				defer span.End()
 				span.SetAttributes(
 					attribute.Int64("userId", typedEvent.UserId),
@@ -138,7 +138,7 @@ func (r *subscriptionResolver) GlobalEvents(ctx context.Context) (<-chan *model.
 		switch typedEvent := event.(type) {
 		case dto.UserSessionsKilledEvent:
 			if isReceiverOfEvent(typedEvent.UserId, authResult) {
-				_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+				_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 				defer span.End()
 				span.SetAttributes(
 					attribute.Int64("userId", typedEvent.UserId),
@@ -205,7 +205,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 			var batch = []*model.UserStatusEvent{}
 			for _, userOnline := range typedEvent.UserOnlines {
 				if utils.Contains(userIds, userOnline.UserId) {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", "user_online"))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", "user_online"))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", userOnline.UserId),
@@ -241,7 +241,7 @@ func (r *subscriptionResolver) UserStatusEvents(ctx context.Context, userIds []i
 				var batch = []*model.UserStatusEvent{}
 				for _, userCallStatus := range videoCallUsersCallStatusChangedEvent.Users {
 					if utils.Contains(userIds, userCallStatus.UserId) {
-						_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+						_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 						defer span.End()
 						span.SetAttributes(
 							attribute.Int64("userId", userCallStatus.UserId),
@@ -311,7 +311,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			if filter(typedEvent.UserId, userIdsFilter) {
 				var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
 				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", typedEvent.UserId),
@@ -342,7 +342,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			if filter(typedEvent.UserId, userIdsFilter) {
 				var anEvent = r.prepareUserAccountEvent(ctx, authResult.UserId, typedEvent.EventType, typedEvent.User)
 				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", typedEvent.UserId),
@@ -373,7 +373,7 @@ func (r *subscriptionResolver) UserAccountEvents(ctx context.Context, userIdsFil
 			if filter(typedEvent.UserId, userIdsFilter) {
 				var anEvent = convertUserAccountDeletedEvent(typedEvent.EventType, typedEvent.UserId)
 				if anEvent != nil {
-					_, span := r.Tr.Start(rabbitmq.DeserializeValues(r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
+					_, span := r.Tr.Start(rabbitmq.DeserializeValues(ctx, r.Lgr, typedEvent.TraceString), fmt.Sprintf("subscription.%s", typedEvent.EventType))
 					defer span.End()
 					span.SetAttributes(
 						attribute.Int64("userId", typedEvent.UserId),

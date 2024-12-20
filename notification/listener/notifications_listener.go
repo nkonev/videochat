@@ -7,6 +7,7 @@ import (
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/notification/dto"
+	"nkonev.name/notification/logger"
 	"nkonev.name/notification/rabbitmq"
 	"nkonev.name/notification/services"
 )
@@ -23,12 +24,12 @@ func CreateNotificationsListener(service *services.NotificationService, lgr *log
 
 		bytesData := msg.Body
 		strData := string(bytesData)
-		lgr.Debugf("Received %v", strData)
+		logger.GetLogEntry(ctx, lgr).Debugf("Received %v", strData)
 
 		var bindTo = new(dto.NotificationEvent)
 		err := json.Unmarshal(msg.Body, bindTo)
 		if err != nil {
-			lgr.Errorf("Unable to unmarshall notification %v", err)
+			logger.GetLogEntry(ctx, lgr).Errorf("Unable to unmarshall notification %v", err)
 			return err
 		}
 

@@ -33,7 +33,7 @@ func CreateMinioEventsListener(
 
 		bytesData := msg.Body
 		strData := string(bytesData)
-		lgr.Debugf("Received %v", strData)
+		GetLogEntry(ctx, lgr).Debugf("Received %v", strData)
 
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()

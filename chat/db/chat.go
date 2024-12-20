@@ -441,7 +441,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		if noData {
 			// leave empty list
 		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
-			co.logger().Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
+			GetLogEntry(ctx, co.logger()).Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
@@ -470,7 +470,7 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 		if noData {
 			// leave empty list
 		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
-			co.logger().Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
+			GetLogEntry(ctx, co.logger()).Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
 			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
 			if err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")

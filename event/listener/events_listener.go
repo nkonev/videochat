@@ -10,6 +10,7 @@ import (
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/event/dto"
+	"nkonev.name/event/logger"
 	"nkonev.name/event/rabbitmq"
 	"nkonev.name/event/type_registry"
 )
@@ -29,11 +30,11 @@ func CreateEventsListener(lgr *log.Logger, bus *eventbus.Bus, typeRegistry *type
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		lgr.Debugf("Received %v with type %v", strData, aType)
+		logger.GetLogEntry(ctx, lgr).Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
 			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			lgr.Errorf(errStr)
+			logger.GetLogEntry(ctx, lgr).Errorf(errStr)
 			return errors.New(errStr)
 		}
 
@@ -43,35 +44,35 @@ func CreateEventsListener(lgr *log.Logger, bus *eventbus.Bus, typeRegistry *type
 		case dto.ChatEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 
 		case dto.GlobalUserEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 
 		case []dto.UserOnline:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 
@@ -82,78 +83,78 @@ func CreateEventsListener(lgr *log.Logger, bus *eventbus.Bus, typeRegistry *type
 
 			err = bus.PublishAsync(converted)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 
 		case dto.GeneralEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 		case dto.UserAccountEventCreated:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 		case dto.UserAccountEventDeleted:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 		case dto.UserSessionsKilledEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			bindTo.TraceString = traceString
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
-				lgr.Errorf("Error during sending to bus : %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during sending to bus : %v", err)
 				return err
 			}
 
 		default:
-			lgr.Errorf("Unexpected type : %v", anInstance)
+			logger.GetLogEntry(ctx, lgr).Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 		}
 

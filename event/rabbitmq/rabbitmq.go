@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"nkonev.name/event/logger"
 )
 
 func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
@@ -80,19 +81,19 @@ func SerializeValues(spanContext context.Context, lgr *log.Logger) string {
 	propagator.Inject(spanContext, carrier)
 	marshal, err := json.Marshal(carrier)
 	if err != nil {
-		lgr.Infof("Unable to marshall")
+		logger.GetLogEntry(spanContext, lgr).Infof("Unable to marshall")
 		return ""
 	}
 	return string(marshal)
 }
 
-func DeserializeValues(lgr *log.Logger, input string) context.Context {
+func DeserializeValues(spanContext context.Context, lgr *log.Logger, input string) context.Context {
 	propagator := otel.GetTextMapPropagator()
 	carrier := propagation.MapCarrier{}
 
 	err := json.Unmarshal([]byte(input), &carrier)
 	if err != nil {
-		lgr.Infof("Unable to unmarshall")
+		logger.GetLogEntry(spanContext, lgr).Infof("Unable to unmarshall")
 		return context.Background()
 	}
 

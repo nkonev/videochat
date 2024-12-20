@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/type_registry"
@@ -28,11 +29,11 @@ func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, t
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		lgr.Debugf("Received %v with type %v", strData, aType)
+		logger.GetLogEntry(ctx, lgr).Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
 			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			lgr.Debugf(errStr)
+			logger.GetLogEntry(ctx, lgr).Debugf(errStr)
 			return nil
 		}
 
@@ -42,7 +43,7 @@ func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, t
 		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.Errorf("Error during deserialize notification %v", err)
+				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			if bindTo.EventType == "user_account_changed" {
@@ -50,7 +51,7 @@ func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, t
 			}
 
 		default:
-			lgr.Errorf("Unexpected type : %v", anInstance)
+			logger.GetLogEntry(ctx, lgr).Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 		}
 

@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"nkonev.name/event/logger"
 	"regexp"
 	"strconv"
 )
@@ -24,10 +26,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(ctx context.Context, lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			lgr.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			logger.GetLogEntry(ctx, lgr).Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}

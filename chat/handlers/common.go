@@ -141,7 +141,7 @@ func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, erro
 func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
-	if utils.CheckUrlInWhitelist(lgr, whitelist, request.RequestURI) {
+	if utils.CheckUrlInWhitelist(request.Context(), lgr, whitelist, request.RequestURI) {
 		return nil, true, nil
 	}
 	auth, err := ExtractAuth(request, lgr)

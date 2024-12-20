@@ -6,6 +6,7 @@ import (
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
+	"nkonev.name/chat/logger"
 	myRabbitmq "nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/utils"
 	"time"
@@ -21,7 +22,7 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
-		rp.lgr.Error(err, "Failed during marshal dto")
+		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal dto")
 		return err
 	}
 
@@ -35,7 +36,7 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 	}
 
 	if err := rp.channel.Publish(EventsFanoutExchange, "", false, false, msg); err != nil {
-		rp.lgr.Error(err, "Error during publishing dto")
+		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing dto")
 		return err
 	} else {
 		return nil
@@ -59,7 +60,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
-		rp.lgr.Error(err, "Failed during marshal dto")
+		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal dto")
 		return err
 	}
 
@@ -72,7 +73,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 	}
 
 	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
-		rp.lgr.Error(err, "Error during publishing dto")
+		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing dto")
 		return err
 	} else {
 		return nil
