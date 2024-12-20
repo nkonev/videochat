@@ -731,47 +731,4 @@
     text-overflow: ellipsis;
     overflow: hidden;
 }
-
-.bubble-menu {
-    display: flex;
-    background-color: #0D0D0D;
-    padding: 0.2rem;
-    border-radius: 0.5rem;
-
-    button {
-        border: none;
-        background: none;
-        color: #FFF;
-        font-size: 0.85rem;
-        font-weight: 500;
-        padding: 0 0.2rem;
-        opacity: 0.6;
-
-        &:hover,
-        &.is-active {
-            opacity: 1;
-        }
-    }
-}
-
-.floating-menu {
-    display: flex;
-    background-color: #f1f1f1;
-    padding: 0.2rem;
-    border-radius: 0.5rem;
-
-    button {
-        border: none;
-        background: none;
-        font-size: 0.85rem;
-        font-weight: 500;
-        padding: 0 0.2rem;
-        opacity: 0.6;
-
-        &:hover,
-        &.is-active {
-            opacity: 1;
-        }
-    }
-}
 </style>
