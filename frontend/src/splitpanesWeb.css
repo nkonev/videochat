@@ -79,7 +79,8 @@
 }
 
 .default-theme.splitpanes .splitpanes .splitpanes__splitter {
-    z-index: 1
+    /* removed
+    z-index: 1*/
 }
 
 .default-theme.splitpanes--vertical > .splitpanes__splitter, .default-theme .splitpanes--vertical > .splitpanes__splitter {
