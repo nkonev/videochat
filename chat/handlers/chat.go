@@ -374,6 +374,9 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 		}
 
 		aLen := min(len(chatDtos), len(bindTo))
+		if len(bindTo) == 0 && len(chatDtos) != 0 {
+			edge = false
+		}
 
 		for i := range aLen {
 			currentChat := chatDtos[i]
