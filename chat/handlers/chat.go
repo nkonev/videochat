@@ -206,7 +206,7 @@ type ChatFilterDto struct {
 	SearchString string `json:"searchString"`
 	PageSize     int    `json:"pageSize"`
 	ChatId       int64  `json:"chatId"`     // id of probe element
-	EdgeChatId   int64  `json:"edgeChatId"` // edge chatId on the this page on screen
+	EdgeChatId   *int64 `json:"edgeChatId"` // edge chatId on the this page on screen
 }
 
 func (ch *ChatHandler) Filter(c echo.Context) error {
@@ -1135,8 +1135,16 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 				return err
 			}
 
-			ch.notificator.NotifyAboutNewParticipants(c.Request().Context(), participantIds, chatId, newUsersWithAdmin)
-			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
+			for _, aParticipant := range participantIds {
+				if utils.Contains(bindTo.ParticipantIds, aParticipant) {
+					// for the new participants of participantIds
+					ch.notificator.NotifyAboutNewChat(c.Request().Context(), chatDto, []int64{aParticipant}, false, true, tx, areAdmins)
+				} else {
+					// for the old participants of participantIds
+					ch.notificator.NotifyAboutNewParticipants(c.Request().Context(), []int64{aParticipant}, chatId, newUsersWithAdmin)
+					ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, []int64{aParticipant}, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
+				}
+			}
 			return nil
 		})
 		if err != nil {
