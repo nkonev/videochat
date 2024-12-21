@@ -247,7 +247,7 @@ func (h *FilesService) GetPublicUrl(public bool, fileName string) (*string, erro
 	return &str, nil
 }
 
-func (h *FilesService) GetAnonymousUrl(fileName string, messageId int64) (string, error) {
+func (h *FilesService) GetAnonymousUrl(fileName string, overrideChatId, overrideMessageId int64) (string, error) {
 	downloadUrl, err := url.Parse(utils.UrlStorageGetFilePublicExternal)
 	if err != nil {
 		return "", err
@@ -255,14 +255,15 @@ func (h *FilesService) GetAnonymousUrl(fileName string, messageId int64) (string
 
 	query := downloadUrl.Query()
 	query.Add(utils.FileParam, fileName)
-	query.Add(utils.MessageIdParam, utils.Int64ToString(messageId))
+	query.Add(utils.OverrideChatId, utils.Int64ToString(overrideChatId))
+	query.Add(utils.OverrideMessageId, utils.Int64ToString(overrideMessageId))
 	downloadUrl.RawQuery = query.Encode()
 	str := downloadUrl.String()
 	return str, nil
 }
 
-func (h *FilesService) GetAnonymousPreviewUrl(c context.Context, fileName string, messageId int64) (*string, error) {
-	anUrl := h.getPreviewUrlSmart(c, fileName, utils.UrlBasePublicPreview, &messageId)
+func (h *FilesService) GetAnonymousPreviewUrl(c context.Context, fileName string, chatId, messageId int64) (*string, error) {
+	anUrl := h.getPreviewUrlSmart(c, fileName, utils.UrlBasePublicPreview, &chatId, &messageId)
 	return anUrl, nil
 }
 
@@ -331,17 +332,17 @@ const Media_video = "video"
 const Media_audio = "audio"
 
 func (h *FilesService) GetPreviewUrlSmart(c context.Context, aKey string) *string {
-	return h.getPreviewUrlSmart(c, aKey, utils.UrlBasePreview, nil)
+	return h.getPreviewUrlSmart(c, aKey, utils.UrlBasePreview, nil, nil)
 }
 
-func (h *FilesService) getPreviewUrlSmart(c context.Context, aKey string, urlBase string, messageId *int64) *string {
+func (h *FilesService) getPreviewUrlSmart(c context.Context, aKey string, urlBase string, overrideChatId, overrideMessageId *int64) *string {
 	recognizedType := ""
 	if utils.IsVideo(aKey) {
 		recognizedType = Media_video
-		return h.getPreviewUrl(c, aKey, recognizedType, urlBase, messageId)
+		return h.getPreviewUrl(c, aKey, recognizedType, urlBase, overrideChatId, overrideMessageId)
 	} else if utils.IsImage(aKey) {
 		recognizedType = Media_image
-		return h.getPreviewUrl(c, aKey, recognizedType, urlBase, messageId)
+		return h.getPreviewUrl(c, aKey, recognizedType, urlBase, overrideChatId, overrideMessageId)
 	}
 	return nil
 }
@@ -363,7 +364,7 @@ func GetType(itemUrl string) *string {
 	}
 }
 
-func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMediaType string, urlBase string, messageId *int64) *string {
+func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMediaType string, urlBase string, overrideChatId, overrideMessageId *int64) *string {
 	var previewUrl *string = nil
 
 	respUrl := url.URL{}
@@ -384,8 +385,11 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 			query.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
 		}
 
-		if messageId != nil {
-			query.Add(utils.MessageIdParam, utils.Int64ToString(*messageId))
+		if overrideChatId != nil {
+			query.Add(utils.OverrideChatId, utils.Int64ToString(*overrideChatId))
+		}
+		if overrideMessageId != nil {
+			query.Add(utils.OverrideMessageId, utils.Int64ToString(*overrideMessageId))
 		}
 
 		respUrl.RawQuery = query.Encode()

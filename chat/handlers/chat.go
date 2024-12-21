@@ -1483,30 +1483,50 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	chat, err := ch.db.GetChatBasic(c.Request().Context(), chatId)
+	originalChat, err := ch.db.GetChatBasic(c.Request().Context(), chatId) // chat where the file is stored
 	if err != nil {
 		return err
 	}
-	if chat == nil {
+	if originalChat == nil {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	messageId, _ := GetQueryParamAsInt64(c, "messageId")
-	if messageId > 0 {
-		m, err := ch.db.GetMessageBasic(c.Request().Context(), chatId, messageId)
+	// this branch is for "public"
+	// overrideChatId and overrideMessageId come together
+	// in general, they can be crafted by an intruder ...
+	overrideMessageId, _ := GetQueryParamAsInt64(c, OverrideMessageId)
+	if overrideMessageId > 0 {
+		overrideChatId, err := GetQueryParamAsInt64(c, OverrideChatId)
 		if err != nil {
 			return err
 		}
+
+		overrideMessage, err := ch.db.GetMessageBasic(c.Request().Context(), overrideChatId, overrideMessageId)
+		if err != nil {
+			return err
+		}
+		overrideChat, err := ch.db.GetChatBasic(c.Request().Context(), overrideChatId) // chat where the embedded message is stored
+		if err != nil {
+			return err
+		}
+		if overrideChat == nil {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		fileItemUuid := c.QueryParam("fileItemUuid")
-		if m != nil && (chat.IsBlog || m.Published || m.BlogPost) {
+		if overrideMessage != nil && (overrideChat.IsBlog || overrideMessage.Published || overrideMessage.BlogPost) {
+
+			// ... here we check that the message which we found by potentially crafted overrideMessageId / overrideChatId with malicious intent
+			// really contains this fileItemUuid
 			encodedFileItemUuid := utils.UrlEncode(fileItemUuid)
-			if strings.Contains(m.Text, encodedFileItemUuid) {
+			if strings.Contains(overrideMessage.Text, encodedFileItemUuid) {
 				return c.NoContent(http.StatusOK)
 			}
 		}
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	// this branch is for "regular" and resent
 	userId, err := GetQueryParamAsInt64(c, "userId")
 	if err != nil {
 		return err
@@ -1521,7 +1541,7 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	} else {
 		if useCanResend {
-			if chat.CanResend {
+			if originalChat.CanResend {
 				return c.NoContent(http.StatusOK)
 			} else {
 				return c.NoContent(http.StatusUnauthorized)

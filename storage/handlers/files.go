@@ -454,13 +454,14 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 		return err
 	}
 
-	messageId := int64(utils.MessageIdNonExistent)
-	messageIdRaw := anUrl.Query().Get(utils.MessageIdParam)
-	if len(messageIdRaw) > 0 {
-		messageId, err = utils.ParseInt64(messageIdRaw)
-		if err != nil {
-			return err
-		}
+	overrideChatId, err := getOverrideChatIdPublicFromUrl(anUrl)
+	if err != nil {
+		return err
+	}
+
+	overrideMessageId, err := getOverrideMessageIdPublicFromUrl(anUrl)
+	if err != nil {
+		return err
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -475,7 +476,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	} else {
 		isAnonymous = true
 	}
-	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, messageId, fileItemUuid); err != nil {
+	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, overrideChatId, overrideMessageId, fileItemUuid); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -508,13 +509,13 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 				}
 				previewUrl = h.filesService.GetPreviewUrlSmart(c.Request().Context(), objInfo.Key)
 			} else {
-				downloadUrl, err = h.filesService.GetAnonymousUrl(objInfo.Key, messageId)
+				downloadUrl, err = h.filesService.GetAnonymousUrl(objInfo.Key, overrideChatId, overrideMessageId)
 				if err != nil {
 					GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting public downlad url %v", err)
 					continue
 				}
 
-				previewUrl, err = h.filesService.GetAnonymousPreviewUrl(c.Request().Context(), objInfo.Key, messageId)
+				previewUrl, err = h.filesService.GetAnonymousPreviewUrl(c.Request().Context(), objInfo.Key, overrideChatId, overrideMessageId)
 				if err != nil {
 					GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting public downlad url %v", err)
 					continue
@@ -571,13 +572,14 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 		return err
 	}
 
-	messageId := int64(utils.MessageIdNonExistent)
-	messageIdRaw := anUrl.Query().Get(utils.MessageIdParam)
-	if len(messageIdRaw) > 0 {
-		messageId, err = utils.ParseInt64(messageIdRaw)
-		if err != nil {
-			return err
-		}
+	overrideChatId, err := getOverrideChatIdPublicFromUrl(anUrl)
+	if err != nil {
+		return err
+	}
+
+	overrideMessageId, err := getOverrideMessageIdPublicFromUrl(anUrl)
+	if err != nil {
+		return err
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -589,7 +591,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 	if userPrincipalDto != nil {
 		userId = &userPrincipalDto.UserId
 	}
-	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, messageId, fileItemUuid); err != nil {
+	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, overrideChatId, overrideMessageId, fileItemUuid); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -1348,7 +1350,8 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	messageId := getMessageIdPublic(c)
+	overrideChatId := getOverrideChatIdPublic(c)
+	overrideMessageId := getOverrideMessageIdPublic(c)
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 	if err != nil {
@@ -1356,7 +1359,7 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileItemUuid)
+	belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, overrideChatId, overrideMessageId, fileItemUuid)
 	if err != nil {
 		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1433,12 +1436,52 @@ func (h *FilesHandler) previewCacheableResponse(c echo.Context) {
 	cacheableResponse(c, viper.GetDuration("response.cache.preview"))
 }
 
-func getMessageIdPublic(c echo.Context) int64 {
-	parseInt64, err := utils.ParseInt64(c.QueryParam(utils.MessageIdParam))
+func getOverrideChatIdPublic(c echo.Context) int64 {
+	parseInt64, err := utils.ParseInt64(c.QueryParam(utils.OverrideChatId))
+	if err != nil {
+		return utils.ChatIdNonExistent
+	}
+	return parseInt64
+}
+
+func getOverrideMessageIdPublic(c echo.Context) int64 {
+	parseInt64, err := utils.ParseInt64(c.QueryParam(utils.OverrideMessageId))
 	if err != nil {
 		return utils.MessageIdNonExistent
 	}
 	return parseInt64
+}
+
+func getOverrideChatIdPublicFromUrl(anUrl *url.URL) (int64, error) {
+	chatId := int64(utils.ChatIdNonExistent)
+	if anUrl == nil {
+		return chatId, errors.New("no url")
+	}
+	chatIdRaw := anUrl.Query().Get(utils.OverrideChatId)
+	var err error
+	if len(chatIdRaw) > 0 {
+		chatId, err = utils.ParseInt64(chatIdRaw)
+		if err != nil {
+			return chatId, err
+		}
+	}
+	return chatId, err
+}
+
+func getOverrideMessageIdPublicFromUrl(anUrl *url.URL) (int64, error) {
+	messageId := int64(utils.MessageIdNonExistent)
+	if anUrl == nil {
+		return messageId, errors.New("no url")
+	}
+	messageIdRaw := anUrl.Query().Get(utils.OverrideMessageId)
+	var err error
+	if len(messageIdRaw) > 0 {
+		messageId, err = utils.ParseInt64(messageIdRaw)
+		if err != nil {
+			return messageId, err
+		}
+	}
+	return messageId, err
 }
 
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
@@ -1476,7 +1519,8 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		messageId := getMessageIdPublic(c)
+		overrideChatId := getOverrideChatIdPublic(c)
+		overrideMessageId := getOverrideMessageIdPublic(c)
 
 		fileItemUuid, err := utils.ParseFileItemUuid(fileId)
 		if err != nil {
@@ -1484,7 +1528,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, messageId, fileItemUuid)
+		belongs, err := h.restClient.CheckAccessExtended(c.Request().Context(), nil, chatId, overrideChatId, overrideMessageId, fileItemUuid)
 		if err != nil {
 			GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during checking user auth to chat %v", err)
 			return c.NoContent(http.StatusInternalServerError)
