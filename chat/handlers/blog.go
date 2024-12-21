@@ -87,7 +87,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 						query.Set(utils.FileParam, utils.SetImagePreviewExtension(fileParam))
 						dumbUrl.RawQuery = query.Encode()
 
-						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.MessageId)
+						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.ChatId, post.MessageId)
 						if err != nil {
 							GetLogEntry(ctx, h.lgr).Warnf("Unagle to change url: %v", err)
 							break
@@ -357,7 +357,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
-		patchedText := PatchStorageUrlToPublic(c.Request().Context(), h.lgr, post.Text, post.MessageId)
+		patchedText := PatchStorageUrlToPublic(c.Request().Context(), h.lgr, post.Text, post.ChatId, post.MessageId)
 		response.Text = &patchedText
 
 		var participantIdSet = map[int64]bool{}
@@ -436,7 +436,10 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 	var users = getUsersRemotelyOrEmpty(c.Request().Context(), h.lgr, ownersSet, h.restClient)
 	for _, cc := range messages {
 		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), h.lgr, cc, users, chatsSet)
-		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.Text, msg.Id)
+		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.Text, blogId, msg.Id)
+		if msg.EmbedMessage != nil {
+			msg.EmbedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.EmbedMessage.Text, blogId, msg.EmbedMessage.Id)
+		}
 		messageDtos = append(messageDtos, msg)
 	}
 
@@ -450,7 +453,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 }
 
 // see also message.go :: patchStorageUrlToPreventCachingVideo
-func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, messageId int64) string {
+func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, overrideChatId, overrideMessageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
@@ -466,7 +469,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 			original, originalExists := maybeImage.Attr("data-original")
 			if originalExists { // we have 2 tags - preview (small, tag attr) and original (data-original attr)
 				if utils.ContainsUrl(lgr, wlArr, original) { // original
-					newurl, err := makeUrlPublic(original, "", false, messageId)
+					newurl, err := makeUrlPublic(original, "", false, overrideChatId, overrideMessageId)
 					if err != nil {
 						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 						return
@@ -476,7 +479,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 
 				src, srcExists := maybeImage.Attr("src") // preview
 				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, false, messageId)
+					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, false, overrideChatId, overrideMessageId)
 					if err != nil {
 						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 						return
@@ -486,7 +489,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 			} else { // we have only original // legacy
 				src, srcExists := maybeImage.Attr("src") // original
 				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-					newurl, err := makeUrlPublic(src, "", false, messageId)
+					newurl, err := makeUrlPublic(src, "", false, overrideChatId, overrideMessageId)
 					if err != nil {
 						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 						return
@@ -502,7 +505,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
 			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-				newurl, err := makeUrlPublic(src, "", true, messageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
+				newurl, err := makeUrlPublic(src, "", true, overrideChatId, overrideMessageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
 				if err != nil {
 					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 					return
@@ -512,7 +515,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 
 			poster, posterExists := maybeVideo.Attr("poster")
 			if posterExists && utils.ContainsUrl(lgr, wlArr, src) {
-				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, messageId)
+				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, overrideChatId, overrideMessageId)
 				if err != nil {
 					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 					return
@@ -527,7 +530,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 		if maybeVideo != nil {
 			src, srcExists := maybeVideo.Attr("src")
 			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-				newurl, err := makeUrlPublic(src, "", true, messageId)
+				newurl, err := makeUrlPublic(src, "", true, overrideChatId, overrideMessageId)
 				if err != nil {
 					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
 					return
@@ -554,7 +557,10 @@ func (h *BlogHandler) getFileParam(src string) (string, error) {
 	return fileParam, nil
 }
 
-func makeUrlPublic(src string, additionalSegment string, addTime bool, messageId int64) (string, error) {
+const OverrideMessageId = "overrideMessageId"
+const OverrideChatId = "overrideChatId"
+
+func makeUrlPublic(src string, additionalSegment string, addTime bool, overrideChatId, overrideMessageId int64) (string, error) {
 	// we add time in order not to cache the video itself
 	parsed, err := url.Parse(src)
 	if err != nil {
@@ -569,7 +575,8 @@ func makeUrlPublic(src string, additionalSegment string, addTime bool, messageId
 		addTimeToUrlValues(&query)
 	}
 
-	query.Set("messageId", utils.Int64ToString(messageId))
+	query.Set(OverrideMessageId, utils.Int64ToString(overrideMessageId))
+	query.Set(OverrideChatId, utils.Int64ToString(overrideChatId))
 
 	parsed.RawQuery = query.Encode()
 

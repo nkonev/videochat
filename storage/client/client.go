@@ -65,10 +65,11 @@ func NewChatAccessClient(lgr *log.Logger) *RestClient {
 }
 
 func (h *RestClient) CheckAccess(c context.Context, userId *int64, chatId int64) (bool, error) {
-	return h.CheckAccessExtended(c, userId, chatId, utils.MessageIdNonExistent, "")
+	return h.CheckAccessExtended(c, userId, chatId, utils.ChatIdNonExistent, utils.MessageIdNonExistent, "")
 }
 
-func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatId int64, messageId int64, fileItemUuid string) (bool, error) {
+// overrideChatId and overrideMessageId come together
+func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatId int64, overrideChatId, overrideMessageId int64, fileItemUuid string) (bool, error) {
 	var url0 string
 
 	parsed, err := url.Parse(fmt.Sprintf("%v%v", h.baseUrl, h.accessPath))
@@ -77,9 +78,10 @@ func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatI
 	}
 	query := parsed.Query()
 
-	if messageId != utils.MessageIdNonExistent {
+	if overrideMessageId != utils.MessageIdNonExistent {
 		query.Set("chatId", utils.Int64ToString(chatId))
-		query.Set("messageId", utils.Int64ToString(messageId))
+		query.Set(utils.OverrideChatId, utils.Int64ToString(overrideChatId))
+		query.Set(utils.OverrideMessageId, utils.Int64ToString(overrideMessageId))
 		query.Set("fileItemUuid", fileItemUuid)
 	} else {
 		query.Set("chatId", utils.Int64ToString(chatId))

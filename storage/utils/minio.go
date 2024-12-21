@@ -86,7 +86,8 @@ func SetImagePreviewExtension(key string) string {
 
 const FileParam = "file"
 const TimeParam = "time"
-const MessageIdParam = "messageId"
+const OverrideMessageId = "overrideMessageId"
+const OverrideChatId = "overrideChatId"
 
 func ParseChatId(minioKey string) (int64, error) {
 	// "chat/116/0W007Z2P0CRT2G4E1X0DCWB0DK/561ae246-7eff-45a6-a480-2b2be254c768.jpg"

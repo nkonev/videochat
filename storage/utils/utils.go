@@ -19,6 +19,7 @@ const USER_PRINCIPAL_DTO = "userPrincipalDto"
 
 type H map[string]interface{}
 
+const ChatIdNonExistent = -1
 const MessageIdNonExistent = -1
 
 const converted = "converted"

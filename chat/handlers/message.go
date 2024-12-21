@@ -2198,7 +2198,10 @@ func (mc *MessageHandler) GetPublishedMessage(c echo.Context) error {
 
 		convertedMessage := convertToMessageDtoWithoutPersonalized(c.Request().Context(), mc.lgr, message, owners, chatsSet) // the actual personal values don't needed here
 
-		convertedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), mc.lgr, convertedMessage.Text, convertedMessage.Id)
+		convertedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), mc.lgr, convertedMessage.Text, chatId, convertedMessage.Id)
+		if convertedMessage.EmbedMessage != nil {
+			convertedMessage.EmbedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), mc.lgr, convertedMessage.EmbedMessage.Text, chatId, convertedMessage.Id)
+		}
 
 		preview := stripTagsAndCut(mc.stripAllTags, viper.GetInt("previewMaxTextSize"), convertedMessage.Text)
 
