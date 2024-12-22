@@ -2,6 +2,13 @@
   <div class="richText">
     <input id="file-input" type="file" style="display: none;" accept="image/*,video/*,audio/*" multiple="multiple" />
     <div :class="editorContainer()">
+      <!--
+       we can add !chatStore.shouldShowSendMessageButtons
+       it will lead to the redrawing the editor on opening video and
+       changing the placeholder (gray text) to the shorter version,
+       but it also shows the bubble menu on the bottom of the page,
+       breaking the markup by adding an excess scroll
+       -->
       <div v-if="editor">
         <bubble-menu
             :should-show="shouldShowBubbleMenu"
