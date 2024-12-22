@@ -322,5 +322,6 @@ export default {
     set_password: "Задать пароль",
     video_presenter_enable: "Включить презентатор",
     close_video: "Закрыть видео",
-    video_presenter_disable: "Выключить презентатор"
+    video_presenter_disable: "Выключить презентатор",
+    messages: "Сообщения"
 }
