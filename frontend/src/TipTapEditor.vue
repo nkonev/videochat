@@ -54,7 +54,7 @@
         </floating-menu>
       </div>
 
-      <editor-content :editor="editor" class="editorContent" />
+      <editor-content :editor="editor" class="editorContent" :title="$vuetify.locale.t('$vuetify.message_edit_placeholder')" />
     </div>
   </div>
 </template>
@@ -433,11 +433,7 @@ export default {
           History,
           Placeholder.configure({
               placeholder: ({ node }) => {
-                  if (this.chatStore.shouldShowSendMessageButtons) {
-                      return this.$vuetify.locale.t('$vuetify.message_edit_placeholder')
-                  } else {
-                    return this.$vuetify.locale.t('$vuetify.message_edit_placeholder_short')
-                  }
+                return this.$vuetify.locale.t('$vuetify.message_edit_placeholder_short')
               },
           }),
           Text,
