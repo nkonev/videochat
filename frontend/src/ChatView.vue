@@ -886,6 +886,7 @@ export default {
 @import "pinned.styl"
 
 .pinned-promoted {
+  font-size: 0.875rem
   position: absolute
   left 0
   margin-right 2em
