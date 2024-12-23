@@ -104,6 +104,7 @@ export default {
                 ret.push({
                   title: this.$vuetify.locale.t('$vuetify.close_video'),
                   icon: 'mdi-close',
+                  iconColor: 'error',
                   action: () => {
                     this.menuableItem.onClose()
                   }
@@ -114,6 +115,7 @@ export default {
                 ret.push({
                   title: this.$vuetify.locale.t('$vuetify.kick'),
                   icon: 'mdi-block-helper',
+                  iconColor: 'error',
                   action: () => {
                     this.menuableItem.kickRemote()
                   }
@@ -124,6 +126,7 @@ export default {
                 ret.push({
                   title: this.$vuetify.locale.t('$vuetify.force_mute'),
                   icon: 'mdi-microphone-off',
+                  iconColor: 'error',
                   action: () => {
                     this.menuableItem.forceMuteRemote()
                   }
