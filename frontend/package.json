@@ -56,5 +56,12 @@
     "stylus": "^0.64.0",
     "vite": "^6.0.3",
     "vite-plugin-vuetify": "^2.0.4"
+  },
+  "overrides": {
+    "prosemirror-commands":"1.5.2",
+    "prosemirror-model":"1.22.2",
+    "prosemirror-trailing-node":"2.0.9",
+    "prosemirror-transform":"1.9.0",
+    "prosemirror-view":"1.33.9"
   }
 }
