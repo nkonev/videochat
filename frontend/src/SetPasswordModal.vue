@@ -24,10 +24,10 @@
 
                 </v-card-text>
 
-                <v-card-actions class="my-actions d-flex flex-wrap flex-row">
+                <v-card-actions class="d-flex flex-wrap flex-row">
                     <v-spacer></v-spacer>
                     <v-btn color="primary" variant="flat" @click="onSet()">{{ $vuetify.locale.t('$vuetify.ok') }}</v-btn>
-                    <v-btn variant="outlined" @click="onClose()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                    <v-btn color="red" variant="flat" @click="onClose()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
