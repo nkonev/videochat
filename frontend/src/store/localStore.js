@@ -1,4 +1,4 @@
-import {hasLength} from "@/utils";
+import {hasLength, isMobileBrowser} from "@/utils";
 
 const defaultResolution = 'h720';
 
@@ -202,7 +202,8 @@ export const getStoredPresenter = () => {
     let v = JSON.parse(localStorage.getItem(KEY_PRESENTER));
     if (v === null) {
         console.log("Resetting presenter to default");
-        setStoredPresenter(true);
+        const shouldSetDefaultPresenter = !isMobileBrowser();
+        setStoredPresenter(shouldSetDefaultPresenter);
         v = JSON.parse(localStorage.getItem(KEY_PRESENTER));
     }
     return v;
