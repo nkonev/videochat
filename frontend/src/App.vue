@@ -988,17 +988,13 @@ div .stop-scrolling {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media screen and (max-width: $mobileWidth) {
-  .inline-caption-base {
-    font-size 0.6em
-  }
+  font-size 0.9rem
+  font-weight: 500;
 }
 
 .caption-small {
   color:rgba(0, 0, 0, .6);
-  font-size: .8125rem;
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1rem;
   display: inherit

@@ -6,7 +6,7 @@
           </a>
         </div>
         <div class="message-item-with-buttons-wrapper">
-            <v-container class="ma-0 pa-0 d-flex caption-small">
+            <v-container class="ma-0 pa-0 d-flex align-center caption-small">
                 <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)" :title="getDate(item)">{{getOwner(item.owner)}}</a>
                 <span class="with-space" v-if="!isCompact"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
                 <router-link v-if="!isCompact" class="gray-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')"><span class="mr-1">{{getDate(item)}}</span></router-link>

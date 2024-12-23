@@ -6,7 +6,7 @@
           </a>
         </div>
         <div class="message-item-with-buttons-wrapper">
-            <v-container class="ma-0 pa-0 d-flex caption-small">
+            <v-container class="ma-0 pa-0 d-flex align-center caption-small">
                 <a :href="getOwnerLink(item)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{getOwner(item.owner)}}</a>
                 <span class="with-space"> at </span>
                 <span class="mr-1">{{getDate(item)}}</span>
