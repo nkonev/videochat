@@ -127,6 +127,7 @@ import {
   setTopChatPosition
 } from "@/store/localStore.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
+import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -140,6 +141,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
     userStatusMixin('tetATetInChatList'),
+    userStatusRequestMixin(),
     onFocusMixin(),
   ],
   props:['embedded'],
@@ -258,7 +260,9 @@ export default {
           }
 
           this.performMarking();
-          this.requestInVideo();
+
+          this.requestStatuses();
+
           return Promise.resolve(true)
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
@@ -655,21 +659,16 @@ export default {
         }
         return obj;
     },
-
+    requestStatuses() {
+      this.$nextTick(()=> {
+        const userIds = this.tetAtetParticipants;
+        const joined = userIds.join(",");
+        this.triggerUsesStatusesEvents(joined, this.requestAbortController.signal);
+      })
+    },
     onFocus() {
       if (this.chatStore.currentUser && this.items) {
-          const list = this.items.filter(item => item.tetATet).flatMap(item => item.participantIds);
-          const uniqueUserIds = [...new Set(list)];
-          const joined = uniqueUserIds.join(",");
-          axios.put(`/api/aaa/user/request-for-online`, null, {
-              params: {
-                  userId: joined
-              },
-              signal: this.requestAbortController.signal
-          }).then(()=>{
-              this.requestInVideo();
-          });
-
+        this.requestStatuses();
 
         if (this.isScrolledToTop()) {
           const topNElements = this.items.slice(0, PAGE_SIZE);
@@ -689,19 +688,6 @@ export default {
           })
         }
       }
-    },
-    requestInVideo() {
-        this.$nextTick(()=>{
-            const userIds = this.tetAtetParticipants;
-            const joined = userIds.join(",");
-
-            axios.put("/api/video/user/request-in-video-status", null, {
-                params: {
-                    userId: joined
-                },
-                signal: this.requestAbortController.signal
-            });
-        })
     },
     hasItems() {
         return !!this.items?.length

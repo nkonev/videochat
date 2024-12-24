@@ -172,6 +172,7 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
+import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
 export default {
   components: {
@@ -180,6 +181,7 @@ export default {
   },
   mixins: [
       userStatusMixin('userStatusInUserProfile'), // another subscription
+      userStatusRequestMixin(),
       onFocusMixin(),
   ],
   data() {
@@ -351,7 +353,7 @@ export default {
       this.loadUser();
       this.graphQlUserStatusSubscribe();
       this.userProfileEventsSubscription.graphQlSubscribe();
-      this.requestInVideo();
+      this.requestStatuses();
     },
     canDrawUsers() {
       return !!this.chatStore.currentUser
@@ -387,24 +389,12 @@ export default {
     },
     onFocus() {
           if (this.chatStore.currentUser) {
-              axios.put(`/api/aaa/user/request-for-online`, null, {
-                  params: {
-                      userId: this.userId
-                  },
-                  signal: this.requestAbortController.signal
-              }).then(()=>{
-                  this.requestInVideo();
-              })
+            this.requestStatuses();
           }
     },
-    requestInVideo() {
+    requestStatuses() {
           this.$nextTick(()=>{
-              axios.put("/api/video/user/request-in-video-status", null, {
-                  params: {
-                      userId: this.userId
-                  },
-                  signal: this.requestAbortController.signal
-              });
+              this.triggerUsesStatusesEvents(this.userId, this.requestAbortController.signal);
           })
     },
     onShowContextMenu(e) {
