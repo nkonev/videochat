@@ -489,7 +489,7 @@
 
         created() {
             this.doSearch = debounce(this.doSearch, 700);
-            this.debuncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
+            this.debouncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
         },
         mounted() {
           bus.on(OPEN_PARTICIPANTS_DIALOG, this.showModal);
