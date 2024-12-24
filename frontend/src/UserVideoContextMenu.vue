@@ -15,10 +15,11 @@
             <v-list-item
                 v-for="(item, index) in getContextMenuItems()"
                 :key="index"
+                :disabled="!item.enabled"
                 @click="item.action"
             >
               <template v-slot:prepend>
-                <v-icon :color="item.iconColor">
+                <v-icon v-if="item.icon" :color="item.iconColor">
                   {{item.icon}}
                 </v-icon>
               </template>
@@ -48,7 +49,8 @@ export default {
         'shouldShowVideoKick',
         'shouldShowAudioMute',
         'audioMute',
-        'videoMute'
+        'videoMute',
+        'userName'
     ],
     methods:{
         className() {
@@ -63,13 +65,20 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
+                ret.push({
+                  title: this.userName,
+                  action: () => { },
+                  enabled: false,
+                });
+
                 if (this.isMobile()) {
                     ret.push({
                         title: this.$vuetify.locale.t('$vuetify.close'),
                         icon: 'mdi-close',
                         action: () => {
                             this.onCloseContextMenu()
-                        }
+                        },
+                        enabled: true,
                     });
                 }
                 if (this.shouldShowMuteAudio) {
@@ -82,7 +91,8 @@ export default {
                       } else {
                         this.menuableItem.doMuteAudio(true)
                       }
-                    }
+                    },
+                    enabled: true,
                   });
                 }
 
@@ -96,7 +106,8 @@ export default {
                     } else {
                       this.menuableItem.doMuteVideo(true)
                     }
-                  }
+                  },
+                  enabled: true,
                 });
               }
 
@@ -107,7 +118,8 @@ export default {
                   iconColor: 'error',
                   action: () => {
                     this.menuableItem.onClose()
-                  }
+                  },
+                  enabled: true,
                 });
               }
 
@@ -118,7 +130,8 @@ export default {
                   iconColor: 'error',
                   action: () => {
                     this.menuableItem.kickRemote()
-                  }
+                  },
+                  enabled: true,
                 });
               }
 
@@ -129,7 +142,8 @@ export default {
                   iconColor: 'error',
                   action: () => {
                     this.menuableItem.forceMuteRemote()
-                  }
+                  },
+                  enabled: true,
                 });
               }
             }
