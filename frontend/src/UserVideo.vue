@@ -2,7 +2,7 @@
     <div :class="videoContainerElementClass" ref="containerRef" @contextmenu.stop="onShowContextMenu($event, this)">
         <img v-show="avatarIsSet && videoMute" :class="videoElementClass" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" :class="videoElementClass" :id="id" autoPlay playsInline ref="videoRef"/>
-        <p v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption', 'inline-caption-base']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
+        <p v-if="shouldShowCaption()" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption', 'inline-caption-base']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
 
         <UserVideoContextMenu
             ref="contextMenuRef"
@@ -14,6 +14,7 @@
             :shouldShowAudioMute="shouldShowAudioMute()"
             :audioMute="audioMute"
             :videoMute="videoMute"
+            :userName="getUserName()"
         >
         </UserVideoContextMenu>
 
@@ -182,6 +183,9 @@ export default {
         onShowContextMenu(e, menuableItem) {
           this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
         },
+        shouldShowCaption() {
+          return !(this.isMobile() && this.chatStore.presenterEnabled)
+        },
     },
     computed: {
         ...mapStores(useChatStore),
@@ -190,9 +194,6 @@ export default {
         },
         isLocal() {
             return !!this.localVideoProperties;
-        },
-        isChangeable() {
-            return this.localVideoProperties && !this.localVideoProperties.screen;
         },
         canVideoKick() { // only on remote
           return !this.isLocal && this.chatStore.canVideoKickParticipant(this.userId)
