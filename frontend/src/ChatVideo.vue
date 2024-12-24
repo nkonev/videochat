@@ -93,6 +93,10 @@ export default {
       presenterVideoMute: false,
       presenterAudioMute: true,
       showControls: true,
+
+      localTrackDrawn: false,
+      localTrackCreatedAndPublished: false,
+      finishedConnectingToRoom: false,
     }
   },
   methods: {
@@ -218,9 +222,14 @@ export default {
         return
       } finally {
         if (localVideoProperties) {
-          this.chatStore.initializingVideoCall = false;
+          this.localTrackDrawn = true;
+          this.updateInitializingVideoCall();
         }
       }
+    },
+    updateInitializingVideoCall() {
+      // because of possibly 2 local tracks (audio + video) we wait for localTrackCreatedAndPublished too
+      this.chatStore.initializingVideoCall = !(this.localTrackDrawn && this.localTrackCreatedAndPublished && this.finishedConnectingToRoom);
     },
     getPresenterPriority(pub, isSpeaking) {
       if (!pub) {
@@ -427,11 +436,14 @@ export default {
       }
     },
 
-    async tryRestartVideoDevice() {
-      this.inRestarting = true;
+    async stopLocalTracks() {
       for (const publication of this.room.localParticipant.getTrackPublications().values()) {
         await this.room.localParticipant.unpublishTrack(publication.track, true);
       }
+    },
+    async tryRestartVideoDevice() {
+      this.inRestarting = true;
+      await this.stopLocalTracks();
       await this.createLocalMediaTracks(getStoredCallVideoDeviceId(), getStoredCallAudioDeviceId());
       bus.emit(VIDEO_PARAMETERS_CHANGED);
       this.inRestarting = false;
@@ -520,6 +532,15 @@ export default {
               autoSubscribe: true,
             });
             console.log('Connected to room', this.room.name);
+
+            // after a several attempts (Firefox + ssh tunnel)
+            // it turns into true
+            // and the spinner on red tube button disappears
+            // so we can leave the call, and we won't get an error "this.room is null in createLocalMediaTracks()"
+            // because of this retry
+            this.finishedConnectingToRoom = true;
+            this.updateInitializingVideoCall();
+
           } else {
             console.warn("Didn't connect to room because it's null. It is ok when user leaves very fast.");
           }
@@ -533,6 +554,9 @@ export default {
         // If error is due to timeout then `err.code` will be the
         // string `ATTEMPT_TIMEOUT`.
         this.setError(e, "Error during connecting to room");
+
+        this.finishedConnectingToRoom = true; // stop the spinner
+        this.updateInitializingVideoCall();
       }
     },
     getOnScreenPosition(publication) {
@@ -645,6 +669,9 @@ export default {
           }
           console.info("Published track sid=", track.sid, " kind=", track.kind);
         }
+        this.localTrackCreatedAndPublished = true;
+        this.updateInitializingVideoCall();
+        return Promise.resolve(true);
       } catch (e) {
         this.setError(e, "Error during publishing local tracks");
         this.chatStore.initializingVideoCall = false;
@@ -975,7 +1002,7 @@ export default {
 
     this.startRoom(enterResponse.data.token);
   },
-  beforeUnmount() {
+  async beforeUnmount() {
     axios.put(`/api/video/${this.chatId}/dial/exit`, null, {
         params: {
             tokenId: this.chatStore.videoTokenId
@@ -984,13 +1011,17 @@ export default {
 
     this.detachPresenter();
 
-    this.stopRoom().then(()=>{
-      console.log("Cleaning videoContainerDiv");
-      this.videoContainerDiv = null;
-      this.inRestarting = false;
-    });
+    await this.stopLocalTracks();
+    await this.stopRoom();
+    console.log("Cleaning videoContainerDiv");
+    this.videoContainerDiv = null;
+    this.inRestarting = false;
 
     this.chatStore.canShowMicrophoneButton = false;
+
+    this.localTrackDrawn = false;
+    this.localTrackCreatedAndPublished = false;
+    this.finishedConnectingToRoom = false;
 
     if (!this.isMobile()) {
       this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
