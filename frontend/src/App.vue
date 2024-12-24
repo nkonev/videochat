@@ -749,11 +749,17 @@ export default {
           this.showNotificationBadge = this.chatStore.notificationsCount != 0 && !this.chatStore.showDrawer
         },
         updateVideoBadge() {
-          this.showVideoBadge = !!this.chatStore.videoChatUsersCount
+          this.showVideoBadge = !!parseInt(this.chatStore.videoChatUsersCount)
         },
         // needed to update video badge after /api/video/${chatId}/users was called by FOCUS event
-        onVideoCallChanged() {
-          this.updateVideoBadge();
+        onVideoCallChanged(dto) {
+          if (dto.chatId == this.chatId) {
+            this.chatStore.videoChatUsersCount = dto.usersCount;
+            this.$nextTick(()=>{
+              console.debug("For", dto, "updating updateVideoBadge with", this.chatStore.videoChatUsersCount);
+              this.updateVideoBadge();
+            })
+          }
         },
         onNotificationCountChanged() {
           this.updateNotificationBadge();
