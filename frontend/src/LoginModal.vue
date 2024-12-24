@@ -24,12 +24,13 @@
 
                 </v-card-title>
 
-                <v-card-text :class="isMobile() ? 'pa-4 pt-0 pb-2' : 'pl-4 pt-0 pb-2'">
+                <v-card-text :class="isMobile() ? 'pa-4 py-0' : 'pl-4 py-0'">
                     <v-form
                         ref="form"
                         v-model="valid"
                         lazy-validation
                         @keyup.native.enter="loginWithUsername"
+                        class="pb-2"
                     >
                         <v-text-field
                                 id="login-text"
@@ -71,7 +72,7 @@
                                 id="login-btn"
                                 :disabled="!valid || disable"
                                 color="success"
-                                class="mr-2 mb-4"
+                                class="mr-2 mb-2"
                                 @click="loginWithUsername"
                                 min-width="80px"
                                 :loading="loadingLogin"
@@ -79,26 +80,26 @@
                             {{ $vuetify.locale.t('$vuetify.login_action') }}
                         </v-btn>
 
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-4 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('vkontakte')" class="mr-2 mb-2 c-btn-vk" :disabled="disable" :loading="loadingVk" min-width="80px" @click="loginVk()">
                             <font-awesome-icon :icon="[ 'fab', 'vk']" :size="'2x'"></font-awesome-icon>
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-4 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('facebook')" class="mr-2 mb-2 c-btn-fb" :disabled="disable" :loading="loadingFb" min-width="80px" @click="loginFb()">
                             <font-awesome-icon :icon="[ 'fab', 'facebook' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-4 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('google')" class="mr-2 mb-2 c-btn-google" :disabled="disable" :loading="loadingGoogle" min-width="80px" @click="loginGoogle()">
                             <font-awesome-icon :icon="[ 'fab', 'google' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
-                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-4 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()">
+                        <v-btn v-if="chatStore.availableOAuth2Providers.includes('keycloak')" class="mr-2 mb-2 c-btn-keycloak" :disabled="disable" :loading="loadingKeycloak" min-width="80px" @click="loginKeycloak()">
                             <font-awesome-icon :icon="['fa', 'key' ]" :size="'2x'"></font-awesome-icon>
                         </v-btn>
                     </v-form>
 
                     <v-divider/>
-                    <div class="mt-2">
-                    <a :href="registration()" class="colored-link" @click.prevent="onRegisterClick">{{ $vuetify.locale.t('$vuetify.registration') }}</a>
-                    <span>{{ $vuetify.locale.t('$vuetify.or') }}</span>
-                    <a :href="forgot_password()" class="colored-link" @click.prevent="onForgotPasswordClick">{{ $vuetify.locale.t('$vuetify.forgot_password') }}</a>
-                      </div>
+                    <div class="my-2">
+                      <a :href="registration()" class="colored-link" @click.prevent="onRegisterClick">{{ $vuetify.locale.t('$vuetify.registration') }}</a>
+                      <span>{{ $vuetify.locale.t('$vuetify.or') }}</span>
+                      <a :href="forgot_password()" class="colored-link" @click.prevent="onForgotPasswordClick">{{ $vuetify.locale.t('$vuetify.forgot_password') }}</a>
+                    </div>
                 </v-card-text>
 
             </v-card>
