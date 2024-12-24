@@ -995,7 +995,6 @@ div .stop-scrolling {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size 0.9rem
-  font-weight: 500;
 }
 
 .caption-small {
