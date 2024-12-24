@@ -1,5 +1,6 @@
 import {graphQlClient} from "@/graphql/graphql";
 import {deepCopy, hasLength} from "@/utils";
+import axios from "axios";
 
 // requires getUserIdsSubscribeTo(), onUserStatusChanged()
 export default (nameForLog) => {
@@ -111,6 +112,23 @@ export default (nameForLog) => {
                     this.doUnsubscribe(subscriptionElement);
                 }
                 this.subscriptionElements = [];
+            },
+
+
+            triggerUsesStatusesEvents(userIdsJoined, signal) {
+                axios.put(`/api/aaa/user/request-for-online`, null, {
+                    params: {
+                        userId: userIdsJoined
+                    },
+                    signal: signal
+                }).then(()=>{
+                    axios.put("/api/video/user/request-in-video-status", null, {
+                        params: {
+                            userId: userIdsJoined
+                        },
+                        signal: signal
+                    });
+                })
             }
         }
     };

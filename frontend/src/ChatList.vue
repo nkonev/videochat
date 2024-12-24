@@ -127,7 +127,6 @@ import {
   setTopChatPosition
 } from "@/store/localStore.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
-import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -141,7 +140,6 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
     userStatusMixin('tetATetInChatList'),
-    userStatusRequestMixin(),
     onFocusMixin(),
   ],
   props:['embedded'],

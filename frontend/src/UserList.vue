@@ -193,7 +193,6 @@ import {
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
-import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -211,7 +210,6 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
     userStatusMixin('userStatusInUserList'), // another subscription
-    userStatusRequestMixin(),
     onFocusMixin(),
   ],
   data() {
