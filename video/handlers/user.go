@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
+	"nkonev.name/video/dto"
 	. "nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
@@ -22,11 +23,6 @@ type UserHandler struct {
 
 func NewUserHandler(chatClient *client.RestClient, userService *services.UserService, livekitRoomClient client.LivekitRoomClient, lgr *log.Logger) *UserHandler {
 	return &UserHandler{chatClient: chatClient, userService: userService, livekitRoomClient: livekitRoomClient, lgr: lgr}
-}
-
-type CountUsersResponse struct {
-	UsersCount int64 `json:"usersCount"`
-	ChatId     int64 `json:"chatId"`
 }
 
 func (h *UserHandler) GetVideoUsers(c echo.Context) error {
@@ -52,7 +48,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, CountUsersResponse{UsersCount: usersCount, ChatId: chatId})
+	return c.JSON(http.StatusOK, dto.VideoCallUserCountChangedDto{UsersCount: usersCount, ChatId: chatId})
 }
 
 func (h *UserHandler) Kick(c echo.Context) error {

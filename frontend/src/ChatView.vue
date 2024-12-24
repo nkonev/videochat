@@ -237,7 +237,6 @@ export default {
         })
           .then(response => response.data)
           .then(data => {
-            this.chatStore.videoChatUsersCount = data.usersCount;
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, data);
           })
         return Promise.resolve();
@@ -571,11 +570,6 @@ export default {
         // after the joining all user 2 want to see chat of blog at the left
         return this.chatStore.currentUser && this.initialLoaded
     },
-    onVideoCallChanged(dto) {
-      if (dto.chatId == this.chatId) {
-        this.chatStore.videoChatUsersCount = dto.usersCount;
-      }
-    },
     onWsRestoredRefresh() {
       this.getInfo(this.chatId)
     },
@@ -835,7 +829,6 @@ export default {
     bus.on(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.on(CHAT_EDITED, this.onChatChange);
     bus.on(CHAT_DELETED, this.onChatDelete);
-    bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
@@ -865,7 +858,6 @@ export default {
     bus.off(MESSAGE_BROADCAST, this.onUserBroadcast);
     bus.off(CHAT_EDITED, this.onChatChange);
     bus.off(CHAT_DELETED, this.onChatDelete);
-    bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.off(PARTICIPANT_DELETED, this.onParticipantDeleted);
