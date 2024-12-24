@@ -642,37 +642,12 @@ firewall-cmd --zone=public --add-port=5000-5100/udp
 
 # Keycloak
 
-## Links
-* https://habr.com/ru/amp/publications/552346/
-* https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
+There is already configured Keycloak in `docker-compose.keycloak.yml`. Run
+```bash
+docker compose -f docker-compose.keycloak.yml up -d
+```
 
-* Problem: Keycloak renders 'Invalid parameter: redirect_uri'
-* Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
-
-
-* Problem: Keycloak 24+, Unauthorized in browser after entering login and password on Keycloak's page
-* Solution: From [here](https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/12)
-
-
-## spring-boot-keycloak
-Using spring boot and Keycloak authorization server
-https://habr.com/en/amp/post/552346/
-
-Article about OpenID Connect
-https://habr.com/en/post/422765/
-
-Keycloak login/password - see in docker-compose.yml
-
-Open user's keyclock page
-http://localhost:8484/auth/realms/my_realm2/account
-
-Open keyclock admin console
-http://localhost:8484/ (keycloak_admin:admin_password)
-
-Open protected page
-http://localhost:8060/api2/user
-
-### Configuring Keycloak as an OIDC provider for "Login via Keycloak" in aaa:
+## Configuring Keycloak as an OIDC provider for "Login via Keycloak" in aaa:
 1. Login as admin `keycloak_admin`:`admin_password`
 2. Create realm `my_realm2`
 3. Create client `my_client2` with all defaults (Save) and then, after saving set
@@ -692,16 +667,16 @@ Clients -> `my_client2` -> client scopes -> Add client scope, choose `openid`, p
 10. User's -> Role Mappings -> `Assign roles to user2` -> Choose `Fileter by realm roles` at top left -> add `USER` role
 11. Clients -> `my_client2` -> `Capability config` -> enable `Client authentication`, then grab Client Secret from credentials tab
 
-#### Login as user1 (get 3 tokens)
+### Login as user1 (get 3 tokens)
 ```bash
 curl -Ss -H 'Content-Type: application/x-www-form-urlencoded' 'http://localhost:8484/realms/my_realm2/protocol/openid-connect/token' -d 'client_id=my_client2&grant_type=password&scope=openid&username=user2&password=user_password2' | jq '.'
 ```
 
-### Configuring Keycloak for getting users via REST API:
+## Configuring Keycloak for getting users via REST API:
 * https://medium.com/@imsanthiyag/introduction-to-keycloak-admin-api-44beb9011f7d
 * https://www.keycloak.org/docs-api/22.0.1/rest-api/index.html#_users
 
-#### 1. Using admin user (not recommended)
+### 1. Using admin user (not recommended)
 1.1 Get access_token for admin
 ```bash
 curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/token' --header 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'username=keycloak_admin' --data-urlencode 'password=admin_password' --data-urlencode 'grant_type=password' --data-urlencode 'client_id=admin-cli' | jq 
@@ -713,7 +688,7 @@ curl -Ss -X POST 'http://localhost:8484/realms/master/protocol/openid-connect/to
 curl -Ss -H 'Authorization: Bearer ey_PASTE_TOKEN' http://localhost:8484/admin/realms/my_realm2/users | jq
 ```
 
-#### 2. Using User Client Credentials Grant (we go this way)
+### 2. Using User Client Credentials Grant (we go this way)
 
 2.1 How I changed my_client2 to make REST API working:
 
@@ -822,8 +797,45 @@ spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/api/l
 spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8484/auth/realms/my_realm2
 ```
 
+## Links
+* https://habr.com/ru/amp/publications/552346/
+* https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
+
+* Problem: Keycloak renders 'Invalid parameter: redirect_uri'
+* Solution: Set proper [redirect url](https://stackoverflow.com/questions/45352880/keycloak-invalid-parameter-redirect-uri)
+
+
+* Problem: Keycloak 24+, Unauthorized in browser after entering login and password on Keycloak's page
+* Solution: From [here](https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/12)
+
+
+## spring-boot-keycloak
+Using spring boot and Keycloak authorization server
+https://habr.com/en/amp/post/552346/
+
+Article about OpenID Connect
+https://habr.com/en/post/422765/
+
+Keycloak login/password - see in docker-compose.yml
+
+Open user's keyclock page
+http://localhost:8484/auth/realms/my_realm2/account
+
+Open keyclock admin console
+http://localhost:8484/ (keycloak_admin:admin_password)
+
+Open protected page
+http://localhost:8060/api2/user
+
 
 # LDAP (Example with OpenDJ)
+
+There is already configured OpenDJ in `docker-compose.opendj.yml`. Run
+```bash
+docker compose -f docker-compose.opendj.yml up -d
+```
+
+## Configuring OpenDJ to provide an example users
 1. Download and unzip [OpenDJ](https://github.com/OpenIdentityPlatform/OpenDJ/releases/tag/4.8.0)
 2. Run installation script
 ```bash
