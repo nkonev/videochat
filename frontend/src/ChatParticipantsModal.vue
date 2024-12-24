@@ -181,12 +181,10 @@
     import ChatParticipantsContextMenu from "@/ChatParticipantsContextMenu.vue";
     import ChatListContextMenu from "@/ChatListContextMenu.vue";
     import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
-    import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
     export default {
         mixins: [
             userStatusMixin('chatParticipants'),
-            userStatusRequestMixin(),
             pageableModalMixin(),
         ],
         data () {

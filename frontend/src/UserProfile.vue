@@ -172,7 +172,6 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
-import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
 export default {
   components: {
@@ -181,7 +180,6 @@ export default {
   },
   mixins: [
       userStatusMixin('userStatusInUserProfile'), // another subscription
-      userStatusRequestMixin(),
       onFocusMixin(),
   ],
   data() {
