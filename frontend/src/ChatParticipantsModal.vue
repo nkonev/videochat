@@ -181,10 +181,12 @@
     import ChatParticipantsContextMenu from "@/ChatParticipantsContextMenu.vue";
     import ChatListContextMenu from "@/ChatListContextMenu.vue";
     import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
+    import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
     export default {
         mixins: [
             userStatusMixin('chatParticipants'),
+            userStatusRequestMixin(),
             pageableModalMixin(),
         ],
         data () {
@@ -226,11 +228,7 @@
                     const userIds = this.itemsDto?.items.map(item => item.id);
                     const joined = userIds.join(",");
 
-                    axios.put("/api/video/user/request-in-video-status", null, {
-                        params: {
-                            userId: joined
-                        },
-                    });
+                    this.triggerUsesStatusesEvents(joined);
                 })
             },
             changeChatAdmin(item) {

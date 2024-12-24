@@ -193,6 +193,7 @@ import {
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
+import userStatusRequestMixin from "@/mixins/userStatusRequestMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -210,6 +211,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
     userStatusMixin('userStatusInUserList'), // another subscription
+    userStatusRequestMixin(),
     onFocusMixin(),
   ],
   data() {
@@ -325,7 +327,7 @@ export default {
 
           this.graphQlUserStatusSubscribe();
           this.performMarking();
-          this.requestInVideo();
+          this.requestStatuses();
           return Promise.resolve(true)
         }).finally(()=>{
           this.chatStore.decrementProgressCount();
@@ -630,32 +632,19 @@ export default {
               return
           }
 
-          this.requestInVideo();
+          this.requestStatuses();
       }
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
       this.initializeHashVariablesAndReloadItems();
     },
-    requestInVideo() {
+    requestStatuses() {
       this.$nextTick(()=>{
           const list = this.items.map(item => item.id);
           const joined = list.join(",");
 
-          axios.put("/api/video/user/request-in-video-status", null, {
-              params: {
-                  userId: joined
-              },
-              signal: this.requestAbortController.signal
-          });
-
-          axios.put(`/api/aaa/user/request-for-online`, null, {
-            params: {
-              userId: joined
-            },
-            signal: this.requestAbortController.signal
-          })
-
+          this.triggerUsesStatusesEvents(joined, this.requestAbortController.signal);
       })
     },
     getMaximumItemId() {
