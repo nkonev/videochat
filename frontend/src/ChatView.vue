@@ -6,7 +6,7 @@
 
       <pane style="background: white" :size="centralPaneSize()">
         <splitpanes ref="splCentral" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
-          <pane v-if="showTopPane()" :size="topPaneSize()">
+          <pane v-if="showTopPane()" :size="topPaneSize()" class="video-top-pane">
             <ChatVideo v-if="chatDtoIsReady" :chatId="chatId" ref="chatVideoRef"/>
           </pane>
 
@@ -909,6 +909,10 @@ export default {
     .pinned-promoted {
         margin-right unset
     }
+}
+
+.video-top-pane {
+  position: relative // to work position fixed for VideoButtons in case mobile
 }
 </style>
 

@@ -71,7 +71,7 @@ export default {
   computed: {
     ...mapStores(useChatStore),
     videoButtonsControlClass() {
-      if (this.videoIsHorizontal() || this.videoIsGallery()) {
+      if (this.videoIsHorizontal() || this.videoIsGallery() || this.isMobile()) {
         return ["video-buttons-control", "video-buttons-control-horizontal"]
       } else if (this.videoIsVertical())  {
         if (!this.chatStore.presenterEnabled) {
