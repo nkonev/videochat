@@ -524,13 +524,19 @@ export default {
       // it takes 1 or some retries
       //
       // without this retry it's going to just return the error to user
+      const maxAttempts = 10;
       const retryOptions = {
         delay: 200,
-        maxAttempts: 10,
+        maxAttempts: maxAttempts,
       };
       try {
         this.inRestarting = true;
         await retry(async (context) => {
+          const attempt = context.attemptNum + 1
+          if (attempt > 1) {
+            this.setWarning("Connecting to the room, attempt " + attempt + " / " + maxAttempts);
+          }
+
           if (this.room) {
             await this.room.connect(getWebsocketUrlPrefix() + '/api/livekit', token, {
               // subscribe to other participants automatically
@@ -545,7 +551,7 @@ export default {
             // because of this retry
             this.finishedConnectingToRoom = true;
             this.updateInitializingVideoCall();
-
+            this.closeError();
           } else {
             console.warn("Didn't connect to room because it's null. It is ok when user leaves very fast.");
           }
