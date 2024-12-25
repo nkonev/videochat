@@ -438,7 +438,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		msg := convertToMessageDtoWithoutPersonalized(c.Request().Context(), h.lgr, cc, users, chatsSet)
 		msg.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.Text, blogId, msg.Id)
 		if msg.EmbedMessage != nil {
-			msg.EmbedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.EmbedMessage.Text, blogId, msg.EmbedMessage.Id)
+			msg.EmbedMessage.Text = PatchStorageUrlToPublic(c.Request().Context(), h.lgr, msg.EmbedMessage.Text, blogId, msg.Id) // overrideMessageId the same as in MessageHandler.GetPublishedMessage()
 		}
 		messageDtos = append(messageDtos, msg)
 	}
