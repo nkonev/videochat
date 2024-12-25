@@ -12,11 +12,10 @@
       <div v-if="editor">
         <bubble-menu
             :should-show="shouldShowBubbleMenu"
-            :updateDelay="0"
-            :resizeDelay="0"
+            class="bubble-menu"
+            :tippy-options="{ duration: 0 }"
             :editor="editor"
         >
-          <div class="bubble-menu">
             <button @click="boldClick" :class="{ 'is-active': boldValue() }">
               {{ $vuetify.locale.t('$vuetify.message_edit_bold_short') }}
             </button>
@@ -26,14 +25,14 @@
             <button @click="underlineClick" :class="{ 'is-active': underlineValue() }">
               {{ $vuetify.locale.t('$vuetify.message_edit_underline_short') }}
             </button>
-          </div>
         </bubble-menu>
 
         <floating-menu
             :editor="editor"
+            class="floating-menu"
+            :tippy-options="{ duration: 0, zIndex: 200, interactive: true, appendTo: documentBody }"
             :should-show="shouldShowFloatingMenu"
         >
-          <div class="floating-menu">
             <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
               {{ $vuetify.locale.t('$vuetify.message_edit_bullet_list_short') }}
             </button>
@@ -50,7 +49,6 @@
             <button @click="embedClick">
               {{ $vuetify.locale.t('$vuetify.message_edit_embed_short') }}
             </button>
-          </div>
         </floating-menu>
       </div>
 
@@ -63,7 +61,6 @@
 import "prosemirror-view/style/prosemirror.css";
 import "./messageBody.styl";
 import {Editor, EditorContent, BubbleMenu, FloatingMenu, isTextSelection} from "@tiptap/vue-3";
-import { getText, getTextSerializersFromSchema } from '@tiptap/core';
 import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -116,8 +113,6 @@ const domParser = new DOMParser();
 export default {
   components: {
     EditorContent,
-    // https://github.com/ueberdosis/tiptap/pull/5398/files
-    // https://github.com/ueberdosis/tiptap/blob/next/demos/src/Examples/Menus/Vue/index.vue
     BubbleMenu,
     FloatingMenu,
   },
@@ -327,18 +322,19 @@ export default {
     embedClick() {
       bus.emit(OPEN_MESSAGE_EDIT_LINK, {dialogType: link_dialog_type_add_media_embed, mediaType: embed});
     },
-    // patched version of https://github.com/ueberdosis/tiptap/blob/a6919e60a089227a63b667a3460adfd9e8dac1f8/packages/extension-bubble-menu/src/bubble-menu-plugin.ts#L132
+    // patched version of frontend/node_modules/@tiptap/extension-bubble-menu/src/bubble-menu-plugin.ts
     shouldShowBubbleMenu({
       editor,
-      element,
       view,
       state,
       from,
       to,
     }) {
+      // patch start
       if (this.chatStore.shouldShowSendMessageButtons) {
         return false
       }
+      // patch end
 
       const { doc, selection } = state
       const { empty } = selection
@@ -351,7 +347,7 @@ export default {
       // When clicking on a element inside the bubble menu the editor "blur" event
       // is called and the bubble menu item is focussed. In this case we should
       // consider the menu as part of the editor and keep showing the menu
-      const isChildOfMenu = element.contains(document.activeElement)
+      const isChildOfMenu = false; // patch because there is no element
 
       const hasEditorFocus = view.hasFocus() || isChildOfMenu
 
@@ -362,20 +358,18 @@ export default {
       return true
     },
 
-    getTextContent(node) {
-      return getText(node, { textSerializers: getTextSerializersFromSchema(this.editor.schema) })
-    },
-    // patched version of https://github.com/ueberdosis/tiptap/blob/a6919e60a089227a63b667a3460adfd9e8dac1f8/packages/extension-floating-menu/src/floating-menu-plugin.ts#L88
+    // patched version of frontend/node_modules/@tiptap/extension-floating-menu/src/floating-menu-plugin.ts
     shouldShowFloatingMenu({ editor, view, state }) {
+      // patch start
       if (this.chatStore.shouldShowSendMessageButtons) {
           return false
       }
+      // patch end
 
       const { selection } = state
       const { $anchor, empty } = selection
       const isRootDepth = $anchor.depth === 1
-
-      const isEmptyTextBlock = $anchor.parent.isTextblock && !$anchor.parent.type.spec.code && !$anchor.parent.textContent && $anchor.parent.childCount === 0 && !this.getTextContent($anchor.parent)
+      const isEmptyTextBlock = $anchor.parent.isTextblock && !$anchor.parent.type.spec.code && !$anchor.parent.textContent
 
       if (
           !view.hasFocus()
@@ -388,6 +382,9 @@ export default {
       }
 
       return true
+    },
+    documentBody() {
+      return document.body
     },
   },
   mounted() {
