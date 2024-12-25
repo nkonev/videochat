@@ -322,5 +322,7 @@ export default {
     set_password: "Set password",
     video_presenter_enable: "Enable presenter",
     close_video: "Close video",
-    video_presenter_disable: "Disable presenter"
+    video_presenter_disable: "Disable presenter",
+    pin_video: "Pin video",
+    unpin_video: "Unpin video"
 }

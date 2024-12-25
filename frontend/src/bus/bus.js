@@ -127,3 +127,5 @@ export const ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED = "onMessageEditSendButto
 export const OPEN_RECORDING_MODAL = "openRecordingModal";
 
 export const MESSAGES_RELOAD = "messagesReload";
+export const PIN_VIDEO = "pinVideo";
+export const UN_PIN_VIDEO = "unPinVideo";

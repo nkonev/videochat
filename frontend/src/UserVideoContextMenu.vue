@@ -33,10 +33,13 @@
 import contextMenuMixin from "@/mixins/contextMenuMixin";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
+import bus, {PIN_VIDEO, UN_PIN_VIDEO} from "@/bus/bus.js";
+import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 
 export default {
     mixins: [
       contextMenuMixin(),
+      videoPositionMixin(),
     ],
     computed: {
         ...mapStores(useChatStore),
@@ -145,6 +148,28 @@ export default {
                   },
                   enabled: true,
                 });
+              }
+
+              if (this.chatStore.presenterEnabled && this.isPresenterEnabled()) {
+                if (!this.chatStore.pinnedTrackSid) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.pin_video'),
+                    icon: 'mdi-pin',
+                    action: () => {
+                      bus.emit(PIN_VIDEO, this.menuableItem.getVideoStreamId())
+                    },
+                    enabled: true,
+                  });
+                } else {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.unpin_video'),
+                    icon: 'mdi-pin-off-outline',
+                    action: () => {
+                      bus.emit(UN_PIN_VIDEO)
+                    },
+                    enabled: true,
+                  });
+                }
               }
             }
             return ret;

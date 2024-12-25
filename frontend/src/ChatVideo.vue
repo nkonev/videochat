@@ -43,10 +43,10 @@ import {
   setStoredCallVideoDeviceId,
 } from "@/store/localStore";
 import bus, {
-    ADD_SCREEN_SOURCE,
-    ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE,
-    REQUEST_CHANGE_VIDEO_PARAMETERS,
-    VIDEO_PARAMETERS_CHANGED
+  ADD_SCREEN_SOURCE,
+  ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE, PIN_VIDEO,
+  REQUEST_CHANGE_VIDEO_PARAMETERS, UN_PIN_VIDEO,
+  VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
 import {chat_name, videochat_name} from "@/router/routes";
 import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
@@ -235,6 +235,9 @@ export default {
       if (!pub) {
         return -1
       }
+      if (pub.trackSid === this.chatStore.pinnedTrackSid) {
+        return 5
+      }
       for (const t of this.room.localParticipant.getTrackPublications().values()) {
         if (t.trackSid === pub.trackSid)  {
           return 0
@@ -249,7 +252,15 @@ export default {
             return 1
       }
     },
-    // TODO pin to presenter an element from UserVideo
+    onPinVideo(trackSid) {
+      console.log("pinning", trackSid);
+      this.chatStore.pinnedTrackSid = trackSid;
+      this.electNewPresenter();
+    },
+    onUnpinVideo(){
+      this.chatStore.pinnedTrackSid = null;
+      this.electNewPresenter();
+    },
     // TODO think how to reuse the presenter mode with egress
     detachPresenter() {
       if (this.presenterData) {
@@ -1006,6 +1017,8 @@ export default {
     bus.on(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.on(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+    bus.on(PIN_VIDEO, this.onPinVideo);
+    bus.on(UN_PIN_VIDEO, this.onUnpinVideo);
 
     window.addEventListener("resize", this.recalculateLayout);
 
@@ -1044,6 +1057,8 @@ export default {
     this.chatStore.initializingStaringVideoRecord = false;
     this.chatStore.initializingStoppingVideoRecord = false;
 
+    this.chatStore.pinnedTrackSid = null;
+
     this.chatStore.videoTokenId = null;
 
     this.chatStore.setCallStateReady();
@@ -1054,6 +1069,8 @@ export default {
     bus.off(ADD_SCREEN_SOURCE, this.onAddScreenSource);
     bus.off(REQUEST_CHANGE_VIDEO_PARAMETERS, this.tryRestartVideoDevice);
     bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
+    bus.off(PIN_VIDEO, this.onPinVideo);
+    bus.off(UN_PIN_VIDEO, this.onUnpinVideo);
   },
 }
 
