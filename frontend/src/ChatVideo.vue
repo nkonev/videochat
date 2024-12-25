@@ -235,13 +235,18 @@ export default {
       if (!pub) {
         return -1
       }
+      for (const t of this.room.localParticipant.getTrackPublications().values()) {
+        if (t.trackSid === pub.trackSid)  {
+          return 0
+        }
+      }
       switch (pub.source) {
         case "camera":
-          return isSpeaking ? 2 : 1;
+          return isSpeaking ? 3 : 2;
         case "screen_share":
-          return 3
+          return 4
         default:
-            return 0
+            return 1
       }
     },
     // TODO pin to presenter an element from UserVideo
