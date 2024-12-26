@@ -390,6 +390,10 @@ export default {
         }
       }
 
+      if (track.sid === this.chatStore.pinnedTrackSid) {
+        this.chatStore.pinnedTrackSid = null;
+      }
+
       this.recalculateLayout();
       this.electNewPresenterIfNeed();
     },
