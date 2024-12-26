@@ -351,7 +351,6 @@ export default {
       this.removeComponent(participant.identity, track);
 
       this.refreshLocalMuteAppBarButtons();
-      this.recalculateLayout();
     },
     electNewPresenterIfNeed() {
       // about second: detachPresenterIfNeed() leaves presenterVideoPublication null
@@ -387,9 +386,11 @@ export default {
           if (this.chatStore.presenterEnabled && this.presenterData?.videoStream && this.presenterData.videoStream.trackSid == component.getVideoStream()?.trackSid) {
             this.detachPresenter();
           }
+
         }
       }
 
+      this.recalculateLayout();
       this.electNewPresenterIfNeed();
     },
 
