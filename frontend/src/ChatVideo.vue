@@ -1,12 +1,14 @@
 <template>
     <splitpanes ref="splVideo" class="default-theme" :dbl-click-splitter="false" :horizontal="splitpanesIsHorizontal" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
         <pane v-if="shouldShowPresenter" :size="presenterPaneSize()">
-            <div class="video-presenter-container-element">
+            <div class="video-presenter-container-element" @contextmenu.stop="onShowContextMenu($event, this)">
                 <video v-show="!presenterVideoMute || !presenterAvatarIsSet" @click.self="onClick()" class="video-presenter-element" ref="presenterRef"/>
                 <img v-show="presenterAvatarIsSet && presenterVideoMute" @click.self="onClick()" class="video-presenter-element" :src="presenterData?.avatar"/>
                 <p v-bind:class="[speaking ? 'presenter-element-caption-speaking' : '', 'presenter-element-caption', 'inline-caption-base']">{{ presenterData?.userName ? presenterData?.userName : getLoadingMessage() }} <v-icon v-if="presenterAudioMute">mdi-microphone-off</v-icon></p>
 
                 <VideoButtons v-if="!isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
+
+                <PresenterContextMenu ref="contextMenuRef" :userName="presenterUserName"/>
             </div>
         </pane>
         <pane :class="paneVideoContainerClass"  :size="miniaturesPaneSize()">
@@ -60,6 +62,8 @@ import {largestRect} from "rect-scaler";
 import debounce from "lodash/debounce";
 import VideoButtons from "./VideoButtons.vue"
 import speakingMixin from "@/mixins/speakingMixin.js";
+import PresenterContextMenu from "@/PresenterContextMenu.vue";
+import UserVideoContextMenu from "@/UserVideoContextMenu.vue";
 
 const first = 'first';
 const second = 'second';
@@ -876,6 +880,12 @@ export default {
         this.$refs.splVideo.panes[0].size = 100;
       }
     },
+    onShowContextMenu(e, menuableItem) {
+      this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+    },
+    getPresenterVideoStreamId() {
+      return this.presenterData?.videoStream.trackSid
+    },
   },
   computed: {
     ...mapStores(useChatStore),
@@ -906,11 +916,16 @@ export default {
     presenterAvatarIsSet() {
       return hasLength(this.presenterData?.avatar);
     },
+    presenterUserName() {
+      return this.presenterData?.userName
+    }
   },
   components: {
+    UserVideoContextMenu,
       Splitpanes,
       Pane,
       VideoButtons,
+      PresenterContextMenu,
   },
   watch: {
     'chatStore.videoPosition': {
