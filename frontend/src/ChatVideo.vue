@@ -336,9 +336,7 @@ export default {
       participant,
     ) {
       console.log('handleTrackUnsubscribed', track);
-      // remove tracks from all attached elements
-      track.detach();
-      this.removeComponent(participant.identity, track);
+      this.removeComponentIfNeed(participant.identity, track);
     },
 
     handleLocalTrackUnpublished(trackPublication, participant) {
@@ -346,20 +344,9 @@ export default {
       console.log('handleLocalTrackUnpublished sid=', track.sid, "kind=", track.kind);
       console.debug('handleLocalTrackUnpublished', trackPublication, "track", track);
 
-      // when local tracks are ended, update UI to remove them from rendering
-      track.detach();
-      this.removeComponent(participant.identity, track);
+      this.removeComponentIfNeed(participant.identity, track);
 
       this.refreshLocalMuteAppBarButtons();
-    },
-    electNewPresenterIfNeed() {
-      // about second: detachPresenterIfNeed() leaves presenterVideoPublication null
-      if (this.chatStore.presenterEnabled && !this.presenterData?.videoStream) {
-        const data = this.getAnyPrioritizedVideoData();
-        if (data) {
-          this.updatePresenterIfNeed(data, false);
-        }
-      }
     },
     electNewPresenter() {
       const data = this.getAnyPrioritizedVideoData();
@@ -367,35 +354,57 @@ export default {
         this.updatePresenter(data);
       }
     },
-    removeComponent(userIdentity, track) {
+    removeComponentIfNeed(userIdentity, track) {
+      // remove tracks from all attached elements
+      track.detach();
+
+      let presenterWasUnpinned = false;
+      if (track.sid === this.chatStore.pinnedTrackSid) {
+        this.chatStore.pinnedTrackSid = null;
+        this.detachPresenter();
+        presenterWasUnpinned = true;
+      }
+
+      let presenterWasDetached = false;
       for (const componentWrapper of this.getByUser(userIdentity)) {
         const component = componentWrapper.component;
         const app = componentWrapper.app;
         const containerEl = componentWrapper.containerEl;
         console.debug("For removal checking component=", component, "against", track);
         if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
-          console.log("Removing component=", component.getId());
-          try {
-            app.unmount();
-            this.videoContainerDiv.removeChild(containerEl);
-          } catch (e) {
-            console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
+          if (component.getVideoStreamId() == track.sid) {
+            console.log("Setting null video for component=", component.getId());
+            if (this.chatStore.presenterEnabled && this.presenterData?.videoStream && this.presenterData.videoStream.trackSid == component.getVideoStreamId()) {
+              this.detachPresenter();
+              presenterWasDetached = true;
+            }
+            component.setVideoStream(null)
+          } else if (component.getAudioStreamId() == track.sid) {
+            console.log("Setting null audio for component=", component.getId());
+            component.setAudioStream(null)
           }
-          this.removeComponentForUser(userIdentity, componentWrapper);
 
-          if (this.chatStore.presenterEnabled && this.presenterData?.videoStream && this.presenterData.videoStream.trackSid == component.getVideoStream()?.trackSid) {
-            this.detachPresenter();
+          if (component.getVideoStreamId() == null && component.getAudioStreamId() == null) {
+            try {
+              console.log("Removing component=", component.getId());
+              app.unmount();
+              this.videoContainerDiv.removeChild(containerEl);
+              this.removeComponentForUser(userIdentity, componentWrapper);
+
+              console.log("Successfully removed component=", component.getId());
+
+              this.recalculateLayout();
+              break
+            } catch (e) {
+              console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
+            }
           }
-
         }
       }
 
-      if (track.sid === this.chatStore.pinnedTrackSid) {
-        this.chatStore.pinnedTrackSid = null;
+      if (presenterWasDetached || presenterWasUnpinned) {
+        this.electNewPresenter();
       }
-
-      this.recalculateLayout();
-      this.electNewPresenterIfNeed();
     },
 
     handleActiveSpeakerChange(speakers) {
