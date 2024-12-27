@@ -100,6 +100,15 @@
                       <span>{{ $vuetify.locale.t('$vuetify.or') }}</span>
                       <a :href="forgot_password()" class="colored-link" @click.prevent="onForgotPasswordClick">{{ $vuetify.locale.t('$vuetify.forgot_password') }}</a>
                     </div>
+                    <v-btn class="mb-4" @click.prevent="goBlog()" text variant="outlined" :href="getBlog()">
+                      <template v-slot:prepend>
+                        <v-icon >mdi-postage-stamp</v-icon>
+                      </template>
+                      <template v-slot:default>
+                        {{ $vuetify.locale.t('$vuetify.blogs') }}
+                      </template>
+                    </v-btn>
+
                 </v-card-text>
 
             </v-card>
@@ -112,12 +121,12 @@ import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
-    import {
-      confirmation_pending_name, forgot_password,
-      forgot_password_name, check_email_name,
-      password_restore_enter_new_name, registration,
-      registration_name
-    } from "@/router/routes";
+import {
+  confirmation_pending_name, forgot_password,
+  forgot_password_name, check_email_name,
+  password_restore_enter_new_name, registration,
+  registration_name, blog
+} from "@/router/routes";
 import {setLanguageToVuetify} from "@/utils";
 import {getStoredLanguage} from "@/store/localStore";
 
@@ -259,6 +268,12 @@ import {getStoredLanguage} from "@/store/localStore";
             },
             onLanguageClick() {
                 bus.emit(OPEN_SETTINGS)
+            },
+            goBlog() {
+              window.location.href = blog
+            },
+            getBlog() {
+              return blog
             },
         }
     }
