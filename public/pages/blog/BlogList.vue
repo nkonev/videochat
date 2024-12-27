@@ -194,7 +194,7 @@ export default {
           const visible = elems.filter((el) => el.visible);
           // console.log("visible", visible, "elems", elems);
           if (visible.length == 0) {
-              console.warn("Unable to get desiredVisible")
+              console.log("Unable to get desiredVisible")
               return
           }
           const desiredVisible = visible[0].item
