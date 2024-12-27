@@ -37,6 +37,5 @@ async function data(pageContext) {
         searchStringFacade: searchString,
         title: "Blog",
         description: "Various tech blog",
-        loading: false,
     }
 }

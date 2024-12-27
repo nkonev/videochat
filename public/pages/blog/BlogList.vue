@@ -22,7 +22,7 @@
                             >
                                 <v-container class="post-title ma-0 pa-0">
                                     <v-card-title>
-                                        <a class="post-title-text" v-html="item.title" :href="getLink(item)" @click="onPostClick()"></a>
+                                        <a class="post-title-text" v-html="item.title" :href="getLink(item)"></a>
                                     </v-card-title>
                                 </v-container>
                             </v-img>
@@ -120,7 +120,6 @@ export default {
       return blogIdPrefix + id
     },
     onClickPage(e) {
-      this.loading = true; // false will be set with the new data from server
 
       let actualPage = e--;
 
@@ -130,7 +129,6 @@ export default {
       navigate(url.pathname + url.search);
     },
     onSearchStringChanged(searchString) {
-        this.loading = true; // false will be set with the new data from server
 
         const url = new URL(window.location.href);
 
@@ -226,22 +224,6 @@ export default {
           this.removeTopBlogPosition();
       }
     },
-    onPostClick() {
-        this.setLoadingAnimation()
-    },
-    setLoadingAnimation() {
-        this.loading = true
-    },
-  },
-  computed: {
-      loading: {
-          get() {
-              return this.pageContext.data.loading
-          },
-          set(v) {
-              this.pageContext.data.loading = v;
-          }
-      }
   },
   watch: {
     'pageContext.data.items': function(newUserValue, oldUserValue) {

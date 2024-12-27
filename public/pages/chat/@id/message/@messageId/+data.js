@@ -21,7 +21,6 @@ async function data(pageContext) {
             },
             title: "Page not found",
             chatMessageHref: null,
-            loading: false,
         }
     }
 
@@ -38,7 +37,6 @@ async function data(pageContext) {
         description: publishedMessageResponse.data.preview,
         showSearchButton: true,
         chatMessageHref,
-        loading: false,
     }
 
 }

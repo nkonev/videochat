@@ -40,7 +40,7 @@
 
     <template v-if="pageContext.data.blogDto.messageId">
         <v-container class="ma-0 pa-0" fluid>
-          <MessageItem v-for="(item, index) in pageContext.data.items" v-if="!commentsLoading"
+          <MessageItem v-for="(item, index) in pageContext.data.items"
             :id="getItemId(item.id)"
             :key="item.id"
             :item="item"
@@ -48,13 +48,6 @@
             :isInBlog="true"
             @click="onClickTrap"
           ></MessageItem>
-
-          <v-progress-linear
-            class="my-2"
-            v-else
-            color="primary"
-            indeterminate
-          ></v-progress-linear>
 
           <v-btn class="my-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
 
@@ -132,8 +125,6 @@ export default {
     },
 
     onClickPage(e) {
-      this.commentsLoading = true; // false will be set with the new data from server
-
       const url = new URL(window.location.href);
       url.searchParams.set(PAGE_PARAM, e);
       navigate(url.pathname + url.search);
@@ -148,16 +139,6 @@ export default {
   },
   components: {
     MessageItem,
-  },
-  computed: {
-      commentsLoading: {
-        get() {
-            return this.pageContext.data.commentsLoading
-        },
-        set(v) {
-            this.pageContext.data.commentsLoading = v;
-        }
-    }
   },
   mounted() {
   },
