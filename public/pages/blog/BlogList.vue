@@ -1,13 +1,5 @@
 <template>
   <v-container class="ma-0 pa-0 my-list-container" fluid>
-    <template v-if="loading">
-        <v-progress-circular
-            class="ma-4"
-            color="primary"
-            indeterminate
-        ></v-progress-circular>
-    </template>
-    <template v-else>
         <template v-if="pageContext.data.items.length">
             <div class="my-blog-scroller" id="blog-post-list">
 
@@ -30,7 +22,7 @@
                             >
                                 <v-container class="post-title ma-0 pa-0">
                                     <v-card-title>
-                                        <a class="post-title-text" v-html="item.title" :href="getLink(item)"></a>
+                                        <a class="post-title-text" v-html="item.title" :href="getLink(item)" @click="onPostClick()"></a>
                                     </v-card-title>
                                 </v-container>
                             </v-img>
@@ -80,7 +72,6 @@
         <div v-else>
             <h1>Posts not found</h1>
         </div>
-    </template>
   </v-container>
 </template>
 
@@ -234,6 +225,12 @@ export default {
       if (loadedResult === true) {
           this.removeTopBlogPosition();
       }
+    },
+    onPostClick() {
+        this.setLoadingAnimation()
+    },
+    setLoadingAnimation() {
+        this.loading = true
     },
   },
   computed: {

@@ -3,6 +3,7 @@
         <v-app-bar color='indigo' dark :density="getDensity()">
             <template v-if="getShowSearchButton()">
                 <v-breadcrumbs
+                    @click="onBreadcrumbsLinkClick"
                     :items="getBreadcrumbs()"
                 />
                 <v-spacer/>
@@ -17,7 +18,16 @@
         </v-app-bar>
 
         <v-main>
+          <template v-if="pageLoading">
+            <v-progress-circular
+                class="ma-4"
+                color="primary"
+                indeterminate
+            ></v-progress-circular>
+          </template>
+          <template v-else>
             <slot />
+          </template>
 
             <PlayerModal/>
         </v-main>
@@ -25,7 +35,7 @@
 </template>
 
 <script>
-    import {hasLength} from "#root/common/utils";
+    import {hasLength, getUrlPrefix} from "#root/common/utils";
     import {blog, path_prefix, blog_post, videochat} from "#root/common/router/routes.js";
     import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
     import {usePageContext} from "./usePageContext.js";
@@ -52,6 +62,16 @@
             },
             isMobile() {
                 return this.pageContext.isMobile
+            },
+            onBreadcrumbsLinkClick(e) {
+                const relUrl = e?.target?.href?.slice(getUrlPrefix().length);
+                console.log("onBreadcrumbsLinkClick", relUrl);
+                if (hasLength(relUrl)) {
+                    this.setLoadingAnimation();
+                }
+            },
+            setLoadingAnimation(){
+                this.pageLoading = true
             },
             getBreadcrumbs() {
                 const ret = [
@@ -136,6 +156,14 @@
             },
             messageId() {
                 return this.pageContext.routeParams?.messageId
+            },
+            pageLoading: {
+              get() {
+                return this.pageContext.data.loading
+              },
+              set(v) {
+                this.pageContext.data.loading = v;
+              }
             },
         },
     }
