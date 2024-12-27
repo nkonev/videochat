@@ -195,7 +195,6 @@ export const positionItems = () => {
     return [VIDEO_POSITION_HORIZONTAL, VIDEO_POSITION_VERTICAL, VIDEO_POSITION_GALLERY]
 }
 
-
 export const KEY_PRESENTER = 'presenter';
 
 export const getStoredPresenter = () => {
@@ -211,6 +210,22 @@ export const getStoredPresenter = () => {
 
 export const setStoredPresenter = (v) => {
     localStorage.setItem(KEY_PRESENTER, JSON.stringify(v));
+}
+
+export const KEY_VIDEO_MINIATURES = 'videoMiniatures';
+
+export const getStoredVideoMiniatures = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_VIDEO_MINIATURES));
+    if (v === null) {
+        console.log("Resetting videoMiniatures to default");
+        setStoredVideoMiniatures(true);
+        v = JSON.parse(localStorage.getItem(KEY_VIDEO_MINIATURES));
+    }
+    return v;
+}
+
+export const setStoredVideoMiniatures = (v) => {
+    localStorage.setItem(KEY_VIDEO_MINIATURES, JSON.stringify(v));
 }
 
 

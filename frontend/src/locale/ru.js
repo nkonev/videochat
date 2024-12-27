@@ -324,5 +324,7 @@ export default {
     close_video: "Закрыть видео",
     video_presenter_disable: "Выключить презентатор",
     pin_video: "Закрепить это видео",
-    unpin_video: "Открепить видео"
+    unpin_video: "Открепить видео",
+    video_miniatures_disable: "Выключить видео миниатюры",
+    video_miniatures_enable: "Включить видео миниатюры"
 }

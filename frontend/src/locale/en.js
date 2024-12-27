@@ -324,5 +324,7 @@ export default {
     close_video: "Close video",
     video_presenter_disable: "Disable presenter",
     pin_video: "Pin this video",
-    unpin_video: "Unpin pinned video"
+    unpin_video: "Unpin pinned video",
+    video_miniatures_disable: "Disable video miniatures",
+    video_miniatures_enable: "Enable video miniatures"
 }

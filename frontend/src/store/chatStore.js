@@ -76,6 +76,8 @@ export const useChatStore = defineStore('chat', {
         presenterEnabled: false,
         pinnedTrackSid: null,
         oppositeUserInVideo: false,
+        videoMiniaturesEnabled: true,
+        videoMessagesEnabled: true,
     }
   },
   actions: {

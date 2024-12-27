@@ -15,6 +15,10 @@
       </template>
       <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
 
+      <v-btn variant="plain" tile icon @click.stop.prevent="toggleMessages()"><v-icon size="x-large">mdi-message-text-outline</v-icon></v-btn>
+
+      <v-btn :disabled="!enableToggleMiniatures" tile icon @click.stop.prevent="toggleMiniatures()" :variant="miniaturesValue() ? 'tonal' : 'plain'" :title="miniaturesValue() ? $vuetify.locale.t('$vuetify.video_miniatures_disable') : $vuetify.locale.t('$vuetify.video_miniatures_enable')"><v-icon size="x-large">mdi-table-row</v-icon></v-btn>
+
       <v-btn :disabled="videoIsGallery()" tile icon :input-value="presenterValue()" @click="presenterClick" :variant="presenterValue() ? 'tonal' : 'plain'" :title="presenterValue() ? $vuetify.locale.t('$vuetify.video_presenter_disable') : $vuetify.locale.t('$vuetify.video_presenter_enable')"><v-icon size="x-large">mdi-presentation</v-icon></v-btn>
 
       <v-select
@@ -54,7 +58,7 @@ import {stopCall} from "@/utils.js";
 import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS} from "@/bus/bus.js";
 import {
   positionItems,
-  setStoredPresenter,
+  setStoredPresenter, setStoredVideoMiniatures,
   setStoredVideoPosition,
 } from "@/store/localStore.js";
 import axios from "axios";
@@ -89,6 +93,9 @@ export default {
     chatId() {
       return this.$route.params.id
     },
+    enableToggleMiniatures() {
+      return this.chatStore.presenterEnabled && this.isPresenterEnabled()
+    },
   },
   methods: {
     doMuteAudio(requestedState) {
@@ -114,6 +121,9 @@ export default {
     presenterValue() {
       return this.chatStore.presenterEnabled
     },
+    miniaturesValue() {
+      return this.chatStore.videoMiniaturesEnabled
+    },
     presenterClick() {
       const v = !this.chatStore.presenterEnabled;
       this.chatStore.presenterEnabled = v;
@@ -132,6 +142,14 @@ export default {
     },
     openSettings() {
       bus.emit(OPEN_SETTINGS, 'a_video_settings') // value matches with SettingsModal.vue :: v-window-item
+    },
+    toggleMiniatures() {
+        const newValue = !this.chatStore.videoMiniaturesEnabled;
+        this.chatStore.videoMiniaturesEnabled = newValue;
+        setStoredVideoMiniatures(newValue);
+    },
+    toggleMessages() {
+        this.chatStore.videoMessagesEnabled = !this.chatStore.videoMessagesEnabled;
     },
   }
 }

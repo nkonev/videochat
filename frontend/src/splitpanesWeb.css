@@ -37,7 +37,7 @@
  */
 
 .splitpanes__splitter {
-    touch-action: none
+    touch-action: none;
 }
 
 .splitpanes--vertical > .splitpanes__splitter {

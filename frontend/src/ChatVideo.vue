@@ -1,5 +1,5 @@
 <template>
-    <splitpanes ref="splVideo" class="default-theme" :dbl-click-splitter="false" :horizontal="splitpanesIsHorizontal" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+    <splitpanes ref="splVideo" id="video-splitpanes" class="default-theme" :dbl-click-splitter="false" :horizontal="splitpanesIsHorizontal" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
         <pane v-if="shouldShowPresenter" :size="presenterPaneSize()">
             <div class="video-presenter-container-element" @contextmenu.stop="onShowContextMenu($event, this)">
                 <video v-show="!presenterVideoMute || !presenterAvatarIsSet" @click.self="onClick()" class="video-presenter-element" ref="presenterRef"/>
@@ -35,11 +35,18 @@ import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {
   defaultAudioMute,
-  getWebsocketUrlPrefix, hasLength, isFullscreen, isMobileBrowser, loadingMessage, PURPOSE_CALL, goToPreservingQuery
+  getWebsocketUrlPrefix,
+  hasLength,
+  isFullscreen,
+  isMobileBrowser,
+  loadingMessage,
+  PURPOSE_CALL,
+  goToPreservingQuery,
+  setSplitter
 } from "@/utils";
 import {
   getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
-  getStoredVideoDevicePresents,
+  getStoredVideoDevicePresents, getStoredVideoMiniatures,
   NULL_CODEC,
   NULL_SCREEN_RESOLUTION,
   setStoredCallAudioDeviceId,
@@ -80,6 +87,8 @@ const emptyStoredPanes = () => {
     presenterPane: 80
   }
 }
+
+const videoSplitpanesSelector = "#video-splitpanes";
 
 export default {
   mixins: [
@@ -839,13 +848,21 @@ export default {
         this.onClick()
     },
     presenterPaneSize() {
-      return this.getStored().presenterPane;
+      if (this.chatStore.videoMiniaturesEnabled) {
+        return this.getStored().presenterPane;
+      } else {
+        return 100
+      }
     },
     miniaturesPaneSize() {
-      if (this.shouldShowPresenter) {
-        return 100 - this.presenterPaneSize();
+      if (this.chatStore.videoMiniaturesEnabled) {
+        if (this.shouldShowPresenter) {
+          return 100 - this.presenterPaneSize();
+        } else {
+          return 100;
+        }
       } else {
-        return 100;
+        return 0
       }
     },
 
@@ -890,8 +907,12 @@ export default {
       })
     },
     restorePanelsSize(ret) {
-      if (this.shouldShowPresenter) {
-        this.$refs.splVideo.panes[0].size = ret.presenterPane;
+      if (this.chatStore.videoMiniaturesEnabled) {
+        if (this.shouldShowPresenter) {
+          this.$refs.splVideo.panes[0].size = ret.presenterPane;
+        } else {
+          this.$refs.splVideo.panes[0].size = 100;
+        }
       } else {
         this.$refs.splVideo.panes[0].size = 100;
       }
@@ -975,6 +996,7 @@ export default {
     'chatStore.presenterEnabled': {
       handler: function (newValue, oldValue) {
         if (this.videoContainerDiv) {
+          setSplitter(videoSplitpanesSelector, this.chatStore.videoMiniaturesEnabled);
           if (newValue) {
             this.$nextTick(()=>{ // needed because videoContainerDiv still not visible for attaching from livekit js
               this.electNewPresenter();
@@ -1014,12 +1036,23 @@ export default {
         }
       },
     },
+    'chatStore.videoMiniaturesEnabled': {
+      handler: function (newValue, oldValue) {
+        setSplitter(videoSplitpanesSelector, newValue);
+
+        const stored = this.getStored();
+        this.restorePanelsSize(stored);
+      }
+    }
   },
   created() {
     this.recalculateLayout = debounce(this.recalculateLayout);
   },
   async mounted() {
     this.initPositionAndPresenter();
+    const videoMiniatures = getStoredVideoMiniatures();
+    setSplitter(videoSplitpanesSelector, videoMiniatures);
+    this.chatStore.videoMiniaturesEnabled = videoMiniatures;
 
     this.chatStore.setCallStateInCall();
 
@@ -1200,4 +1233,7 @@ export default {
   display contents
 }
 
+#video-splitpanes.splitpanes--horizontal .splitpanes__splitter {
+  display: var(--splitter-display);
+}
 </style>
