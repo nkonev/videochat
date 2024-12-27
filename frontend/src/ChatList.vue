@@ -309,7 +309,7 @@ export default {
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
-      this.initializeHashVariablesAndReloadItems();
+      this.doOnFocus();
     },
     async onProfileSet() {
       await this.initializeHashVariablesAndReloadItems();

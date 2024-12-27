@@ -522,7 +522,7 @@
         },
         onWsRestoredRefresh() {
           this.saveLastVisibleElement(this.storedChatId);
-          this.initializeHashVariablesAndReloadItems();
+          this.doOnFocus();
         },
         onReactionChanged(dto) {
           const foundMessage = this.items.find(item => item.id == dto.messageId);
@@ -704,7 +704,6 @@
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true});
-        this.onWsRestoredRefresh = debounce(this.onWsRestoredRefresh, 300, {leading:false, trailing:true});
       },
 
       watch: {
