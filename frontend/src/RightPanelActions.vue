@@ -83,6 +83,7 @@ import bus, {
 } from "@/bus/bus";
 import {copyCallLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
+import onFocusMixin from "@/mixins/onFocusMixin.js";
 
 const userStateFactory = () => {
     return {
@@ -94,6 +95,7 @@ const userStateFactory = () => {
 export default {
   mixins: [
       userStatusMixin('userStatusInUserList'), // subscription
+      onFocusMixin(),
   ],
   data() {
       return {
@@ -117,29 +119,29 @@ export default {
     hasLength,
     getLoginColoredStyle,
     getUserNameOverride(currentUser, userState) {
-        const item = {
-            login: currentUser.login,
-            avatar: currentUser.avatar,
-            online: userState.online,
-            isInVideo: userState.isInVideo
-        };
-        return this.getUserName(item)
+      const item = {
+        login: currentUser.login,
+        avatar: currentUser.avatar,
+        online: userState.online,
+        isInVideo: userState.isInVideo
+      };
+      return this.getUserName(item)
     },
     getUserIdsSubscribeTo() {
-          return [this.chatStore.currentUser?.id];
+      return [this.chatStore.currentUser?.id];
     },
     onUserStatusChanged(dtos) {
-        const userId = this.chatStore.currentUser?.id;
-        if (dtos && userId) {
-            dtos.forEach(dtoItem => {
-                if (dtoItem.online !== null && userId == dtoItem.userId) {
-                    this.userState.online = dtoItem.online;
-                }
-                if (dtoItem.isInVideo !== null && userId == dtoItem.userId) {
-                    this.userState.isInVideo = dtoItem.isInVideo;
-                }
-            })
-        }
+      const userId = this.chatStore.currentUser?.id;
+      if (dtos && userId) {
+        dtos.forEach(dtoItem => {
+          if (dtoItem.online !== null && userId == dtoItem.userId) {
+            this.userState.online = dtoItem.online;
+          }
+          if (dtoItem.isInVideo !== null && userId == dtoItem.userId) {
+            this.userState.isInVideo = dtoItem.isInVideo;
+          }
+        })
+      }
     },
 
     createChat() {
@@ -161,7 +163,7 @@ export default {
       return root
     },
     goHome() {
-      this.$router.push({name: root_name} )
+      this.$router.push({name: root_name})
     },
     copyCallLink() {
       copyCallLink(this.chatId);
@@ -182,19 +184,19 @@ export default {
       // then user clicks Chats
       // then user enter into the different chat
       // due to "ololo" the user will see 0 messages
-      this.$router.push({name: chat_list_name} )
+      this.$router.push({name: chat_list_name})
     },
     goBlogs() {
       window.location.href = blog
     },
     openUsers() {
       this.chatStore.incrementProgressCount();
-      this.$router.push({name: profile_list_name}).finally(()=>{
+      this.$router.push({name: profile_list_name}).finally(() => {
         this.chatStore.decrementProgressCount();
       })
     },
     isChatable() {
-        return this.$route.name == chat_name || this.$route.name == videochat_name
+      return this.$route.name == chat_name || this.$route.name == videochat_name
     },
     canShowFiles() {
       return this.chatStore.currentUser && this.isChatable();
@@ -202,15 +204,15 @@ export default {
     openSettings() {
       bus.emit(OPEN_SETTINGS)
     },
-    logout(){
+    logout() {
       this.isLoggingOut = true;
       this.chatStore.incrementProgressCount();
       axios.post(`/api/aaa/logout`).then(() => {
         this.chatStore.unsetUser();
         bus.emit(LOGGED_OUT);
-      }).finally(()=>{
-          this.isLoggingOut = false
-          this.chatStore.decrementProgressCount();
+      }).finally(() => {
+        this.isLoggingOut = false
+        this.chatStore.decrementProgressCount();
       });
     },
     shouldDisplayLogout() {
@@ -220,13 +222,13 @@ export default {
       bus.emit(OPEN_NOTIFICATIONS_DIALOG);
     },
     openFiles() {
-      bus.emit(OPEN_VIEW_FILES_DIALOG, { chatId: this.$route.params.id });
+      bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.$route.params.id});
     },
     openPinnedMessages() {
       bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.$route.params.id});
     },
     openPublishedMessages() {
-        bus.emit(OPEN_PUBLISHED_MESSAGES_MODAL, {chatId: this.$route.params.id});
+      bus.emit(OPEN_PUBLISHED_MESSAGES_MODAL, {chatId: this.$route.params.id});
     },
     shouldPinnedMessages() {
       return this.chatStore.currentUser && this.isChatable();
@@ -245,41 +247,52 @@ export default {
       }
     },
     shouldShowUpperChats() {
-        if (this.isMobile()) {
-            return isChatRoute(this.$route)
-        } else {
-            return false
-        }
+      if (this.isMobile()) {
+        return isChatRoute(this.$route)
+      } else {
+        return false
+      }
     },
     shouldShowLowerChats() {
-        if (!this.isMobile()) {
-            return true
-        } else {
-            return !isChatRoute(this.$route)
-        }
+      if (!this.isMobile()) {
+        return true
+      } else {
+        return !isChatRoute(this.$route)
+      }
     },
     onProfileSet() {
-        this.graphQlUserStatusSubscribe();
+      this.graphQlUserStatusSubscribe();
     },
     onLogOut() {
-        this.userState = userStateFactory();
-        this.graphQlUserStatusUnsubscribe();
+      this.userState = userStateFactory();
+      this.graphQlUserStatusUnsubscribe();
     },
     canDrawUsers() {
-        return !!this.chatStore.currentUser
+      return !!this.chatStore.currentUser
     },
     onUserClick() {
-        bus.emit(OPEN_SETTINGS, 'user_profile_self')
+      bus.emit(OPEN_SETTINGS, 'user_profile_self')
     },
     shouldShowAdminsCorner() {
       return this.chatStore.currentUser?.canShowAdminsCorner
     },
     openAdminsCorner() {
-      this.$router.push({name: admins_corner_name} )
+      this.$router.push({name: admins_corner_name})
     },
     getRouteAdminsCorner() {
       return admins_corner
     },
+    requestStatuses() {
+      this.$nextTick(() => {
+        if (this.chatStore.currentUser) {
+          const userIds = this.chatStore.currentUser.id;
+          this.triggerUsesStatusesEvents(userIds, this.requestAbortController.signal);
+        }
+      })
+    },
+    onFocus() {
+      this.requestStatuses();
+    }
   },
   mounted() {
       if (this.canDrawUsers()) {
@@ -288,8 +301,10 @@ export default {
 
       bus.on(PROFILE_SET, this.onProfileSet);
       bus.on(LOGGED_OUT, this.onLogOut);
+      this.installOnFocus();
   },
   beforeUnmount() {
+      this.uninstallOnFocus();
       bus.off(PROFILE_SET, this.onProfileSet);
       bus.off(LOGGED_OUT, this.onLogOut);
   },

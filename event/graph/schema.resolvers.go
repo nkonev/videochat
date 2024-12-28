@@ -521,9 +521,10 @@ func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserC
 }
 func convertToUserOnline(userOnline dto.UserOnline) *model.UserStatusEvent {
 	return &model.UserStatusEvent{
-		EventType: "user_online",
-		UserID:    userOnline.UserId,
-		Online:    &userOnline.Online,
+		EventType:         "user_online",
+		UserID:            userOnline.UserId,
+		Online:            &userOnline.Online,
+		LastLoginDateTime: userOnline.LastLoginDateTime.Ptr(),
 	}
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {

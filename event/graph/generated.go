@@ -355,10 +355,11 @@ type ComplexityRoot struct {
 	}
 
 	UserStatusEvent struct {
-		EventType func(childComplexity int) int
-		IsInVideo func(childComplexity int) int
-		Online    func(childComplexity int) int
-		UserID    func(childComplexity int) int
+		EventType         func(childComplexity int) int
+		IsInVideo         func(childComplexity int) int
+		LastLoginDateTime func(childComplexity int) int
+		Online            func(childComplexity int) int
+		UserID            func(childComplexity int) int
 	}
 
 	UserTypingDto struct {
@@ -1928,6 +1929,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserStatusEvent.IsInVideo(childComplexity), true
+
+	case "UserStatusEvent.lastLoginDateTime":
+		if e.complexity.UserStatusEvent.LastLoginDateTime == nil {
+			break
+		}
+
+		return e.complexity.UserStatusEvent.LastLoginDateTime(childComplexity), true
 
 	case "UserStatusEvent.online":
 		if e.complexity.UserStatusEvent.Online == nil {
@@ -10538,6 +10546,8 @@ func (ec *executionContext) fieldContext_Subscription_userStatusEvents(ctx conte
 				return ec.fieldContext_UserStatusEvent_online(ctx, field)
 			case "isInVideo":
 				return ec.fieldContext_UserStatusEvent_isInVideo(ctx, field)
+			case "lastLoginDateTime":
+				return ec.fieldContext_UserStatusEvent_lastLoginDateTime(ctx, field)
 			case "eventType":
 				return ec.fieldContext_UserStatusEvent_eventType(ctx, field)
 			}
@@ -12102,6 +12112,47 @@ func (ec *executionContext) fieldContext_UserStatusEvent_isInVideo(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserStatusEvent_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserStatusEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserStatusEvent_lastLoginDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastLoginDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserStatusEvent_lastLoginDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserStatusEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16767,6 +16818,8 @@ func (ec *executionContext) _UserStatusEvent(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._UserStatusEvent_online(ctx, field, obj)
 		case "isInVideo":
 			out.Values[i] = ec._UserStatusEvent_isInVideo(ctx, field, obj)
+		case "lastLoginDateTime":
+			out.Values[i] = ec._UserStatusEvent_lastLoginDateTime(ctx, field, obj)
 		case "eventType":
 			out.Values[i] = ec._UserStatusEvent_eventType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

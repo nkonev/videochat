@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"github.com/guregu/null"
 	"github.com/montag451/go-eventbus"
 	"time"
 )
@@ -19,7 +20,7 @@ const AAA_KILL_SESSIONS = "events.aaa.kill.sessions"
 
 type PinnedMessageEvent struct {
 	Message    PinnedMessageDto `json:"message"`
-	TotalCount int64             `json:"totalCount"`
+	TotalCount int64            `json:"totalCount"`
 }
 
 type WrappedFileInfoDto struct {
@@ -28,16 +29,16 @@ type WrappedFileInfoDto struct {
 
 type PublishedMessageEvent struct {
 	Message    PublishedMessageDto `json:"message"`
-	TotalCount int64             `json:"totalCount"`
+	TotalCount int64               `json:"totalCount"`
 }
 
 type ReactionChangedEvent struct {
-	MessageId             int64                 `json:"messageId"`
-	Reaction              Reaction              `json:"reaction"`
+	MessageId int64    `json:"messageId"`
+	Reaction  Reaction `json:"reaction"`
 }
 
 type ChatEvent struct {
-	TraceString                  string  `json:"-"`
+	TraceString                  string                        `json:"-"`
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
 	UserId                       int64                         `json:"userId"`
@@ -71,8 +72,8 @@ type NotificationDto struct {
 }
 
 type WrapperNotificationDto struct {
-	NotificationDto NotificationDto   `json:"notificationDto"`
-	TotalCount      int64             `json:"totalCount"`
+	NotificationDto NotificationDto `json:"notificationDto"`
+	TotalCount      int64           `json:"totalCount"`
 }
 
 type HasUnreadMessagesChanged struct {
@@ -80,32 +81,32 @@ type HasUnreadMessagesChanged struct {
 }
 
 type BrowserNotification struct {
-	ChatId int64 `json:"chatId"`
-	ChatName string `json:"chatName"`
-	ChatAvatar *string `json:"chatAvatar"`
-	MessageId int64 `json:"messageId"`
-	MessageText string `json:"messageText"`
-	OwnerId int64 `json:"ownerId"`
-	OwnerLogin string `json:"ownerLogin"`
+	ChatId      int64   `json:"chatId"`
+	ChatName    string  `json:"chatName"`
+	ChatAvatar  *string `json:"chatAvatar"`
+	MessageId   int64   `json:"messageId"`
+	MessageText string  `json:"messageText"`
+	OwnerId     int64   `json:"ownerId"`
+	OwnerLogin  string  `json:"ownerLogin"`
 }
 
 type GlobalUserEvent struct {
-	TraceString                   string  `json:"-"`
-	EventType                     string                        `json:"eventType"`
-	UserId                        int64                         `json:"userId"`
-	ChatNotification              *ChatDto                      `json:"chatNotification"`
-	ChatDeletedDto                *ChatDeletedDto               `json:"chatDeletedNotification"`
-	CoChattedParticipantNotification       *User                `json:"coChattedParticipantNotification"`
-	VideoCallUserCountEvent       *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`
-	VideoChatInvitation           *VideoCallInvitation          `json:"videoCallInvitation"`
-	VideoParticipantDialEvent     *VideoDialChanges             `json:"videoParticipantDialEvent"`
-	UnreadMessagesNotification    *ChatUnreadMessageChanged     `json:"unreadMessagesNotification"`
-	AllUnreadMessagesNotification *AllUnreadMessages            `json:"allUnreadMessagesNotification"`
-	VideoCallRecordingEvent       *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
-	UserNotificationEvent         *WrapperNotificationDto       `json:"userNotificationEvent"`
-	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
-	HasUnreadMessagesChanged      *HasUnreadMessagesChanged `json:"hasUnreadMessagesChanged"`
-	BrowserNotification           *BrowserNotification         `json:"browserNotification"`
+	TraceString                      string                          `json:"-"`
+	EventType                        string                          `json:"eventType"`
+	UserId                           int64                           `json:"userId"`
+	ChatNotification                 *ChatDto                        `json:"chatNotification"`
+	ChatDeletedDto                   *ChatDeletedDto                 `json:"chatDeletedNotification"`
+	CoChattedParticipantNotification *User                           `json:"coChattedParticipantNotification"`
+	VideoCallUserCountEvent          *VideoCallUserCountChangedDto   `json:"videoCallUserCountEvent"`
+	VideoChatInvitation              *VideoCallInvitation            `json:"videoCallInvitation"`
+	VideoParticipantDialEvent        *VideoDialChanges               `json:"videoParticipantDialEvent"`
+	UnreadMessagesNotification       *ChatUnreadMessageChanged       `json:"unreadMessagesNotification"`
+	AllUnreadMessagesNotification    *AllUnreadMessages              `json:"allUnreadMessagesNotification"`
+	VideoCallRecordingEvent          *VideoCallRecordingChangedDto   `json:"videoCallRecordingEvent"`
+	UserNotificationEvent            *WrapperNotificationDto         `json:"userNotificationEvent"`
+	VideoCallScreenShareChangedDto   *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
+	HasUnreadMessagesChanged         *HasUnreadMessagesChanged       `json:"hasUnreadMessagesChanged"`
+	BrowserNotification              *BrowserNotification            `json:"browserNotification"`
 }
 
 func (GlobalUserEvent) Name() eventbus.EventName {
@@ -121,13 +122,14 @@ type PreviewCreatedEvent struct {
 }
 
 type UserOnline struct {
-	UserId int64 `json:"userId"`
-	Online bool  `json:"online"`
+	UserId            int64     `json:"userId"`
+	Online            bool      `json:"online"`
+	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
 }
 
 type ArrayUserOnline struct {
-	UserOnlines  []UserOnline
-	TraceString  string  `json:"-"`
+	UserOnlines []UserOnline
+	TraceString string `json:"-"`
 }
 
 func (ArrayUserOnline) Name() eventbus.EventName {
@@ -150,13 +152,13 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
-	FileItemUuid   string `json:"fileItemUuid"`
-	CorrelationId *string `json:"correlationId"`
+	FileItemUuid   string    `json:"fileItemUuid"`
+	CorrelationId  *string   `json:"correlationId"`
 }
 
 type GeneralEvent struct {
-	TraceString  string  `json:"-"`
-	EventType string `json:"eventType"`
+	TraceString                          string                              `json:"-"`
+	EventType                            string                              `json:"eventType"`
 	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
 }
 

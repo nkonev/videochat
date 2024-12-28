@@ -288,6 +288,7 @@ type UserStatusEvent {
     userId:     Int64!
     online:     Boolean
     isInVideo:  Boolean
+    lastLoginDateTime: Time
     eventType:  String!
 }
 

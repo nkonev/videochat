@@ -100,6 +100,7 @@ import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
+import userStatusMixin from "@/mixins/userStatusMixin.js";
 
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
@@ -125,6 +126,7 @@ export default {
     videoPositionMixin(),
     searchString(SEARCH_MODE_CHATS),
     onFocusMixin(),
+    userStatusMixin('userStatusInChatViewTetATet'), // subscription
   ],
   data() {
     return {
@@ -198,7 +200,7 @@ export default {
         this.chatStore.tetATet = data.tetATet;
         this.chatStore.setChatDto(data);
         this.initialLoaded = true;
-        return Promise.resolve();
+        return Promise.resolve(data);
     },
     commonChatEdit(data) {
         this.chatStore.title = data.name;
@@ -212,9 +214,16 @@ export default {
         } else {
             this.chatStore.showGoToBlogButton = null;
         }
-        if (data.tetATet && data.participantsCount == 2) {
+        if (this.isRealTetATet(data)) {
             this.chatStore.oppositeUserLastLoginDateTime = data.lastLoginDateTime;
         }
+    },
+    isRealTetATet(data) {
+      if (data.tetATet && data.participantsCount == 2) {
+        return true
+      } else {
+        return false
+      }
     },
     fetchPromotedMessage(chatId) {
       axios.get(`/api/chat/${chatId}/message/pin/promoted`, {
@@ -228,8 +237,18 @@ export default {
         }
       });
     },
+    hasTetATetUserStatusSubscriptions() {
+      return !!this.subscriptionElements.length
+    },
     getInfo(chatId) {
-      return this.fetchAndSetChat(chatId).then(() => {
+      return this.fetchAndSetChat(chatId).then((data) => {
+        if (this.isRealTetATet(data)) {
+            if (!this.hasTetATetUserStatusSubscriptions()) {
+              console.info("Subscribing onto tet-a-tet online")
+              this.graphQlUserStatusSubscribe();
+            }
+            this.requestTetAtTetStatuses();
+        }
         // async call
         this.fetchPromotedMessage(chatId);
         axios.get(`/api/video/${chatId}/users`, {
@@ -255,6 +274,44 @@ export default {
         })
         return Promise.resolve();
       })
+    },
+    getTetAtetOppositeParticipant() {
+      return this.chatStore.chatDto.participantIds.find(pi => pi !== this.chatStore.currentUser.id)
+    },
+    requestTetAtTetStatuses() {
+      this.$nextTick(() => {
+        if (this.chatStore.currentUser && this.chatId) {
+          const userId = this.getTetAtetOppositeParticipant();
+          this.triggerUsesStatusesEvents(userId, this.requestAbortController.signal);
+        }
+      })
+    },
+    getUserIdsSubscribeTo() {
+      const userId = this.getTetAtetOppositeParticipant();
+      return [userId];
+    },
+    // testcase
+    // user 1 opens a tet-a-tet with user 2
+    // user 2 is offline
+    // user 1 sees "last login..." instead of num of participants
+    // user 2 logs in
+    // user 1 sees num of participants
+    // user 2 logs out
+    // user 1 sees "last login..."
+    onUserStatusChanged(dtos) {
+      const userId = this.getTetAtetOppositeParticipant();
+
+      if (dtos && userId) {
+        dtos.forEach(dtoItem => {
+          if (dtoItem.online != null && userId == dtoItem.userId) {
+            if (dtoItem.online) {
+              this.chatStore.oppositeUserLastLoginDateTime = null;
+            } else {
+              this.chatStore.oppositeUserLastLoginDateTime = dtoItem.lastLoginDateTime;
+            }
+          }
+        })
+      }
     },
     goToChatList() {
       this.$router.push(({name: chat_list_name}))
@@ -594,6 +651,11 @@ export default {
       this.chatStore.oppositeUserLastLoginDateTime = null;
 
       this.chatStore.showCallManagement = false;
+
+      if (this.hasTetATetUserStatusSubscriptions()) {
+        console.info("Unsubscribing from tet-a-tet online")
+        this.graphQlUserStatusUnsubscribe();
+      }
     },
     onChatDialStatusChange(dto) {
       if (this.chatStore.chatDto?.tetATet && dto.chatId == this.chatId) { // if tet-a-tet

@@ -183,8 +183,7 @@ public class UserProfileService {
         }
 
         List<UserOnlineResponse> usersOnline = aaaUserDetailsService.getUsersOnline(userIdsReal);
-        List<UserOnlineResponse> userOnlineResponses = usersOnline.stream().map(uo -> new UserOnlineResponse(uo.userId(), uo.online())).toList();
-        notifier.notifyOnlineChanged(userOnlineResponses);
+        notifier.notifyOnlineChanged(usersOnline);
     }
 
     private Function<UserAccount, UserAccountDTOExtended> getConvertToUserAccountDTO(UserAccountDetailsDTO currentUser) {

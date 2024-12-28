@@ -315,10 +315,11 @@ type UserDeletedDto struct {
 func (UserDeletedDto) IsUserAccountEventDto() {}
 
 type UserStatusEvent struct {
-	UserID    int64  `json:"userId"`
-	Online    *bool  `json:"online"`
-	IsInVideo *bool  `json:"isInVideo"`
-	EventType string `json:"eventType"`
+	UserID            int64      `json:"userId"`
+	Online            *bool      `json:"online"`
+	IsInVideo         *bool      `json:"isInVideo"`
+	LastLoginDateTime *time.Time `json:"lastLoginDateTime"`
+	EventType         string     `json:"eventType"`
 }
 
 type UserTypingDto struct {

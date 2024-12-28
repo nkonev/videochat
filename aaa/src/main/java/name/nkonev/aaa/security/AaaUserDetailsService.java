@@ -79,7 +79,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("userIds cannon be null");
         }
         return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastLoginDateTime()))
                 .toList();
     }
 
@@ -88,7 +88,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("users cannon be null");
         }
         return users.stream()
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username()))))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastLoginDateTime()))
                 .toList();
     }
 
@@ -126,7 +126,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             // nothing
         } else {
             eventService.notifySessionsKilled(userId, reasonType);
-            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userId, false)));
+            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userId, false, userToFillSessions.lastLoginDateTime())));
         }
     }
 
