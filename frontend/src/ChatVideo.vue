@@ -416,12 +416,14 @@ export default {
         const userComponents = this.getByUser(userIdentity).map(c => c.component);
         for (const component of userComponents) {
           const audioStreamId = component.getAudioStreamId();
-          console.debug("Track sids", tracksSids, " component audio stream id", audioStreamId);
-          if (tracksSids.includes(component.getAudioStreamId())) {
-            component.setSpeakingWithDefaultTimeout();
-
-            const data = this.getDataForPresenter(component);
-            this.updatePresenterIfNeed(data, true);
+          if (tracksSids.includes(audioStreamId)) {
+            if (speaker.isSpeaking) {
+              component.setSpeakingWithDefaultTimeout();
+              const data = this.getDataForPresenter(component);
+              this.updatePresenterIfNeed(data, true);
+            } else {
+              component.resetSpeaking();
+            }
           }
         }
       }

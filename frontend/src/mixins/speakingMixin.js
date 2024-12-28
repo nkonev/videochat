@@ -28,6 +28,13 @@ export default () => {
             setSpeakingWithDefaultTimeout() {
                 this.setSpeakingWithTimeout(1000);
             },
+            resetSpeaking() {
+                this.speaking = false;
+                if (this.speakingTimer) {
+                    clearTimeout(this.speakingTimer);
+                    this.speakingTimer = null;
+                }
+            },
         },
     }
 }
