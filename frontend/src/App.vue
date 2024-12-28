@@ -51,7 +51,16 @@
           </v-btn>
 
         <template v-if="showSearchButton">
-          <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
+          <v-badge
+              :color="getTetATetBadgeColor()"
+              dot
+              location="right bottom"
+              overlap
+              bordered
+              :model-value="showTetATetBadge"
+          >
+            <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
+          </v-badge>
           <div class="d-flex flex-column app-title mx-2" :class="isInChat() ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
             <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
             <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
@@ -284,6 +293,9 @@ export default {
         shouldShowFileUpload() {
             return !!this.chatStore.fileUploadingQueue.length
         },
+        showTetATetBadge() {
+            return !this.chatStore.oppositeUserLastLoginDateTime && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()
+        },
     },
     methods: {
         searchIcon() {
@@ -298,7 +310,13 @@ export default {
         getStore() {
             return this.chatStore
         },
-
+        getTetATetBadgeColor() {
+          if (this.chatStore.oppositeUserInVideo) {
+            return 'red'
+          } else {
+            return 'green'
+          }
+        },
         refreshPage() {
           location.reload();
         },

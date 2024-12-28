@@ -310,6 +310,13 @@ export default {
               this.chatStore.oppositeUserLastLoginDateTime = dtoItem.lastLoginDateTime;
             }
           }
+          if (dtoItem.isInVideo !== null && userId == dtoItem.userId) {
+            if (dtoItem.isInVideo) {
+              this.chatStore.oppositeUserInVideo = true
+            } else {
+              this.chatStore.oppositeUserInVideo = false
+            }
+          }
         })
       }
     },
@@ -649,6 +656,7 @@ export default {
       this.chatStore.chatUsersCount = 0;
 
       this.chatStore.oppositeUserLastLoginDateTime = null;
+      this.chatStore.oppositeUserInVideo = false;
 
       this.chatStore.showCallManagement = false;
 
