@@ -2,6 +2,7 @@ package name.nkonev.aaa.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.EventService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
+
 /**
  * Created by nik on 09.07.17.
  *
@@ -38,6 +41,9 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private UserAccountRepository userAccountRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTAuthenticationLogoutSuccessHandler.class);
 
@@ -60,6 +66,9 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
 
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO)authentication.getPrincipal();
         LOGGER.info("User '{}' logged out", userDetails.getUsername());
+
+        final var now = getNowUTC();
+        userAccountRepository.updateLastSeen(userDetails.getUsername(), now);
 
         var usersOnline = aaaUserDetailsService.getUsersOnline(List.of(userDetails.getId()));
         eventService.notifyOnlineChanged(usersOnline);

@@ -122,9 +122,9 @@ type PreviewCreatedEvent struct {
 }
 
 type UserOnline struct {
-	UserId            int64     `json:"userId"`
-	Online            bool      `json:"online"`
-	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
+	UserId           int64     `json:"userId"`
+	Online           bool      `json:"online"`
+	LastSeenDateTime null.Time `json:"lastSeenDateTime"`
 }
 
 type ArrayUserOnline struct {

@@ -300,7 +300,7 @@ export default {
     send_message_after_media_insert: "Отправить сообщение",
     send_message_after_media_insert_description: "Отправить сообщение после вставки медиа",
     open_in_new_tab: "Открыть в новой вкладке",
-    last_logged_in_at: "Послений раз заходил(а) в {0}",
+    last_seen_at: "Последний раз был(а) в {0}",
     default_devices_for_call: "Дефолт. устройства звонка",
     published_message_link_copied: "Ссылка на опубликованное сообщение скопирована в буфер обмена",
     video_call_link_copied: "Ссылка на видеозвонок скопирована в буфер обмена",

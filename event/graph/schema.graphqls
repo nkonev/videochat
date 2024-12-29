@@ -87,7 +87,7 @@ type ChatDto {
     blog:                Boolean!
     loginColor:          String
     regularParticipantCanPublishMessage: Boolean!
-    lastLoginDateTime: Time
+    lastSeenDateTime: Time
     regularParticipantCanPinMessage: Boolean!
 }
 
@@ -288,7 +288,7 @@ type UserStatusEvent {
     userId:     Int64!
     online:     Boolean
     isInVideo:  Boolean
-    lastLoginDateTime: Time
+    lastSeenDateTime: Time
     eventType:  String!
 }
 
@@ -305,7 +305,7 @@ type UserAccountDto {
     avatar:     String # url
     avatarBig:  String # url
     shortInfo: String
-    lastLoginDateTime: Time
+    lastSeenDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
     loginColor: String
     ldap: Boolean!
@@ -331,7 +331,7 @@ type UserAccountExtendedDto {
     avatar:     String # url
     avatarBig:  String # url
     shortInfo: String
-    lastLoginDateTime: Time
+    lastSeenDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
     additionalData: DataDTO
     canLock: Boolean!

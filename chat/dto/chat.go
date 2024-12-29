@@ -6,32 +6,32 @@ import (
 )
 
 type BaseChatDto struct {
-	Id                           int64       `json:"id"`
-	Name                         string      `json:"name"`
-	Avatar                       null.String `json:"avatar"`
-	AvatarBig                    null.String `json:"avatarBig"`
-	ShortInfo                    null.String `json:"shortInfo"`
-	LastUpdateDateTime           time.Time   `json:"lastUpdateDateTime"`
-	ParticipantIds               []int64     `json:"participantIds"`
-	CanEdit                      null.Bool   `json:"canEdit"`
-	CanDelete                    null.Bool   `json:"canDelete"`
-	CanLeave                     null.Bool   `json:"canLeave"`
-	UnreadMessages               int64       `json:"unreadMessages"`
-	CanBroadcast                 bool        `json:"canBroadcast"`
-	CanVideoKick                 bool        `json:"canVideoKick"`
-	CanChangeChatAdmins          bool        `json:"canChangeChatAdmins"`
-	IsTetATet                    bool        `json:"tetATet"`
-	CanAudioMute                 bool        `json:"canAudioMute"`
-	ParticipantsCount            int         `json:"participantsCount"`
-	CanResend                    bool        `json:"canResend"`
-	AvailableToSearch            bool        `json:"availableToSearch"`
-	IsResultFromSearch           null.Bool   `json:"isResultFromSearch"`
-	Pinned                       bool        `json:"pinned"`
-	Blog                         bool        `json:"blog"`
+	Id                                  int64       `json:"id"`
+	Name                                string      `json:"name"`
+	Avatar                              null.String `json:"avatar"`
+	AvatarBig                           null.String `json:"avatarBig"`
+	ShortInfo                           null.String `json:"shortInfo"`
+	LastUpdateDateTime                  time.Time   `json:"lastUpdateDateTime"`
+	ParticipantIds                      []int64     `json:"participantIds"`
+	CanEdit                             null.Bool   `json:"canEdit"`
+	CanDelete                           null.Bool   `json:"canDelete"`
+	CanLeave                            null.Bool   `json:"canLeave"`
+	UnreadMessages                      int64       `json:"unreadMessages"`
+	CanBroadcast                        bool        `json:"canBroadcast"`
+	CanVideoKick                        bool        `json:"canVideoKick"`
+	CanChangeChatAdmins                 bool        `json:"canChangeChatAdmins"`
+	IsTetATet                           bool        `json:"tetATet"`
+	CanAudioMute                        bool        `json:"canAudioMute"`
+	ParticipantsCount                   int         `json:"participantsCount"`
+	CanResend                           bool        `json:"canResend"`
+	AvailableToSearch                   bool        `json:"availableToSearch"`
+	IsResultFromSearch                  null.Bool   `json:"isResultFromSearch"`
+	Pinned                              bool        `json:"pinned"`
+	Blog                                bool        `json:"blog"`
 	LoginColor                          null.String `json:"loginColor"`
-	RegularParticipantCanPublishMessage bool `json:"regularParticipantCanPublishMessage"`
-	LastLoginDateTime null.Time `json:"lastLoginDateTime"`
-	RegularParticipantCanPinMessage bool `json:"regularParticipantCanPinMessage"`
+	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
+	LastSeenDateTime                    null.Time   `json:"lastSeenDateTime"`
+	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -67,7 +67,7 @@ type ChatDtoWithTetATet interface {
 	SetAvatar(s null.String)
 	SetShortInfo(s null.String)
 	SetLoginColor(s null.String)
-	SetLastLoginDateTime(t null.Time)
+	SetLastSeenDateTime(t null.Time)
 }
 
 func (r *ChatDto) GetId() int64 {
@@ -118,8 +118,8 @@ func (r *BaseChatDto) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (r *BaseChatDto) SetLastLoginDateTime(t null.Time) {
-	r.LastLoginDateTime = t
+func (r *BaseChatDto) SetLastSeenDateTime(t null.Time) {
+	r.LastSeenDateTime = t
 }
 
 type ChatName struct {

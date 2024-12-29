@@ -133,3 +133,10 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: db/migration/V19__sync_ldap_keycloak.sql
+
+  - changeSet:
+      id: 20
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: db/migration/V20__last_seen.sql

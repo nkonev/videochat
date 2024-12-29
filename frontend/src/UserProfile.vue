@@ -31,8 +31,8 @@
         </span>
       </span>
 
-      <v-card-subtitle class="title px-0 pb-0" v-if="viewableUser.lastLoginDateTime">
-        {{ $vuetify.locale.t('$vuetify.last_logged_in_at', getHumanReadableDate(viewableUser.lastLoginDateTime)) }}
+      <v-card-subtitle class="title px-0 pb-0" v-if="viewableUser.lastSeenDateTime">
+        {{ $vuetify.locale.t('$vuetify.last_seen_at', getHumanReadableDate(viewableUser.lastSeenDateTime)) }}
       </v-card-subtitle>
 
       <template v-if="displayShortInfo(viewableUser)">

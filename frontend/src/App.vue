@@ -294,7 +294,7 @@ export default {
             return !!this.chatStore.fileUploadingQueue.length
         },
         showTetATetBadge() {
-            return !this.chatStore.oppositeUserLastLoginDateTime && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()
+            return !this.chatStore.oppositeUserLastSeenDateTime && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()
         },
         shouldShowSearch() {
             return this.chatStore.isShowSearch && !(this.isVideoRoute() && !this.chatStore.videoMessagesEnabled)
@@ -413,7 +413,7 @@ export default {
                         blog
                         loginColor
                         regularParticipantCanPublishMessage
-                        lastLoginDateTime
+                        lastSeenDateTime
                         regularParticipantCanPinMessage
                       }
                       chatDeletedEvent {
@@ -589,14 +589,14 @@ export default {
               return this.chatStore.moreImportantSubtitleInfo
             } if (!!this.chatStore.usersWritingSubtitleInfo) {
               return this.chatStore.usersWritingSubtitleInfo
-            } else if (this.chatStore.oppositeUserLastLoginDateTime) {
-                return this.$vuetify.locale.t('$vuetify.last_logged_in_at', getHumanReadableDate(this.chatStore.oppositeUserLastLoginDateTime));
+            } else if (this.chatStore.oppositeUserLastSeenDateTime) {
+                return this.$vuetify.locale.t('$vuetify.last_seen_at', getHumanReadableDate(this.chatStore.oppositeUserLastSeenDateTime));
             } else {
                 return this.chatStore.chatUsersCount + " " + this.$vuetify.locale.t('$vuetify.participants')
             }
         },
         shouldShowSubtitle() {
-            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo || !!this.chatStore.usersWritingSubtitleInfo || this.chatStore.oppositeUserLastLoginDateTime
+            return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo || !!this.chatStore.usersWritingSubtitleInfo || this.chatStore.oppositeUserLastSeenDateTime
         },
         afterRouteInitialized() {
             return this.chatStore.fetchAvailableOauth2Providers()

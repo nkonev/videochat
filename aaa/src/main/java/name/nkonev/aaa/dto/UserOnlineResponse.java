@@ -9,5 +9,5 @@ public record UserOnlineResponse(
         long userId,
         boolean online,
         @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
-        LocalDateTime lastLoginDateTime
+        LocalDateTime lastSeenDateTime
 ) { }

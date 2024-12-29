@@ -18,7 +18,7 @@ type UserAccount struct {
 	Avatar            *string            `json:"avatar"`
 	AvatarBig         *string            `json:"avatarBig"`
 	ShortInfo         *string            `json:"shortInfo"`
-	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
+	LastSeenDateTime  *time.Time         `json:"lastSeenDateTime"`
 	Oauth2Identifiers *Oauth2Identifiers `json:"oauth2Identifiers"`
 	LoginColor        *string            `json:"loginColor"`
 	Ldap              bool               `json:"ldap"`

@@ -282,10 +282,10 @@ func getChat(
 
 			utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId, isSingleParticipant)
 
-			// leave LastLoginDateTime not null only if the opposite user isn't online
+			// leave LastSeenDateTime not null only if the opposite user isn't online
 			if participant.Id != behalfParticipantId {
 				if participant.Id != behalfParticipantId && !isSingleParticipant {
-					chatDto.SetLastLoginDateTime(participant.LastLoginDateTime)
+					chatDto.SetLastSeenDateTime(participant.LastSeenDateTime)
 				}
 
 				onlines, err := restClient.GetOnlines(ctx, []int64{participant.Id}) // get online for opposite user
@@ -295,7 +295,7 @@ func getChat(
 				} else {
 					if len(onlines) == 1 {
 						if onlines[0].Online { // if the opposite user is online we don't need to show last login
-							chatDto.SetLastLoginDateTime(null.TimeFromPtr(nil))
+							chatDto.SetLastSeenDateTime(null.TimeFromPtr(nil))
 						}
 					}
 				}
@@ -1740,13 +1740,13 @@ func (ch *ChatHandler) IsExists(c echo.Context) error {
 }
 
 type simpleChat struct {
-	Id                int64
-	Name              string
-	IsTetATet         bool
-	Avatar            null.String
-	ShortInfo         null.String
-	LoginColor        null.String
-	LastLoginDateTime null.Time
+	Id               int64
+	Name             string
+	IsTetATet        bool
+	Avatar           null.String
+	ShortInfo        null.String
+	LoginColor       null.String
+	LastSeenDateTime null.Time
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -1781,8 +1781,8 @@ func (r *simpleChat) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (r *simpleChat) SetLastLoginDateTime(t null.Time) {
-	r.LastLoginDateTime = t
+func (r *simpleChat) SetLastSeenDateTime(t null.Time) {
+	r.LastSeenDateTime = t
 }
 
 func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {

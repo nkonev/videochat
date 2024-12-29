@@ -219,7 +219,7 @@ export default {
             this.chatStore.showGoToBlogButton = null;
         }
         if (this.isRealTetATet(data)) {
-            this.chatStore.oppositeUserLastLoginDateTime = data.lastLoginDateTime;
+            this.chatStore.oppositeUserLastSeenDateTime = data.lastSeenDateTime;
         }
     },
     isRealTetATet(data) {
@@ -309,9 +309,9 @@ export default {
         dtos.forEach(dtoItem => {
           if (dtoItem.online != null && userId == dtoItem.userId) {
             if (dtoItem.online) {
-              this.chatStore.oppositeUserLastLoginDateTime = null;
+              this.chatStore.oppositeUserLastSeenDateTime = null;
             } else {
-              this.chatStore.oppositeUserLastLoginDateTime = dtoItem.lastLoginDateTime;
+              this.chatStore.oppositeUserLastSeenDateTime = dtoItem.lastSeenDateTime;
             }
           }
           if (dtoItem.isInVideo !== null && userId == dtoItem.userId) {
@@ -659,7 +659,7 @@ export default {
 
       this.chatStore.chatUsersCount = 0;
 
-      this.chatStore.oppositeUserLastLoginDateTime = null;
+      this.chatStore.oppositeUserLastSeenDateTime = null;
       this.chatStore.oppositeUserInVideo = false;
 
       this.chatStore.showCallManagement = false;

@@ -473,7 +473,7 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		Avatar:            aDto.Avatar,
 		AvatarBig:         aDto.AvatarBig,
 		ShortInfo:         aDto.ShortInfo,
-		LastLoginDateTime: aDto.LastLoginDateTime,
+		LastSeenDateTime:  aDto.LastSeenDateTime,
 		Oauth2Identifiers: convertOauth2Identifiers(aDto.Oauth2Identifiers),
 		CanLock:           aDto.CanLock,
 		CanEnable:         aDto.CanEnable,
@@ -521,10 +521,10 @@ func convertToUserCallStatusChanged(event dto.GeneralEvent, u dto.VideoCallUserC
 }
 func convertToUserOnline(userOnline dto.UserOnline) *model.UserStatusEvent {
 	return &model.UserStatusEvent{
-		EventType:         "user_online",
-		UserID:            userOnline.UserId,
-		Online:            &userOnline.Online,
-		LastLoginDateTime: userOnline.LastLoginDateTime.Ptr(),
+		EventType:        "user_online",
+		UserID:           userOnline.UserId,
+		Online:           &userOnline.Online,
+		LastSeenDateTime: userOnline.LastSeenDateTime.Ptr(),
 	}
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
@@ -742,7 +742,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			Blog:                                chatEvent.Blog,
 			LoginColor:                          chatEvent.LoginColor.Ptr(),
 			RegularParticipantCanPublishMessage: chatEvent.RegularParticipantCanPublishMessage,
-			LastLoginDateTime:                   chatEvent.LastLoginDateTime.Ptr(),
+			LastSeenDateTime:                    chatEvent.LastSeenDateTime.Ptr(),
 			RegularParticipantCanPinMessage:     chatEvent.RegularParticipantCanPinMessage,
 		}
 	}

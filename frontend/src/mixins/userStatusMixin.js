@@ -44,7 +44,7 @@ export default (nameForLog) => {
                             userId
                             online
                             isInVideo
-                            lastLoginDateTime
+                            lastSeenDateTime
                         }
                     }`
             },

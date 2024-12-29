@@ -68,7 +68,7 @@ export const useChatStore = defineStore('chat', {
         hasNewMessages: false,
         chatDto: chatDtoFactory(),
         sendMessageAfterMediaInsert: false,
-        oppositeUserLastLoginDateTime: null,
+        oppositeUserLastSeenDateTime: null,
         correlationId: null,
         videoTokenId: null,
         compactMessages: false,

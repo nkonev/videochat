@@ -28,7 +28,7 @@ public record UserSelfProfileDTO(
             String shortInfo,
             String email,
             boolean awaitingForConfirmEmailChange,
-            LocalDateTime lastLoginDateTime,
+            LocalDateTime lastSeenDateTime,
             OAuth2IdentifiersDTO oauth2Identifiers,
             Collection<UserRole> roles,
             Long expiresAt,
@@ -42,7 +42,7 @@ public record UserSelfProfileDTO(
                 avatar,
                 avatarBig,
                 shortInfo,
-                lastLoginDateTime,
+                lastSeenDateTime,
                 oauth2Identifiers,
                 loginColor,
                 ldap

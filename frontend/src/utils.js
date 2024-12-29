@@ -421,7 +421,7 @@ awaitingForConfirmEmailChange,
   avatar,
   avatarBig,
   shortInfo,
-  lastLoginDateTime,
+  lastSeenDateTime,
   oauth2Identifiers {
     facebookId,
     vkontakteId,

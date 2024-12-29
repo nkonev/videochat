@@ -82,7 +82,7 @@ type ComplexityRoot struct {
 		CanVideoKick                        func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		IsResultFromSearch                  func(childComplexity int) int
-		LastLoginDateTime                   func(childComplexity int) int
+		LastSeenDateTime                    func(childComplexity int) int
 		LastUpdateDateTime                  func(childComplexity int) int
 		LoginColor                          func(childComplexity int) int
 		Name                                func(childComplexity int) int
@@ -315,7 +315,7 @@ type ComplexityRoot struct {
 		Avatar            func(childComplexity int) int
 		AvatarBig         func(childComplexity int) int
 		ID                func(childComplexity int) int
-		LastLoginDateTime func(childComplexity int) int
+		LastSeenDateTime  func(childComplexity int) int
 		Ldap              func(childComplexity int) int
 		Login             func(childComplexity int) int
 		LoginColor        func(childComplexity int) int
@@ -342,7 +342,7 @@ type ComplexityRoot struct {
 		CanSetPassword                func(childComplexity int) int
 		Email                         func(childComplexity int) int
 		ID                            func(childComplexity int) int
-		LastLoginDateTime             func(childComplexity int) int
+		LastSeenDateTime              func(childComplexity int) int
 		Ldap                          func(childComplexity int) int
 		Login                         func(childComplexity int) int
 		LoginColor                    func(childComplexity int) int
@@ -355,11 +355,11 @@ type ComplexityRoot struct {
 	}
 
 	UserStatusEvent struct {
-		EventType         func(childComplexity int) int
-		IsInVideo         func(childComplexity int) int
-		LastLoginDateTime func(childComplexity int) int
-		Online            func(childComplexity int) int
-		UserID            func(childComplexity int) int
+		EventType        func(childComplexity int) int
+		IsInVideo        func(childComplexity int) int
+		LastSeenDateTime func(childComplexity int) int
+		Online           func(childComplexity int) int
+		UserID           func(childComplexity int) int
 	}
 
 	UserTypingDto struct {
@@ -599,12 +599,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChatDto.IsResultFromSearch(childComplexity), true
 
-	case "ChatDto.lastLoginDateTime":
-		if e.complexity.ChatDto.LastLoginDateTime == nil {
+	case "ChatDto.lastSeenDateTime":
+		if e.complexity.ChatDto.LastSeenDateTime == nil {
 			break
 		}
 
-		return e.complexity.ChatDto.LastLoginDateTime(childComplexity), true
+		return e.complexity.ChatDto.LastSeenDateTime(childComplexity), true
 
 	case "ChatDto.lastUpdateDateTime":
 		if e.complexity.ChatDto.LastUpdateDateTime == nil {
@@ -1720,12 +1720,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountDto.ID(childComplexity), true
 
-	case "UserAccountDto.lastLoginDateTime":
-		if e.complexity.UserAccountDto.LastLoginDateTime == nil {
+	case "UserAccountDto.lastSeenDateTime":
+		if e.complexity.UserAccountDto.LastSeenDateTime == nil {
 			break
 		}
 
-		return e.complexity.UserAccountDto.LastLoginDateTime(childComplexity), true
+		return e.complexity.UserAccountDto.LastSeenDateTime(childComplexity), true
 
 	case "UserAccountDto.ldap":
 		if e.complexity.UserAccountDto.Ldap == nil {
@@ -1867,12 +1867,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccountExtendedDto.ID(childComplexity), true
 
-	case "UserAccountExtendedDto.lastLoginDateTime":
-		if e.complexity.UserAccountExtendedDto.LastLoginDateTime == nil {
+	case "UserAccountExtendedDto.lastSeenDateTime":
+		if e.complexity.UserAccountExtendedDto.LastSeenDateTime == nil {
 			break
 		}
 
-		return e.complexity.UserAccountExtendedDto.LastLoginDateTime(childComplexity), true
+		return e.complexity.UserAccountExtendedDto.LastSeenDateTime(childComplexity), true
 
 	case "UserAccountExtendedDto.ldap":
 		if e.complexity.UserAccountExtendedDto.Ldap == nil {
@@ -1930,12 +1930,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserStatusEvent.IsInVideo(childComplexity), true
 
-	case "UserStatusEvent.lastLoginDateTime":
-		if e.complexity.UserStatusEvent.LastLoginDateTime == nil {
+	case "UserStatusEvent.lastSeenDateTime":
+		if e.complexity.UserStatusEvent.LastSeenDateTime == nil {
 			break
 		}
 
-		return e.complexity.UserStatusEvent.LastLoginDateTime(childComplexity), true
+		return e.complexity.UserStatusEvent.LastSeenDateTime(childComplexity), true
 
 	case "UserStatusEvent.online":
 		if e.complexity.UserStatusEvent.Online == nil {
@@ -3788,8 +3788,8 @@ func (ec *executionContext) fieldContext_ChatDto_regularParticipantCanPublishMes
 	return fc, nil
 }
 
-func (ec *executionContext) _ChatDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChatDto_lastLoginDateTime(ctx, field)
+func (ec *executionContext) _ChatDto_lastSeenDateTime(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_lastSeenDateTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3802,7 +3802,7 @@ func (ec *executionContext) _ChatDto_lastLoginDateTime(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastLoginDateTime, nil
+		return obj.LastSeenDateTime, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3816,7 +3816,7 @@ func (ec *executionContext) _ChatDto_lastLoginDateTime(ctx context.Context, fiel
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ChatDto_lastLoginDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ChatDto_lastSeenDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ChatDto",
 		Field:      field,
@@ -6831,8 +6831,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(_ context.Context
 				return ec.fieldContext_ChatDto_loginColor(ctx, field)
 			case "regularParticipantCanPublishMessage":
 				return ec.fieldContext_ChatDto_regularParticipantCanPublishMessage(ctx, field)
-			case "lastLoginDateTime":
-				return ec.fieldContext_ChatDto_lastLoginDateTime(ctx, field)
+			case "lastSeenDateTime":
+				return ec.fieldContext_ChatDto_lastSeenDateTime(ctx, field)
 			case "regularParticipantCanPinMessage":
 				return ec.fieldContext_ChatDto_regularParticipantCanPinMessage(ctx, field)
 			}
@@ -10546,8 +10546,8 @@ func (ec *executionContext) fieldContext_Subscription_userStatusEvents(ctx conte
 				return ec.fieldContext_UserStatusEvent_online(ctx, field)
 			case "isInVideo":
 				return ec.fieldContext_UserStatusEvent_isInVideo(ctx, field)
-			case "lastLoginDateTime":
-				return ec.fieldContext_UserStatusEvent_lastLoginDateTime(ctx, field)
+			case "lastSeenDateTime":
+				return ec.fieldContext_UserStatusEvent_lastSeenDateTime(ctx, field)
 			case "eventType":
 				return ec.fieldContext_UserStatusEvent_eventType(ctx, field)
 			}
@@ -10854,8 +10854,8 @@ func (ec *executionContext) fieldContext_UserAccountDto_shortInfo(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_lastLoginDateTime(ctx, field)
+func (ec *executionContext) _UserAccountDto_lastSeenDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountDto_lastSeenDateTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -10868,7 +10868,7 @@ func (ec *executionContext) _UserAccountDto_lastLoginDateTime(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastLoginDateTime, nil
+		return obj.LastSeenDateTime, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10882,7 +10882,7 @@ func (ec *executionContext) _UserAccountDto_lastLoginDateTime(ctx context.Contex
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountDto_lastLoginDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountDto_lastSeenDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserAccountDto",
 		Field:      field,
@@ -11409,8 +11409,8 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_shortInfo(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _UserAccountExtendedDto_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountExtendedDto_lastLoginDateTime(ctx, field)
+func (ec *executionContext) _UserAccountExtendedDto_lastSeenDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_lastSeenDateTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -11423,7 +11423,7 @@ func (ec *executionContext) _UserAccountExtendedDto_lastLoginDateTime(ctx contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastLoginDateTime, nil
+		return obj.LastSeenDateTime, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11437,7 +11437,7 @@ func (ec *executionContext) _UserAccountExtendedDto_lastLoginDateTime(ctx contex
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserAccountExtendedDto_lastLoginDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_lastSeenDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserAccountExtendedDto",
 		Field:      field,
@@ -12117,8 +12117,8 @@ func (ec *executionContext) fieldContext_UserStatusEvent_isInVideo(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _UserStatusEvent_lastLoginDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserStatusEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserStatusEvent_lastLoginDateTime(ctx, field)
+func (ec *executionContext) _UserStatusEvent_lastSeenDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserStatusEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserStatusEvent_lastSeenDateTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -12131,7 +12131,7 @@ func (ec *executionContext) _UserStatusEvent_lastLoginDateTime(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastLoginDateTime, nil
+		return obj.LastSeenDateTime, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12145,7 +12145,7 @@ func (ec *executionContext) _UserStatusEvent_lastLoginDateTime(ctx context.Conte
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserStatusEvent_lastLoginDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStatusEvent_lastSeenDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserStatusEvent",
 		Field:      field,
@@ -15156,8 +15156,8 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "lastLoginDateTime":
-			out.Values[i] = ec._ChatDto_lastLoginDateTime(ctx, field, obj)
+		case "lastSeenDateTime":
+			out.Values[i] = ec._ChatDto_lastSeenDateTime(ctx, field, obj)
 		case "regularParticipantCanPinMessage":
 			out.Values[i] = ec._ChatDto_regularParticipantCanPinMessage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -16582,8 +16582,8 @@ func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._UserAccountDto_avatarBig(ctx, field, obj)
 		case "shortInfo":
 			out.Values[i] = ec._UserAccountDto_shortInfo(ctx, field, obj)
-		case "lastLoginDateTime":
-			out.Values[i] = ec._UserAccountDto_lastLoginDateTime(ctx, field, obj)
+		case "lastSeenDateTime":
+			out.Values[i] = ec._UserAccountDto_lastSeenDateTime(ctx, field, obj)
 		case "oauth2Identifiers":
 			out.Values[i] = ec._UserAccountDto_oauth2Identifiers(ctx, field, obj)
 		case "loginColor":
@@ -16688,8 +16688,8 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			out.Values[i] = ec._UserAccountExtendedDto_avatarBig(ctx, field, obj)
 		case "shortInfo":
 			out.Values[i] = ec._UserAccountExtendedDto_shortInfo(ctx, field, obj)
-		case "lastLoginDateTime":
-			out.Values[i] = ec._UserAccountExtendedDto_lastLoginDateTime(ctx, field, obj)
+		case "lastSeenDateTime":
+			out.Values[i] = ec._UserAccountExtendedDto_lastSeenDateTime(ctx, field, obj)
 		case "oauth2Identifiers":
 			out.Values[i] = ec._UserAccountExtendedDto_oauth2Identifiers(ctx, field, obj)
 		case "additionalData":
@@ -16818,8 +16818,8 @@ func (ec *executionContext) _UserStatusEvent(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._UserStatusEvent_online(ctx, field, obj)
 		case "isInVideo":
 			out.Values[i] = ec._UserStatusEvent_isInVideo(ctx, field, obj)
-		case "lastLoginDateTime":
-			out.Values[i] = ec._UserStatusEvent_lastLoginDateTime(ctx, field, obj)
+		case "lastSeenDateTime":
+			out.Values[i] = ec._UserStatusEvent_lastSeenDateTime(ctx, field, obj)
 		case "eventType":
 			out.Values[i] = ec._UserStatusEvent_eventType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

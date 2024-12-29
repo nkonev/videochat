@@ -21,7 +21,7 @@ public record UserAccountEventDTO(
         String shortInfo,
 
         @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
-        LocalDateTime lastLoginDateTime,
+        LocalDateTime lastSeenDateTime,
 
         OAuth2IdentifiersDTO oauth2Identifiers,
         String loginColor,

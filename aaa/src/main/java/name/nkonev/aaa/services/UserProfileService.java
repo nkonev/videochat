@@ -97,7 +97,7 @@ public class UserProfileService {
      */
     @Transactional
     public UserSelfProfileDTO getProfile(UserAccountDetailsDTO userAccount, HttpSession session) {
-        return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastLoginDateTime(), getExpiresAt(session));
+        return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastSeenDateTime(), getExpiresAt(session));
     }
 
     @Transactional
@@ -242,7 +242,7 @@ public class UserProfileService {
                 // we care for email leak...
                 return new Pair<>(
                     (UserAccount)null,
-                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession))
+                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastSeenDateTime(), getExpiresAt(httpSession))
                 );
             }
 
@@ -266,7 +266,7 @@ public class UserProfileService {
             SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, exists);
             return new Pair<>(
                 exists,
-                UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastLoginDateTime(), getExpiresAt(httpSession))
+                UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastSeenDateTime(), getExpiresAt(httpSession))
             );
         });
 
@@ -482,7 +482,7 @@ public class UserProfileService {
             SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, userAccount);
             return
                 new Pair<>(
-                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastLoginDateTime(), getExpiresAt(httpSession)),
+                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastSeenDateTime(), getExpiresAt(httpSession)),
                     userAccount
                 );
         });

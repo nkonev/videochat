@@ -54,14 +54,14 @@ public record UserAccountDetailsDTO (
             Collection<GrantedAuthority> roles,
             String email,
             boolean awaitingForConfirmEmailChange,
-            LocalDateTime lastLoginDateTime,
+            LocalDateTime lastSeenDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers,
             String loginColor,
             String ldapId
     ) {
         this(
                 new UserAccountDTO(
-                    id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor, ldapId != null
+                    id, login, avatar, avatarBig, shortInfo, lastSeenDateTime, oauthIdentifiers, loginColor, ldapId != null
                 ),
                 new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange, ldapId
         );
@@ -151,8 +151,8 @@ public record UserAccountDetailsDTO (
         return userAccountDTO.oauth2Identifiers();
     }
 
-    public LocalDateTime getLastLoginDateTime() {
-        return userAccountDTO.lastLoginDateTime();
+    public LocalDateTime getLastSeenDateTime() {
+        return userAccountDTO.lastSeenDateTime();
     }
 
     public String getLoginColor() {
@@ -162,7 +162,7 @@ public record UserAccountDetailsDTO (
     public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
         return new UserAccountDetailsDTO(
                 new UserAccountDTO(
-                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastLoginDateTime(), newOauth2Identifiers, userAccountDTO.loginColor(), ldapId != null
+                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastSeenDateTime(), newOauth2Identifiers, userAccountDTO.loginColor(), ldapId != null
                 ),
                 oauth2Attributes,
                 idToken,
@@ -178,4 +178,23 @@ public record UserAccountDetailsDTO (
                 ldapId
         );
     }
+
+    public UserAccountDetailsDTO withUserAccountDTO(UserAccountDTO userAccountDTO) {
+        return new UserAccountDetailsDTO(
+                userAccountDTO,
+                oauth2Attributes,
+                idToken,
+                userInfo,
+                password,
+                expired,
+                locked,
+                enabled,
+                confirmed,
+                roles,
+                email,
+                awaitingForConfirmEmailChange,
+                ldapId
+        );
+    }
+
 }

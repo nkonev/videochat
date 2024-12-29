@@ -35,7 +35,7 @@ public record UserAccountDTOExtended (
         @JsonProperty("avatarBig") String avatarBig,
         @JsonProperty("shortInfo") String shortInfo,
         @JsonProperty("additionalData") DataDTO managementData,
-        @JsonProperty("lastLoginDateTime") LocalDateTime lastLoginDateTime,
+        @JsonProperty("lastSeenDateTime") LocalDateTime lastSeenDateTime,
         @JsonProperty("oauth2Identifiers") OAuth2IdentifiersDTO oauthIdentifiers,
         @JsonProperty("canLock") boolean canLock,
         @JsonProperty("canEnable") boolean canEnable,
@@ -49,7 +49,7 @@ public record UserAccountDTOExtended (
         @JsonProperty("canSetPassword") boolean canSetPassword
     ) {
         this(
-            new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastLoginDateTime, oauthIdentifiers, loginColor, ldap),
+            new UserAccountDTO(id, login, avatar, avatarBig, shortInfo, lastSeenDateTime, oauthIdentifiers, loginColor, ldap),
             managementData,
             canDelete,
             canLock,

@@ -54,7 +54,7 @@ type ChatDto struct {
 	Blog                                bool           `json:"blog"`
 	LoginColor                          *string        `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool           `json:"regularParticipantCanPublishMessage"`
-	LastLoginDateTime                   *time.Time     `json:"lastLoginDateTime"`
+	LastSeenDateTime                    *time.Time     `json:"lastSeenDateTime"`
 	RegularParticipantCanPinMessage     bool           `json:"regularParticipantCanPinMessage"`
 }
 
@@ -273,7 +273,7 @@ type UserAccountDto struct {
 	Avatar            *string            `json:"avatar"`
 	AvatarBig         *string            `json:"avatarBig"`
 	ShortInfo         *string            `json:"shortInfo"`
-	LastLoginDateTime *time.Time         `json:"lastLoginDateTime"`
+	LastSeenDateTime  *time.Time         `json:"lastSeenDateTime"`
 	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
 	LoginColor        *string            `json:"loginColor"`
 	Ldap              bool               `json:"ldap"`
@@ -292,7 +292,7 @@ type UserAccountExtendedDto struct {
 	Avatar                        *string            `json:"avatar"`
 	AvatarBig                     *string            `json:"avatarBig"`
 	ShortInfo                     *string            `json:"shortInfo"`
-	LastLoginDateTime             *time.Time         `json:"lastLoginDateTime"`
+	LastSeenDateTime              *time.Time         `json:"lastSeenDateTime"`
 	Oauth2Identifiers             *OAuth2Identifiers `json:"oauth2Identifiers"`
 	AdditionalData                *DataDto           `json:"additionalData"`
 	CanLock                       bool               `json:"canLock"`
@@ -315,11 +315,11 @@ type UserDeletedDto struct {
 func (UserDeletedDto) IsUserAccountEventDto() {}
 
 type UserStatusEvent struct {
-	UserID            int64      `json:"userId"`
-	Online            *bool      `json:"online"`
-	IsInVideo         *bool      `json:"isInVideo"`
-	LastLoginDateTime *time.Time `json:"lastLoginDateTime"`
-	EventType         string     `json:"eventType"`
+	UserID           int64      `json:"userId"`
+	Online           *bool      `json:"online"`
+	IsInVideo        *bool      `json:"isInVideo"`
+	LastSeenDateTime *time.Time `json:"lastSeenDateTime"`
+	EventType        string     `json:"eventType"`
 }
 
 type UserTypingDto struct {

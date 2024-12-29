@@ -1,6 +1,5 @@
 package name.nkonev.aaa.repository.jdbc;
 
-import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
@@ -32,8 +31,8 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     Optional<UserAccount> findByKeycloakId(String keycloakId);
 
     @Modifying
-    @Query("update user_account set last_login_date_time = :newLastLoginDateTime where username = :userName")
-    void updateLastLogin(@Param("userName") String username, @Param("newLastLoginDateTime") LocalDateTime localDateTime);
+    @Query("update user_account set last_seen_date_time = :newLastSeenDateTime where username = :userName")
+    void updateLastSeen(@Param("userName") String username, @Param("newLastSeenDateTime") LocalDateTime localDateTime);
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
 

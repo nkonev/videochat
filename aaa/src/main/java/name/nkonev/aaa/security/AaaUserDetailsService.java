@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
+import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
+
 /**
  * Provides Spring Security compatible UserAccountDetailsDTO.
  */
@@ -56,10 +58,17 @@ public class AaaUserDetailsService implements UserDetailsService {
      */
     @Override
     public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userAccountRepository
+        var ud = userAccountRepository
                 .findByUsername(username)
                 .map(userAccountConverter::convertToUserAccountDetailsDTO)
                 .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
+
+        final var now = getNowUTC();
+        if (ud.getLastSeenDateTime() == null || now.minus(aaaProperties.onlineEstimation()).isAfter(ud.getLastSeenDateTime())) {
+            userAccountRepository.updateLastSeen(username, now);
+            ud = ud.withUserAccountDTO(ud.userAccountDTO().withLastSeenDateTime(now));
+        }
+        return ud;
     }
 
     public Map<String, Session> getSessions(String userName){
@@ -79,7 +88,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("userIds cannon be null");
         }
         return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastLoginDateTime()))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastSeenDateTime()))
                 .toList();
     }
 
@@ -88,7 +97,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("users cannon be null");
         }
         return users.stream()
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastLoginDateTime()))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastSeenDateTime()))
                 .toList();
     }
 
@@ -126,7 +135,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             // nothing
         } else {
             eventService.notifySessionsKilled(userId, reasonType);
-            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userId, false, userToFillSessions.lastLoginDateTime())));
+            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userId, false, userToFillSessions.lastSeenDateTime())));
         }
     }
 

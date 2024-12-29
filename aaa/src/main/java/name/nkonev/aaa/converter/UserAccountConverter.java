@@ -91,14 +91,14 @@ public class UserAccountConverter {
                 Arrays.stream(userAccount.roles()).map(UserAccountConverter::convertRole).collect(Collectors.toSet()),
                 userAccount.email(),
                 awaitingForConfirmEmailChange,
-                userAccount.lastLoginDateTime(),
+                userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 userAccount.ldapId()
         );
     }
 
-    public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastLoginDateTime, Long expiresAt) {
+    public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastSeenDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
         var roles = convertRoles2Enum(userAccount.getRoles());
         var canShowAdminsCorner = canAccessToAdminsCorner(roles);
@@ -110,7 +110,7 @@ public class UserAccountConverter {
                 userAccount.userAccountDTO().shortInfo(),
                 userAccount.getEmail(),
                 userAccount.awaitingForConfirmEmailChange(),
-                lastLoginDateTime,
+                lastSeenDateTime,
                 userAccount.getOauth2Identifiers(),
                 roles,
                 expiresAt,
@@ -146,7 +146,7 @@ public class UserAccountConverter {
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
-                userAccount.lastLoginDateTime(),
+                userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 userAccount.ldapId() != null
@@ -164,7 +164,7 @@ public class UserAccountConverter {
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
-                userAccount.lastLoginDateTime(),
+                userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 userAccount.ldapId() != null
@@ -187,7 +187,7 @@ public class UserAccountConverter {
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
                 dataDTO,
-                userAccount.lastLoginDateTime(),
+                userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canEnable(currentUser, userAccount),
