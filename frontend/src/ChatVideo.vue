@@ -1232,7 +1232,8 @@ export default {
   display contents
 }
 
-#video-splitpanes.splitpanes--horizontal .splitpanes__splitter {
+// can be both horizontal and vertical depending on the video position
+#video-splitpanes .splitpanes__splitter {
   display: var(--splitter-h-display);
 }
 </style>
