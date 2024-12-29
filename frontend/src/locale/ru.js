@@ -326,5 +326,7 @@ export default {
     pin_video: "Закрепить это видео",
     unpin_video: "Открепить видео",
     video_miniatures_disable: "Выключить видео миниатюры",
-    video_miniatures_enable: "Включить видео миниатюры"
+    video_miniatures_enable: "Включить видео миниатюры",
+    video_messages_disable: "Выключить сообщения",
+    video_messages_enable: "Включить сообщения"
 }

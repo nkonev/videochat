@@ -46,7 +46,7 @@ import {
 } from "@/utils";
 import {
   getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
-  getStoredVideoDevicePresents, getStoredVideoMiniatures,
+  getStoredVideoDevicePresents, getStoredVideoMessages, getStoredVideoMiniatures,
   NULL_CODEC,
   NULL_SCREEN_RESOLUTION,
   setStoredCallAudioDeviceId,
@@ -89,6 +89,7 @@ const emptyStoredPanes = () => {
 }
 
 const videoSplitpanesSelector = "#video-splitpanes";
+const videoSplitterDisplayVarName = "--splitter-h-display";
 
 export default {
   mixins: [
@@ -996,7 +997,7 @@ export default {
     'chatStore.presenterEnabled': {
       handler: function (newValue, oldValue) {
         if (this.videoContainerDiv) {
-          setSplitter(videoSplitpanesSelector, this.chatStore.videoMiniaturesEnabled);
+          setSplitter(videoSplitpanesSelector, videoSplitterDisplayVarName, this.chatStore.videoMiniaturesEnabled);
           if (newValue) {
             this.$nextTick(()=>{ // needed because videoContainerDiv still not visible for attaching from livekit js
               this.electNewPresenter();
@@ -1038,10 +1039,7 @@ export default {
     },
     'chatStore.videoMiniaturesEnabled': {
       handler: function (newValue, oldValue) {
-        setSplitter(videoSplitpanesSelector, newValue);
-
-        const stored = this.getStored();
-        this.restorePanelsSize(stored);
+        setSplitter(videoSplitpanesSelector, videoSplitterDisplayVarName, newValue);
       }
     }
   },
@@ -1050,8 +1048,9 @@ export default {
   },
   async mounted() {
     this.initPositionAndPresenter();
+
     const videoMiniatures = getStoredVideoMiniatures();
-    setSplitter(videoSplitpanesSelector, videoMiniatures);
+    setSplitter(videoSplitpanesSelector, videoSplitterDisplayVarName, videoMiniatures);
     this.chatStore.videoMiniaturesEnabled = videoMiniatures;
 
     this.chatStore.setCallStateInCall();
@@ -1234,6 +1233,6 @@ export default {
 }
 
 #video-splitpanes.splitpanes--horizontal .splitpanes__splitter {
-  display: var(--splitter-display);
+  display: var(--splitter-h-display);
 }
 </style>

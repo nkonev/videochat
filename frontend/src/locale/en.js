@@ -326,5 +326,7 @@ export default {
     pin_video: "Pin this video",
     unpin_video: "Unpin pinned video",
     video_miniatures_disable: "Disable video miniatures",
-    video_miniatures_enable: "Enable video miniatures"
+    video_miniatures_enable: "Enable video miniatures",
+    video_messages_disable: "Disable messages",
+    video_messages_enable: "Enable messages"
 }

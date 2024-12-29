@@ -1,11 +1,11 @@
 <template>
-    <splitpanes ref="splOuter" class="default-theme" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+    <splitpanes ref="splOuter" class="default-theme" id="root-splitpanes" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
       <pane :size="leftPaneSize()" v-if="showLeftPane()">
         <ChatList :embedded="true" v-if="isAllowedChatList()" ref="chatListRef"/>
       </pane>
 
       <pane style="background: white" :size="centralPaneSize()">
-        <splitpanes ref="splCentral" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
+        <splitpanes ref="splCentral" id="central-splitpanes" class="default-theme" :dbl-click-splitter="false" horizontal @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
           <pane v-if="showTopPane()" :size="topPaneSize()" class="video-top-pane">
             <ChatVideo v-if="chatDtoIsReady" :chatId="chatId" ref="chatVideoRef"/>
           </pane>
@@ -58,12 +58,12 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
 import {
-    hasLength,
-    isCalling,
-    isChatRoute,
-    new_message,
-    setTitle,
-    goToPreservingQuery
+  hasLength,
+  isCalling,
+  isChatRoute,
+  new_message,
+  setTitle,
+  goToPreservingQuery, setSplitter, isMobileBrowser
 } from "@/utils";
 import bus, {
     CHAT_DELETED,
@@ -101,6 +101,7 @@ import videoPositionMixin from "@/mixins/videoPositionMixin";
 import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
+import {getStoredVideoMessages} from "@/store/localStore.js";
 
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
@@ -109,6 +110,9 @@ const getChatEventsData = (message) => {
 let writingUsersTimerId;
 
 const panelSizesKey = "panelSizes";
+
+const messagesSplitpanesSelector = isMobileBrowser() ? '#central-splitpanes' : "#root-splitpanes";
+const messagesSplitterDisplayVarName = "--splitter-v-display";
 
 const emptyStoredPanes = () => {
   return {
@@ -701,13 +705,21 @@ export default {
       return this.getStored().leftPane;
     },
     rightPaneSize() {
-      return this.getStored().rightPane;
+      if (this.chatStore.videoMessagesEnabled) {
+        return this.getStored().rightPane;
+      } else {
+        return 100
+      }
     },
     showTopPane() {
       return this.isMobile() && this.isAllowedVideo()
     },
-    topPaneSize() {
-      return this.getStored().topPane;
+    topPaneSize() { // only for mobile
+      if (this.chatStore.videoMessagesEnabled) {
+        return this.getStored().topPane;
+      } else {
+        return 100
+      }
     },
     centralPaneSize() {
       if (this.isMobile()) {
@@ -792,14 +804,22 @@ export default {
       // console.debug("Restoring from", ret);
       if (this.isMobile()) {
         if (this.showTopPane()) {
-          this.$refs.splCentral.panes[0].size = ret.topPane;
+          if (this.chatStore.videoMessagesEnabled) {
+            this.$refs.splCentral.panes[0].size = ret.topPane;
+          } else {
+            this.$refs.splCentral.panes[0].size = 100
+          }
         }
       } else {
         if (this.showLeftPane()) {
           this.$refs.splOuter.panes[0].size = ret.leftPane;
         }
         if (this.showRightPane()) {
-          this.$refs.splOuter.panes[this.$refs.splOuter.panes.length - 1].size = ret.rightPane;
+          if (this.chatStore.videoMessagesEnabled) {
+            this.$refs.splOuter.panes[this.$refs.splOuter.panes.length - 1].size = ret.rightPane;
+          } else {
+            this.$refs.splOuter.panes[this.$refs.splOuter.panes.length - 1].size = 100;
+          }
         }
         if (this.showBottomPane()) {
           let bottomPaneSize;
@@ -812,9 +832,12 @@ export default {
         }
       }
     },
-
     onPanelAdd() {
       this.$refs.chatVideoRef?.recalculateLayout();
+
+      if (this.isAllowedVideo()) {
+        setSplitter(messagesSplitpanesSelector, messagesSplitterDisplayVarName, this.chatStore.videoMessagesEnabled);
+      }
 
       // console.debug("On panel add", this.$refs.splOuter.panes);
       this.$nextTick(() => {
@@ -826,6 +849,10 @@ export default {
     },
     onPanelRemove() {
       this.$refs.chatVideoRef?.recalculateLayout();
+
+      if (!this.isAllowedVideo()) {
+        setSplitter(messagesSplitpanesSelector, messagesSplitterDisplayVarName, true);
+      }
 
       // console.debug("On panel removed", this.$refs.splOuter.panes);
       this.$nextTick(() => {
@@ -873,6 +900,11 @@ export default {
         }
       }
     },
+    'chatStore.videoMessagesEnabled': {
+      handler: function (newValue, oldValue) {
+        setSplitter(messagesSplitpanesSelector, messagesSplitterDisplayVarName, newValue || !this.isAllowedVideo());
+      }
+    }
   },
   created() {
 
@@ -882,6 +914,10 @@ export default {
     this.chatStore.chatUsersCount = 0;
     this.chatStore.isShowSearch = true;
     this.chatStore.showChatEditButton = false;
+
+    const videoMessages = getStoredVideoMessages();
+    setSplitter(messagesSplitpanesSelector, messagesSplitterDisplayVarName, videoMessages || !this.isAllowedVideo());
+    this.chatStore.videoMessagesEnabled = videoMessages;
 
     // create subscription object before ON_PROFILE_SET
     this.chatEventsSubscription = graphqlSubscriptionMixin('chatEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
@@ -995,6 +1031,15 @@ export default {
     padding-top 2px
     padding-bottom 2px
   }
+}
 
+// desktop
+#root-splitpanes.splitpanes--vertical > .splitpanes__splitter {
+  display: var(--splitter-v-display);
+}
+
+// mobile
+#central-splitpanes.splitpanes--horizontal > .splitpanes__splitter::before {
+  display: var(--splitter-v-display);
 }
 </style>

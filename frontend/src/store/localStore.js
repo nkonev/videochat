@@ -228,6 +228,21 @@ export const setStoredVideoMiniatures = (v) => {
     localStorage.setItem(KEY_VIDEO_MINIATURES, JSON.stringify(v));
 }
 
+export const KEY_VIDEO_MESSAGES = 'videoMessages';
+
+export const getStoredVideoMessages = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_VIDEO_MESSAGES));
+    if (v === null) {
+        console.log("Resetting videoMessages to default");
+        setStoredVideoMessages(true);
+        v = JSON.parse(localStorage.getItem(KEY_VIDEO_MESSAGES));
+    }
+    return v;
+}
+
+export const setStoredVideoMessages = (v) => {
+    localStorage.setItem(KEY_VIDEO_MESSAGES, JSON.stringify(v));
+}
 
 export const NULL_CODEC = 'null';
 

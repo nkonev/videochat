@@ -465,11 +465,11 @@ export const stopCall = (chatStore, route, router) => {
     goToPreservingQuery(route, router, routerNewState);
 }
 
-export const setSplitter = (parentSelector, enable) => {
+export const setSplitter = (parentSelector, varName, enable) => {
     const splitPanes = document.querySelector(parentSelector);
     if (!splitPanes) {
         console.warn("By", parentSelector, "an element is not found")
     } else {
-        splitPanes.style.setProperty("--splitter-display", enable ? 'unset' : 'none');
+        splitPanes.style.setProperty(varName, enable ? 'unset' : 'none');
     }
 }

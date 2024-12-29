@@ -15,7 +15,7 @@
       </template>
       <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
 
-      <v-btn variant="plain" tile icon @click.stop.prevent="toggleMessages()"><v-icon size="x-large">mdi-message-text-outline</v-icon></v-btn>
+      <v-btn tile icon @click.stop.prevent="toggleMessages()" :variant="messagesValue() ? 'tonal' : 'plain'" :title="messagesValue() ? $vuetify.locale.t('$vuetify.video_messages_disable') : $vuetify.locale.t('$vuetify.video_messages_enable')"><v-icon size="x-large">mdi-message-text-outline</v-icon></v-btn>
 
       <v-btn :disabled="!enableToggleMiniatures" tile icon @click.stop.prevent="toggleMiniatures()" :variant="miniaturesValue() ? 'tonal' : 'plain'" :title="miniaturesValue() ? $vuetify.locale.t('$vuetify.video_miniatures_disable') : $vuetify.locale.t('$vuetify.video_miniatures_enable')"><v-icon size="x-large">mdi-table-row</v-icon></v-btn>
 
@@ -58,7 +58,7 @@ import {stopCall} from "@/utils.js";
 import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS} from "@/bus/bus.js";
 import {
   positionItems,
-  setStoredPresenter, setStoredVideoMiniatures,
+  setStoredPresenter, setStoredVideoMessages, setStoredVideoMiniatures,
   setStoredVideoPosition,
 } from "@/store/localStore.js";
 import axios from "axios";
@@ -124,6 +124,9 @@ export default {
     miniaturesValue() {
       return this.chatStore.videoMiniaturesEnabled
     },
+    messagesValue() {
+      return this.chatStore.videoMessagesEnabled
+    },
     presenterClick() {
       const v = !this.chatStore.presenterEnabled;
       this.chatStore.presenterEnabled = v;
@@ -149,7 +152,9 @@ export default {
         setStoredVideoMiniatures(newValue);
     },
     toggleMessages() {
-        this.chatStore.videoMessagesEnabled = !this.chatStore.videoMessagesEnabled;
+        const newValue = !this.chatStore.videoMessagesEnabled;
+        this.chatStore.videoMessagesEnabled = newValue;
+        setStoredVideoMessages(newValue);
     },
   }
 }
