@@ -69,7 +69,7 @@
           </div>
         </template>
 
-        <template v-if="chatStore.isShowSearch">
+        <template v-if="shouldShowSearch">
           <CollapsedSearch :provider="{
               getModelValue: this.getModelValue,
               setModelValue: this.setModelValue,
@@ -295,6 +295,9 @@ export default {
         },
         showTetATetBadge() {
             return !this.chatStore.oppositeUserLastLoginDateTime && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()
+        },
+        shouldShowSearch() {
+            return this.chatStore.isShowSearch && !(this.isVideoRoute() && !this.chatStore.videoMessagesEnabled)
         },
     },
     methods: {
