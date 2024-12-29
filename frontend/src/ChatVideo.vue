@@ -381,20 +381,18 @@ export default {
         const app = componentWrapper.app;
         const containerEl = componentWrapper.containerEl;
         console.debug("For removal checking component=", component, "against", track);
+        // it's correct regardless weird design
+        // testcase:
+        // user1 and user2 start a video chat
+        // user1 starts screen sharing
+        // user1 closes video with screen sharing
+        // camera video of user1 should continue to work
         if (component.getVideoStreamId() == track.sid || component.getAudioStreamId() == track.sid) {
-          if (component.getVideoStreamId() == track.sid) {
             console.log("Setting null video for component=", component.getId());
             if (this.chatStore.presenterEnabled && this.presenterData?.videoStream && this.presenterData.videoStream.trackSid == component.getVideoStreamId()) {
               this.detachPresenter();
               presenterWasDetached = true;
             }
-            component.setVideoStream(null)
-          } else if (component.getAudioStreamId() == track.sid) {
-            console.log("Setting null audio for component=", component.getId());
-            component.setAudioStream(null)
-          }
-
-          if (component.getVideoStreamId() == null && component.getAudioStreamId() == null) {
             try {
               console.log("Removing component=", component.getId());
               app.unmount();
@@ -408,7 +406,6 @@ export default {
             } catch (e) {
               console.debug("Something wrong on removing child", e, component.$el, this.videoContainerDiv);
             }
-          }
         }
       }
 
