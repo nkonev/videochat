@@ -25,6 +25,7 @@ type InviteHandler struct {
 	chatClient               *client.RestClient
 	dialStatusPublisher      *producer.RabbitDialStatusPublisher
 	notificationPublisher    *producer.RabbitNotificationsPublisher
+	invitePublisher          *producer.RabbitInvitePublisher
 	userService              *services.UserService
 	stateChangedEventService *services.StateChangedEventService
 	config                   *config.ExtendedConfig
@@ -38,6 +39,7 @@ func NewInviteHandler(
 	chatClient *client.RestClient,
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
 	notificationPublisher *producer.RabbitNotificationsPublisher,
+	invitePublisher *producer.RabbitInvitePublisher,
 	userService *services.UserService,
 	stateChangedEventService *services.StateChangedEventService,
 	config *config.ExtendedConfig,
@@ -48,6 +50,7 @@ func NewInviteHandler(
 		chatClient:               chatClient,
 		dialStatusPublisher:      dialStatusPublisher,
 		notificationPublisher:    notificationPublisher,
+		invitePublisher:          invitePublisher,
 		userService:              userService,
 		stateChangedEventService: stateChangedEventService,
 		config:                   config,
@@ -430,10 +433,27 @@ func (vh *InviteHandler) getJoinToken(apiKey, apiSecret, room string, authResult
 func (vh *InviteHandler) hardRemove(c context.Context, tx *db.Tx, userCallStates []dto.UserCallState) {
 	userCallStateIds := make([]dto.UserCallStateId, 0)
 	for _, st := range userCallStates {
+		// prepare userCallStateIds
 		userCallStateIds = append(userCallStateIds, dto.UserCallStateId{
 			TokenId: st.TokenId,
 			UserId:  st.UserId,
 		})
+
+		// send 1 removing event to the prev owner
+		o := st.OwnerUserId
+		if o != nil {
+			m := map[int64]string{st.UserId: db.CallStatusRemoving}
+			vh.dialStatusPublisher.Publish(c, st.ChatId, m, *o)
+		}
+
+		// send stop "you are being invited" to the user
+		inv := dto.VideoCallInvitation{
+			ChatId:   st.ChatId,
+			ChatName: "",
+			Status:   db.CallStatusRemoving,
+			Avatar:   nil,
+		}
+		vh.invitePublisher.Publish(c, &inv, st.UserId)
 	}
 	err := tx.RemoveByUserCallStates(c, userCallStateIds)
 	if err != nil {
