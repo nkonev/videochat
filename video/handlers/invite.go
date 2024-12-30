@@ -159,7 +159,10 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 			return http.StatusConflict
 		}
 	}
+	// end of forbid to make calls to the different chats
 
+	// remove states which can override
+	// we don't want to send both "removing" event to old chat and "beingInvited" event to the new chat
 	gotStatusesAllChats, err := tx.GetByCalleeUserIdFromAllChats(c, calleeUserId)
 	if err != nil {
 		GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
@@ -177,6 +180,7 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 	}
 	// we remove callee's previous inviting - only after CanOverrideCallStatus() check
 	vh.hardRemove(c, tx, ucss)
+	// end of remove states which can override
 
 	var newCalleeStatus = dto.UserCallState{
 		TokenId:      uuid.New(),
@@ -215,8 +219,13 @@ func (vh *InviteHandler) ownerRemoveFromCalling(ctx context.Context, tx *db.Tx, 
 		return http.StatusInternalServerError
 	}
 
-	// softRemove has an internal deduplication in order not to send multiple events to one user in case multiple tokens of he
-	code := vh.softRemove(ctx, tx, userPrincipalDto.UserId, userPrincipalDto.Avatar, tetATet, chatId, statuses, db.CallStatusRemoving)
+	// softRemoveExtended has an internal deduplication in order not to send multiple events to one user in case multiple tokens of he
+	code := vh.softRemoveExtended(ctx, tx, statuses, db.CallStatusRemoving, &overrideArg{
+		overrideOwnerId:     userPrincipalDto.UserId,
+		overrideOwnerAvatar: userPrincipalDto.Avatar,
+		overrideTetATet:     tetATet,
+		overrideChatId:      chatId,
+	})
 	if code != http.StatusOK {
 		return code
 	}
@@ -278,7 +287,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			}
 		}
 		// first of all we remove our previous invitations (smb. invites me)
-		vh.hardRemove(c.Request().Context(), tx, prevStatesToRemove)
+		vh.softRemoveExtended(c.Request().Context(), tx, prevStatesToRemove, db.CallStatusRemoving, nil)
 
 		var enterToChatInitializedByMe bool = true
 		var myInvitation *dto.UserCallState = nil
@@ -438,22 +447,6 @@ func (vh *InviteHandler) hardRemove(c context.Context, tx *db.Tx, userCallStates
 			TokenId: st.TokenId,
 			UserId:  st.UserId,
 		})
-
-		// send 1 removing event to the prev owner
-		o := st.OwnerUserId
-		if o != nil {
-			m := map[int64]string{st.UserId: db.CallStatusRemoving}
-			vh.dialStatusPublisher.Publish(c, st.ChatId, m, *o)
-		}
-
-		// send stop "you are being invited" to the user
-		inv := dto.VideoCallInvitation{
-			ChatId:   st.ChatId,
-			ChatName: "",
-			Status:   db.CallStatusRemoving,
-			Avatar:   nil,
-		}
-		vh.invitePublisher.Publish(c, &inv, st.UserId)
 	}
 	err := tx.RemoveByUserCallStates(c, userCallStateIds)
 	if err != nil {
@@ -493,7 +486,12 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 
 		for ownerId, states := range byOwnerId {
 			if len(states) > 0 {
-				vh.softRemove(c.Request().Context(), tx, ownerId, utils.NullToEmpty(states[0].OwnerAvatar), states[0].ChatTetATet, chatId, states, db.CallStatusCancelling)
+				vh.softRemoveExtended(c.Request().Context(), tx, states, db.CallStatusCancelling, &overrideArg{
+					overrideOwnerId:     ownerId,
+					overrideOwnerAvatar: utils.NullToEmpty(states[0].OwnerAvatar),
+					overrideTetATet:     states[0].ChatTetATet,
+					overrideChatId:      chatId,
+				})
 			}
 		}
 
@@ -506,7 +504,20 @@ func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 // question: how not to overwhelm the system by iterating over all the users and all the chats ?
 // answer: using opened rooms and rooms are going to be closed - see livekit's room.empty_timeout
 
-func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64, ownerAvatar string, tetATet bool, chatId int64, usersToRemove []dto.UserCallState, callStatus string) int {
+type overrideArg struct {
+	overrideOwnerId     int64
+	overrideOwnerAvatar string
+	overrideTetATet     bool
+	overrideChatId      int64
+}
+
+func (vh *InviteHandler) softRemoveExtended(
+	c context.Context,
+	tx *db.Tx,
+	usersToRemove []dto.UserCallState,
+	callStatus string,
+	overrideArg *overrideArg,
+) int {
 	var err error
 	// we remove callee by setting status
 	var sentUserIds = map[int64]bool{}
@@ -519,6 +530,27 @@ func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64,
 		}
 
 		if _, ok := sentUserIds[userId.UserId]; !ok {
+
+			var chatId int64
+			var ownerId int64 = db.NoUser
+			var ownerAvatar string
+			var tetATet bool
+			if overrideArg != nil {
+				chatId = overrideArg.overrideChatId
+				ownerId = overrideArg.overrideOwnerId
+				ownerAvatar = overrideArg.overrideOwnerAvatar
+				tetATet = overrideArg.overrideTetATet
+			} else {
+				chatId = userId.ChatId
+				if userId.OwnerUserId != nil {
+					ownerId = *userId.OwnerUserId
+				}
+				if userId.OwnerAvatar != nil {
+					ownerAvatar = *userId.OwnerAvatar
+				}
+				tetATet = userId.ChatTetATet
+			}
+
 			vh.sendEvents(c, chatId, userId.UserId, callStatus, ownerId, ownerAvatar, tetATet)
 			sentUserIds[userId.UserId] = true
 		}
@@ -601,10 +633,20 @@ func (vh *InviteHandler) ProcessExit(c echo.Context) error {
 			tetATet := calleesIOwe[0].ChatTetATet
 
 			// set myself to status Removing
-			vh.softRemove(c.Request().Context(), tx, ownerId, ownerAvatar, tetATet, chatId, []dto.UserCallState{*myState}, db.CallStatusRemoving)
+			vh.softRemoveExtended(c.Request().Context(), tx, []dto.UserCallState{*myState}, db.CallStatusRemoving, &overrideArg{
+				overrideOwnerId:     ownerId,
+				overrideOwnerAvatar: ownerAvatar,
+				overrideTetATet:     tetATet,
+				overrideChatId:      chatId,
+			})
 
 			// set callees to status Removing
-			vh.softRemove(c.Request().Context(), tx, ownerId, ownerAvatar, tetATet, chatId, calleesIOwe, db.CallStatusRemoving)
+			vh.softRemoveExtended(c.Request().Context(), tx, calleesIOwe, db.CallStatusRemoving, &overrideArg{
+				overrideOwnerId:     ownerId,
+				overrideOwnerAvatar: ownerAvatar,
+				overrideTetATet:     tetATet,
+				overrideChatId:      chatId,
+			})
 
 			// for being invited participants to dial - send EventMissedCall notification
 			vh.sendMissedCallNotification(c.Request().Context(), chatId, userPrincipalDto, calleesIOwe)
@@ -613,7 +655,12 @@ func (vh *InviteHandler) ProcessExit(c echo.Context) error {
 			var ownerId = utils.OwnerIdToNoUser(myState.OwnerUserId)
 			var ownerAvatar = utils.NullToEmpty(myState.OwnerAvatar)
 			var tetATet = myState.ChatTetATet
-			vh.softRemove(c.Request().Context(), tx, ownerId, ownerAvatar, tetATet, chatId, []dto.UserCallState{*myState}, db.CallStatusRemoving)
+			vh.softRemoveExtended(c.Request().Context(), tx, []dto.UserCallState{*myState}, db.CallStatusRemoving, &overrideArg{
+				overrideOwnerId:     ownerId,
+				overrideOwnerAvatar: ownerAvatar,
+				overrideTetATet:     tetATet,
+				overrideChatId:      chatId,
+			})
 		}
 		vh.stateChangedEventService.NotifyAllChatsAboutUsersInVideoStatus(c.Request().Context(), tx, []int64{userPrincipalDto.UserId})
 		return nil
