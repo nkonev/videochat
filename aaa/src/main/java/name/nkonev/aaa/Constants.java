@@ -5,9 +5,6 @@ import name.nkonev.aaa.security.OAuth2Providers;
 
 import java.util.Set;
 
-/**
- * Created by nik on 23.05.17.
- */
 public class Constants {
 
     public static class Urls {

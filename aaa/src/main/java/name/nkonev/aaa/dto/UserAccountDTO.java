@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 
 /**
- * Created by nik on 22.06.17.
  * Contains public information
  */
 public record UserAccountDTO (

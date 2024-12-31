@@ -5,9 +5,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-/**
- * Created by nkonev on 15.05.17.
- */
 public class TimeUtil {
     public static LocalDateTime getNowUTC() {
         return LocalDateTime.now(ZoneOffset.UTC);

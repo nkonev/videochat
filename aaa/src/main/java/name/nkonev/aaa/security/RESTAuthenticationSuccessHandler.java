@@ -1,9 +1,5 @@
 package name.nkonev.aaa.security;
 
-/**
- * Created by nik on 07.03.17.
- */
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.dto.SuccessfulLoginDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;

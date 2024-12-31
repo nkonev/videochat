@@ -1,8 +1,5 @@
 package name.nkonev.aaa.utils;
 
-/**
- * Created by nik on 05.07.17.
- */
 public class PageUtils {
     public static final int MAX_SIZE=100;
     public static final int DEFAULT_SIZE=20;

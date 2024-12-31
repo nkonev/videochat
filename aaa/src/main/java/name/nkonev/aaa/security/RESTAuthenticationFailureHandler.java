@@ -11,7 +11,6 @@ import java.io.IOException;
 
 /**
  * Called on wrong credentials
- * Created by nik on 07.03.17.
  */
 @Component
 public class RESTAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {

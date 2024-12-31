@@ -22,9 +22,6 @@ import java.util.*;
 
 import static name.nkonev.aaa.Constants.QueryVariables.BEHALF_USER_ID;
 
-/**
- * Created by nik on 08.06.17.
- */
 @Controller
 public class UserProfileController {
 

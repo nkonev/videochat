@@ -5,9 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-/**
- * Created by nik on 04.10.16.
- */
 @ConfigurationProperties(prefix = "custom.htmlunit")
 public class HtmlUnitProperties {
 

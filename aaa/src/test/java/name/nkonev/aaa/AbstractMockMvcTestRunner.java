@@ -1,9 +1,5 @@
 package name.nkonev.aaa;
 
-/**
- * Created by nik on 27.05.17.
- */
-
 import name.nkonev.aaa.security.SecurityConfig;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;

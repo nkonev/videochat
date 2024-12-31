@@ -1,9 +1,5 @@
 package name.nkonev.aaa;
 
-/**
- * Created by nik on 27.05.17.
- */
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.SuccessfulLoginDTO;

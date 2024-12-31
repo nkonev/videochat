@@ -33,9 +33,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 
-/**
- * Created by nik on 08.06.17.
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

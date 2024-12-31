@@ -25,7 +25,6 @@ import java.util.List;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 /**
- * Created by nik on 09.07.17.
  *
  * This listener works for both database and OAuth2 logouts
  */

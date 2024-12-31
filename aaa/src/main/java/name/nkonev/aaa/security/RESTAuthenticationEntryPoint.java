@@ -1,9 +1,5 @@
 package name.nkonev.aaa.security;
 
-/**
- * Created by nik on 07.03.17.
- */
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
