@@ -404,9 +404,7 @@ export default {
               text: this.$vuetify.locale.t('$vuetify.delete_chat_text', chat.name),
               actionFunction: (that) => {
                   that.loading = true;
-                  axios.delete(`/api/chat/${chat.id}`, {
-                    signal: this.requestAbortController.signal
-                  })
+                  axios.delete(`/api/chat/${chat.id}`)
                       .then(() => {
                           bus.emit(CLOSE_SIMPLE_MODAL);
                       }).finally(()=>{
@@ -422,9 +420,7 @@ export default {
               text: this.$vuetify.locale.t('$vuetify.leave_chat_text', chat.name),
               actionFunction: (that) => {
                   that.loading = true;
-                  axios.put(`/api/chat/${chat.id}/leave`, null, {
-                    signal: this.requestAbortController.signal
-                  })
+                  axios.put(`/api/chat/${chat.id}/leave`, null)
                       .then(() => {
                           bus.emit(CLOSE_SIMPLE_MODAL);
                       }).finally(()=>{
