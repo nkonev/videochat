@@ -78,6 +78,7 @@ export const useChatStore = defineStore('chat', {
         oppositeUserInVideo: false,
         videoMiniaturesEnabled: true,
         videoMessagesEnabled: true,
+        oppositeUserOnline: false,
     }
   },
   actions: {

@@ -294,7 +294,7 @@ export default {
             return !!this.chatStore.fileUploadingQueue.length
         },
         showTetATetBadge() {
-            return !this.chatStore.oppositeUserLastSeenDateTime && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()
+            return this.chatStore.oppositeUserOnline && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()
         },
         shouldShowSearch() {
             return this.chatStore.isShowSearch && !(this.isVideoRoute() && !this.chatStore.videoMessagesEnabled)

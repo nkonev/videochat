@@ -309,8 +309,10 @@ export default {
         dtos.forEach(dtoItem => {
           if (dtoItem.online != null && userId == dtoItem.userId) {
             if (dtoItem.online) {
+              this.chatStore.oppositeUserOnline = true;
               this.chatStore.oppositeUserLastSeenDateTime = null;
             } else {
+              this.chatStore.oppositeUserOnline = false;
               this.chatStore.oppositeUserLastSeenDateTime = dtoItem.lastSeenDateTime;
             }
           }
@@ -661,6 +663,7 @@ export default {
 
       this.chatStore.oppositeUserLastSeenDateTime = null;
       this.chatStore.oppositeUserInVideo = false;
+      this.chatStore.oppositeUserOnline = false;
 
       this.chatStore.showCallManagement = false;
 
