@@ -4,6 +4,7 @@ import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.services.OAuth2ProvidersService;
 import name.nkonev.aaa.services.UserProfileService;
+import name.nkonev.aaa.services.PasswordResetService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class UserProfileController {
 
     @Autowired
     private UserProfileService userProfileService;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -258,8 +262,8 @@ public class UserProfileController {
     @PutMapping(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.USER_ID + Constants.Urls.PASSWORD)
     public void setPassword(@AuthenticationPrincipal UserAccountDetailsDTO userAccount,
                             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
-                            @RequestBody SetPasswordDTO setPasswordDTO){
-        userProfileService.setPassword(setPasswordDTO, userId);
+                            @RequestBody @Valid SetPasswordDTO setPasswordDTO){
+        passwordResetService.setPassword(setPasswordDTO, userId);
     }
 
 }

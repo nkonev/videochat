@@ -4,6 +4,8 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.Language;
 import name.nkonev.aaa.dto.PasswordResetDTO;
+import name.nkonev.aaa.dto.SetPasswordDTO;
+import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.PasswordResetToken;
 import name.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
@@ -11,6 +13,7 @@ import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.PasswordResetTokenRepository;
 import name.nkonev.aaa.security.LoginListener;
 import name.nkonev.aaa.security.SecurityUtils;
+import name.nkonev.aaa.security.AaaUserDetailsService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +48,9 @@ public class PasswordResetService {
 
     @Autowired
     private UserAccountConverter userAccountConverter;
+
+    @Autowired
+    private AaaUserDetailsService aaaUserDetailsService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetService.class);
 
@@ -101,6 +107,13 @@ public class PasswordResetService {
         var auth = userAccountConverter.convertToUserAccountDetailsDTO(userAccount);
         SecurityUtils.setToContext(httpSession, auth);
         loginListener.onApplicationEvent(auth);
+    }
+
+    public void setPassword(SetPasswordDTO setPasswordDTO, long userId) {
+        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.password_forcibly_set);
+
+        var encoded = passwordEncoder.encode(setPasswordDTO.password());
+        userAccountRepository.updatePassword(userId, encoded);
     }
 
 }

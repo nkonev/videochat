@@ -512,11 +512,4 @@ public class UserProfileService {
         return result;
     }
 
-    public void setPassword(SetPasswordDTO setPasswordDTO, long userId) {
-        aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.password_forcibly_set);
-
-        var encoded = passwordEncoder.encode(setPasswordDTO.password());
-        userAccountRepository.updatePassword(userId, encoded);
-    }
-
 }
