@@ -1,3 +1,4 @@
+# https://github.com/livekit/livekit/blob/master/config-sample.yaml
 port: 7880
 rtc:
     #node_ip: {{ ansible_default_ipv4.address }}
@@ -46,6 +47,6 @@ webhook:
     - 'http://video:1237/internal/livekit-webhook'
 
 audio:
-  # minimum level to be considered active, 0-127, where 0 is loudest
-  # defaults to 30
-  active_level: 100
+  active_level: 30
+  min_percentile: 50
+  smooth_intervals: 2
