@@ -79,6 +79,7 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 	stringPresingedUrl := presignedUrl.String()
 	ffCmd := exec.Command(viper.GetString("converting.ffmpegPath"),
 		"-i", stringPresingedUrl,
+		// convert to format, which can be played in both Firefox and Chrome
 		"-c:v", "libvpx-vp9",
 		"-c:a", "libopus",
 		pathOfConvertedFile,
