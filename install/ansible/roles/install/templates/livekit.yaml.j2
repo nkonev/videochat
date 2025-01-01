@@ -38,15 +38,15 @@ redis:
 keys:
     {{ livekit_api_key }}: {{ livekit_api_secret }}
 logging:
-  json: false
-  level: info
+    json: false
+    level: info
 
 webhook:
-  api_key: '{{ livekit_api_key }}'
-  urls:
-    - 'http://video:1237/internal/livekit-webhook'
+    api_key: '{{ livekit_api_key }}'
+    urls:
+      - 'http://video:1237/internal/livekit-webhook'
 
 audio:
-  active_level: 30
-  min_percentile: 50
-  smooth_intervals: 2
+    active_level: 30
+    min_percentile: 50
+    smooth_intervals: 2
