@@ -18,6 +18,7 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"os/exec"
+	"syscall"
 )
 
 type PreviewService struct {
@@ -169,6 +170,10 @@ func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey s
 	ffCmd := exec.Command(viper.GetString("preview.ffmpegPath"),
 		"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
 		"-c:v", "png", "-f", "rawvideo", "-an", "-")
+	// https://medium.com/@ganeshmaharaj/clean-exit-of-golangs-exec-command-897832ac3fa5
+	ffCmd.SysProcAttr = &syscall.SysProcAttr{
+		Pdeathsig: syscall.SIGTERM,
+	}
 
 	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
 	var out bytes.Buffer

@@ -15,6 +15,7 @@ import (
 	"nkonev.name/storage/utils"
 	"os"
 	"os/exec"
+	"syscall"
 )
 
 type ConvertingService struct {
@@ -82,6 +83,11 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 		"-c:a", "libopus",
 		pathOfConvertedFile,
 	)
+	// https://medium.com/@ganeshmaharaj/clean-exit-of-golangs-exec-command-897832ac3fa5
+	ffCmd.SysProcAttr = &syscall.SysProcAttr{
+		Pdeathsig: syscall.SIGTERM,
+	}
+
 	// getting real error msg : https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
 	var out bytes.Buffer
 	var stderr bytes.Buffer
