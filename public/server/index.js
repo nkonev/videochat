@@ -25,6 +25,10 @@ import * as api from '@opentelemetry/api';
 
 axios.defaults.timeout = getHttpClientTimeout();
 
+if (process.pid) {
+    console.log('This process is your pid ' + process.pid);
+}
+
 const isProduction = process.env.NODE_ENV === 'production'
 
 const tracer = opentelemetry.trace.getTracer(

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nkonev/dcron"
@@ -31,6 +32,7 @@ import (
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/tasks"
 	"nkonev.name/chat/type_registry"
+	"os"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -39,6 +41,8 @@ const TRACE_RESOURCE = "chat"
 func main() {
 	config.InitViper()
 	lgr := NewLogger()
+
+	fmt.Printf("My pid: %d\n", os.Getpid())
 
 	app := fx.New(
 		fx.Logger(lgr),
