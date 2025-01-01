@@ -44,16 +44,19 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
 
     private final LockService lockService;
 
+    private final UserAccountConverter userAccountConverter;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncLdapTask.class);
 
     private static final String LOCK_NAME = "syncLdapTask";
 
-    public SyncLdapTask(AaaProperties aaaProperties, LdapOperations ldapOperations, AaaUserDetailsService aaaUserDetailsService, LdapSyncRolesService ldapSyncRolesService, LockService lockService) {
+    public SyncLdapTask(AaaProperties aaaProperties, LdapOperations ldapOperations, AaaUserDetailsService aaaUserDetailsService, LdapSyncRolesService ldapSyncRolesService, LockService lockService, UserAccountConverter userAccountConverter) {
         this.aaaProperties = aaaProperties;
         this.ldapOperations = ldapOperations;
         this.aaaUserDetailsService = aaaUserDetailsService;
         this.ldapSyncRolesService = ldapSyncRolesService;
         this.lockService = lockService;
+        this.userAccountConverter = userAccountConverter;
     }
 
     @Scheduled(cron = "${custom.schedulers.sync-ldap.cron}")
@@ -185,7 +188,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
         var mappedRoles = Set.of(DEFAULT_ROLE);
         boolean locked = ldapEntry.locked() == null ? false : ldapEntry.locked();
         boolean enabled = ldapEntry.enabled() == null ? true : ldapEntry.enabled();
-        return UserAccountConverter.buildUserAccountEntityForLdapInsert(
+        return userAccountConverter.buildUserAccountEntityForLdapInsert(
                 ldapEntry.username(),
                 ldapEntry.id(),
                 mappedRoles,

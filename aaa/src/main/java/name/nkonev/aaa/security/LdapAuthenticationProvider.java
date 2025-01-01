@@ -112,7 +112,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                             }
                             var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().ldap(), rawRoles);
 
-                            var userToInsert = UserAccountConverter.buildUserAccountEntityForLdapInsert(
+                            var userToInsert = userAccountConverter.buildUserAccountEntityForLdapInsert(
                                     userName,
                                     ldapUserId,
                                     mappedRoles,

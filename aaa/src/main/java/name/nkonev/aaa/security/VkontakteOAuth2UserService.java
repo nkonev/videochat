@@ -111,7 +111,7 @@ public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implem
 
     @Override
     protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> oauthResourceServerResponse, Set<String> roles) {
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForVkontakteInsert(oauthId, login);
+        UserAccount userAccount = userAccountConverter.buildUserAccountEntityForVkontakteInsert(oauthId, login);
         LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 
         return userAccount;

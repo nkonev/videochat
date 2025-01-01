@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.session.Session;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,9 +42,6 @@ public class UserProfileService {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private AaaUserDetailsService aaaUserDetailsService;
@@ -251,7 +247,7 @@ public class UserProfileService {
                 checkService.checkLoginIsFreeOrThrow(userAccountDTO.login());
             }
 
-            var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists, passwordEncoder);
+            var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists);
             exists = resp.userAccount();
             exists = userAccountRepository.save(exists);
 

@@ -38,6 +38,9 @@ public class UserAccountConverter {
     @Autowired
     private ChangeEmailConfirmationTokenRepository changeEmailConfirmationTokenRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     static final UserRole[] newUserRoles = new UserRole[]{DEFAULT_ROLE};
 
     public static String normalizeEmail(String email) {
@@ -210,7 +213,7 @@ public class UserAccountConverter {
     }
 
     // EditUserDTO userAccountDTO is already filtered by normalize()
-    public static UserAccount buildUserAccountEntityForInsert(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, PasswordEncoder passwordEncoder) {
+    public UserAccount buildUserAccountEntityForInsert(name.nkonev.aaa.dto.EditUserDTO userAccountDTO) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -313,7 +316,7 @@ public class UserAccountConverter {
     }
 
     // used for just get user id
-    public static UserAccount buildUserAccountEntityForFacebookInsert(String facebookId, String login, String maybeImageUrl) {
+    public UserAccount buildUserAccountEntityForFacebookInsert(String facebookId, String login, String maybeImageUrl) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -347,7 +350,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForVkontakteInsert(String vkontakteId, String login) {
+    public UserAccount buildUserAccountEntityForVkontakteInsert(String vkontakteId, String login) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -381,7 +384,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForGoogleInsert(String googleId, String login, String maybeImageUrl) {
+    public UserAccount buildUserAccountEntityForGoogleInsert(String googleId, String login, String maybeImageUrl) {
         final boolean expired = false;
         final boolean locked = false;
         final boolean enabled = true;
@@ -415,7 +418,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, Set<UserRole> roles, String email, boolean locked, boolean enabled, LocalDateTime syncKeycloakTime) {
+    public UserAccount buildUserAccountEntityForKeycloakInsert(String keycloakId, String login, String maybeImageUrl, Set<UserRole> roles, String email, boolean locked, boolean enabled, LocalDateTime syncKeycloakTime) {
         final boolean expired = false;
         final boolean confirmed = true;
 
@@ -447,7 +450,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles, String email, boolean locked, boolean enabled, LocalDateTime syncLdapTime) {
+    public UserAccount buildUserAccountEntityForLdapInsert(String login, String ldapId, Set<UserRole> mappedRoles, String email, boolean locked, boolean enabled, LocalDateTime syncLdapTime) {
         final boolean expired = false;
         final boolean confirmed = true;
 
@@ -497,7 +500,7 @@ public class UserAccountConverter {
     }
 
     // EditUserDTO userAccountDTO is already filtered through normalize()
-    public UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount, PasswordEncoder passwordEncoder) {
+    public UpdateUserAccountEntityNotEmptyResponse updateUserAccountEntityNotEmpty(name.nkonev.aaa.dto.EditUserDTO userAccountDTO, UserAccount userAccount) {
         var emailAction = UpdateUserAccountEntityNotEmptyResponse.Action.NO_ACTION;
         String newEmail = null;
         if (StringUtils.hasLength(userAccountDTO.login())) {

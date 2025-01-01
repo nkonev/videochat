@@ -86,6 +86,9 @@ public class SecurityConfig {
     @Autowired
     private RefererService refererService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
         final CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
@@ -96,11 +99,6 @@ public class SecurityConfig {
             responseCookieBuilder.httpOnly(aaaProperties.csrf().cookie().httpOnly());
         });
         return cookieCsrfTokenRepository;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // default strength is BCrypt.GENSALT_DEFAULT_LOG2_ROUNDS=10
     }
 
     // https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
@@ -182,7 +180,7 @@ public class SecurityConfig {
     public DaoAuthenticationProvider dbAuthenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(aaaUserDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setPasswordEncoder(passwordEncoder);
         authenticationProvider.setPreAuthenticationChecks(aaaPreAuthenticationChecks);
         authenticationProvider.setPostAuthenticationChecks(aaaPostAuthenticationChecks);
         return authenticationProvider;

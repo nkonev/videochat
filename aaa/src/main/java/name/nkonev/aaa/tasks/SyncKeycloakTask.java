@@ -38,11 +38,13 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
 
     private final KeycloakClient keycloakClient;
 
+    private final UserAccountConverter userAccountConverter;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SyncKeycloakTask.class);
 
     private static final String LOCK_NAME = "syncKeycloakTask";
 
-    public SyncKeycloakTask(AaaProperties aaaProperties, ObjectProvider<KeycloakClient> keycloakClientProvider, LockService lockService) {
+    public SyncKeycloakTask(AaaProperties aaaProperties, ObjectProvider<KeycloakClient> keycloakClientProvider, LockService lockService, UserAccountConverter userAccountConverter) {
         this.aaaProperties = aaaProperties;
         this.lockService = lockService;
         var keycloakClient = keycloakClientProvider.getIfAvailable();
@@ -53,6 +55,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
             this.keycloakClient = null;
             LOGGER.info("Keycloak client wasn't configured");
         }
+        this.userAccountConverter = userAccountConverter;
     }
 
     @Scheduled(cron = "${custom.schedulers.sync-keycloak.cron}")
@@ -178,7 +181,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         var roles = Set.of(DEFAULT_ROLE);
         boolean locked = false;
         boolean enabled = keycloakUserEntity.enabled();
-        return UserAccountConverter.buildUserAccountEntityForKeycloakInsert(
+        return userAccountConverter.buildUserAccountEntityForKeycloakInsert(
                 keycloakUserEntity.id(),
                 keycloakUserEntity.username(),
                 null,

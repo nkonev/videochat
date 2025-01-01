@@ -82,7 +82,7 @@ public class RegistrationService {
                 return null; // we care for user email leak
             }
 
-            UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForInsert(userAccountDTO, passwordEncoder);
+            UserAccount userAccount = userAccountConverter.buildUserAccountEntityForInsert(userAccountDTO);
 
             userAccount = userAccountRepository.save(userAccount);
             userSettingsRepository.insertDefault(userAccount.id());

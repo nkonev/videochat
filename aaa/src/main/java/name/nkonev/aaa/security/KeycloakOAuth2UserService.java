@@ -103,7 +103,7 @@ public class KeycloakOAuth2UserService extends AbstractOAuth2UserService impleme
 
         var mappedRoles = RoleMapper.map(aaaProperties.roleMappings().keycloak(), roles);
 
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, mappedRoles, null, false, true, getNowUTC());
+        UserAccount userAccount = userAccountConverter.buildUserAccountEntityForKeycloakInsert(oauthId, login, maybeImageUrl, mappedRoles, null, false, true, getNowUTC());
         LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
 
         return userAccount;

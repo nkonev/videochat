@@ -99,7 +99,7 @@ public class GoogleOAuth2UserService extends AbstractOAuth2UserService implement
     @Override
     protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForGoogleInsert(oauthId, login, maybeImageUrl);
+        UserAccount userAccount = userAccountConverter.buildUserAccountEntityForGoogleInsert(oauthId, login, maybeImageUrl);
         LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
         return userAccount;
     }

@@ -99,7 +99,7 @@ public class FacebookOAuth2UserService extends AbstractOAuth2UserService impleme
     @Override
     protected UserAccount buildEntity(String oauthId, String login, Map<String, Object> map, Set<String> roles) {
         String maybeImageUrl = getAvatarUrl(map);
-        UserAccount userAccount = UserAccountConverter.buildUserAccountEntityForFacebookInsert(oauthId, login, maybeImageUrl);
+        UserAccount userAccount = userAccountConverter.buildUserAccountEntityForFacebookInsert(oauthId, login, maybeImageUrl);
         LOGGER.info("Built {} user id={} login='{}'", getOAuth2Name(), oauthId, login);
         return userAccount;
     }

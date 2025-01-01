@@ -40,7 +40,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
     private TransactionTemplate transactionTemplate;
 
     @Autowired
-    private UserAccountConverter userAccountConverter;
+    protected UserAccountConverter userAccountConverter;
 
     @Autowired
     private ConflictService conflictService;
