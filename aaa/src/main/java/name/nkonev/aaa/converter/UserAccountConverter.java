@@ -101,6 +101,14 @@ public class UserAccountConverter {
         );
     }
 
+    private static boolean isLdapSet(UserAccountDetailsDTO userAccount) {
+        return userAccount.ldapId() != null;
+    }
+
+    private static boolean isLdapSet(UserAccount userAccount) {
+        return userAccount.ldapId() != null;
+    }
+
     public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastSeenDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
         var roles = convertRoles2Enum(userAccount.getRoles());
@@ -118,7 +126,7 @@ public class UserAccountConverter {
                 roles,
                 expiresAt,
                 userAccount.getLoginColor(),
-                userAccount.ldapId() != null,
+                isLdapSet(userAccount),
                 canShowAdminsCorner
         );
     }
@@ -152,7 +160,7 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                userAccount.ldapId() != null
+                isLdapSet(userAccount)
         );
     }
 
@@ -170,7 +178,7 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                userAccount.ldapId() != null
+                isLdapSet(userAccount)
         );
     }
 
@@ -200,7 +208,7 @@ public class UserAccountConverter {
                 awaitingForConfirmEmailChange,
                 userAccount.loginColor(),
                 aaaSecurityService.canRemoveSessions(currentUser, userAccount.id()),
-                userAccount.ldapId() != null,
+                isLdapSet(userAccount),
                 aaaSecurityService.canSetPassword(currentUser, userAccount.id())
         );
     }
