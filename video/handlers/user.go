@@ -4,12 +4,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	"nkonev.name/video/dto"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
 )
@@ -18,17 +17,17 @@ type UserHandler struct {
 	chatClient        *client.RestClient
 	userService       *services.UserService
 	livekitRoomClient client.LivekitRoomClient
-	lgr               *log.Logger
+	lgr               *logger.Logger
 }
 
-func NewUserHandler(chatClient *client.RestClient, userService *services.UserService, livekitRoomClient client.LivekitRoomClient, lgr *log.Logger) *UserHandler {
+func NewUserHandler(chatClient *client.RestClient, userService *services.UserService, livekitRoomClient client.LivekitRoomClient, lgr *logger.Logger) *UserHandler {
 	return &UserHandler{chatClient: chatClient, userService: userService, livekitRoomClient: livekitRoomClient, lgr: lgr}
 }
 
 func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -44,7 +43,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 	var roomName = utils.GetRoomNameFromId(chatId)
 	usersCount, _, err := h.userService.CountUsers(c.Request().Context(), roomName)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during getting participants from http users request, %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("got error during getting participants from http users request, %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -54,7 +53,7 @@ func (h *UserHandler) GetVideoUsers(c echo.Context) error {
 func (h *UserHandler) Kick(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -80,7 +79,7 @@ func (h *UserHandler) Kick(c echo.Context) error {
 func (h *UserHandler) Mute(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Error during getting auth context")
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
@@ -103,14 +102,14 @@ func (h *UserHandler) Mute(c echo.Context) error {
 	lpr := &livekit.ListParticipantsRequest{Room: roomName}
 	participants, err := h.livekitRoomClient.ListParticipants(c.Request().Context(), lpr)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), h.lgr).Errorf("Unable to get participants %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Unable to get participants %v", err)
 		return err
 	}
 
 	for _, participant := range participants.Participants {
 		metadata, err := utils.ParseParticipantMetadataOrNull(participant)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
+			h.lgr.WithTracing(c.Request().Context()).Errorf("got error during parsing metadata from participant=%v chatId=%v, %v", participant, chatId, err)
 			continue
 		}
 		if metadata == nil {
@@ -118,7 +117,7 @@ func (h *UserHandler) Mute(c echo.Context) error {
 		}
 
 		if metadata.UserId == userId {
-			GetLogEntry(c.Request().Context(), h.lgr).Infof("Muting userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
+			h.lgr.WithTracing(c.Request().Context()).Infof("Muting userId=%v with identity %v from chatId=%v", userId, participant.Identity, chatId)
 
 			for _, track := range participant.GetTracks() {
 				if track.Type == livekit.TrackType_AUDIO && !track.Muted {
@@ -130,7 +129,7 @@ func (h *UserHandler) Mute(c echo.Context) error {
 					}
 					_, err := h.livekitRoomClient.MutePublishedTrack(c.Request().Context(), muteReq)
 					if err != nil {
-						GetLogEntry(c.Request().Context(), h.lgr).Errorf("got error during muting userId=%v, %v", userId, err)
+						h.lgr.WithTracing(c.Request().Context()).Errorf("got error during muting userId=%v, %v", userId, err)
 						continue
 					}
 				}

@@ -1,16 +1,16 @@
 package name.nkonev.aaa.nomockmvc;
 
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.util.Cookie;
 import name.nkonev.aaa.AbstractHtmlUnitRunner;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.security.OAuth2Providers;
 import org.awaitility.Awaitility;
+import org.htmlunit.WebResponse;
+import org.htmlunit.html.HtmlButton;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.util.Cookie;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

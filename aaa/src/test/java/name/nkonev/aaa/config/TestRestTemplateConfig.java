@@ -16,8 +16,8 @@ public class TestRestTemplateConfig {
     public TestRestTemplate testRestTemplate() {
         RestTemplateBuilder builder = new RestTemplateBuilder();
         builder = builder
-            .setConnectTimeout(Duration.of(10, ChronoUnit.SECONDS))
-            .setReadTimeout(Duration.of(20, ChronoUnit.SECONDS))
+            .connectTimeout(Duration.of(10, ChronoUnit.SECONDS))
+            .readTimeout(Duration.of(20, ChronoUnit.SECONDS))
             .requestFactory(JdkClientHttpRequestFactory.class);
 
         return new TestRestTemplate(builder);

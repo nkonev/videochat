@@ -92,6 +92,56 @@
   tags:
     - videochat
 
+- name: Create FluentBit config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/fluent-bit/etc"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create FluentBit socket dir
+  ansible.builtin.file:
+    path: "/var/run/fluent-bit"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create FluentBit config
+  ansible.builtin.copy:
+    src: files/fluent-bit.conf
+    dest: "{{ dir_prefix }}/fluent-bit/etc/fluent-bit.conf"
+  tags:
+    - videochat
+
+- name: Create FluentBit parsers config
+  ansible.builtin.copy:
+    src: files/parsers.conf
+    dest: "{{ dir_prefix }}/fluent-bit/etc/parsers.conf"
+  tags:
+    - videochat
+
+- name: Create Opensearch config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create Opensearch init script
+  template:
+    src: templates/init.sh.j2
+    dest: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d/init.sh"
+  tags:
+    - videochat
+
+- name: Create Opensearch entrypoint
+  ansible.builtin.copy:
+    src: files/docker-entrypoint-init.d.sh
+    dest: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d.sh"
+    mode: a+x
+  tags:
+    - videochat
+
 - name: Create Traefik config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/traefik/dynamic"

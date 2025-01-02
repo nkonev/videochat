@@ -3,12 +3,11 @@ package tasks
 import (
 	"context"
 	"github.com/nkonev/dcron"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/config"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/services"
 )
 
@@ -16,10 +15,10 @@ type RecordingNotifierService struct {
 	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
 	tracer          trace.Tracer
-	lgr             *log.Logger
+	lgr             *logger.Logger
 }
 
-func NewRecordingNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig, lgr *log.Logger) *RecordingNotifierService {
+func NewRecordingNotifierService(scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig, lgr *logger.Logger) *RecordingNotifierService {
 	trcr := otel.Tracer("scheduler/recording-notifier")
 	return &RecordingNotifierService{
 		scheduleService: scheduleService,
@@ -33,10 +32,10 @@ func (srv *RecordingNotifierService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.RecordingNotifier")
 	defer span.End()
 
-	GetLogEntry(ctx, srv.lgr).Debugf("Invoked periodic RecordingNotifierService")
+	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic RecordingNotifierService")
 	srv.scheduleService.NotifyAllChatsAboutVideoCallRecording(ctx)
 
-	GetLogEntry(ctx, srv.lgr).Debugf("End of RecordingNotifierService")
+	srv.lgr.WithTracing(ctx).Debugf("End of RecordingNotifierService")
 }
 
 type RecordingNotifierTask struct {
@@ -45,7 +44,7 @@ type RecordingNotifierTask struct {
 
 func RecordingNotifierScheduler(
 	service *RecordingNotifierService,
-	lgr *log.Logger,
+	lgr *logger.Logger,
 ) *RecordingNotifierTask {
 	const key = "videoRecordingNotifierTask"
 	var str = viper.GetString("schedulers." + key + ".cron")

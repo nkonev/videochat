@@ -1,5 +1,5 @@
 ALTER SYSTEM SET max_connections = 200;
-ALTER SYSTEM SET log_statement = 'all';
+-- ALTER SYSTEM SET log_statement = 'all';
 -- ALTER SYSTEM SET synchronous_commit = 'off'; -- https://postgrespro.ru/docs/postgrespro/9.5/runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT
 -- ALTER SYSTEM SET shared_buffers='512MB';
 -- ALTER SYSTEM SET fsync=FALSE;

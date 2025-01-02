@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"nkonev.name/event/logger"
 )
 
-func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *logger.Logger) *rabbitmq.Connection {
 	rabbitmq.Debug = true
 
 	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
@@ -21,7 +20,7 @@ func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
 	return conn
 }
 
-func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
+func CreateRabbitMqChannel(lgr *logger.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(nil)
 	if err != nil {
 		lgr.Panic(err)
@@ -29,7 +28,7 @@ func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *ra
 	return consumeCh
 }
 
-func CreateRabbitMqChannelWithCallback(lgr *log.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *logger.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
 		lgr.Panic(err)
@@ -75,25 +74,25 @@ func ExtractAMQPHeaders(ctx context.Context, headers map[string]interface{}) con
 	return otel.GetTextMapPropagator().Extract(ctx, AmqpHeadersCarrier(headers))
 }
 
-func SerializeValues(spanContext context.Context, lgr *log.Logger) string {
+func SerializeValues(spanContext context.Context, lgr *logger.Logger) string {
 	carrier := propagation.MapCarrier{}
 	propagator := otel.GetTextMapPropagator()
 	propagator.Inject(spanContext, carrier)
 	marshal, err := json.Marshal(carrier)
 	if err != nil {
-		logger.GetLogEntry(spanContext, lgr).Infof("Unable to marshall")
+		lgr.WithTracing(spanContext).Infof("Unable to marshall")
 		return ""
 	}
 	return string(marshal)
 }
 
-func DeserializeValues(spanContext context.Context, lgr *log.Logger, input string) context.Context {
+func DeserializeValues(spanContext context.Context, lgr *logger.Logger, input string) context.Context {
 	propagator := otel.GetTextMapPropagator()
 	carrier := propagation.MapCarrier{}
 
 	err := json.Unmarshal([]byte(input), &carrier)
 	if err != nil {
-		logger.GetLogEntry(spanContext, lgr).Infof("Unable to unmarshall")
+		lgr.WithTracing(spanContext).Infof("Unable to unmarshall")
 		return context.Background()
 	}
 

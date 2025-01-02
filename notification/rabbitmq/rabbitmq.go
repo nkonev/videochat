@@ -3,12 +3,12 @@ package rabbitmq
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
+	"nkonev.name/notification/logger"
 )
 
-func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *logger.Logger) *rabbitmq.Connection {
 	rabbitmq.Debug = true
 
 	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
@@ -18,7 +18,7 @@ func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
 	return conn
 }
 
-func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
+func CreateRabbitMqChannel(lgr *logger.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(nil)
 	if err != nil {
 		lgr.Panic(err)
@@ -26,7 +26,7 @@ func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *ra
 	return consumeCh
 }
 
-func CreateRabbitMqChannelWithCallback(lgr *log.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *logger.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
 		lgr.Panic(err)

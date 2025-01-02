@@ -3,9 +3,9 @@ package listener
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
+	"nkonev.name/notification/logger"
 	myRabbit "nkonev.name/notification/rabbitmq"
 )
 
@@ -13,7 +13,7 @@ const NotificationsExchange = "notifications-exchange"
 
 type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
-func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func create(lgr *logger.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -31,7 +31,7 @@ func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Que
 	return &q
 }
 
-func createAndBind(lgr *log.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createAndBind(lgr *logger.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -54,7 +54,7 @@ func createAndBind(lgr *log.Logger, name string, key string, exchange string, co
 	return &q
 }
 
-func CreateNotificationsChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage NotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+func CreateNotificationsChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage NotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
 	var queueName = "notifications"
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
@@ -81,7 +81,7 @@ func CreateNotificationsChannel(lgr *log.Logger, connection *rabbitmq.Connection
 }
 
 func listen(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,

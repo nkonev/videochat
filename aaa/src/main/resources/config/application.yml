@@ -207,3 +207,27 @@ custom.admins-corner:
     - "/minio"
     - "/rabbitmq"
     - "/postgresql"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+logging.config: 'classpath:/config/cf.xml'
+logging.structured.json.customizer: "name.nkonev.aaa.config.StructuredLogCustomizer"
+logging.structured.format.console: 'ecs'
+# see org.springframework.boot.logging.LogFile#get, org.springframework.boot.logging.logback.DefaultLogbackConfiguration#apply
+# see also name.nkonev.aaa.AaaApplication
+logging.file.name: logs/file.log
+logging.structured.format.file: 'ecs'
+custom.write.log.file: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+logging.config: 'classpath:/config/c.xml'
+logging.structured.json.customizer: "name.nkonev.aaa.config.StructuredLogCustomizer"
+logging.structured.format.console: 'ecs'
+custom.write.log.file: false

@@ -72,11 +72,18 @@ services:
       - management.otlp.tracing.endpoint=http://jaeger:4318/v1/traces
       - spring.data.redis.url=redis://redis:6379/0
       - CUSTOM_INITIAL_ADMIN_PASSWORD={{ initial_admin_password | password_hash(hashtype='bcrypt', salt=initial_admin_password_salt, rounds=10) | replace('$', '$$') }}
-      - CUSTOM_ACCESS_LOG_ENABLE={{ aaa_access_log }}
+      - CUSTOM_REQUEST_DUMP={{ aaa_request_dump }}
+      # disable logging to filename because of capturing from stdout
+      # https://github.com/docker/compose/issues/4636#issuecomment-2388639015
+      - SPRING_PROFILES_ACTIVE=production
+
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat-aaa
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.app.java.aaa
+        fluentd-sub-second-precision: "true"
 
 networks:
   backend:

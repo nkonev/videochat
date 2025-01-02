@@ -9,29 +9,29 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"net/http"
+	"nkonev.name/video/logger"
 	"time"
 )
 
 // https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
 type DB struct {
 	*sql.DB
-	lgr *log.Logger
+	lgr *logger.Logger
 }
 
 type Tx struct {
 	*sql.Tx
-	lgr *log.Logger
+	lgr *logger.Logger
 }
 
-func (dbR *DB) logger() *log.Logger {
+func (dbR *DB) logger() *logger.Logger {
 	return dbR.lgr
 }
 
-func (tx *Tx) logger() *log.Logger {
+func (tx *Tx) logger() *logger.Logger {
 	return tx.lgr
 }
 
@@ -44,7 +44,7 @@ type CommonOperations interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	logger() *log.Logger
+	logger() *logger.Logger
 }
 
 func (dbR *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
@@ -74,7 +74,7 @@ func (txR *Tx) ExecContext(ctx context.Context, query string, args ...interface{
 const postgresDriverString = "pgx"
 
 // Open returns a DB reference for a data source.
-func Open(lgr *log.Logger, conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
+func Open(lgr *logger.Logger, conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
 	if db, err := sql.Open(postgresDriverString, conninfo); err != nil {
 		return nil, err
 	} else {
@@ -103,7 +103,7 @@ func (tx *Tx) SafeRollback() {
 //go:embed migrations
 var embeddedFiles embed.FS
 
-func migrateInternal(lgr *log.Logger, db *sql.DB, path, migrationTable string) {
+func migrateInternal(lgr *logger.Logger, db *sql.DB, path, migrationTable string) {
 	staticDir := http.FS(embeddedFiles)
 	src, err := httpfs.New(staticDir, "migrations"+path)
 	if err != nil {
@@ -133,7 +133,7 @@ func migrateInternal(lgr *log.Logger, db *sql.DB, path, migrationTable string) {
 	}
 }
 
-func (db *DB) Migrate(lgr *log.Logger, migrationsConfig *MigrationsConfig) {
+func (db *DB) Migrate(lgr *logger.Logger, migrationsConfig *MigrationsConfig) {
 	lgr.Infof("Starting prod migration")
 	migrateInternal(lgr, db.DB, "/prod", "go_migrate")
 	lgr.Infof("Migration successful prod completed")
@@ -145,7 +145,7 @@ func (db *DB) Migrate(lgr *log.Logger, migrationsConfig *MigrationsConfig) {
 	}
 }
 
-func ConfigureDb(lgr *log.Logger, lc fx.Lifecycle) (*DB, error) {
+func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 	dbConnectionString := viper.GetString("postgresql.url")
 	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
 	maxIdle := viper.GetInt("postgresql.maxIdleConnections")

@@ -4,21 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
-	. "nkonev.name/notification/logger"
+	"nkonev.name/notification/logger"
 	"nkonev.name/notification/producer"
 )
 
 type NotificationService struct {
 	dbs                   *db.DB
 	rabbitEventsPublisher *producer.RabbitEventPublisher
-	lgr                   *log.Logger
+	lgr                   *logger.Logger
 }
 
-func CreateNotificationService(dbs *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher, lgr *log.Logger) *NotificationService {
+func CreateNotificationService(dbs *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher, lgr *logger.Logger) *NotificationService {
 	return &NotificationService{
 		dbs:                   dbs,
 		rabbitEventsPublisher: rabbitEventsPublisher,
@@ -34,7 +33,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 
 	settings, err := srv.getNotificationSettings(ctx, event)
 	if err != nil {
-		GetLogEntry(ctx, srv.lgr).Errorf("Unable to get notification settings %v", err)
+		srv.lgr.WithTracing(ctx).Errorf("Unable to get notification settings %v", err)
 		return
 	}
 
@@ -47,19 +46,19 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 		case "mention_added":
 			err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete excess notifications %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to delete excess notifications %v", err)
 				return
 			}
 
 			id, createDateTime, err := srv.dbs.PutNotification(ctx, &mentionNotification.Id, event.UserId, event.ChatId, notificationType, mentionNotification.Text, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to put notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to put notification %v", err)
 				return
 			}
 
 			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return
 			}
 
@@ -84,37 +83,37 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				NotificationAdd,
 			)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 			}
 
 		case "mention_deleted":
 			id, err := srv.dbs.DeleteNotificationByMessageId(ctx, mentionNotification.Id, notificationType, event.UserId, nil)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
-					GetLogEntry(ctx, srv.lgr).Debugf("Missed notification %v", err)
+					srv.lgr.WithTracing(ctx).Debugf("Missed notification %v", err)
 				} else {
-					GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete notification %v", err)
+					srv.lgr.WithTracing(ctx).Errorf("Unable to delete notification %v", err)
 				}
 				return
 			}
 
 			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(ctx, event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 			}
 		default:
-			GetLogEntry(ctx, srv.lgr).Errorf("Unexpected event type %v", event.EventType)
+			srv.lgr.WithTracing(ctx).Errorf("Unexpected event type %v", event.EventType)
 		}
 	} else if event.MissedCallNotification != nil && settings.MissedCallsEnabled {
 		err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete excess notifications %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to delete excess notifications %v", err)
 			return
 		}
 
@@ -122,13 +121,13 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 		notificationType := "missed_call"
 		id, createDateTime, err := srv.dbs.PutNotification(ctx, nil, event.UserId, event.ChatId, notificationType, notification.Description, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to put notification %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to put notification %v", err)
 			return
 		}
 
 		count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 			return
 		}
 
@@ -153,12 +152,12 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 			NotificationAdd,
 		)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 		}
 	} else if event.ReplyNotification != nil && settings.AnswersEnabled {
 		err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete excess notifications %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to delete excess notifications %v", err)
 			return
 		}
 
@@ -168,12 +167,12 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 		case "reply_added":
 			id, createDateTime, err := srv.dbs.PutNotification(ctx, &notification.MessageId, event.UserId, event.ChatId, notificationType, notification.ReplyableMessage, event.ByUserId, event.ByLogin, event.ChatTitle, nil)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to put notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to put notification %v", err)
 				return
 			}
 			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return
 			}
 
@@ -198,37 +197,37 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				NotificationAdd,
 			)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 			}
 
 		case "reply_deleted":
 			id, err := srv.dbs.DeleteNotificationByMessageId(ctx, notification.MessageId, notificationType, event.UserId, nil)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
-					GetLogEntry(ctx, srv.lgr).Debugf("Missed notification %v", err)
+					srv.lgr.WithTracing(ctx).Debugf("Missed notification %v", err)
 				} else {
-					GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete notification %v", err)
+					srv.lgr.WithTracing(ctx).Errorf("Unable to delete notification %v", err)
 				}
 				return
 			}
 			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(ctx, event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 			}
 		default:
-			GetLogEntry(ctx, srv.lgr).Errorf("Unexpected event type %v", event.EventType)
+			srv.lgr.WithTracing(ctx).Errorf("Unexpected event type %v", event.EventType)
 		}
 
 	} else if event.ReactionEvent != nil && settings.ReactionsEnabled {
 		err := srv.removeExcessNotificationsIfNeed(ctx, event.UserId)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete excess notifications %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to delete excess notifications %v", err)
 			return
 		}
 		notification := event.ReactionEvent
@@ -238,12 +237,12 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 		case "reaction_notification_added":
 			id, createDateTime, err := srv.dbs.PutNotification(ctx, &notification.MessageId, event.UserId, event.ChatId, notificationType, notification.Reaction, event.ByUserId, event.ByLogin, event.ChatTitle, &notification.Reaction)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to put notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to put notification %v", err)
 				return
 			}
 			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return
 			}
 
@@ -268,28 +267,28 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 				NotificationAdd,
 			)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 			}
 
 		case "reaction_notification_removed":
 			id, err := srv.dbs.DeleteNotificationByMessageId(ctx, notification.MessageId, notificationType, event.UserId, &notification.Reaction)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) { // occurs during message read on previously read message
-					GetLogEntry(ctx, srv.lgr).Debugf("Missed notification %v", err)
+					srv.lgr.WithTracing(ctx).Debugf("Missed notification %v", err)
 				} else {
-					GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete notification %v", err)
+					srv.lgr.WithTracing(ctx).Errorf("Unable to delete notification %v", err)
 				}
 				return
 			}
 			count, err = srv.dbs.GetNotificationCount(ctx, event.UserId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(ctx, event.UserId, dto.NewWrapperNotificationDeleteDto(id, count, notificationType), NotificationDelete)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 			}
 		}
 	}
@@ -300,13 +299,13 @@ func (srv *NotificationService) getNotificationSettings(ctx context.Context, eve
 
 	userNotificationsGlobalSettings, err := srv.dbs.GetNotificationGlobalSettings(ctx, event.UserId)
 	if err != nil {
-		GetLogEntry(ctx, srv.lgr).Errorf("Error during getting global notification settings %v", err)
+		srv.lgr.WithTracing(ctx).Errorf("Error during getting global notification settings %v", err)
 		return nil, err
 	}
 
 	userNotificationsPerChatSettings, err := srv.dbs.GetNotificationPerChatSettings(ctx, event.UserId, event.ChatId)
 	if err != nil {
-		GetLogEntry(ctx, srv.lgr).Errorf("Error during getting per chat notification settings %v", err)
+		srv.lgr.WithTracing(ctx).Errorf("Error during getting per chat notification settings %v", err)
 		return nil, err
 	}
 
@@ -340,35 +339,35 @@ func (srv *NotificationService) getNotificationSettings(ctx context.Context, eve
 func (srv *NotificationService) removeExcessNotificationsIfNeed(ctx context.Context, userId int64) error {
 	count, err := srv.dbs.GetNotificationCount(ctx, userId)
 	if err != nil {
-		GetLogEntry(ctx, srv.lgr).Errorf("Unable to get notification count %v", err)
+		srv.lgr.WithTracing(ctx).Errorf("Unable to get notification count %v", err)
 		return err
 	}
 
 	maxNotifications := viper.GetInt("maxNotificationsPerUser")
 	if count >= int64(maxNotifications) {
-		GetLogEntry(ctx, srv.lgr).Infof("Notifications %v are exceeded maxNotificationsPerUser %v, going to delete the oldest", count, maxNotifications)
+		srv.lgr.WithTracing(ctx).Infof("Notifications %v are exceeded maxNotificationsPerUser %v, going to delete the oldest", count, maxNotifications)
 
 		toDelete := count - int64(maxNotifications) + 1
 		notificationsIdsToDelete, err := srv.dbs.GetExcessUserNotificationIds(ctx, userId, toDelete)
 		if err != nil {
-			GetLogEntry(ctx, srv.lgr).Errorf("Unable to get notification ids to delete %v", err)
+			srv.lgr.WithTracing(ctx).Errorf("Unable to get notification ids to delete %v", err)
 			return err
 		}
 		for _, id := range notificationsIdsToDelete {
 			deletedNotificationType, err := srv.dbs.DeleteNotification(ctx, id, userId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to delete notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to delete notification %v", err)
 				return err
 			}
 			count, err = srv.dbs.GetNotificationCount(ctx, userId)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to count notification %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to count notification %v", err)
 				return err
 			}
 
 			err = srv.rabbitEventsPublisher.Publish(ctx, userId, dto.NewWrapperNotificationDeleteDto(id, count, deletedNotificationType), NotificationDelete)
 			if err != nil {
-				GetLogEntry(ctx, srv.lgr).Errorf("Unable to send notification delete %v", err)
+				srv.lgr.WithTracing(ctx).Errorf("Unable to send notification delete %v", err)
 				return err
 			}
 		}

@@ -156,8 +156,8 @@ public class SecurityConfig {
         oAuth2AccessTokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new BearerOAuth2AccessTokenResponseConverter());
 
         RestTemplate restTemplate = new RestTemplateBuilder()
-                .setConnectTimeout(aaaProperties.httpClient().connectTimeout())
-                .setReadTimeout(aaaProperties.httpClient().readTimeout())
+                .connectTimeout(aaaProperties.httpClient().connectTimeout())
+                .readTimeout(aaaProperties.httpClient().readTimeout())
                 .requestFactory(JdkClientHttpRequestFactory.class)
                 .messageConverters(Arrays.asList(
                         new FormHttpMessageConverter(),

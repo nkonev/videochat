@@ -3,12 +3,11 @@ package services
 import (
 	"context"
 	"github.com/livekit/protocol/livekit"
-	log "github.com/sirupsen/logrus"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/utils"
 )
@@ -23,7 +22,7 @@ type StateChangedEventService struct {
 	rabbitUserIdsPublisher  *producer.RabbitUserIdsPublisher
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher
 	dialStatusPublisher     *producer.RabbitDialStatusPublisher
-	lgr                     *log.Logger
+	lgr                     *logger.Logger
 }
 
 func NewStateChangedEventService(
@@ -36,7 +35,7 @@ func NewStateChangedEventService(
 	rabbitUserIdsPublisher *producer.RabbitUserIdsPublisher,
 	rabbitMqInvitePublisher *producer.RabbitInvitePublisher,
 	dialStatusPublisher *producer.RabbitDialStatusPublisher,
-	lgr *log.Logger,
+	lgr *logger.Logger,
 ) *StateChangedEventService {
 	return &StateChangedEventService{
 		conf:                    conf,
@@ -56,38 +55,38 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallUsersCount(ctx co
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		GetLogEntry(ctx, h.lgr).Error(err, "error during reading rooms %v", err)
+		h.lgr.WithTracing(ctx).Error(err, "error during reading rooms %v", err)
 		return
 	}
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			h.lgr.WithTracing(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
 		// Here room.NumParticipants are zeroed, so we need to invoke service
 		usersCount, hasScreenShares, err := h.userService.CountUsers(ctx, room.Name)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Errorf("got error during counting users in scheduler, %v", err)
+			h.lgr.WithTracing(ctx).Errorf("got error during counting users in scheduler, %v", err)
 			continue
 		}
 
 		err = h.restClient.GetChatParticipantIds(ctx, chatId, func(participantIds []int64) error {
-			GetLogEntry(ctx, h.lgr).Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
+			h.lgr.WithTracing(ctx).Debugf("Sending user count in video changed chatId=%v, usersCount=%v", chatId, usersCount)
 			internalErr := h.notificationService.NotifyVideoUserCountChanged(ctx, participantIds, chatId, usersCount)
 			if internalErr != nil {
-				GetLogEntry(ctx, h.lgr).Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", internalErr)
+				h.lgr.WithTracing(ctx).Errorf("got error during notificationService.NotifyVideoUserCountChanged, %v", internalErr)
 			}
 
 			internalErr = h.notificationService.NotifyVideoScreenShareChanged(ctx, participantIds, chatId, hasScreenShares)
 			if internalErr != nil {
-				GetLogEntry(ctx, h.lgr).Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", internalErr)
+				h.lgr.WithTracing(ctx).Errorf("got error during notificationService.NotifyVideoScreenShareChanged, %v", internalErr)
 			}
 			return internalErr
 		})
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Error(err, "Failed during getting chat participantIds")
+			h.lgr.WithTracing(ctx).Error(err, "Failed during getting chat participantIds")
 			continue
 		}
 	}
@@ -98,7 +97,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersInVideoStatus(ctx con
 	if len(userIdsToFilter) > 0 {
 		batchUserStates, err := tx.GetUserStatesFiltered(ctx, userIdsToFilter)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Errorf("error during reading user states %v", err)
+			h.lgr.WithTracing(ctx).Errorf("error during reading user states %v", err)
 			return
 		}
 		h.processBatch(ctx, batchUserStates)
@@ -108,7 +107,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersInVideoStatus(ctx con
 		for hasMoreElements {
 			batchUserStates, err := tx.GetAllUserStates(ctx, utils.DefaultSize, offset)
 			if err != nil {
-				GetLogEntry(ctx, h.lgr).Errorf("error during reading user states %v", err)
+				h.lgr.WithTracing(ctx).Errorf("error during reading user states %v", err)
 				continue
 			}
 			h.processBatch(ctx, batchUserStates)
@@ -145,7 +144,7 @@ func (h *StateChangedEventService) processBatch(ctx context.Context, batchUserSt
 	// red dot
 	err := h.rabbitUserIdsPublisher.Publish(ctx, &dto.VideoCallUsersCallStatusChangedDto{Users: dtos})
 	if err != nil {
-		GetLogEntry(ctx, h.lgr).Errorf("error during publishing: %v", err)
+		h.lgr.WithTracing(ctx).Errorf("error during publishing: %v", err)
 		return
 	}
 }
@@ -154,19 +153,19 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 	listRoomReq := &livekit.ListRoomsRequest{}
 	rooms, err := h.livekitRoomClient.ListRooms(ctx, listRoomReq)
 	if err != nil {
-		GetLogEntry(ctx, h.lgr).Error(err, "error during reading rooms %v", err)
+		h.lgr.WithTracing(ctx).Error(err, "error during reading rooms %v", err)
 		return
 	}
 	for _, room := range rooms.Rooms {
 		chatId, err := utils.GetRoomIdFromName(room.Name)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
+			h.lgr.WithTracing(ctx).Errorf("got error during getting chat id from roomName %v %v", room.Name, err)
 			continue
 		}
 
 		activeEgresses, err := h.egressService.GetActiveEgresses(ctx, chatId)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Errorf("got error during counting active egresses in scheduler, %v", err)
+			h.lgr.WithTracing(ctx).Errorf("got error during counting active egresses in scheduler, %v", err)
 			continue
 		}
 
@@ -177,7 +176,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutVideoCallRecording(ctx con
 
 		err = h.notificationService.NotifyRecordingChanged(ctx, chatId, recordInProgressByOwner)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
+			h.lgr.WithTracing(ctx).Errorf("got error during notificationService.NotifyRecordingChanged, %v", err)
 		}
 
 	}
@@ -210,7 +209,7 @@ func (h *StateChangedEventService) SendInvitationsWithStatuses(ctx context.Conte
 
 		err := h.rabbitMqInvitePublisher.Publish(ctx, &invitation, anUserId)
 		if err != nil {
-			GetLogEntry(ctx, h.lgr).Error(err, "Error during sending VideoInviteDto")
+			h.lgr.WithTracing(ctx).Error(err, "Error during sending VideoInviteDto")
 		}
 	}
 }
@@ -224,7 +223,7 @@ func GetAvatar(ownerAvatar string, tetATet bool) *string {
 }
 
 func (h *StateChangedEventService) SendDialEvents(c context.Context, chatId int64, userIdAndStatus map[int64]string, ownerId int64, ownerAvatar string, tetATet bool, inviteNames []*dto.ChatName) {
-	GetLogEntry(c, h.lgr).Infof("Sending dial events for %v with ownerId %v", userIdAndStatus, ownerId)
+	h.lgr.WithTracing(c).Infof("Sending dial events for %v with ownerId %v", userIdAndStatus, ownerId)
 
 	// updates for ChatParticipants (blinking green tube) and ChatView (blinking it tet-a-tet)
 	h.dialStatusPublisher.Publish(c, chatId, userIdAndStatus, ownerId)

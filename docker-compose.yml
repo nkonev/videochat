@@ -21,10 +21,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:z
       - ./docker/traefik:/etc/traefik:z
     logging:
-      driver: "json-file"
+      # https://docs.docker.com/engine/logging/drivers/fluentd/
+      driver: "fluentd"
       options:
-        max-size: "50m"
-        max-file: "1"
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.infra.traefik
+        fluentd-sub-second-precision: "true"
     networks:
       backend:
 
@@ -179,12 +182,66 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  fluentbit:
+    image: fluent/fluent-bit:3.2.3
+    restart: unless-stopped
+    hostname: fluentbit
+    volumes:
+      - ./docker/fluent-bit/etc:/fluent-bit/etc:z
+      - /var/run/fluent-bit:/var/run/fluent-bit:z
+      - ./aaa/logs:/var/log/videochat/aaa/logs:z
+      - ./chat/logs:/var/log/videochat/chat/logs:z
+      - ./storage/logs:/var/log/videochat/storage/logs:z
+      - ./video/logs:/var/log/videochat/video/logs:z
+      - ./event/logs:/var/log/videochat/event/logs:z
+      - ./notification/logs:/var/log/videochat/notification/logs:z
+      - ./public/logs:/var/log/videochat/public/logs:z
+    networks:
+      backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
+  opensearch:
+    image: opensearchproject/opensearch:2.18.0
+    hostname: opensearch
+    restart: unless-stopped
+    environment:
+      - node.name=opensearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      # - OPENSEARCH_INITIAL_ADMIN_PASSWORD=yourStrongPassword123!
+      # https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    networks:
+      backend:
+    volumes:
+      - opensearch_data_dir:/usr/share/opensearch/data
+      - ./docker/opensearch/docker-entrypoint-init.d.sh:/docker-entrypoint-init.d.sh:z
+      - ./docker/opensearch/docker-entrypoint-init.d:/docker-entrypoint-init.d:z
+    ports:
+      - 9200:9200
+      # - 9600:9600 # required for Performance Analyzer
+    entrypoint: ["/docker-entrypoint-init.d.sh"]
+
 volumes:
   postgres_data:
   redis_data_dir:
   minio_data:
   rabbitmq_data_dir:
   egress_tmp:
+  opensearch_data_dir:
 
 networks:
   backend:

@@ -36,11 +36,15 @@ services:
       - NOTIFICATION_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - NOTIFICATION_POSTGRESQL.URL=postgres://notification:notificationPazZw0rd@postgresql:5432/notification?sslmode=disable&application_name=notification-app
       - NOTIFICATION_OTLP.ENDPOINT=jaeger:4317
+      - NOTIFICATION_LOGGER.WRITETOFILE=false
 
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat-notification
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.app.golang.notification
+        fluentd-sub-second-precision: "true"
 
 networks:
   backend:

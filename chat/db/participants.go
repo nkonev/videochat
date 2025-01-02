@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/rotisserie/eris"
-	. "nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
 )
 
@@ -112,7 +111,7 @@ func getChatParticipantIdsCommon(ctx context.Context, qq CommonOperations, chatI
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		participantIds, err := getParticipantIdsCommon(ctx, qq, chatId, utils.DefaultSize, offset)
 		if err != nil {
-			GetLogEntry(ctx, qq.logger()).Errorf("Got error during getting portion %v", err)
+			qq.logger().WithTracing(ctx).Errorf("Got error during getting portion %v", err)
 			lastError = err
 			break
 		}
@@ -124,7 +123,7 @@ func getChatParticipantIdsCommon(ctx context.Context, qq CommonOperations, chatI
 		}
 		err = consumer(participantIds)
 		if err != nil {
-			GetLogEntry(ctx, qq.logger()).Errorf("Got error during invoking consumer portion %v", err)
+			qq.logger().WithTracing(ctx).Errorf("Got error during invoking consumer portion %v", err)
 			lastError = err
 			break
 		}
@@ -165,7 +164,7 @@ func getAllParticipantIdsCommon(ctx context.Context, qq CommonOperations, consum
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		participantIds, err := getPortionOfAllParticipantIdsCommon(ctx, qq, utils.DefaultSize, offset)
 		if err != nil {
-			GetLogEntry(ctx, qq.logger()).Errorf("Got error during getting portion %v", err)
+			qq.logger().WithTracing(ctx).Errorf("Got error during getting portion %v", err)
 			lastError = err
 			break
 		}
@@ -178,7 +177,7 @@ func getAllParticipantIdsCommon(ctx context.Context, qq CommonOperations, consum
 		}
 		err = consumer(participantIds)
 		if err != nil {
-			GetLogEntry(ctx, qq.logger()).Errorf("Got error during invoking consumer portion %v", err)
+			qq.logger().WithTracing(ctx).Errorf("Got error during invoking consumer portion %v", err)
 			lastError = err
 			break
 		}
@@ -219,7 +218,7 @@ func getAllMyChatIdsCommon(ctx context.Context, qq CommonOperations, participant
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		chatIds, err := getPortionOfAllChatIdsCommon(ctx, qq, participantId, utils.DefaultSize, offset)
 		if err != nil {
-			GetLogEntry(ctx, qq.logger()).Errorf("Got error during getting portion %v", err)
+			qq.logger().WithTracing(ctx).Errorf("Got error during getting portion %v", err)
 			lastError = err
 			break
 		}
@@ -232,7 +231,7 @@ func getAllMyChatIdsCommon(ctx context.Context, qq CommonOperations, participant
 		}
 		err = consumer(chatIds)
 		if err != nil {
-			GetLogEntry(ctx, qq.logger()).Errorf("Got error during invoking consumer portion %v", err)
+			qq.logger().WithTracing(ctx).Errorf("Got error during invoking consumer portion %v", err)
 			lastError = err
 			break
 		}
@@ -485,7 +484,7 @@ func iterateOverCoChattedParticipantIdsCommon(ctx context.Context, co CommonOper
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		participantIds, err := getCoChattedParticipantIdsCommon(ctx, co, participantId, utils.DefaultSize, offset)
 		if err != nil {
-			GetLogEntry(ctx, co.logger()).Errorf("Got error during getting portion %v", err)
+			co.logger().WithTracing(ctx).Errorf("Got error during getting portion %v", err)
 			lastError = err
 			break
 		}
@@ -497,7 +496,7 @@ func iterateOverCoChattedParticipantIdsCommon(ctx context.Context, co CommonOper
 		}
 		err = consumer(participantIds)
 		if err != nil {
-			GetLogEntry(ctx, co.logger()).Errorf("Got error during invoking consumer portion %v", err)
+			co.logger().WithTracing(ctx).Errorf("Got error during invoking consumer portion %v", err)
 			lastError = err
 			break
 		}

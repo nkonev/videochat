@@ -2,13 +2,12 @@ package listener
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
-	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
@@ -17,7 +16,7 @@ import (
 type MinioEventsListener func(*amqp.Delivery) error
 
 func CreateMinioEventsListener(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	previewService *services.PreviewService,
 	eventService *services.EventService,
 	client *client.RestClient,
@@ -33,7 +32,7 @@ func CreateMinioEventsListener(
 
 		bytesData := msg.Body
 		strData := string(bytesData)
-		GetLogEntry(ctx, lgr).Debugf("Received %v", strData)
+		lgr.WithTracing(ctx).Debugf("Received %v", strData)
 
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
@@ -58,12 +57,12 @@ func CreateMinioEventsListener(
 		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
 		workingChatId, err := utils.ParseChatId(normalizedKey)
 		if err != nil {
-			GetLogEntry(ctx, lgr).Errorf("Error during parsing chatId: %v", err)
+			lgr.WithTracing(ctx).Errorf("Error during parsing chatId: %v", err)
 			return err
 		}
 		eventType, err := utils.GetEventType(eventName, isConferenceRecording || isMessageRecording)
 		if err != nil {
-			GetLogEntry(ctx, lgr).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
+			lgr.WithTracing(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
 			return err
 		}
 
@@ -90,7 +89,7 @@ func CreateMinioEventsListener(
 			return nil
 		})
 		if err != nil {
-			GetLogEntry(ctx, lgr).Errorf("Error during getting participant ids: %v", err)
+			lgr.WithTracing(ctx).Errorf("Error during getting participant ids: %v", err)
 		}
 		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
 		if eventForConvertingService {
@@ -120,11 +119,11 @@ func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.Mini
 		!previewExists // prevents the indefinite converting
 }
 
-func isPreviewAlreadyExists(ctx context.Context, lgr *log.Logger, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) (bool, error) {
+func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) (bool, error) {
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
 	exists, _, err := minioClient.FileExists(ctx, minioConfig.FilesPreview, previewKey)
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during checking existence for %v: %v", previewKey, err)
+		lgr.WithTracing(ctx).Errorf("Error during checking existence for %v: %v", previewKey, err)
 	}
 	return exists, err
 }

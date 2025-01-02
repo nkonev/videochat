@@ -1,19 +1,18 @@
 package graph_types
 
 import (
+	"errors"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
 	"io"
-	"nkonev.name/event/logger"
+	"log"
 	"strings"
 )
 
 //
 // Most common scalars
 //
-
-var lgr = logger.NewLogger()
 
 // UnmarshalGQL implements the graphql.Unmarshaler interface
 func UnmarshalUUID(v interface{}) (*uuid.UUID, error) {
@@ -22,8 +21,7 @@ func UnmarshalUUID(v interface{}) (*uuid.UUID, error) {
 		withoutDoubleQuotes := strings.ReplaceAll(v, "\"", "")
 		parsed, err := uuid.Parse(withoutDoubleQuotes)
 		if err != nil {
-			lgr.Errorf("Error during unmarshalling uuid %v", err)
-			return nil, err
+			return nil, errors.New(fmt.Sprintf("Error during unmarshalling uuid %v", err))
 		}
 		return &parsed, nil
 	default:
@@ -36,7 +34,7 @@ func MarshalUUID(u *uuid.UUID) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
 		_, err := fmt.Fprintf(w, "\"%v\"", u)
 		if err != nil {
-			lgr.Errorf("Error during marshalling uuid %v", err)
+			log.Printf("Error during marshalling uuid %v", err)
 		}
 	})
 }

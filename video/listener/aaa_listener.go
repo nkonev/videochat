@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/video/dto"
@@ -17,7 +16,7 @@ import (
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserSessionsKilledListener(lgr *log.Logger, userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
+func CreateAaaUserSessionsKilledListener(lgr *logger.Logger, userService *services.UserService, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -28,11 +27,11 @@ func CreateAaaUserSessionsKilledListener(lgr *log.Logger, userService *services.
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		logger.GetLogEntry(ctx, lgr).Debugf("Received %v with type %v", strData, aType)
+		lgr.WithTracing(ctx).Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
 			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			logger.GetLogEntry(ctx, lgr).Debugf(errStr)
+			lgr.WithTracing(ctx).Debugf(errStr)
 			return nil
 		}
 
@@ -42,7 +41,7 @@ func CreateAaaUserSessionsKilledListener(lgr *log.Logger, userService *services.
 		case dto.UserSessionsKilledEvent:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
+				lgr.WithTracing(ctx).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			if bindTo.EventType == "user_sessions_killed" {
@@ -51,7 +50,7 @@ func CreateAaaUserSessionsKilledListener(lgr *log.Logger, userService *services.
 			}
 
 		default:
-			logger.GetLogEntry(ctx, lgr).Errorf("Unexpected type : %v", anInstance)
+			lgr.WithTracing(ctx).Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 
 		}

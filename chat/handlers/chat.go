@@ -7,14 +7,13 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
-	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
@@ -52,10 +51,10 @@ type ChatHandler struct {
 	policy                 *services.SanitizerPolicy
 	stripTagsPolicy        *services.StripTagsPolicy
 	onlyAdminCanCreateBlog bool
-	lgr                    *log.Logger
+	lgr                    *logger.Logger
 }
 
-func NewChatHandler(dbR *db.DB, notificator *services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy, lgr *log.Logger) *ChatHandler {
+func NewChatHandler(dbR *db.DB, notificator *services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy, lgr *logger.Logger) *ChatHandler {
 	return &ChatHandler{
 		db:                     dbR,
 		notificator:            notificator,
@@ -86,7 +85,7 @@ func (ch *ChatHandler) getAdditionalUserIds(ctx context.Context, searchString st
 	if searchString != "" && searchString != db.ReservedPublicallyAvailableForSearchChats {
 		users, _, err := ch.restClient.SearchGetUsers(ctx, searchString, true, []int64{}, 0, 0)
 		if err != nil {
-			GetLogEntry(ctx, ch.lgr).Errorf("Error get users from aaa %v", err)
+			ch.lgr.WithTracing(ctx).Errorf("Error get users from aaa %v", err)
 		}
 		for _, u := range users {
 			additionalFoundUserIds = append(additionalFoundUserIds, u.Id)
@@ -98,7 +97,7 @@ func (ch *ChatHandler) getAdditionalUserIds(ctx context.Context, searchString st
 func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, size int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*dto.ChatDto, error) {
 	dbChats, err := tx.GetChatsWithParticipants(ctx, userId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, 0, 0)
 	if err != nil {
-		GetLogEntry(ctx, ch.lgr).Errorf("Error get chats from db %v", err)
+		ch.lgr.WithTracing(ctx).Errorf("Error get chats from db %v", err)
 		return nil, err
 	}
 
@@ -113,7 +112,7 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 
 	membership, err := tx.GetAmIParticipantBatch(ctx, chatIds, userId) // need to setting isResultFromSearch correctly
 	if err != nil {
-		GetLogEntry(ctx, ch.lgr).Errorf("Error get chats with me from db %v", err)
+		ch.lgr.WithTracing(ctx).Errorf("Error get chats with me from db %v", err)
 		return nil, err
 	}
 
@@ -149,7 +148,7 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -181,7 +180,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 			return err
 		}
 
-		GetLogEntry(c.Request().Context(), ch.lgr).Debugf("Successfully returning %v chats", len(chatDtos))
+		ch.lgr.WithTracing(c.Request().Context()).Debugf("Successfully returning %v chats", len(chatDtos))
 		return c.JSON(http.StatusOK, chatDtos)
 	})
 }
@@ -189,7 +188,7 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 func (ch *ChatHandler) HasNewMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -212,13 +211,13 @@ type ChatFilterDto struct {
 func (ch *ChatHandler) Filter(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = new(ChatFilterDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Warnf("Error during binding to dto %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -238,7 +237,7 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 
 func getChat(
 	ctx context.Context,
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	dbR db.CommonOperations,
 	restClient *client.RestClient,
 	chatId int64,
@@ -260,7 +259,7 @@ func getChat(
 	users, err = restClient.GetUsers(ctx, cc.ParticipantsIds)
 	if err != nil {
 		users = []*dto.User{}
-		GetLogEntry(ctx, lgr).Warn("Error during getting users from aaa")
+		lgr.WithTracing(ctx).Warn("Error during getting users from aaa")
 	}
 
 	unreadMessages, err := dbR.GetUnreadMessagesCount(ctx, cc.Id, behalfParticipantId)
@@ -290,7 +289,7 @@ func getChat(
 
 				onlines, err := restClient.GetOnlines(ctx, []int64{participant.Id}) // get online for opposite user
 				if err != nil {
-					GetLogEntry(ctx, lgr).Errorf("Unable to get online for the opposite user %v: %v", participant.Id, err)
+					lgr.WithTracing(ctx).Errorf("Unable to get online for the opposite user %v: %v", participant.Id, err)
 					// nothing
 				} else {
 					if len(onlines) == 1 {
@@ -309,7 +308,7 @@ func getChat(
 func (ch *ChatHandler) GetChat(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -337,8 +336,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 			return c.NoContent(http.StatusNoContent)
 		}
 	} else {
-
-		GetLogEntry(c.Request().Context(), ch.lgr).Infof("Successfully returning %v chat", chat)
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Successfully returning %v chat", chat)
 		return c.JSON(http.StatusOK, chat)
 	}
 }
@@ -346,13 +344,13 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = make([]*dto.ChatDto, 0)
 	if err := c.Bind(&bindTo); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Warnf("Error during binding to dto %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -462,7 +460,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	var bindTo = new(CreateChatDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Warnf("Error during binding to dto %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 	if valid, err := ValidateAndRespondError(c, ch.lgr, bindTo); err != nil || !valid {
@@ -471,18 +469,18 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	if !ch.checkCanCreateBlog(userPrincipalDto, bindTo.Blog) {
-		GetLogEntry(c.Request().Context(), ch.lgr).Infof("Blog is disabled for regular users")
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Blog is disabled for regular users")
 		bindTo.Blog = nil
 	}
 
 	creatableChat := convertToCreatableChat(bindTo, ch.stripTagsPolicy)
 	if err := lateValidateChatTitle(creatableChat.Title); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Infof("Failed late validation: %v", err.Error())
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Failed late validation: %v", err.Error())
 		return c.JSON(http.StatusBadRequest, &utils.H{"error": err.Error()})
 	}
 
@@ -511,7 +509,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		return id, nil
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
 	}
 
@@ -536,7 +534,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		return c.JSON(http.StatusCreated, chatDto)
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -568,7 +566,7 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -594,7 +592,7 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, &utils.H{"id": chatId})
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -602,7 +600,7 @@ func (ch *ChatHandler) DeleteChat(c echo.Context) error {
 func (ch *ChatHandler) EditChat(c echo.Context) error {
 	var bindTo = new(EditChatDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Warnf("Error during binding to dto %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -612,18 +610,18 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	if !ch.checkCanCreateBlog(userPrincipalDto, bindTo.Blog) {
-		GetLogEntry(c.Request().Context(), ch.lgr).Infof("Blog is disabled for regular users")
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Blog is disabled for regular users")
 		bindTo.Blog = nil
 	}
 
 	chatTitle := TrimAmdSanitizeChatTitle(ch.stripTagsPolicy, bindTo.Name)
 	if err := lateValidateChatTitle(chatTitle); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Infof("Failed late validation: %v", err.Error())
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Failed late validation: %v", err.Error())
 		return c.JSON(http.StatusBadRequest, &utils.H{"error": err.Error()})
 	}
 
@@ -688,7 +686,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -701,7 +699,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -729,7 +727,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 				return nil
 			})
 			if err != nil {
-				GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting chat participants %v", err)
+				ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 			// also send to user himself
@@ -745,7 +743,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 		}
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -758,7 +756,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -770,7 +768,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			return err
 		}
 		if !chat.AvailableToSearch && !chat.IsBlog {
-			GetLogEntry(c.Request().Context(), ch.lgr).Infof("User %d isn't allowed to loin to this chat beacuse chat isn't avaliable for search", userPrincipalDto.UserId)
+			ch.lgr.WithTracing(c.Request().Context()).Infof("User %d isn't allowed to loin to this chat beacuse chat isn't avaliable for search", userPrincipalDto.UserId)
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
@@ -780,7 +778,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		return nil
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
 	}
 
@@ -819,13 +817,13 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			return nil
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting chat participants %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 		return c.JSON(http.StatusAccepted, chatDto)
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -842,7 +840,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -871,13 +869,13 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		}
 		err = tx.SetAdmin(c.Request().Context(), interestingUserId, chatId, newAdmin)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during changing chat admin in database %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 			return err
 		}
 
 		newUsersWithAdmin, err := ch.getParticipantsWithAdmin(tx, []int64{interestingUserId}, chatId, c.Request().Context())
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting participants aith admin %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting participants aith admin %v", err)
 			return err
 		}
 
@@ -886,7 +884,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return nil
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting chat participants %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 			return err
 		}
 
@@ -901,7 +899,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, newUsersWithAdmin)
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -919,7 +917,7 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -959,7 +957,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -980,13 +978,13 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 
 		err = tx.DeleteParticipant(c.Request().Context(), interestingUserId, chatId)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during changing chat admin in database %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 			return err
 		}
 		return nil
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
 	}
 	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
@@ -1005,7 +1003,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 			return nil
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting chat participants %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 			return err
 		}
 
@@ -1021,7 +1019,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		return nil
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
 	}
 	return c.NoContent(http.StatusAccepted)
@@ -1030,7 +1028,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 func (ch *ChatHandler) getParticipantsWithAdmin(cdo db.CommonOperations, participantIds []int64, chatId int64, ctx context.Context) ([]*dto.UserWithAdmin, error) {
 	newUsers, err := ch.restClient.GetUsers(ctx, participantIds)
 	if err != nil {
-		GetLogEntry(ctx, ch.lgr).Errorf("Error during getting users %v", err)
+		ch.lgr.WithTracing(ctx).Errorf("Error during getting users %v", err)
 		return nil, err
 	}
 	return ch.enrichWithAdmin(ctx, cdo, newUsers, chatId)
@@ -1046,7 +1044,7 @@ func (ch *ChatHandler) enrichWithAdmin(ctx context.Context, cdo db.CommonOperati
 
 	areAdmins, err := cdo.IsAdminBatchByParticipants(ctx, userIds, chatId)
 	if err != nil {
-		GetLogEntry(ctx, ch.lgr).Errorf("Error during getting users %v", err)
+		ch.lgr.WithTracing(ctx).Errorf("Error during getting users %v", err)
 		return nil, err
 	}
 
@@ -1059,7 +1057,7 @@ func (ch *ChatHandler) enrichWithAdmin(ctx context.Context, cdo db.CommonOperati
 			}
 		}
 		if anUser == nil {
-			GetLogEntry(ctx, ch.lgr).Errorf("Unable to find an user")
+			ch.lgr.WithTracing(ctx).Errorf("Unable to find an user")
 			continue
 		}
 
@@ -1083,13 +1081,13 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = new(AddParticipantsDto)
 	if err := c.Bind(bindTo); err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Warnf("Error during binding to dto %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
@@ -1107,21 +1105,21 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 		for _, participantId := range bindTo.ParticipantIds {
 			err = tx.AddParticipant(c.Request().Context(), participantId, chatId, false)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during changing chat admin in database %v", err)
+				ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during changing chat admin in database %v", err)
 				return err
 			}
 		}
 		return nil
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 		return errOuter
 	}
 
 	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		newUsersWithAdmin, err := ch.getParticipantsWithAdmin(tx, bindTo.ParticipantIds, chatId, c.Request().Context())
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting participants aith admin %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting participants aith admin %v", err)
 			return err
 		}
 
@@ -1148,14 +1146,14 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 			return nil
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting chat participants %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 			return err
 		}
 
 		return c.NoContent(http.StatusAccepted)
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -1168,7 +1166,7 @@ func (ch *ChatHandler) SearchForUsersToAdd(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1209,13 +1207,13 @@ func (ch *ChatHandler) searchUsersContaining(c echo.Context, searchString string
 			shouldContinue = false
 		}
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Got error during getting portion %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Got error during getting portion %v", err)
 			break
 		}
 
 		usersPortion, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), searchString, true, participantIds, 0, pageSize)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error get users from aaa %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 			break
 		}
 		for _, u := range usersPortion {
@@ -1239,7 +1237,7 @@ func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString str
 		ignoredInAaa := false
 		usersPortion, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), searchString, ignoredInAaa, []int64{}, page, pageSize)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error get users from aaa %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 		}
 		if len(usersPortion) < pageSize {
 			shouldContinueSearch = false
@@ -1252,7 +1250,7 @@ func (ch *ChatHandler) searchUsersNotContaining(c echo.Context, searchString str
 
 		foundParticipantIds, err := ch.db.ParticipantsExistence(c.Request().Context(), chatId, portionUserIds)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Got error during getting ParticipantsNonExistence %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Got error during getting ParticipantsNonExistence %v", err)
 			break
 		}
 		for _, u := range usersPortion {
@@ -1278,7 +1276,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1298,7 +1296,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 		users, totalFoundInChatUserCount, err = ch.searchUsersContaining(c, userSearchString, chatId, participantsSize, participantsOffset)
 		usersWithAdmin, err = ch.enrichWithAdmin(c.Request().Context(), ch.db, users, chatId)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting participants with admin %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
 			return err
 		}
 	} else {
@@ -1309,7 +1307,7 @@ func (ch *ChatHandler) GetParticipants(c echo.Context) error {
 
 		usersWithAdmin, err = ch.getParticipantsWithAdmin(ch.db, participantIds, chatId, c.Request().Context())
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting participants with admin %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting participants with admin %v", err)
 			return err
 		}
 
@@ -1333,7 +1331,7 @@ type CountRequestDto struct {
 func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1345,7 +1343,7 @@ func (ch *ChatHandler) CountParticipants(c echo.Context) error {
 	bindTo := new(CountRequestDto)
 	err = c.Bind(bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during unmarshalling %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
 	userSearchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
@@ -1381,7 +1379,7 @@ type FilteredParticipantItemResponse struct {
 func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1393,7 +1391,7 @@ func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 	bindTo := new(FilteredRequestDto)
 	err = c.Bind(bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during unmarshalling %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
 
@@ -1417,7 +1415,7 @@ func (ch *ChatHandler) FilterParticipants(c echo.Context) error {
 		for _, aBatch := range batches { // we already know that requestedParticipantIds belong to this chat, so our sole task is to pass them through aaa filter
 			usersPortion, _, err := ch.restClient.SearchGetUsers(c.Request().Context(), userSearchString, true, aBatch, 0, utils.DefaultSize)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error get users from aaa %v", err)
+				ch.lgr.WithTracing(c.Request().Context()).Errorf("Error get users from aaa %v", err)
 			} else {
 				for _, user := range usersPortion {
 					response = append(response, &FilteredParticipantItemResponse{user.Id})
@@ -1446,7 +1444,7 @@ func (ch *ChatHandler) SearchForUsersToMention(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1578,12 +1576,12 @@ type TetATetResponse struct {
 func (ch *ChatHandler) TetATet(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	toParticipantId, err := GetPathParamAsInt64(c, "participantId")
 	if err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during parsing participantId %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing participantId %v", err)
 		return err
 	}
 
@@ -1591,7 +1589,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		// check existing tet-a-tet chat
 		exists, chatId, err := tx.IsExistsTetATet(c.Request().Context(), userPrincipalDto.UserId, toParticipantId)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during checking exists tet-a-tet chat %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking exists tet-a-tet chat %v", err)
 			return err
 		}
 		if exists {
@@ -1601,7 +1599,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		// create tet-a-tet chat
 		chatId2, err := tx.CreateTetATetChat(c.Request().Context(), userPrincipalDto.UserId, toParticipantId)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during creating tet-a-tet chat %v", err)
+			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during creating tet-a-tet chat %v", err)
 			return err
 		}
 
@@ -1624,7 +1622,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 		return c.JSON(http.StatusCreated, TetATetResponse{Id: chatId2})
 	})
 	if errOuter != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during act transaction %v", errOuter)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
 	}
 	return errOuter
 }
@@ -1636,7 +1634,7 @@ type UserChatNotificationSettings struct {
 func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1648,13 +1646,13 @@ func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
 	bindTo := new(UserChatNotificationSettings)
 	err = c.Bind(bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during unmarshalling %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
 
 	err = ch.db.InitUserChatNotificationSettings(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during initializing notification settings %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
@@ -1668,7 +1666,7 @@ func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
 func (ch *ChatHandler) GetUserChatNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1698,7 +1696,7 @@ func (ch *ChatHandler) CreatePreview(c echo.Context) error {
 	bindTo := new(CleanHtmlTagsRequestDto)
 	err := c.Bind(bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during unmarshalling %v", err)
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during unmarshalling %v", err)
 		return err
 	}
 	preview := createMessagePreview(ch.stripTagsPolicy, bindTo.Text, bindTo.Login)
@@ -1816,7 +1814,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 	}
 	var behalfUserLogin string
 	if len(behalfUsers) != 1 {
-		GetLogEntry(c.Request().Context(), ch.lgr).Infof("Behalf user with id %v is not found", behalfUserId)
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Behalf user with id %v is not found", behalfUserId)
 	} else {
 		behalfUserLogin = behalfUsers[0].Login
 	}
@@ -1873,7 +1871,7 @@ func (ch *ChatHandler) GetBasicInfo(c echo.Context) error {
 }
 
 func (ch *ChatHandler) RemoveAllParticipants(c echo.Context) error {
-	GetLogEntry(c.Request().Context(), ch.lgr).Warnf("Removing ALL participants")
+	ch.lgr.WithTracing(c.Request().Context()).Warnf("Removing ALL participants")
 	return ch.db.DeleteAllParticipants(c.Request().Context())
 }
 
@@ -1905,7 +1903,7 @@ type ParticipantsBelongToChat struct {
 }
 
 func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
-	GetLogEntry(c.Request().Context(), ch.lgr).Infof("Checking if participant belongs")
+	ch.lgr.WithTracing(c.Request().Context()).Infof("Checking if participant belongs")
 	chatId, err := GetQueryParamAsInt64(c, "chatId")
 	if err != nil {
 		return err
@@ -1953,7 +1951,7 @@ func (ch *ChatHandler) checkCanCreateBlog(userPrincipalDto *auth.AuthResult, blo
 func (ch *ChatHandler) CanCreateBlog(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -1969,7 +1967,7 @@ func (ch *ChatHandler) MarkAsRead(c echo.Context) error {
 
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -2004,7 +2002,7 @@ func (ch *ChatHandler) MarkAsRead(c echo.Context) error {
 func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during getting auth context")
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
@@ -2018,13 +2016,13 @@ func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
 				if has {
 					err := tx.MarkAllMessagesAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
 					if err != nil {
-						GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during marking chat %v as read: %v", chatId, err)
+						ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during marking chat %v as read: %v", chatId, err)
 						continue
 					}
 
 					lastUpdated, err := tx.GetChatLastDatetimeChat(c.Request().Context(), chatId)
 					if err != nil {
-						GetLogEntry(c.Request().Context(), ch.lgr).Errorf("Error during GetChatLastDatetimeChat chat %v: %v", chatId, err)
+						ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during GetChatLastDatetimeChat chat %v: %v", chatId, err)
 						continue
 					}
 					ch.notificator.NotifyAboutUnreadMessage(c.Request().Context(), chatId, userPrincipalDto.UserId, 0, lastUpdated)

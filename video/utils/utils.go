@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/livekit"
-	log "github.com/sirupsen/logrus"
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
 	"nkonev.name/video/logger"
@@ -33,10 +32,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(ctx context.Context, lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(ctx context.Context, lgr *logger.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			logger.GetLogEntry(ctx, lgr).Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			lgr.WithTracing(ctx).Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}

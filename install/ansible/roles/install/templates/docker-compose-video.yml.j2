@@ -39,11 +39,15 @@ services:
       - VIDEO_OTLP.ENDPOINT=jaeger:4317
       - VIDEO_LIVEKIT.API.KEY={{ livekit_api_key }}
       - VIDEO_LIVEKIT.API.SECRET={{ livekit_api_secret }}
+      - VIDEO_LOGGER.WRITETOFILE=false
 
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat-video
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.app.golang.video
+        fluentd-sub-second-precision: "true"
 
 networks:
   backend:

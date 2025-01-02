@@ -18,12 +18,63 @@ import { renderPage } from 'vike/server'
 import { root } from './root.js'
 import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
-import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort} from "../common/config.js";
+import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort, getWriteLogToFile} from "../common/config.js";
 import axios from "axios";
 import opentelemetry from '@opentelemetry/api';
 import * as api from '@opentelemetry/api';
+import { createLogger, format, transports } from "winston";
+import morgan from 'morgan';
 
 axios.defaults.timeout = getHttpClientTimeout();
+
+const configuredTransports = [
+    new transports.Console(),
+];
+if (getWriteLogToFile()) {
+    configuredTransports.push(
+        new transports.File({
+            filename: 'logs/file.log',
+            level: 'info',
+            options: {flags: 'w'}
+        }),
+    )
+}
+// partial copy from public/node_modules/logform/logstash.js
+const customFormat = format(
+    info => {
+        if (info.timestamp) {
+            info['@timestamp'] = info.timestamp;
+            delete info.timestamp;
+        }
+        return info;
+    }
+);
+
+// https://betterstack.com/community/guides/logging/how-to-install-setup-and-use-winston-and-morgan-to-log-node-js-applications/
+// https://github.com/winstonjs/winston/tree/master/examples
+const logger = createLogger({
+    level: 'info',
+    format: format.combine(
+        // https://github.com/taylorhakes/fecha
+        format.timestamp(),
+        customFormat(),
+        format.errors({ stack: true }),
+        format.splat(),
+        format.json(),
+    ),
+    defaultMeta: { service: 'public' },
+    transports: configuredTransports,
+});
+
+const morganMiddleware = morgan(
+    ':remote-addr :user-agent :method :url :status :res[content-length] - :response-time ms',
+    {
+        stream: {
+            // Configure Morgan to use our custom logger with the http severity
+            write: (message) => logger.info(message.trim()),
+        },
+    }
+);
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -40,6 +91,7 @@ async function startServer() {
   const app = express()
   app.disable('x-powered-by')
   app.use(compression())
+  app.use(morganMiddleware)
 
   const traceHeader = function (req, res, next) {
         // https://opentelemetry.io/docs/languages/js/context/
@@ -116,7 +168,7 @@ async function startServer() {
               // make sure to attach a write stream such as streamToPromise before ending
               smStream.end()
           } catch (e) {
-              console.error(e)
+              logger.error(e)
               res.status(500).end()
           } finally {
               span.end();
@@ -175,5 +227,5 @@ Sitemap: ${sitemapUrl}`);
 
   const port = getPort()
   app.listen(port)
-  console.log(`Server running at http://localhost:${port}`)
+  logger.info(`Server running at http://localhost:${port}`)
 }

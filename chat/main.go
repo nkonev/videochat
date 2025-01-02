@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nkonev/dcron"
 	"github.com/rotisserie/eris"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	jaegerPropagator "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -17,15 +16,17 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
+	"nkonev.name/chat/app"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/handlers"
 	"nkonev.name/chat/listener"
-	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
@@ -34,13 +35,13 @@ import (
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
-const TRACE_RESOURCE = "chat"
+const TRACE_RESOURCE = app.APP_NAME
 
 func main() {
 	config.InitViper()
-	lgr := NewLogger()
+	lgr := logger.NewLogger()
 
-	app := fx.New(
+	appFx := fx.New(
 		fx.Logger(lgr),
 		fx.Supply(lgr),
 		fx.Provide(
@@ -76,9 +77,10 @@ func main() {
 			listener.CreateAaaChannel,
 		),
 	)
-	app.Run()
+	appFx.Run()
 
 	lgr.Infof("Exit program")
+	lgr.CloseLogger()
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
@@ -106,17 +108,17 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 	return mw
 }
 
-func createCustomHTTPErrorHandler(lgr *log.Logger, e *echo.Echo) func(err error, c echo.Context) {
+func createCustomHTTPErrorHandler(lgr *logger.Logger, e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
 		formattedStr := eris.ToString(err, true)
-		GetLogEntry(c.Request().Context(), lgr).Errorf("Unhandled error: %v", formattedStr)
+		lgr.WithTracing(c.Request().Context()).Errorf("Unhandled error: %v", formattedStr)
 		originalHandler(err, c)
 	}
 }
 
 func configureEcho(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	staticMiddleware handlers.StaticMiddleware,
 	authMiddleware handlers.AuthMiddleware,
 	lc fx.Lifecycle,
@@ -129,7 +131,7 @@ func configureEcho(
 	bodyLimit := viper.GetString("server.body.limit")
 
 	e := echo.New()
-	e.Logger.SetOutput(lgr.Writer())
+	e.Logger.SetOutput(lgr)
 
 	e.HTTPErrorHandler = createCustomHTTPErrorHandler(lgr, e)
 
@@ -137,14 +139,53 @@ func configureEcho(
 	e.Use(configureOpentelemetryMiddleware(tp))
 	e.Use(configureWriteHeaderMiddleware())
 	e.Use(echo.MiddlewareFunc(authMiddleware))
-	accessLoggerConfig := middleware.LoggerConfig{
-		Output: lgr.Writer(),
-		Format: `"remote_ip":"${remote_ip}",` +
-			`"method":"${method}","uri":"${uri}",` +
-			`"status":${status},` +
-			`,"bytes_in":${bytes_in},"bytes_out":${bytes_out},"traceId":"${header:uber-trace-id}"` + "\n",
+	skipper := func(c echo.Context) bool {
+		// Skip health check endpoint
+		return c.Request().URL.Path == "/health"
 	}
-	e.Use(middleware.LoggerWithConfig(accessLoggerConfig))
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogStatus:        true,
+		LogURI:           true,
+		LogMethod:        true,
+		LogRemoteIP:      true,
+		LogError:         true,
+		LogLatency:       true,
+		LogUserAgent:     true,
+		LogContentLength: true,
+		LogResponseSize:  true,
+		Skipper:          skipper,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			tl := lgr.SugaredLogger
+			spanCtx := trace.SpanContextFromContext(c.Request().Context())
+			if spanCtx.HasTraceID() {
+				tl = lgr.With(
+					zap.String("trace_id", spanCtx.TraceID().String()),
+					zap.String("span_id", spanCtx.SpanID().String()),
+				)
+			}
+			tl = tl.With(
+				"status", v.Status,
+				"uri", v.URI,
+				"method", v.Method,
+				"remote_ip", v.RemoteIP,
+				"latency", v.Latency,
+				"user_agent", v.UserAgent,
+				"content_length", v.ContentLength,
+				"response_size", v.ResponseSize,
+			)
+
+			if v.Error == nil {
+				tl.Infof("REQUEST")
+			} else {
+				tl = tl.With(
+					"error", v.Error.Error(),
+				)
+				tl.Errorf("REQUEST")
+			}
+			return nil
+		},
+	}))
+
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
@@ -226,7 +267,7 @@ func configureEcho(
 	return e
 }
 
-func configureTracer(lgr *log.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
+func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	lgr.Infof("Configuring Jaeger tracing")
 
 	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
@@ -274,7 +315,7 @@ func runMigrations(db *db.DB, migrationsConfig *db.MigrationsConfig) {
 }
 
 // rely on viper import and it's configured by
-func runEcho(lgr *log.Logger, e *echo.Echo) {
+func runEcho(lgr *logger.Logger, e *echo.Echo) {
 	address := viper.GetString("server.address")
 
 	lgr.Info("Starting server...")
@@ -288,7 +329,7 @@ func runEcho(lgr *log.Logger, e *echo.Echo) {
 }
 
 func runScheduler(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	scheduler *dcron.Cron,
 	ct *tasks.CleanChatsOfDeletedUserTask,
 	lc fx.Lifecycle,

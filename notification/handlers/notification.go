@@ -3,12 +3,11 @@ package handlers
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nkonev.name/notification/auth"
 	"nkonev.name/notification/db"
 	"nkonev.name/notification/dto"
-	. "nkonev.name/notification/logger"
+	"nkonev.name/notification/logger"
 	"nkonev.name/notification/producer"
 	"nkonev.name/notification/services"
 	"nkonev.name/notification/utils"
@@ -17,10 +16,10 @@ import (
 type NotificationHandler struct {
 	db                    *db.DB
 	rabbitEventsPublisher *producer.RabbitEventPublisher
-	lgr                   *log.Logger
+	lgr                   *logger.Logger
 }
 
-func NewMessageHandler(dbR *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher, lgr *log.Logger) *NotificationHandler {
+func NewMessageHandler(dbR *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher, lgr *logger.Logger) *NotificationHandler {
 	return &NotificationHandler{
 		db:                    dbR,
 		rabbitEventsPublisher: rabbitEventsPublisher,
@@ -40,7 +39,7 @@ type NotificationsCount struct {
 func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -49,7 +48,7 @@ func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 	offset := utils.GetOffset(page, size)
 
 	if notifications, err := mc.db.GetNotifications(c.Request().Context(), userPrincipalDto.UserId, size, offset); err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error get notification from db %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error get notification from db %v", err)
 		return err
 	} else {
 
@@ -65,7 +64,7 @@ func (mc *NotificationHandler) GetNotifications(c echo.Context) error {
 func (mc *NotificationHandler) GetNotificationsCount(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -80,7 +79,7 @@ func (mc *NotificationHandler) GetNotificationsCount(c echo.Context) error {
 func (mc *NotificationHandler) DeleteAllNotifications(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -91,7 +90,7 @@ func (mc *NotificationHandler) DeleteAllNotifications(c echo.Context) error {
 
 	err = mc.rabbitEventsPublisher.Publish(c.Request().Context(), userPrincipalDto.UserId, nil, services.NotificationClearAll)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Unable to send notification delete %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Unable to send notification delete %v", err)
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -100,7 +99,7 @@ func (mc *NotificationHandler) DeleteAllNotifications(c echo.Context) error {
 func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -116,13 +115,13 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 
 	count, err := mc.db.GetNotificationCount(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Unable to count notification %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Unable to count notification %v", err)
 		return err
 	}
 
 	err = mc.rabbitEventsPublisher.Publish(c.Request().Context(), userPrincipalDto.UserId, dto.NewWrapperNotificationDeleteDto(notificationId, count, deletedNotificationType), services.NotificationDelete)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Unable to send notification delete %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Unable to send notification delete %v", err)
 	}
 
 	return c.NoContent(http.StatusAccepted)
@@ -131,13 +130,13 @@ func (mc *NotificationHandler) ReadNotification(c echo.Context) error {
 func (mc *NotificationHandler) GetGlobalNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	notSett, err := mc.db.GetNotificationGlobalSettings(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
 		return err
 	}
 
@@ -147,32 +146,32 @@ func (mc *NotificationHandler) GetGlobalNotificationSettings(c echo.Context) err
 func (mc *NotificationHandler) PutGlobalNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = new(dto.NotificationGlobalSettings)
 	err := c.Bind(bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during reading notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during reading notification settings %v", err)
 		return err
 	}
 
 	err = mc.db.InitGlobalNotificationSettings(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during initializing notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
 	err = mc.db.PutNotificationGlobalSettings(c.Request().Context(), userPrincipalDto.UserId, bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during writing notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during writing notification settings %v", err)
 		return err
 	}
 
 	notSett, err := mc.db.GetNotificationGlobalSettings(c.Request().Context(), userPrincipalDto.UserId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
 		return err
 	}
 
@@ -182,7 +181,7 @@ func (mc *NotificationHandler) PutGlobalNotificationSettings(c echo.Context) err
 func (mc *NotificationHandler) GetChatNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -193,7 +192,7 @@ func (mc *NotificationHandler) GetChatNotificationSettings(c echo.Context) error
 
 	notSett, err := mc.db.GetNotificationPerChatSettings(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
 		return err
 	}
 
@@ -203,14 +202,14 @@ func (mc *NotificationHandler) GetChatNotificationSettings(c echo.Context) error
 func (mc *NotificationHandler) PutChatNotificationSettings(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting auth context")
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
 	var bindTo = new(dto.NotificationPerChatSettings)
 	err := c.Bind(bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during reading notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during reading notification settings %v", err)
 		return err
 	}
 
@@ -221,19 +220,19 @@ func (mc *NotificationHandler) PutChatNotificationSettings(c echo.Context) error
 
 	err = mc.db.InitPerChatNotificationSettings(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during initializing notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during initializing notification settings %v", err)
 		return err
 	}
 
 	err = mc.db.PutNotificationPerChatSettings(c.Request().Context(), userPrincipalDto.UserId, chatId, bindTo)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during writing notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during writing notification settings %v", err)
 		return err
 	}
 
 	notSett, err := mc.db.GetNotificationPerChatSettings(c.Request().Context(), userPrincipalDto.UserId, chatId)
 	if err != nil {
-		GetLogEntry(c.Request().Context(), mc.lgr).Errorf("Error during getting notification settings %v", err)
+		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting notification settings %v", err)
 		return err
 	}
 

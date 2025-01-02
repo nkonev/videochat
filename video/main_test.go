@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	"github.com/oliveagle/jsonpath"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -25,7 +24,7 @@ import (
 	"nkonev.name/video/dto"
 	"nkonev.name/video/handlers"
 	"nkonev.name/video/listener"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/rabbitmq"
 	"nkonev.name/video/services"
@@ -55,11 +54,11 @@ const chatEmuPort = "8062"
 var userTester = base64.StdEncoding.EncodeToString([]byte("tester"))
 
 var theConfig *config.ExtendedConfig
-var lgr *log.Logger
+var lgr *logger.Logger
 
 func setup() {
 	config.InitViper()
-	lgr = NewLogger()
+	lgr = logger.NewLogger()
 
 	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 	viper.Set("chat.url.base", "http://localhost:"+chatEmuPort)

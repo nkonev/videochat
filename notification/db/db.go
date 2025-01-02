@@ -9,22 +9,22 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"net/http"
+	"nkonev.name/notification/logger"
 	"time"
 )
 
 // https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
 type DB struct {
 	*sql.DB
-	lgr *log.Logger
+	lgr *logger.Logger
 }
 
 type Tx struct {
 	*sql.Tx
-	lgr *log.Logger
+	lgr *logger.Logger
 }
 
 type MigrationsConfig struct {
@@ -65,7 +65,7 @@ func (txR *Tx) ExecContext(ctx context.Context, query string, args ...interface{
 const postgresDriverString = "pgx"
 
 // Open returns a DB reference for a data source.
-func Open(lgr *log.Logger, conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
+func Open(lgr *logger.Logger, conninfo string, maxOpen int, maxIdle int, maxLifetime time.Duration) (*DB, error) {
 	if db, err := sql.Open(postgresDriverString, conninfo); err != nil {
 		return nil, err
 	} else {
@@ -94,7 +94,7 @@ func (tx *Tx) SafeRollback() {
 //go:embed migrations
 var embeddedFiles embed.FS
 
-func migrateInternal(lgr *log.Logger, db *sql.DB, path, migrationTable string) {
+func migrateInternal(lgr *logger.Logger, db *sql.DB, path, migrationTable string) {
 	staticDir := http.FS(embeddedFiles)
 	src, err := httpfs.New(staticDir, "migrations"+path)
 	if err != nil {
@@ -136,7 +136,7 @@ func (db *DB) Migrate(migrationsConfig *MigrationsConfig) {
 	}
 }
 
-func ConfigureDb(lgr *log.Logger, lc fx.Lifecycle) (*DB, error) {
+func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 	dbConnectionString := viper.GetString("postgresql.url")
 	maxOpen := viper.GetInt("postgresql.maxOpenConnections")
 	maxIdle := viper.GetInt("postgresql.maxIdleConnections")

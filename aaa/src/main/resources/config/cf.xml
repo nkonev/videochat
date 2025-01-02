@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+https://docs.spring.io/spring-cloud-sleuth/docs/current/reference/htmlsingle/logback-spring.xml
+https://github.com/spring-projects/spring-boot/tree/main/spring-boot-project/spring-boot/src/main/resources/org/springframework/boot/logging/logback
+-->
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+	<!-- Appender to log to console -->
+	<appender name="STRUCTURED_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>${CONSOLE_LOG_THRESHOLD}</level>
+		</filter>
+		<encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+			<format>${CONSOLE_LOG_STRUCTURED_FORMAT}</format>
+			<charset>${CONSOLE_LOG_CHARSET}</charset>
+		</encoder>
+	</appender>
+
+	<!-- Appender to log to file in a JSON format -->
+	<appender name="STRUCTURED_FILE" class="ch.qos.logback.core.FileAppender">
+		<append>false</append>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>${FILE_LOG_THRESHOLD}</level>
+		</filter>
+		<encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+			<format>${FILE_LOG_STRUCTURED_FORMAT}</format>
+			<charset>${FILE_LOG_CHARSET}</charset>
+		</encoder>
+		<file>${LOG_FILE}</file>
+	</appender>
+
+	<root level="INFO">
+		<appender-ref ref="STRUCTURED_CONSOLE"/>
+		<appender-ref ref="STRUCTURED_FILE" />
+	</root>
+</configuration>

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"nkonev.name/chat/logger"
 	myRabbitmq "nkonev.name/chat/rabbitmq"
@@ -22,7 +21,7 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
-		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal dto")
+		rp.lgr.WithTracing(ctx).Error(err, "Failed during marshal dto")
 		return err
 	}
 
@@ -36,7 +35,7 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 	}
 
 	if err := rp.channel.Publish(EventsFanoutExchange, "", false, false, msg); err != nil {
-		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing dto")
+		rp.lgr.WithTracing(ctx).Error(err, "Error during publishing dto")
 		return err
 	} else {
 		return nil
@@ -45,10 +44,10 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 
 type RabbitEventsPublisher struct {
 	channel *rabbitmq.Channel
-	lgr     *log.Logger
+	lgr     *logger.Logger
 }
 
-func NewRabbitEventsPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitEventsPublisher {
+func NewRabbitEventsPublisher(lgr *logger.Logger, connection *rabbitmq.Connection) *RabbitEventsPublisher {
 	return &RabbitEventsPublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
 		lgr:     lgr,
@@ -60,7 +59,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 
 	bytea, err := json.Marshal(aDto)
 	if err != nil {
-		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Failed during marshal dto")
+		rp.lgr.WithTracing(ctx).Error(err, "Failed during marshal dto")
 		return err
 	}
 
@@ -73,7 +72,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 	}
 
 	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
-		logger.GetLogEntry(ctx, rp.lgr).Error(err, "Error during publishing dto")
+		rp.lgr.WithTracing(ctx).Error(err, "Error during publishing dto")
 		return err
 	} else {
 		return nil
@@ -82,10 +81,10 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 
 type RabbitNotificationsPublisher struct {
 	channel *rabbitmq.Channel
-	lgr     *log.Logger
+	lgr     *logger.Logger
 }
 
-func NewRabbitNotificationsPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
+func NewRabbitNotificationsPublisher(lgr *logger.Logger, connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
 	return &RabbitNotificationsPublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
 		lgr:     lgr,

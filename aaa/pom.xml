@@ -12,11 +12,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
-        <spring.boot.version>3.3.1</spring.boot.version>
+        <spring.boot.version>3.4.1</spring.boot.version>
         <greenmail.version>2.1.0-rc-1</greenmail.version>
         <mockserver.version>5.15.0</mockserver.version>
         <skipTests>false</skipTests>
-        <logback-access.version>1.4.14</logback-access.version>
         <owasp.encoder.version>1.2.3</owasp.encoder.version>
         <liquibase.session.lock.version>1.6.9</liquibase.session.lock.version>
     </properties>
@@ -216,16 +215,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
         </dependency>
+
          <dependency>
              <groupId>org.springframework.boot</groupId>
              <artifactId>spring-boot-starter-validation</artifactId>
          </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-access</artifactId>
-            <version>${logback-access.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -328,7 +322,7 @@
         </dependency>
 
         <dependency>
-            <groupId>net.sourceforge.htmlunit</groupId>
+            <groupId>org.htmlunit</groupId>
             <artifactId>htmlunit</artifactId>
             <scope>test</scope>
         </dependency>

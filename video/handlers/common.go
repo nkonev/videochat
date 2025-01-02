@@ -4,21 +4,20 @@ import (
 	"encoding/base64"
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/config"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/utils"
 	"time"
 )
 
 type AuthMiddleware echo.MiddlewareFunc
 
-func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, error) {
+func ExtractAuth(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
-	GetLogEntry(request.Context(), lgr).Infof("Extracted session expiration time: %v", t)
+	lgr.WithTracing(request.Context()).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
@@ -60,7 +59,7 @@ func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, erro
 //   - *AuthResult pointer or nil
 //   - is whitelisted
 //   - error
-func authorize(config *config.ExtendedConfig, request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, error) {
+func authorize(config *config.ExtendedConfig, request *http.Request, lgr *logger.Logger) (*auth.AuthResult, bool, error) {
 	whitelistStr := config.AuthConfig.ExcludePaths
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
 	if utils.CheckUrlInWhitelist(request.Context(), lgr, whitelist, request.RequestURI) {
@@ -68,19 +67,19 @@ func authorize(config *config.ExtendedConfig, request *http.Request, lgr *log.Lo
 	}
 	auth, err := ExtractAuth(request, lgr)
 	if err != nil {
-		GetLogEntry(request.Context(), lgr).Infof("Error during extract AuthResult: %v", err)
+		lgr.WithTracing(request.Context()).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request.Context(), lgr).Infof("Success AuthResult: %v", *auth)
+	lgr.WithTracing(request.Context()).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 
-func ConfigureAuthMiddleware(config *config.ExtendedConfig, lgr *log.Logger) AuthMiddleware {
+func ConfigureAuthMiddleware(config *config.ExtendedConfig, lgr *logger.Logger) AuthMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(config, c.Request(), lgr)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), lgr).Errorf("Error during authorize: %v", err)
+				lgr.WithTracing(c.Request().Context()).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)

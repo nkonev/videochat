@@ -367,7 +367,7 @@ jobs:
       - name: Start and wait docker-compose
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d postgresql redis rabbitmq jaeger minio traefik
+          docker compose up -d fluentbit postgresql redis rabbitmq jaeger minio traefik 
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'

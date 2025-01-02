@@ -3,9 +3,9 @@ package listener
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
+	"nkonev.name/chat/logger"
 	myRabbit "nkonev.name/chat/rabbitmq"
 )
 
@@ -17,7 +17,7 @@ type AaaEventsQueue struct{ *amqp.Queue }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 
-func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func create(lgr *logger.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -35,7 +35,7 @@ func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Que
 	return &q
 }
 
-func createAndBind(lgr *log.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createAndBind(lgr *logger.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -57,7 +57,7 @@ func createAndBind(lgr *log.Logger, name string, key string, exchange string, co
 	}
 	return &q
 }
-func CreateAaaChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage AaaUserProfileUpdateListener, lc fx.Lifecycle) *AaaEventsChannel {
+func CreateAaaChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage AaaUserProfileUpdateListener, lc fx.Lifecycle) *AaaEventsChannel {
 	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
 		connection,
@@ -81,12 +81,12 @@ func CreateAaaChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessag
 	)}
 }
 
-func CreateAaaQueue(lgr *log.Logger, consumeCh *AaaEventsChannel) *AaaEventsQueue {
+func CreateAaaQueue(lgr *logger.Logger, consumeCh *AaaEventsChannel) *AaaEventsQueue {
 	return &AaaEventsQueue{create(lgr, aaaEventsQueue, consumeCh.Channel)}
 }
 
 func listen(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,
@@ -125,7 +125,7 @@ func listen(
 }
 
 func ListenAaaQueue(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	channel *AaaEventsChannel,
 	queue *AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,

@@ -4,14 +4,13 @@ import (
 	"context"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
 	"net/url"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
-	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"sort"
@@ -25,10 +24,10 @@ type BlogHandler struct {
 	policy          *services.SanitizerPolicy
 	stripTagsPolicy *services.StripTagsPolicy
 	restClient      *client.RestClient
-	lgr             *log.Logger
+	lgr             *logger.Logger
 }
 
-func NewBlogHandler(lgr *log.Logger, db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
+func NewBlogHandler(lgr *logger.Logger, db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
 	return &BlogHandler{
 		db:              db,
 		notificator:     notificator,
@@ -78,7 +77,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 				if mbImage != nil {
 					fileParam, err := h.getFileParam(*mbImage)
 					if err != nil {
-						GetLogEntry(ctx, h.lgr).Warnf("Unagle to get file key: %v", err)
+						h.lgr.WithTracing(ctx).Warnf("Unagle to get file key: %v", err)
 						break
 					}
 					if len(fileParam) > 0 {
@@ -89,7 +88,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 
 						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.ChatId, post.MessageId)
 						if err != nil {
-							GetLogEntry(ctx, h.lgr).Warnf("Unagle to change url: %v", err)
+							h.lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 							break
 						}
 						blogPost.ImageUrl = &publicPreviewUrl
@@ -280,7 +279,7 @@ func (h *BlogHandler) tryGetFirstImage(ctx context.Context, text string) *string
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		GetLogEntry(ctx, h.lgr).Warnf("Unagle to get image: %v", err)
+		h.lgr.WithTracing(ctx).Warnf("Unagle to get image: %v", err)
 		return nil
 	}
 
@@ -333,7 +332,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	}
 	if !chatBasic.IsBlog {
-		GetLogEntry(c.Request().Context(), h.lgr).Infof("This chat %v is not blog", blogId)
+		h.lgr.WithTracing(c.Request().Context()).Infof("This chat %v is not blog", blogId)
 		return c.NoContent(http.StatusNoContent)
 	}
 
@@ -351,7 +350,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	if len(posts) == 1 {
 		post = posts[0]
 	} else {
-		GetLogEntry(c.Request().Context(), h.lgr).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
+		h.lgr.WithTracing(c.Request().Context()).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
 	}
 
 	if post != nil {
@@ -365,7 +364,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 
 		reactions, err := h.db.GetReactionsOnMessage(c.Request().Context(), chatBasic.Id, post.MessageId)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), h.lgr).Infof("For blog id %v unable to get reactions: %v", blogId, err)
+			h.lgr.WithTracing(c.Request().Context()).Infof("For blog id %v unable to get reactions: %v", blogId, err)
 			return err
 		}
 
@@ -400,7 +399,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	}
 	if !chatBasic.IsBlog {
-		GetLogEntry(c.Request().Context(), h.lgr).Infof("This chat %v is not blog", blogId)
+		h.lgr.WithTracing(c.Request().Context()).Infof("This chat %v is not blog", blogId)
 		return c.NoContent(http.StatusNoContent)
 	}
 
@@ -448,16 +447,16 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 		pagesCount++
 	}
 
-	GetLogEntry(c.Request().Context(), h.lgr).Infof("Successfully returning %v messages", len(messageDtos))
+	h.lgr.WithTracing(c.Request().Context()).Infof("Successfully returning %v messages", len(messageDtos))
 	return c.JSON(http.StatusOK, &utils.H{"items": messageDtos, "count": count, "pagesCount": pagesCount})
 }
 
 // see also message.go :: patchStorageUrlToPreventCachingVideo
-func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, overrideChatId, overrideMessageId int64) string {
+func PatchStorageUrlToPublic(ctx context.Context, lgr *logger.Logger, text string, overrideChatId, overrideMessageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {
-		GetLogEntry(ctx, lgr).Warnf("Unagle to read html: %v", err)
+		lgr.WithTracing(ctx).Warnf("Unagle to read html: %v", err)
 		return ""
 	}
 
@@ -471,7 +470,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 				if utils.ContainsUrl(lgr, wlArr, original) { // original
 					newurl, err := makeUrlPublic(original, "", false, overrideChatId, overrideMessageId)
 					if err != nil {
-						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
+						lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 						return
 					}
 					maybeImage.SetAttr("data-original", newurl)
@@ -481,7 +480,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, false, overrideChatId, overrideMessageId)
 					if err != nil {
-						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
+						lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 						return
 					}
 					maybeImage.SetAttr("src", newurl)
@@ -491,7 +490,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 					newurl, err := makeUrlPublic(src, "", false, overrideChatId, overrideMessageId)
 					if err != nil {
-						GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
+						lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 						return
 					}
 					maybeImage.SetAttr("src", newurl)
@@ -507,7 +506,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", true, overrideChatId, overrideMessageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
 				if err != nil {
-					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
+					lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
@@ -517,7 +516,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 			if posterExists && utils.ContainsUrl(lgr, wlArr, src) {
 				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, overrideChatId, overrideMessageId)
 				if err != nil {
-					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
+					lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("poster", newurl)
@@ -532,7 +531,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
 				newurl, err := makeUrlPublic(src, "", true, overrideChatId, overrideMessageId)
 				if err != nil {
-					GetLogEntry(ctx, lgr).Warnf("Unagle to change url: %v", err)
+					lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 					return
 				}
 				maybeVideo.SetAttr("src", newurl)
@@ -542,7 +541,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, 
 
 	ret, err := doc.Find("html").Find("body").Html()
 	if err != nil {
-		GetLogEntry(ctx, lgr).Warnf("Unagle to write html: %v", err)
+		lgr.WithTracing(ctx).Warnf("Unagle to write html: %v", err)
 		return ""
 	}
 	return ret

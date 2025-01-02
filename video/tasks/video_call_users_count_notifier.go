@@ -3,12 +3,11 @@ package tasks
 import (
 	"context"
 	"github.com/nkonev/dcron"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/config"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/services"
 )
 
@@ -16,10 +15,10 @@ type VideoCallUsersCountNotifierService struct {
 	scheduleService *services.StateChangedEventService
 	conf            *config.ExtendedConfig
 	tracer          trace.Tracer
-	lgr             *log.Logger
+	lgr             *logger.Logger
 }
 
-func NewVideoCallUsersCountNotifierService(lgr *log.Logger, scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *VideoCallUsersCountNotifierService {
+func NewVideoCallUsersCountNotifierService(lgr *logger.Logger, scheduleService *services.StateChangedEventService, conf *config.ExtendedConfig) *VideoCallUsersCountNotifierService {
 	trcr := otel.Tracer("scheduler/video-call-users-count-notifier")
 	return &VideoCallUsersCountNotifierService{
 		scheduleService: scheduleService,
@@ -33,10 +32,10 @@ func (srv *VideoCallUsersCountNotifierService) doJob() {
 	ctx, span := srv.tracer.Start(context.Background(), "scheduler.VideoCallUsersCountNotifier")
 	defer span.End()
 
-	GetLogEntry(ctx, srv.lgr).Debugf("Invoked periodic ChatNotifier")
+	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic ChatNotifier")
 	srv.scheduleService.NotifyAllChatsAboutVideoCallUsersCount(ctx)
 
-	GetLogEntry(ctx, srv.lgr).Debugf("End of ChatNotifier")
+	srv.lgr.WithTracing(ctx).Debugf("End of ChatNotifier")
 }
 
 type VideoCallUsersCountNotifierTask struct {
@@ -44,7 +43,7 @@ type VideoCallUsersCountNotifierTask struct {
 }
 
 func VideoCallUsersCountNotifierScheduler(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	service *VideoCallUsersCountNotifierService,
 ) *VideoCallUsersCountNotifierTask {
 	const key = "videoCallUsersCountNotifierTask"

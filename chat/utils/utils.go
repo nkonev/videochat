@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/rotisserie/eris"
-	log "github.com/sirupsen/logrus"
 	"net/url"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
@@ -30,10 +29,10 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(ctx context.Context, lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(ctx context.Context, lgr *logger.Logger, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			logger.GetLogEntry(ctx, lgr).Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
+			lgr.WithTracing(ctx).Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}
@@ -160,7 +159,7 @@ func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
 }
 
-func ContainsUrl(lgr *log.Logger, elems []string, elem string) bool {
+func ContainsUrl(lgr *logger.Logger, elems []string, elem string) bool {
 	parsedUrlToTest, err := url.Parse(elem)
 	if err != nil {
 		lgr.Infof("Unable to parse urlToTest %v", elem)

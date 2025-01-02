@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/chat/db"
@@ -18,7 +17,7 @@ import (
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, typeRegistry *type_registry.TypeRegistryInstance, db *db.DB) AaaUserProfileUpdateListener {
+func CreateAaaUserProfileUpdateListener(lgr *logger.Logger, not *services.Events, typeRegistry *type_registry.TypeRegistryInstance, db *db.DB) AaaUserProfileUpdateListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -29,11 +28,11 @@ func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, t
 		bytesData := msg.Body
 		strData := string(bytesData)
 		aType := msg.Type
-		logger.GetLogEntry(ctx, lgr).Debugf("Received %v with type %v", strData, aType)
+		lgr.WithTracing(ctx).Debugf("Received %v with type %v", strData, aType)
 
 		if !typeRegistry.HasType(aType) {
 			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			logger.GetLogEntry(ctx, lgr).Debugf(errStr)
+			lgr.WithTracing(ctx).Debugf(errStr)
 			return nil
 		}
 
@@ -43,7 +42,7 @@ func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, t
 		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				logger.GetLogEntry(ctx, lgr).Errorf("Error during deserialize notification %v", err)
+				lgr.WithTracing(ctx).Errorf("Error during deserialize notification %v", err)
 				return err
 			}
 			if bindTo.EventType == "user_account_changed" {
@@ -51,7 +50,7 @@ func CreateAaaUserProfileUpdateListener(lgr *log.Logger, not *services.Events, t
 			}
 
 		default:
-			logger.GetLogEntry(ctx, lgr).Errorf("Unexpected type : %v", anInstance)
+			lgr.WithTracing(ctx).Errorf("Unexpected type : %v", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 		}
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
+	"nkonev.name/event/logger"
 	myRabbit "nkonev.name/event/rabbitmq"
 )
 
@@ -18,7 +18,7 @@ type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
 type AaaEventsChannel struct{ *rabbitmq.Channel }
 
-func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func create(lgr *logger.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -36,7 +36,7 @@ func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Que
 	return &q
 }
 
-func createAndBind(lgr *log.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createAndBind(lgr *logger.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -59,7 +59,7 @@ func createAndBind(lgr *log.Logger, name string, key string, exchange string, co
 	return &q
 }
 
-func CreateEventsChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
+func CreateEventsChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
 	var fanoutQueueName = "async-events-" + uuid.New().String()
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
@@ -85,7 +85,7 @@ func CreateEventsChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMes
 	)}
 }
 
-func CreateAaaChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) *AaaEventsChannel {
+func CreateAaaChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage EventsListener, lc fx.Lifecycle) *AaaEventsChannel {
 	var fanoutQueueName = "event-aaa-profile-events-" + uuid.New().String()
 
 	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
@@ -112,7 +112,7 @@ func CreateAaaChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessag
 }
 
 func listen(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,

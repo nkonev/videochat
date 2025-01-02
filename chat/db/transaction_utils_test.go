@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"nkonev.name/chat/config"
-	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/logger"
 	"os"
 	"testing"
 )
@@ -23,7 +23,7 @@ func shutdown() {
 }
 
 var dbInstance *DB
-var lgr = NewLogger()
+var lgr = logger.NewLogger()
 
 func setup() {
 	config.InitViper()

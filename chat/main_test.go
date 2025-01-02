@@ -9,7 +9,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
@@ -24,7 +23,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/handlers"
-	. "nkonev.name/chat/logger"
+	"nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
 	myRabbitmq "nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/services"
@@ -51,11 +50,11 @@ const aaaEmuPort = "8061"
 
 var userTester = base64.StdEncoding.EncodeToString([]byte("tester"))
 var userTester2 = base64.StdEncoding.EncodeToString([]byte("tester2"))
-var lgr *log.Logger
+var lgr *logger.Logger
 
 func setup() {
 	config.InitViper()
-	lgr = NewLogger()
+	lgr = logger.NewLogger()
 
 	viper.Set("aaa.url.base", "http://localhost:"+aaaEmuPort)
 

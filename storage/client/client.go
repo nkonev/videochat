@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -16,7 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"nkonev.name/storage/dto"
-	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 	"strings"
 )
@@ -31,7 +30,7 @@ type RestClient struct {
 	checkChatExistsPath    string
 	chatParticipantIdsPath string
 	tracer                 trace.Tracer
-	lgr                    *log.Logger
+	lgr                    *logger.Logger
 }
 
 func newRestClient() *http.Client {
@@ -46,7 +45,7 @@ func newRestClient() *http.Client {
 	return client
 }
 
-func NewChatAccessClient(lgr *log.Logger) *RestClient {
+func NewChatAccessClient(lgr *logger.Logger) *RestClient {
 	client := newRestClient()
 	trcr := otel.Tracer("rest/client")
 
@@ -95,7 +94,7 @@ func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatI
 
 	req, err := http.NewRequest("GET", url0, nil)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Error(err, "Error during create GET")
+		h.lgr.WithTracing(c).Errorw("Error during create GET", err)
 		return false, err
 	}
 
@@ -105,7 +104,7 @@ func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatI
 
 	response, err := h.client.Do(req)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Error(err, "Transport error during checking access")
+		h.lgr.WithTracing(c).Errorw("Transport error during checking access", err)
 		return false, err
 	}
 	defer response.Body.Close()
@@ -115,7 +114,7 @@ func (h *RestClient) CheckAccessExtended(c context.Context, userId *int64, chatI
 		return false, nil
 	} else {
 		err := errors.New("Unexpected status on checkAccess")
-		GetLogEntry(c, h.lgr).Error(err, "Unexpected status on checkAccess", "httpCode", response.StatusCode)
+		h.lgr.WithTracing(c).Errorw("Unexpected status on checkAccess", err, "httpCode", response.StatusCode)
 		return false, err
 	}
 }
@@ -125,7 +124,7 @@ func (h *RestClient) RemoveFileItem(c context.Context, chatId int64, fileItemUui
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed during parse chat url:", err)
+		h.lgr.WithTracing(c).Errorln("Failed during parse chat url:", err)
 		return
 	}
 
@@ -140,14 +139,14 @@ func (h *RestClient) RemoveFileItem(c context.Context, chatId int64, fileItemUui
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorf("Transport error during removing file item %v", err)
+		h.lgr.WithTracing(c).Errorf("Transport error during removing file item %v", err)
 		return
 	}
 	defer response.Body.Close()
 	if response.StatusCode == http.StatusOK {
 		return
 	} else {
-		GetLogEntry(c, h.lgr).Errorf("Unexpected status on removing file item %v: %v", err, response.StatusCode)
+		h.lgr.WithTracing(c).Errorf("Unexpected status on removing file item %v: %v", err, response.StatusCode)
 		return
 	}
 
@@ -172,7 +171,7 @@ func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 
 	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed during parse aaa url:", err)
+		h.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -187,24 +186,24 @@ func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Warningln("Failed to request get users response:", err)
+		h.lgr.WithTracing(c).Warnln("Failed to request get users response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c, h.lgr).Warningln("Users response responded non-200 code: ", code)
+		h.lgr.WithTracing(c).Warnln("Users response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to decode get users response:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to decode get users response:", err)
 		return nil, err
 	}
 
 	users := &[]*dto.User{}
 	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to parse users:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to parse users:", err)
 		return nil, err
 	}
 	return *users, nil
@@ -228,7 +227,7 @@ func (h *RestClient) CheckIsChatExists(c context.Context, chatIds []int64) (*[]C
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed during parse chat url:", err)
+		h.lgr.WithTracing(c).Errorln("Failed during parse chat url:", err)
 		return nil, err
 	}
 
@@ -246,7 +245,7 @@ func (h *RestClient) CheckIsChatExists(c context.Context, chatIds []int64) (*[]C
 
 	response, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Error(err, "Transport error during checking chat presence")
+		h.lgr.WithTracing(c).Errorw("Transport error during checking chat presence", err)
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -257,13 +256,13 @@ func (h *RestClient) CheckIsChatExists(c context.Context, chatIds []int64) (*[]C
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to decode get chat presence response:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to decode get chat presence response:", err)
 		return nil, err
 	}
 
 	resultMap := new([]ChatExists)
 	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to parse result:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to parse result:", err)
 		return nil, err
 	}
 	return resultMap, nil
@@ -281,7 +280,7 @@ func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64
 
 	parsedUrl, err := url.Parse(fullUrl + "?chatId=" + utils.Int64ToString(chatId) + "&page=" + utils.IntToString(page) + "&size=" + utils.IntToString(size))
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed during parse chat participant ids url:", err)
+		h.lgr.WithTracing(c).Errorln("Failed during parse chat participant ids url:", err)
 		return nil, err
 	}
 	request := &http.Request{
@@ -296,24 +295,24 @@ func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Warningln("Failed to request chat participant ids response:", err)
+		h.lgr.WithTracing(c).Warnln("Failed to request chat participant ids response:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c, h.lgr).Warningln("Chat response responded non-200 code: ", code)
+		h.lgr.WithTracing(c).Warnln("Chat response responded non-200 code: ", code)
 		return nil, err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to decode chat participant ids response:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to decode chat participant ids response:", err)
 		return nil, err
 	}
 
 	userIds := new([]int64)
 	if err := json.Unmarshal(bodyBytes, userIds); err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to parse chat participant ids:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to parse chat participant ids:", err)
 		return nil, err
 	}
 	return *userIds, nil
@@ -328,13 +327,13 @@ func (h *RestClient) GetChatParticipantIds(c context.Context, chatId int64, cons
 			shouldContinue = false
 		}
 		if err != nil {
-			GetLogEntry(c, h.lgr).Warningf("got error %v", err)
+			h.lgr.WithTracing(c).Warnf("got error %v", err)
 			lastError = err
 			continue
 		}
 		err = consumer(portion)
 		if err != nil {
-			GetLogEntry(c, h.lgr).Errorf("Got error during invoking consumer portion %v", err)
+			h.lgr.WithTracing(c).Errorf("Got error during invoking consumer portion %v", err)
 			lastError = err
 			continue
 		}
@@ -364,7 +363,7 @@ func (h *RestClient) GetMinioMetricsCluster(c context.Context) (string, error) {
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed during parse aaa url:", err)
+		h.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
 		return "", err
 	}
 	request := &http.Request{
@@ -375,18 +374,18 @@ func (h *RestClient) GetMinioMetricsCluster(c context.Context) (string, error) {
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Warningln("Failed to request get minio response:", err)
+		h.lgr.WithTracing(c).Warnln("Failed to request get minio response:", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c, h.lgr).Warningln("minio response responded non-200 code: ", code)
+		h.lgr.WithTracing(c).Warnln("minio response responded non-200 code: ", code)
 		return "", err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to decode minio response:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to decode minio response:", err)
 		return "", err
 	}
 
@@ -404,7 +403,7 @@ func (h *RestClient) GetMinioMetricsBucket(c context.Context) (string, error) {
 
 	parsedUrl, err := url.Parse(fullUrl)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed during parse aaa url:", err)
+		h.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
 		return "", err
 	}
 	request := &http.Request{
@@ -415,18 +414,18 @@ func (h *RestClient) GetMinioMetricsBucket(c context.Context) (string, error) {
 
 	resp, err := h.client.Do(request)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Warningln("Failed to request get minio response:", err)
+		h.lgr.WithTracing(c).Warnln("Failed to request get minio response:", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 	code := resp.StatusCode
 	if code != 200 {
-		GetLogEntry(c, h.lgr).Warningln("minio response responded non-200 code: ", code)
+		h.lgr.WithTracing(c).Warnln("minio response responded non-200 code: ", code)
 		return "", err
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		GetLogEntry(c, h.lgr).Errorln("Failed to decode minio response:", err)
+		h.lgr.WithTracing(c).Errorln("Failed to decode minio response:", err)
 		return "", err
 	}
 

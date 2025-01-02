@@ -3,14 +3,14 @@ package rabbitmq
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/video/config"
+	"nkonev.name/video/logger"
 )
 
 type VideoListenerFunction func(data []byte) error
 
-func CreateRabbitMqConnection(lgr *log.Logger, conf *config.ExtendedConfig) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *logger.Logger, conf *config.ExtendedConfig) *rabbitmq.Connection {
 	rabbitmq.Debug = conf.RabbitMqConfig.Debug
 
 	conn, err := rabbitmq.Dial(conf.RabbitMqConfig.Url)
@@ -23,7 +23,7 @@ func CreateRabbitMqConnection(lgr *log.Logger, conf *config.ExtendedConfig) *rab
 }
 
 func CreateRabbitMqChannelWithRecreate(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	connection *rabbitmq.Connection,
 	callback func(argChannel *rabbitmq.Channel) error,
 ) *rabbitmq.Channel {
@@ -36,7 +36,7 @@ func CreateRabbitMqChannelWithRecreate(
 }
 
 func CreateRabbitMqChannel(
-	lgr *log.Logger,
+	lgr *logger.Logger,
 	connection *rabbitmq.Connection,
 ) *rabbitmq.Channel {
 	channel, err := connection.Channel(func(argChannel *rabbitmq.Channel) error {
@@ -49,7 +49,7 @@ func CreateRabbitMqChannel(
 	return channel
 }
 
-func CreateRabbitMqChannelWithCallback(lgr *log.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *logger.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
 		lgr.Panic(err)

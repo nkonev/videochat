@@ -17,3 +17,4 @@ test-results/
 playwright-report/
 __debug_bin
 .vscode/
+*.log

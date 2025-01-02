@@ -6,14 +6,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	lkauth "github.com/livekit/protocol/auth"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/db"
 	"nkonev.name/video/dto"
-	. "nkonev.name/video/logger"
+	"nkonev.name/video/logger"
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
@@ -29,7 +28,7 @@ type InviteHandler struct {
 	userService              *services.UserService
 	stateChangedEventService *services.StateChangedEventService
 	config                   *config.ExtendedConfig
-	lgr                      *log.Logger
+	lgr                      *logger.Logger
 }
 
 const EventMissedCall = "missed_call"
@@ -43,7 +42,7 @@ func NewInviteHandler(
 	userService *services.UserService,
 	stateChangedEventService *services.StateChangedEventService,
 	config *config.ExtendedConfig,
-	lgr *log.Logger,
+	lgr *logger.Logger,
 ) *InviteHandler {
 	return &InviteHandler{
 		database:                 database,
@@ -62,7 +61,7 @@ func NewInviteHandler(
 func (vh *InviteHandler) ProcessCreatingOrDeletingInvite(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting auth context")
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -150,26 +149,26 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 		UserId:  userPrincipalDto.UserId,
 	})
 	if err != nil {
-		GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
+		vh.lgr.WithTracing(c).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 	for _, callee := range calleesOfOwner {
 		if callee.ChatId != chatId {
-			GetLogEntry(c, vh.lgr).Infof("Calls to the different chats are prohibited")
+			vh.lgr.WithTracing(c).Infof("Calls to the different chats are prohibited")
 			return http.StatusConflict
 		}
 	}
 
 	gotStatusesAllChats, err := tx.GetByCalleeUserIdFromAllChats(c, calleeUserId)
 	if err != nil {
-		GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
+		vh.lgr.WithTracing(c).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
 	var ucss []dto.UserCallState = make([]dto.UserCallState, 0)
 	for _, gotStatus := range gotStatusesAllChats {
 		if !db.CanOverrideCallStatus(gotStatus.Status) {
-			GetLogEntry(c, vh.lgr).Infof("Unable to invite somebody with non-overridable status")
+			vh.lgr.WithTracing(c).Infof("Unable to invite somebody with non-overridable status")
 			return http.StatusConflict
 		} else {
 			ucss = append(ucss, gotStatus)
@@ -193,7 +192,7 @@ func (vh *InviteHandler) addAsCallee(c context.Context, tx *db.Tx, calleeUserId 
 	err = tx.Set(c, newCalleeStatus)
 
 	if err != nil {
-		GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
+		vh.lgr.WithTracing(c).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -211,7 +210,7 @@ func (vh *InviteHandler) ownerRemoveFromCalling(ctx context.Context, tx *db.Tx, 
 
 	statuses, err := tx.GetBeingInvitedByOwnerAndCalleeId(ctx, dto.UserCallStateId{TokenId: ownerTokenId, UserId: userPrincipalDto.UserId}, callee, chatId)
 	if err != nil {
-		GetLogEntry(ctx, vh.lgr).Errorf("Error during getting stetuses %v", err)
+		vh.lgr.WithTracing(ctx).Errorf("Error during getting stetuses %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -232,7 +231,7 @@ func (vh *InviteHandler) ownerRemoveFromCalling(ctx context.Context, tx *db.Tx, 
 func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting auth context")
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -298,7 +297,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			if len(tokenIdStr) > 0 {
 				tokenId, err = uuid.Parse(tokenIdStr)
 				if err != nil {
-					GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during parsing provided token, error=%v", err)
+					vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing provided token, error=%v", err)
 					return err
 				}
 			} else {
@@ -307,7 +306,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 
 			token, err = vh.getJoinToken(aKey, aSecret, aRoomId, userPrincipalDto, tokenId)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting token, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
+				vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting token, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
 				return err
 			}
 
@@ -322,17 +321,17 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 				basicChatInfo.TetATet,
 			)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during adding as owner %v", err)
+				vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during adding as owner %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
 			oppositeTetATetUserId, err := vh.getOppositeUserOfTetATetIfPossible(c.Request().Context(), basicChatInfo, chatId, userPrincipalDto)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error %v", err)
+				vh.lgr.WithTracing(c.Request().Context()).Errorf("Error %v", err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
 			if oppositeTetATetUserId != nil {
-				GetLogEntry(c.Request().Context(), vh.lgr).Infof("Adding user %v to call because it is tet-a-tet chat and he isn't in video", *oppositeTetATetUserId)
+				vh.lgr.WithTracing(c.Request().Context()).Infof("Adding user %v to call because it is tet-a-tet chat and he isn't in video", *oppositeTetATetUserId)
 				vh.addAsCallee(c.Request().Context(), tx, *oppositeTetATetUserId, chatId, userPrincipalDto, tokenId, basicChatInfo.TetATet)
 			}
 		} else { // we enter to somebody's chat
@@ -340,7 +339,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 			tokenId = myInvitation.TokenId
 			token, err = vh.getJoinToken(aKey, aSecret, aRoomId, userPrincipalDto, tokenId)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting token, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
+				vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting token, userId=%v, chatId=%v, error=%v", userPrincipalDto.UserId, chatId, err)
 				return err
 			}
 
@@ -353,7 +352,7 @@ func (vh *InviteHandler) ProcessEnterToDial(c echo.Context) error {
 				basicChatInfo.TetATet,
 			)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during adding as non-owner %v", err)
+				vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during adding as non-owner %v", err)
 				return err
 			}
 			vh.sendEvents(c.Request().Context(), chatId, userPrincipalDto.UserId, db.CallStatusInCall, *myInvitation.OwnerUserId, *myInvitation.OwnerAvatar, basicChatInfo.TetATet)
@@ -382,7 +381,7 @@ func (vh *InviteHandler) getOppositeUserOfTetATetIfPossible(c context.Context, b
 		// uniq users by userId
 		usersOfVideo, err := vh.userService.GetVideoParticipants(c, chatId)
 		if err != nil {
-			GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
+			vh.lgr.WithTracing(c).Errorf("Error %v", err)
 			return nil, err
 		}
 
@@ -448,14 +447,14 @@ func (vh *InviteHandler) hardRemove(c context.Context, tx *db.Tx, userCallStates
 	}
 	err := tx.RemoveByUserCallStates(c, userCallStateIds)
 	if err != nil {
-		GetLogEntry(c, vh.lgr).Errorf("Error during removing from db: %v", err)
+		vh.lgr.WithTracing(c).Errorf("Error during removing from db: %v", err)
 	}
 }
 
 func (vh *InviteHandler) ProcessCancelInvitation(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting auth context")
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -505,7 +504,7 @@ func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64,
 
 		err = tx.SetRemoving(c, dto.UserCallStateId{TokenId: userId.TokenId, UserId: userId.UserId}, callStatus)
 		if err != nil {
-			GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
+			vh.lgr.WithTracing(c).Errorf("Error %v", err)
 			continue
 		}
 
@@ -515,7 +514,7 @@ func (vh *InviteHandler) softRemove(c context.Context, tx *db.Tx, ownerId int64,
 		}
 	}
 	if err != nil {
-		GetLogEntry(c, vh.lgr).Errorf("Error %v", err)
+		vh.lgr.WithTracing(c).Errorf("Error %v", err)
 		return http.StatusInternalServerError
 	}
 
@@ -527,7 +526,7 @@ func (vh *InviteHandler) sendEvents(c context.Context, chatId int64, userId int6
 
 	inviteNames, err := vh.chatClient.GetChatNameForInvite(c, chatId, ownerId, usersOfDial)
 	if err != nil {
-		GetLogEntry(c, vh.lgr).Error(err, "Failed during getting chat invite names")
+		vh.lgr.WithTracing(c).Error(err, "Failed during getting chat invite names")
 		return
 	}
 
@@ -541,7 +540,7 @@ func (vh *InviteHandler) sendEvents(c context.Context, chatId int64, userId int6
 func (vh *InviteHandler) ProcessExit(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting auth context")
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -611,7 +610,7 @@ func (vh *InviteHandler) ProcessExit(c echo.Context) error {
 	})
 
 	if err != nil {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during leaving: %v", err)
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during leaving: %v", err)
 		return err
 	}
 
@@ -633,7 +632,7 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 
 	if len(missedUsersList) > 0 {
 		if chatNames, err := vh.chatClient.GetChatNameForInvite(ctx, chatId, userPrincipalDto.UserId, missedUsersList); err != nil {
-			GetLogEntry(ctx, vh.lgr).Errorf("Error %v", err)
+			vh.lgr.WithTracing(ctx).Errorf("Error %v", err)
 		} else {
 			for _, chatName := range chatNames {
 				states := missedUserMap[chatName.UserId]
@@ -655,7 +654,7 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 
 						err = vh.notificationPublisher.Publish(ctx, missedCall)
 						if err != nil {
-							GetLogEntry(ctx, vh.lgr).Errorf("Error %v", err)
+							vh.lgr.WithTracing(ctx).Errorf("Error %v", err)
 						}
 
 						sentToUser = true
@@ -671,7 +670,7 @@ func (vh *InviteHandler) sendMissedCallNotification(ctx context.Context, chatId 
 func (vh *InviteHandler) SendCurrentInVideoStatuses(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok || userPrincipalDto == nil {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting auth context")
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -684,7 +683,7 @@ func (vh *InviteHandler) SendCurrentInVideoStatuses(c echo.Context) error {
 		}
 		parseInt64, err := utils.ParseInt64(us)
 		if err != nil {
-			GetLogEntry(c.Request().Context(), vh.lgr).Errorf("unable to parse %v", err)
+			vh.lgr.WithTracing(c.Request().Context()).Errorf("unable to parse %v", err)
 		} else {
 			userIds = append(userIds, parseInt64)
 		}
@@ -696,7 +695,7 @@ func (vh *InviteHandler) SendCurrentInVideoStatuses(c echo.Context) error {
 			return nil
 		})
 		if err != nil {
-			GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error %v", err)
+			vh.lgr.WithTracing(c.Request().Context()).Errorf("Error %v", err)
 		}
 	}
 
@@ -706,7 +705,7 @@ func (vh *InviteHandler) SendCurrentInVideoStatuses(c echo.Context) error {
 func (vh *InviteHandler) GetMyBeingInvitedStatus(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error during getting auth context")
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
 		return errors.New("Error during getting auth context")
 	}
 
@@ -749,7 +748,7 @@ func (vh *InviteHandler) GetMyBeingInvitedStatus(c echo.Context) error {
 		return invitation, nil
 	})
 	if err != nil {
-		GetLogEntry(c.Request().Context(), vh.lgr).Errorf("Error: %v", err)
+		vh.lgr.WithTracing(c.Request().Context()).Errorf("Error: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 

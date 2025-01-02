@@ -50,6 +50,11 @@ export EDITOR=vim
 sudo dnf install ffmpeg-free
 ```
 
+## Create dir for fluent-bit socket
+```bash
+sudo mkdir /var/run/fluent-bit
+```
+
 ## Environment (PostgreSQL, RabbitMQ, ...)
 To start the environment do
 ```
@@ -1207,3 +1212,190 @@ go generate ./...
 * [minio](https://github.com/minio/minio/discussions/15551)
 * [pgadmin](https://stackoverflow.com/questions/72567935/run-pgadmin4-on-a-custom-path-with-docker/72694786#72694786)
 * [traefik](https://github.com/traefik/traefik/commit/0ec12c7aa7b1344648e8789c489e14ee6063dafc) starting from 3.3
+
+
+# Opensearch
+```bash
+curl -Ss -X GET 'http://localhost:9200/_cat/indices'
+
+# by trace id, without jq, but with pretty, to use inside from opensearch container
+curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+  "size": 1000,
+  "query": {
+      "match": {
+        "trace_id": "6077d4a6a80eacc954d668b8e8edbf5e"
+      }
+  },
+  "sort" : [
+    { 
+        "@timestamp" : "asc"
+    }
+  ]
+}
+'
+
+# last 100 docs, without jq, but with pretty, to use inside from opensearch container
+curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+  "size": 100,
+  "query": {
+      "match_all": { }
+  },
+  "sort" : [
+    { 
+        "@timestamp" : "desc"
+    }
+  ]
+}
+'
+
+
+
+
+curl -Ss -X GET 'http://localhost:9200/videochat-*/_mapping' | jq
+
+# AUTO CLEANING 2
+# create a policy to delete old idx
+# https://opensearch.org/docs/latest/im-plugin/ism/api/#create-policy
+# https://opensearch.org/docs/latest/im-plugin/ism/policies/#example-policy
+curl -Ss -X PUT 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes_policy?pretty' -H 'Content-Type: application/json' -d'
+{
+  "policy": {
+    "description": "delete old indexes",
+    "default_state": "hot",
+    "schema_version": 1,
+    "states": [
+      {
+        "name": "hot",
+        "transitions": [
+          {
+            "state_name": "delete",
+            "conditions": {
+              "min_index_age": "1d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "delete",
+        "actions": [
+          {
+            "delete": {}
+          }
+        ]
+      }
+    ],
+    "ism_template": {
+      "index_patterns": ["videochat-*"],
+      "priority": 100
+    }
+  }
+}
+'
+
+# AUTO CLEANING 3
+# every 1 min (https://opensearch.org/docs/latest/im-plugin/ism/policies/#example-policy)
+curl -Ss -X PUT 'http://localhost:9200/_cluster/settings?pretty=true' -H 'Content-Type: application/json' -d'
+{
+  "persistent" : {
+    "plugins.index_state_management.job_interval" : 1
+  }
+}
+'
+
+# by count
+curl -Ss -X PUT 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes_policy?pretty' -H 'Content-Type: application/json' -d'
+{
+  "policy": {
+    "description": "delete old indexes",
+    "default_state": "hot",
+    "schema_version": 1,
+    "states": [
+      {
+        "name": "hot",
+        "transitions": [
+          {
+            "state_name": "delete",
+            "conditions": {
+              "min_doc_count": 10
+            }
+          }
+        ]
+      },
+      {
+        "name": "delete",
+        "actions": [
+          {
+            "delete": {}
+          }
+        ]
+      }
+    ],
+    "ism_template": {
+      "index_patterns": ["videochat-*"],
+      "priority": 100
+    }
+  }
+}
+'
+
+curl -Ss -X GET 'http://localhost:9200/_cat/count/videochat-2025.01.05'
+curl -Ss -X GET 'http://localhost:9200/videochat/_count'
+
+# also
+curl -Ss 'http://localhost:9200/_plugins/_ism/policies?pretty'
+curl -i -X PUT 'http://localhost:9200/.opendistro-ism-config'
+curl -Ss -X DELETE 'http://localhost:9200/.opendistro-ism-config'
+curl -Ss -X DELETE 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes_policy?pretty'
+
+# AUTO CLEANING check, should be "enabled" : true
+# explain
+curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/videochat-2025.01.05?pretty'
+
+# Warning!
+# It can change from "enabled" : null to "enabled" : true after roughly 5 minutes ! 
+
+# make yellow -> green (https://opster.com/guides/opensearch/opensearch-basics/yellow-status/)
+curl -i -X PUT 'http://localhost:9200/videochat-2025.01.05/_settings' -H 'Content-Type: application/json' -d'
+{
+    "index" : {
+        "number_of_replicas" : 0
+    }
+}
+'
+
+curl -i -X PUT 'http://localhost:9200/.opendistro-ism-config/_settings' -H 'Content-Type: application/json' -d'
+{
+    "index" : {
+        "number_of_replicas" : 0
+    }
+}
+'
+
+# then health will show green
+curl -i 'http://localhost:9200/_cluster/health/?level=shards&pretty'
+
+# AUTO CLEANING 1
+# should be created beforehand in order to make policy working (policy searches templates)
+curl -i -X PUT 'http://localhost:9200/_index_template/videochat_template' -H 'Content-Type: application/json' -d'
+{
+  "index_patterns": [
+    "videochat-*"
+  ],
+  "template": {
+    "aliases": {
+      "videochat": {}
+    },
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  }
+}
+'
+
+# if an index videochat-2025.01.05 was created before, just remove it
+curl -Ss -X DELETE 'http://localhost:9200/videochat-2025.01.05'
+
+```

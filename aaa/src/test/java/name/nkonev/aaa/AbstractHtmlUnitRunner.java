@@ -1,9 +1,9 @@
 package name.nkonev.aaa;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gargoylesoftware.htmlunit.WebClient;
 import name.nkonev.aaa.config.HtmlUnitProperties;
 import name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests;
+import org.htmlunit.WebClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;

@@ -50,11 +50,16 @@ services:
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=
       - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com,https://coub.com,https://vk.com,https://rutube.ru,https://player.vimeo.com,https://player.smotrim.ru,https://vkvideo.ru
       - CHAT_ONLYADMINCANCREATEBLOG={{ chat_only_role_admin_can_create_blog }}
+      # disable logging to filename because of capturing from stdout
+      - CHAT_LOGGER.WRITETOFILE=false
 
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.app.golang.chat
+        fluentd-sub-second-precision: "true"
 
 networks:
   backend:

@@ -7,13 +7,12 @@ import (
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/common/expfmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"math/big"
 	"net/http"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
-	. "nkonev.name/storage/logger"
+	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 	"strings"
@@ -22,10 +21,10 @@ import (
 
 type AuthMiddleware echo.MiddlewareFunc
 
-func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, error) {
+func ExtractAuth(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
-	GetLogEntry(request.Context(), lgr).Infof("Extracted session expiration time: %v", t)
+	lgr.WithTracing(request.Context()).Infof("Extracted session expiration time: %v", t)
 
 	if err != nil {
 		return nil, err
@@ -65,7 +64,7 @@ func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, erro
 //   - *AuthResult pointer or nil
 //   - is whitelisted
 //   - error
-func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, error) {
+func authorize(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
 	if utils.CheckUrlInWhitelist(request.Context(), lgr, whitelist, request.RequestURI) {
@@ -73,19 +72,19 @@ func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, 
 	}
 	auth, err := ExtractAuth(request, lgr)
 	if err != nil {
-		GetLogEntry(request.Context(), lgr).Infof("Error during extract AuthResult: %v", err)
+		lgr.WithTracing(request.Context()).Infof("Error during extract AuthResult: %v", err)
 		return nil, false, nil
 	}
-	GetLogEntry(request.Context(), lgr).Infof("Success AuthResult: %v", *auth)
+	lgr.WithTracing(request.Context()).Infof("Success AuthResult: %v", *auth)
 	return auth, false, nil
 }
 
-func ConfigureAuthMiddleware(lgr *log.Logger) AuthMiddleware {
+func ConfigureAuthMiddleware(lgr *logger.Logger) AuthMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(c.Request(), lgr)
 			if err != nil {
-				GetLogEntry(c.Request().Context(), lgr).Errorf("Error during authorize: %v", err)
+				lgr.WithTracing(c.Request().Context()).Errorf("Error during authorize: %v", err)
 				return err
 			} else if whitelist {
 				return next(c)
@@ -106,7 +105,7 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func getMaxAllowedConsumption(ctx context.Context, lgr *log.Logger, restClient *client.RestClient, isUnlimited bool) (int64, error) {
+func getMaxAllowedConsumption(ctx context.Context, lgr *logger.Logger, restClient *client.RestClient, isUnlimited bool) (int64, error) {
 	if isUnlimited {
 		return calcTotalSize(ctx, lgr, restClient)
 	} else {
@@ -114,12 +113,12 @@ func getMaxAllowedConsumption(ctx context.Context, lgr *log.Logger, restClient *
 	}
 }
 
-func calcTotalSize(ctx context.Context, lgr *log.Logger, restClient *client.RestClient) (int64, error) {
+func calcTotalSize(ctx context.Context, lgr *logger.Logger, restClient *client.RestClient) (int64, error) {
 	var totalClusterSize = big.NewFloat(0)
 
 	clusterMetrics, err := restClient.GetMinioMetricsCluster(ctx)
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during getting bucket consumption %v", err)
+		lgr.WithTracing(ctx).Errorf("Error during getting bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -127,7 +126,7 @@ func calcTotalSize(ctx context.Context, lgr *log.Logger, restClient *client.Rest
 
 	mf, err := parser.TextToMetricFamilies(strings.NewReader(clusterMetrics))
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during parsing bucket consumption %v", err)
+		lgr.WithTracing(ctx).Errorf("Error during parsing bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -147,12 +146,12 @@ func calcTotalSize(ctx context.Context, lgr *log.Logger, restClient *client.Rest
 	return resV, nil
 }
 
-func calcBucketsConsumption(ctx context.Context, lgr *log.Logger, restClient *client.RestClient) (int64, error) {
+func calcBucketsConsumption(ctx context.Context, lgr *logger.Logger, restClient *client.RestClient) (int64, error) {
 	var totalBucketConsumption = big.NewFloat(0)
 
 	bucketMetrics, err := restClient.GetMinioMetricsBucket(ctx)
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during getting bucket consumption %v", err)
+		lgr.WithTracing(ctx).Errorf("Error during getting bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -160,7 +159,7 @@ func calcBucketsConsumption(ctx context.Context, lgr *log.Logger, restClient *cl
 
 	mf, err := parser.TextToMetricFamilies(strings.NewReader(bucketMetrics))
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during parsing bucket consumption %v", err)
+		lgr.WithTracing(ctx).Errorf("Error during parsing bucket consumption %v", err)
 		return 0, err
 	}
 
@@ -180,12 +179,12 @@ func calcBucketsConsumption(ctx context.Context, lgr *log.Logger, restClient *cl
 	return resV, nil
 }
 
-func checkUserLimit(ctx context.Context, lgr *log.Logger, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64, restClient *client.RestClient) (bool, int64, int64, error) {
+func checkUserLimit(ctx context.Context, lgr *logger.Logger, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64, restClient *client.RestClient) (bool, int64, int64, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
 	// TODO take into account userId
 	consumption, err := calcBucketsConsumption(ctx, lgr, restClient)
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during getting consumption %v", err)
+		lgr.WithTracing(ctx).Errorf("Error during getting consumption %v", err)
 		return false, 0, 0, err
 	}
 
@@ -193,14 +192,14 @@ func checkUserLimit(ctx context.Context, lgr *log.Logger, minioClient *s3.Intern
 
 	maxAllowed, err := getMaxAllowedConsumption(ctx, lgr, restClient, isUnlimited)
 	if err != nil {
-		GetLogEntry(ctx, lgr).Errorf("Error during calculating max allowed %v", err)
+		lgr.WithTracing(ctx).Errorf("Error during calculating max allowed %v", err)
 		return false, 0, 0, err
 	}
 	available := maxAllowed - consumption
-	GetLogEntry(ctx, lgr).Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
+	lgr.WithTracing(ctx).Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
 
 	if desiredSize > available {
-		GetLogEntry(ctx, lgr).Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
+		lgr.WithTracing(ctx).Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
 		return false, consumption, available, nil
 	}
 	return true, consumption, available, nil

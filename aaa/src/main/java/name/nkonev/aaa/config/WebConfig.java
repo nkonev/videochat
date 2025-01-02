@@ -3,12 +3,15 @@ package name.nkonev.aaa.config;
 import jakarta.annotation.PostConstruct;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import org.apache.catalina.Valve;
+import org.apache.catalina.filters.RequestDumperFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,10 +50,20 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplateBuilder()
-                .setConnectTimeout(aaaProperties.httpClient().connectTimeout())
-                .setReadTimeout(aaaProperties.httpClient().readTimeout())
+                .connectTimeout(aaaProperties.httpClient().connectTimeout())
+                .readTimeout(aaaProperties.httpClient().readTimeout())
                 .requestFactory(JdkClientHttpRequestFactory.class)
                 .build();
+    }
+
+    @ConditionalOnProperty("custom.request.dump")
+    @Bean
+    public FilterRegistrationBean<?> requestDumperFilter() {
+        var registration = new FilterRegistrationBean<>();
+        var requestDumperFilter = new RequestDumperFilter();
+        registration.setFilter(requestDumperFilter);
+        registration.addUrlPatterns("/*");
+        return registration;
     }
 
     // see https://github.com/spring-projects/spring-boot/issues/14302#issuecomment-418712080 if you want to customize management tomcat

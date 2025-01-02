@@ -23,9 +23,12 @@ services:
     networks:
       - backend
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat-traefik
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.infra.traefik
+        fluentd-sub-second-precision: "true"
 
   postgresql:
     image: postgres:17.0-alpine3.20
@@ -253,10 +256,57 @@ services:
       options:
         tag: chat-pgadmin
 
+  fluentbit:
+    image: fluent/fluent-bit:3.2.3
+    restart: unless-stopped
+    hostname: fluentbit
+    volumes:
+      - ./fluent-bit/etc:/fluent-bit/etc:z
+      - /var/run/fluent-bit:/var/run/fluent-bit:z
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-fluentbit
+
+  opensearch:
+    image: opensearchproject/opensearch:2.18.0
+    hostname: opensearch
+    restart: unless-stopped
+    environment:
+      - node.name=opensearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      # - OPENSEARCH_INITIAL_ADMIN_PASSWORD=yourStrongPassword123!
+      # https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    networks:
+      backend:
+    volumes:
+      - opensearch_data_dir:/usr/share/opensearch/data
+      - ./opensearch/docker-entrypoint-init.d.sh:/docker-entrypoint-init.d.sh:z
+      - ./opensearch/docker-entrypoint-init.d:/docker-entrypoint-init.d:z
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-opensearch
+    entrypoint: ["/docker-entrypoint-init.d.sh"]
+
 volumes:
   redis_data_dir:
   rabbitmq_data_dir:
   egress_tmp:
+  opensearch_data_dir:
 
 networks:
   backend:

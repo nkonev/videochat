@@ -37,11 +37,15 @@ services:
       - EVENT_AAA.URL.BASE=http://aaa:8060
       - EVENT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - EVENT_OTLP.ENDPOINT=jaeger:4317
+      - EVENT_LOGGER.WRITETOFILE=false
 
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat-event
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.app.golang.event
+        fluentd-sub-second-precision: "true"
 
 networks:
   backend:

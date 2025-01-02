@@ -45,11 +45,15 @@ services:
       - CHAT_API_URL=http://chat:1235
       - FRONTEND_URL=https://{{ domain }}
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
+      - WRITE_LOG_TO_FILE=false
 
     logging:
-      driver: "journald"
+      driver: "fluentd"
       options:
-        tag: chat-public
+        fluentd-address: unix:///var/run/fluent-bit/socket
+        fluentd-async: "true" # in order not to fail in case traefik started faster than fluent-bit
+        tag: videochat.app.nodejs.public
+        fluentd-sub-second-precision: "true"
 
 networks:
   backend:
