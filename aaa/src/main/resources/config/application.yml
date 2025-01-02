@@ -11,6 +11,7 @@
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type: TRACE
 # logging.level.org.springframework.jdbc.core: TRACE
+logging.structured.format.console: 'logstash'
 
 custom.api-url: "http://localhost:8081/api/aaa"
 custom.frontend-url: "http://localhost:8081"
