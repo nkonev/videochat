@@ -62,9 +62,7 @@ func NewLogger() *log.Logger {
 func CloseLogger() {
 	if logFileVar != nil {
 		fmt.Println("Closing log file")
-		if err := logFileVar.Close(); err != nil {
-			panic(err)
-		}
+		logFileVar.Close()
 	}
 }
 
