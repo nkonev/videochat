@@ -36,13 +36,13 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
     private final ObjectMapper objectMapper;
 
     @Autowired
-    private AaaUserDetailsService aaaUserDetailsService;
-
-    @Autowired
     private EventService eventService;
 
     @Autowired
     private UserAccountRepository userAccountRepository;
+
+    @Autowired
+    private AaaUserDetailsService aaaUserDetailsService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RESTAuthenticationLogoutSuccessHandler.class);
 
@@ -69,6 +69,7 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
         final var now = getNowUTC();
         userAccountRepository.updateLastSeen(userDetails.getUsername(), now);
 
+        // we invoke aaaUserDetailsService.getUsersOnline() because there can be different sessions of this user
         var usersOnline = aaaUserDetailsService.getUsersOnline(List.of(userDetails.getId()));
         eventService.notifyOnlineChanged(usersOnline);
 

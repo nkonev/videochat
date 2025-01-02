@@ -67,6 +67,7 @@ public class AaaUserDetailsService implements UserDetailsService {
         if (ud.getLastSeenDateTime() == null || now.minus(aaaProperties.onlineEstimation()).isAfter(ud.getLastSeenDateTime())) {
             userAccountRepository.updateLastSeen(username, now);
             ud = ud.withUserAccountDTO(ud.userAccountDTO().withLastSeenDateTime(now));
+            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(ud.getId(), true, now)));
         }
         return ud;
     }

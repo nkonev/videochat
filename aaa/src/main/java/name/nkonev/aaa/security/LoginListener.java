@@ -2,6 +2,7 @@ package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.dto.UserOnlineResponse;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,9 @@ public class LoginListener implements ApplicationListener<AuthenticationSuccessE
     @Autowired
     private EventService eventService;
 
+    @Autowired
+    private UserAccountRepository userAccountRepository;
+
     @Override
     public void onApplicationEvent(AuthenticationSuccessEvent event) {
         UserAccountDetailsDTO userDetails = (UserAccountDetailsDTO) event.getAuthentication().getPrincipal();
@@ -36,6 +40,7 @@ public class LoginListener implements ApplicationListener<AuthenticationSuccessE
     public void onApplicationEvent(UserAccountDetailsDTO userDetails) {
         LOGGER.info("User '{}' logged in", userDetails.getUsername());
         final var now = getNowUTC();
+        userAccountRepository.updateLastSeen(userDetails.getUsername(), now);
         eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userDetails.getId(), true, now)));
     }
 
