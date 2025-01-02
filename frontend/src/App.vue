@@ -59,10 +59,10 @@
               bordered
               :model-value="showTetATetBadge"
           >
-            <img v-if="!!chatStore.avatar && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
+            <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           </v-badge>
           <div class="d-flex flex-column app-title mx-2" :class="isInChat() ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
-            <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="chatStore.title"></div>
+            <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="getTitle()"></div>
             <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
               {{ getSubtitle() }}
             </div>
@@ -583,6 +583,21 @@ export default {
           }).then(({data}) => {
             this.onVideoCallInvited(data);
           })
+        },
+        shouldShowAvatar() {
+            return hasLength(this.chatStore.avatar)
+        },
+        getTitle() {
+            let bldr = this.chatStore.title;
+            if (!this.shouldShowAvatar()) {
+              if (this.chatStore.oppositeUserOnline) {
+                bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";
+              }
+              if (this.chatStore.oppositeUserInVideo) {
+                bldr += " (" + this.$vuetify.locale.t('$vuetify.user_in_video_call') + ")";
+              }
+            }
+            return bldr
         },
         getSubtitle() {
             if (!!this.chatStore.moreImportantSubtitleInfo) {
