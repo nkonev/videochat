@@ -2,7 +2,6 @@ package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
-import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
@@ -14,7 +13,7 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Map;
@@ -23,8 +22,7 @@ import java.util.Set;
 
 import static name.nkonev.aaa.Constants.GOOGLE_LOGIN_PREFIX;
 
-
-@Component
+@Service
 public class GoogleOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GoogleOAuth2UserService.class);

@@ -2,7 +2,6 @@ package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
-import name.nkonev.aaa.converter.UserAccountConverter;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
@@ -14,7 +13,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Map;
@@ -23,8 +22,7 @@ import java.util.Set;
 
 import static name.nkonev.aaa.Constants.FACEBOOK_LOGIN_PREFIX;
 
-
-@Component
+@Service
 public class FacebookOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FacebookOAuth2UserService.class);

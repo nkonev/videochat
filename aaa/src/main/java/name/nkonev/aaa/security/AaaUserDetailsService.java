@@ -17,7 +17,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -30,7 +30,7 @@ import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 /**
  * Provides Spring Security compatible UserAccountDetailsDTO.
  */
-@Component
+@Service
 public class AaaUserDetailsService implements UserDetailsService {
 
     @Autowired
