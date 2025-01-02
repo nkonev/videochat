@@ -34,7 +34,6 @@ func NewLogger() *log.Logger {
 			log.FieldKeyMsg:   "message",
 			log.FieldKeyFunc:  "caller",
 		},
-		PrettyPrint: true,
 	})
 
 	logWriteToFile := viper.GetBool("logger.writeToFile")

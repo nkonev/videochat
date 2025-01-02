@@ -11,7 +11,7 @@
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type: TRACE
 # logging.level.org.springframework.jdbc.core: TRACE
-logging.structured.json.exclude: level_value
+logging.structured.json.exclude: level_value,@version
 logging.structured.format.console: 'logstash'
 # see org.springframework.boot.logging.LogFile#get, org.springframework.boot.logging.logback.DefaultLogbackConfiguration#apply
 # see also name.nkonev.aaa.AaaApplication
