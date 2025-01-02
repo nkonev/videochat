@@ -12,6 +12,10 @@
 #logging.level.org.hibernate.type: TRACE
 # logging.level.org.springframework.jdbc.core: TRACE
 logging.structured.format.console: 'logstash'
+# see org.springframework.boot.logging.LogFile#get, org.springframework.boot.logging.logback.DefaultLogbackConfiguration#apply
+# see also name.nkonev.aaa.AaaApplication
+logging.file.name: log.log
+logging.structured.format.file: 'logstash'
 
 custom.api-url: "http://localhost:8081/api/aaa"
 custom.frontend-url: "http://localhost:8081"

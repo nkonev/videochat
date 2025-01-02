@@ -2,12 +2,16 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/trace"
+	"io"
 	"os"
 	"time"
 )
+
+var logFileVar *os.File
 
 // should be after viper
 func NewLogger() *log.Logger {
@@ -32,9 +36,30 @@ func NewLogger() *log.Logger {
 		},
 		PrettyPrint: true,
 	})
-	logger.SetOutput(os.Stdout)
+
+	logFilename := viper.GetString("logger.filename")
+	logWriteToFile := viper.GetBool("logger.writeToFile")
+	if len(logFilename) > 0 && logWriteToFile {
+		logFileVar, err = os.Create(logFilename)
+		if err != nil {
+			panic(err)
+		}
+		mw := io.MultiWriter(os.Stdout, logFileVar)
+		logger.SetOutput(mw)
+	} else {
+		logger.SetOutput(os.Stdout)
+	}
 
 	return logger
+}
+
+func CloseLogger() {
+	if logFileVar != nil {
+		fmt.Println("Closing log file")
+		if err := logFileVar.Close(); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func GetLogEntry(context context.Context, lgr *log.Logger) *log.Entry {

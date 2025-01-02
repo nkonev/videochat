@@ -73,6 +73,9 @@ services:
       - spring.data.redis.url=redis://redis:6379/0
       - CUSTOM_INITIAL_ADMIN_PASSWORD={{ initial_admin_password | password_hash(hashtype='bcrypt', salt=initial_admin_password_salt, rounds=10) | replace('$', '$$') }}
       - CUSTOM_REQUEST_DUMP={{ aaa_request_dump }}
+      # disable logging to filename because of capturing from stdout
+      # https://github.com/docker/compose/issues/4636#issuecomment-2388639015
+      - LOGGING_FILE_NAME=
 
     logging:
       driver: "journald"

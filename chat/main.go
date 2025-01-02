@@ -79,6 +79,7 @@ func main() {
 	app.Run()
 
 	lgr.Infof("Exit program")
+	CloseLogger()
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
