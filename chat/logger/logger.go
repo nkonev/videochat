@@ -37,10 +37,17 @@ func NewLogger() *log.Logger {
 		PrettyPrint: true,
 	})
 
-	logFilename := viper.GetString("logger.filename")
 	logWriteToFile := viper.GetBool("logger.writeToFile")
-	if len(logFilename) > 0 && logWriteToFile {
-		logFileVar, err = os.Create(logFilename)
+	if logWriteToFile {
+		logDir := viper.GetString("logger.dir")
+
+		err = os.MkdirAll(logDir, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+
+		logFilename := viper.GetString("logger.filename")
+		logFileVar, err = os.Create(logDir + string(os.PathSeparator) + logFilename)
 		if err != nil {
 			panic(err)
 		}

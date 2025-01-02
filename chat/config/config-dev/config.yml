@@ -5,7 +5,8 @@ server:
 
 logger:
   level: INFO
-  filename: "log.log"
+  dir: "logs"
+  filename: "file.log"
   writeToFile: true
 
 # Rest client
