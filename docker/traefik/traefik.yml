@@ -19,6 +19,7 @@ api:
   dashboard: false
 log:
   level: INFO
+  format: json
 accessLog:
   format: json
   fields:
