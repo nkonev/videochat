@@ -8,9 +8,7 @@ public class StructuredLogCustomizer implements StructuredLoggingJsonMembersCust
     @Override
     public void customize(JsonWriter.Members<ILoggingEvent> members) {
             members.applyingNameProcessor((path, existingName) -> {
-                if ("@timestamp".equals(path.name())) {
-                    return "timestamp";
-                } if ("logger_name".equals(path.name())) {
+                if ("logger_name".equals(path.name())) {
                     return "logger";
                 } if ("thread_name".equals(path.name())) {
                     return "thread";

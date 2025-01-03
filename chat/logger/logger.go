@@ -30,7 +30,7 @@ func NewLogger() *log.Entry {
 	logger.SetFormatter(&log.JSONFormatter{
 		TimestampFormat: time.RFC3339Nano,
 		FieldMap: log.FieldMap{
-			log.FieldKeyTime:  "timestamp",
+			log.FieldKeyTime:  "@timestamp",
 			log.FieldKeyLevel: "level",
 			log.FieldKeyMsg:   "message",
 			log.FieldKeyFunc:  "caller",

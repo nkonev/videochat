@@ -24,6 +24,8 @@ import opentelemetry from '@opentelemetry/api';
 import * as api from '@opentelemetry/api';
 import { createLogger, format, transports } from "winston";
 import morgan from 'morgan';
+import {MESSAGE} from "triple-beam";
+import jsonStringify from "safe-stable-stringify";
 
 axios.defaults.timeout = getHttpClientTimeout();
 
@@ -39,6 +41,16 @@ if (getWriteLogToFile()) {
         }),
     )
 }
+// partial copy from public/node_modules/logform/logstash.js
+const customFormat = format(
+    info => {
+        if (info.timestamp) {
+            info['@timestamp'] = info.timestamp;
+            delete info.timestamp;
+        }
+        return info;
+    }
+);
 
 // https://betterstack.com/community/guides/logging/how-to-install-setup-and-use-winston-and-morgan-to-log-node-js-applications/
 // https://github.com/winstonjs/winston/tree/master/examples
@@ -47,6 +59,7 @@ const logger = createLogger({
     format: format.combine(
         // https://github.com/taylorhakes/fecha
         format.timestamp({format: 'YYYY-MM-DDTHH:mm:ss.SSSZ'}),
+        customFormat(),
         format.errors({ stack: true }),
         format.splat(),
         format.json(),
