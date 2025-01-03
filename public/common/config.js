@@ -14,3 +14,9 @@ export const getHttpClientTimeout = () => {
 export const getPort = () => {
     return process.env.PORT || '3100'
 }
+
+export const getWriteLogToFile = () => {
+    const v = process.env.WRITE_LOG_TO_FILE || 'true'
+    const r = (/true/i).test(v);
+    return r
+}

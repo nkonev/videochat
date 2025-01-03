@@ -8,8 +8,8 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { AlwaysOnSampler, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { SamplingDecision, SpanKind } from '@opentelemetry/api';
 import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
+import { WinstonInstrumentation } from "@opentelemetry/instrumentation-winston";
 
 const collectorOptions = {
     // use an env var OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://trace-service:4318/v1/traces
@@ -46,6 +46,11 @@ const sdk = new NodeSDK({
             }
         }),
         new ExpressInstrumentation(),
+        // https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/plugins/node/opentelemetry-instrumentation-winston
+        new WinstonInstrumentation({
+            // See below for Winston instrumentation options.
+            disableLogSending: true
+        }),
     ],
     // https://www.npmjs.com/package/@opentelemetry/propagator-jaeger
     textMapPropagator: new JaegerPropagator(),

@@ -45,6 +45,7 @@ services:
       - CHAT_API_URL=http://chat:1235
       - FRONTEND_URL=https://{{ domain }}
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
+      - WRITE_LOG_TO_FILE=false
 
     logging:
       driver: "journald"
