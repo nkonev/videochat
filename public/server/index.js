@@ -24,8 +24,6 @@ import opentelemetry from '@opentelemetry/api';
 import * as api from '@opentelemetry/api';
 import { createLogger, format, transports } from "winston";
 import morgan from 'morgan';
-import {MESSAGE} from "triple-beam";
-import jsonStringify from "safe-stable-stringify";
 
 axios.defaults.timeout = getHttpClientTimeout();
 
@@ -69,7 +67,7 @@ const logger = createLogger({
 });
 
 const morganMiddleware = morgan(
-    ':method :url :status :res[content-length] - :response-time ms',
+    ':remote-addr :user-agent :method :url :status :res[content-length] - :response-time ms',
     {
         stream: {
             // Configure Morgan to use our custom logger with the http severity
