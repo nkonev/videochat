@@ -75,7 +75,7 @@ services:
       - CUSTOM_REQUEST_DUMP={{ aaa_request_dump }}
       # disable logging to filename because of capturing from stdout
       # https://github.com/docker/compose/issues/4636#issuecomment-2388639015
-      - CUSTOM_WRITE_LOG_FILE=false
+      - SPRING_PROFILES_ACTIVE=production
 
     logging:
       driver: "journald"

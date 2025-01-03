@@ -5,7 +5,6 @@ https://github.com/spring-projects/spring-boot/tree/main/spring-boot-project/spr
 -->
 <configuration>
 	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-	<springProperty name="WRITE_FILE" source="custom.write.log.file"/>
 
 	<!-- Appender to log to console -->
 	<appender name="STRUCTURED_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -18,25 +17,6 @@ https://github.com/spring-projects/spring-boot/tree/main/spring-boot-project/spr
 		</encoder>
 	</appender>
 
-	<if condition='isDefined("WRITE_FILE") &amp;&amp; property("WRITE_FILE").equals("true")'>
-		<then>
-			<!-- Appender to log to file in a JSON format -->
-			<appender name="STRUCTURED_FILE" class="ch.qos.logback.core.FileAppender">
-				<append>false</append>
-				<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-					<level>${FILE_LOG_THRESHOLD}</level>
-				</filter>
-				<encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
-					<format>${FILE_LOG_STRUCTURED_FORMAT}</format>
-					<charset>${FILE_LOG_CHARSET}</charset>
-				</encoder>
-				<file>${LOG_FILE}</file>
-			</appender>
-			<root>
-				<appender-ref ref="STRUCTURED_FILE" />
-			</root>
-		</then>
-	</if>
 	<root level="INFO">
 		<appender-ref ref="STRUCTURED_CONSOLE"/>
 	</root>
