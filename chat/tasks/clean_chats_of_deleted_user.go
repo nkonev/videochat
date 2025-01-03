@@ -18,7 +18,7 @@ type CleanChatsOfDeletedUserTask struct {
 }
 
 func CleanChatsOfDeletedUserScheduler(
-	lgr *log.Logger,
+	lgr *log.Entry,
 	service *CleanChatsOfDeletedUserService,
 ) *CleanChatsOfDeletedUserTask {
 	const key = "cleanChatsOfDeletedUserTask"
@@ -37,7 +37,7 @@ type CleanChatsOfDeletedUserService struct {
 	restClient *client.RestClient
 	tracer     trace.Tracer
 	dbR        *db.DB
-	lgr        *log.Logger
+	lgr        *log.Entry
 }
 
 func (srv *CleanChatsOfDeletedUserService) doJob() {
@@ -133,7 +133,7 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 	logger.GetLogEntry(c, srv.lgr).Infof("End of cleaning chats of deleted user job")
 }
 
-func NewCleanChatsOfDeletedUserService(lgr *log.Logger, chatClient *client.RestClient, dbR *db.DB) *CleanChatsOfDeletedUserService {
+func NewCleanChatsOfDeletedUserService(lgr *log.Entry, chatClient *client.RestClient, dbR *db.DB) *CleanChatsOfDeletedUserService {
 	trcr := otel.Tracer("scheduler/clean-chats-of-deleted-user")
 	return &CleanChatsOfDeletedUserService{
 		restClient: chatClient,

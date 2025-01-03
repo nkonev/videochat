@@ -45,10 +45,10 @@ func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) 
 
 type RabbitEventsPublisher struct {
 	channel *rabbitmq.Channel
-	lgr     *log.Logger
+	lgr     *log.Entry
 }
 
-func NewRabbitEventsPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitEventsPublisher {
+func NewRabbitEventsPublisher(lgr *log.Entry, connection *rabbitmq.Connection) *RabbitEventsPublisher {
 	return &RabbitEventsPublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
 		lgr:     lgr,
@@ -82,10 +82,10 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 
 type RabbitNotificationsPublisher struct {
 	channel *rabbitmq.Channel
-	lgr     *log.Logger
+	lgr     *log.Entry
 }
 
-func NewRabbitNotificationsPublisher(lgr *log.Logger, connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
+func NewRabbitNotificationsPublisher(lgr *log.Entry, connection *rabbitmq.Connection) *RabbitNotificationsPublisher {
 	return &RabbitNotificationsPublisher{
 		channel: myRabbitmq.CreateRabbitMqChannel(lgr, connection),
 		lgr:     lgr,

@@ -10,7 +10,7 @@ import (
 	. "nkonev.name/chat/logger"
 )
 
-func RedisV9(lc fx.Lifecycle, lgr *log.Logger) *redisV9.Client {
+func RedisV9(lc fx.Lifecycle, lgr *log.Entry) *redisV9.Client {
 	rv8 := redisV9.NewClient(&redisV9.Options{
 		Addr:       viper.GetString("redis.address"),
 		Password:   viper.GetString("redis.password"),
@@ -28,7 +28,7 @@ func RedisV9(lc fx.Lifecycle, lgr *log.Logger) *redisV9.Client {
 
 type RedisLock struct {
 	client *redisV9.Client
-	lgr    *log.Logger
+	lgr    *log.Entry
 }
 
 func (m *RedisLock) Lock(ctx context.Context, key, value string) bool {
@@ -51,7 +51,7 @@ func (m *RedisLock) Unlock(ctx context.Context, key, value string) {
 	m.client.Del(ctx, key)
 }
 
-func RedisLocker(redisClient *redisV9.Client, lgr *log.Logger) (*RedisLock, error) {
+func RedisLocker(redisClient *redisV9.Client, lgr *log.Entry) (*RedisLock, error) {
 	return &RedisLock{client: redisClient, lgr: lgr}, nil
 }
 

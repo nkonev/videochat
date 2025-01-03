@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *log.Entry) *rabbitmq.Connection {
 	rabbitmq.Debug = true
 
 	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
@@ -18,7 +18,7 @@ func CreateRabbitMqConnection(lgr *log.Logger) *rabbitmq.Connection {
 	return conn
 }
 
-func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
+func CreateRabbitMqChannel(lgr *log.Entry, connection *rabbitmq.Connection) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(nil)
 	if err != nil {
 		lgr.Panic(err)
@@ -26,7 +26,7 @@ func CreateRabbitMqChannel(lgr *log.Logger, connection *rabbitmq.Connection) *ra
 	return consumeCh
 }
 
-func CreateRabbitMqChannelWithCallback(lgr *log.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *log.Entry, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
 		lgr.Panic(err)

@@ -56,10 +56,10 @@ type MessageHandler struct {
 	stripAllTags       *services.StripTagsPolicy
 	notificator        *services.Events
 	restClient         *client.RestClient
-	lgr                *log.Logger
+	lgr                *log.Entry
 }
 
-func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator *services.Events, restClient *client.RestClient, lgr *log.Logger) *MessageHandler {
+func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator *services.Events, restClient *client.RestClient, lgr *log.Entry) *MessageHandler {
 	return &MessageHandler{
 		db:                 dbR,
 		policy:             policy,
@@ -196,7 +196,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	})
 }
 
-func getMessage(c echo.Context, lgr *log.Logger, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, behalfUserIsAdminInChat bool) (*dto.DisplayMessageDto, error) {
+func getMessage(c echo.Context, lgr *log.Entry, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64, behalfUserIsAdminInChat bool) (*dto.DisplayMessageDto, error) {
 	message, chatsSet, users, err := prepareDataForMessage(c.Request().Context(), lgr, co, restClient, chatId, messageId, behalfUserId)
 
 	if err != nil {
@@ -211,7 +211,7 @@ func getMessage(c echo.Context, lgr *log.Logger, co db.CommonOperations, restCli
 	return convertToMessageDto(c.Request().Context(), lgr, message, users, chatsSet, behalfUserId, behalfUserIsAdminInChat), nil
 }
 
-func prepareDataForMessage(ctx context.Context, lgr *log.Logger, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*db.Message, map[int64]*db.BasicChatDtoExtended, map[int64]*dto.User, error) {
+func prepareDataForMessage(ctx context.Context, lgr *log.Entry, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*db.Message, map[int64]*db.BasicChatDtoExtended, map[int64]*dto.User, error) {
 	if message, err := co.GetMessage(ctx, chatId, behalfUserId, messageId); err != nil {
 		GetLogEntry(ctx, lgr).Errorf("Error get messages from db %v", err)
 		return nil, nil, nil, err
@@ -233,7 +233,7 @@ func prepareDataForMessage(ctx context.Context, lgr *log.Logger, co db.CommonOpe
 	}
 }
 
-func getMessageWithoutPersonalized(ctx context.Context, lgr *log.Logger, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
+func getMessageWithoutPersonalized(ctx context.Context, lgr *log.Entry, co db.CommonOperations, restClient *client.RestClient, chatId int64, messageId int64, behalfUserId int64) (*dto.DisplayMessageDto, error) {
 	message, chatsSet, users, err := prepareDataForMessage(ctx, lgr, co, restClient, chatId, messageId, behalfUserId)
 
 	if err != nil {
@@ -502,7 +502,7 @@ func getDeletedUser(id int64) *dto.User {
 	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
 }
 
-func convertToMessageDto(ctx context.Context, lgr *log.Logger, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool) *dto.DisplayMessageDto {
+func convertToMessageDto(ctx context.Context, lgr *log.Entry, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended, behalfUserId int64, behalfUserIsAdminInChat bool) *dto.DisplayMessageDto {
 
 	ret := convertToMessageDtoWithoutPersonalized(ctx, lgr, dbMessage, users, chats)
 
@@ -515,7 +515,7 @@ func convertToMessageDto(ctx context.Context, lgr *log.Logger, dbMessage *db.Mes
 	return ret
 }
 
-func convertToMessageDtoWithoutPersonalized(ctx context.Context, lgr *log.Logger, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended) *dto.DisplayMessageDto {
+func convertToMessageDtoWithoutPersonalized(ctx context.Context, lgr *log.Entry, dbMessage *db.Message, users map[int64]*dto.User, chats map[int64]*db.BasicChatDtoExtended) *dto.DisplayMessageDto {
 	user := users[dbMessage.OwnerId]
 	if user == nil {
 		user = getDeletedUser(dbMessage.OwnerId)
@@ -906,7 +906,7 @@ func (mc *MessageHandler) validateAndSetEmbedFieldsEmbedMessage(ctx context.Cont
 	return nil
 }
 
-func convertToCreatableMessage(ctx context.Context, lgr *log.Logger, dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
+func convertToCreatableMessage(ctx context.Context, lgr *log.Entry, dto *CreateMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
 	trimmedAndSanitized, err := TrimAmdSanitizeMessage(ctx, lgr, policy, dto.Text)
 	if err != nil {
 		return nil, err
@@ -1191,7 +1191,7 @@ func excludeMyself(mentionedUserIds []int64, principalDto *auth.AuthResult) []in
 	return utils.Remove(mentionedUserIds, principalDto.UserId)
 }
 
-func convertToEditableMessage(ctx context.Context, lgr *log.Logger, dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
+func convertToEditableMessage(ctx context.Context, lgr *log.Entry, dto *EditMessageDto, authPrincipal *auth.AuthResult, chatId int64, policy *services.SanitizerPolicy) (*db.Message, error) {
 	trimmedAndSanitized, err := TrimAmdSanitizeMessage(ctx, lgr, policy, dto.Text)
 	if err != nil {
 		return nil, err
@@ -2315,7 +2315,7 @@ func (mc *MessageHandler) wasReplyRemoved(oldMessage *db.Message, messageRendere
 
 // in order to be able to see video in Chrome after minio link's ttl expiration
 // see also blog.go :: PatchStorageUrlToPublic
-func patchStorageUrlToPreventCachingVideo(ctx context.Context, lgr *log.Logger, text string) string {
+func patchStorageUrlToPreventCachingVideo(ctx context.Context, lgr *log.Entry, text string) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {

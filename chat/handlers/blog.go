@@ -25,10 +25,10 @@ type BlogHandler struct {
 	policy          *services.SanitizerPolicy
 	stripTagsPolicy *services.StripTagsPolicy
 	restClient      *client.RestClient
-	lgr             *log.Logger
+	lgr             *log.Entry
 }
 
-func NewBlogHandler(lgr *log.Logger, db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
+func NewBlogHandler(lgr *log.Entry, db *db.DB, notificator *services.Events, policy *services.SanitizerPolicy, stripTagsPolicy *services.StripTagsPolicy, restClient *client.RestClient) *BlogHandler {
 	return &BlogHandler{
 		db:              db,
 		notificator:     notificator,
@@ -453,7 +453,7 @@ func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {
 }
 
 // see also message.go :: patchStorageUrlToPreventCachingVideo
-func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Logger, text string, overrideChatId, overrideMessageId int64) string {
+func PatchStorageUrlToPublic(ctx context.Context, lgr *log.Entry, text string, overrideChatId, overrideMessageId int64) string {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
 	if err != nil {

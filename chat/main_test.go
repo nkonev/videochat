@@ -51,7 +51,7 @@ const aaaEmuPort = "8061"
 
 var userTester = base64.StdEncoding.EncodeToString([]byte("tester"))
 var userTester2 = base64.StdEncoding.EncodeToString([]byte("tester2"))
-var lgr *log.Logger
+var lgr *log.Entry
 
 func setup() {
 	config.InitViper()

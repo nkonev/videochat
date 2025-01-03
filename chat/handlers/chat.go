@@ -52,10 +52,10 @@ type ChatHandler struct {
 	policy                 *services.SanitizerPolicy
 	stripTagsPolicy        *services.StripTagsPolicy
 	onlyAdminCanCreateBlog bool
-	lgr                    *log.Logger
+	lgr                    *log.Entry
 }
 
-func NewChatHandler(dbR *db.DB, notificator *services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy, lgr *log.Logger) *ChatHandler {
+func NewChatHandler(dbR *db.DB, notificator *services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy, lgr *log.Entry) *ChatHandler {
 	return &ChatHandler{
 		db:                     dbR,
 		notificator:            notificator,
@@ -238,7 +238,7 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 
 func getChat(
 	ctx context.Context,
-	lgr *log.Logger,
+	lgr *log.Entry,
 	dbR db.CommonOperations,
 	restClient *client.RestClient,
 	chatId int64,

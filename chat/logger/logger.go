@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/trace"
 	"io"
+	"nkonev.name/chat/app"
 	"os"
 	"time"
 )
@@ -14,7 +15,7 @@ import (
 var logFileVar *os.File
 
 // should be after viper
-func NewLogger() *log.Logger {
+func NewLogger() *log.Entry {
 	var logger = log.New()
 
 	sl := viper.GetString("logger.level")
@@ -29,9 +30,9 @@ func NewLogger() *log.Logger {
 	logger.SetFormatter(&log.JSONFormatter{
 		TimestampFormat: time.RFC3339Nano,
 		FieldMap: log.FieldMap{
-			log.FieldKeyTime:  "@timestamp",
+			log.FieldKeyTime:  "timestamp",
 			log.FieldKeyLevel: "level",
-			log.FieldKeyMsg:   "@message",
+			log.FieldKeyMsg:   "message",
 			log.FieldKeyFunc:  "caller",
 		},
 	})
@@ -56,7 +57,9 @@ func NewLogger() *log.Logger {
 		logger.SetOutput(os.Stdout)
 	}
 
-	return logger
+	le := logger.WithFields(map[string]interface{}{"service": app.APP_NAME})
+
+	return le
 }
 
 func CloseLogger() {
@@ -66,11 +69,12 @@ func CloseLogger() {
 	}
 }
 
-func GetLogEntry(context context.Context, lgr *log.Logger) *log.Entry {
+func GetLogEntry(context context.Context, lgr *log.Entry) *log.Entry {
 	if p := trace.SpanFromContext(context); p != nil {
 		return lgr.WithFields(
 			log.Fields{
-				"traceId": p.SpanContext().TraceID(),
+				"trace_id": p.SpanContext().TraceID(),
+				"span_id":  p.SpanContext().SpanID(),
 			})
 	} else {
 		return lgr.WithContext(context)

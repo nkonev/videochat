@@ -14,7 +14,7 @@ var embeddedFiles embed.FS
 
 type StaticMiddleware echo.MiddlewareFunc
 
-func ConfigureStaticMiddleware(lgr *log.Logger) StaticMiddleware {
+func ConfigureStaticMiddleware(lgr *log.Entry) StaticMiddleware {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
 		lgr.Panicf("Cannot open static embedded dir")

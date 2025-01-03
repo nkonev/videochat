@@ -20,10 +20,10 @@ type Events struct {
 	rabbitEventPublisher        *producer.RabbitEventsPublisher
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
 	tr                          trace.Tracer
-	lgr                         *log.Logger
+	lgr                         *log.Entry
 }
 
-func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, lgr *log.Logger) *Events {
+func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, lgr *log.Entry) *Events {
 	tr := otel.Tracer("event")
 
 	return &Events{

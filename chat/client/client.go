@@ -25,10 +25,10 @@ import (
 type RestClient struct {
 	*http.Client
 	tracer trace.Tracer
-	lgr    *log.Logger
+	lgr    *log.Entry
 }
 
-func NewRestClient(lgr *log.Logger) *RestClient {
+func NewRestClient(lgr *log.Entry) *RestClient {
 	tr := &http.Transport{
 		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
 		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),

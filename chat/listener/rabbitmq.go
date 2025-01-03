@@ -35,7 +35,7 @@ func create(lgr *log.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Que
 	return &q
 }
 
-func createAndBind(lgr *log.Logger, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
+func createAndBind(lgr *log.Entry, name string, key string, exchange string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
 	var q amqp.Queue
 	q, err = consumeCh.QueueDeclare(
@@ -57,7 +57,7 @@ func createAndBind(lgr *log.Logger, name string, key string, exchange string, co
 	}
 	return &q
 }
-func CreateAaaChannel(lgr *log.Logger, connection *rabbitmq.Connection, onMessage AaaUserProfileUpdateListener, lc fx.Lifecycle) *AaaEventsChannel {
+func CreateAaaChannel(lgr *log.Entry, connection *rabbitmq.Connection, onMessage AaaUserProfileUpdateListener, lc fx.Lifecycle) *AaaEventsChannel {
 	return &AaaEventsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
 		connection,
@@ -86,7 +86,7 @@ func CreateAaaQueue(lgr *log.Logger, consumeCh *AaaEventsChannel) *AaaEventsQueu
 }
 
 func listen(
-	lgr *log.Logger,
+	lgr *log.Entry,
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,
@@ -125,7 +125,7 @@ func listen(
 }
 
 func ListenAaaQueue(
-	lgr *log.Logger,
+	lgr *log.Entry,
 	channel *AaaEventsChannel,
 	queue *AaaEventsQueue,
 	onMessage AaaUserProfileUpdateListener,

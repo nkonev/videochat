@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-func getUsersRemotely(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
+func getUsersRemotely(ctx context.Context, lgr *log.Entry, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
 	GetLogEntry(ctx, lgr).Infof("Requested user length is %v", length)
@@ -42,7 +42,7 @@ func getUsersRemotely(ctx context.Context, lgr *log.Logger, userIdSet map[int64]
 	return ownersObjects, nil
 }
 
-func getUserOnlinesRemotely(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.UserOnline, error) {
+func getUserOnlinesRemotely(ctx context.Context, lgr *log.Entry, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.UserOnline, error) {
 	var userIds = utils.SetToArray(userIdSet)
 	length := len(userIds)
 	GetLogEntry(ctx, lgr).Infof("Requested user length is %v", length)
@@ -60,15 +60,15 @@ func getUserOnlinesRemotely(ctx context.Context, lgr *log.Logger, userIdSet map[
 	return ownersObjects, nil
 }
 
-func getUsersRemotelyOrEmptyFromSlice(ctx context.Context, lgr *log.Logger, userIds []int64, restClient *client.RestClient) map[int64]*dto.User {
+func getUsersRemotelyOrEmptyFromSlice(ctx context.Context, lgr *log.Entry, userIds []int64, restClient *client.RestClient) map[int64]*dto.User {
 	return getUsersRemotelyOrEmpty(ctx, lgr, utils.ArrayToSet(userIds), restClient)
 }
 
-func getUserOnlinesRemotelyOrEmptyFromSlice(ctx context.Context, lgr *log.Logger, userIds []int64, restClient *client.RestClient) map[int64]*dto.UserOnline {
+func getUserOnlinesRemotelyOrEmptyFromSlice(ctx context.Context, lgr *log.Entry, userIds []int64, restClient *client.RestClient) map[int64]*dto.UserOnline {
 	return getUserOnlinesRemotelyOrEmpty(ctx, lgr, utils.ArrayToSet(userIds), restClient)
 }
 
-func getUsersRemotelyOrEmpty(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
+func getUsersRemotelyOrEmpty(ctx context.Context, lgr *log.Entry, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.User {
 	if remoteUsers, err := getUsersRemotely(ctx, lgr, userIdSet, restClient); err != nil {
 		GetLogEntry(ctx, lgr).Warn("Error during getting users from aaa")
 		return map[int64]*dto.User{}
@@ -77,7 +77,7 @@ func getUsersRemotelyOrEmpty(ctx context.Context, lgr *log.Logger, userIdSet map
 	}
 }
 
-func getUserOnlinesRemotelyOrEmpty(ctx context.Context, lgr *log.Logger, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.UserOnline {
+func getUserOnlinesRemotelyOrEmpty(ctx context.Context, lgr *log.Entry, userIdSet map[int64]bool, restClient *client.RestClient) map[int64]*dto.UserOnline {
 	if remoteUsers, err := getUserOnlinesRemotely(ctx, lgr, userIdSet, restClient); err != nil {
 		GetLogEntry(ctx, lgr).Warn("Error during getting users from aaa")
 		return map[int64]*dto.UserOnline{}
@@ -88,7 +88,7 @@ func getUserOnlinesRemotelyOrEmpty(ctx context.Context, lgr *log.Logger, userIdS
 
 type AuthMiddleware echo.MiddlewareFunc
 
-func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, error) {
+func ExtractAuth(request *http.Request, lgr *log.Entry) (*auth.AuthResult, error) {
 	expiresInString := request.Header.Get("X-Auth-ExpiresIn") // in GMT. in milliseconds from java
 	t, err := dateparse.ParseIn(expiresInString, time.UTC)
 	GetLogEntry(request.Context(), lgr).Infof("Extracted session expiration time: %v", t)
@@ -138,7 +138,7 @@ func ExtractAuth(request *http.Request, lgr *log.Logger) (*auth.AuthResult, erro
 //   - *AuthResult pointer or nil
 //   - is whitelisted
 //   - error
-func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, error) {
+func authorize(request *http.Request, lgr *log.Entry) (*auth.AuthResult, bool, error) {
 	whitelistStr := viper.GetStringSlice("auth.exclude")
 	whitelist := utils.StringsToRegexpArray(whitelistStr)
 	if utils.CheckUrlInWhitelist(request.Context(), lgr, whitelist, request.RequestURI) {
@@ -153,7 +153,7 @@ func authorize(request *http.Request, lgr *log.Logger) (*auth.AuthResult, bool, 
 	return auth, false, nil
 }
 
-func ConfigureAuthMiddleware(lgr *log.Logger) AuthMiddleware {
+func ConfigureAuthMiddleware(lgr *log.Entry) AuthMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authResult, whitelist, err := authorize(c.Request(), lgr)
@@ -208,7 +208,7 @@ func (s *MediaUrlErr) Error() string {
 	return fmt.Sprintf("Media url is not allowed in %v: %v", s.where, s.url)
 }
 
-func TrimAmdSanitizeMessage(ctx context.Context, lgr *log.Logger, policy *services.SanitizerPolicy, input string) (string, error) {
+func TrimAmdSanitizeMessage(ctx context.Context, lgr *log.Entry, policy *services.SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
 
 	whitelist := viper.GetString("message.allowedMediaUrls")
@@ -389,7 +389,7 @@ func removeProtocolHostPortIfNeed(src, frontendUrl string) (string, error) {
 	return parsed.String(), nil
 }
 
-func TrimAmdSanitizeAvatar(ctx context.Context, lgr *log.Logger, policy *services.SanitizerPolicy, input null.String) null.String {
+func TrimAmdSanitizeAvatar(ctx context.Context, lgr *log.Entry, policy *services.SanitizerPolicy, input null.String) null.String {
 	if input.IsZero() {
 		return input
 	}
@@ -413,7 +413,7 @@ func TrimAmdSanitizeAvatar(ctx context.Context, lgr *log.Logger, policy *service
 	return null.StringFrom(sanitizedHtml)
 }
 
-func ValidateAndRespondError(c echo.Context, lgr *log.Logger, v validation.Validatable) (bool, error) {
+func ValidateAndRespondError(c echo.Context, lgr *log.Entry, v validation.Validatable) (bool, error) {
 	if err := v.Validate(); err != nil {
 		GetLogEntry(c.Request().Context(), lgr).Debugf("Error during validation: %v", err)
 		return false, c.JSON(http.StatusBadRequest, err)

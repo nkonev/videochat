@@ -30,7 +30,7 @@ func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	return regexps
 }
 
-func CheckUrlInWhitelist(ctx context.Context, lgr *log.Logger, whitelist []regexp.Regexp, uri string) bool {
+func CheckUrlInWhitelist(ctx context.Context, lgr *log.Entry, whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
 			logger.GetLogEntry(ctx, lgr).Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
@@ -160,7 +160,7 @@ func Contains(ids []int64, elem int64) bool {
 	return GetIndexOf(ids, elem) != -1
 }
 
-func ContainsUrl(lgr *log.Logger, elems []string, elem string) bool {
+func ContainsUrl(lgr *log.Entry, elems []string, elem string) bool {
 	parsedUrlToTest, err := url.Parse(elem)
 	if err != nil {
 		lgr.Infof("Unable to parse urlToTest %v", elem)
