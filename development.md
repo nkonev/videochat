@@ -1207,3 +1207,21 @@ go generate ./...
 * [minio](https://github.com/minio/minio/discussions/15551)
 * [pgadmin](https://stackoverflow.com/questions/72567935/run-pgadmin4-on-a-custom-path-with-docker/72694786#72694786)
 * [traefik](https://github.com/traefik/traefik/commit/0ec12c7aa7b1344648e8789c489e14ee6063dafc) starting from 3.3
+
+
+# Opensearch
+```bash
+curl -Ss -X GET 'http://localhost:9200/videochat-*/_search' -H 'Content-Type: application/json' -d'
+{
+  "size": 1000,
+  "query": {
+    "match_all": {}
+  },
+  "sort" : [
+    { 
+        "@timestamp" : "asc"
+    }
+  ]
+}
+' | jq
+```
