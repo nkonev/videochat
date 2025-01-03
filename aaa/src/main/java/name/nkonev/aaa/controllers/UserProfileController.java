@@ -117,6 +117,7 @@ public class UserProfileController {
     public List<UserAccountDTO> getUsersInternal(
         @RequestParam(value = "userId") List<Long> userIds
     ) {
+        LOGGER.info("Getting users internal");
         return userProfileService.getUsersInternal(userIds);
     }
 

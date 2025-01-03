@@ -13,11 +13,11 @@
 # logging.level.org.springframework.jdbc.core: TRACE
 logging.config: classpath:/config/logback-spring.xml
 logging.structured.json.customizer: "name.nkonev.aaa.config.StructuredLogCustomizer"
-logging.structured.format.console: 'logstash'
+logging.structured.format.console: 'ecs'
 # see org.springframework.boot.logging.LogFile#get, org.springframework.boot.logging.logback.DefaultLogbackConfiguration#apply
 # see also name.nkonev.aaa.AaaApplication
 logging.file.name: logs/file.log
-logging.structured.format.file: 'logstash'
+logging.structured.format.file: 'ecs'
 custom.write.log.file: true
 
 custom.api-url: "http://localhost:8081/api/aaa"

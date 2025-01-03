@@ -58,7 +58,7 @@ const logger = createLogger({
     level: 'info',
     format: format.combine(
         // https://github.com/taylorhakes/fecha
-        format.timestamp({format: 'YYYY-MM-DDTHH:mm:ss.SSSZ'}),
+        format.timestamp(),
         customFormat(),
         format.errors({ stack: true }),
         format.splat(),

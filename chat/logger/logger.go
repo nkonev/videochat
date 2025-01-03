@@ -14,6 +14,15 @@ import (
 
 var logFileVar *os.File
 
+type UTCFormatter struct {
+	log.Formatter
+}
+
+func (u UTCFormatter) Format(e *log.Entry) ([]byte, error) {
+	e.Time = e.Time.UTC()
+	return u.Formatter.Format(e)
+}
+
 // should be after viper
 func NewLogger() *log.Entry {
 	var logger = log.New()
@@ -27,7 +36,7 @@ func NewLogger() *log.Entry {
 	}
 
 	logger.SetReportCaller(true)
-	logger.SetFormatter(&log.JSONFormatter{
+	logger.SetFormatter(UTCFormatter{&log.JSONFormatter{
 		TimestampFormat: time.RFC3339Nano,
 		FieldMap: log.FieldMap{
 			log.FieldKeyTime:  "@timestamp",
@@ -35,7 +44,7 @@ func NewLogger() *log.Entry {
 			log.FieldKeyMsg:   "message",
 			log.FieldKeyFunc:  "caller",
 		},
-	})
+	}})
 
 	logWriteToFile := viper.GetBool("logger.writeToFile")
 	if logWriteToFile {
