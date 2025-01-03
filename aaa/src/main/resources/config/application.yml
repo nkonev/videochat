@@ -22,6 +22,7 @@ logging.structured.format.console: 'logstash'
 # see also name.nkonev.aaa.AaaApplication
 logging.file.name: logs/file.log
 logging.structured.format.file: 'logstash'
+custom.write.log.file: true
 
 custom.api-url: "http://localhost:8081/api/aaa"
 custom.frontend-url: "http://localhost:8081"
