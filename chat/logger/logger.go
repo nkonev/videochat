@@ -31,7 +31,7 @@ func NewLogger() *log.Logger {
 		FieldMap: log.FieldMap{
 			log.FieldKeyTime:  "@timestamp",
 			log.FieldKeyLevel: "level",
-			log.FieldKeyMsg:   "message",
+			log.FieldKeyMsg:   "@message",
 			log.FieldKeyFunc:  "caller",
 		},
 	})
