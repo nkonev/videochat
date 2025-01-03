@@ -49,7 +49,6 @@ const logger = createLogger({
         format.errors({ stack: true }),
         format.splat(),
         format.json(),
-        format.logstash() // creates @fields
     ),
     defaultMeta: { service: 'public' },
     transports: configuredTransports,
