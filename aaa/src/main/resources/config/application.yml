@@ -215,12 +215,11 @@ spring:
     activate:
       on-profile: default
 logging.config: 'classpath:/config/cf.xml'
-logging.structured.json.customizer: "name.nkonev.aaa.config.StructuredLogCustomizer"
-logging.structured.format.console: 'ecs'
+logging.structured.format.console: 'name.nkonev.aaa.config.CompatibleLogFormatter'
 # see org.springframework.boot.logging.LogFile#get, org.springframework.boot.logging.logback.DefaultLogbackConfiguration#apply
 # see also name.nkonev.aaa.AaaApplication
 logging.file.name: logs/file.log
-logging.structured.format.file: 'ecs'
+logging.structured.format.file: 'name.nkonev.aaa.config.CompatibleLogFormatter'
 custom.write.log.file: true
 
 ---
@@ -229,6 +228,5 @@ spring:
     activate:
       on-profile: production
 logging.config: 'classpath:/config/c.xml'
-logging.structured.json.customizer: "name.nkonev.aaa.config.StructuredLogCustomizer"
-logging.structured.format.console: 'ecs'
+logging.structured.format.console: 'name.nkonev.aaa.config.CompatibleLogFormatter'
 custom.write.log.file: false
