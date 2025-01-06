@@ -666,8 +666,10 @@ export default {
         },
         onClickInvitation() {
           const routerNewState = { name: videochat_name, params: { id: this.invitedVideoChatId }};
-          goToPreservingQuery(this.$route, this.$router, routerNewState)
-          this.resetVideoInvitation();
+          this.invitedVideoChatState = false;
+          this.$router.push(routerNewState).then(()=>{
+            this.resetVideoInvitation();
+          })
         },
         onClickCancelInvitation() {
           axios.put(`/api/video/${this.invitedVideoChatId}/dial/cancel`).then(()=>{
