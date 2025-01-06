@@ -234,6 +234,31 @@ services:
       - 9200:9200
       # - 9600:9600 # required for Performance Analyzer
     entrypoint: ["/docker-entrypoint-init.d.sh"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    hostname: dashboards
+    restart: unless-stopped
+    ports:
+      - 5601:5601
+    networks:
+      backend:
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      # https://stackoverflow.com/a/74178195
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: true
+      SERVER_BASEPATH: /opensearch-dashboards
+      SERVER_REWRITEBASEPATH: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
 
 volumes:
   postgres_data:

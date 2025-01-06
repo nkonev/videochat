@@ -58,6 +58,11 @@ http:
         servers:
           - url: http://pgadmin:8080
 
+    opensearch-dashboards-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://dashboards:5601
+
   routers:
     frontend-router:
       rule: "PathPrefix(`/`)"
@@ -182,6 +187,12 @@ http:
     postgresql-ui-router:
       rule: "PathPrefix(`/postgresql`)"
       service: postgresql-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
+    opensearch-dashboards-ui-router:
+      rule: "PathPrefix(`/opensearch-dashboards`)"
+      service: opensearch-dashboards-ui-service
       middlewares:
         - "auth-middleware"
         - "retry-middleware"

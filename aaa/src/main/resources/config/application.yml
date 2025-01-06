@@ -207,6 +207,7 @@ custom.admins-corner:
     - "/minio"
     - "/rabbitmq"
     - "/postgresql"
+    - "/opensearch-dashboards"
 
 ---
 spring:

@@ -2,6 +2,9 @@
     <v-container fluid>
     <v-card>
         <v-list>
+          <v-list-subheader>{{ $vuetify.locale.t('$vuetify.logs') }}</v-list-subheader>
+          <v-list-item title="Opensearch Dashboards" href="/opensearch-dashboards" target="_blank"></v-list-item>
+
           <v-list-subheader>{{ $vuetify.locale.t('$vuetify.tracing') }}</v-list-subheader>
           <v-list-item title="Jaeger" href="/jaeger" target="_blank"></v-list-item>
 

@@ -258,7 +258,6 @@ services:
 
   fluentbit:
     image: fluent/fluent-bit:3.2.3
-    restart: unless-stopped
     hostname: fluentbit
     volumes:
       - ./fluent-bit/etc:/fluent-bit/etc:z
@@ -273,7 +272,6 @@ services:
   opensearch:
     image: opensearchproject/opensearch:2.18.0
     hostname: opensearch
-    restart: unless-stopped
     environment:
       - node.name=opensearch
       - discovery.type=single-node
@@ -301,6 +299,31 @@ services:
       options:
         tag: chat-opensearch
     entrypoint: ["/docker-entrypoint-init.d.sh"]
+
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    hostname: dashboards
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.opensearch-dashboards-ui-service.loadbalancer.server.port=5601" # ui port
+        - "traefik.http.routers.opensearch-dashboards-ui-router.rule=PathPrefix(`/opensearch-dashboards`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.opensearch-dashboards-ui-router.entrypoints=https"
+        - "traefik.http.routers.opensearch-dashboards-ui-router.tls=true"
+        - "traefik.http.routers.opensearch-dashboards-ui-router.tls.certresolver=myresolver"
+        - "traefik.http.routers.opensearch-dashboards-ui-router.middlewares=auth-middleware@file,retry-middleware@file"
+    networks:
+      backend:
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      # https://stackoverflow.com/a/74178195
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+      SERVER_BASEPATH: "/opensearch-dashboards"
+      SERVER_REWRITEBASEPATH: "true"
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-opensearch-dashboards
 
 volumes:
   redis_data_dir:
