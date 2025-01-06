@@ -743,6 +743,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			RegularParticipantCanPublishMessage: chatEvent.RegularParticipantCanPublishMessage,
 			LastSeenDateTime:                    chatEvent.LastSeenDateTime.Ptr(),
 			RegularParticipantCanPinMessage:     chatEvent.RegularParticipantCanPinMessage,
+			BlogAbout:                           chatEvent.BlogAbout,
 		}
 	}
 

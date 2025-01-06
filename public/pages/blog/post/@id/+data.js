@@ -54,11 +54,12 @@ async function data(pageContext) {
         page,
         pagesCount,
         count,
-        blogDto: blogResponse.data,
+        blogDto: blogResponse.data.post,
+        header: blogResponse.data.header,
         items: commentResponse.data.items,
         // see getPageTitle.js
-        title: unescapeHtml(blogResponse.data.title),
-        description: blogResponse.data.preview,
+        title: unescapeHtml(blogResponse.data.post.title),
+        description: blogResponse.data.post.preview,
         showSearchButton: true,
     }
 

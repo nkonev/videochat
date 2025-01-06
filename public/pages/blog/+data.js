@@ -33,6 +33,7 @@ async function data(pageContext) {
         pagesCount,
         count,
         items: response.data.items,
+        header: response.data.header,
         showSearchButton: true,
         searchStringFacade: searchString,
         title: "Blog",

@@ -1881,8 +1881,14 @@ func (mc *MessageHandler) MakeBlogPost(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+		if prevBlogPostMessageId != nil {
+			err = tx.SetBlogPost(c.Request().Context(), chatId, *prevBlogPostMessageId, false)
+			if err != nil {
+				return err
+			}
+		}
 
-		err = tx.SetBlogPost(c.Request().Context(), chatId, messageId)
+		err = tx.SetBlogPost(c.Request().Context(), chatId, messageId, true)
 		if err != nil {
 			return err
 		}

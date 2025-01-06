@@ -67,6 +67,8 @@ process.on("SIGTERM", () => {
 function ignoreTrace(req) {
     return req.url === "/health" ||
         req.url?.startsWith('/public/assets') ||
-        req.url?.startsWith('/public/node_modules')
+        req.url?.startsWith('/public/node_modules') ||
+        req.url?.startsWith('/assets') ||
+        req.url?.startsWith('/node_modules')
         ;
 }

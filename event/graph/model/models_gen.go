@@ -56,6 +56,7 @@ type ChatDto struct {
 	RegularParticipantCanPublishMessage bool           `json:"regularParticipantCanPublishMessage"`
 	LastSeenDateTime                    *time.Time     `json:"lastSeenDateTime"`
 	RegularParticipantCanPinMessage     bool           `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool           `json:"blogAbout"`
 }
 
 type ChatEvent struct {

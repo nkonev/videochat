@@ -415,6 +415,7 @@ export default {
                         regularParticipantCanPublishMessage
                         lastSeenDateTime
                         regularParticipantCanPinMessage
+                        blogAbout
                       }
                       chatDeletedEvent {
                         id

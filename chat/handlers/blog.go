@@ -115,6 +115,11 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 	return response, nil
 }
 
+type BlogHeader struct {
+	AboutPostId    *int64  `json:"aboutPostId"`
+	AboutPostTitle *string `json:"aboutPostTitle"`
+}
+
 func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 
 	size := utils.FixSizeString(c.QueryParam("size"))
@@ -207,7 +212,13 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 		pagesCount++
 	}
 
+	aboutPostId, aboutPostTitle, err := h.db.GetBlogAboutChatId(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
 	return c.JSON(http.StatusOK, &BlogPostsDTO{
+		Header:     BlogHeader{AboutPostId: aboutPostId, AboutPostTitle: aboutPostTitle},
 		Items:      response,
 		Count:      count,
 		PagesCount: pagesCount,
@@ -215,6 +226,7 @@ func (h *BlogHandler) GetBlogPosts(c echo.Context) error {
 }
 
 type BlogPostsDTO struct {
+	Header     BlogHeader            `json:"header"`
 	Items      []*BlogPostPreviewDto `json:"items"`
 	Count      int64                 `json:"count"`
 	PagesCount int64                 `json:"pagesCount"`
@@ -223,6 +235,10 @@ type BlogPostsDTO struct {
 type BlogSeoItem struct {
 	ChatId       int64     `json:"chatId"`
 	LastModified time.Time `json:"lastModified"`
+}
+
+type SeoBlogPosts struct {
+	Items []BlogSeoItem `json:"items"`
 }
 
 func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
@@ -257,7 +273,9 @@ func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
 		return res[i].LastModified.Unix() > res[j].LastModified.Unix()
 	})
 
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, SeoBlogPosts{
+		Items: res,
+	})
 }
 
 func (h *BlogHandler) performSearch(searchString string, searchable []*BlogPostPreviewDto) ([]*BlogPostPreviewDto, error) {
@@ -316,6 +334,11 @@ type BlogPostResponse struct {
 	CreateDateTime time.Time      `json:"createDateTime"`
 	Reactions      []dto.Reaction `json:"reactions"`
 	Preview        *string        `json:"preview"`
+}
+
+type WrappedBlogPostResponse struct {
+	Header BlogHeader       `json:"header"`
+	Post   BlogPostResponse `json:"post"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -380,7 +403,15 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		response.Preview = h.cutText(post.Text)
 	}
 
-	return c.JSON(http.StatusOK, response)
+	aboutPostId, aboutPostTitle, err := h.db.GetBlogAboutChatId(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, WrappedBlogPostResponse{
+		Header: BlogHeader{AboutPostId: aboutPostId, AboutPostTitle: aboutPostTitle},
+		Post:   response,
+	})
 }
 
 func (h *BlogHandler) GetBlogPostComments(c echo.Context) error {

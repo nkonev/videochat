@@ -329,5 +329,6 @@ export default {
     video_miniatures_enable: "Enable video miniatures",
     video_messages_disable: "Disable messages",
     video_messages_enable: "Enable messages",
-    logs: "Logs"
+    logs: "Logs",
+    blog_about: "Blog's About"
 }

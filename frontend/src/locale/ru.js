@@ -329,5 +329,6 @@ export default {
     video_miniatures_enable: "Включить видео миниатюры",
     video_messages_disable: "Выключить сообщения",
     video_messages_enable: "Включить сообщения",
-    logs: "Логи"
+    logs: "Логи",
+    blog_about: "Блог - про меня"
 }

@@ -8,6 +8,7 @@
                 <v-spacer/>
                 <span v-if="shouldShowTitle()" class="app-title-text">{{chatTitle}}</span>
                 <v-spacer/>
+                <span v-if="shouldShowAboutTitle()" class="mr-4 app-title-text"><a class="v-breadcrumbs-item--link" :href="aboutPostTitleHref">{{aboutPostTitle}}</a></span>
                 <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
             </template>
             <template v-if="isShowSearch()">
@@ -36,11 +37,10 @@
 <script>
     import {hasLength} from "#root/common/utils";
     import {blog, path_prefix, blog_post, videochat} from "#root/common/router/routes.js";
-    import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
+    import bus, {SEARCH_STRING_CHANGED, SET_LOADING} from "#root/common/bus.js";
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "#root/common/components/CollapsedSearch.vue";
     import PlayerModal from "#root/common/components/PlayerModal.vue";
-    import {SET_LOADING} from "../common/bus.js";
 
     export default {
         components: {PlayerModal, CollapsedSearch},
@@ -57,6 +57,8 @@
           return {
             chatMessageHref: this.pageContext.data.chatMessageHref,
             chatTitle: this.pageContext.data.chatTitle,
+            aboutPostTitle: this.pageContext.data.header?.aboutPostTitle,
+            aboutPostId: this.pageContext.data.header?.aboutPostId,
             showSearchButton: this.pageContext.data.showSearchButton,
             pageLoading: false,
           }
@@ -144,6 +146,9 @@
             shouldShowTitle() {
                 return hasLength(this.$data.chatTitle)
             },
+            shouldShowAboutTitle() {
+                return hasLength(this.$data.aboutPostTitle)
+            },
             setLoading(v) {
               this.$data.pageLoading = v
             },
@@ -154,6 +159,9 @@
             },
             messageId() {
                 return this.pageContext.routeParams?.messageId
+            },
+            aboutPostTitleHref() {
+                return path_prefix + blog_post + "/" + this.aboutPostId
             },
         },
         mounted() {

@@ -411,13 +411,8 @@ func (tx *Tx) GetMessagePublic(ctx context.Context, chatId int64, messageId int6
 	return getMessagePublicCommon(ctx, tx, chatId, messageId)
 }
 
-func (tx *Tx) SetBlogPost(ctx context.Context, chatId int64, messageId int64) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_chat_%v SET blog_post = false", chatId))
-	if err != nil {
-		return eris.Wrap(err, "error during interacting with db")
-	}
-
-	_, err = tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_chat_%v SET blog_post = true WHERE id = $1", chatId), messageId)
+func (tx *Tx) SetBlogPost(ctx context.Context, chatId int64, messageId int64, desiredValue bool) error {
+	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_chat_%v SET blog_post = $2 WHERE id = $1", chatId), messageId, desiredValue)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
@@ -473,7 +468,7 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 							ORDER BY id LIMIT 1
 						`, chatId),
 	)
-	var id int64
+	var id *int64
 	err := row.Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
@@ -482,7 +477,7 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
-		return &id, nil
+		return id, nil
 	}
 }
 

@@ -73,6 +73,14 @@ const morganMiddleware = morgan(
             // Configure Morgan to use our custom logger with the http severity
             write: (message) => logger.info(message.trim()),
         },
+        skip: function (req, res) {
+            return req.url === "/health" ||
+                    req.url?.startsWith('/public/assets') ||
+                    req.url?.startsWith('/public/node_modules') ||
+                    req.url?.startsWith('/assets') ||
+                    req.url?.startsWith('/node_modules')
+                ;
+        }
     }
 );
 
@@ -152,10 +160,11 @@ async function startServer() {
               for (let page = 0; ; page++) {
                   const response = await axios.get(apiHost + `/internal/blog/seo?page=${page}&size=${PAGE_SIZE}`);
                   const data = response.data;
-                  if (data.length == 0) {
+                  const posts = data.items;
+                  if (posts.length == 0) {
                       break
                   }
-                  for (const item of data) {
+                  for (const item of posts) {
                       smStream.write({url: path_prefix + blog_post + `/${item.chatId}`, lastmod: item.lastModified})
                   }
               }

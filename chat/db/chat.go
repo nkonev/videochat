@@ -26,7 +26,8 @@ const real_chat_columns = `
 	pinned,
 	blog,
 	regular_participant_can_publish_message,
-	regular_participant_can_pin_message
+	regular_participant_can_pin_message,
+	blog_about
 `
 
 const select_chat = `
@@ -42,7 +43,8 @@ SELECT
 	cp.user_id IS NOT NULL as pinned,
 	ch.blog,
 	ch.regular_participant_can_publish_message,
-	ch.regular_participant_can_pin_message
+	ch.regular_participant_can_pin_message,
+	ch.blog_about
 
 `
 const chat_order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
@@ -67,6 +69,7 @@ type Chat struct {
 	Blog                                bool
 	RegularParticipantCanPublishMessage bool
 	RegularParticipantCanPinMessage     bool
+	BlogAbout                           bool
 }
 
 type Blog struct {
@@ -94,7 +97,7 @@ func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage)
+	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7, $8) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -149,6 +152,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.Blog,
 		&chat.RegularParticipantCanPublishMessage,
 		&chat.RegularParticipantCanPinMessage,
+		&chat.BlogAbout,
 	}
 }
 
@@ -608,12 +612,23 @@ func (tx *Tx) DeleteChat(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (tx *Tx) EditChat(ctx context.Context, id int64, newTitle string, avatar, avatarBig null.String, canResend bool, availableToSearch bool, blog *bool, regularParticipantCanPublishMessage bool, regularParticipantCanPinMessage bool) (*time.Time, error) {
+func (tx *Tx) EditChat(
+	ctx context.Context,
+	id int64,
+	newTitle string,
+	avatar, avatarBig null.String,
+	canResend bool,
+	availableToSearch bool,
+	blog *bool, // null is whether to change blog or not
+	regularParticipantCanPublishMessage bool,
+	regularParticipantCanPinMessage bool,
+	blogAbout bool,
+) (*time.Time, error) {
 	var res sql.Result
 	var err error
 	if blog != nil {
 		isBlog := utils.NullableToBoolean(blog)
-		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9, blog_about = $10 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, blogAbout)
 	} else {
 		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
 	}
@@ -1232,6 +1247,48 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 		return false, eris.Wrap(err, "error during interacting with db")
 	}
 	return found, nil
+}
+
+func getBlogAboutChatIdCommon(ctx context.Context, co CommonOperations) (*int64, *string, error) {
+	row := co.QueryRowContext(ctx, `
+							SELECT 
+								ch.id,
+								ch.title
+							FROM chat ch 
+							WHERE 
+							    ch.blog IS TRUE AND
+								ch.blog_about IS TRUE
+							ORDER BY id LIMIT 1
+						`,
+	)
+	var id *int64
+	var title *string
+	err := row.Scan(&id, &title)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil, nil
+	}
+	if err != nil {
+		return nil, nil, eris.Wrap(err, "error during interacting with db")
+	} else {
+		return id, title, nil
+	}
+}
+
+func (db *DB) GetBlogAboutChatId(ctx context.Context) (*int64, *string, error) {
+	return getBlogAboutChatIdCommon(ctx, db)
+}
+
+func (tx *Tx) GetBlogAboutChatId(ctx context.Context) (*int64, *string, error) {
+	return getBlogAboutChatIdCommon(ctx, tx)
+}
+
+func (tx *Tx) SetBlogAbout(ctx context.Context, chatId int64, desiredValue bool) error {
+	_, err := tx.ExecContext(ctx, "UPDATE chat SET blog_about = $2 WHERE id = $1", chatId, desiredValue)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	return nil
 }
 
 func (db *DB) DeleteAllParticipants(ctx context.Context) error {

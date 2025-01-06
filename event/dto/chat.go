@@ -32,6 +32,7 @@ type BaseChatDto struct {
 	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
 	LastSeenDateTime                    null.Time   `json:"lastSeenDateTime"`
 	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool        `json:"blogAbout"`
 }
 
 type ChatDeletedDto struct {

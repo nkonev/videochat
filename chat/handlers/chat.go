@@ -42,6 +42,7 @@ type CreateChatDto struct {
 	Blog                                *bool       `json:"blog"`
 	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
 	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool        `json:"blogAbout"`
 }
 
 type ChatHandler struct {
@@ -436,6 +437,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		Blog:                                c.Blog,
 		RegularParticipantCanPublishMessage: c.RegularParticipantCanPublishMessage,
 		RegularParticipantCanPinMessage:     c.RegularParticipantCanPinMessage,
+		BlogAbout:                           c.BlogAbout,
 	}
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
@@ -555,6 +557,7 @@ func convertToCreatableChat(d *CreateChatDto, policy *services.StripTagsPolicy) 
 		Blog:                                isBlog,
 		RegularParticipantCanPublishMessage: d.RegularParticipantCanPublishMessage,
 		RegularParticipantCanPinMessage:     d.RegularParticipantCanPinMessage,
+		BlogAbout:                           d.BlogAbout,
 	}
 }
 
@@ -619,6 +622,8 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		bindTo.Blog = nil
 	}
 
+	shouldChangeBlog := bindTo.Blog != nil
+
 	chatTitle := TrimAmdSanitizeChatTitle(ch.stripTagsPolicy, bindTo.Name)
 	if err := lateValidateChatTitle(chatTitle); err != nil {
 		ch.lgr.WithTracing(c.Request().Context()).Infof("Failed late validation: %v", err.Error())
@@ -626,10 +631,28 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 	}
 
 	errOuter := db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		if admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, bindTo.Id); err != nil {
+		admin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, bindTo.Id)
+		if err != nil {
 			return err
 		} else if !admin {
 			return errors.New(fmt.Sprintf("User %v is not admin of chat %v", userPrincipalDto.UserId, bindTo.Id))
+		}
+
+		var oldBlogAboutChatId *int64
+		if shouldChangeBlog && bindTo.BlogAbout {
+			// find old "about"
+			oldBlogAboutChatId, _, err = tx.GetBlogAboutChatId(c.Request().Context())
+			if err != nil {
+				return err
+			}
+
+			// unset old "about"
+			if oldBlogAboutChatId != nil {
+				err = tx.SetBlogAbout(c.Request().Context(), *oldBlogAboutChatId, false)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		chatBasicBefore, err := tx.GetChatBasic(c.Request().Context(), bindTo.Id)
@@ -648,6 +671,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			bindTo.Blog,
 			bindTo.RegularParticipantCanPublishMessage,
 			bindTo.RegularParticipantCanPinMessage,
+			bindTo.BlogAbout,
 		)
 		if err != nil {
 			return err
@@ -658,10 +682,26 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return err
 		}
 
+		var oldBlogAboutChatDto *dto.ChatDto
+		if oldBlogAboutChatId != nil {
+			oldBlogAboutChatDto, err = getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, *oldBlogAboutChatId, userPrincipalDto.UserId, 0, 0)
+			if err != nil {
+				return err
+			}
+		}
+
 		err = tx.IterateOverChatParticipantIds(c.Request().Context(), bindTo.Id, func(participantIds []int64) error {
 			areAdmins, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, bindTo.Id)
 			if err != nil {
 				return err
+			}
+
+			if oldBlogAboutChatDto != nil {
+				areAdminsOld, err := getAreAdminsOfUserIds(c.Request().Context(), tx, participantIds, *oldBlogAboutChatId)
+				if err != nil {
+					return err
+				}
+				ch.notificator.NotifyAboutChangeChat(c.Request().Context(), oldBlogAboutChatDto, participantIds, len(oldBlogAboutChatDto.ParticipantIds) == 1, true, tx, areAdminsOld)
 			}
 
 			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)

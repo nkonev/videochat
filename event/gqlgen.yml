@@ -70,4 +70,4 @@ models:
 #      - github.com/99designs/gqlgen/graphql.Int32
   UUID:
     model:
-      - nkonev.name/event/graph_types.UUID
+      - github.com/99designs/gqlgen/graphql.UUID

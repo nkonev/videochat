@@ -102,6 +102,16 @@
                             color="primary"
                         ></v-checkbox>
 
+                        <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
+                            v-if="canCreateBlog"
+                            v-model="editDto.blogAbout"
+                            :label="$vuetify.locale.t('$vuetify.blog_about')"
+                            hide-details
+                            density="compact"
+                            color="primary"
+                        ></v-checkbox>
+
                         <template v-if="!isNew">
                             <v-container class="pa-0 ma-0 mt-2">
                                 <img v-if="hasAva"
@@ -236,6 +246,7 @@
                 canResend: chatDto.canResend,
                 availableToSearch: chatDto.availableToSearch,
                 blog: chatDto.blog,
+                blogAbout: chatDto.blogAbout,
                 regularParticipantCanPublishMessage: chatDto.regularParticipantCanPublishMessage,
                 regularParticipantCanPinMessage: chatDto.regularParticipantCanPinMessage,
               }
