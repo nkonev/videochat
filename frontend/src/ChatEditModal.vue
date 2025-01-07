@@ -94,6 +94,15 @@
 
                         <v-checkbox
                             :class="isMobile() ? 'mt-2': ''"
+                            v-model="editDto.regularParticipantCanWriteMessage"
+                            :label="$vuetify.locale.t('$vuetify.regular_participant_can_write_message')"
+                            hide-details
+                            density="compact"
+                            color="primary"
+                        ></v-checkbox>
+
+                        <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
                             v-if="canCreateBlog"
                             v-model="editDto.blog"
                             :label="$vuetify.locale.t('$vuetify.blog')"
@@ -178,6 +187,7 @@
             participantIds: [ ],
             canResend: false,
             availableToSearch: false, // it's default for all the new chats, excluding tet-a-tet
+            regularParticipantCanWriteMessage: true ,
         }
     };
 
@@ -249,6 +259,7 @@
                 blogAbout: chatDto.blogAbout,
                 regularParticipantCanPublishMessage: chatDto.regularParticipantCanPublishMessage,
                 regularParticipantCanPinMessage: chatDto.regularParticipantCanPinMessage,
+                regularParticipantCanWriteMessage: chatDto.regularParticipantCanWriteMessage,
               }
             },
             loadCanCreateBlog() {

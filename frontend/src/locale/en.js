@@ -330,5 +330,7 @@ export default {
     video_messages_disable: "Disable messages",
     video_messages_enable: "Enable messages",
     logs: "Logs",
-    blog_about: "Blog's About"
+    blog_about: "Blog's About",
+    regular_participant_can_write_message: "Regular participant can write messages",
+    you_cannot_write_message: "You cannot write a message into this chat"
 }

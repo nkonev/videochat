@@ -105,6 +105,7 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 			// see also handlers/chat.go:199 convertToDto()
 			copied.SetPersonalizedFields(areAdminsMap[participantId], unreadMessages[participantId], overrideIsParticipant)
 
+			// override pinned personally for participantId
 			copied.Pinned = isChatPinnedMap[participantId]
 
 			for _, participant := range copied.Participants {

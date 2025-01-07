@@ -330,5 +330,7 @@ export default {
     video_messages_disable: "Выключить сообщения",
     video_messages_enable: "Включить сообщения",
     logs: "Логи",
-    blog_about: "Блог - про меня"
+    blog_about: "Блог - про меня",
+    regular_participant_can_write_message: "Участники могут писать сообщения",
+    you_cannot_write_message: "Вы не можете писать сообщения в этом чате"
 }

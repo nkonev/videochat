@@ -666,6 +666,12 @@ func (m *notParticipantError) Error() string {
 	return "You are not a participant"
 }
 
+type cannotWriteMessageError struct{}
+
+func (m *cannotWriteMessageError) Error() string {
+	return "You cannot write a message"
+}
+
 func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	var bindTo = new(CreateMessageDto)
 	if err := c.Bind(bindTo); err != nil {
@@ -712,6 +718,15 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			return 0, err
 		}
 
+		isChatAdmin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return 0, err
+		}
+
+		if !canWriteMessage(chatBasic, isChatAdmin) {
+			return 0, &cannotWriteMessageError{}
+		}
+
 		if chatBasic.IsBlog {
 			hasMessages, err := tx.HasMessages(c.Request().Context(), chatId)
 			if err != nil {
@@ -744,6 +759,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		var npe *notParticipantError
 		if errors.As(errOuter, &npe) {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
+		}
+		var cwm *cannotWriteMessageError
+		if errors.As(errOuter, &cwm) {
+			return c.NoContent(http.StatusUnauthorized)
 		}
 
 		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
@@ -839,6 +858,7 @@ func toChatBasic(chatDto *dto.ChatDto) *db.BasicChatDto {
 			IsBlog:                              chatDto.Blog,
 			RegularParticipantCanPublishMessage: chatDto.RegularParticipantCanPublishMessage,
 			RegularParticipantCanPinMessage:     chatDto.RegularParticipantCanPinMessage,
+			RegularParticipantCanWriteMessage:   chatDto.RegularParticipantCanWriteMessage,
 		}
 	}
 }
@@ -946,6 +966,20 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 			return err
 		}
 
+		chatBasic, err := tx.GetChatBasic(c.Request().Context(), chatId)
+		if err != nil {
+			return err
+		}
+
+		isChatAdmin, err := tx.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
+		if err != nil {
+			return err
+		}
+
+		if !canWriteMessage(chatBasic, isChatAdmin) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		err = mc.validateAndSetEmbedFieldsEmbedMessage(c.Request().Context(), tx, &bindTo.CreateMessageDto, editableMessage)
 		if err != nil {
 			mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking embed %v", err)
@@ -979,11 +1013,6 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		}
 
 		chatNameForNotification, err := mc.getChatNameForNotification(c.Request().Context(), tx, chatId)
-		if err != nil {
-			return err
-		}
-
-		chatBasic, err := tx.GetChatBasic(c.Request().Context(), chatId)
 		if err != nil {
 			return err
 		}
@@ -1066,6 +1095,15 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		return errOuter
 	}
 	return errOuter
+}
+
+func canWriteMessage(chatBasic *db.BasicChatDto, isChatAdmin bool) bool {
+	var res = true
+	// see also handlers PostMessage, EditMessage, DeleteMessage
+	if !chatBasic.RegularParticipantCanWriteMessage && !isChatAdmin {
+		res = false
+	}
+	return res
 }
 
 type MessageFilterDto struct {
@@ -1153,6 +1191,20 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, &utils.H{"message": msg})
 	}
 
+	chatBasic, err := mc.db.GetChatBasic(c.Request().Context(), chatId)
+	if err != nil {
+		return err
+	}
+
+	isChatAdmin, err := mc.db.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+
+	if !canWriteMessage(chatBasic, isChatAdmin) {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	err = mc.db.SetFileItemUuidTo(c.Request().Context(), userPrincipalDto.UserId, chatId, bindTo.MessageId, bindTo.FileItemUuid)
 	if err != nil {
 		mc.lgr.WithTracing(c.Request().Context()).Errorf("Unable to set FileItemUuid to full for fileItemUuid=%v, chatId=%v", bindTo.FileItemUuid, chatId)
@@ -1160,11 +1212,6 @@ func (mc *MessageHandler) SetFileItemUuid(c echo.Context) error {
 	}
 
 	message, err := getMessageWithoutPersonalized(c.Request().Context(), mc.lgr, mc.db, mc.restClient, chatId, bindTo.MessageId, userPrincipalDto.UserId) // personal values will be set inside IterateOverChatParticipantIds -> event.go
-	if err != nil {
-		return err
-	}
-
-	chatBasic, err := mc.db.GetChatBasic(c.Request().Context(), chatId)
 	if err != nil {
 		return err
 	}
@@ -1216,6 +1263,20 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 	chatId, err := GetPathParamAsInt64(c, "id")
 	if err != nil {
 		return err
+	}
+
+	chatBasic, err := mc.db.GetChatBasic(c.Request().Context(), chatId)
+	if err != nil {
+		return err
+	}
+
+	isChatAdmin, err := mc.db.IsAdmin(c.Request().Context(), userPrincipalDto.UserId, chatId)
+	if err != nil {
+		return err
+	}
+
+	if !canWriteMessage(chatBasic, isChatAdmin) {
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	messageId, err := GetPathParamAsInt64(c, "messageId")

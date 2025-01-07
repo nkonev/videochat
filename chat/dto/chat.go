@@ -33,6 +33,8 @@ type BaseChatDto struct {
 	LastSeenDateTime                    null.Time   `json:"lastSeenDateTime"`
 	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
 	BlogAbout                           bool        `json:"blogAbout"`
+	RegularParticipantCanWriteMessage   bool        `json:"regularParticipantCanWriteMessage"`
+	CanWriteMessage                     bool        `json:"canWriteMessage"`
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
@@ -47,6 +49,12 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 
 	if !participant {
 		copied.IsResultFromSearch = null.BoolFrom(true)
+	}
+
+	copied.CanWriteMessage = true
+	// see also handlers PostMessage, EditMessage, DeleteMessage
+	if !copied.RegularParticipantCanWriteMessage && !admin {
+		copied.CanWriteMessage = false
 	}
 }
 

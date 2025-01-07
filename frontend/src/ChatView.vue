@@ -33,10 +33,11 @@
             <MessageList :canResend="chatStore.chatDto.canResend" :blog="chatStore.chatDto.blog" :isCompact="isVideoRoute()"/>
 
             <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
-            <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-plus" class="new-fab-b" @click="openNewMessageDialog()"></v-btn>
+            <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" color="primary" icon="mdi-plus" class="new-fab-b" @click="openNewMessageDialog()"></v-btn>
           </pane>
-          <pane class="message-edit-pane" v-if="showBottomPane()" :size="bottomPaneSize()">
-            <MessageEdit :chatId="this.chatId"/>
+          <pane class="message-edit-pane d-flex flex-row justify-center align-center" v-if="showBottomPane()" :size="bottomPaneSize()" style="background: white; color: #3a3a3e">
+            <MessageEdit v-if="canWriteMessage" :chatId="this.chatId"/>
+            <span v-else>{{ $vuetify.locale.t('$vuetify.you_cannot_write_message') }}</span>
           </pane>
         </splitpanes>
       </pane>
@@ -143,6 +144,7 @@ export default {
       // if we remove it (or replace with chatDtoIsReady) - there are going to be disappears of ChatList when user clicks on the different chat
       initialLoaded: false,
       chatEventsSubscription: null,
+      canWriteMessage: true, // for sake prevent disappearing TipTap on switching in the left pane
     }
   },
   components: {
@@ -204,6 +206,7 @@ export default {
         this.chatStore.tetATet = data.tetATet;
         this.chatStore.setChatDto(data);
         this.initialLoaded = true;
+        this.canWriteMessage = data.canWriteMessage;
         return Promise.resolve(data);
     },
     commonChatEdit(data) {
@@ -876,7 +879,11 @@ export default {
     },
     scrollDownClass() {
       if (this.isMobile()) {
-        return "new-fab-t"
+        if (!this.canWriteMessage) {
+          return "new-fab-b"
+        } else {
+          return "new-fab-t"
+        }
       } else {
         return "new-fab-b"
       }
@@ -907,7 +914,14 @@ export default {
       handler: function (newValue, oldValue) {
         setSplitter(messagesSplitpanesSelector, messagesSplitterDisplayVarName, newValue || !this.isAllowedVideo());
       }
-    }
+    },
+    'chatStore.chatDto.canWriteMessage': {
+      handler: function (newValue, oldValue) {
+        if (newValue !== undefined) {
+          this.canWriteMessage = newValue;
+        }
+      }
+    },
   },
   created() {
 
@@ -978,6 +992,7 @@ export default {
     this.initialLoaded = false;
 
     this.chatStore.isEditingBigText = false;
+    this.canWriteMessage = true;
   }
 }
 </script>

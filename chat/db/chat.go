@@ -27,7 +27,9 @@ const real_chat_columns = `
 	blog,
 	regular_participant_can_publish_message,
 	regular_participant_can_pin_message,
-	blog_about
+	blog_about,
+	regular_participant_can_write_message
+
 `
 
 const select_chat = `
@@ -44,7 +46,8 @@ SELECT
 	ch.blog,
 	ch.regular_participant_can_publish_message,
 	ch.regular_participant_can_pin_message,
-	ch.blog_about
+	ch.blog_about,
+	ch.regular_participant_can_write_message
 
 `
 const chat_order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
@@ -70,6 +73,7 @@ type Chat struct {
 	RegularParticipantCanPublishMessage bool
 	RegularParticipantCanPinMessage     bool
 	BlogAbout                           bool
+	RegularParticipantCanWriteMessage   bool
 }
 
 type Blog struct {
@@ -97,7 +101,7 @@ func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error
 	}
 
 	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7, $8) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout)
+	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7, $8, $9) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -153,6 +157,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.RegularParticipantCanPublishMessage,
 		&chat.RegularParticipantCanPinMessage,
 		&chat.BlogAbout,
+		&chat.RegularParticipantCanWriteMessage,
 	}
 }
 
@@ -627,14 +632,15 @@ func (tx *Tx) EditChat(
 	regularParticipantCanPublishMessage bool,
 	regularParticipantCanPinMessage bool,
 	blogAbout bool,
+	regularParticipantCanWriteMessage bool,
 ) (*time.Time, error) {
 	var res sql.Result
 	var err error
 	if blog != nil {
 		isBlog := utils.NullableToBoolean(blog)
-		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9, blog_about = $10 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, blogAbout)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9, blog_about = $10, regular_participant_can_write_message = $11 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, blogAbout, regularParticipantCanWriteMessage)
 	} else {
-		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8, regular_participant_can_write_message = $9 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, regularParticipantCanWriteMessage)
 	}
 	if err != nil {
 		tx.lgr.WithTracing(ctx).Errorf("Error during editing chat id %v", err)
@@ -690,12 +696,13 @@ func getChatBasicCommon(ctx context.Context, co CommonOperations, chatId int64) 
 				ch.available_to_search,
 				ch.blog,
 				ch.regular_participant_can_publish_message,
-				ch.regular_participant_can_pin_message
+				ch.regular_participant_can_pin_message,
+				ch.regular_participant_can_write_message
 			FROM chat ch 
 			WHERE ch.id = $1
 `, chatId)
 	chat := BasicChatDto{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage, &chat.RegularParticipantCanWriteMessage)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -720,12 +727,13 @@ func getBlogChatBasicCommon(ctx context.Context, co CommonOperations, chatId int
 				ch.id, 
 				ch.title, 
 				ch.blog,
-				ch.create_date_time
+				ch.create_date_time,
+				ch.regular_participant_can_write_message
 			FROM chat ch 
 			WHERE ch.id = $1
 `, chatId)
 	chat := BasicBlogDto{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.IsBlog, &chat.CreateDateTime)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsBlog, &chat.CreateDateTime, &chat.CanWriteMessage)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -819,13 +827,15 @@ type BasicChatDto struct {
 	CreateDateTime                      time.Time
 	RegularParticipantCanPublishMessage bool
 	RegularParticipantCanPinMessage     bool
+	RegularParticipantCanWriteMessage   bool
 }
 
 type BasicBlogDto struct {
-	Id             int64
-	Title          string
-	IsBlog         bool
-	CreateDateTime time.Time
+	Id              int64
+	Title           string
+	IsBlog          bool
+	CreateDateTime  time.Time
+	CanWriteMessage bool
 }
 
 type BasicChatDtoExtended struct {

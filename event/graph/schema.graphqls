@@ -90,6 +90,8 @@ type ChatDto {
     lastSeenDateTime: Time
     regularParticipantCanPinMessage: Boolean!
     blogAbout: Boolean!
+    regularParticipantCanWriteMessage: Boolean!
+    canWriteMessage: Boolean!
 }
 
 type ChatDeletedDto {

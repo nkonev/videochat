@@ -61,6 +61,7 @@ async function data(pageContext) {
         title: unescapeHtml(blogResponse.data.post.title),
         description: blogResponse.data.post.preview,
         showSearchButton: true,
+        canWriteMessage: blogResponse.data.canWriteMessage,
     }
 
 }

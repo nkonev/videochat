@@ -337,8 +337,9 @@ type BlogPostResponse struct {
 }
 
 type WrappedBlogPostResponse struct {
-	Header BlogHeader       `json:"header"`
-	Post   BlogPostResponse `json:"post"`
+	Header          BlogHeader       `json:"header"`
+	Post            BlogPostResponse `json:"post"`
+	CanWriteMessage bool             `json:"canWriteMessage"`
 }
 
 func (h *BlogHandler) GetBlogPost(c echo.Context) error {
@@ -376,6 +377,8 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		h.lgr.WithTracing(c.Request().Context()).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
 	}
 
+	userCanWriteMessage := chatBasic.CanWriteMessage
+
 	if post != nil {
 		response.OwnerId = &post.OwnerId
 		response.MessageId = &post.MessageId
@@ -409,8 +412,9 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, WrappedBlogPostResponse{
-		Header: BlogHeader{AboutPostId: aboutPostId, AboutPostTitle: aboutPostTitle},
-		Post:   response,
+		Header:          BlogHeader{AboutPostId: aboutPostId, AboutPostTitle: aboutPostTitle},
+		Post:            response,
+		CanWriteMessage: userCanWriteMessage,
 	})
 }
 

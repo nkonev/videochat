@@ -49,7 +49,7 @@
             @click="onClickTrap"
           ></MessageItem>
 
-          <v-btn class="my-2 mx-2" variant="flat" color="primary" :href="getChatLink()">Write a comment</v-btn>
+          <v-btn class="my-2 mx-2" variant="flat" color="primary" :href="getChatLink()"> {{ pageContext.data.canWriteMessage ? 'Write a comment' : 'Join' }}</v-btn>
 
           <v-pagination
               v-model="pageContext.data.page"

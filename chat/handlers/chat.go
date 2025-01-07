@@ -43,6 +43,7 @@ type CreateChatDto struct {
 	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
 	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
 	BlogAbout                           bool        `json:"blogAbout"`
+	RegularParticipantCanWriteMessage   bool        `json:"regularParticipantCanWriteMessage"`
 }
 
 type ChatHandler struct {
@@ -438,6 +439,7 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		RegularParticipantCanPublishMessage: c.RegularParticipantCanPublishMessage,
 		RegularParticipantCanPinMessage:     c.RegularParticipantCanPinMessage,
 		BlogAbout:                           c.BlogAbout,
+		RegularParticipantCanWriteMessage:   c.RegularParticipantCanWriteMessage,
 	}
 
 	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
@@ -558,6 +560,7 @@ func convertToCreatableChat(d *CreateChatDto, policy *services.StripTagsPolicy) 
 		RegularParticipantCanPublishMessage: d.RegularParticipantCanPublishMessage,
 		RegularParticipantCanPinMessage:     d.RegularParticipantCanPinMessage,
 		BlogAbout:                           d.BlogAbout,
+		RegularParticipantCanWriteMessage:   d.RegularParticipantCanWriteMessage,
 	}
 }
 
@@ -672,6 +675,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			bindTo.RegularParticipantCanPublishMessage,
 			bindTo.RegularParticipantCanPinMessage,
 			bindTo.BlogAbout,
+			bindTo.RegularParticipantCanWriteMessage,
 		)
 		if err != nil {
 			return err
