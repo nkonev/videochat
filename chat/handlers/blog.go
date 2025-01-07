@@ -516,58 +516,6 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *logger.Logger, text strin
 					}
 					maybeImage.SetAttr("src", newurl)
 				}
-			} else { // we have only original // legacy
-				src, srcExists := maybeImage.Attr("src") // original
-				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-					newurl, err := makeUrlPublic(src, "", false, overrideChatId, overrideMessageId)
-					if err != nil {
-						lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
-						return
-					}
-					maybeImage.SetAttr("src", newurl)
-				}
-			}
-		}
-	})
-
-	// legacy
-	doc.Find("video").Each(func(i int, s *goquery.Selection) {
-		maybeVideo := s.First()
-		if maybeVideo != nil {
-			src, srcExists := maybeVideo.Attr("src")
-			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-				newurl, err := makeUrlPublic(src, "", true, overrideChatId, overrideMessageId) // large video file doesn't fit in cache well, so in order not to cache it we add time
-				if err != nil {
-					lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
-					return
-				}
-				maybeVideo.SetAttr("src", newurl)
-			}
-
-			poster, posterExists := maybeVideo.Attr("poster")
-			if posterExists && utils.ContainsUrl(lgr, wlArr, src) {
-				newurl, err := makeUrlPublic(poster, utils.UrlStorageEmbedPreview, false, overrideChatId, overrideMessageId)
-				if err != nil {
-					lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
-					return
-				}
-				maybeVideo.SetAttr("poster", newurl)
-			}
-		}
-	})
-
-	// legacy
-	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
-		maybeVideo := s.First()
-		if maybeVideo != nil {
-			src, srcExists := maybeVideo.Attr("src")
-			if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-				newurl, err := makeUrlPublic(src, "", true, overrideChatId, overrideMessageId)
-				if err != nil {
-					lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
-					return
-				}
-				maybeVideo.SetAttr("src", newurl)
 			}
 		}
 	})
