@@ -111,8 +111,8 @@ const videoConvertingClass = "video-converting";
 export const onClickTrap = (e) => {
     const foundElements = [
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
-        checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-button")),
-        checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("video-in-message-button-replace")),
+        checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
+        checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
     ].filter(r => r.found);
     if (foundElements.length) {
         e.preventDefault();
@@ -125,54 +125,48 @@ export const onClickTrap = (e) => {
             }
             case "span": { // span of any of "show in player" or "replace" button
                 const spanContainer = found.parentElement;
-                if (found.classList?.contains("video-in-message-button")) { // "show in player" button
-                    let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                    if (videoHolder) {
-                        if (!videoHolder.classList.contains(videoConvertingClass)) {
-                            bus.emit(PLAYER_MODAL, {
-                                canPlayAsVideo: true,
-                                url: videoHolder.getAttribute('data-original'),
-                                previewUrl: videoHolder.src,
-                                canSwitch: true
-                            })
-                        }
-                    } else {
-                        videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "video"); // legacy
+                if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
+                    if (found.classList?.contains("media-in-message-button-open")) { // "show in player" button
+                        let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
                         if (videoHolder) {
-                            bus.emit(PLAYER_MODAL, {
-                                canPlayAsVideo: true,
-                                url: videoHolder.src,
-                                previewUrl: videoHolder.poster,
-                                canSwitch: true
-                            })
-                        }
-                    }
-                } else { // "replace" button
-                    let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                    if (videoHolder) {
-                        const src = videoHolder.src;
-                        const original = videoHolder.getAttribute('data-original');
-                        spanContainer.removeChild(videoHolder);
-
-                        spanContainer.removeChild(found);
-
-                        const videoReplacement = createVideoReplacementElement(original, src);
-                        spanContainer.appendChild(videoReplacement);
-
-                        axios.post(`/api/storage/public/view/status`, {
-                            url: original
-                        }).then(res => {
-                            if (res.data.status == "converting") {
-                                spanContainer.removeChild(videoReplacement);
-
-                                const imgReplacement = document.createElement("IMG");
-                                imgReplacement.src = res.data.statusImage;
-                                imgReplacement.className = "video-custom-class " + videoConvertingClass;
-                                spanContainer.appendChild(imgReplacement);
+                            if (!videoHolder.classList.contains(videoConvertingClass)) {
+                                bus.emit(PLAYER_MODAL, {
+                                    canPlayAsVideo: true,
+                                    url: videoHolder.getAttribute('data-original'),
+                                    previewUrl: videoHolder.src,
+                                    canSwitch: true
+                                })
+                            } else {
+                                console.info("cannot open still converting video")
                             }
-                        })
-                    } else {
-                        console.info("video holder is not found")
+                        }
+                    } else if (found.classList?.contains("media-in-message-button-replace")) { // "replace" button
+                        let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                        if (videoHolder) {
+                            const src = videoHolder.src;
+                            const original = videoHolder.getAttribute('data-original');
+                            spanContainer.removeChild(videoHolder);
+
+                            spanContainer.removeChild(found);
+
+                            const videoReplacement = createVideoReplacementElement(original, src);
+                            spanContainer.appendChild(videoReplacement);
+
+                            axios.post(`/api/storage/public/view/status`, {
+                                url: original
+                            }).then(res => {
+                                if (res.data.status == "converting") {
+                                    spanContainer.removeChild(videoReplacement);
+
+                                    const imgReplacement = document.createElement("IMG");
+                                    imgReplacement.src = res.data.statusImage;
+                                    imgReplacement.className = "video-custom-class " + videoConvertingClass;
+                                    spanContainer.appendChild(imgReplacement);
+                                }
+                            })
+                        } else {
+                            console.info("video holder is not found")
+                        }
                     }
                 }
                 break;
