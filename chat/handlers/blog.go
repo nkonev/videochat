@@ -530,6 +530,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *logger.Logger, text strin
 		}
 	})
 
+	// legacy
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()
 		if maybeVideo != nil {
@@ -555,6 +556,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *logger.Logger, text strin
 		}
 	})
 
+	// legacy
 	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()
 		if maybeVideo != nil {
@@ -591,6 +593,10 @@ const OverrideMessageId = "overrideMessageId"
 const OverrideChatId = "overrideChatId"
 
 func makeUrlPublic(src string, additionalSegment string, addTime bool, overrideChatId, overrideMessageId int64) (string, error) {
+	if strings.HasPrefix(src, "/api/storage/assets/") { // don't touch built-in default urls (used for video-by-link, audio)
+		return src, nil
+	}
+
 	// we add time in order not to cache the video itself
 	parsed, err := url.Parse(src)
 	if err != nil {

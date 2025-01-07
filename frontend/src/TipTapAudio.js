@@ -14,6 +14,9 @@ const Audio = Node.create({
             {
                 tag: 'audio',
             },
+            {
+                tag: 'img[class="audio-custom-class"]',
+            },
         ]
     },
     addAttributes() {
@@ -21,10 +24,27 @@ const Audio = Node.create({
             "src": {
                 default: null
             },
+            original: {
+                default: null,
+                parseHTML: element => element.getAttribute('data-original'),
+                renderHTML: attributes => {
+                    if (!attributes.original) {
+                        return {};
+                    }
+                    return {
+                        'data-original': attributes.original,
+                    };
+                },
+            },
         }
     },
     renderHTML({ HTMLAttributes }) {
-        return ['audio', mergeAttributes({"class": "audio-custom-class", "controls": true}, HTMLAttributes)];
+        return [
+            'span', {"class": "media-in-message-wrapper media-in-message-wrapper-audio"},
+            ['img', mergeAttributes({"class": "audio-custom-class"}, HTMLAttributes)],
+            ['span', {"class": "media-in-message-button-open mdi mdi-arrow-expand-all", "title": "Open in player"}],
+            ['span', {"class": "media-in-message-button-replace mdi mdi-play-box-outline", "title": "Play in-place"}],
+        ];
     },
     addCommands() {
         return {

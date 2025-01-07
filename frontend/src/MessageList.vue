@@ -580,28 +580,32 @@
                     }
                     case "span": { // span of any of "show in player" or "replace" button
                         const spanContainer = found.parentElement;
-                        if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
+                        if (spanContainer.classList.contains("media-in-message-wrapper")) {
                             if (found.classList?.contains("media-in-message-button-open")) { // "show in player" button
-                                let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                                if (videoHolder) {
-                                  if (!videoHolder.classList.contains(videoConvertingClass)) {
-                                    bus.emit(PLAYER_MODAL, {
-                                      canPlayAsVideo: true,
-                                      url: videoHolder.getAttribute('data-original'),
-                                      previewUrl: videoHolder.src,
-                                      canSwitch: true
-                                    })
-                                  } else {
-                                    console.info("cannot open still converting video")
+                                const theHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                                if (theHolder) {
+                                  if (!theHolder.classList.contains(videoConvertingClass)) {
+                                    const playerReq = {
+                                      canSwitch: true,
+                                      url: theHolder.getAttribute('data-original'),
+                                      previewUrl: theHolder.src,
+                                    }
+                                    if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
+                                      playerReq.canPlayAsVideo = true
+                                    } else if (spanContainer.classList.contains("media-in-message-wrapper-audio")) {
+                                      playerReq.canPlayAsAudio = true
+                                    }
+                                    bus.emit(PLAYER_MODAL, playerReq);
                                   }
                                 }
                             } else if (found.classList?.contains("media-in-message-button-replace")) { // "replace" button
-                                let videoHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                                if (videoHolder) {
-                                    const src = videoHolder.src;
-                                    const original = videoHolder.getAttribute('data-original');
-                                    spanContainer.removeChild(videoHolder);
+                                const theHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                                if (theHolder) {
+                                  const src = theHolder.src;
+                                  const original = theHolder.getAttribute('data-original');
 
+                                  if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
+                                    spanContainer.removeChild(theHolder);
                                     spanContainer.removeChild(found);
 
                                     const videoReplacement = this.createVideoReplacementElement(original, src);
@@ -622,8 +626,20 @@
                                         spanContainer.appendChild(imgReplacement);
                                       }
                                     })
+                                  } else if (spanContainer.classList.contains("media-in-message-wrapper-audio")) {
+                                    spanContainer.removeChild(theHolder);
+                                    spanContainer.removeChild(found);
+
+                                    const openButton = Array.from(spanContainer?.children).find(ch => ch?.classList?.contains("media-in-message-button-open"));
+                                    spanContainer.removeChild(openButton);
+
+                                    const audioReplacement = this.createAudioReplacementElement(original);
+                                    spanContainer.appendChild(audioReplacement);
+                                  } else {
+                                    console.info("no case for it")
+                                  }
                                 } else {
-                                    console.info("video holder is not found")
+                                    console.info("holder is not found")
                                 }
                             }
                         }
@@ -665,6 +681,13 @@
           replacement.playsinline = true;
           replacement.controls = true;
           replacement.className = "video-custom-class";
+          return replacement
+        },
+        createAudioReplacementElement(src) {
+          const replacement = document.createElement("AUDIO");
+          replacement.src = src;
+          replacement.controls = true;
+          replacement.className = "audio-custom-class";
           return replacement
         },
         getMaximumItemId() {

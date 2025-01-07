@@ -266,6 +266,7 @@ func TrimAmdSanitizeMessage(ctx context.Context, lgr *logger.Logger, policy *ser
 		return "", retErr
 	}
 
+	// legacy
 	doc.Find("video").Each(func(i int, s *goquery.Selection) {
 		maybeVideo := s.First()
 		if maybeVideo != nil {
@@ -317,6 +318,7 @@ func TrimAmdSanitizeMessage(ctx context.Context, lgr *logger.Logger, policy *ser
 		return "", retErr
 	}
 
+	// legacy
 	doc.Find("audio").Each(func(i int, s *goquery.Selection) {
 		maybeAudio := s.First()
 		if maybeAudio != nil {

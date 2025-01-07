@@ -11,6 +11,7 @@ import {
 import he from "he";
 
 export const defaultVideoPreviewUrl = '/api/storage/assets/video.png';
+export const defaultAudioPreviewUrl = '/api/storage/assets/audio.jpg';
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1

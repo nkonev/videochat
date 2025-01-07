@@ -84,6 +84,7 @@ import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {
+  defaultAudioPreviewUrl,
   defaultVideoPreviewUrl,
   embed,
   hasLength,
@@ -207,7 +208,7 @@ export default {
         }
     },
     setAudio(src) {
-        this.editor.chain().focus().setAudio({ src: src }).run();
+        this.editor.chain().focus().setAudio({src: defaultAudioPreviewUrl, original: src}).run()
     },
     setIframe(obj) {
       if (obj.src) {

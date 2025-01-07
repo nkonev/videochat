@@ -43,10 +43,7 @@ const Video = Node.create({
             'span', {"class": "media-in-message-wrapper media-in-message-wrapper-video"},
             ['img', mergeAttributes({"class": "video-custom-class"}, HTMLAttributes)],
             ['span', {"class": "media-in-message-button-open mdi mdi-arrow-expand-all", "title": "Open in player"}],
-            ['span', {
-                "class": "media-in-message-button-replace mdi mdi-play-box-outline",
-                "title": "Play in-place"
-            }],
+            ['span', { "class": "media-in-message-button-replace mdi mdi-play-box-outline", "title": "Play in-place"}],
         ];
     },
     addCommands() {
