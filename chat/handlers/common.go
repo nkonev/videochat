@@ -247,7 +247,7 @@ func TrimAmdSanitizeMessage(ctx context.Context, lgr *logger.Logger, policy *ser
 			}
 
 			original, originalExists := maybeImage.Attr("data-original")
-			if originalExists && !utils.ContainsUrl(lgr, wlArr, original) {
+			if originalExists && (!utils.ContainsUrl(lgr, wlArr, original) && !utils.ContainsUrl(lgr, iframeWlArr, original)) {
 				lgr.WithTracing(ctx).Infof("Filtered not allowed url in image src %v", original)
 				retErr = &MediaUrlErr{original, "image src"}
 			}
@@ -303,6 +303,7 @@ func TrimAmdSanitizeMessage(ctx context.Context, lgr *logger.Logger, policy *ser
 		return "", retErr
 	}
 
+	// legacy
 	doc.Find("iframe").Each(func(i int, s *goquery.Selection) {
 		maybeIframe := s.First()
 		if maybeIframe != nil {

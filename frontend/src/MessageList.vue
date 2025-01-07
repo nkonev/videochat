@@ -645,6 +645,16 @@
                                       p.textContent=res.data?.filename;
                                       spanContainer.prepend(p);
                                     })
+                                  } else if (spanContainer.classList.contains("media-in-message-wrapper-iframe")) {
+                                    const width = theHolder.getAttribute('data-width');
+                                    const height = theHolder.getAttribute('data-height');
+                                    const allowfullscreen = theHolder.getAttribute('data-allowfullscreen');
+
+                                    spanContainer.removeChild(theHolder);
+                                    spanContainer.removeChild(found);
+
+                                    const iframeReplacement = this.createIframeReplacementElement(original, width, height, allowfullscreen);
+                                    spanContainer.appendChild(iframeReplacement);
                                   } else {
                                     console.info("no case for it")
                                   }
@@ -698,6 +708,17 @@
           replacement.src = src;
           replacement.controls = true;
           replacement.className = "audio-custom-class";
+          return replacement
+        },
+        createIframeReplacementElement(src, width, height, allowfullscreen) {
+          const replacement = document.createElement("IFRAME");
+          replacement.src = src;
+          replacement.setAttribute('width', width);
+          replacement.setAttribute('height', height);
+          if (allowfullscreen) {
+            replacement.setAttribute('allowFullScreen', '')
+          }
+          replacement.className = "iframe-custom-class";
           return replacement
         },
         getMaximumItemId() {

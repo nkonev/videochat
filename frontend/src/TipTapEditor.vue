@@ -84,7 +84,7 @@ import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {
-  defaultAudioPreviewUrl,
+  defaultAudioPreviewUrl, defaultIframePreviewUrl,
   defaultVideoPreviewUrl,
   embed,
   hasLength,
@@ -246,19 +246,18 @@ export default {
         }
     },
     onEmbedLinkSet(link) {
-        console.log("onEmbedLinkSet", link);
+        console.debug("onEmbedLinkSet", link);
         if (link && !link.startsWith("http")) {
             const htmlDoc = domParser.parseFromString(link, 'text/html');
             const iframes = htmlDoc.getElementsByTagName('iframe');
             if (iframes.length == 1) {
                 const iframe = iframes[0];
-
-                this.setIframe({src: iframe.src, width: iframe.width, height: iframe.height, allowfullscreen: iframe.getAttribute('allowfullscreen')});
+                this.setIframe({src: defaultIframePreviewUrl, original: iframe.src, width: iframe.width, height: iframe.height, allowfullscreen: iframe.getAttribute('allowfullscreen') != null});
                 return
             }
         }
 
-        this.setIframe({src: link});
+        this.setIframe({src: defaultIframePreviewUrl, original: link});
     },
     addText(text) {
       this.editor.commands.insertContent(text)
