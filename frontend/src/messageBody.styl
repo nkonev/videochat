@@ -25,6 +25,12 @@
 @media (min-width: $mobileWidth) {
   .audio-custom-class {
     min-width: 480px
+    height: 360px
+  }
+
+  audio.audio-custom-class {
+    min-width: 640px
+    height: unset
   }
 }
 
@@ -97,6 +103,7 @@
 
 .media-in-message-wrapper-audio {
   height: unset !important
+  display: block;
 }
 
 // open in player button

@@ -179,6 +179,7 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+@import "constants.styl"
 
 .close-button {
     position absolute
@@ -215,8 +216,14 @@ export default {
 }
 
 .audio-custom-class-view {
-    min-width: 600px
+    min-width: 640px
     max-width: 100% !important
+}
+
+@media screen and (max-width: $mobileWidth) {
+  .audio-custom-class-view {
+    min-width: 100%
+  }
 }
 
 .player-caption-placeholder {

@@ -495,7 +495,7 @@
             !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "audio") &&
             !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
             !checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions")) &&
-            !checkUpByTree(e?.target, 1, (el) => Array.from(el?.children).find(ch => ch?.classList?.contains("video-in-message-button")))
+            !checkUpByTree(e?.target, 1, (el) => el?.classList?.contains("media-in-message-wrapper"))
           ) {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           } else if (this.isMobile()) {
@@ -564,7 +564,7 @@
         },
         onClickTrap(e) {
             const foundElements = [
-                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
+                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
                 checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
                 checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
                 checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a" && el?.classList?.contains("mention")),
@@ -635,6 +635,16 @@
 
                                     const audioReplacement = this.createAudioReplacementElement(original);
                                     spanContainer.appendChild(audioReplacement);
+
+                                    axios.post(`/api/storage/view/status`, {
+                                      url: original
+                                    }, {
+                                      signal: this.requestAbortController.signal
+                                    }).then((res) => {
+                                      const p = document.createElement("P");
+                                      p.textContent=res.data?.filename;
+                                      spanContainer.prepend(p);
+                                    })
                                   } else {
                                     console.info("no case for it")
                                   }

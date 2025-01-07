@@ -118,7 +118,7 @@ const videoConvertingClass = "video-converting";
 
 export const onClickTrap = (e) => {
     const foundElements = [
-        checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.classList?.contains("video-custom-class")),
+        checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
     ].filter(r => r.found);
@@ -186,6 +186,14 @@ export const onClickTrap = (e) => {
 
                                 const audioReplacement = createAudioReplacementElement(original);
                                 spanContainer.appendChild(audioReplacement);
+
+                                axios.post(`/api/storage/public/view/status`, {
+                                    url: original
+                                }).then((res) => {
+                                    const p = document.createElement("P");
+                                    p.textContent=res.data?.filename;
+                                    spanContainer.prepend(p);
+                                })
                             } else {
                                 console.info("no case for it")
                             }
