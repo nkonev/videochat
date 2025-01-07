@@ -1250,7 +1250,21 @@ curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Typ
 }
 '
 
-
+# by date https://www.elastic.co/guide/en/elasticsearch/reference/current/api-conventions.html#api-date-math-index-names
+docker exec -t $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_opensearch --filter desired-state=running -q)) curl -Ss -X GET 'http://localhost:9200/%3Cvideochat-%7Bnow%2Fd-1d%7D%3E%2C%3Cvideochat-%7Bnow%2Fd%7D%3E/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+  "size": 10000,
+  "query": {
+      "match_all": { }
+  },
+  "sort" : [
+    { 
+        "@timestamp" : "asc"
+    }
+  ]
+}
+' > /tmp/logs.json
+less /tmp/logs.json
 
 
 curl -Ss -X GET 'http://localhost:9200/videochat-*/_mapping' | jq
