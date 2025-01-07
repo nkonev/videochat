@@ -83,7 +83,15 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
-import {embed, hasLength, link_dialog_type_add_media_embed, media_audio, media_image, media_video} from "@/utils";
+import {
+  defaultVideoPreviewUrl,
+  embed,
+  hasLength,
+  link_dialog_type_add_media_embed,
+  media_audio,
+  media_image,
+  media_video
+} from "@/utils";
 import bus, {
   FILE_UPLOAD_MODAL_START_UPLOADING,
   PREVIEW_CREATED,
@@ -195,7 +203,7 @@ export default {
         if (hasLength(src) && hasLength(previewUrl)) {
             this.editor.chain().focus().setVideo({src: previewUrl, original: src}).run()
         } else {
-            this.editor.chain().focus().setVideo({src: src}).run()
+            this.editor.chain().focus().setVideo({src: defaultVideoPreviewUrl, original: src}).run()
         }
     },
     setAudio(src) {

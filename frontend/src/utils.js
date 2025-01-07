@@ -10,6 +10,8 @@ import {
 } from "@/router/routes";
 import he from "he";
 
+export const defaultVideoPreviewUrl = '/api/storage/assets/video.png';
+
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
 }
