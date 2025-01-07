@@ -174,6 +174,11 @@ export const onClickTrap = (e) => {
                                 spanContainer.removeChild(theHolder);
                                 spanContainer.removeChild(found);
 
+                                const openButton = Array.from(spanContainer.children).find(ch => ch?.classList?.contains("media-in-message-button-open"));
+                                if (openButton) {
+                                    spanContainer.removeChild(openButton);
+                                }
+
                                 const videoReplacement = createVideoReplacementElement(original, src);
                                 spanContainer.appendChild(videoReplacement);
 
