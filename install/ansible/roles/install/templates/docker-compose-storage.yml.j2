@@ -51,11 +51,11 @@ services:
         - STORAGE_LIMITS.ENABLED={{ storage_limits_enabled }}
         - STORAGE_LIMITS.DEFAULT.ALL.USERS.LIMIT={{ storage_all_user_limit }}
         - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
-        - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
-        - STORAGE_SCHEDULERS.ACTUALIZEGENERATEDFILESTASK.ENABLED=true
         - STORAGE_OTLP.ENDPOINT=jaeger:4317
         - STORAGE_SELFURLS=https://{{ domain }},
         - STORAGE_LOGGER.WRITETOFILE=false
+        - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
+        - STORAGE_SCHEDULERS.ACTUALIZEGENERATEDFILESTASK.ENABLED=true
 
     volumes:
       # use temp dir for uploading large files

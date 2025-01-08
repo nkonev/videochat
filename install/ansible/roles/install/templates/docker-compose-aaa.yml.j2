@@ -76,6 +76,9 @@ services:
       # disable logging to filename because of capturing from stdout
       # https://github.com/docker/compose/issues/4636#issuecomment-2388639015
       - SPRING_PROFILES_ACTIVE=production
+      - CUSTOM_SCHEDULERS_USER-ONLINE_ENABLED=true
+      - CUSTOM_SCHEDULERS_SYNC-LDAP_ENABLED=false
+      - CUSTOM_SCHEDULERS_SYNC-KEYCLOAK_ENABLED=false
 
     logging:
       driver: "fluentd"

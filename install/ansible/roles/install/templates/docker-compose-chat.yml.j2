@@ -52,6 +52,7 @@ services:
       - CHAT_ONLYADMINCANCREATEBLOG={{ chat_only_role_admin_can_create_blog }}
       # disable logging to filename because of capturing from stdout
       - CHAT_LOGGER.WRITETOFILE=false
+      - CHAT_SCHEDULERS.CLEANCHATSOFDELETEDUSERTASK.ENABLED=true
 
     logging:
       driver: "fluentd"
