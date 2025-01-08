@@ -33,6 +33,8 @@ public class UserOnlineTask {
         this.eventService = eventService;
         this.aaaProperties = aaaProperties;
         this.lockService = lockService;
+
+        LOGGER.info("UserOnlineTask is enabled: {} with {}", this.aaaProperties.schedulers().userOnline().enabled(), this.aaaProperties.schedulers().userOnline().cron());
     }
 
     @Scheduled(cron = "${custom.schedulers.user-online.cron}")

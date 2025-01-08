@@ -318,39 +318,53 @@ func runScheduler(
 	lgr.Infof("Scheduler started")
 
 	if viper.GetBool("schedulers." + chatNotifierTask.Key() + ".enabled") {
-		lgr.Infof("Adding " + chatNotifierTask.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + chatNotifierTask.Key() + " to scheduler")
 		err := scheduler.AddJobs(chatNotifierTask)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + chatNotifierTask.Key() + " is disabled")
 	}
+
 	if viper.GetBool("schedulers." + chatDialerTask.Key() + ".enabled") {
-		lgr.Infof("Adding " + chatDialerTask.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + chatDialerTask.Key() + " to scheduler")
 		err := scheduler.AddJobs(chatDialerTask)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + chatDialerTask.Key() + " is disabled")
 	}
+
 	if viper.GetBool("schedulers." + videoRecordingTask.Key() + ".enabled") {
-		lgr.Infof("Adding " + videoRecordingTask.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + videoRecordingTask.Key() + " to scheduler")
 		err := scheduler.AddJobs(videoRecordingTask)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + videoRecordingTask.Key() + " is disabled")
 	}
+
 	if viper.GetBool("schedulers." + usersInVideoStatusNotifierTask.Key() + ".enabled") {
-		lgr.Infof("Adding " + usersInVideoStatusNotifierTask.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + usersInVideoStatusNotifierTask.Key() + " to scheduler")
 		err := scheduler.AddJobs(usersInVideoStatusNotifierTask)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + usersInVideoStatusNotifierTask.Key() + " is disabled")
 	}
+
 	if viper.GetBool("schedulers." + synchronizeWithLivekitTask.Key() + ".enabled") {
-		lgr.Infof("Adding " + synchronizeWithLivekitTask.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + synchronizeWithLivekitTask.Key() + " to scheduler")
 		err := scheduler.AddJobs(synchronizeWithLivekitTask)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + synchronizeWithLivekitTask.Key() + " is disabled")
 	}
 
 	lc.Append(fx.Hook{

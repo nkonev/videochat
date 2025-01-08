@@ -407,19 +407,23 @@ func runScheduler(
 	lgr.Infof("Scheduler started")
 
 	if viper.GetBool("schedulers." + dt.Key() + ".enabled") {
-		lgr.Infof("Adding " + dt.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + dt.Key() + " to scheduler")
 		err := scheduler.AddJobs(dt)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + dt.Key() + " is disabled")
 	}
 
 	if viper.GetBool("schedulers." + a.Key() + ".enabled") {
-		lgr.Infof("Adding " + a.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + a.Key() + " to scheduler")
 		err := scheduler.AddJobs(a)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + a.Key() + " is disabled")
 	}
 
 	lc.Append(fx.Hook{

@@ -338,11 +338,13 @@ func runScheduler(
 	lgr.Infof("Scheduler started")
 
 	if viper.GetBool("schedulers." + ct.Key() + ".enabled") {
-		lgr.Infof("Adding " + ct.Key() + " job to scheduler")
+		lgr.Infof("Adding task " + ct.Key() + " to scheduler")
 		err := scheduler.AddJobs(ct)
 		if err != nil {
 			return err
 		}
+	} else {
+		lgr.Infof("Task " + ct.Key() + " is disabled")
 	}
 
 	lc.Append(fx.Hook{

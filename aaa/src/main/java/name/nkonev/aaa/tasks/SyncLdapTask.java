@@ -57,6 +57,8 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
         this.ldapSyncRolesService = ldapSyncRolesService;
         this.lockService = lockService;
         this.userAccountConverter = userAccountConverter;
+
+        LOGGER.info("SyncLdapTask is enabled: {} with {}", this.aaaProperties.schedulers().syncLdap().enabled(), this.aaaProperties.schedulers().syncLdap().cron());
     }
 
     @Scheduled(cron = "${custom.schedulers.sync-ldap.cron}")

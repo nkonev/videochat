@@ -56,6 +56,8 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
             LOGGER.info("Keycloak client wasn't configured");
         }
         this.userAccountConverter = userAccountConverter;
+
+        LOGGER.info("SyncKeycloakTask is enabled: {} with {}", this.aaaProperties.schedulers().syncKeycloak().enabled(), this.aaaProperties.schedulers().syncKeycloak().cron());
     }
 
     @Scheduled(cron = "${custom.schedulers.sync-keycloak.cron}")

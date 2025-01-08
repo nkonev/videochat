@@ -6,6 +6,7 @@ public record SyncKeycloakSchedulerProperties(
     boolean enabled,
     boolean syncEmailVerified,
     boolean syncRoles,
+    String cron,
     int batchSize,
     Duration expiration
 ) {
