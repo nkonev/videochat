@@ -391,6 +391,10 @@ func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
+			// false is not an error
+			// testcase: Open Chats
+			// then open Welcome
+			// then Public chats
 			return nil, nil, false, nil
 		}
 		return nil, nil, false, eris.Wrap(err, "error during interacting with db")

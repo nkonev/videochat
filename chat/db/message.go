@@ -127,6 +127,8 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 			searchStringPercents = "%" + searchString + "%"
 		}
 
+		var noData bool
+
 		var limitRes *sql.Row
 		if searchString != "" {
 			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
@@ -151,10 +153,16 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 		}
 		err = limitRes.Scan(&leftItemId, &rightItemId)
 		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
+			if errors.Is(err, sql.ErrNoRows) {
+				noData = true
+			} else {
+				return nil, eris.Wrap(err, "error during interacting with db")
+			}
 		}
 
-		if leftItemId == nil || rightItemId == nil {
+		if noData {
+			// leave empty list
+		} else if leftItemId == nil || rightItemId == nil {
 			co.logger().WithTracing(ctx).Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
 			var startedFromItemIdSafe int64
 			if reverse {
