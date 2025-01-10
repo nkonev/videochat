@@ -25,8 +25,8 @@
           <div class="message-last-element" style="min-height: 1px; background: white"></div>
           <MessageItemContextMenu
             ref="contextMenuRef"
-            :canResend="canResend"
-            :isBlog="blog"
+            :canResend="chatStore.chatDto.canResend"
+            :isBlog="chatStore.chatDto.blog"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
             @replyOnMessage="this.replyOnMessage"
@@ -106,7 +106,7 @@
         searchString(SEARCH_MODE_MESSAGES),
         onFocusMixin(),
       ],
-      props: ['canResend', 'blog', 'isCompact'],
+      props: ['isCompact'],
       data() {
         return {
           markInstance: null,
