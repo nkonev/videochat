@@ -404,6 +404,10 @@ export default {
               text: this.$vuetify.locale.t('$vuetify.delete_chat_text', chat.name),
               actionFunction: (that) => {
                   that.loading = true;
+                  // here is no signal: this.requestAbortController.signal
+                  // because of it would cancel request on unmounting ChatList.vue because of unmounting CatView.vue
+                  // due to navigating to ChatList.vue because the user isn't a chat member anymore
+                  // the same is for leaveChat()
                   axios.delete(`/api/chat/${chat.id}`)
                       .then(() => {
                           bus.emit(CLOSE_SIMPLE_MODAL);
