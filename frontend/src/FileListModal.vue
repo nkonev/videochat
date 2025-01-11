@@ -7,6 +7,7 @@
                         {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
                     </template>
                     <v-spacer/>
+                    <v-btn :icon="fileModeIcon" variant="flat" @click="toggleFileMode" :title="fileModeTitle"></v-btn>
                     <CollapsedSearch :provider="{
                       getModelValue: this.getModelValue,
                       setModelValue: this.setModelValue,
@@ -21,57 +22,84 @@
                 <v-card-text :class="isMobile() ? ['py-0', 'px-4', 'files-list'] : ['py-2', 'files-list']">
                     <v-row v-if="!loading">
                         <template v-if="itemsDto.count > 0">
-                            <v-col
-                                v-for="item in itemsDto.items"
-                                :key="item.id"
-                                :cols="isMobile() ? 12 : 6"
-                            >
-                                <v-card>
-                                    <v-img
-                                        :src="item.previewUrl"
-                                        class="align-end"
-                                        cover
-                                        gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                                        height="200px"
-                                    >
-                                        <v-container class="file-info-title ma-0 pa-0">
-                                        <v-card-title class="pb-1 card-title-wrapper">
-                                          <a :href="item.url" download class="file-title download-link text-white">{{item.filename}}</a>
-                                        </v-card-title>
-                                        <v-card-subtitle class="text-white pb-2 no-opacity text-wrap">
-                                            {{ formattedSize(item.size) }}
-                                            <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner?.login}}</span>
-                                            <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                            <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="colored-link">
-                                                {{ $vuetify.locale.t('$vuetify.files_public_url') }}
-                                            </a>
-                                        </v-card-subtitle>
-                                        </v-container>
-                                    </v-img>
-                                    <v-card-actions>
-                                        <v-spacer></v-spacer>
-                                        <a :href="item.url" download class="colored-link mx-2"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
+                            <template v-if="!fileListMode">
+                                <template v-for="(item, i) in itemsDto.items">
+                                  <v-list-item class="list-item-prepend-spacer px-2 py-2" @contextmenu.stop="onShowContextMenu($event, item)">
+                                    <template v-slot:prepend>
+                                      <v-avatar v-if="hasLength(item.previewUrl)" :image="item.previewUrl"></v-avatar>
+                                      <v-icon v-else class="mx-2">mdi-file</v-icon>
+                                    </template>
 
-                                        <v-btn size="medium" :disabled="item.hasNoMessage" :loading="item.loadingHasNoMessage" @click="fireSearchMessage(item)" :title="$vuetify.locale.t('$vuetify.search_related_message')"><v-icon size="large">mdi-note-search-outline</v-icon></v-btn>
+                                    <template v-slot:default>
+                                      <v-list-item-title><a :href="item.url" target="_blank" class="colored-link">{{item.filename}}</a></v-list-item-title>
+                                      <v-list-item-subtitle>
+                                        {{ formattedSize(item.size) }}
+                                        <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner?.login}}</span>
+                                        <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                                      </v-list-item-subtitle>
+                                    </template>
+                                  </v-list-item>
+                                  <v-divider></v-divider>
+                                </template>
+                            </template>
+                            <template v-else>
+                                <v-col
+                                    v-for="item in itemsDto.items"
+                                    :key="item.id"
+                                    :cols="isMobile() ? 12 : 6"
+                                >
+                                    <v-card>
+                                        <v-img
+                                            :src="item.previewUrl"
+                                            class="align-end"
+                                            cover
+                                            gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                                            height="200px"
+                                        >
+                                            <v-container class="file-info-title ma-0 pa-0">
+                                            <v-card-title class="pb-1 card-title-wrapper">
+                                              <a :href="item.url" download class="file-title download-link text-white">{{item.filename}}</a>
+                                            </v-card-title>
+                                            <v-card-subtitle class="text-white pb-2 no-opacity text-wrap">
+                                                {{ formattedSize(item.size) }}
+                                                <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner?.login}}</span>
+                                                <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
+                                                <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="colored-link">
+                                                    {{ $vuetify.locale.t('$vuetify.files_public_url') }}
+                                                </a>
+                                            </v-card-subtitle>
+                                            </v-container>
+                                        </v-img>
+                                        <v-card-actions>
+                                            <v-spacer></v-spacer>
+                                            <a :href="item.url" download class="colored-link mx-2"><v-icon :title="$vuetify.locale.t('$vuetify.file_download')">mdi-download</v-icon></a>
 
-                                        <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-image</v-icon></v-btn>
+                                            <v-btn size="medium" :disabled="item.hasNoMessage" :loading="item.loadingHasNoMessage" @click="fireSearchMessage(item)" :title="$vuetify.locale.t('$vuetify.search_related_message')"><v-icon size="large">mdi-note-search-outline</v-icon></v-btn>
 
-                                        <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
+                                            <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-image</v-icon></v-btn>
 
-                                        <v-btn size="medium" v-if="item.canPlayAsAudio" @click="fireAudioPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
+                                            <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
 
-                                        <v-btn size="medium" v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon size="large">mdi-pencil</v-icon></v-btn>
+                                            <v-btn size="medium" v-if="item.canPlayAsAudio" @click="fireAudioPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
 
-                                        <v-btn size="medium" v-if="item.canShare" @click="shareFile(item, !item.publicUrl)">
-                                            <v-icon color="primary" size="large" dark :title="item.publicUrl ? $vuetify.locale.t('$vuetify.unshare_file') : $vuetify.locale.t('$vuetify.share_file')">{{ item.publicUrl ? 'mdi-lock' : 'mdi-export'}}</v-icon>
-                                        </v-btn>
+                                            <v-btn size="medium" v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon size="large">mdi-pencil</v-icon></v-btn>
 
-                                        <v-btn size="medium" v-if="item.canDelete" @click="deleteFile(item)">
-                                            <v-icon color="red" size="large" dark :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
-                                        </v-btn>
-                                    </v-card-actions>
-                                </v-card>
-                            </v-col>
+                                            <template v-if="item.canShare">
+                                                <v-btn size="medium" v-if="!item.publicUrl" @click="shareFile(item)">
+                                                    <v-icon color="primary" size="large" dark :title="$vuetify.locale.t('$vuetify.share_file')">mdi-export</v-icon>
+                                                </v-btn>
+
+                                                <v-btn size="medium" v-if="item.publicUrl" @click="unshareFile(item)">
+                                                  <v-icon color="primary" size="large" dark :title="$vuetify.locale.t('$vuetify.unshare_file')">mdi-lock</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <v-btn size="medium" v-if="item.canDelete" @click="deleteFile(item)">
+                                                <v-icon color="red" size="large" dark :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-col>
+                            </template>
                         </template>
                         <template v-else>
                             <v-card-text>{{ $vuetify.locale.t('$vuetify.no_files') }}</v-card-text>
@@ -82,7 +110,17 @@
                         indeterminate
                         color="primary"
                     ></v-progress-circular>
-
+                    <FileListContextMenu
+                        ref="contextMenuRef"
+                        @searchRelatedMessage="this.fireSearchMessage"
+                        @showAsImage="this.fireShowImage"
+                        @playAsVideo="this.fireVideoPlay"
+                        @playAsAudio="this.fireAudioPlay"
+                        @edit="this.fireEdit"
+                        @share="this.shareFile"
+                        @unshare="this.unshareFile"
+                        @delete="this.deleteFile"
+                    />
                 </v-card-text>
 
                 <v-card-actions class="my-actions d-flex flex-wrap flex-row">
@@ -139,6 +177,8 @@ import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
 import {messageIdHashPrefix} from "@/router/routes";
 import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
+import {getStoredFileListMode, setStoredFileListMode} from "@/store/localStore.js";
+import FileListContextMenu from "@/FileListContextMenu.vue";
 
 export default {
     mixins: [pageableModalMixin()],
@@ -153,13 +193,37 @@ export default {
             chatId: null,
             fileUploadingSessionType: null,
             correlationId: null,
+            fileListMode: false,
         }
     },
     computed: {
         ...mapStores(useChatStore),
+        fileModeIcon() {
+          if (this.fileListMode) {
+            return 'mdi-format-list-bulleted'
+          } else {
+            return 'mdi-image-multiple-outline'
+          }
+        },
+        fileModeTitle() {
+          if (this.fileListMode) {
+            return this.$vuetify.locale.t('$vuetify.file_mode_switch_to_list')
+          } else {
+            return this.$vuetify.locale.t('$vuetify.file_mode_switch_to_miniatures')
+          }
+        },
     },
 
     methods: {
+        onShowContextMenu(e, menuableItem) {
+          this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+        },
+        toggleFileMode() {
+          const newValue = !this.fileListMode;
+          this.fileListMode = newValue;
+          setStoredFileListMode(newValue);
+        },
+        hasLength,
         isCachedRelevantToArguments({fileItemUuid, chatId}) {
             return this.fileItemUuid == fileItemUuid && this.chatId == chatId
         },
@@ -242,14 +306,17 @@ export default {
                 }
             });
         },
-        shareFile(dto, share) {
-            axios.put(`/api/storage/publish/file`, {id: dto.id, public: share}).then((resp)=>{
+        shareFile(dto) {
+            axios.put(`/api/storage/publish/file`, {id: dto.id, public: true}).then((resp)=>{
                 const link = resp.data.publicUrl;
                 if (link) {
                     navigator.clipboard.writeText(getUrlPrefix() + link);
                     this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_file_link_copied'));
                 }
             })
+        },
+        unshareFile(dto) {
+            axios.put(`/api/storage/publish/file`, {id: dto.id, public: false})
         },
         fireEdit(dto) {
             bus.emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
@@ -377,6 +444,7 @@ export default {
         },
     },
     components: {
+        FileListContextMenu,
         CollapsedSearch
     },
     created() {
@@ -384,6 +452,8 @@ export default {
         this.debouncedUpdate = debounce(this.debouncedUpdate, 300, {leading:false, trailing:true})
     },
     mounted() {
+      this.fileListMode = getStoredFileListMode();
+
       bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
       bus.on(PREVIEW_CREATED, this.onPreviewCreated);
       bus.on(FILE_CREATED, this.onItemCreatedEvent);

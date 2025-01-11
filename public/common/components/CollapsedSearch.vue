@@ -73,6 +73,7 @@ export default {
 <style lang="stylus">
 .search-card {
     min-width: 330px;
+    margin-left: 0.4em;
     margin-right: 2px;
 }
 .search-card-mobile {
