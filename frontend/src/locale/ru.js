@@ -243,6 +243,7 @@ export default {
     delete_user_title: "Удаление пользователя #{0}",
     delete_user_text: "Вы действительно хотите удалить пользователя '{0}' ?",
     change_roles: "Изменить роли",
+    change_roles_for: "Изменить роли для '{0}'",
     roles: "Роли",
     confirm_email_to_change_part_1: "Новая почта ожидает подтверждения",
     confirm_email_to_change_part_2: "Если нужно",

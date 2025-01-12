@@ -1,6 +1,6 @@
 <template>
         <v-dialog v-model="show" max-width="440" persistent>
-            <v-card v-if="show" :title="$vuetify.locale.t('$vuetify.change_roles')">
+            <v-card v-if="show" :title="$vuetify.locale.t('$vuetify.change_roles_for', user?.login)">
 
                 <v-card-text class="pb-0">
                     <v-select v-if="!loading"
