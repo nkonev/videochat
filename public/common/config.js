@@ -20,3 +20,7 @@ export const getWriteLogToFile = () => {
     const r = (/true/i).test(v);
     return r
 }
+
+export const getLogLevel = () => {
+    return parseInt(process.env.LOG_LEVEL || 'info')
+}

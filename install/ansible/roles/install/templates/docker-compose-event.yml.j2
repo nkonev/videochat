@@ -38,6 +38,7 @@ services:
       - EVENT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - EVENT_OTLP.ENDPOINT=jaeger:4317
       - EVENT_LOGGER.WRITETOFILE=false
+      - EVENT_LOGGER.LEVEL=info
 
     logging:
       driver: "fluentd"

@@ -4,7 +4,7 @@ server:
   bodyLimit: "100G"
 
 logger:
-  level: INFO
+  level: info
   dir: "logs"
   filename: "file.log"
   writeToFile: true

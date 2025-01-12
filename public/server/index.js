@@ -18,7 +18,7 @@ import { renderPage } from 'vike/server'
 import { root } from './root.js'
 import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
-import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort, getWriteLogToFile} from "../common/config.js";
+import {getChatApiUrl, getFrontendUrl, getHttpClientTimeout, getPort, getWriteLogToFile, getLogLevel} from "../common/config.js";
 import axios from "axios";
 import opentelemetry from '@opentelemetry/api';
 import * as api from '@opentelemetry/api';
@@ -34,7 +34,7 @@ if (getWriteLogToFile()) {
     configuredTransports.push(
         new transports.File({
             filename: 'logs/file.log',
-            level: 'info',
+            level: getLogLevel(),
             options: {flags: 'w'}
         }),
     )
@@ -236,5 +236,5 @@ Sitemap: ${sitemapUrl}`);
 
   const port = getPort()
   app.listen(port)
-  logger.info(`Server running at http://localhost:${port}`)
+  logger.info(`Server running at :${port}`)
 }

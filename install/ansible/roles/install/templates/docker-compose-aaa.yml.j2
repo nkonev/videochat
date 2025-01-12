@@ -79,6 +79,7 @@ services:
       - CUSTOM_SCHEDULERS_USER-ONLINE_ENABLED=true
       - CUSTOM_SCHEDULERS_SYNC-LDAP_ENABLED=false
       - CUSTOM_SCHEDULERS_SYNC-KEYCLOAK_ENABLED=false
+      - LOGGING_LEVEL_ROOT=info
 
     logging:
       driver: "fluentd"

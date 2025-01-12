@@ -56,6 +56,7 @@ services:
         - STORAGE_LOGGER.WRITETOFILE=false
         - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
         - STORAGE_SCHEDULERS.ACTUALIZEGENERATEDFILESTASK.ENABLED=true
+        - STORAGE_LOGGER.LEVEL=info
 
     volumes:
       # use temp dir for uploading large files
