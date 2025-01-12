@@ -411,7 +411,7 @@ export default {
       });
     },
     setPassword(user) {
-      bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id})
+      bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id, userName: user.login})
     },
   },
   mounted() {

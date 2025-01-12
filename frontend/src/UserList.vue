@@ -572,7 +572,7 @@ export default {
       });
     },
     setPassword(user) {
-      bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id})
+      bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id, userName: user.login})
     },
     tetATet(user) {
         axios.put(`/api/chat/tet-a-tet/${user.id}`, null, {

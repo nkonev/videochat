@@ -1,7 +1,7 @@
 <template>
     <v-row justify="center">
         <v-dialog v-model="show" max-width="480" persistent>
-            <v-card :title="$vuetify.locale.t('$vuetify.set_password')" :disabled="loading">
+            <v-card :title="$vuetify.locale.t('$vuetify.set_password_for', userName)" :disabled="loading">
                 <v-progress-linear
                   :active="loading"
                   :indeterminate="loading"
@@ -46,12 +46,14 @@
                 password: null,
                 showInputablePassword: false,
                 userId: null,
+                userName: null,
             }
         },
         methods: {
             showModal(newData) {
                 this.$data.show = true;
                 this.$data.userId = newData.userId;
+                this.$data.userName = newData.userName;
             },
             onClose() {
                 this.$data.show = false;
@@ -60,6 +62,7 @@
                 this.$data.loading = false;
                 this.$data.password = null;
                 this.$data.userId = null;
+                this.$data.userName = null;
             },
             onSet() {
               this.$data.loading = true;

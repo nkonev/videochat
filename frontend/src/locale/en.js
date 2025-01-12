@@ -334,5 +334,6 @@ export default {
     regular_participant_can_write_message: "Regular participant can write messages",
     you_cannot_write_message: "You cannot write a message into this chat",
     file_mode_switch_to_list: "Switch to list",
-    file_mode_switch_to_miniatures: "Switch to miniatures"
+    file_mode_switch_to_miniatures: "Switch to miniatures",
+    set_password_for: "Set password for '{0}'"
 }
