@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -56,6 +57,7 @@ public class AaaUserDetailsService implements UserDetailsService {
      * @return
      * @throws UsernameNotFoundException
      */
+    @Transactional
     @Override
     public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
         var ud = userAccountRepository
