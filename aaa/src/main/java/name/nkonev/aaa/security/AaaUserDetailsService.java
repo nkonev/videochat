@@ -18,15 +18,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
-
-import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 /**
  * Provides Spring Security compatible UserAccountDetailsDTO.
@@ -57,21 +54,12 @@ public class AaaUserDetailsService implements UserDetailsService {
      * @return
      * @throws UsernameNotFoundException
      */
-    @Transactional
     @Override
     public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
-        var ud = userAccountRepository
+        return userAccountRepository
                 .findByUsername(username)
                 .map(userAccountConverter::convertToUserAccountDetailsDTO)
                 .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
-
-        final var now = getNowUTC();
-        if (ud.getLastSeenDateTime() == null || now.minus(aaaProperties.onlineEstimation()).isAfter(ud.getLastSeenDateTime())) {
-            userAccountRepository.updateLastSeen(username, now);
-            ud = ud.withUserAccountDTO(ud.userAccountDTO().withLastSeenDateTime(now));
-            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(ud.getId(), true, now)));
-        }
-        return ud;
     }
 
     public Map<String, Session> getSessions(String userName){

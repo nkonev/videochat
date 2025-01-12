@@ -36,6 +36,7 @@ import static name.nkonev.aaa.Constants.*;
 import static name.nkonev.aaa.Constants.Headers.*;
 import static name.nkonev.aaa.converter.UserAccountConverter.*;
 import static name.nkonev.aaa.utils.NullUtils.trimToNull;
+import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 @Service
 public class UserProfileService {
@@ -76,6 +77,9 @@ public class UserProfileService {
     @Autowired
     private AaaPermissionService aaaPermissionService;
 
+    @Autowired
+    private EventService eventService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileService.class);
 
     private Long getExpiresAt(HttpSession session) {
@@ -91,24 +95,12 @@ public class UserProfileService {
      * @param userAccount
      * @return current logged in profile
      */
-    @Transactional
     public UserSelfProfileDTO getProfile(UserAccountDetailsDTO userAccount, HttpSession session) {
         return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastSeenDateTime(), getExpiresAt(session));
     }
 
     @Transactional
     public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session, HttpHeaders requestHeaders) {
-        Long expiresAt = getExpiresAt(session);
-        var dto = getProfile(userAccount, session);
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
-        responseHeaders.set(X_AUTH_USER_ID, ""+userAccount.getId());
-        responseHeaders.set(X_AUTH_EXPIRESIN, ""+expiresAt);
-        responseHeaders.set(X_AUTH_SESSION_ID, session.getId());
-        responseHeaders.set(X_AUTH_AVATAR, userAccount.getAvatar());
-        convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
-            responseHeaders.add(X_AUTH_ROLE, s);
-        });
         var path = trimToNull(requestHeaders.getFirst("x-forwarded-uri")); // nullable
         if (aaaPermissionService.isManagementUrlPath(path)) {
             var roles = convertRoles2Enum(userAccount.getRoles());
@@ -116,6 +108,30 @@ public class UserProfileService {
                 throw new UnauthorizedException("user with id %s and roles %s cannot access this path".formatted(userAccount.getId(), userAccount.roles()));
             }
         }
+
+        final var now = getNowUTC();
+        if (userAccount.getLastSeenDateTime() == null || now.minus(aaaProperties.onlineEstimation()).isAfter(userAccount.getLastSeenDateTime())) {
+            userAccountRepository.updateLastSeen(userAccount.getUsername(), now);
+            userAccount = userAccount.withUserAccountDTO(userAccount.userAccountDTO().withLastSeenDateTime(now));
+            SecurityUtils.setToContext(session, userAccount);
+            eventService.notifyOnlineChanged(List.of(new UserOnlineResponse(userAccount.getId(), true, now)));
+        }
+
+        Long expiresAt = getExpiresAt(session);
+        var dto = getProfile(userAccount, session);
+
+        var responseHeaders = new HttpHeaders();
+        responseHeaders.set(X_AUTH_USERNAME, Base64.getEncoder().encodeToString(dto.login().getBytes()));
+        responseHeaders.set(X_AUTH_USER_ID, ""+userAccount.getId());
+        if (expiresAt != null) {
+            responseHeaders.set(X_AUTH_EXPIRESIN, "" + expiresAt);
+        }
+        responseHeaders.set(X_AUTH_SESSION_ID, session.getId());
+        responseHeaders.set(X_AUTH_AVATAR, userAccount.getAvatar());
+        convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
+            responseHeaders.add(X_AUTH_ROLE, s);
+        });
+
         return responseHeaders;
     }
 
