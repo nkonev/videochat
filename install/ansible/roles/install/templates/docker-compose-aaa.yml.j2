@@ -80,6 +80,7 @@ services:
       - CUSTOM_SCHEDULERS_SYNC-LDAP_ENABLED=false
       - CUSTOM_SCHEDULERS_SYNC-KEYCLOAK_ENABLED=false
       - LOGGING_LEVEL_ROOT=info
+      - CUSTOM_ONLINE-ESTIMATION={{ aaa_online_estimation }}
 
     logging:
       driver: "fluentd"
