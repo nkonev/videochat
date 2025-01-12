@@ -19,7 +19,7 @@
 
                 </v-card-title>
 
-                <v-card-text :class="isMobile() ? ['py-0', 'px-4', 'files-list'] : ['py-2', 'files-list']">
+                <v-card-text :class="isMobile() ? ['py-1', 'px-4', 'files-list'] : ['py-1', 'px-4', 'files-list']">
                     <v-row v-if="!loading">
                         <template v-if="itemsDto.count > 0">
                             <template v-if="!fileListMode">
