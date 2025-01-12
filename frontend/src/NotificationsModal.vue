@@ -8,7 +8,7 @@
                     <v-btn v-if="itemsDto.items.length > 0" variant="outlined" @click="onClickClearAllNotifications()"><v-icon>mdi-delete</v-icon> {{ $vuetify.locale.t('$vuetify.clear') }} </v-btn>
                 </v-card-title>
                 <v-card-text class="ma-0 pa-0">
-                    <v-list class="pb-0 notification-list" v-if="!loading">
+                    <v-list class="py-0 notification-list" v-if="!loading">
                         <template v-if="itemsDto.items.length > 0">
                             <template v-for="(item, index) in itemsDto.items">
                                 <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
