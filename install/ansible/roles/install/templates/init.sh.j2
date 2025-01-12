@@ -67,7 +67,7 @@ echo "Configuring task interval"
 curl -i -Ss -X PUT "http://$HOST:$PORT/_cluster/settings?pretty=true" -H 'Content-Type: application/json' -d'
 {
   "persistent" : {
-    "plugins.index_state_management.job_interval" : 1
+    "plugins.index_state_management.job_interval": {{ opensearch_logs_sheduler_task_interval_minutes }}
   }
 }
 '
