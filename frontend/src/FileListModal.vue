@@ -172,8 +172,6 @@ import {
 } from "./utils";
 import { getHumanReadableDate } from "@/date.js";
 import debounce from "lodash/debounce";
-import {mapStores} from "pinia";
-import {useChatStore} from "@/store/chatStore";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
 import {messageIdHashPrefix} from "@/router/routes";
@@ -198,7 +196,6 @@ export default {
         }
     },
     computed: {
-        ...mapStores(useChatStore),
         fileModeIcon() {
           if (this.fileListMode) {
             return 'mdi-format-list-bulleted'

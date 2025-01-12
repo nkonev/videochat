@@ -136,17 +136,6 @@ export default {
       }
       return ret;
     },
-    goToBlog(item) {
-      window.location.href = getBlogLink(item.id)
-    },
-    copyLink(item) {
-      copyChatLink(item.id);
-      this.setTempNotification(this.$vuetify.locale.t('$vuetify.chat_link_copied'));
-    },
-    copyCallLink(item) {
-      copyCallLink(item.id);
-      this.setTempNotification(this.$vuetify.locale.t('$vuetify.video_call_link_copied'));
-    },
   }
 }
 </script>
