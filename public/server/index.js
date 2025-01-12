@@ -28,7 +28,9 @@ import morgan from 'morgan';
 axios.defaults.timeout = getHttpClientTimeout();
 
 const configuredTransports = [
-    new transports.Console(),
+    new transports.Console({
+        level: getLogLevel()
+    }),
 ];
 if (getWriteLogToFile()) {
     configuredTransports.push(

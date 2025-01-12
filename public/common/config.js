@@ -22,5 +22,5 @@ export const getWriteLogToFile = () => {
 }
 
 export const getLogLevel = () => {
-    return parseInt(process.env.LOG_LEVEL || 'info')
+    return process.env.LOG_LEVEL || 'info'
 }
