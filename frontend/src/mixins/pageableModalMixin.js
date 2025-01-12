@@ -85,10 +85,8 @@ export default () => {
             getTotalVisible() {
                 if (!this.isMobile()) {
                     return 7
-                } else if (this.page == firstPage || this.page == this.pagesCount) {
-                    return 3
                 } else {
-                    return 1
+                    return 6
                 }
             },
 
