@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="800" height="100%" scrollable>
+        <v-dialog v-model="show" max-width="800" height="100%" scrollable :fullscreen="isMobile()">
           <v-card :title="title()">
                 <v-card-text>
                     <v-row

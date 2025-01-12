@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="640" scrollable>
+        <v-dialog v-model="show" max-width="640" scrollable :fullscreen="isMobile()">
             <v-card>
                 <v-card-title class="d-flex align-center ml-2 mt-2">
                     {{ $vuetify.locale.t('$vuetify.notifications') }}

@@ -2,7 +2,7 @@
     <v-row justify="center">
         <input id="image-input-chat-avatar" type="file" style="display: none;" accept="image/*"/>
 
-        <v-dialog v-model="show" max-width="640" :persistent="isNew" scrollable>
+        <v-dialog v-model="show" max-width="640" :persistent="isNew" scrollable :fullscreen="isMobile()">
             <v-card :title="getTitle()">
                 <v-card-text :class="isMobile() ? ['ma-0', 'mx-2', 'pa-0', 'pt-2'] : ['ma-0', 'mx-4', 'pa-0', 'pt-2']">
                     <v-form

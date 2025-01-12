@@ -966,16 +966,6 @@ html {
   }
 }
 
-// to check those 2 bugs:
-// Open ChatEditModal of a chat with an avatar
-
-// reverts 3.7.4 https://github.com/vuetifyjs/vuetify/commit/42a12dd89da2e7e5ea5f6a3bc7611fb2e9f2563a#diff-0ca827fe1439dde86f60164ea243a0e4c495fa2e03606f4dd802703d1a0d30efR58
-.v-dialog--scrollable {
-  > .v-overlay__content {
-    max-height: calc(100% - 48px);
-  }
-}
-
 // reverts some changes from ~3.7.0 (from F12)
 .my-actions .v-btn ~ .v-btn:not(.v-btn-toggle .v-btn) {
   margin-inline-start: .5rem;
@@ -985,6 +975,18 @@ html {
 
 <style lang="stylus">
 @import "constants.styl"
+
+@media screen and (min-width: $mobileWidth) {
+  // to check those 2 bugs:
+  // Open ChatEditModal of a chat with an avatar
+  // reverts 3.7.4 https://github.com/vuetifyjs/vuetify/commit/42a12dd89da2e7e5ea5f6a3bc7611fb2e9f2563a#diff-0ca827fe1439dde86f60164ea243a0e4c495fa2e03606f4dd802703d1a0d30efR58
+  .v-dialog--scrollable {
+    > .v-overlay__content {
+      max-height: calc(100% - 48px);
+    }
+  }
+}
+
 
 .colored-link {
     color: $linkColor;
