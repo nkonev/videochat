@@ -20,7 +20,7 @@
 
                 <v-card-text class="ma-0 pa-0 participants-list">
                     <template v-if="!loading">
-                        <v-list v-if="itemsDto.items && itemsDto.count > 0">
+                        <v-list v-if="itemsDto.items && itemsDto.count > 0" class="py-0">
                             <template v-for="(item, index) in itemsDto.items">
                                 <v-list-item
                                   class="list-item-prepend-spacer"
