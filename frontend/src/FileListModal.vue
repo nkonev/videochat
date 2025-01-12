@@ -7,7 +7,7 @@
                         {{ fileItemUuid ? $vuetify.locale.t('$vuetify.attached_message_files') : $vuetify.locale.t('$vuetify.attached_chat_files') }}
                     </template>
                     <v-spacer/>
-                    <v-btn :icon="fileModeIcon" variant="flat" @click="toggleFileMode" :title="fileModeTitle"></v-btn>
+                    <v-btn v-if="showSearchButton" :icon="fileModeIcon" variant="flat" @click="toggleFileMode" :title="fileModeTitle"></v-btn>
                     <CollapsedSearch :provider="{
                       getModelValue: this.getModelValue,
                       setModelValue: this.setModelValue,
