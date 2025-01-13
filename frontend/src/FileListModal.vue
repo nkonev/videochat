@@ -342,6 +342,10 @@ export default {
                       id: this.chatId
                     },
                     hash: messageIdHashPrefix + response.data.messageId,
+                  }).then(()=>{
+                    if (this.isMobile()) {
+                      this.closeModal()
+                    }
                   })
                 }
               }).finally(()=>{
