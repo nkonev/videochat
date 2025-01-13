@@ -267,7 +267,7 @@
             }
             this.updateTopAndBottomIds();
 
-            if (!startingFromItemId && this.items.length) {
+            if ((!startingFromItemId || this.isFirstLoad) && this.items.length) {
                 axios.put(`/api/chat/${this.chatId}/message/read/${this.startingFromItemIdBottom}`, null, {
                   signal: this.requestAbortController.signal
                 })
