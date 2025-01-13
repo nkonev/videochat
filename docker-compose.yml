@@ -183,7 +183,7 @@ services:
         max-file: "1"
 
   fluentbit:
-    image: fluent/fluent-bit:3.2.3
+    image: fluent/fluent-bit:3.2.4
     restart: unless-stopped
     hostname: fluentbit
     volumes:
