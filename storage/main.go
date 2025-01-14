@@ -205,6 +205,7 @@ func configureEcho(
 	e.PUT("/api/storage/:chatId/upload/finish", fh.FinishMultipartUpload)
 	e.PUT("/api/storage/:chatId/replace/file", fh.ReplaceHandler)
 	e.GET("/api/storage/:chatId", fh.ListHandler)
+	e.GET("/api/storage/public/:chatId", fh.ListHandlerPublic)
 	e.POST("/api/storage/view/list", fh.ViewListHandler)
 	e.POST("/api/storage/public/view/list", fh.ViewListHandler)
 	e.POST("/api/storage/view/status", fh.ViewStatusHandler)

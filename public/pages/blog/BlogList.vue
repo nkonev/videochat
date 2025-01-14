@@ -77,7 +77,10 @@
 
 <script>
 import Mark from "mark.js";
-import {getHumanReadableDate, hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE} from "#root/common/utils";
+import {hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE} from "#root/common/utils";
+import {
+  getHumanReadableDate,
+} from "#root/common/date";
 import {path_prefix, blog_post, blogIdPrefix, blogIdHashPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 import debounce from "lodash/debounce.js";

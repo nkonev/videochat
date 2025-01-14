@@ -40,13 +40,19 @@ func NewFilesService(
 
 func (h *FilesService) GetListFilesInFileItem(
 	c context.Context,
-	behalfUserId int64,
+	public bool,
+	overrideChatId, overrideMessageId int64,
+	behalfUserId *int64,
 	bucket, filenameChatPrefix string,
 	chatId int64,
 	filter func(*minio.ObjectInfo) bool,
 	requestOwners bool,
 	size, offset int,
 ) ([]*dto.FileInfoDto, int, error) {
+	if !public && behalfUserId == nil {
+		return nil, 0, errors.New("wrong invariant")
+	}
+
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       filenameChatPrefix,
@@ -69,7 +75,7 @@ func (h *FilesService) GetListFilesInFileItem(
 						continue
 					}
 
-					info, err := h.GetFileInfo(c, behalfUserId, objInfo, chatId, tagging, true)
+					info, err := h.GetFileInfo(c, public, overrideChatId, overrideMessageId, behalfUserId, objInfo, tagging, true)
 					if err != nil {
 						h.lgr.WithTracing(c).Errorf("Error get file info: %v, skipping", err)
 						continue
@@ -184,7 +190,7 @@ func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) 
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
-	ttl := viper.GetDuration("minio.publicDownloadTtl")
+	ttl := viper.GetDuration("minio.presignDownloadTtl")
 
 	u, err := h.minio.PresignedGetObject(ctx, h.minioConfig.Files, aKey, ttl, url.Values{})
 	if err != nil {
@@ -214,8 +220,8 @@ func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
 }
 
 func ChangeMinioUrl(url *url.URL) (string, error) {
-	publicUrlPrefix := viper.GetString("minio.publicUrlPrefix")
-	parsed, err := url.Parse(publicUrlPrefix)
+	externalS3UrlPrefix := viper.GetString("minio.externalS3UrlPrefix")
+	parsed, err := url.Parse(externalS3UrlPrefix)
 	if err != nil {
 		return "", err
 	}
@@ -229,7 +235,7 @@ func ChangeMinioUrl(url *url.URL) (string, error) {
 	return stringV, nil
 }
 
-func (h *FilesService) GetPublicUrl(public bool, fileName string) (*string, error) {
+func (h *FilesService) GetPublishedUrl(public bool, fileName string) (*string, error) {
 	if !public {
 		return nil, nil
 	}
@@ -266,8 +272,10 @@ func (h *FilesService) GetAnonymousPreviewUrl(c context.Context, fileName string
 	return anUrl, nil
 }
 
-func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInfo minio.ObjectInfo, chatId int64, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
-	previewUrl := h.GetPreviewUrlSmart(c, objInfo.Key)
+func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatId, overrideMessageId int64, behalfUserId *int64, objInfo minio.ObjectInfo, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
+	if !public && behalfUserId == nil {
+		return nil, errors.New("wrong invariant")
+	}
 
 	metadata := objInfo.UserMetadata
 
@@ -279,21 +287,15 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 
 	filename := ReadFilename(objInfo.Key)
 
-	public, err := DeserializeTags(tagging)
+	published, err := DeserializeTags(tagging)
 	if err != nil {
 		h.lgr.WithTracing(c).Errorf("Error get tags: %v", err)
 		return nil, err
 	}
 
-	publicUrl, err := h.GetPublicUrl(public, objInfo.Key)
+	publishedUrl, err := h.GetPublishedUrl(published, objInfo.Key)
 	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error get public url: %v", err)
-		return nil, err
-	}
-
-	downloadUrl, err := h.GetConstantDownloadUrl(objInfo.Key)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error during getting downlad url %v", err)
+		h.lgr.WithTracing(c).Errorf("Error get published url: %v", err)
 		return nil, err
 	}
 
@@ -305,17 +307,58 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 	if len(correlationId) > 0 {
 		theCorrelationId = &correlationId
 	}
+
+	var downloadUrl string
+	var previewUrl *string
+
+	var canDelete, canEdit, canShare bool
+
+	downloadUrltmp, err := h.GetConstantDownloadUrl(objInfo.Key)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Error during getting downlad url %v", err)
+		return nil, err
+	}
+
+	previewUrltmp := h.GetPreviewUrlSmart(c, objInfo.Key)
+
+	if !public {
+		// normal flow
+		canDelete = fileOwnerId == *behalfUserId
+		canEdit = fileOwnerId == *behalfUserId && utils.IsPlainText(objInfo.Key)
+		canShare = fileOwnerId == *behalfUserId
+
+		downloadUrl = downloadUrltmp
+		previewUrl = previewUrltmp
+	} else {
+		// public microservice flow - user clicks on FileListModal
+		// it's safe becasue we already checked the access before
+		downloadUrl, err = makeUrlPublic(downloadUrltmp, "", overrideChatId, overrideMessageId)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Error during getting downlad url %v", err)
+			return nil, err
+		}
+
+		if previewUrltmp != nil {
+			previewUrlpublic, err := makeUrlPublic(*previewUrltmp, utils.UrlStorageEmbedPreview, overrideChatId, overrideMessageId)
+			if err != nil {
+				h.lgr.WithTracing(c).Errorf("Error during getting downlad url %v", err)
+				return nil, err
+			}
+			previewUrl = &previewUrlpublic
+		}
+	}
+
 	info := &dto.FileInfoDto{
 		Id:             objInfo.Key,
 		Filename:       filename,
 		Url:            downloadUrl,
 		Size:           objInfo.Size,
-		CanDelete:      fileOwnerId == behalfUserId,
-		CanEdit:        fileOwnerId == behalfUserId && utils.IsPlainText(objInfo.Key),
-		CanShare:       fileOwnerId == behalfUserId,
+		CanDelete:      canDelete,
+		CanEdit:        canEdit,
+		CanShare:       canShare,
 		LastModified:   objInfo.LastModified,
 		OwnerId:        fileOwnerId,
-		PublicUrl:      publicUrl,
+		PublishedUrl:   publishedUrl,
 		PreviewUrl:     previewUrl,
 		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
 		CanShowAsImage: utils.IsImage(objInfo.Key),
@@ -324,6 +367,33 @@ func (h *FilesService) GetFileInfo(c context.Context, behalfUserId int64, objInf
 		CorrelationId:  theCorrelationId,
 	}
 	return info, nil
+}
+
+// prepares url to use ib lublic microservice
+// in case getting file list
+// see also chat/handlers/blog.go :: makeUrlPublic
+func makeUrlPublic(src string, additionalSegment string, overrideChatId, overrideMessageId int64) (string, error) {
+	if strings.HasPrefix(src, "/api/storage/assets/") { // don't touch built-in default urls (used for video-by-link, audio)
+		return src, nil
+	}
+
+	// we add time in order not to cache the video itself
+	parsed, err := url.Parse(src)
+	if err != nil {
+		return "", err
+	}
+
+	parsed.Path = utils.UrlStoragePublicGetFile + additionalSegment
+
+	query := parsed.Query()
+
+	query.Set(utils.OverrideMessageId, utils.Int64ToString(overrideMessageId))
+	query.Set(utils.OverrideChatId, utils.Int64ToString(overrideChatId))
+
+	parsed.RawQuery = query.Encode()
+
+	newurl := parsed.String()
+	return newurl, nil
 }
 
 const Media_image = "image"
@@ -402,7 +472,7 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 	return previewUrl
 }
 
-const publicKey = "public"
+const publishedKey = "published"
 
 const ownerIdKey = "ownerid"
 const chatIdKey = "chatid"
@@ -537,9 +607,9 @@ func MessageRecordingKey(hasAmzPrefix bool) string {
 	return prefix + strings.Title(messageRecordingKey)
 }
 
-func SerializeTags(public bool) map[string]string {
+func SerializeTags(published bool) map[string]string {
 	var userTags = map[string]string{}
-	userTags[publicKey] = fmt.Sprintf("%v", public)
+	userTags[publishedKey] = fmt.Sprintf("%v", published)
 	return userTags
 }
 
@@ -549,11 +619,11 @@ func DeserializeTags(tagging *tags.Tags) (bool, error) {
 	}
 
 	var tagsMap map[string]string = tagging.ToMap()
-	publicString, ok := tagsMap[publicKey]
+	publishedString, ok := tagsMap[publishedKey]
 	if !ok {
 		return false, nil
 	}
-	return utils.ParseBoolean(publicString)
+	return utils.ParseBoolean(publishedString)
 }
 
 func GetUsersRemotelyOrEmpty(lgr *logger.Logger, userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {

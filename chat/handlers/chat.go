@@ -1561,8 +1561,12 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 			// ... here we check that the message which we found by potentially crafted overrideMessageId / overrideChatId with malicious intent
 			// really contains this fileItemUuid
 			encodedFileItemUuid := utils.UrlEncode(fileItemUuid)
-			if strings.Contains(overrideMessage.Text, encodedFileItemUuid) {
-				return c.NoContent(http.StatusOK)
+			if len(fileItemUuid) != 0 {
+				if strings.Contains(overrideMessage.Text, encodedFileItemUuid) {
+					return c.NoContent(http.StatusOK)
+				} else if overrideMessage.FileItemUuid != nil && *overrideMessage.FileItemUuid == fileItemUuid {
+					return c.NoContent(http.StatusOK)
+				}
 			}
 		}
 		return c.NoContent(http.StatusUnauthorized)

@@ -9,6 +9,7 @@
                  :isInBlog="true"
                  @onreactionclick="onReactionClick"
                  @click="onClickTrap"
+                 @onFilesClicked="onFilesClicked"
             ></MessageItem>
         </div>
     </v-container>
@@ -17,6 +18,7 @@
 import MessageItem from "#root/common/components/MessageItem.vue";
 import {getMessageLink, onClickTrap} from "#root/common/utils";
 import {usePageContext} from "#root/renderer/usePageContext.js";
+import bus, {OPEN_VIEW_FILES_DIALOG} from "#root/common/bus.js";
 
 export default {
     setup() {
@@ -39,6 +41,14 @@ export default {
         },
         onClickTrap(e) {
             onClickTrap(e)
+        },
+        onFilesClicked() {
+          const obj = {
+            chatId: this.chatId,
+            messageId: this.messageId,
+            fileItemUuid : this.pageContext.data.messageDto.messageItem.fileItemUuid
+          };
+          bus.emit(OPEN_VIEW_FILES_DIALOG, obj);
         },
     },
     computed: {

@@ -86,7 +86,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 						query.Set(utils.FileParam, utils.SetImagePreviewExtension(fileParam))
 						dumbUrl.RawQuery = query.Encode()
 
-						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, false, post.ChatId, post.MessageId)
+						publicPreviewUrl, err := makeUrlPublic(dumbUrl.String(), utils.UrlStorageEmbedPreview, post.ChatId, post.MessageId)
 						if err != nil {
 							h.lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 							break
@@ -334,6 +334,7 @@ type BlogPostResponse struct {
 	CreateDateTime time.Time      `json:"createDateTime"`
 	Reactions      []dto.Reaction `json:"reactions"`
 	Preview        *string        `json:"preview"`
+	FileItemUuid   *string        `json:"fileItemUuid"`
 }
 
 type WrappedBlogPostResponse struct {
@@ -360,35 +361,35 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	}
 
-	response := BlogPostResponse{
+	post := BlogPostResponse{
 		ChatId:         chatBasic.Id,
 		Title:          chatBasic.Title,
 		CreateDateTime: chatBasic.CreateDateTime,
 	}
 
-	var post *db.BlogPost
+	var dbPost *db.BlogPost
 	posts, err := h.db.GetBlogPostsByChatIds(c.Request().Context(), []int64{blogId})
 	if err != nil {
 		return err
 	}
 	if len(posts) == 1 {
-		post = posts[0]
+		dbPost = posts[0]
 	} else {
 		h.lgr.WithTracing(c.Request().Context()).Infof("By blog id %v found not 1 message - %v", blogId, len(posts))
 	}
 
 	userCanWriteMessage := chatBasic.CanWriteMessage
 
-	if post != nil {
-		response.OwnerId = &post.OwnerId
-		response.MessageId = &post.MessageId
-		patchedText := PatchStorageUrlToPublic(c.Request().Context(), h.lgr, post.Text, post.ChatId, post.MessageId)
-		response.Text = &patchedText
+	if dbPost != nil {
+		post.OwnerId = &dbPost.OwnerId
+		post.MessageId = &dbPost.MessageId
+		patchedText := PatchStorageUrlToPublic(c.Request().Context(), h.lgr, dbPost.Text, dbPost.ChatId, dbPost.MessageId)
+		post.Text = &patchedText
 
 		var participantIdSet = map[int64]bool{}
-		participantIdSet[post.OwnerId] = true
+		participantIdSet[dbPost.OwnerId] = true
 
-		reactions, err := h.db.GetReactionsOnMessage(c.Request().Context(), chatBasic.Id, post.MessageId)
+		reactions, err := h.db.GetReactionsOnMessage(c.Request().Context(), chatBasic.Id, dbPost.MessageId)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Infof("For blog id %v unable to get reactions: %v", blogId, err)
 			return err
@@ -398,12 +399,14 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 
 		var users = getUsersRemotelyOrEmpty(c.Request().Context(), h.lgr, participantIdSet, h.restClient)
 
-		user := users[post.OwnerId]
-		response.Owner = user
+		user := users[dbPost.OwnerId]
+		post.Owner = user
 
-		response.Reactions = convertReactions(reactions, users)
+		post.Reactions = convertReactions(reactions, users)
 
-		response.Preview = h.cutText(post.Text)
+		post.Preview = h.cutText(dbPost.Text)
+
+		post.FileItemUuid = dbPost.FileItemUuid
 	}
 
 	aboutPostId, aboutPostTitle, err := h.db.GetBlogAboutChatId(c.Request().Context())
@@ -413,7 +416,7 @@ func (h *BlogHandler) GetBlogPost(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, WrappedBlogPostResponse{
 		Header:          BlogHeader{AboutPostId: aboutPostId, AboutPostTitle: aboutPostTitle},
-		Post:            response,
+		Post:            post,
 		CanWriteMessage: userCanWriteMessage,
 	})
 }
@@ -503,7 +506,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *logger.Logger, text strin
 			original, originalExists := maybeImage.Attr("data-original")
 			if originalExists { // we have 2 tags - preview (small, tag attr) and original (data-original attr)
 				if utils.ContainsUrl(lgr, wlArr, original) { // original
-					newurl, err := makeUrlPublic(original, "", false, overrideChatId, overrideMessageId)
+					newurl, err := makeUrlPublic(original, "", overrideChatId, overrideMessageId)
 					if err != nil {
 						lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 						return
@@ -513,7 +516,7 @@ func PatchStorageUrlToPublic(ctx context.Context, lgr *logger.Logger, text strin
 
 				src, srcExists := maybeImage.Attr("src") // preview
 				if srcExists && utils.ContainsUrl(lgr, wlArr, src) {
-					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, false, overrideChatId, overrideMessageId)
+					newurl, err := makeUrlPublic(src, utils.UrlStorageEmbedPreview, overrideChatId, overrideMessageId)
 					if err != nil {
 						lgr.WithTracing(ctx).Warnf("Unagle to change url: %v", err)
 						return
@@ -544,7 +547,8 @@ func (h *BlogHandler) getFileParam(src string) (string, error) {
 const OverrideMessageId = "overrideMessageId"
 const OverrideChatId = "overrideChatId"
 
-func makeUrlPublic(src string, additionalSegment string, addTime bool, overrideChatId, overrideMessageId int64) (string, error) {
+// see also storage/services/files.go :: makeUrlPublic
+func makeUrlPublic(src string, additionalSegment string, overrideChatId, overrideMessageId int64) (string, error) {
 	if strings.HasPrefix(src, "/api/storage/assets/") { // don't touch built-in default urls (used for video-by-link, audio)
 		return src, nil
 	}
@@ -555,13 +559,9 @@ func makeUrlPublic(src string, additionalSegment string, addTime bool, overrideC
 		return "", err
 	}
 
-	parsed.Path = utils.UrlApiPrefix + utils.UrlStoragePublicGetFile + additionalSegment
+	parsed.Path = utils.UrlStoragePublicGetFile + additionalSegment
 
 	query := parsed.Query()
-
-	if addTime {
-		addTimeToUrlValues(&query)
-	}
 
 	query.Set(OverrideMessageId, utils.Int64ToString(overrideMessageId))
 	query.Set(OverrideChatId, utils.Int64ToString(overrideChatId))

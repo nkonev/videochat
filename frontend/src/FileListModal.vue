@@ -64,7 +64,7 @@
                                                 {{ formattedSize(item.size) }}
                                                 <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner?.login}}</span>
                                                 <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
-                                                <a v-if="item.publicUrl" :href="item.publicUrl" target="_blank" class="colored-link">
+                                                <a v-if="item.publishedUrl" :href="item.publishedUrl" target="_blank" class="colored-link">
                                                     {{ $vuetify.locale.t('$vuetify.files_public_url') }}
                                                 </a>
                                             </v-card-subtitle>
@@ -85,11 +85,11 @@
                                             <v-btn size="medium" v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon size="large">mdi-pencil</v-icon></v-btn>
 
                                             <template v-if="item.canShare">
-                                                <v-btn size="medium" v-if="!item.publicUrl" @click="shareFile(item)">
+                                                <v-btn size="medium" v-if="!item.publishedUrl" @click="shareFile(item)">
                                                     <v-icon color="primary" size="large" dark :title="$vuetify.locale.t('$vuetify.share_file')">mdi-export</v-icon>
                                                 </v-btn>
 
-                                                <v-btn size="medium" v-if="item.publicUrl" @click="unshareFile(item)">
+                                                <v-btn size="medium" v-if="item.publishedUrl" @click="unshareFile(item)">
                                                   <v-icon color="primary" size="large" dark :title="$vuetify.locale.t('$vuetify.unshare_file')">mdi-lock</v-icon>
                                                 </v-btn>
                                             </template>
@@ -306,7 +306,7 @@ export default {
         },
         shareFile(dto) {
             axios.put(`/api/storage/publish/file`, {id: dto.id, public: true}).then((resp)=>{
-                const link = resp.data.publicUrl;
+                const link = resp.data.publishedUrl;
                 if (link) {
                     navigator.clipboard.writeText(getUrlPrefix() + link);
                     this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_file_link_copied'));

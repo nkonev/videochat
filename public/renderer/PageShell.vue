@@ -29,7 +29,8 @@
             <slot />
           </template>
 
-            <PlayerModal/>
+          <PlayerModal/>
+          <FileListModal/>
         </v-main>
     </v-app>
 </template>
@@ -41,9 +42,14 @@
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "#root/common/components/CollapsedSearch.vue";
     import PlayerModal from "#root/common/components/PlayerModal.vue";
+    import FileListModal from "#root/common/components/FileListModal.vue";
 
     export default {
-        components: {PlayerModal, CollapsedSearch},
+        components: {
+          PlayerModal,
+          FileListModal,
+          CollapsedSearch,
+        },
         // https://vuejs.org/api/composition-api-setup.html
         setup() {
             const pageContext = usePageContext();
@@ -119,6 +125,7 @@
                     searchName: this.searchName,
                     searchIcon: this.searchIcon,
                     textFieldVariant: 'solo',
+                    switchSearchType: false,
                 }
             },
 

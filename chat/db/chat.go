@@ -1070,10 +1070,11 @@ func (db *DB) CountBlogs(ctx context.Context) (int64, error) {
 }
 
 type BlogPost struct {
-	ChatId    int64
-	MessageId int64
-	OwnerId   int64
-	Text      string
+	ChatId       int64
+	MessageId    int64
+	OwnerId      int64
+	Text         string
+	FileItemUuid *string
 }
 
 func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, ids []int64) ([]*BlogPost, error) {
@@ -1083,7 +1084,7 @@ func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, ids [
 		if !first {
 			builder += " UNION ALL "
 		}
-		builder += fmt.Sprintf("(select %v, id, owner_id, text from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
+		builder += fmt.Sprintf("(select %v, id, owner_id, text, file_item_uuid from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
 
 		first = false
 	}
@@ -1097,11 +1098,11 @@ func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, ids [
 		defer rows.Close()
 		list := make([]*BlogPost, 0)
 		for rows.Next() {
-			chat := BlogPost{}
-			if err := rows.Scan(&chat.ChatId, &chat.MessageId, &chat.OwnerId, &chat.Text); err != nil {
+			post := BlogPost{}
+			if err := rows.Scan(&post.ChatId, &post.MessageId, &post.OwnerId, &post.Text, &post.FileItemUuid); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
-				list = append(list, &chat)
+				list = append(list, &post)
 			}
 		}
 		return list, nil

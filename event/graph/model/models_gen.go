@@ -124,7 +124,7 @@ type FileInfoDto struct {
 	ID             string       `json:"id"`
 	Filename       string       `json:"filename"`
 	URL            string       `json:"url"`
-	PublicURL      *string      `json:"publicUrl"`
+	PublishedURL   *string      `json:"publishedUrl"`
 	PreviewURL     *string      `json:"previewUrl"`
 	Size           int64        `json:"size"`
 	CanDelete      bool         `json:"canDelete"`

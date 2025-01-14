@@ -90,7 +90,8 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 			var err error
 			if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
 				if response.objectInfo != nil {
-					fileInfo, err = s.filesService.GetFileInfo(ctx, participantId, *response.objectInfo, chatId, response.tagging, false)
+					userId := &participantId
+					fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, *response.objectInfo, response.tagging, false)
 					if err != nil {
 						s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
 						continue

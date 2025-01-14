@@ -593,7 +593,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				ID:             fileEvent.FileInfoDto.Id,
 				Filename:       fileEvent.FileInfoDto.Filename,
 				URL:            fileEvent.FileInfoDto.Url,
-				PublicURL:      fileEvent.FileInfoDto.PublicUrl,
+				PublishedURL:   fileEvent.FileInfoDto.PublishedUrl,
 				PreviewURL:     fileEvent.FileInfoDto.PreviewUrl,
 				Size:           fileEvent.FileInfoDto.Size,
 				CanDelete:      fileEvent.FileInfoDto.CanDelete,

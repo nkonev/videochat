@@ -175,7 +175,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return err
 	}
 
-	uploadDuration := viper.GetDuration("minio.publicUploadTtl")
+	uploadDuration := viper.GetDuration("minio.presignUploadTtl")
 
 	chunkSize := viper.GetInt64("minio.multipart.chunkSize")
 	chunksNum := int(reqDto.FileSize / chunkSize)
@@ -367,16 +367,38 @@ func getFileItemUuid(fileId string) string {
 }
 
 func (h *FilesHandler) ListHandler(c echo.Context) error {
-	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
-	if !ok {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
-		return errors.New("Error during getting auth context")
-	}
+	return h.listHandler(c, false)
+}
+
+func (h *FilesHandler) ListHandlerPublic(c echo.Context) error {
+	return h.listHandler(c, true)
+}
+
+func (h *FilesHandler) listHandler(c echo.Context, public bool) error {
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
 	if err != nil {
 		return err
 	}
-	if ok, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId); err != nil {
+
+	var userId *int64
+	var overrideChatId, overrideMessageId int64
+	if !public {
+		var userPrincipalDto, _ = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+		if userPrincipalDto == nil {
+			return c.NoContent(http.StatusUnauthorized)
+		} else {
+			userId = &userPrincipalDto.UserId
+		}
+		overrideChatId = utils.ChatIdNonExistent
+		overrideMessageId = utils.MessageIdNonExistent
+	} else { // userPrincipalDto == nil and userId == nil
+		overrideChatId = getOverrideChatIdPublic(c)
+		overrideMessageId = getOverrideMessageIdPublic(c)
+	}
+
+	fileItemUuid := c.QueryParam("fileItemUuid")
+
+	if ok, err := h.restClient.CheckAccessExtended(c.Request().Context(), userId, chatId, overrideChatId, overrideMessageId, fileItemUuid); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
@@ -385,8 +407,6 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 	filesPage := utils.FixPageString(c.QueryParam("page"))
 	filesSize := utils.FixSizeString(c.QueryParam("size"))
 	filesOffset := utils.GetOffset(filesPage, filesSize)
-
-	fileItemUuid := c.QueryParam("fileItemUuid")
 
 	searchString := c.QueryParam("searchString")
 	searchString = strings.TrimSpace(searchString)
@@ -400,7 +420,7 @@ func (h *FilesHandler) ListHandler(c echo.Context) error {
 
 	filter := h.getFilterFunction(searchString)
 
-	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, filenameChatPrefix, chatId, filter, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -859,13 +879,13 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	publicUrl, err := h.filesService.GetPublicUrl(bindTo.Public, objectInfo.Key)
+	publishedUrl, err := h.filesService.GetPublishedUrl(bindTo.Public, objectInfo.Key)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error get public url: %v", err)
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "publicUrl": publicUrl})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "publishedUrl": publishedUrl})
 }
 
 type CountResponse struct {
@@ -1138,7 +1158,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(requestedMediaType)
 
-	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -1181,7 +1201,7 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(requestedMediaType)
 
-	_, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, 10, 0)
+	_, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, 10, 0)
 	if err != nil {
 		return err
 	}

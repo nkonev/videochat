@@ -294,6 +294,7 @@ const UrlStoragePublicPreviewFile = "/api/storage/public/download/embed/preview"
 const UrlStorageGetFile = "/api/storage/download"
 const UrlStorageGetFilePublicExternal = "/api/storage/public/download"
 const UrlBasePreview = "/api/storage/embed/preview"
+const UrlStorageEmbedPreview = "/embed/preview"
 const UrlBasePublicPreview = "/api/storage/public/download/embed/preview"
 
 // returns monotonically decreasing lexically sequence to use S3's lexical sorting

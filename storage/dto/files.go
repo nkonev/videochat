@@ -8,7 +8,7 @@ type FileInfoDto struct {
 	Id             string    `json:"id"`
 	Filename       string    `json:"filename"`
 	Url            string    `json:"url"`
-	PublicUrl      *string   `json:"publicUrl"`
+	PublishedUrl   *string   `json:"publishedUrl"`
 	PreviewUrl     *string   `json:"previewUrl"`
 	Size           int64     `json:"size"`
 	CanDelete      bool      `json:"canDelete"`
@@ -20,8 +20,8 @@ type FileInfoDto struct {
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
-	FileItemUuid   string `json:"fileItemUuid"`
-	CorrelationId *string `json:"correlationId"`
+	FileItemUuid   string    `json:"fileItemUuid"`
+	CorrelationId  *string   `json:"correlationId"`
 }
 
 type WrappedFileInfoDto struct {

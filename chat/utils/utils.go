@@ -225,8 +225,7 @@ func Min(a, b int) int {
 }
 
 const FileParam = "file"
-const UrlApiPrefix = "/api"
-const UrlStoragePublicGetFile = "/storage/public/download"
+const UrlStoragePublicGetFile = "/api/storage/public/download"
 const UrlStorageEmbedPreview = "/embed/preview"
 
 func SetImagePreviewExtension(key string) string {

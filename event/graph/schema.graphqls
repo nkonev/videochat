@@ -152,7 +152,7 @@ type FileInfoDto {
     id: String!
     filename: String!
     url: String!
-    publicUrl: String
+    publishedUrl: String
     previewUrl: String
     size: Int64!
     canDelete:           Boolean!

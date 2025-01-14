@@ -461,7 +461,7 @@ export default {
                                         id
                                         filename
                                         url
-                                        publicUrl
+                                        publishedUrl
                                         previewUrl
                                         size
                                         canDelete

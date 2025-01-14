@@ -10,6 +10,9 @@
                 <a :href="getOwnerLink(item)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{getOwner(item.owner)}}</a>
                 <span class="with-space"> at </span>
                 <span class="mr-1">{{getDate(item)}}</span>
+                <span class="message-quick-buttons">
+                    <v-icon class="mx-1" v-if="item.fileItemUuid" @click="onFilesClicked(item)" size="small" title="Attached message files">mdi-file-download</v-icon>
+                </span>
             </v-container>
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }">
                 <div v-if="item.embedMessage" class="embedded-message">
@@ -38,8 +41,11 @@
     import {
         embed_message_reply,
         embed_message_resend,
-        getHumanReadableDate, getLoginColoredStyle, hasLength,
+        getLoginColoredStyle, hasLength,
     } from "#root/common/utils";
+    import {
+      getHumanReadableDate,
+    } from "#root/common/date";
     import "#root/common/styles/messageBody.styl";
     import "#root/common/styles/messageWrapper.styl";
     import "#root/common/styles/itemAvatar.styl";
@@ -127,6 +133,9 @@
             getReactedUsers(reactionObj) {
                 return reactionObj.users?.map(u => u.login).join(", ")
             },
+            onFilesClicked(dto) {
+              this.$emit('onFilesClicked', dto)
+            },
 
         },
         created() {
@@ -174,6 +183,14 @@
 
   @keyframes anothercolor {
       0% { background: yellow }
+  }
+
+  .message-quick-buttons {
+    opacity: 0.35;
+  }
+
+  .message-quick-buttons:hover {
+    opacity: 1;
   }
 
 </style>

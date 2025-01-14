@@ -15,7 +15,7 @@
               <span class="player-caption-text">{{filename}}</span>
             </div>
         </span>
-        <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
+        <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" title="Close"></v-btn>
         <template v-if="showArrows">
             <v-btn v-if="canShowLeftArrow" class="arrow-left-button" variant="text" color="white" icon @click="arrowLeft"><v-icon size="x-large">mdi-arrow-left-bold</v-icon></v-btn>
             <v-btn v-if="canShowRightArrow" class="arrow-right-button" variant="text" color="white" icon @click="arrowRight"><v-icon size="x-large">mdi-arrow-right-bold</v-icon></v-btn>

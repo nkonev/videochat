@@ -432,14 +432,15 @@ func getMessageBasicCommon(ctx context.Context, co CommonOperations, chatId int6
     	m.text,
     	m.owner_id,
     	m.blog_post,
-    	m.published
+    	m.published,
+    	m.file_item_uuid
 	FROM message_chat_%v m 
 	WHERE 
 	    m.id = $1 
 `, chatId),
 		messageId)
 	var mb = MessageBasic{}
-	err := row.Scan(&mb.Text, &mb.OwnerId, &mb.BlogPost, &mb.Published)
+	err := row.Scan(&mb.Text, &mb.OwnerId, &mb.BlogPost, &mb.Published, &mb.FileItemUuid)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -452,10 +453,11 @@ func getMessageBasicCommon(ctx context.Context, co CommonOperations, chatId int6
 }
 
 type MessageBasic struct {
-	Text      string
-	OwnerId   int64
-	BlogPost  bool
-	Published bool
+	Text         string
+	OwnerId      int64
+	BlogPost     bool
+	Published    bool
+	FileItemUuid *string
 }
 
 func (tx *Tx) GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*MessageBasic, error) {

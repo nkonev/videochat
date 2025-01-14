@@ -174,7 +174,7 @@ type ComplexityRoot struct {
 		Owner          func(childComplexity int) int
 		OwnerID        func(childComplexity int) int
 		PreviewURL     func(childComplexity int) int
-		PublicURL      func(childComplexity int) int
+		PublishedURL   func(childComplexity int) int
 		Size           func(childComplexity int) int
 		URL            func(childComplexity int) int
 	}
@@ -1120,12 +1120,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FileInfoDto.PreviewURL(childComplexity), true
 
-	case "FileInfoDto.publicUrl":
-		if e.complexity.FileInfoDto.PublicURL == nil {
+	case "FileInfoDto.publishedUrl":
+		if e.complexity.FileInfoDto.PublishedURL == nil {
 			break
 		}
 
-		return e.complexity.FileInfoDto.PublicURL(childComplexity), true
+		return e.complexity.FileInfoDto.PublishedURL(childComplexity), true
 
 	case "FileInfoDto.size":
 		if e.complexity.FileInfoDto.Size == nil {
@@ -6197,8 +6197,8 @@ func (ec *executionContext) fieldContext_FileInfoDto_url(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _FileInfoDto_publicUrl(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FileInfoDto_publicUrl(ctx, field)
+func (ec *executionContext) _FileInfoDto_publishedUrl(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_publishedUrl(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6211,7 +6211,7 @@ func (ec *executionContext) _FileInfoDto_publicUrl(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PublicURL, nil
+		return obj.PublishedURL, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6225,7 +6225,7 @@ func (ec *executionContext) _FileInfoDto_publicUrl(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FileInfoDto_publicUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FileInfoDto_publishedUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FileInfoDto",
 		Field:      field,
@@ -13113,8 +13113,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(_ contex
 				return ec.fieldContext_FileInfoDto_filename(ctx, field)
 			case "url":
 				return ec.fieldContext_FileInfoDto_url(ctx, field)
-			case "publicUrl":
-				return ec.fieldContext_FileInfoDto_publicUrl(ctx, field)
+			case "publishedUrl":
+				return ec.fieldContext_FileInfoDto_publishedUrl(ctx, field)
 			case "previewUrl":
 				return ec.fieldContext_FileInfoDto_previewUrl(ctx, field)
 			case "size":
@@ -15725,8 +15725,8 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "publicUrl":
-			out.Values[i] = ec._FileInfoDto_publicUrl(ctx, field, obj)
+		case "publishedUrl":
+			out.Values[i] = ec._FileInfoDto_publishedUrl(ctx, field, obj)
 		case "previewUrl":
 			out.Values[i] = ec._FileInfoDto_previewUrl(ctx, field, obj)
 		case "size":

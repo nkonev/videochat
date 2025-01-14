@@ -1,17 +1,7 @@
-import { format, parseISO, differenceInDays } from 'date-fns';
 import {chat, messageIdHashPrefix} from "./router/routes.js";
 import bus, {PLAYER_MODAL} from "./bus.js";
 import axios from "axios";
 import he from "he";
-
-export const getHumanReadableDate = (timestamp) => {
-    const parsedDate = parseISO(timestamp);
-    let formatString = 'HH:mm:ss';
-    if (differenceInDays(new Date(), parsedDate) >= 1) {
-        formatString = formatString + ', d MMM yyyy';
-    }
-    return `${format(parsedDate, formatString)}`
-}
 
 export const hasLength = (str) => {
     if (!str) {
@@ -57,7 +47,9 @@ export const findIndexNonStrictly = (array, element) => {
     return array.findIndex(value => value.id == element.id);
 };
 
+export const FIRST_PAGE = 1;
 export const PAGE_SIZE = 40;
+export const PAGE_SIZE_SMALL = 20;
 
 export const SEARCH_MODE_POSTS = "qp"
 
@@ -244,4 +236,26 @@ export const unescapeHtml = (text) => {
         return text
     }
     return he.decode(text);
+}
+
+export const formatSize = (size) => {
+    const operableSize = Math.abs(size);
+    if (operableSize > 1024 * 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024 / 1024 / 1024).toFixed(2) + ' TB'
+    } else if (operableSize > 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+    } else if (operableSize > 1024 * 1024) {
+        return (size / 1024 / 1024).toFixed(2) + ' MB'
+    } else if (operableSize > 1024) {
+        return (size / 1024).toFixed(2) + ' KB'
+    }
+    return size.toString() + ' B'
+};
+
+export const deepCopy = (aVal) => {
+    return JSON.parse(JSON.stringify(aVal))
+}
+
+export const isMobileBrowser = () => {
+    return navigator.userAgent.indexOf('Mobile') !== -1
 }

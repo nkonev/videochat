@@ -29,9 +29,19 @@
 </template>
 
 <script>
-import contextMenuMixin from "@/mixins/contextMenuMixin";
+import contextMenuMixin from "../mixins/contextMenuMixin";
+import {usePageContext} from "#root/renderer/usePageContext.js";
 
 export default {
+  setup() {
+    const pageContext = usePageContext();
+
+    // expose to template and other options API hooks
+    return {
+      pageContext
+    }
+  },
+
   mixins: [
     contextMenuMixin(),
   ],
@@ -50,25 +60,17 @@ export default {
       if (this.menuableItem) {
         if (this.isMobile()) {
           ret.push({
-            title: this.$vuetify.locale.t('$vuetify.close'),
+            title: 'Close',
             icon: 'mdi-close',
             action: () => {
               this.onCloseContextMenu()
             }
           });
         }
-        if (!this.menuableItem.hasNoMessage) {
-          ret.push({
-            title: this.$vuetify.locale.t('$vuetify.search_related_message'),
-            icon: 'mdi-note-search-outline',
-            action: () => {
-              this.$emit('searchRelatedMessage', this.menuableItem)
-            }
-          });
-        }
+
         if (this.menuableItem.canShowAsImage) {
           ret.push({
-            title: this.$vuetify.locale.t('$vuetify.view'),
+            title: 'View',
             icon: 'mdi-image',
             action: () => {
               this.$emit('showAsImage', this.menuableItem)
@@ -77,7 +79,7 @@ export default {
         }
         if (this.menuableItem.canPlayAsVideo) {
           ret.push({
-            title: this.$vuetify.locale.t('$vuetify.play'),
+            title: 'Play',
             icon: 'mdi-play',
             action: () => {
               this.$emit('playAsVideo', this.menuableItem)
@@ -86,54 +88,18 @@ export default {
         }
         if (this.menuableItem.canPlayAsAudio) {
           ret.push({
-            title: this.$vuetify.locale.t('$vuetify.play'),
+            title: 'Play',
             icon: 'mdi-play',
             action: () => {
               this.$emit('playAsAudio', this.menuableItem)
             }
           });
         }
-        if (this.menuableItem.canEdit) {
-          ret.push({
-            title: this.$vuetify.locale.t('$vuetify.edit'),
-            icon: 'mdi-pencil',
-            action: () => {
-              this.$emit('edit', this.menuableItem)
-            }
-          });
-        }
-
-        if (this.menuableItem.canShare) {
-          if (!this.menuableItem.publishedUrl) {
-            ret.push({
-              title: this.$vuetify.locale.t('$vuetify.share_file'),
-              icon: 'mdi-export',
-              action: () => {
-                this.$emit('share', this.menuableItem)
-              }
-            });
-          } else {
-            ret.push({
-              title: this.$vuetify.locale.t('$vuetify.unshare_file'),
-              icon: 'mdi-lock',
-              action: () => {
-                this.$emit('unshare', this.menuableItem)
-              }
-            });
-          }
-        }
-        if (this.menuableItem.canDelete) {
-          ret.push({
-            title: this.$vuetify.locale.t('$vuetify.delete_btn'),
-            icon: 'mdi-delete',
-            iconColor: 'red',
-            action: () => {
-              this.$emit('delete', this.menuableItem)
-            }
-          });
-        }
       }
       return ret;
+    },
+    isMobile() {
+      return this.pageContext.isMobile
     },
   }
 }
