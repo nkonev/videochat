@@ -1571,7 +1571,8 @@ func (ch *ChatHandler) CheckAccess(c echo.Context) error {
 	// this branch is for "regular" and resent
 	userId, err := GetQueryParamAsInt64(c, "userId")
 	if err != nil {
-		return err
+		ch.lgr.WithTracing(c.Request().Context()).Infof("Unable to get userId: %v", err) // it can be error when overrideChatId and overrideMessageId are missed
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	useCanResend, _ := GetQueryParamAsBoolean(c, "considerCanResend")
 	participant, err := ch.db.IsParticipant(c.Request().Context(), userId, chatId)
