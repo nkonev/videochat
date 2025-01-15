@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import {copyCallLink, copyChatLink, getBlogLink, getChatLink} from "@/utils";
 import contextMenuMixin from "@/mixins/contextMenuMixin";
 
 export default {
