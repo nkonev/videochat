@@ -6,6 +6,7 @@ import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import name.nkonev.aaa.exception.OAuth2IdConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -45,12 +47,25 @@ public class AaaErrorController extends AbstractErrorController {
         super(errorAttributes, errorViewResolvers);
     }
 
+    private final Set<Class<?>> noErrorExceptions = Set.of(AuthorizationDeniedException.class, OAuth2IdConflictException.class);
+
     @RequestMapping(value = PATH)
     public ModelAndView error(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         final List<String> acceptValues = getAcceptHeaderValues(request);
 
-        Map<String, Object> errorAttributes = getCustomErrorAttributes(request, aaaProperties.debugResponse());
+        Map<String, Object> errorAttributes = getCustomErrorAttributes(request);
+
+        if (noErrorExceptions.stream()
+                .map(Class::getCanonicalName)
+                .filter(Objects::nonNull)
+                .anyMatch(se -> se.equals(errorAttributes.get("exception")))
+        ) {
+            LOGGER.info("Message: {}, error: {}, exception: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"));
+        } else {
+            LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
+        }
+
         if (acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             try {
@@ -75,7 +90,6 @@ public class AaaErrorController extends AbstractErrorController {
                 LOGGER.error("IOException", e);
             }
             return null;
-
         } else {
             HttpStatus status = getStatus(request);
 
@@ -86,11 +100,7 @@ public class AaaErrorController extends AbstractErrorController {
         }
     }
 
-    private Map<String, Object> getCustomErrorAttributes(HttpServletRequest request, boolean debug) {
-        if (debug) {
-            return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
-        } else {
-            return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE));
-        }
+    private Map<String, Object> getCustomErrorAttributes(HttpServletRequest request) {
+        return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
     }
 }
