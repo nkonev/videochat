@@ -6,13 +6,13 @@ import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.exception.OAuth2IdConflictException;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.exception.UserConflictException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.security.checks.AaaPostAuthenticationChecks;
 import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import name.nkonev.aaa.services.ConflictResolvingActions;
 import name.nkonev.aaa.services.ConflictService;
 import name.nkonev.aaa.services.EventService;
-import name.nkonev.aaa.utils.Pair;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -77,7 +77,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
 
             Optional<UserAccount> maybeUserAccount = findByOAuth2Id(oauthId);
             if (maybeUserAccount.isPresent() && !maybeUserAccount.get().id().equals(principal.getId())){
-                logger().error("With {}Id={} already present another user '{}', id={}", getOAuth2Name(), oauthId, maybeUserAccount.get().username(), maybeUserAccount.get().id());
+                logger().info("With {}Id={} already present another user '{}', id={}", getOAuth2Name(), oauthId, maybeUserAccount.get().username(), maybeUserAccount.get().id());
                 throw new OAuth2IdConflictException("Somebody already taken this "+ getOAuth2Name()+" id="+oauthId+". " +
                         "If this is you and you want to merge your profiles please delete another profile and bind "+ getOAuth2Name()+" to this. If not please contact administrator.");
             }
@@ -120,7 +120,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
             // due to conflict we can ignore the user and not to save him or we can create a new
             // so we try to lookup him
             userAccount = findByOAuth2Id(oauthId)
-                    .orElseThrow(() -> new OAuth2IdConflictException(("User with "+getOAuth2Name()+"Id = " + oauthId + " is not found after conflict solving")));
+                    .orElseThrow(() -> new UserConflictException(("User with "+getOAuth2Name()+"Id = " + oauthId + " is not found after conflict solving")));
         } else { // get existing
             userAccount = userAccountOpt.get();
         }

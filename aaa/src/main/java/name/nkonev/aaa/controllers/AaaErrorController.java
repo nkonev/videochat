@@ -6,7 +6,6 @@ import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import name.nkonev.aaa.exception.OAuth2IdConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,7 @@ public class AaaErrorController extends AbstractErrorController {
         super(errorAttributes, errorViewResolvers);
     }
 
-    private final Set<Class<?>> noErrorExceptions = Set.of(AuthorizationDeniedException.class, OAuth2IdConflictException.class);
+    private final Set<Class<?>> noErrorExceptions = Set.of(AuthorizationDeniedException.class);
 
     @RequestMapping(value = PATH)
     public ModelAndView error(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

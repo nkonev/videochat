@@ -15,7 +15,6 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
@@ -78,7 +77,10 @@ public class SecurityConfig {
     ClientRegistrationRepository clientRegistrationRepository;
 
     @Autowired
-    private OAuth2ExceptionHandler OAuth2ExceptionHandler;
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private OAuth2ExceptionHandler oAuth2ExceptionHandler;
 
     @Autowired
     private AaaProperties aaaProperties;
@@ -131,8 +133,8 @@ public class SecurityConfig {
                             authorizationEndpointConfig.baseUri(API_LOGIN_OAUTH);
                         })
 
-                        .successHandler(new OAuth2AuthenticationSuccessHandler())
-                        .failureHandler(OAuth2ExceptionHandler)
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2ExceptionHandler)
                         .redirectionEndpoint(redirectionEndpointConfig -> redirectionEndpointConfig.baseUri(AUTHORIZATION_RESPONSE_BASE_URI))
                         .tokenEndpoint(tokenEndpointConfig -> {
                             tokenEndpointConfig.accessTokenResponseClient(this.accessTokenResponseClient());

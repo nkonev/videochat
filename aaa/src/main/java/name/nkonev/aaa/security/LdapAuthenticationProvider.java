@@ -6,7 +6,7 @@ import name.nkonev.aaa.dto.EventWrapper;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.ldap.LdapEntity;
-import name.nkonev.aaa.exception.OAuth2IdConflictException;
+import name.nkonev.aaa.exception.UserConflictException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.services.ConflictResolvingActions;
 import name.nkonev.aaa.services.ConflictService;
@@ -126,7 +126,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
                             // due to conflict we can ignore the user and not to save him or we can create a new
                             // so we try to lookup him
                             var foundNewUser = userAccountRepository.findByLdapId(ldapUserId)
-                                    .orElseThrow(() -> new OAuth2IdConflictException(("User with ldapId = " + ldapUserId + " is not found after conflict solving")));
+                                    .orElseThrow(() -> new UserConflictException(("User with ldapId = " + ldapUserId + " is not found after conflict solving")));
                             return foundNewUser;
                         });
                 });
