@@ -200,7 +200,7 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
     }
 
     @Test
-    public void testBindFacebookToTheCurrentAccountThenConflictOnTryingToBindForeignVkontakte() throws Exception {
+    public void testBindFacebookToTheCurrentAccountThenConflictOnTryingToBindForeignVkontakte(CapturedOutput output) throws Exception {
         long countInitial = userAccountRepository.count();
 
         // login as regular user 600
@@ -245,6 +245,8 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
         final WebResponse vkLoginResponse = clickVkontakteAndReturn();
 
         Assertions.assertTrue(vkLoginResponse.getContentAsString().contains("Somebody already taken this vkontakte id"));
+
+        assertThat(output).contains("Handling OAuth2IdConflictException, message");
     }
 
     @Test
