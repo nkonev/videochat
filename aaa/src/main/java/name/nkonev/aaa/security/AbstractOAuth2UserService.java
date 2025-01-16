@@ -46,7 +46,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
     private ConflictService conflictService;
 
     @Autowired
-    private UserAccountRepository userAccountRepository;
+    protected UserAccountRepository userAccountRepository;
 
     private boolean isAlreadyAuthenticated(){
         return SecurityContextHolder.getContext().getAuthentication()!=null && SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserAccountDetailsDTO;

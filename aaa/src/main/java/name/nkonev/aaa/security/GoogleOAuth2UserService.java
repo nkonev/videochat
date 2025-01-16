@@ -4,7 +4,6 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
-import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +25,6 @@ import static name.nkonev.aaa.Constants.GOOGLE_LOGIN_PREFIX;
 public class GoogleOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GoogleOAuth2UserService.class);
-
-    @Autowired
-    private UserAccountRepository userAccountRepository;
 
     @Autowired
     private OidcUserService oidcUserService;

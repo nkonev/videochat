@@ -4,7 +4,6 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
-import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import com.nimbusds.jwt.JWTParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +27,6 @@ import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 public class KeycloakOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeycloakOAuth2UserService.class);
-
-    @Autowired
-    private UserAccountRepository userAccountRepository;
 
     @Autowired
     private DefaultOAuth2UserService delegate;

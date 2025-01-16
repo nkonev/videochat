@@ -1,9 +1,7 @@
 package name.nkonev.aaa.security;
 
-
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
-import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.slf4j.Logger;
@@ -23,9 +21,6 @@ import static name.nkonev.aaa.Constants.VKONTAKTE_LOGIN_PREFIX;
 
 @Service
 public class VkontakteOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-
-    @Autowired
-    private UserAccountRepository userAccountRepository;
 
     @Autowired
     private DefaultOAuth2UserService delegate;

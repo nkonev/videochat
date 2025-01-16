@@ -2,7 +2,6 @@ package name.nkonev.aaa.security;
 
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.config.properties.ConflictResolveStrategy;
-import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.slf4j.Logger;
@@ -26,9 +25,6 @@ import static name.nkonev.aaa.Constants.FACEBOOK_LOGIN_PREFIX;
 public class FacebookOAuth2UserService extends AbstractOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FacebookOAuth2UserService.class);
-
-    @Autowired
-    private UserAccountRepository userAccountRepository;
 
     @Autowired
     private DefaultOAuth2UserService delegate;
