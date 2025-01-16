@@ -60,7 +60,7 @@ public class AaaErrorController extends AbstractErrorController {
                 .filter(Objects::nonNull)
                 .anyMatch(se -> se.equals(errorAttributes.get("exception")))
         ) {
-            LOGGER.info("Message: {}, error: {}, exception: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"));
+            LOGGER.debug("Message: {}, error: {}, exception: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"));
         } else {
             LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
         }
