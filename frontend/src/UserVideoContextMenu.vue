@@ -151,16 +151,15 @@ export default {
               }
 
               if (this.chatStore.presenterEnabled && this.isPresenterEnabled()) {
-                if (!this.chatStore.pinnedTrackSid) {
-                  ret.push({
-                    title: this.$vuetify.locale.t('$vuetify.pin_video'),
-                    icon: 'mdi-pin',
-                    action: () => {
-                      bus.emit(PIN_VIDEO, this.menuableItem.getVideoStreamId())
-                    },
-                    enabled: true,
-                  });
-                } else {
+                ret.push({
+                  title: this.$vuetify.locale.t('$vuetify.pin_video'),
+                  icon: 'mdi-pin',
+                  action: () => {
+                    bus.emit(PIN_VIDEO, this.menuableItem.getVideoStreamId())
+                  },
+                  enabled: true,
+                });
+                if (this.chatStore.pinnedTrackSid) {
                   ret.push({
                     title: this.$vuetify.locale.t('$vuetify.unpin_video'),
                     icon: 'mdi-pin-off-outline',
