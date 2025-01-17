@@ -491,50 +491,22 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 	}
 }
 
-func (tx *Tx) MarkAllMessagesAsRead(ctx context.Context, chatId int64, participantId int64) error {
+func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId int64, messageId *int64) error {
 	_, err := tx.ExecContext(ctx, fmt.Sprintf(`
 		WITH calced_last_message_id AS (SELECT COALESCE((SELECT max(id) from message_chat_%v), 0))
 		INSERT INTO message_read (last_message_id, user_id, chat_id) 
 			VALUES((SELECT * FROM calced_last_message_id), $1, $2)
-		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (SELECT * FROM calced_last_message_id) 
+		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
+			CASE 
+				WHEN ($3::bigint <= (SELECT * FROM calced_last_message_id) AND $3::bigint > message_read.last_message_id) THEN $3::bigint
+				WHEN ($3::bigint <= (SELECT * FROM calced_last_message_id) AND $3::bigint <= message_read.last_message_id) THEN message_read.last_message_id
+				ELSE (SELECT * FROM calced_last_message_id)
+			END
+		) 
 			WHERE message_read.user_id = $1 AND message_read.chat_id = $2
 		`, chatId),
-		participantId, chatId)
+		participantId, chatId, messageId)
 	return err
-}
-
-func addMessageReadCommon(ctx context.Context, co CommonOperations, messageId, userId int64, chatId int64) error {
-	row := co.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT id FROM message_chat_%v WHERE id = $1)", chatId), messageId)
-	if row.Err() != nil {
-		return eris.Wrap(row.Err(), "error during interacting with db")
-	}
-	exists := true
-	err := row.Scan(&exists)
-	if err != nil {
-		return eris.Wrap(err, "error during interacting with db")
-	}
-	if !exists {
-		co.logger().WithTracing(ctx).Infof("Message with id %v doesn't exists in chat %v", messageId, chatId)
-		return nil
-	}
-	_, err = co.ExecContext(ctx, `
-		INSERT INTO message_read (last_message_id, user_id, chat_id) 
-		VALUES ($1, $2, $3) 
-		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = $1 
-			WHERE ($1 > (SELECT MAX(last_message_id) FROM message_read WHERE user_id = $2 AND chat_id = $3))
-	`, messageId, userId, chatId)
-	if err != nil {
-		return eris.Wrap(err, "error during interacting with db")
-	}
-	return nil
-}
-
-func (db *DB) AddMessageRead(ctx context.Context, messageId, userId int64, chatId int64) error {
-	return addMessageReadCommon(ctx, db, messageId, userId, chatId)
-}
-
-func (tx *Tx) AddMessageRead(ctx context.Context, messageId, userId int64, chatId int64) error {
-	return addMessageReadCommon(ctx, tx, messageId, userId, chatId)
 }
 
 func deleteMessageReadCommon(ctx context.Context, co CommonOperations, userId int64, chatId int64) error {

@@ -183,13 +183,6 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		if hasHash {
-			err = mc.addMessageReadAndSendIt(tx, c.Request().Context(), chatId, startingFromItemId, userPrincipalDto.UserId)
-			if err != nil {
-				return err
-			}
-		}
-
 		mc.lgr.WithTracing(c.Request().Context()).Debugf("Successfully returning %v messages", len(messageDtos))
 		return c.JSON(http.StatusOK, messageDtos)
 	})
@@ -742,7 +735,8 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return 0, err
 		}
-		err = tx.AddMessageRead(c.Request().Context(), messageId, userPrincipalDto.UserId, chatId) // not to send to myself (1/2)
+		mp := &messageId
+		err = tx.MarkMessageAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId, mp) // not to send to myself (1/2)
 		if err != nil {
 			return 0, err
 		}
@@ -1410,7 +1404,8 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 }
 
 func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, ctx context.Context, chatId int64, messageId int64, userId int64) error {
-	err := tx.AddMessageRead(ctx, messageId, userId, chatId)
+	mp := &messageId
+	err := tx.MarkMessageAsRead(ctx, chatId, userId, mp)
 	if err != nil {
 		return err
 	}

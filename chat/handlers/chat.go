@@ -2027,7 +2027,7 @@ func (ch *ChatHandler) MarkAsRead(c echo.Context) error {
 			return errors.New(fmt.Sprintf("User %v is not isParticipant of chat %v", userPrincipalDto.UserId, chatId))
 		}
 
-		err = tx.MarkAllMessagesAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
+		err = tx.MarkMessageAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId, nil)
 		if err != nil {
 			return err
 		}
@@ -2063,7 +2063,7 @@ func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
 
 			for chatId, has := range chatsHasUnreadMessages {
 				if has {
-					err := tx.MarkAllMessagesAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId)
+					err := tx.MarkMessageAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId, nil)
 					if err != nil {
 						ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during marking chat %v as read: %v", chatId, err)
 						continue
