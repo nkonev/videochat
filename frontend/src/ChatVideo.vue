@@ -202,7 +202,6 @@ export default {
             candidateToAppendVideo.setUserId(md.userId);
 
             const data = this.getDataForPresenter(candidateToAppendVideo);
-
             this.updatePresenterIfNeed(data, false);
             this.recalculateLayout();
 
@@ -228,6 +227,8 @@ export default {
             candidateToAppendAudio.setAvatar(md.avatar);
             candidateToAppendAudio.setUserId(md.userId);
 
+            const data = this.getDataForPresenter(candidateToAppendAudio);
+            this.updatePresenterIfNeed(data, false); // append an audio to this.presenterData to correct working "muted" on Presenter
             this.recalculateLayout();
 
             return
@@ -296,13 +297,29 @@ export default {
     },
     updatePresenterIfNeed(data, isSpeaking) {
         if (this.chatStore.presenterEnabled && this.canUsePresenter()) {
-          if (this.presenterData?.videoStream?.trackSid !== data.videoStream.trackSid &&
+
+          // replace presenter
+          if (data.videoStream?.trackSid != null && this.presenterData?.videoStream?.trackSid !== data.videoStream.trackSid &&
               this.getPresenterPriority(data.videoStream, isSpeaking) > this.getPresenterPriority(this.presenterData?.videoStream)
           ) {
             this.detachPresenter();
             this.updatePresenter(data);
           }
-          if (this.presenterData?.videoStream?.trackSid === data.videoStream.trackSid && isSpeaking) {
+
+          // append an audio stream to the existing presenter with only video
+          if (this.presenterData?.videoStream != null && this.presenterData.audioStream == null && data.audioStream && this.presenterData?.videoStream?.trackSid === data.videoStream?.trackSid) {
+            console.log("Appending an audio stream to the presenter");
+            this.presenterData.audioStream = data.audioStream;
+          }
+
+          // append a video stream to the existing presenter with only audio
+          if (this.presenterData?.audioStream != null && this.presenterData.videoStream == null && data.videoStream && this.presenterData?.audioStream?.trackSid === data.audioStream?.trackSid) {
+            console.log("Appending a video stream to the presenter");
+            this.presenterData.videoStream = data.videoStream;
+          }
+
+          // set is speaking
+          if (this.presenterData?.videoStream?.trackSid != null && data.videoStream != null && this.presenterData?.videoStream?.trackSid === data.videoStream.trackSid && isSpeaking) {
             this.setSpeakingWithDefaultTimeout();
           }
         }
@@ -469,13 +486,13 @@ export default {
       for (const component of matchedVideoComponents) {
         component.setDisplayVideoMute(trackPublication.isMuted);
         if (component.getVideoStreamId() && this.presenterData?.videoStream && component.getVideoStreamId() == this.presenterData.videoStream.trackSid) {
-          this.updatePresenterVideoMute();
+          this.presenterVideoMute = trackPublication.isMuted;
         }
       }
       for (const component of matchedAudioComponents) {
         component.setDisplayAudioMute(trackPublication.isMuted);
         if (component.getAudioStreamId() && this.presenterData?.audioStream && component.getAudioStreamId() == this.presenterData.audioStream.trackSid) {
-          this.updatePresenterAudioMute();
+          this.presenterAudioMute = trackPublication.isMuted;
         }
       }
     },
@@ -783,7 +800,7 @@ export default {
       tmp.sort((a, b) => {
         return this.getPresenterPriority(b.videoStream) - this.getPresenterPriority(a.videoStream);
       });
-      
+
       if (tmp.length) {
         return tmp[0]
       }
