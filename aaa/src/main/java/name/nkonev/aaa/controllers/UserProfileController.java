@@ -59,6 +59,7 @@ public class UserProfileController {
 
     @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
     public List<name.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
@@ -66,6 +67,17 @@ public class UserProfileController {
     ) {
         LOGGER.info("Searching users external");
         return userProfileService.searchUsers(userAccount, request);
+    }
+
+    @ResponseBody
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.FRESH)
+    public FreshDTO fresh(
+            @RequestBody List<UserAccountDTOExtended> users,
+            @RequestParam(value = "size", required = false) int size,
+            @RequestParam(value = "searchString", required = false) String searchString
+    ) {
+        return userProfileService.freshUsers(users, size, searchString);
     }
 
     @ResponseBody

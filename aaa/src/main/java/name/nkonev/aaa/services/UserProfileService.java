@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.Constants.*;
 import static name.nkonev.aaa.Constants.Headers.*;
@@ -147,6 +148,106 @@ public class UserProfileService {
         var result = userListViewRepository.getUsers(size, request.startingFromItemId(), request.reverse(), request.hasHash(), searchString);
 
         return result.stream().map(getConvertToUserAccountDTO(userAccount)).toList();
+    }
+
+    @Transactional
+    public FreshDTO freshUsers(List<UserAccountDTOExtended> users, int size0, String searchString0) {
+        Long startingFromItemId = null;
+        var size = PageUtils.fixSize(size0);
+        var reverse = false; // false for edge chat
+        var searchString = searchString0 != null ? searchString0.trim() : "";
+
+        var hasHash = false;
+
+        var result = userListViewRepository.getUsers(size, startingFromItemId, reverse, hasHash, searchString);
+
+        var edge = true;
+
+        var aLen = Math.min(result.size(), users.size());
+        if (users.size() == 0 && result.size() != 0) {
+            edge = false;
+        }
+
+        for (var i = 0; i < aLen; ++i) {
+            var currentUser = result.get(i);
+            var gottenUser = users.get(i);
+
+            if (!gottenUser.userAccountDTO().id().equals(currentUser.id())) {
+                edge = false;
+                break;
+            }
+
+            if (!Objects.equals(gottenUser.userAccountDTO().login(), currentUser.username())) {
+                edge = false;
+                break;
+            }
+
+            if (!Objects.equals(gottenUser.userAccountDTO().avatar(), currentUser.avatar())) {
+                edge = false;
+                break;
+            }
+
+            if (!Objects.equals(gottenUser.userAccountDTO().avatarBig(), currentUser.avatarBig())) {
+                edge = false;
+                break;
+            }
+
+            if (!Objects.equals(gottenUser.userAccountDTO().loginColor(), currentUser.loginColor())) {
+                edge = false;
+                break;
+            }
+
+            if (gottenUser.additionalData() != null) {
+                if (!Objects.equals(gottenUser.additionalData().confirmed(), currentUser.confirmed())) {
+                    edge = false;
+                    break;
+                }
+
+                if (!Objects.equals(gottenUser.additionalData().enabled(), currentUser.enabled())) {
+                    edge = false;
+                    break;
+                }
+
+                if (!Objects.equals(gottenUser.additionalData().locked(), currentUser.locked())) {
+                    edge = false;
+                    break;
+                }
+
+                if (!Objects.equals(gottenUser.additionalData().roles(), Arrays.stream(currentUser.roles()).collect(Collectors.toSet()))) {
+                    edge = false;
+                    break;
+                }
+            }
+
+            if (gottenUser.userAccountDTO().oauth2Identifiers() != null) {
+                if (!Objects.equals(gottenUser.userAccountDTO().oauth2Identifiers().facebookId(), currentUser.facebookId())) {
+                    edge = false;
+                    break;
+                }
+
+                if (!Objects.equals(gottenUser.userAccountDTO().oauth2Identifiers().vkontakteId(), currentUser.vkontakteId())) {
+                    edge = false;
+                    break;
+                }
+
+                if (!Objects.equals(gottenUser.userAccountDTO().oauth2Identifiers().googleId(), currentUser.googleId())) {
+                    edge = false;
+                    break;
+                }
+
+                if (!Objects.equals(gottenUser.userAccountDTO().oauth2Identifiers().keycloakId(), currentUser.keycloakId())) {
+                    edge = false;
+                    break;
+                }
+            }
+
+            if (gottenUser.userAccountDTO().ldap() != StringUtils.hasLength(currentUser.ldapId())) {
+                edge = false;
+                break;
+            }
+        }
+
+        return new FreshDTO(edge);
     }
 
     @Transactional

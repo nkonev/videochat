@@ -38,8 +38,24 @@ public class UserListViewRepository {
         )
     """;
 
+    private long getSafeDefaultUserId(boolean reverse) {
+        if (reverse) {
+            return 0;
+        } else {
+            return Long.MAX_VALUE;
+        }
+    }
+
     // copy-paste from chat/db/message.go::getMessagesCommon
-    public List<UserAccount> getUsers(int limit, long startingFromItemId, boolean reverse, boolean hasHash, String searchString) {
+    public List<UserAccount> getUsers(int limit, Long startingFromItemId0, boolean reverse, boolean hasHash, String searchString) {
+
+        final long startingFromItemId;
+        if (startingFromItemId0 == null) {
+            startingFromItemId = getSafeDefaultUserId(reverse);
+        } else {
+            startingFromItemId = startingFromItemId0;
+        }
+
         List<UserAccount> list;
         if (hasHash) {
             // has hash means that frontend's page has message hash
@@ -60,6 +76,11 @@ public class UserListViewRepository {
             var searchStringPercents = "";
             if (StringUtils.hasLength(searchString)) {
                 searchStringPercents = "%" + searchString + "%";
+            }
+
+            var order = "desc";
+            if (reverse) {
+                order = "asc";
             }
 
             if (StringUtils.hasLength(searchString)) {
@@ -111,19 +132,9 @@ public class UserListViewRepository {
 
             if (leftItemId == null || rightItemId == null) {
                 LOGGER.info("Got leftItemId={}, rightItemId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString);
-                long startedFromItemIdSafe;
-                if (reverse) {
-                    startedFromItemIdSafe = Long.MAX_VALUE;
-                } else {
-                    startedFromItemIdSafe = 0;
-                }
+                long startedFromItemIdSafe = getSafeDefaultUserId(reverse);;
                 list = getUsersSimple(limit, startedFromItemIdSafe, reverse, searchString);
             } else {
-
-                var order = "asc";
-                if (reverse) {
-                    order = "desc";
-                }
 
                 if (StringUtils.hasLength(searchString)) {
                     list = jdbcTemplate.query("""
@@ -174,11 +185,11 @@ public class UserListViewRepository {
 
     private List<UserAccount> getUsersSimple(int limit, long startingFromItemId, boolean reverse, String searchString) {
         List<UserAccount> list;
-        var order = "asc";
-        var nonEquality = "u.id > :startingFromItemId";
+        var order = "desc";
+        var nonEquality = "u.id < :startingFromItemId";
         if (reverse) {
-            order = "desc";
-            nonEquality = "u.id < :startingFromItemId";
+            order = "asc";
+            nonEquality = "u.id > :startingFromItemId";
         }
         if (StringUtils.hasLength(searchString)) {
             var searchStringPercents = "%" + searchString + "%";

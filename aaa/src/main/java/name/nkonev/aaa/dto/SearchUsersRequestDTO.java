@@ -2,7 +2,7 @@ package name.nkonev.aaa.dto;
 
 public record SearchUsersRequestDTO(
     int size,
-    long startingFromItemId,
+    Long startingFromItemId,
     boolean reverse,
     boolean hasHash,
     String searchString

@@ -1,7 +1,7 @@
 import {hasLength} from "@/utils";
 import {directionBottom} from "@/mixins/infiniteScrollMixin.js";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), doSaveTheFirstItem(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection(), isAppropriateHash()
+// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection(), isAppropriateHash()
 // isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {

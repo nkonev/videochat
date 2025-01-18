@@ -34,6 +34,7 @@ public class Constants {
         public static final String LIST = "/list";
 
         public static final String SEARCH = "/search";
+        public static final String FRESH = "/fresh";
 
         public static final String LOCK = "/lock";
         public static final String ENABLE = "/enable";

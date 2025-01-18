@@ -27,10 +27,9 @@ export default class ChatList {
             const autocompleteInput = this.page.locator('.v-autocomplete .v-field__input input');
             await autocompleteInput.fill(participantName);
 
-            const selectableSuggestion = 0;
             const autocompleteSuggestedElements = this.page.locator('.v-autocomplete__content .v-list .v-list-item');
-            await expect(autocompleteSuggestedElements.nth(selectableSuggestion)).toHaveText(participantName);
-            await(autocompleteSuggestedElements.nth(selectableSuggestion).click());
+            await expect(autocompleteSuggestedElements.last()).toHaveText(participantName);
+            await(autocompleteSuggestedElements.last().click());
 
             // close suggestion list
             await this.page.locator('.v-dialog .v-card-title').click()

@@ -245,15 +245,15 @@ export default {
         return 80 // in case numeric pages, should complement with getMaxItemsLength() and PAGE_SIZE
     },
     reduceBottom() {
-      this.items = this.items.slice(0, this.getReduceToLength());
-      this.startingFromItemIdBottom = this.getMaximumItemId();
+      this.items = this.items.slice(0, this.getReduceToLength()); // remove last from array, retain first N - reduce bottom on the page
+      this.startingFromItemIdBottom = this.findBottomElementId();
     },
     reduceTop() {
-      this.items = this.items.slice(-this.getReduceToLength());
-      this.startingFromItemIdTop = this.getMinimumItemId();
+      this.items = this.items.slice(-this.getReduceToLength()); // retain last n
+      this.startingFromItemIdTop = this.findTopElementId();
     },
     saveScroll(top) {
-      this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
+      this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
       console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
     },
     initialDirection() {
@@ -436,8 +436,8 @@ export default {
         }
     },
     updateTopAndBottomIds() {
-      this.startingFromItemIdTop = this.getMinimumItemId();
-      this.startingFromItemIdBottom = this.getMaximumItemId();
+      this.startingFromItemIdTop = this.findTopElementId();
+      this.startingFromItemIdBottom = this.findBottomElementId();
     },
 
     getUserIdsSubscribeTo() {
@@ -496,12 +496,14 @@ export default {
     },
     addItem(dto) {
       console.log("Adding item", dto);
-      this.items.push(dto);
-      this.reduceListIfNeed();
+      this.transformItem(dto);
+      this.items.unshift(dto);
+      this.reduceListAfterAdd(false);
       this.updateTopAndBottomIds();
     },
     changeItem(dto) {
       console.log("Replacing item", dto);
+      this.transformItem(dto);
       replaceInArray(this.items, dto);
     },
     removeItem(dto) {
@@ -516,13 +518,13 @@ export default {
     },
 
     onNewUser(dto) {
-      const isScrolledToBottom = this.isScrolledToBottom();
+      const isScrolledToTop = this.isScrolledToTop();
       const emptySearchString = !hasLength(this.searchString);
-      if (isScrolledToBottom && emptySearchString) {
+      if (isScrolledToTop && emptySearchString) {
           this.addItem(dto);
           this.performMarking();
-          this.scrollTo(userIdHashPrefix + dto.id)
-      } else if (isScrolledToBottom) { // not empty searchString
+          this.scrollTop();
+      } else if (isScrolledToTop) { // not empty searchString
           axios.post(`/api/aaa/user/filter`, {
               searchString: this.searchString,
               userId: dto.id
@@ -532,11 +534,11 @@ export default {
               if (data.found) {
                   this.addItem(dto);
                   this.performMarking();
-                  this.scrollTo(userIdHashPrefix + dto.id)
+                  this.scrollTop();
               }
           })
       } else {
-          console.log("Skipping", dto, isScrolledToBottom, emptySearchString)
+          console.log("Skipping", dto, isScrolledToTop, emptySearchString)
       }
     },
     onDeleteUser(dto) {
@@ -623,19 +625,31 @@ export default {
         });
     },
     onFocus() {
-      if (this.chatStore.currentUser) {
-          const list = this.items.map(item => item.id);
+      if (this.chatStore.currentUser && this.items) {
+        this.requestStatuses();
 
-          if (!list.length) {
-              return
-          }
-
-          this.requestStatuses();
+        if (this.isScrolledToTop()) {
+          const topNElements = this.items.slice(0, PAGE_SIZE);
+          axios.post(`/api/aaa/user/fresh`, topNElements, {
+            params: {
+              size: PAGE_SIZE,
+              searchString: this.searchString,
+            },
+            signal: this.requestAbortController.signal
+          }).then((res)=>{
+            if (!res.data.ok) {
+              console.log("Need to update users");
+              this.reloadItems();
+            } else {
+              console.log("No need to update users");
+            }
+          })
+        }
       }
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
-      this.initializeHashVariablesAndReloadItems();
+      this.doOnFocus();
     },
     requestStatuses() {
       this.$nextTick(()=>{
@@ -645,11 +659,11 @@ export default {
           this.triggerUsesStatusesEvents(joined, this.requestAbortController.signal);
       })
     },
-    getMaximumItemId() {
-      return this.items.length ? Math.max(...this.items.map(it => it.id)) : null
+    findBottomElementId() {
+      return this.items[this.items.length-1]?.id
     },
-    getMinimumItemId() {
-      return this.items.length ? Math.min(...this.items.map(it => it.id)) : null
+    findTopElementId() {
+      return this.items[0]?.id
     },
     isAppropriateHash(hash) {
       return isUserHash(hash)

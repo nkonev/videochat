@@ -54,6 +54,18 @@ export default (name) => {
           });
         }
       },
+      reduceListAfterAdd(fromTop) {
+        if (this.items.length > this.getMaxItemsLength()) {
+            if (fromTop) {
+                this.reduceTop();
+                this.loadedTop = false;
+            } else {
+                this.reduceBottom();
+                this.loadedBottom = false;
+            }
+            console.log("Reduced after add to", this.getMaxItemsLength(), this.loadedBottom, this.loadedTop, "in", name);
+        }
+      },
       onScroll(e) {
         if (this.onScrollCallback) {
           this.onScrollCallback();

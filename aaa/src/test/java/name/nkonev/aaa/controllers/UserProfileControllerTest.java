@@ -293,7 +293,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
-                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDTO(0, 0, false, false, bob.username())))
+                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDTO(0, null, false, false, bob.username())))
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf())
         )
@@ -455,6 +455,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                 .andReturn();
     }
 
+    @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void userSearchJohnSmithTrim() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
@@ -475,6 +476,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
     }
 
+    @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void userSearchJohnSmithIgnoreCase() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
@@ -729,6 +731,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
     }
 
+    @WithUserDetails(TestConstants.USER_ALICE)
     @org.junit.jupiter.api.Test
     public void noErrorInCaseTooBigRequestedStartingFromItemId() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
@@ -746,7 +749,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
             )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.[0].login").value("admin"))
+            .andExpect(jsonPath("$.[0].login").value("forgot-password-user"))
             .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);

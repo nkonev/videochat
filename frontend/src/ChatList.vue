@@ -171,7 +171,7 @@ export default {
     },
     reduceBottom() {
         console.log("reduceBottom");
-        this.items = this.items.slice(0, this.getReduceToLength());
+        this.items = this.items.slice(0, this.getReduceToLength()); // remove last from array, retain first N - reduce bottom on the page
         this.startingFromItemIdBottom = this.findBottomElementId();
     },
     reduceTop() {
@@ -531,10 +531,12 @@ export default {
       this.transformItem(dto);
       this.items.unshift(dto);
       this.sort(this.items);
+      this.reduceListAfterAdd(false);
       this.updateTopAndBottomIds();
     },
     changeItem(dto) {
       console.log("Replacing item", dto);
+      this.transformItem(dto);
       replaceInArray(this.items, dto);
       this.sort(this.items);
       this.updateTopAndBottomIds();
@@ -578,6 +580,7 @@ export default {
             signal: this.requestAbortController.signal
           }).then(({data}) => {
             if (data.found) {
+              // chat can change the position after chat_edited so we reflect it here
               let idxOf = findIndex(this.items, dto);
               if (idxOf !== -1) { // hasItem()
                 const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo

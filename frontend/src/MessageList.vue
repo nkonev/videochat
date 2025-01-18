@@ -133,7 +133,7 @@
         addItem(dto) {
           console.log("Adding item", dto);
           this.items.unshift(dto);
-          this.reduceListIfNeed();
+          this.reduceListAfterAdd(true);
           this.updateTopAndBottomIds();
         },
         changeItem(dto) {
@@ -200,7 +200,7 @@
           this.startingFromItemIdBottom = this.getMaximumItemId();
         },
         reduceTop() {
-          this.items = this.items.slice(0, this.getReduceToLength());
+          this.items = this.items.slice(0, this.getReduceToLength()); // remove last from array, retain first N - reduce top on the page (due to reverse)
           this.startingFromItemIdTop = this.getMinimumItemId();
         },
         saveScroll(top) {
