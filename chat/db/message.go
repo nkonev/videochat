@@ -498,8 +498,12 @@ func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId
 			VALUES((SELECT * FROM calced_last_message_id), $1, $2)
 		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
 			CASE 
-				WHEN ($3::bigint <= (SELECT * FROM calced_last_message_id) AND $3::bigint > message_read.last_message_id) THEN $3::bigint
-				WHEN ($3::bigint <= (SELECT * FROM calced_last_message_id) AND $3::bigint <= message_read.last_message_id) THEN message_read.last_message_id
+				WHEN ($3::bigint <= (SELECT * FROM calced_last_message_id)) THEN (
+					CASE 
+						WHEN ($3::bigint > message_read.last_message_id) THEN $3::bigint
+						ELSE message_read.last_message_id
+					END
+				)
 				ELSE (SELECT * FROM calced_last_message_id)
 			END
 		) 
