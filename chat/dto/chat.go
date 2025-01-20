@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type BaseChatDto struct {
+type BaseChatDto0 struct {
 	Id                                  int64       `json:"id"`
 	Name                                string      `json:"name"`
 	Avatar                              null.String `json:"avatar"`
@@ -37,7 +37,48 @@ type BaseChatDto struct {
 	CanWriteMessage                     bool        `json:"canWriteMessage"`
 }
 
-func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
+// designed to be able to get it from db with a single query
+// it means without JOINs, without requesting aaa
+type LightChatDto struct {
+	Id                                  int64       `json:"id"`
+	Name                                string      `json:"name"`
+	Avatar                              null.String `json:"avatar"`
+	AvatarBig                           null.String `json:"avatarBig"`
+	LastUpdateDateTime                  time.Time   `json:"lastUpdateDateTime"`
+	CanEdit                             null.Bool   `json:"canEdit"`
+	CanDelete                           null.Bool   `json:"canDelete"`
+	CanLeave                            null.Bool   `json:"canLeave"`
+	CanBroadcast                        bool        `json:"canBroadcast"`
+	CanVideoKick                        bool        `json:"canVideoKick"`
+	CanChangeChatAdmins                 bool        `json:"canChangeChatAdmins"`
+	IsTetATet                           bool        `json:"tetATet"`
+	CanAudioMute                        bool        `json:"canAudioMute"`
+	CanResend                           bool        `json:"canResend"`
+	AvailableToSearch                   bool        `json:"availableToSearch"`
+	IsResultFromSearch                  null.Bool   `json:"isResultFromSearch"`
+	Blog                                bool        `json:"blog"`
+	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool        `json:"blogAbout"`
+	RegularParticipantCanWriteMessage   bool        `json:"regularParticipantCanWriteMessage"`
+	CanWriteMessage                     bool        `json:"canWriteMessage"`
+}
+
+// requires additional requests to aaa or to the different table
+// TODO think about: we should be able to send (and apply) a portion of it, in order not to make unnecessary interactions during preparing a "full" Dto
+type AdditionalChatDto struct {
+	Id                int64       `json:"id"`
+	ShortInfo         null.String `json:"shortInfo"`
+	ParticipantIds    []int64     `json:"participantIds"`
+	UnreadMessages    int64       `json:"unreadMessages"`
+	ParticipantsCount int         `json:"participantsCount"`
+	Pinned            bool        `json:"pinned"` // pinned for this particular user
+	LoginColor        null.String `json:"loginColor"`
+	LastSeenDateTime  null.Time   `json:"lastSeenDateTime"`
+	Participants      []*User     `json:"participants"`
+}
+
+func (copied *BaseChatDto0) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
 	copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
 	copied.CanDelete = null.BoolFrom(admin)
 	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet && participant)
@@ -62,8 +103,8 @@ type ChatDeletedDto struct {
 	Id int64 `json:"id"`
 }
 
-type ChatDto struct {
-	BaseChatDto
+type ChatDto0 struct {
+	BaseChatDto0
 	Participants []*User `json:"participants"`
 }
 
@@ -79,55 +120,55 @@ type ChatDtoWithTetATet interface {
 	SetLastSeenDateTime(t null.Time)
 }
 
-func (r *ChatDto) GetId() int64 {
+func (r *ChatDto0) GetId() int64 {
 	return r.Id
 }
 
-func (r *ChatDto) GetName() string {
+func (r *ChatDto0) GetName() string {
 	return r.Name
 }
 
-func (r *ChatDto) SetName(s string) {
+func (r *ChatDto0) SetName(s string) {
 	r.Name = s
 }
 
-func (r *ChatDto) GetIsTetATet() bool {
+func (r *ChatDto0) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (r *BaseChatDto) GetId() int64 {
+func (r *BaseChatDto0) GetId() int64 {
 	return r.Id
 }
 
-func (r *BaseChatDto) GetName() string {
+func (r *BaseChatDto0) GetName() string {
 	return r.Name
 }
 
-func (r *BaseChatDto) SetName(s string) {
+func (r *BaseChatDto0) SetName(s string) {
 	r.Name = s
 }
 
-func (r *BaseChatDto) GetAvatar() null.String {
+func (r *BaseChatDto0) GetAvatar() null.String {
 	return r.Avatar
 }
 
-func (r *BaseChatDto) SetAvatar(s null.String) {
+func (r *BaseChatDto0) SetAvatar(s null.String) {
 	r.Avatar = s
 }
 
-func (r *BaseChatDto) SetShortInfo(s null.String) {
+func (r *BaseChatDto0) SetShortInfo(s null.String) {
 	r.ShortInfo = s
 }
 
-func (r *BaseChatDto) SetLoginColor(s null.String) {
+func (r *BaseChatDto0) SetLoginColor(s null.String) {
 	r.LoginColor = s
 }
 
-func (r *BaseChatDto) GetIsTetATet() bool {
+func (r *BaseChatDto0) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (r *BaseChatDto) SetLastSeenDateTime(t null.Time) {
+func (r *BaseChatDto0) SetLastSeenDateTime(t null.Time) {
 	r.LastSeenDateTime = t
 }
 
