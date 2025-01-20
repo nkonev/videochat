@@ -147,7 +147,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 	if exists {
 		h.lgr.WithTracing(c.Request().Context()).Infof("Conflict for: %v", aKey)
-		return c.JSON(http.StatusConflict, &utils.H{"status": "error", "message": err.Error()})
+		return c.JSON(http.StatusConflict, &utils.H{"status": "error", "message": fmt.Sprintf("Already exists: %v", aKey)})
 	}
 
 	// check enough size taking on account free disk space probe (see LimitsHandler)
