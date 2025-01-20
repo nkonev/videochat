@@ -101,7 +101,7 @@ export default {
     delete_message_title: "Delete message #{0}",
     delete_message_text: "Are you sure to delete this message ?",
     files_by: "by",
-    files_public_url: "Public url",
+    files_published_url: "Published url",
     delete_from_chat: "Delete from chat",
     welcome_participant: "Welcome, ",
     delete_participant: "Remove participant #{0}",

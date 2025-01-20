@@ -65,7 +65,7 @@
                                                 <span v-if="item.owner"> {{ $vuetify.locale.t('$vuetify.files_by') }} {{item.owner?.login}}</span>
                                                 <span> {{$vuetify.locale.t('$vuetify.time_at')}} </span>{{getDate(item)}}
                                                 <a v-if="item.publishedUrl" :href="item.publishedUrl" target="_blank" class="colored-link">
-                                                    {{ $vuetify.locale.t('$vuetify.files_public_url') }}
+                                                    {{ $vuetify.locale.t('$vuetify.files_published_url') }}
                                                 </a>
                                             </v-card-subtitle>
                                             </v-container>

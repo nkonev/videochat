@@ -101,7 +101,7 @@ export default {
     delete_message_title: "Удаление сообщения #{0}",
     delete_message_text: "Вы действительно хотите удалить это сообщение ?",
     files_by: "загрузил",
-    files_public_url: "Публичная ссылка",
+    files_published_url: "Опубл. ссылка",
     delete_from_chat: "Удалить из чата",
     welcome_participant: "Добро пожаловать, ",
     delete_participant: "Удаление из чата #{0}",
