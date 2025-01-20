@@ -66,7 +66,7 @@ export default {
         ret.push({title: this.$vuetify.locale.t('$vuetify.open_published_message'), icon: 'mdi-eye', action: () => this.$emit('openPublishedMessage', this.menuableItem) });
         ret.push({title: this.$vuetify.locale.t('$vuetify.copy_public_link_to_message'), icon: 'mdi-content-copy', iconColor: 'primary', action: () => this.$emit('copyLinkToPublishedMessage', this.menuableItem) });
         if (this.canUnpublish(this.menuableItem)) {
-          ret.push({title: this.$vuetify.locale.t('$vuetify.remove_from_public'), icon: 'mdi-delete', iconColor: 'red', action: () => this.$emit('unpublishMessage', this.menuableItem) });
+          ret.push({title: this.$vuetify.locale.t('$vuetify.unpublish_message'), icon: 'mdi-delete', iconColor: 'red', action: () => this.$emit('unpublishMessage', this.menuableItem) });
         }
       }
       return ret;

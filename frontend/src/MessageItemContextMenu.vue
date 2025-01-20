@@ -128,7 +128,7 @@ export default {
                             action: () => this.copyPublicLink(this.menuableItem)
                         });
                         ret.push({
-                            title: this.$vuetify.locale.t('$vuetify.remove_from_public'),
+                            title: this.$vuetify.locale.t('$vuetify.unpublish_message'),
                             icon: 'mdi-lock',
                             action: () => this.$emit('removePublic', this.menuableItem)
                         });

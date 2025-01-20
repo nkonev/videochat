@@ -281,7 +281,7 @@ export default {
     waiting_for_devices: "Waiting for device",
     treat_newlines_as_in_html: "During pasting treat newlines as in HTML (e. g. swallow)",
     consider_messages_of_this_chat_as_unread: "Contribute to unread messages",
-    remove_from_public: "Remove public",
+    unpublish_message: "Unpublish message",
     publish_message: "Publish",
     published_messages: "Published messages",
     published_messages_full: "Published messages",
