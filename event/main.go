@@ -34,7 +34,6 @@ import (
 	"nkonev.name/event/logger"
 	"nkonev.name/event/rabbitmq"
 	"nkonev.name/event/type_registry"
-	"time"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -198,8 +197,10 @@ func configureGraphQlServer(lgr *logger.Logger, bus *eventbus.Bus, httpClient *c
 	tr := otel.Tracer("graphql")
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{bus, httpClient, tr, lgr}}))
 	srv.AddTransport(transport.POST{})
+
+	d := viper.GetDuration("graphql.websocket.keepAlivePingInterval")
 	srv.AddTransport(transport.Websocket{
-		KeepAlivePingInterval: 10 * time.Second,
+		KeepAlivePingInterval: d,
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true

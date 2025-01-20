@@ -15,6 +15,10 @@ http:
   idleConnTimeout: '10s'
   disableCompression: false
 
+graphql:
+  websocket:
+    keepAlivePingInterval: 10s
+
 auth:
   exclude:
     - "^/api/event/public.*"
