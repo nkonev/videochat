@@ -96,6 +96,7 @@ func (ch *ChatHandler) getAdditionalUserIds(ctx context.Context, searchString st
 	return additionalFoundUserIds
 }
 
+// TODO here
 func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, size int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*dto.ChatDto, error) {
 	dbChats, err := tx.GetChatsWithParticipants(ctx, userId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, 0, 0)
 	if err != nil {
@@ -237,6 +238,7 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 	})
 }
 
+// TODO
 func getChat(
 	ctx context.Context,
 	lgr *logger.Logger,
@@ -343,6 +345,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 	}
 }
 
+// TODO think, may be it's ok to send a thin chat
 func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
