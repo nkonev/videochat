@@ -15,12 +15,12 @@
                                     </template>
 
                                     <v-list-item-subtitle style="opacity: 1">
-                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><router-link class="gray-link" :to="getPublishedRouteObject(item)">{{getDate(item)}}</router-link>
+                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><a class="gray-link nodecorated-link" @click="gotoPublishedMessage(item)" :href="getPublishedHref(item)">{{getDate(item)}}</a>
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
-                                        <router-link :to="getPublishedRouteObject(item)" :class="getItemClass(item)">
+                                        <a @click="gotoPublishedMessage(item)" :class="getItemClass(item)" :href="getPublishedHref(item)">
                                             <div v-html="item.text" class="with-ellipsis"></div>
-                                        </router-link>
+                                        </a>
                                     </v-list-item-title>
 
                                     <template v-slot:append v-if="!this.isMobile()">
@@ -102,7 +102,7 @@ import bus, {
 import axios from "axios";
 import {getPublicMessageLink, hasLength} from "./utils";
 import { getHumanReadableDate } from "@/date.js";
-import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
+import {chat, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
@@ -175,11 +175,6 @@ export default {
             navigator.clipboard.writeText(link);
             this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_message_link_copied'));
         },
-        openPublishedMessage(dto) {
-            const link = getPublicMessageLink(this.chatId, dto.id);
-            // window.location.href = link
-            window.open(link, '_blank').focus();
-        },
         getDate(item) {
             return getHumanReadableDate(item.createDateTime)
         },
@@ -188,10 +183,6 @@ export default {
         },
         isVideoRoute() {
             return this.$route.name == videochat_name
-        },
-        getPublishedRouteObject(item) {
-            const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-            return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
         },
         getItemClass(item) {
             return {
@@ -222,6 +213,33 @@ export default {
         },
         onShowContextMenu(e, menuableItem) {
           this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+        },
+        openPublishedMessage(dto) {
+          const link = getPublicMessageLink(this.chatId, dto.id);
+          window.open(link, '_blank').focus();
+        },
+        getPublishedRouteObject(item) {
+          const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+          return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+        },
+        gotoPublishedMessage(item) {
+          const routeObj = this.getPublishedRouteObject(item);
+          this.$router.push(routeObj).then(()=>{
+            if (this.isMobile()) {
+              this.closeModal()
+            }
+          })
+        },
+        getPublishedHref(item) {
+          let bldr = "";
+          bldr += chat;
+          bldr += "/";
+          bldr += item.chatId;
+          if (this.isVideoRoute()) {
+            bldr += video_suffix;
+          }
+          bldr += messageIdHashPrefix + item.id;
+          return bldr;
         },
     },
     computed: {
