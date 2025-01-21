@@ -15,10 +15,10 @@
                                     </template>
 
                                     <v-list-item-subtitle style="opacity: 1">
-                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><a class="gray-link nodecorated-link" @click="gotoPublishedMessage(item)" :href="getPublishedHref(item)">{{getDate(item)}}</a>
+                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><a class="gray-link nodecorated-link" @click.prevent="gotoPublishedMessage(item)" :href="getPublishedHref(item)">{{getDate(item)}}</a>
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
-                                        <a @click="gotoPublishedMessage(item)" :class="getItemClass(item)" :href="getPublishedHref(item)">
+                                        <a @click.prevent="gotoPublishedMessage(item)" :class="getItemClass(item)" :href="getPublishedHref(item)">
                                             <div v-html="item.text" class="with-ellipsis"></div>
                                         </a>
                                     </v-list-item-title>
