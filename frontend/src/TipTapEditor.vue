@@ -530,6 +530,8 @@ export default {
           }
         }
     })
+
+    this.$emit("editorIsReady")
   },
 
   beforeUnmount() {

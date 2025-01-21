@@ -7,12 +7,13 @@
         <tiptap
             ref="tipTapRef"
             @myinput="onInput"
+            @editorIsReady="onEditorIsReady"
             @keydown.ctrl.enter.native="sendMessageToChat"
             @keydown.esc.native="resetInput()"
             @sendMessage="sendMessageToChat"
         />
 
-        <div class="d-flex flex-wrap flex-row align-center" v-if="chatStore.shouldShowSendMessageButtons">
+        <div class="d-flex flex-wrap flex-row align-center" v-if="chatStore.shouldShowSendMessageButtons && shouldShowButtons">
           <v-slide-group
               multiple
               show-arrows
@@ -185,6 +186,7 @@
                 answerOnPreview: null,
                 targetElement: null,
                 resizeObserver: null,
+                shouldShowButtons: false,
             }
         },
         methods: {
@@ -624,8 +626,8 @@
             documentBody() {
               return document.body
             },
-            shouldShowButtons() {
-              return this.$refs.tipTapRef?.getEditor()
+            onEditorIsReady() {
+              this.shouldShowButtons = true;
             },
         },
         computed: {
@@ -661,6 +663,7 @@
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
             this.targetElement = null;
+            this.shouldShowButtons = false;
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);
