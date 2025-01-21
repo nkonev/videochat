@@ -147,6 +147,36 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 	return chatDtos, nil
 }
 
+func (ch *ChatHandler) getChatsLight(ctx context.Context, tx *db.Tx, userId int64, size int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*dto.LightChatDto, error) {
+	dbChats, err := tx.GetChatsWithoutParticipants(ctx, userId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+	if err != nil {
+		ch.lgr.WithTracing(ctx).Errorf("Error get chats from db %v", err)
+		return nil, err
+	}
+
+	var chatIds []int64 = make([]int64, 0)
+	for _, cc := range dbChats {
+		chatIds = append(chatIds, cc.Id)
+	}
+
+	membership, err := tx.GetAmIParticipantBatch(ctx, chatIds, userId) // need to setting isResultFromSearch correctly
+	if err != nil {
+		ch.lgr.WithTracing(ctx).Errorf("Error get chats with me from db %v", err)
+		return nil, err
+	}
+
+	chatDtos := make([]*dto.LightChatDto, 0)
+	for _, cc := range dbChats {
+		isParticipant := membership[cc.Id]
+
+		cd := convertToDtoLight(cc, isParticipant)
+
+		chatDtos = append(chatDtos, cd)
+	}
+
+	return chatDtos, nil
+}
+
 func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -178,6 +208,46 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
 		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+		if err != nil {
+			return err
+		}
+
+		ch.lgr.WithTracing(c.Request().Context()).Debugf("Successfully returning %v chats", len(chatDtos))
+		return c.JSON(http.StatusOK, chatDtos)
+	})
+}
+
+func (ch *ChatHandler) GetChatsLight(c echo.Context) error {
+	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
+	if !ok {
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting auth context")
+		return errors.New("Error during getting auth context")
+	}
+
+	var startingFromItemId *int64
+	startingFromItemIdString := c.QueryParam("startingFromItemId")
+	if startingFromItemIdString == "" {
+		startingFromItemId = nil
+	} else {
+		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
+		if err != nil {
+			return err
+		}
+		startingFromItemId = &startingFromItemId2
+	}
+
+	size := utils.FixSizeString(c.QueryParam("size"))
+	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+	searchString := c.QueryParam("searchString")
+	searchString = TrimAmdSanitize(ch.policy, searchString)
+
+	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
+
+	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
+
+	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
+
+		chatDtos, err := ch.getChatsLight(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
 		}
@@ -459,6 +529,30 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		BaseChatDto:  b,
 		Participants: orderedParticipants,
 	}
+}
+
+func convertToDtoLight(c *db.ChatWithoutParticipants, participant bool) *dto.LightChatDto {
+	b := dto.LightChatDto{
+		Id:                c.Id,
+		Name:              c.Title,
+		Avatar:            c.Avatar,
+		AvatarBig:         c.AvatarBig,
+		IsTetATet:         c.TetATet,
+		CanResend:         c.CanResend,
+		AvailableToSearch: c.AvailableToSearch,
+		// see also services/events.go:75 chatNotifyCommon()
+
+		LastUpdateDateTime:                  c.LastUpdateDateTime,
+		Blog:                                c.Blog,
+		RegularParticipantCanPublishMessage: c.RegularParticipantCanPublishMessage,
+		RegularParticipantCanPinMessage:     c.RegularParticipantCanPinMessage,
+		BlogAbout:                           c.BlogAbout,
+		RegularParticipantCanWriteMessage:   c.RegularParticipantCanWriteMessage,
+	}
+
+	b.SetPersonalizedFieldsLight(c.IsAdmin, participant)
+
+	return &b
 }
 
 func (ch *ChatHandler) CreateChat(c echo.Context) error {

@@ -90,6 +90,11 @@ type ChatWithParticipants struct {
 	IsAdmin           bool
 }
 
+type ChatWithoutParticipants struct {
+	Chat
+	IsAdmin bool
+}
+
 // CreateChat creates a new chat.
 // Returns an error if user is invalid or the tx fails.
 func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error) {
@@ -253,6 +258,17 @@ func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*Participa
 		ParticipantsIds:   participantsIds,
 		IsAdmin:           admin,
 		ParticipantsCount: participantsCount,
+	}
+	return ccc, nil
+}
+
+func convertToWithoutParticipantsBatch(chat *Chat, isAdminBatch map[int64]bool) (*ChatWithoutParticipants, error) {
+
+	admin := isAdminBatch[chat.Id]
+
+	ccc := &ChatWithoutParticipants{
+		Chat:    *chat,
+		IsAdmin: admin,
 	}
 	return ccc, nil
 }
@@ -582,6 +598,45 @@ func getChatWithoutParticipantsCommon(ctx context.Context, commonOps CommonOpera
 	} else {
 		return convertToWithoutParticipants(ctx, commonOps, chat, behalfParticipantId)
 	}
+}
+
+func getChatsWithoutParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*ChatWithoutParticipants, error) {
+	var err error
+	var chats []*Chat
+
+	chats, err = getChatsCommon(ctx, commonOps, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var chatIds []int64 = make([]int64, 0)
+	for _, cc := range chats {
+		chatIds = append(chatIds, cc.Id)
+	}
+
+	isAdminBatch, err := commonOps.IsAdminBatch(ctx, participantId, chatIds)
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]*ChatWithoutParticipants, 0)
+
+	for _, cc := range chats {
+		if ccc, err := convertToWithoutParticipantsBatch(cc, isAdminBatch); err != nil {
+			return nil, err
+		} else {
+			list = append(list, ccc)
+		}
+	}
+	return list, nil
+}
+func (db *DB) GetChatsWithoutParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*ChatWithoutParticipants, error) {
+	return getChatsWithoutParticipantsCommon(ctx, db, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+}
+
+func (tx *Tx) GetChatsWithoutParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*ChatWithoutParticipants, error) {
+	return getChatsWithoutParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
 }
 
 func (db *DB) CountChats(ctx context.Context) (int64, error) {

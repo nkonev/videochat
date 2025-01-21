@@ -5,6 +5,82 @@ import (
 	"time"
 )
 
+// designed to be able to get it from db with a single query
+// it means without JOINs, without requesting aaa
+type LightChatDto struct {
+	Id                                  int64       `json:"id"`
+	Name                                string      `json:"name"`
+	Avatar                              null.String `json:"avatar"` // null for tet-a-tet
+	AvatarBig                           null.String `json:"avatarBig"`
+	LastUpdateDateTime                  time.Time   `json:"lastUpdateDateTime"`
+	CanEdit                             null.Bool   `json:"canEdit"`
+	CanDelete                           null.Bool   `json:"canDelete"`
+	CanLeave                            null.Bool   `json:"canLeave"`
+	CanBroadcast                        bool        `json:"canBroadcast"`
+	CanVideoKick                        bool        `json:"canVideoKick"`
+	CanChangeChatAdmins                 bool        `json:"canChangeChatAdmins"`
+	IsTetATet                           bool        `json:"tetATet"`
+	CanAudioMute                        bool        `json:"canAudioMute"`
+	CanResend                           bool        `json:"canResend"`
+	AvailableToSearch                   bool        `json:"availableToSearch"`
+	IsResultFromSearch                  null.Bool   `json:"isResultFromSearch"`
+	Blog                                bool        `json:"blog"`
+	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool        `json:"blogAbout"`
+	RegularParticipantCanWriteMessage   bool        `json:"regularParticipantCanWriteMessage"`
+	CanWriteMessage                     bool        `json:"canWriteMessage"`
+}
+
+// requires additional requests to aaa or to the different table
+type AdditionalChatDto struct {
+	Id                int64       `json:"id"`
+	ShortInfo         null.String `json:"shortInfo"`
+	ParticipantIds    []int64     `json:"participantIds"`
+	UnreadMessages    int64       `json:"unreadMessages"`
+	ParticipantsCount int         `json:"participantsCount"`
+	Pinned            bool        `json:"pinned"` // pinned for this particular user
+	LoginColor        null.String `json:"loginColor"`
+	LastSeenDateTime  null.Time   `json:"lastSeenDateTime"`
+	Participants      []*User     `json:"participants"`
+}
+
+type AdditionalChatDtoShortInfo struct {
+	Id        int64       `json:"id"`
+	ShortInfo null.String `json:"shortInfo"`
+}
+
+type AdditionalChatDtoParticipants struct {
+	Id             int64   `json:"id"`
+	ParticipantIds []int64 `json:"participantIds"`
+	Participants   []*User `json:"participants"`
+}
+
+type AdditionalChatDtoUnreadMessages struct {
+	Id             int64 `json:"id"`
+	UnreadMessages int64 `json:"unreadMessages"`
+}
+
+type AdditionalChatDtoPinned struct {
+	Id     int64 `json:"id"`
+	Pinned bool  `json:"pinned"` // pinned for this particular user
+}
+
+type AdditionalChatDtoLoginColor struct {
+	Id         int64       `json:"id"`
+	LoginColor null.String `json:"loginColor"`
+}
+
+type AdditionalChatDtoLastSeenDateTime struct {
+	Id               int64     `json:"id"`
+	LastSeenDateTime null.Time `json:"lastSeenDateTime"`
+}
+
+type AdditionalChatDtoLastMessagePreview struct {
+	Id                 int64       `json:"id"`
+	LastMessagePreview null.String `json:"lastMessagePreview"`
+}
+
 type BaseChatDto struct {
 	Id                                  int64       `json:"id"`
 	Name                                string      `json:"name"`
@@ -42,6 +118,26 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 	copied.CanDelete = null.BoolFrom(admin)
 	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet && participant)
 	copied.UnreadMessages = unreadMessages
+	copied.CanVideoKick = admin
+	copied.CanAudioMute = admin
+	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
+	copied.CanBroadcast = admin
+
+	if !participant {
+		copied.IsResultFromSearch = null.BoolFrom(true)
+	}
+
+	copied.CanWriteMessage = true
+	// see also handlers PostMessage, EditMessage, DeleteMessage
+	if !copied.RegularParticipantCanWriteMessage && !admin {
+		copied.CanWriteMessage = false
+	}
+}
+
+func (copied *LightChatDto) SetPersonalizedFieldsLight(admin bool, participant bool) {
+	copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
+	copied.CanDelete = null.BoolFrom(admin)
+	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet && participant)
 	copied.CanVideoKick = admin
 	copied.CanAudioMute = admin
 	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
