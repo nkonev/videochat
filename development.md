@@ -1413,3 +1413,12 @@ curl -i -X PUT 'http://localhost:9200/_index_template/videochat_template' -H 'Co
 curl -Ss -X DELETE 'http://localhost:9200/videochat-2025.01.05'
 
 ```
+
+# Structured logging in JSON
+There are the following mandatory fields every microservice should write
+* `@timestamp`
+* `message`
+* `level` in lower case
+* `service` in lower case, which is the name of microservice
+* `trace_id`
+* `span_id`
