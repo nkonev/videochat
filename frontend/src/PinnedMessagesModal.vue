@@ -15,12 +15,12 @@
                                     </template>
 
                                     <v-list-item-subtitle style="opacity: 1">
-                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><router-link class="gray-link" :to="getPinnedRouteObject(item)">{{getDate(item)}}</router-link>
+                                        <router-link class="colored-link" :to="{ name: 'profileUser', params: { id: item.owner?.id }}">{{getOwner(item.owner)}}</router-link><span class="with-space"> {{$vuetify.locale.t('$vuetify.time_at')}} </span><a class="gray-link nodecorated-link" @click="gotoPinnedMessage(item)" :href="getPinnedHref(item)">{{getDate(item)}}</a>
                                     </v-list-item-subtitle>
                                     <v-list-item-title>
-                                        <router-link :to="getPinnedRouteObject(item)" :class="getItemClass(item)">
+                                        <a @click="gotoPinnedMessage(item)" :class="getItemClass(item)" :href="getPinnedHref(item)">
                                             <div v-html="item.text" class="with-ellipsis"></div>
-                                        </router-link>
+                                        </a>
                                     </v-list-item-title>
 
                                     <template v-slot:append v-if="canPin(item) && !this.isMobile()">
@@ -103,7 +103,7 @@ import bus, {
 import axios from "axios";
 import { hasLength } from "./utils";
 import { getHumanReadableDate } from "@/date.js";
-import {chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
+import {chat, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "@/router/routes";
 import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
 import debounce from "lodash/debounce.js";
 import PinnedMessagesContextMenu from "@/PinnedMessagesContextMenu.vue";
@@ -199,10 +199,6 @@ export default {
         isVideoRoute() {
             return this.$route.name == videochat_name
         },
-        getPinnedRouteObject(item) {
-            const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-            return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
-        },
         getItemClass(item) {
             return {
                 "text-primary": true,
@@ -234,9 +230,28 @@ export default {
         onShowContextMenu(e, menuableItem) {
           this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
         },
+        getPinnedHref(item) {
+          let bldr = "";
+          bldr += chat;
+          bldr += "/";
+          bldr += item.chatId;
+          if (this.isVideoRoute()) {
+            bldr += video_suffix;
+          }
+          bldr += messageIdHashPrefix + item.id;
+          return bldr;
+        },
+        getPinnedRouteObject(item) {
+          const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+          return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+        },
         gotoPinnedMessage(item) {
           const routeObj = this.getPinnedRouteObject(item);
-          this.$router.push(routeObj)
+          this.$router.push(routeObj).then(()=>{
+            if (this.isMobile()) {
+              this.closeModal()
+            }
+          })
         },
     },
     created() {
