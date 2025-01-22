@@ -536,7 +536,7 @@ export default {
     },
     changeItem(dto) {
       console.log("Replacing item", dto);
-      this.transformItem(dto);
+      // this.transformItem(dto); // not needed here because it resets online and in video
       replaceInArray(this.items, dto);
       this.sort(this.items);
       this.updateTopAndBottomIds();
