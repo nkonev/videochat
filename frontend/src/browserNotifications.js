@@ -26,7 +26,7 @@ export const createBrowserNotificationIfPermitted = (router, chatId, chatName, c
             notificationObject,
         );
 
-        const shouldAddMessageId = hasLength(`${messageId}`);
+        const shouldAddMessageId = !!messageId;
         let hash = undefined;
         if (shouldAddMessageId) {
             hash = messageIdHashPrefix + messageId;
