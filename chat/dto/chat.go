@@ -24,6 +24,7 @@ type LightChatDto struct {
 	CanResend                           bool        `json:"canResend"`
 	AvailableToSearch                   bool        `json:"availableToSearch"`
 	IsResultFromSearch                  null.Bool   `json:"isResultFromSearch"`
+	Pinned                              bool        `json:"pinned"` // pinned for this particular user
 	Blog                                bool        `json:"blog"`
 	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
 	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
@@ -62,11 +63,6 @@ type AdditionalChatMessagesDto struct {
 	Id                 int64       `json:"id"`
 	UnreadMessages     int64       `json:"unreadMessages"`
 	LastMessagePreview null.String `json:"lastMessagePreview"`
-}
-
-type AdditionalChatDtoPinned struct {
-	Id     int64 `json:"id"`
-	Pinned bool  `json:"pinned"` // pinned for this particular user
 }
 
 type BaseChatDto struct {

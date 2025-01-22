@@ -540,6 +540,7 @@ func convertToDtoLight(c *db.ChatWithoutParticipants, participant bool) *dto.Lig
 		IsTetATet:         c.TetATet,
 		CanResend:         c.CanResend,
 		AvailableToSearch: c.AvailableToSearch,
+		Pinned:            c.Pinned,
 		// see also services/events.go:75 chatNotifyCommon()
 
 		LastUpdateDateTime:                  c.LastUpdateDateTime,
