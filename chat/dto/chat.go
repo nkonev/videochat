@@ -45,40 +45,28 @@ type AdditionalChatDto struct {
 	Participants      []*User     `json:"participants"`
 }
 
-type AdditionalChatDtoShortInfo struct {
-	Id        int64       `json:"id"`
-	ShortInfo null.String `json:"shortInfo"`
+type AdditionalChatTetATetDto struct {
+	Id               int64       `json:"id"`
+	ShortInfo        null.String `json:"shortInfo"`
+	LoginColor       null.String `json:"loginColor"`
+	LastSeenDateTime null.Time   `json:"lastSeenDateTime"`
 }
 
-type AdditionalChatDtoParticipants struct {
+type AdditionalChatParticipantsDto struct {
 	Id             int64   `json:"id"`
 	ParticipantIds []int64 `json:"participantIds"`
 	Participants   []*User `json:"participants"`
 }
 
-type AdditionalChatDtoUnreadMessages struct {
-	Id             int64 `json:"id"`
-	UnreadMessages int64 `json:"unreadMessages"`
+type AdditionalChatMessagesDto struct {
+	Id                 int64       `json:"id"`
+	UnreadMessages     int64       `json:"unreadMessages"`
+	LastMessagePreview null.String `json:"lastMessagePreview"`
 }
 
 type AdditionalChatDtoPinned struct {
 	Id     int64 `json:"id"`
 	Pinned bool  `json:"pinned"` // pinned for this particular user
-}
-
-type AdditionalChatDtoLoginColor struct {
-	Id         int64       `json:"id"`
-	LoginColor null.String `json:"loginColor"`
-}
-
-type AdditionalChatDtoLastSeenDateTime struct {
-	Id               int64     `json:"id"`
-	LastSeenDateTime null.Time `json:"lastSeenDateTime"`
-}
-
-type AdditionalChatDtoLastMessagePreview struct {
-	Id                 int64       `json:"id"`
-	LastMessagePreview null.String `json:"lastMessagePreview"`
 }
 
 type BaseChatDto struct {
