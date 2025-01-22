@@ -34,18 +34,6 @@ type LightChatDto struct {
 }
 
 // requires additional requests to aaa or to the different table
-type AdditionalChatDto struct {
-	Id                int64       `json:"id"`
-	ShortInfo         null.String `json:"shortInfo"`
-	ParticipantIds    []int64     `json:"participantIds"`
-	UnreadMessages    int64       `json:"unreadMessages"`
-	ParticipantsCount int         `json:"participantsCount"`
-	Pinned            bool        `json:"pinned"` // pinned for this particular user
-	LoginColor        null.String `json:"loginColor"`
-	LastSeenDateTime  null.Time   `json:"lastSeenDateTime"`
-	Participants      []*User     `json:"participants"`
-}
-
 type AdditionalChatTetATetDto struct {
 	Id               int64       `json:"id"`
 	ShortInfo        null.String `json:"shortInfo"`
