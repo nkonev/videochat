@@ -535,7 +535,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		return c.JSON(http.StatusCreated, chatDto)
+		return c.JSON(http.StatusCreated, &utils.H{"id": chatId})
 	})
 	if errOuter != nil {
 		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
@@ -726,7 +726,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		return c.JSON(http.StatusAccepted, chatDto)
+		return c.NoContent(http.StatusAccepted)
 
 	})
 	if errOuter != nil {
@@ -783,7 +783,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			} else {
 				ch.notificator.NotifyAboutDeleteChat(c.Request().Context(), chatDto.Id, []int64{userPrincipalDto.UserId}, tx)
 			}
-			return c.JSON(http.StatusAccepted, chatDto)
+			return c.NoContent(http.StatusAccepted)
 		}
 	})
 	if errOuter != nil {
@@ -864,7 +864,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting chat participants %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
-		return c.JSON(http.StatusAccepted, chatDto)
+		return c.NoContent(http.StatusAccepted)
 	})
 	if errOuter != nil {
 		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
@@ -940,7 +940,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 
 		ch.notificator.NotifyMessagesReloadCommand(c.Request().Context(), chatId, []int64{interestingUserId})
 
-		return c.JSON(http.StatusAccepted, newUsersWithAdmin)
+		return c.NoContent(http.StatusAccepted)
 	})
 	if errOuter != nil {
 		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)
@@ -989,7 +989,7 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 
 		ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, []int64{userPrincipalDto.UserId}, len(chatDto.ParticipantIds) == 1, true, tx, map[int64]bool{userPrincipalDto.UserId: admin})
 
-		return c.JSON(http.StatusOK, chatDto)
+		return c.NoContent(http.StatusOK)
 	})
 }
 
