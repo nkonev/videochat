@@ -33,6 +33,13 @@
 
                 <v-card-actions>
                     <v-spacer/>
+                    <v-checkbox
+                        density="comfortable"
+                        color="primary"
+                        hide-details
+                        v-model="stayUnclosed"
+                        :label="$vuetify.locale.t('$vuetify.smiley_stay_unclosed')"
+                    ></v-checkbox>
                     <v-btn v-if="showSettings" color="primary" variant="flat" @click="closeSettings()" :title="$vuetify.locale.t('$vuetify.ok')">{{$vuetify.locale.t('$vuetify.ok')}}</v-btn>
                     <v-btn v-if="!showSettings" variant="outlined" @click="openSettings()" min-width="0" :title="$vuetify.locale.t('$vuetify.settings')"><v-icon size="large">mdi-cog</v-icon></v-btn>
                     <v-btn v-if="!showSettings" color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
@@ -82,6 +89,7 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
                 showSettings: false,
                 groupSmileys: [],
                 loading: false,
+                stayUnclosed: false,
             }
         },
         watch: {
@@ -122,6 +130,9 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
             onSmileyClick(smiley) {
                 if (this.addSmileyCallback) {
                     this.addSmileyCallback(smiley);
+                }
+                if (!this.stayUnclosed) {
+                    this.closeModal()
                 }
             },
             openSettings() {
@@ -233,6 +244,7 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
             bus.on(LOGGED_OUT, this.onLogout);
         },
         beforeUnmount() {
+            this.stayUnclosed = false;
             bus.off(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
             bus.off(LOGGED_OUT, this.onLogout);
         },

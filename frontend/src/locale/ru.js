@@ -336,5 +336,6 @@ export default {
     you_cannot_write_message: "Вы не можете писать сообщения в этом чате",
     file_mode_switch_to_list: "Переключить на список",
     file_mode_switch_to_miniatures: "Переключить на миниатюры",
-    set_password_for: "Задать пароль для '{0}'"
+    set_password_for: "Задать пароль для '{0}'",
+    smiley_stay_unclosed: "Оставить"
 }

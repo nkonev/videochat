@@ -336,5 +336,6 @@ export default {
     you_cannot_write_message: "You cannot write a message into this chat",
     file_mode_switch_to_list: "Switch to list",
     file_mode_switch_to_miniatures: "Switch to miniatures",
-    set_password_for: "Set password for '{0}'"
+    set_password_for: "Set password for '{0}'",
+    smiley_stay_unclosed: "Stay"
 }
