@@ -207,20 +207,6 @@ func convertToWithParticipants(ctx context.Context, db CommonOperations, chat *C
 	}
 }
 
-func convertToWithoutParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithParticipants, error) {
-	admin, err := db.IsAdmin(ctx, behalfUserId, chat.Id)
-	if err != nil {
-		return nil, err
-	}
-	ccc := &ChatWithParticipants{
-		Chat:              *chat,
-		ParticipantsIds:   []int64{}, // to be set in callee
-		IsAdmin:           admin,
-		ParticipantsCount: 0, // to be set in callee
-	}
-	return ccc, nil
-}
-
 type ChatQueryByLimitOffset struct {
 	Limit  int
 	Offset int
@@ -563,24 +549,6 @@ func getChatWithParticipantsCommon(ctx context.Context, commonOps CommonOperatio
 		return nil, nil
 	} else {
 		return convertToWithParticipants(ctx, commonOps, chat, behalfParticipantId, participantsSize, participantsOffset)
-	}
-}
-
-func (tx *Tx) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	return getChatWithoutParticipantsCommon(ctx, tx, behalfParticipantId, chatId)
-}
-
-func (db *DB) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	return getChatWithoutParticipantsCommon(ctx, db, behalfParticipantId, chatId)
-}
-
-func getChatWithoutParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
-	if chat, err := commonOps.GetChat(ctx, behalfParticipantId, chatId); err != nil {
-		return nil, err
-	} else if chat == nil {
-		return nil, nil
-	} else {
-		return convertToWithoutParticipants(ctx, commonOps, chat, behalfParticipantId)
 	}
 }
 

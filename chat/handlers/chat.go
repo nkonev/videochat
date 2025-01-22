@@ -1902,20 +1902,28 @@ func (ch *ChatHandler) GetBasicInfo(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	behalfUserId, err := GetQueryParamAsInt64(c, "userId")
+
+	ret, err := db.TransactWithResult(c.Request().Context(), ch.db, func(tx *db.Tx) (dto.BasicChatDto, error) {
+		chatBasic, err := tx.GetChatBasic(c.Request().Context(), chatId)
+		if err != nil {
+			return dto.BasicChatDto{}, err
+		}
+
+		participantIds, err := tx.GetParticipantIds(c.Request().Context(), chatId, utils.FixSize(0), utils.FixPage(0))
+		if err != nil {
+			return dto.BasicChatDto{}, err
+		}
+
+		ret := dto.BasicChatDto{
+			TetATet:        chatBasic.IsTetATet,
+			ParticipantIds: participantIds,
+		}
+		return ret, nil
+	})
 	if err != nil {
 		return err
 	}
 
-	chat, err := ch.db.GetChatWithParticipants(c.Request().Context(), behalfUserId, chatId, utils.FixSize(0), utils.FixPage(0))
-	if err != nil {
-		return err
-	}
-
-	ret := dto.BasicChatDto{
-		TetATet:        chat.TetATet,
-		ParticipantIds: chat.ParticipantsIds,
-	}
 	return c.JSON(http.StatusOK, ret)
 }
 

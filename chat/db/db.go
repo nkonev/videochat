@@ -62,7 +62,6 @@ type CommonOperations interface {
 	IsParticipant(ctx context.Context, userId int64, chatId int64) (bool, error)
 	GetChat(ctx context.Context, participantId, chatId int64) (*Chat, error)
 	GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)
-	GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error)
 	GetParticipantsCountBatch(ctx context.Context, chatIds []int64) (map[int64]int, error)
 	GetMessage(ctx context.Context, chatId int64, userId int64, messageId int64) (*Message, error)
 	GetUnreadMessagesCount(ctx context.Context, chatId int64, userId int64) (int64, error)

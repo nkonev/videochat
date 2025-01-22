@@ -450,7 +450,7 @@ func (h *RestClient) GetS3(c context.Context, filename string, chatId int64, use
 
 func (h *RestClient) GetBasicChatInfo(c context.Context, chatId int64, userId int64) (*dto.BasicChatDto, error) {
 	contentType := "application/json;charset=UTF-8"
-	fullUrl := h.chatBaseUrl + h.chatBasicInfoPath + "/" + utils.Int64ToString(chatId) + "?userId=" + utils.Int64ToString(userId)
+	fullUrl := h.chatBaseUrl + h.chatBasicInfoPath + "/" + utils.Int64ToString(chatId)
 
 	requestHeaders := map[string][]string{
 		"Accept-Encoding": {"gzip, deflate"},
