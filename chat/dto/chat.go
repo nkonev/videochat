@@ -36,15 +36,18 @@ type LightChatDto struct {
 // requires additional requests to aaa or to the different table
 type AdditionalChatTetATetDto struct {
 	Id               int64       `json:"id"`
+	Avatar           null.String `json:"avatar"` // null for tet-a-tet
+	AvatarBig        null.String `json:"avatarBig"`
 	ShortInfo        null.String `json:"shortInfo"`
 	LoginColor       null.String `json:"loginColor"`
 	LastSeenDateTime null.Time   `json:"lastSeenDateTime"`
 }
 
 type AdditionalChatParticipantsDto struct {
-	Id             int64   `json:"id"`
-	ParticipantIds []int64 `json:"participantIds"`
-	Participants   []*User `json:"participants"`
+	Id                int64   `json:"id"`
+	ParticipantsCount int     `json:"participantsCount"`
+	ParticipantIds    []int64 `json:"participantIds"`
+	Participants      []*User `json:"participants"`
 }
 
 type AdditionalChatMessagesDto struct {
