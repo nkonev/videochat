@@ -746,6 +746,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			BlogAbout:                           chatEvent.BlogAbout,
 			RegularParticipantCanWriteMessage:   chatEvent.RegularParticipantCanWriteMessage,
 			CanWriteMessage:                     chatEvent.CanWriteMessage,
+			LastMessagePreview:                  chatEvent.LastMessagePreview,
 		}
 	}
 

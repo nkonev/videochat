@@ -84,6 +84,7 @@ type ComplexityRoot struct {
 		CanWriteMessage                     func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		IsResultFromSearch                  func(childComplexity int) int
+		LastMessagePreview                  func(childComplexity int) int
 		LastSeenDateTime                    func(childComplexity int) int
 		LastUpdateDateTime                  func(childComplexity int) int
 		LoginColor                          func(childComplexity int) int
@@ -615,6 +616,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDto.IsResultFromSearch(childComplexity), true
+
+	case "ChatDto.lastMessagePreview":
+		if e.complexity.ChatDto.LastMessagePreview == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.LastMessagePreview(childComplexity), true
 
 	case "ChatDto.lastSeenDateTime":
 		if e.complexity.ChatDto.LastSeenDateTime == nil {
@@ -4029,6 +4037,47 @@ func (ec *executionContext) fieldContext_ChatDto_canWriteMessage(_ context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatDto_lastMessagePreview(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_lastMessagePreview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastMessagePreview, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_lastMessagePreview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
 	if err != nil {
@@ -6997,6 +7046,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(_ context.Context
 				return ec.fieldContext_ChatDto_regularParticipantCanWriteMessage(ctx, field)
 			case "canWriteMessage":
 				return ec.fieldContext_ChatDto_canWriteMessage(ctx, field)
+			case "lastMessagePreview":
+				return ec.fieldContext_ChatDto_lastMessagePreview(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -15340,6 +15391,8 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "lastMessagePreview":
+			out.Values[i] = ec._ChatDto_lastMessagePreview(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

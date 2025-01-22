@@ -66,7 +66,8 @@ type ChatDeletedDto struct {
 
 type ChatDto struct {
 	BaseChatDto
-	Participants []*User `json:"participants"`
+	Participants       []*User `json:"participants"`
+	LastMessagePreview *string `json:"lastMessagePreview"`
 }
 
 type ChatDtoWithTetATet interface {

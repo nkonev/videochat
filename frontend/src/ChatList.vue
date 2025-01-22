@@ -37,8 +37,9 @@
                         <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-screenshot" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
                         <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.blog')"/>
                     </v-list-item-title>
-                    <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}" v-html="printParticipants(item)">
+                    <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getParticipantsClass(item)" v-html="printParticipants(item)">
                     </v-list-item-subtitle>
+                    <v-list-item-subtitle v-if="item.lastMessagePreview" class="subtitle-thin my-1"> {{ item.lastMessagePreview }} </v-list-item-subtitle>
                 </template>
 
                 <template v-slot:append v-if="!isMobile() && !embedded">
@@ -326,9 +327,18 @@ export default {
           return item?.isResultFromSearch === true
     },
     getItemClass(item) {
-          return {
-              'pinned-bold': item.pinned,
-          }
+        if (item.pinned) {
+          return 'pinned-bold'
+        } else{
+          return 'chat-normal'
+        }
+    },
+    getParticipantsClass(item) {
+      let res = ['subtitle-thin'];
+      if (item.lastMessagePreview) {
+        res.push('my-1')
+      }
+      return res;
     },
     getChatName(item) {
           let bldr = item.name;
@@ -847,6 +857,14 @@ export default {
 @import "itemAvatar.styl"
 
 .pinned-bold {
-    font-weight bold
+  font-weight 1000
+}
+
+.chat-normal {
+  font-weight 400
+}
+
+.subtitle-thin {
+  font-weight 300
 }
 </style>

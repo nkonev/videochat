@@ -109,9 +109,11 @@ type Blog struct {
 
 type ChatWithParticipants struct {
 	Chat
-	ParticipantsIds   []int64
-	ParticipantsCount int
-	IsAdmin           bool
+	ParticipantsIds    []int64
+	ParticipantsCount  int
+	IsAdmin            bool
+	LastMessagePreview *string
+	LastMessageOwnerId *int64
 }
 
 // CreateChat creates a new chat.
@@ -209,24 +211,38 @@ func getChatSearchClause(additionalFoundUserIds []int64) string {
 	)
 }
 
-func convertToWithParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	if ids, err := db.GetParticipantIds(ctx, chat.Id, participantsSize, participantsOffset); err != nil {
+func convertToWithParticipants(ctx context.Context, co CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	if ids, err := co.GetParticipantIds(ctx, chat.Id, participantsSize, participantsOffset); err != nil {
 		return nil, err
 	} else {
-		admin, err := db.IsAdmin(ctx, behalfUserId, chat.Id)
+		admin, err := co.IsAdmin(ctx, behalfUserId, chat.Id)
 		if err != nil {
 			return nil, err
 		}
-		participantsCount, err := db.GetParticipantsCount(ctx, chat.Id)
+		participantsCount, err := co.GetParticipantsCount(ctx, chat.Id)
 		if err != nil {
 			return nil, err
 		}
+
+		messagePreviews, err := getLastMessagePreview(ctx, co, []int64{chat.Id})
+		if err != nil {
+			return nil, err
+		}
+
 		ccc := &ChatWithParticipants{
 			Chat:              *chat,
 			ParticipantsIds:   ids,
 			IsAdmin:           admin,
 			ParticipantsCount: participantsCount,
 		}
+
+		messagePreview := messagePreviews[chat.Id]
+
+		if messagePreview != nil {
+			ccc.LastMessagePreview = &messagePreview.LastMessagePreview
+			ccc.LastMessageOwnerId = &messagePreview.LastMessageOwnerId
+		}
+
 		return ccc, nil
 	}
 }
@@ -245,7 +261,7 @@ type ParticipantIds struct {
 	ParticipantIds []int64
 }
 
-func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*ParticipantIds, isAdminBatch map[int64]bool, participantsCountBatch map[int64]int) (*ChatWithParticipants, error) {
+func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*ParticipantIds, isAdminBatch map[int64]bool, participantsCountBatch map[int64]int, messagePreviewsBatch map[int64]*LastMessagePreview) (*ChatWithParticipants, error) {
 	participantsCount := participantsCountBatch[chat.Id]
 
 	var participantsIds []int64 = make([]int64, 0)
@@ -258,13 +274,59 @@ func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*Participa
 
 	admin := isAdminBatch[chat.Id]
 
+	messagePreview := messagePreviewsBatch[chat.Id]
+
 	ccc := &ChatWithParticipants{
 		Chat:              *chat,
 		ParticipantsIds:   participantsIds,
 		IsAdmin:           admin,
 		ParticipantsCount: participantsCount,
 	}
+
+	if messagePreview != nil {
+		ccc.LastMessagePreview = &messagePreview.LastMessagePreview
+		ccc.LastMessageOwnerId = &messagePreview.LastMessageOwnerId
+	}
+
 	return ccc, nil
+}
+
+type LastMessagePreview struct {
+	LastMessagePreview string
+	LastMessageOwnerId int64
+}
+
+func getLastMessagePreview(ctx context.Context, co CommonOperations, chatIds []int64) (map[int64]*LastMessagePreview, error) {
+	ret := map[int64]*LastMessagePreview{}
+	if len(chatIds) == 0 {
+		return ret, nil
+	}
+
+	maxPrevSizeDb := viper.GetInt("previewMaxTextSizeDb")
+
+	bldr := ""
+	for i, chatId := range chatIds {
+		if i != 0 {
+			bldr += " UNION ALL "
+		}
+		bldr += fmt.Sprintf("(select %v, substring(strip_tags(text), 0, %v), owner_id from message_chat_%v order by id desc limit 1)", chatId, maxPrevSizeDb, chatId)
+	}
+	rows, err := co.QueryContext(ctx, bldr)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		item := &LastMessagePreview{}
+		var chatId int64
+		if err = rows.Scan(&chatId, &item.LastMessagePreview, &item.LastMessageOwnerId); err != nil {
+			return nil, eris.Wrap(err, "error during interacting with db")
+		} else if chatId != 0 {
+			ret[chatId] = item
+		}
+	}
+	return ret, nil
 }
 
 func getChats(ctx context.Context, co CommonOperations, participantId int64, limit int, leftRowNumber, rightRowNumber int64, orderDirection string, searchString, searchStringPercents string, additionalFoundUserIds []int64) ([]*Chat, error) {
@@ -538,10 +600,15 @@ func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperati
 			return nil, err
 		}
 
+		messagePreviewsBatch, err := getLastMessagePreview(ctx, commonOps, chatIds)
+		if err != nil {
+			return nil, err
+		}
+
 		list := make([]*ChatWithParticipants, 0)
 
 		for _, cc := range chats {
-			if ccc, err := convertToWithParticipantsBatch(cc, participantIdsBatch, isAdminBatch, participantsCountBatch); err != nil {
+			if ccc, err := convertToWithParticipantsBatch(cc, participantIdsBatch, isAdminBatch, participantsCountBatch, messagePreviewsBatch); err != nil {
 				return nil, err
 			} else {
 				list = append(list, ccc)

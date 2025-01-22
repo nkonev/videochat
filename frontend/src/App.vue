@@ -418,6 +418,7 @@ export default {
                         blogAbout
                         regularParticipantCanWriteMessage
                         canWriteMessage
+                        lastMessagePreview
                       }
                       chatDeletedEvent {
                         id

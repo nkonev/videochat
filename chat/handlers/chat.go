@@ -120,27 +120,33 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 		return nil, err
 	}
 
+	var participantIdSet = map[int64]bool{}
+	var participantOftetAtetIdSet = map[int64]bool{}
+	for _, dc := range dbChats {
+		for _, participantId := range dc.ParticipantsIds {
+			participantIdSet[participantId] = true
+			if dc.TetATet {
+				participantOftetAtetIdSet[participantId] = true
+			}
+		}
+	}
+	for _, dbch := range dbChats {
+		if dbch.LastMessageOwnerId != nil {
+			participantIdSet[*dbch.LastMessageOwnerId] = true
+		}
+	}
+	var users = getUsersRemotelyOrEmpty(ctx, ch.lgr, participantIdSet, ch.restClient)
+
 	chatDtos := make([]*dto.ChatDto, 0)
 	for _, cc := range dbChats {
 		messages := unreadMessageBatch[cc.Id]
 		isParticipant := membership[cc.Id]
 
-		cd := convertToDto(cc, true, []*dto.User{}, messages, isParticipant)
+		cd := ch.convertToDto(cc, true, users, messages, isParticipant)
 
 		chatDtos = append(chatDtos, cd)
 	}
 
-	var participantIdSet = map[int64]bool{}
-	var participantOftetAtetIdSet = map[int64]bool{}
-	for _, chatDto := range chatDtos {
-		for _, participantId := range chatDto.ParticipantIds {
-			participantIdSet[participantId] = true
-			if chatDto.IsTetATet {
-				participantOftetAtetIdSet[participantId] = true
-			}
-		}
-	}
-	var users = getUsersRemotelyOrEmpty(ctx, ch.lgr, participantIdSet, ch.restClient)
 	tetAtetOnlines, err := ch.getParticipantsOnlineForTetATetMap(ctx, participantOftetAtetIdSet)
 	if err != nil {
 		ch.lgr.WithTracing(ctx).Warnf("Something bad duringh getting tetAtetOnlines: %v", err)
@@ -149,7 +155,6 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 		for _, participantId := range chatDto.ParticipantIds {
 			user := users[participantId]
 			if user != nil {
-				chatDto.Participants = append(chatDto.Participants, user)
 				utils.ReplaceForTetATet(chatDto, tetAtetOnlines, user, userId, len(chatDto.ParticipantIds) == 1)
 			}
 		}
@@ -280,8 +285,6 @@ func (ch *ChatHandler) getChatCommon(
 ) (*dto.ChatDto, error) {
 	fixedParticipantsSize := utils.FixSize(participantsSize)
 
-	var users []*dto.User = []*dto.User{}
-
 	cc, err := co.GetChatWithParticipants(ctx, performPersonalization, behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset)
 	if err != nil {
 		return nil, err
@@ -290,11 +293,15 @@ func (ch *ChatHandler) getChatCommon(
 		return nil, nil
 	}
 
-	users, err = ch.restClient.GetUsers(ctx, cc.ParticipantsIds)
-	if err != nil {
-		users = []*dto.User{}
-		ch.lgr.WithTracing(ctx).Warn("Error during getting users from aaa")
+	participantIdSet := map[int64]bool{}
+	if cc.LastMessageOwnerId != nil {
+		participantIdSet[*cc.LastMessageOwnerId] = true
 	}
+	for _, pp := range cc.ParticipantsIds {
+		participantIdSet[pp] = true
+	}
+
+	var users = getUsersRemotelyOrEmpty(ctx, ch.lgr, participantIdSet, ch.restClient)
 
 	var unreadMessages int64
 	var isParticipant bool
@@ -311,7 +318,7 @@ func (ch *ChatHandler) getChatCommon(
 		}
 	}
 
-	chatDto := convertToDto(cc, performPersonalization, users, unreadMessages, isParticipant)
+	chatDto := ch.convertToDto(cc, performPersonalization, users, unreadMessages, isParticipant)
 
 	if performPersonalization && chatDto.IsTetATet {
 		tetAtetOnlines, err := ch.getParticipantsOnlineForTetATetMap(ctx, utils.GetInt64BoolMap(cc.ParticipantsIds))
@@ -320,9 +327,7 @@ func (ch *ChatHandler) getChatCommon(
 		}
 
 		for _, participant := range users {
-
 			isSingleTetATetParticipant := len(cc.ParticipantsIds) == 1
-
 			utils.ReplaceForTetATet(chatDto, tetAtetOnlines, participant, behalfParticipantId, isSingleTetATetParticipant)
 		}
 	}
@@ -476,7 +481,7 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 	})
 }
 
-func convertToDto(c *db.ChatWithParticipants, performPersonalization bool, users []*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
+func (ch *ChatHandler) convertToDto(c *db.ChatWithParticipants, performPersonalization bool, users map[int64]*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
 	b := dto.BaseChatDto{
 		Id:                c.Id,
 		Name:              c.Title,
@@ -504,18 +509,26 @@ func convertToDto(c *db.ChatWithParticipants, performPersonalization bool, users
 	// set participant order as in c.ParticipantsIds
 	orderedParticipants := make([]*dto.User, 0)
 	for _, participantId := range c.ParticipantsIds {
-		for _, u := range users {
-			if u.Id == participantId {
-				orderedParticipants = append(orderedParticipants, u)
-				break
-			}
+		u := users[participantId]
+		if u != nil {
+			orderedParticipants = append(orderedParticipants, u)
 		}
 	}
 
-	return &dto.ChatDto{
+	ret := dto.ChatDto{
 		BaseChatDto:  b,
 		Participants: orderedParticipants,
 	}
+
+	if c.LastMessageOwnerId != nil && c.LastMessagePreview != nil {
+		u := users[*c.LastMessageOwnerId]
+		if u != nil {
+			preview := createMessagePreview(ch.stripTagsPolicy, *c.LastMessagePreview, u.Login)
+			ret.LastMessagePreview = &preview
+		}
+	}
+
+	return &ret
 }
 
 func (ch *ChatHandler) CreateChat(c echo.Context) error {

@@ -92,6 +92,7 @@ type ChatDto {
     blogAbout: Boolean!
     regularParticipantCanWriteMessage: Boolean!
     canWriteMessage: Boolean!
+    lastMessagePreview: String
 }
 
 type ChatDeletedDto {
