@@ -83,13 +83,6 @@ type Blog struct {
 	Avatar         null.String
 }
 
-type ChatWithParticipants struct {
-	Chat
-	ParticipantsIds   []int64
-	ParticipantsCount int
-	IsAdmin           bool
-}
-
 type ChatWithoutParticipants struct {
 	Chat
 	IsAdmin bool
@@ -190,38 +183,14 @@ func getChatSearchClause(additionalFoundUserIds []int64) string {
 	)
 }
 
-func convertToWithParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	if ids, err := db.GetParticipantIds(ctx, chat.Id, participantsSize, participantsOffset); err != nil {
-		return nil, err
-	} else {
-		admin, err := db.IsAdmin(ctx, behalfUserId, chat.Id)
-		if err != nil {
-			return nil, err
-		}
-		participantsCount, err := db.GetParticipantsCount(ctx, chat.Id)
-		if err != nil {
-			return nil, err
-		}
-		ccc := &ChatWithParticipants{
-			Chat:              *chat,
-			ParticipantsIds:   ids,
-			IsAdmin:           admin,
-			ParticipantsCount: participantsCount,
-		}
-		return ccc, nil
-	}
-}
-
-func convertToWithoutParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithParticipants, error) {
+func convertToWithoutParticipants(ctx context.Context, db CommonOperations, chat *Chat, behalfUserId int64) (*ChatWithoutParticipants, error) {
 	admin, err := db.IsAdmin(ctx, behalfUserId, chat.Id)
 	if err != nil {
 		return nil, err
 	}
-	ccc := &ChatWithParticipants{
-		Chat:              *chat,
-		ParticipantsIds:   []int64{}, // to be set in callee
-		IsAdmin:           admin,
-		ParticipantsCount: 0, // to be set in callee
+	ccc := &ChatWithoutParticipants{
+		Chat:    *chat,
+		IsAdmin: admin,
 	}
 	return ccc, nil
 }
@@ -238,28 +207,6 @@ type ChatQueryByIds struct {
 type ParticipantIds struct {
 	ChatId         int64
 	ParticipantIds []int64
-}
-
-func convertToWithParticipantsBatch(chat *Chat, participantIdsBatch []*ParticipantIds, isAdminBatch map[int64]bool, participantsCountBatch map[int64]int) (*ChatWithParticipants, error) {
-	participantsCount := participantsCountBatch[chat.Id]
-
-	var participantsIds []int64 = make([]int64, 0)
-	for _, pidsb := range participantIdsBatch {
-		if pidsb.ChatId == chat.Id {
-			participantsIds = pidsb.ParticipantIds
-			break
-		}
-	}
-
-	admin := isAdminBatch[chat.Id]
-
-	ccc := &ChatWithParticipants{
-		Chat:              *chat,
-		ParticipantsIds:   participantsIds,
-		IsAdmin:           admin,
-		ParticipantsCount: participantsCount,
-	}
-	return ccc, nil
 }
 
 func convertToWithoutParticipantsBatch(chat *Chat, isAdminBatch map[int64]bool) (*ChatWithoutParticipants, error) {
@@ -514,83 +461,15 @@ func getChatsCommon(ctx context.Context, co CommonOperations, participantId int6
 	return list, nil
 }
 
-func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	var err error
-	var chats []*Chat
-
-	chats, err = getChatsCommon(ctx, commonOps, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
-
-	if err != nil {
-		return nil, err
-	} else {
-		var chatIds []int64 = make([]int64, 0)
-		for _, cc := range chats {
-			chatIds = append(chatIds, cc.Id)
-		}
-
-		fixedParticipantsSize := utils.FixSize(participantsSize)
-		participantIdsBatch, err := commonOps.GetParticipantIdsBatch(ctx, chatIds, fixedParticipantsSize)
-		if err != nil {
-			return nil, err
-		}
-
-		isAdminBatch, err := commonOps.IsAdminBatch(ctx, participantId, chatIds)
-		if err != nil {
-			return nil, err
-		}
-
-		participantsCountBatch, err := commonOps.GetParticipantsCountBatch(ctx, chatIds)
-		if err != nil {
-			return nil, err
-		}
-
-		list := make([]*ChatWithParticipants, 0)
-
-		for _, cc := range chats {
-			if ccc, err := convertToWithParticipantsBatch(cc, participantIdsBatch, isAdminBatch, participantsCountBatch); err != nil {
-				return nil, err
-			} else {
-				list = append(list, ccc)
-			}
-		}
-		return list, nil
-	}
-}
-func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
-}
-
-func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
-}
-
-func (tx *Tx) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(ctx, tx, behalfParticipantId, chatId, participantsSize, participantsOffset)
-}
-
-func (db *DB) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(ctx, db, behalfParticipantId, chatId, participantsSize, participantsOffset)
-}
-
-func getChatWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	if chat, err := commonOps.GetChat(ctx, behalfParticipantId, chatId); err != nil {
-		return nil, err
-	} else if chat == nil {
-		return nil, nil
-	} else {
-		return convertToWithParticipants(ctx, commonOps, chat, behalfParticipantId, participantsSize, participantsOffset)
-	}
-}
-
-func (tx *Tx) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+func (tx *Tx) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithoutParticipants, error) {
 	return getChatWithoutParticipantsCommon(ctx, tx, behalfParticipantId, chatId)
 }
 
-func (db *DB) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+func (db *DB) GetChatWithoutParticipants(ctx context.Context, behalfParticipantId, chatId int64) (*ChatWithoutParticipants, error) {
 	return getChatWithoutParticipantsCommon(ctx, db, behalfParticipantId, chatId)
 }
 
-func getChatWithoutParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithParticipants, error) {
+func getChatWithoutParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64) (*ChatWithoutParticipants, error) {
 	if chat, err := commonOps.GetChat(ctx, behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else if chat == nil {

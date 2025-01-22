@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/rotisserie/eris"
 	"net/url"
-	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"regexp"
 	"strconv"
@@ -199,17 +198,6 @@ func Remove(ids []int64, elem int64) []int64 {
 
 func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
-}
-
-func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participant *dto.User, behalfParticipantId int64, isSingleParticipant bool) {
-	if chatDto.GetIsTetATet() {
-		if participant.Id != behalfParticipantId || isSingleParticipant {
-			chatDto.SetName(participant.Login)
-			chatDto.SetAvatar(participant.Avatar)
-			chatDto.SetShortInfo(participant.ShortInfo)
-			chatDto.SetLoginColor(participant.LoginColor)
-		}
-	}
 }
 
 func GetType(aDto interface{}) string {

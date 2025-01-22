@@ -11,7 +11,6 @@ import (
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
-	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -40,31 +39,29 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatDto, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.BaseChatDto, userIds []int64, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDto, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.BaseChatDto, userIds []int64, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDto, userId int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.BaseChatDto, userId int64, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", overrideIsParticipant, tx, areAdminsMap)
 }
 
 func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, userIds []int64, tx *db.Tx) {
-	chatDto := dto.ChatDto{
-		BaseChatDto: dto.BaseChatDto{
-			Id: chatId,
-		},
+	chatDto := dto.BaseChatDto{
+		Id: chatId,
 	}
-	not.chatNotifyCommon(ctx, userIds, &chatDto, "chat_deleted", false, false, tx, nil)
+	not.chatNotifyCommon(ctx, userIds, &chatDto, "chat_deleted", false, tx, nil)
 }
 
 /**
  * isSingleParticipant should be taken from responseDto or count. using len(participants) where participants are a portion from Iterate...() is incorrect because we can get only one user in the last iteration
  */
-func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDto, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.BaseChatDto, eventType string, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.lgr.WithTracing(ctx).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
@@ -83,12 +80,6 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 		}
 	} else {
 
-		unreadMessages, err := tx.GetUnreadMessagesCountBatchByParticipants(ctx, userIds, newChatDto.Id)
-		if err != nil {
-			not.lgr.WithTracing(ctx).Errorf("error during get unread messages: %v", err)
-			return
-		}
-
 		isChatPinnedMap, err := tx.IsChatPinnedBatch(ctx, userIds, newChatDto.Id)
 		if err != nil {
 			not.lgr.WithTracing(ctx).Errorf("error during get pinned: %v", err)
@@ -96,21 +87,17 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 		}
 
 		for _, participantId := range userIds {
-			var copied *dto.ChatDto = &dto.ChatDto{}
+			var copied *dto.BaseChatDto = &dto.BaseChatDto{}
 			if err := deepcopy.Copy(copied, newChatDto); err != nil {
 				not.lgr.WithTracing(ctx).Errorf("error during performing deep copy: %s", err)
 				continue
 			}
 
 			// see also handlers/chat.go:199 convertToDto()
-			copied.SetPersonalizedFields(areAdminsMap[participantId], unreadMessages[participantId], overrideIsParticipant)
+			copied.SetPersonalizedFields(areAdminsMap[participantId], overrideIsParticipant)
 
 			// override pinned personally for participantId
 			copied.Pinned = isChatPinnedMap[participantId]
-
-			for _, participant := range copied.Participants {
-				utils.ReplaceChatNameToLoginForTetATet(copied, participant, participantId, isSingleParticipant)
-			}
 
 			err = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
 				UserId:           participantId,

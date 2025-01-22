@@ -764,7 +764,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	}
 
 	errOuter = db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
-		chatDto, err := getChat(c.Request().Context(), mc.lgr, tx, mc.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := getChat(c.Request().Context(), mc.lgr, tx, mc.restClient, chatId, userPrincipalDto.UserId)
 		if err != nil {
 			return err
 		}
@@ -809,12 +809,6 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 						IsTetATet: chatDto.IsTetATet,
 						Avatar:    chatDto.Avatar,
 					}
-					utils.ReplaceChatNameToLoginForTetATet(
-						sch,
-						&meAsUser,
-						participantId,
-						false, // because participantId != userPrincipalDto.UserId above
-					)
 					mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), true, participantId, chatId, sch.GetName(), sch.GetAvatar(), message.Id, messageTextWithoutTags, userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 				}
 			}
