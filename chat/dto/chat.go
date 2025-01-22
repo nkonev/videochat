@@ -37,7 +37,7 @@ type BaseChatDto struct {
 	CanWriteMessage                     bool        `json:"canWriteMessage"`
 }
 
-func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool) {
+func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool, pinned bool) {
 	copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
 	copied.CanDelete = null.BoolFrom(admin)
 	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet && participant)
@@ -56,6 +56,8 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 	if !copied.RegularParticipantCanWriteMessage && !admin {
 		copied.CanWriteMessage = false
 	}
+
+	copied.Pinned = pinned
 }
 
 type ChatDeletedDto struct {

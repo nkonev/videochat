@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
 	"net/url"
 	"nkonev.name/chat/dto"
@@ -201,14 +202,36 @@ func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
 }
 
-func ReplaceChatNameToLoginForTetATet(chatDto dto.ChatDtoWithTetATet, participant *dto.User, behalfParticipantId int64, isSingleParticipant bool) {
+func setLastSeenForteATet(
+	participantsOnline map[int64]bool,
+	participant *dto.User, behalfParticipantId int64, isSingleTetATetParticipant bool, chatDto dto.ChatDtoWithTetATet,
+) {
+	// leave LastSeenDateTime not null only if the opposite user isn't online
+	if participant.Id != behalfParticipantId {
+		if !isSingleTetATetParticipant {
+			chatDto.SetLastSeenDateTime(participant.LastSeenDateTime)
+
+			onl, ok := participantsOnline[participant.Id]
+			if ok {
+				if onl { // if the opposite user is online we don't need to show last login
+					chatDto.SetLastSeenDateTime(null.TimeFromPtr(nil))
+				}
+			}
+		}
+	}
+}
+
+func ReplaceForTetATet(chatDto dto.ChatDtoWithTetATet, participantsOnline map[int64]bool, participant *dto.User, behalfParticipantId int64, isSingleTetATetParticipant bool) {
 	if chatDto.GetIsTetATet() {
-		if participant.Id != behalfParticipantId || isSingleParticipant {
+		if participant.Id != behalfParticipantId || isSingleTetATetParticipant {
 			chatDto.SetName(participant.Login)
 			chatDto.SetAvatar(participant.Avatar)
 			chatDto.SetShortInfo(participant.ShortInfo)
 			chatDto.SetLoginColor(participant.LoginColor)
 		}
+
+		// we cannot use the same branch participant.Id != behalfParticipantId because the second condition is the different
+		setLastSeenForteATet(participantsOnline, participant, behalfParticipantId, isSingleTetATetParticipant, chatDto)
 	}
 }
 
@@ -222,6 +245,14 @@ func Min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func GetInt64BoolMap(ids []int64) map[int64]bool {
+	r := map[int64]bool{}
+	for _, id := range ids {
+		r[id] = true
+	}
+	return r
 }
 
 const FileParam = "file"

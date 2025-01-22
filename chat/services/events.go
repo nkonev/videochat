@@ -7,6 +7,7 @@ import (
 	"github.com/guregu/null"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
@@ -20,9 +21,10 @@ type Events struct {
 	rabbitNotificationPublisher *producer.RabbitNotificationsPublisher
 	tr                          trace.Tracer
 	lgr                         *logger.Logger
+	restClient                  *client.RestClient
 }
 
-func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, lgr *logger.Logger) *Events {
+func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotificationPublisher *producer.RabbitNotificationsPublisher, lgr *logger.Logger, restClient *client.RestClient) *Events {
 	tr := otel.Tracer("event")
 
 	return &Events{
@@ -30,6 +32,7 @@ func NewEvents(rabbitEventPublisher *producer.RabbitEventsPublisher, rabbitNotif
 		rabbitNotificationPublisher: rabbitNotificationPublisher,
 		tr:                          tr,
 		lgr:                         lgr,
+		restClient:                  restClient,
 	}
 }
 
@@ -40,16 +43,16 @@ type DisplayMessageDtoNotification struct {
 
 const NoPagePlaceholder = -1
 
-func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatDto, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutNewChat(ctx context.Context, newChatDto *dto.ChatDto, userIds []int64, isSingleTetATetParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, userIds, newChatDto, "chat_created", isSingleTetATetParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDto, userIds []int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutChangeChat(ctx context.Context, chatDto *dto.ChatDto, userIds []int64, isSingleTetATetParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, userIds, chatDto, "chat_edited", isSingleTetATetParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
-func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDto, userId int64, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
-	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", isSingleParticipant, overrideIsParticipant, tx, areAdminsMap)
+func (not *Events) NotifyAboutRedrawLeftChat(ctx context.Context, chatDto *dto.ChatDto, userId int64, isSingleTetATetParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+	not.chatNotifyCommon(ctx, []int64{userId}, chatDto, "chat_redraw", isSingleTetATetParticipant, overrideIsParticipant, tx, areAdminsMap)
 }
 
 func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, userIds []int64, tx *db.Tx) {
@@ -64,7 +67,7 @@ func (not *Events) NotifyAboutDeleteChat(ctx context.Context, chatId int64, user
 /**
  * isSingleParticipant should be taken from responseDto or count. using len(participants) where participants are a portion from Iterate...() is incorrect because we can get only one user in the last iteration
  */
-func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDto, eventType string, isSingleParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
+func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newChatDto *dto.ChatDto, eventType string, isSingleTetATetParticipant bool, overrideIsParticipant bool, tx *db.Tx, areAdminsMap map[int64]bool) {
 	not.lgr.WithTracing(ctx).Debugf("Sending notification about %v the chat to participants: %v", eventType, userIds)
 
 	ctx, messageSpan := not.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
@@ -95,6 +98,11 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 			return
 		}
 
+		participantsOnlineForTetATetMap, err := not.getParticipantsOnlineForTetATetMap(ctx, newChatDto.IsTetATet, newChatDto.ParticipantIds)
+		if err != nil {
+			not.lgr.WithTracing(ctx).Warnf("error during get user onlines: %v", err)
+		}
+
 		for _, participantId := range userIds {
 			var copied *dto.ChatDto = &dto.ChatDto{}
 			if err := deepcopy.Copy(copied, newChatDto); err != nil {
@@ -103,13 +111,12 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 			}
 
 			// see also handlers/chat.go:199 convertToDto()
-			copied.SetPersonalizedFields(areAdminsMap[participantId], unreadMessages[participantId], overrideIsParticipant)
-
 			// override pinned personally for participantId
-			copied.Pinned = isChatPinnedMap[participantId]
+			copied.SetPersonalizedFields(areAdminsMap[participantId], unreadMessages[participantId], overrideIsParticipant, isChatPinnedMap[participantId])
 
+			// set chat name and avatar for tet-a-tet
 			for _, participant := range copied.Participants {
-				utils.ReplaceChatNameToLoginForTetATet(copied, participant, participantId, isSingleParticipant)
+				utils.ReplaceForTetATet(copied, participantsOnlineForTetATetMap, participant, participantId, isSingleTetATetParticipant)
 			}
 
 			err = not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
@@ -122,6 +129,24 @@ func (not *Events) chatNotifyCommon(ctx context.Context, userIds []int64, newCha
 			}
 		}
 	}
+}
+
+func (not *Events) getParticipantsOnlineForTetATetMap(ctx context.Context, isTetATet bool, userIds []int64) (map[int64]bool, error) {
+	ret := map[int64]bool{}
+	if !isTetATet {
+		return ret, nil
+	}
+	onlines, err := not.restClient.GetOnlines(ctx, userIds) // get online for opposite user
+	if err != nil {
+		not.lgr.WithTracing(ctx).Errorf("Unable to get online for %v: %v", userIds, err)
+		// nothing
+		return ret, nil
+	}
+
+	for _, onl := range onlines {
+		ret[onl.Id] = onl.Online
+	}
+	return ret, err
 }
 
 func (not *Events) ChatNotifyMessageCount(ctx context.Context, userIds []int64, chatId int64, tx *db.Tx) {

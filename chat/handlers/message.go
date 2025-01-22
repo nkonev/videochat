@@ -56,9 +56,10 @@ type MessageHandler struct {
 	notificator        *services.Events
 	restClient         *client.RestClient
 	lgr                *logger.Logger
+	ch                 *ChatHandler
 }
 
-func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator *services.Events, restClient *client.RestClient, lgr *logger.Logger) *MessageHandler {
+func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSourceContent *services.StripSourcePolicy, stripAllTags *services.StripTagsPolicy, notificator *services.Events, restClient *client.RestClient, lgr *logger.Logger, ch *ChatHandler) *MessageHandler {
 	return &MessageHandler{
 		db:                 dbR,
 		policy:             policy,
@@ -67,6 +68,7 @@ func NewMessageHandler(dbR *db.DB, policy *services.SanitizerPolicy, stripSource
 		notificator:        notificator,
 		restClient:         restClient,
 		lgr:                lgr,
+		ch:                 ch,
 	}
 }
 
@@ -764,7 +766,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 	}
 
 	errOuter = db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
-		chatDto, err := getChat(c.Request().Context(), mc.lgr, tx, mc.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := mc.ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -809,8 +811,9 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 						IsTetATet: chatDto.IsTetATet,
 						Avatar:    chatDto.Avatar,
 					}
-					utils.ReplaceChatNameToLoginForTetATet(
+					utils.ReplaceForTetATet(
 						sch,
+						map[int64]bool{}, // empty because we don't need lastSeen here
 						&meAsUser,
 						participantId,
 						false, // because participantId != userPrincipalDto.UserId above

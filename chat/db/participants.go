@@ -430,16 +430,6 @@ func (db *DB) IsParticipant(ctx context.Context, userId int64, chatId int64) (bo
 	return isParticipantCommon(ctx, db, userId, chatId)
 }
 
-func (tx *Tx) GetFirstParticipant(ctx context.Context, chatId int64) (int64, error) {
-	var pid int64
-	row := tx.QueryRowContext(ctx, `SELECT user_id FROM chat_participant WHERE chat_id = $1 LIMIT 1`, chatId)
-	if err := row.Scan(&pid); err != nil {
-		return 0, eris.Wrap(err, "error during interacting with db")
-	} else {
-		return pid, nil
-	}
-}
-
 func getCoChattedParticipantIdsCommon(ctx context.Context, co CommonOperations, participantId int64, limit, offset int) ([]int64, error) {
 	if rows, err := co.QueryContext(ctx, "SELECT DISTINCT user_id FROM chat_participant WHERE chat_id IN (SELECT chat_id FROM chat_participant WHERE user_id = $1) ORDER BY user_id LIMIT $2 OFFSET $3", participantId, limit, offset); err != nil {
 		return nil, err

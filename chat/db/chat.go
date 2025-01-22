@@ -32,7 +32,15 @@ const real_chat_columns = `
 
 `
 
-const select_chat = `
+// expects $1 is userId
+func selectChat(performPersonalization bool) string {
+	var pp string
+	if performPersonalization {
+		pp = "cp.user_id IS NOT NULL as pinned"
+	} else {
+		pp = "($1::bigint != $1::bigint) as pinned" // to consume the given user_id
+	}
+	s := fmt.Sprintf(`
 SELECT 
 	ch.id, 
 	ch.title, 
@@ -42,19 +50,35 @@ SELECT
 	ch.tet_a_tet,
 	ch.can_resend,
 	ch.available_to_search,
-	cp.user_id IS NOT NULL as pinned,
+	%s,
 	ch.blog,
 	ch.regular_participant_can_publish_message,
 	ch.regular_participant_can_pin_message,
 	ch.blog_about,
 	ch.regular_participant_can_write_message
 
-`
+`, pp)
+	return s
+}
+
 const chat_order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
-const chat_from = `
-FROM chat ch 
-LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)
-`
+
+// expects $1 is userId
+func chatFrom(performPersonalization bool) string {
+	var pp string
+	if performPersonalization {
+		pp = "LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)"
+	}
+
+	s := fmt.Sprintf(`
+	FROM chat ch 
+	%s
+	
+	`, pp)
+
+	return s
+}
+
 const chat_of_participant = "SELECT chat_id FROM chat_participant WHERE user_id = $1"
 const chat_where = "ch.id IN ( " + chat_of_participant + " )"
 
@@ -132,14 +156,14 @@ func (tx *Tx) IsExistsTetATet(ctx context.Context, participant1 int64, participa
 
 // expects $1 is userId
 func selectChatWithRowNumbersClause(orderDirection string) string {
-	return select_chat + `
+	return selectChat(true) + `
 			, row_number() over ( ` + chat_order + orderDirection + ` ) as rn		
-` + chat_from
+` + chatFrom(true)
 }
 
 // expects $1 is userId
-func selectChatClause() string {
-	return select_chat + chat_from
+func selectChatClause(performPersonalization bool) string {
+	return selectChat(performPersonalization) + chatFrom(performPersonalization)
 }
 
 func provideScanToChat(chat *Chat) []any {
@@ -308,7 +332,7 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 			WHERE   
 					%s
 			%s %s 
-			LIMIT $4`, selectChatClause(), getChatSearchClause(additionalFoundUserIds), chat_order, order),
+			LIMIT $4`, selectChatClause(true), getChatSearchClause(additionalFoundUserIds), chat_order, order),
 			participantId, searchStringPercents, searchString,
 			limit)
 		if err != nil {
@@ -320,7 +344,7 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 			WHERE 
 			         %s
 			%s %s 
-			LIMIT $2`, selectChatClause(), chat_where, chat_order, order),
+			LIMIT $2`, selectChatClause(true), chat_where, chat_order, order),
 			participantId,
 			limit)
 		if err != nil {
@@ -360,7 +384,7 @@ func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64
 						) inn2
 					) inn3
 				) inn4 where central_element = true
-			`, chat_order, orderDirection, chat_from, getChatSearchClause(additionalFoundUserIds)),
+			`, chat_order, orderDirection, chatFrom(true), getChatSearchClause(additionalFoundUserIds)),
 			participantId, searchStringPercents, searchString, startingFromItemId, leftLimit, rightLimit)
 	} else {
 		limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
@@ -375,7 +399,7 @@ func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64
 						) inn2
 					) inn3
 				) inn4 where central_element = true
-			`, chat_order, orderDirection, chat_from, chat_where),
+			`, chat_order, orderDirection, chatFrom(true), chat_where),
 			participantId, startingFromItemId, leftLimit, rightLimit)
 	}
 	err := limitRes.Scan(&leftRowNumber, &rightRowNumber)
@@ -534,16 +558,16 @@ func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64,
 	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(ctx, tx, behalfParticipantId, chatId, participantsSize, participantsOffset)
+func (tx *Tx) GetChatWithParticipants(ctx context.Context, performPersonalization bool, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(ctx, tx, performPersonalization, behalfParticipantId, chatId, participantsSize, participantsOffset)
 }
 
-func (db *DB) GetChatWithParticipants(ctx context.Context, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	return getChatWithParticipantsCommon(ctx, db, behalfParticipantId, chatId, participantsSize, participantsOffset)
+func (db *DB) GetChatWithParticipants(ctx context.Context, performPersonalization bool, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	return getChatWithParticipantsCommon(ctx, db, performPersonalization, behalfParticipantId, chatId, participantsSize, participantsOffset)
 }
 
-func getChatWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
-	if chat, err := commonOps.GetChat(ctx, behalfParticipantId, chatId); err != nil {
+func getChatWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, performPersonalization bool, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
+	if chat, err := commonOps.GetChat(ctx, performPersonalization, behalfParticipantId, chatId); err != nil {
 		return nil, err
 	} else if chat == nil {
 		return nil, nil
@@ -632,8 +656,12 @@ func (tx *Tx) EditChat(
 	return &lastUpdateDateTime, nil
 }
 
-func getChatCommon(ctx context.Context, co CommonOperations, participantId, chatId int64) (*Chat, error) {
-	row := co.QueryRowContext(ctx, selectChatClause()+` WHERE ch.id in (`+chat_of_participant+` AND chat_id = $2)`, participantId, chatId)
+func getChatCommon(ctx context.Context, co CommonOperations, performPersonalization bool, participantId, chatId int64) (*Chat, error) {
+	s := selectChatClause(performPersonalization) + ` WHERE ch.id = $2 `
+	if performPersonalization {
+		s += " AND ch.id in (" + chat_of_participant + ")"
+	}
+	row := co.QueryRowContext(ctx, s, participantId, chatId)
 	chat := Chat{}
 	err := row.Scan(provideScanToChat(&chat)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -647,12 +675,12 @@ func getChatCommon(ctx context.Context, co CommonOperations, participantId, chat
 	}
 }
 
-func (db *DB) GetChat(ctx context.Context, participantId, chatId int64) (*Chat, error) {
-	return getChatCommon(ctx, db, participantId, chatId)
+func (db *DB) GetChat(ctx context.Context, performPersonalization bool, participantId, chatId int64) (*Chat, error) {
+	return getChatCommon(ctx, db, performPersonalization, participantId, chatId)
 }
 
-func (tx *Tx) GetChat(ctx context.Context, participantId, chatId int64) (*Chat, error) {
-	return getChatCommon(ctx, tx, participantId, chatId)
+func (tx *Tx) GetChat(ctx context.Context, performPersonalization bool, participantId, chatId int64) (*Chat, error) {
+	return getChatCommon(ctx, tx, performPersonalization, participantId, chatId)
 }
 
 func getChatBasicCommon(ctx context.Context, co CommonOperations, chatId int64) (*BasicChatDto, error) {
@@ -1192,7 +1220,7 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 			)
 			select exists (select * from first_page where id = $5) -- chat id to probe
 				and (($6::bigint is null) or exists (select * from first_page where id = $6 and rn in (1, 2)))
-		`, chat_order, orderDirection, chat_from, getChatSearchClause(additionalFoundUserIds)),
+		`, chat_order, orderDirection, chatFrom(true), getChatSearchClause(additionalFoundUserIds)),
 			participantId, searchStringWithPercents, searchString, pageSize, chatId, edgeChatId)
 		// last line:
 		// edge on the screen - here we ensure that this is the first page, in (1, 2) means the first place for the toppest element or the second place after sorting
@@ -1213,7 +1241,7 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 			)
 			select exists (select * from first_page where id = $3) -- chat id to probe
 				and (($4::bigint is null) or exists (select * from first_page where id = $4 and rn in (1, 2))) 
-		`, chat_order, orderDirection, chat_from, chat_where),
+		`, chat_order, orderDirection, chatFrom(true), chat_where),
 			participantId, pageSize, chatId, edgeChatId)
 	}
 	if row.Err() != nil {

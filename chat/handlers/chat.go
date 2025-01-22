@@ -22,6 +22,8 @@ import (
 const minChatNameLen = 1
 const maxChatNameLen = 256
 
+const noUser = -10
+
 type ParticipantsWithAdminWrapper struct {
 	Data  []*dto.UserWithAdmin `json:"items"`
 	Count int                  `json:"count"` // for paginating purposes
@@ -123,24 +125,32 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 		messages := unreadMessageBatch[cc.Id]
 		isParticipant := membership[cc.Id]
 
-		cd := convertToDto(cc, []*dto.User{}, messages, isParticipant)
+		cd := convertToDto(cc, true, []*dto.User{}, messages, isParticipant)
 
 		chatDtos = append(chatDtos, cd)
 	}
 
 	var participantIdSet = map[int64]bool{}
+	var participantOftetAtetIdSet = map[int64]bool{}
 	for _, chatDto := range chatDtos {
 		for _, participantId := range chatDto.ParticipantIds {
 			participantIdSet[participantId] = true
+			if chatDto.IsTetATet {
+				participantOftetAtetIdSet[participantId] = true
+			}
 		}
 	}
 	var users = getUsersRemotelyOrEmpty(ctx, ch.lgr, participantIdSet, ch.restClient)
+	tetAtetOnlines, err := ch.getParticipantsOnlineForTetATetMap(ctx, participantOftetAtetIdSet)
+	if err != nil {
+		ch.lgr.WithTracing(ctx).Warnf("Something bad duringh getting tetAtetOnlines: %v", err)
+	}
 	for _, chatDto := range chatDtos {
 		for _, participantId := range chatDto.ParticipantIds {
 			user := users[participantId]
 			if user != nil {
 				chatDto.Participants = append(chatDto.Participants, user)
-				utils.ReplaceChatNameToLoginForTetATet(chatDto, user, userId, len(chatDto.ParticipantIds) == 1)
+				utils.ReplaceForTetATet(chatDto, tetAtetOnlines, user, userId, len(chatDto.ParticipantIds) == 1)
 			}
 		}
 	}
@@ -237,20 +247,42 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 	})
 }
 
-func getChat(
+func (ch *ChatHandler) getParticipantsOnlineForTetATetMap(ctx context.Context, userIds map[int64]bool) (map[int64]bool, error) {
+	ret := map[int64]bool{}
+
+	userIdsSlice := []int64{}
+	for k, v := range userIds {
+		if v {
+			userIdsSlice = append(userIdsSlice, k)
+		}
+	}
+
+	onlines, err := ch.restClient.GetOnlines(ctx, userIdsSlice) // get online for opposite user
+	if err != nil {
+		ch.lgr.WithTracing(ctx).Errorf("Unable to get online for %v: %v", userIds, err)
+		// nothing
+		return ret, nil
+	}
+
+	for _, onl := range onlines {
+		ret[onl.Id] = onl.Online
+	}
+	return ret, err
+}
+
+func (ch *ChatHandler) getChatCommon(
 	ctx context.Context,
-	lgr *logger.Logger,
-	dbR db.CommonOperations,
-	restClient *client.RestClient,
+	co db.CommonOperations,
 	chatId int64,
 	behalfParticipantId int64,
+	performPersonalization bool,
 	participantsSize, participantsOffset int,
 ) (*dto.ChatDto, error) {
 	fixedParticipantsSize := utils.FixSize(participantsSize)
 
 	var users []*dto.User = []*dto.User{}
 
-	cc, err := dbR.GetChatWithParticipants(ctx, behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset)
+	cc, err := co.GetChatWithParticipants(ctx, performPersonalization, behalfParticipantId, chatId, fixedParticipantsSize, participantsOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -258,53 +290,77 @@ func getChat(
 		return nil, nil
 	}
 
-	users, err = restClient.GetUsers(ctx, cc.ParticipantsIds)
+	users, err = ch.restClient.GetUsers(ctx, cc.ParticipantsIds)
 	if err != nil {
 		users = []*dto.User{}
-		lgr.WithTracing(ctx).Warn("Error during getting users from aaa")
+		ch.lgr.WithTracing(ctx).Warn("Error during getting users from aaa")
 	}
 
-	unreadMessages, err := dbR.GetUnreadMessagesCount(ctx, cc.Id, behalfParticipantId)
-	if err != nil {
-		return nil, err
+	var unreadMessages int64
+	var isParticipant bool
+
+	if performPersonalization {
+		unreadMessages, err = co.GetUnreadMessagesCount(ctx, cc.Id, behalfParticipantId)
+		if err != nil {
+			return nil, err
+		}
+
+		isParticipant, err = co.IsParticipant(ctx, behalfParticipantId, chatId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	isParticipant, err := dbR.IsParticipant(ctx, behalfParticipantId, chatId)
-	if err != nil {
-		return nil, err
-	}
+	chatDto := convertToDto(cc, performPersonalization, users, unreadMessages, isParticipant)
 
-	chatDto := convertToDto(cc, users, unreadMessages, isParticipant)
+	if performPersonalization && chatDto.IsTetATet {
+		tetAtetOnlines, err := ch.getParticipantsOnlineForTetATetMap(ctx, utils.GetInt64BoolMap(cc.ParticipantsIds))
+		if err != nil {
+			ch.lgr.WithTracing(ctx).Warnf("Something bad duringh getting tetAtetOnlines: %v", err)
+		}
 
-	if chatDto.IsTetATet {
 		for _, participant := range users {
 
-			isSingleParticipant := len(cc.ParticipantsIds) == 1
+			isSingleTetATetParticipant := len(cc.ParticipantsIds) == 1
 
-			utils.ReplaceChatNameToLoginForTetATet(chatDto, participant, behalfParticipantId, isSingleParticipant)
-
-			// leave LastSeenDateTime not null only if the opposite user isn't online
-			if participant.Id != behalfParticipantId {
-				if participant.Id != behalfParticipantId && !isSingleParticipant {
-					chatDto.SetLastSeenDateTime(participant.LastSeenDateTime)
-				}
-
-				onlines, err := restClient.GetOnlines(ctx, []int64{participant.Id}) // get online for opposite user
-				if err != nil {
-					lgr.WithTracing(ctx).Errorf("Unable to get online for the opposite user %v: %v", participant.Id, err)
-					// nothing
-				} else {
-					if len(onlines) == 1 {
-						if onlines[0].Online { // if the opposite user is online we don't need to show last login
-							chatDto.SetLastSeenDateTime(null.TimeFromPtr(nil))
-						}
-					}
-				}
-			}
+			utils.ReplaceForTetATet(chatDto, tetAtetOnlines, participant, behalfParticipantId, isSingleTetATetParticipant)
 		}
 	}
 
 	return chatDto, nil
+}
+
+func (ch *ChatHandler) getChatWithoutPersonalization(
+	ctx context.Context,
+	dbR db.CommonOperations,
+	chatId int64,
+	participantsSize, participantsOffset int,
+) (*dto.ChatDto, error) {
+	return ch.getChatCommon(
+		ctx,
+		dbR,
+		chatId,
+		noUser,
+		false,
+		participantsSize, participantsOffset,
+	)
+}
+
+func (ch *ChatHandler) getChatPersonalized(
+	ctx context.Context,
+	dbR db.CommonOperations,
+	chatId int64,
+	behalfParticipantId int64,
+	participantsSize, participantsOffset int,
+) (*dto.ChatDto, error) {
+	return ch.getChatCommon(
+		ctx,
+		dbR,
+		chatId,
+		behalfParticipantId,
+		true,
+		participantsSize, participantsOffset,
+	)
 }
 
 func (ch *ChatHandler) GetChat(c echo.Context) error {
@@ -323,7 +379,7 @@ func (ch *ChatHandler) GetChat(c echo.Context) error {
 		return err
 	}
 
-	chat, err := getChat(c.Request().Context(), ch.lgr, ch.db, ch.restClient, chatId, userPrincipalDto.UserId, participantsSize, participantsOffset)
+	chat, err := ch.getChatPersonalized(c.Request().Context(), ch.db, chatId, userPrincipalDto.UserId, participantsSize, participantsOffset)
 	if err != nil {
 		return err
 	}
@@ -420,7 +476,7 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 	})
 }
 
-func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
+func convertToDto(c *db.ChatWithParticipants, performPersonalization bool, users []*dto.User, unreadMessages int64, participant bool) *dto.ChatDto {
 	b := dto.BaseChatDto{
 		Id:                c.Id,
 		Name:              c.Title,
@@ -430,7 +486,6 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		IsTetATet:         c.TetATet,
 		CanResend:         c.CanResend,
 		AvailableToSearch: c.AvailableToSearch,
-		Pinned:            c.Pinned,
 		// see also services/events.go:75 chatNotifyCommon()
 
 		ParticipantsCount:                   c.ParticipantsCount,
@@ -442,7 +497,9 @@ func convertToDto(c *db.ChatWithParticipants, users []*dto.User, unreadMessages 
 		RegularParticipantCanWriteMessage:   c.RegularParticipantCanWriteMessage,
 	}
 
-	b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant)
+	if performPersonalization {
+		b.SetPersonalizedFields(c.IsAdmin, unreadMessages, participant, c.Pinned)
+	}
 
 	// set participant order as in c.ParticipantsIds
 	orderedParticipants := make([]*dto.User, 0)
@@ -518,7 +575,7 @@ func (ch *ChatHandler) CreateChat(c echo.Context) error {
 	}
 
 	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -681,14 +738,14 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, bindTo.Id, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, bindTo.Id, 0, 0)
 		if err != nil {
 			return err
 		}
 
 		var oldBlogAboutChatDto *dto.ChatDto
 		if oldBlogAboutChatId != nil {
-			oldBlogAboutChatDto, err = getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, *oldBlogAboutChatId, userPrincipalDto.UserId, 0, 0)
+			oldBlogAboutChatDto, err = ch.getChatWithoutPersonalization(c.Request().Context(), tx, *oldBlogAboutChatId, 0, 0)
 			if err != nil {
 				return err
 			}
@@ -752,11 +809,7 @@ func (ch *ChatHandler) LeaveChat(c echo.Context) error {
 			return err
 		}
 
-		firstUser, err := tx.GetFirstParticipant(c.Request().Context(), chatId)
-		if err != nil {
-			return err
-		}
-		if chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, firstUser, 0, 0); err != nil {
+		if chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0); err != nil {
 			return err
 		} else {
 
@@ -827,11 +880,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 	}
 
 	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		firstUser, err := tx.GetFirstParticipant(c.Request().Context(), chatId)
-		if err != nil {
-			return err
-		}
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, firstUser, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -932,7 +981,7 @@ func (ch *ChatHandler) ChangeParticipant(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -982,7 +1031,7 @@ func (ch *ChatHandler) PinChat(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1032,7 +1081,7 @@ func (ch *ChatHandler) DeleteParticipant(c echo.Context) error {
 		return errOuter
 	}
 	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1167,7 +1216,7 @@ func (ch *ChatHandler) AddParticipants(c echo.Context) error {
 			return err
 		}
 
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1661,7 +1710,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 			}
 		}
 
-		chatDto, err := getChat(c.Request().Context(), ch.lgr, tx, ch.restClient, chatId2, userPrincipalDto.UserId, 0, 0)
+		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId2, 0, 0)
 		if err != nil {
 			return err
 		}
@@ -1846,7 +1895,7 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 		return err
 	}
 
-	chat, err := ch.db.GetChat(c.Request().Context(), behalfUserId, chatId)
+	chat, err := ch.db.GetChat(c.Request().Context(), true, behalfUserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1886,8 +1935,9 @@ func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {
 			IsTetATet: chat.TetATet,
 			Avatar:    chat.Avatar,
 		}
-		utils.ReplaceChatNameToLoginForTetATet(
+		utils.ReplaceForTetATet(
 			sch,
+			map[int64]bool{}, // empty because we don't need lastSeen here
 			&meAsUser,
 			user.Id,
 			count == 1,
