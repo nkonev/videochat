@@ -572,8 +572,8 @@ func (tx *Tx) EditMessage(ctx context.Context, m *Message) error {
 	return nil
 }
 
-func (db *DB) DeleteMessage(ctx context.Context, messageId int64, ownerId int64, chatId int64) error {
-	if res, err := db.ExecContext(ctx, fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
+func deleteMessageCommon(ctx context.Context, co CommonOperations, messageId int64, ownerId int64, chatId int64) error {
+	if res, err := co.ExecContext(ctx, fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		affected, err := res.RowsAffected()
@@ -585,6 +585,14 @@ func (db *DB) DeleteMessage(ctx context.Context, messageId int64, ownerId int64,
 		}
 	}
 	return nil
+}
+
+func (db *DB) DeleteMessage(ctx context.Context, messageId int64, ownerId int64, chatId int64) error {
+	return deleteMessageCommon(ctx, db, messageId, ownerId, chatId)
+}
+
+func (tx *Tx) DeleteMessage(ctx context.Context, messageId int64, ownerId int64, chatId int64) error {
+	return deleteMessageCommon(ctx, tx, messageId, ownerId, chatId)
 }
 
 func (dbR *DB) SetFileItemUuidToNull(ctx context.Context, ownerId, chatId int64, fileItemUuid string) (int64, bool, error) {
