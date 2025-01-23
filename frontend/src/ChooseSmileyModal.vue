@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="600px" scrollable>
+        <v-dialog v-model="show" max-width="600px" scrollable class="choose-smiley-dialog">
             <v-card :title="getTitle()">
                 <v-expansion-panels v-model="chosenPanel" v-if="showSettings" class="pt-2" @update:modelValue="generateGroupSmileys">
                   <v-expansion-panel
@@ -270,4 +270,10 @@
     .smiley:hover {
       background #0d47a1
     }
+</style>
+
+<style lang="stylus">
+.choose-smiley-dialog .v-checkbox .v-selection-control {
+  min-height unset
+}
 </style>
