@@ -309,7 +309,7 @@ func getLastMessagePreview(ctx context.Context, co CommonOperations, chatIds []i
 		if i != 0 {
 			bldr += " UNION ALL "
 		}
-		bldr += fmt.Sprintf("(select %v, substring(strip_tags(text), 0, %v), owner_id from message_chat_%v order by id desc limit 1)", chatId, maxPrevSizeDb, chatId)
+		bldr += fmt.Sprintf("(select %v, substring(text, 0, %v), owner_id from message_chat_%v order by id desc limit 1)", chatId, maxPrevSizeDb, chatId)
 	}
 	rows, err := co.QueryContext(ctx, bldr)
 	if err != nil {

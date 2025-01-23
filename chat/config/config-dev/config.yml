@@ -43,7 +43,7 @@ otlp:
   endpoint: "localhost:4317"
 
 previewMaxTextSize: 240
-previewMaxTextSizeDb: 280
+previewMaxTextSizeDb: 512
 
 # Along with resending, it makes all files in private chat available to GET by any logged in user
 canResendFromTetATet: true
