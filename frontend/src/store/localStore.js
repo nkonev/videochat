@@ -450,3 +450,20 @@ export const getStoredFileListMode = () => {
 export const setStoredFileListMode = (v) => {
     localStorage.setItem(KEY_FILE_LIST_MODE, JSON.stringify(v));
 }
+
+
+export const KEY_CHOOSE_SMILEY_STAY_UNCLOSED = 'chooseSmileyStayUnclosed';
+
+export const setChooseSmileyStayUnclosed = (v) => {
+    localStorage.setItem(KEY_CHOOSE_SMILEY_STAY_UNCLOSED, JSON.stringify(v));
+}
+
+export const getChooseSmileyStayUnclosed = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_CHOOSE_SMILEY_STAY_UNCLOSED));
+    if (v === null) {
+        console.log("Resetting chooseSmileyStayUnclosed to default");
+        setChooseSmileyStayUnclosed(false);
+        v = JSON.parse(localStorage.getItem(KEY_CHOOSE_SMILEY_STAY_UNCLOSED));
+    }
+    return v;
+}

@@ -38,6 +38,7 @@
                         color="primary"
                         hide-details
                         v-model="stayUnclosed"
+                        @update:modelValue="changeStayUnclosed"
                         :label="$vuetify.locale.t('$vuetify.smiley_stay_unclosed')"
                     ></v-checkbox>
                     <v-btn v-if="showSettings" color="primary" variant="flat" @click="closeSettings()" :title="$vuetify.locale.t('$vuetify.ok')">{{$vuetify.locale.t('$vuetify.ok')}}</v-btn>
@@ -50,8 +51,9 @@
 </template>
 
 <script>
-import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
+    import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
     import axios from "axios";
+    import {getChooseSmileyStayUnclosed, setChooseSmileyStayUnclosed} from "@/store/localStore.js";
 
     const GROUP_SMILEYS = "smileys";
     const GROUP_EMOJIS = "emojis";
@@ -101,6 +103,7 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
         },
         methods: {
             showModal({addSmileyCallback, title}) {
+                this.stayUnclosed = getChooseSmileyStayUnclosed();
                 this.$data.show = true;
                 this.addSmileyCallback = addSmileyCallback;
                 this.aTitle = title;
@@ -237,7 +240,10 @@ import bus, {LOGGED_OUT, OPEN_MESSAGE_EDIT_SMILEY} from "./bus/bus";
                   break
                 }
               }
-            }
+            },
+            changeStayUnclosed(v) {
+              setChooseSmileyStayUnclosed(v)
+            },
         },
         mounted() {
             bus.on(OPEN_MESSAGE_EDIT_SMILEY, this.showModal);
