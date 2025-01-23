@@ -233,7 +233,7 @@ func (not *Events) messageNotifyCommon(ctx context.Context, userIds []int64, cha
 				continue
 			}
 
-			copied.SetPersonalizedFields(chatBasic.RegularParticipantCanPublishMessage, chatBasic.RegularParticipantCanPinMessage, chatAdmins[participantId], participantId)
+			copied.SetPersonalizedFields(chatBasic.RegularParticipantCanPublishMessage, chatBasic.RegularParticipantCanPinMessage, chatBasic.RegularParticipantCanWriteMessage, chatAdmins[participantId], participantId)
 
 			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
 				EventType:           eventType,

@@ -504,7 +504,7 @@ func convertToMessageDto(ctx context.Context, lgr *logger.Logger, dbMessage *db.
 	if !ok {
 		lgr.WithTracing(ctx).Errorf("Unable to get message's chat for message id = %v, chat id = %v", dbMessage.Id, dbMessage.ChatId)
 	}
-	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, messageChat.RegularParticipantCanPinMessage, behalfUserIsAdminInChat, behalfUserId)
+	ret.SetPersonalizedFields(messageChat.RegularParticipantCanPublishMessage, messageChat.RegularParticipantCanPinMessage, messageChat.RegularParticipantCanWriteMessage, behalfUserIsAdminInChat, behalfUserId)
 
 	return ret
 }
