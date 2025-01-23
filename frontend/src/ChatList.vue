@@ -39,7 +39,7 @@
                     </v-list-item-title>
                     <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getParticipantsClass(item)" v-html="printParticipants(item)">
                     </v-list-item-subtitle>
-                    <v-list-item-subtitle v-if="item.lastMessagePreview" class="subtitle-thin my-1"> {{ item.lastMessagePreview }} </v-list-item-subtitle>
+                    <v-list-item-subtitle v-if="item.lastMessagePreview" class="subtitle-thin my-1" v-html="item.lastMessagePreview"></v-list-item-subtitle>
                 </template>
 
                 <template v-slot:append v-if="!isMobile() && !embedded">
