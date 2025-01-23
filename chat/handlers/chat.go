@@ -768,7 +768,8 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
 
 			if chatBasicBefore.RegularParticipantCanPublishMessage != bindTo.RegularParticipantCanPublishMessage ||
-				chatBasicBefore.RegularParticipantCanPinMessage != bindTo.RegularParticipantCanPinMessage {
+				chatBasicBefore.RegularParticipantCanPinMessage != bindTo.RegularParticipantCanPinMessage ||
+				chatBasicBefore.RegularParticipantCanWriteMessage != bindTo.RegularParticipantCanWriteMessage {
 				regularParticipants := make([]int64, 0)
 				for userId, isAdmin := range areAdmins {
 					if !isAdmin {
