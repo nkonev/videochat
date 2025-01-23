@@ -779,7 +779,8 @@ func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[i
 			c.available_to_search,
 			c.blog,
 			c.regular_participant_can_publish_message,
-			c.regular_participant_can_pin_message
+			c.regular_participant_can_pin_message,
+			c.regular_participant_can_write_message
 		FROM chat c 
 		    LEFT JOIN chat_participant cp 
 		        ON (c.id = cp.chat_id AND cp.user_id = $1) 
@@ -792,7 +793,7 @@ func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[i
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage); err != nil {
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage, &dto.RegularParticipantCanWriteMessage); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, dto)
