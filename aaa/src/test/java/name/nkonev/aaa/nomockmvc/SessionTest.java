@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import java.net.URI;
 
 import static name.nkonev.aaa.TestConstants.*;
-import static name.nkonev.aaa.Constants.Urls.PUBLIC_API;
+import static name.nkonev.aaa.Constants.Urls.EXTERNAL_API;
 import static name.nkonev.aaa.Constants.Urls.LOCK;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
@@ -38,7 +38,7 @@ public class SessionTest extends OAuth2EmulatorTests {
     public void userCannotRequestProfileAfterLock() throws Exception {
         SessionHolder userAliceSession = login(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
         RequestEntity aliceProfileRequest1 = RequestEntity
-                .get(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
+                .get(new URI(urlWithContextPath()+ EXTERNAL_API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();
@@ -49,7 +49,7 @@ public class SessionTest extends OAuth2EmulatorTests {
         SessionHolder userAdminSession = login(username, password);
         LockDTO lockDTO = new LockDTO(userAliceSession.userId, true);
         RequestEntity lockRequest = RequestEntity
-                .post(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.USER+LOCK))
+                .post(new URI(urlWithContextPath()+ EXTERNAL_API + Constants.Urls.USER+LOCK))
                 .header(HEADER_XSRF_TOKEN, userAdminSession.newXsrf)
                 .header(COOKIE, userAdminSession.getCookiesArray())
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -60,7 +60,7 @@ public class SessionTest extends OAuth2EmulatorTests {
 
 
         RequestEntity aliceProfileRequest3 = RequestEntity
-                .get(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
+                .get(new URI(urlWithContextPath()+ EXTERNAL_API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();

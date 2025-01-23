@@ -24,12 +24,12 @@ public class PasswordResetController {
      * Yes, if your email is stolen you can lost your account
      * @param email
      */
-    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET)
+    @PostMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.REQUEST_PASSWORD_RESET)
     public void requestPasswordReset(@RequestParam String email, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
         passwordResetService.requestPasswordReset(email, language);
     }
 
-    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
+    @PostMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
     public void resetPassword(@RequestBody @Valid PasswordResetDTO passwordResetDto, HttpSession httpSession) {
         passwordResetService.resetPassword(passwordResetDto, httpSession);
     }

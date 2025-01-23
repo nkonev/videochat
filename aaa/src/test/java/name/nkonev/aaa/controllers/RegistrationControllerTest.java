@@ -62,7 +62,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountRequest = mockMvc.perform(
-                MockMvcRequestBuilders.post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                MockMvcRequestBuilders.post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
@@ -135,7 +135,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountRequest = mockMvc.perform(
-                MockMvcRequestBuilders.post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                MockMvcRequestBuilders.post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                     .content(objectMapper.writeValueAsString(createUserDTO))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -159,7 +159,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
         {
             long tokenCountBeforeResend = userConfirmationTokenRepository.count();
             mockMvc.perform(
-                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
+                    post(Constants.Urls.EXTERNAL_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
                         .queryParam("email", email)
                         .with(csrf())
                 )
@@ -201,7 +201,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
         {
             long tokenCountBeforeResend = userConfirmationTokenRepository.count();
             mockMvc.perform(
-                    post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
+                    post(Constants.Urls.EXTERNAL_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
                         .queryParam("email", email)
                         .with(csrf())
                 )
@@ -229,7 +229,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
@@ -250,7 +250,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                     .content(objectMapper.writeValueAsString(createUserDTO))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -271,7 +271,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                     .content(objectMapper.writeValueAsString(createUserDTO))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -293,7 +293,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
@@ -316,7 +316,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
@@ -343,7 +343,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
 
         // register
         MvcResult createAccountResult = mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REGISTER)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REGISTER)
                         .content(objectMapper.writeValueAsString(createUserDTO))
                         .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                         .with(csrf())
@@ -410,7 +410,7 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
         // attacker
         long tokenCountBeforeResend = userConfirmationTokenRepository.count();
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.RESEND_CONFIRMATION_EMAIL)
                     .queryParam("email", bobEmail)
                     .with(csrf())
         )

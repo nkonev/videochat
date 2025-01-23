@@ -17,25 +17,25 @@ public class UserSettingsController {
     private UserSettingsService userSettingsService;
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.INIT, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.SETTINGS + Constants.Urls.INIT, produces = MediaType.APPLICATION_JSON_VALUE)
     public SettingsDTO init(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
         return userSettingsService.initSettings(userAccount.getId());
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE)
     public String[] getSmileys(@AuthenticationPrincipal UserAccountDetailsDTO userAccount) {
         return userSettingsService.getSmileys(userAccount.getId());
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PutMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.SETTINGS + Constants.Urls.SMILEYS, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public String[] setSmileys(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestBody String[] smileys) {
         return userSettingsService.setSmileys(userAccount.getId(), smileys);
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PutMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.SETTINGS + Constants.Urls.LANGUAGE, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.SETTINGS + Constants.Urls.LANGUAGE, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public Language setLanguage(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @NotNull @RequestBody LanguageDTO aDto) {
         return userSettingsService.setLanguage(userAccount.getId(), aDto.language());
     }

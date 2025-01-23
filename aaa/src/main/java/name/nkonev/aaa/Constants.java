@@ -9,7 +9,7 @@ public class Constants {
 
     public static class Urls {
         public static final String ROOT = "/";
-        public static final String PUBLIC_API = "/api/aaa";
+        public static final String EXTERNAL_API = "/api/aaa";
         public static final String INTERNAL_API = "/internal";
         public static final String PROFILE = "/profile";
         public static final String SETTINGS = "/settings";

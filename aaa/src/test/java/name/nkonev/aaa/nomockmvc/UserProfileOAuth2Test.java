@@ -28,7 +28,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 import static name.nkonev.aaa.TestConstants.*;
-import static name.nkonev.aaa.Constants.Urls.PUBLIC_API;
+import static name.nkonev.aaa.Constants.Urls.EXTERNAL_API;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.COOKIE;
@@ -188,7 +188,7 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
 
         SessionHolder userNikitaSession = login(vkontakteLogin, vkontaktePassword);
         RequestEntity selfDeleteRequest1 = RequestEntity
-                .delete(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
+                .delete(new URI(urlWithContextPath()+ EXTERNAL_API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userNikitaSession.newXsrf)
                 .header(COOKIE, userNikitaSession.getCookiesArray())
                 .build();
@@ -276,7 +276,7 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
 
         // unbind facebook
         RequestEntity myPostsRequest1 = RequestEntity
-                .delete(new URI(urlWithContextPath()+ Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+FACEBOOK))
+                .delete(new URI(urlWithContextPath()+ Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE+FACEBOOK))
                 .header(HEADER_XSRF_TOKEN, userAliceSession.newXsrf)
                 .header(COOKIE, userAliceSession.getCookiesArray())
                 .build();
@@ -319,7 +319,7 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
 
         SessionHolder userNikitaSession = login(googleLogin, googlePassword);
         RequestEntity selfDeleteRequest1 = RequestEntity
-                .delete(new URI(urlWithContextPath()+ PUBLIC_API + Constants.Urls.PROFILE))
+                .delete(new URI(urlWithContextPath()+ EXTERNAL_API + Constants.Urls.PROFILE))
                 .header(HEADER_XSRF_TOKEN, userNikitaSession.newXsrf)
                 .header(COOKIE, userNikitaSession.getCookiesArray())
                 .build();
@@ -357,7 +357,7 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
 
         // unbind keycloak
         RequestEntity myPostsRequest1 = RequestEntity
-                .delete(new URI(urlWithContextPath()+ Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+bindDeleteUrl))
+                .delete(new URI(urlWithContextPath()+ Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE+bindDeleteUrl))
                 .header(HEADER_XSRF_TOKEN, xsrfValue)
                 .header(COOKIE, session.toString(), xsrf.toString())
                 .build();

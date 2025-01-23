@@ -36,14 +36,14 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    public static final String API_LOGIN_URL = Constants.Urls.PUBLIC_API + "/login";
-    public static final String API_LOGOUT_URL = Constants.Urls.PUBLIC_API + "/logout";
+    public static final String API_LOGIN_URL = Constants.Urls.EXTERNAL_API + "/login";
+    public static final String API_LOGOUT_URL = Constants.Urls.EXTERNAL_API + "/logout";
 
     public static final String USERNAME_PARAMETER = "username";
     public static final String PASSWORD_PARAMETER = "password";
     public static final String REMEMBER_ME_PARAMETER = "remember-me";
 
-    public static final String API_LOGIN_OAUTH = Constants.Urls.PUBLIC_API + "/login/oauth2";
+    public static final String API_LOGIN_OAUTH = Constants.Urls.EXTERNAL_API + "/login/oauth2";
     private static final String AUTHORIZATION_RESPONSE_BASE_URI = API_LOGIN_OAUTH + "/code/*";
 
     @Autowired

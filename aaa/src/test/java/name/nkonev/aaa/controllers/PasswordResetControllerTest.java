@@ -42,7 +42,7 @@ public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
 
         // invoke resend, this sends url /password-reset?uuid=<uuid> and confirm code to email
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.REQUEST_PASSWORD_RESET)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.REQUEST_PASSWORD_RESET)
                     .queryParam("email", email)
                     .with(csrf())
             )
@@ -66,7 +66,7 @@ public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
 
         // user click "set new password" button in modal
         mockMvc.perform(
-            post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
+            post(Constants.Urls.EXTERNAL_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                 .content(objectMapper.writeValueAsString(passwordResetDto))
                 .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .with(csrf())
@@ -102,7 +102,7 @@ public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
         PasswordResetDTO passwordResetDto = new PasswordResetDTO(tokenUuid, "qwqwqwqwqwqwqwqw");
 
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                     .content(objectMapper.writeValueAsString(passwordResetDto))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -123,7 +123,7 @@ public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
         PasswordResetDTO passwordResetDto = new PasswordResetDTO(tokenUuid, "qwqwqwqwqwqwqwqw");
 
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                     .content(objectMapper.writeValueAsString(passwordResetDto))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
@@ -140,7 +140,7 @@ public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
         PasswordResetDTO passwordResetDto = new PasswordResetDTO(UUID.randomUUID(), emptyPassword);
 
         mockMvc.perform(
-                post(Constants.Urls.PUBLIC_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
+                post(Constants.Urls.EXTERNAL_API + Constants.Urls.PASSWORD_RESET_SET_NEW)
                     .content(objectMapper.writeValueAsString(passwordResetDto))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())

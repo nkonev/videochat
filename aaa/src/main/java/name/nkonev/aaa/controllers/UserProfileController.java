@@ -43,7 +43,7 @@ public class UserProfileController {
      */
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE, produces = MediaType.APPLICATION_JSON_VALUE)
     public name.nkonev.aaa.dto.UserSelfProfileDTO getProfile(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session) {
         LOGGER.info("Requesting external user profile");
         return userProfileService.getProfile(userAccount, session);
@@ -60,7 +60,7 @@ public class UserProfileController {
     @ResponseBody
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.SEARCH)
+    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.SEARCH)
     public List<name.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDTO request
@@ -71,7 +71,7 @@ public class UserProfileController {
 
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.FRESH)
+    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.FRESH)
     public FreshDTO fresh(
             @RequestBody List<UserAccountDTOExtended> users,
             @RequestParam(value = "size", required = false) int size,
@@ -81,7 +81,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+"/filter")
+    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+"/filter")
     public Map<String, Boolean> filter(@RequestBody FilterUserRequest filterUserRequest) {
         return userProfileService.filter(filterUserRequest);
     }
@@ -96,7 +96,7 @@ public class UserProfileController {
 
     @ResponseBody
     @PutMapping({
-        Constants.Urls.PUBLIC_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
+        Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
         Constants.Urls.INTERNAL_API+Constants.Urls.USER + Constants.Urls.REQUEST_FOR_ONLINE,
     })
     public void requestUserOnline(@RequestParam(value = "userId", required = false) List<Long> userIds) {
@@ -107,7 +107,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @GetMapping(value = Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.USER_ID)
+    @GetMapping(value = Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.USER_ID)
     public UserAccountDTOExtended getUser(
             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
             @AuthenticationPrincipal UserAccountDetailsDTO userAccountPrincipal
@@ -134,7 +134,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PatchMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
+    @PatchMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE)
     @PreAuthorize("isAuthenticated()")
     public UserSelfProfileDTO editNonEmpty(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
@@ -146,13 +146,13 @@ public class UserProfileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.CHANGE_EMAIL_CONFIRM)
+    @GetMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.CHANGE_EMAIL_CONFIRM)
     public String changeEmailConfirm(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam(Constants.Urls.UUID) UUID uuid, HttpSession httpSession) {
         return "redirect:" + userProfileService.changeEmailConfirm(userAccount.getId(), uuid, httpSession);
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(value = Constants.Urls.PUBLIC_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM)
+    @PostMapping(value = Constants.Urls.EXTERNAL_API + Constants.Urls.RESEND_CHANGE_EMAIL_CONFIRM)
     @ResponseBody
     public void resendConfirmationChangeEmailToken(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam(defaultValue = Language.DEFAULT) Language language) {
         userProfileService.resendConfirmationChangeEmailToken(userAccount, language);
@@ -160,14 +160,14 @@ public class UserProfileController {
 
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS+"/my")
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.SESSIONS+"/my")
     public Map<String, Session> mySessions(@AuthenticationPrincipal UserAccountDetailsDTO userDetails){
         return userProfileService.mySessions(userDetails);
     }
 
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER+Constants.Urls.ONLINE)
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.ONLINE)
     public List<UserOnlineResponse> getOnlineForUsers(@RequestParam(value = "userId") List<Long> userIds){
         return userProfileService.getOnlineForUsers(userIds);
     }
@@ -180,69 +180,69 @@ public class UserProfileController {
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
-    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         return userProfileService.sessions(userAccount, userId);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canRemoveSessions(#userAccount, #userId)")
-    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.SESSIONS)
+    @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId, HttpSession httpSession){
         userProfileService.killSessions(userAccount, userId, httpSession);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.LOCK)
+    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.LOCK)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.LockDTO lockDTO){
         return userProfileService.setLocked(userAccountDetailsDTO, lockDTO);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
+    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.ConfirmDTO confirmDTO){
         return userProfileService.setConfirmed(userAccountDetailsDTO, confirmDTO);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canEnable(#userAccountDetailsDTO, #enableDTO)")
-    @PostMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ENABLE)
+    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.ENABLE)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setEnabled(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.EnabledDTO enableDTO){
         return userProfileService.setEnabled(userAccountDetailsDTO, enableDTO);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
-    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER)
+    @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER)
     public void deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
         userProfileService.deleteUser(userAccountDetailsDTO, userId);
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #setRolesDTO.userId)")
-    @PutMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
+    @PutMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setRoles(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody SetRolesDTO setRolesDTO){
         return userProfileService.setRoles(userAccountDetailsDTO, setRolesDTO.userId(), setRolesDTO.roles());
     }
 
     @ResponseBody
-    @GetMapping(Constants.Urls.PUBLIC_API +Constants.Urls.USER + Constants.Urls.ROLE)
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public List<UserRole> getAllRoles() {
         return Arrays.stream(UserRole.values()).toList();
     }
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canSelfDelete(#userAccountDetailsDTO)")
-    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE)
+    @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         userProfileService.selfDeleteUser(userAccountDetailsDTO);
     }
 
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping(Constants.Urls.PUBLIC_API +Constants.Urls.PROFILE+"/{provider}")
+    @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE+"/{provider}")
     public UserSelfProfileDTO selfDeleteBindingOauth2Provider(
         @AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO,
         @PathVariable("provider") String provider,
@@ -252,7 +252,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @GetMapping(Constants.Urls.PUBLIC_API + "/oauth2/providers")
+    @GetMapping(Constants.Urls.EXTERNAL_API + "/oauth2/providers")
     public List<OAuth2ProvidersDTO> availableOauth2Providers() {
         return oAuth2ProvidersService.availableOauth2Providers();
     }
@@ -269,7 +269,7 @@ public class UserProfileController {
 
     @ResponseBody
     @PreAuthorize("@aaaPermissionService.canSetPassword(#userAccount, #userId)")
-    @PutMapping(Constants.Urls.PUBLIC_API + Constants.Urls.USER+Constants.Urls.USER_ID + Constants.Urls.PASSWORD)
+    @PutMapping(Constants.Urls.EXTERNAL_API + Constants.Urls.USER+Constants.Urls.USER_ID + Constants.Urls.PASSWORD)
     public void setPassword(@AuthenticationPrincipal UserAccountDetailsDTO userAccount,
                             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,
                             @RequestBody @Valid SetPasswordDTO setPasswordDTO){

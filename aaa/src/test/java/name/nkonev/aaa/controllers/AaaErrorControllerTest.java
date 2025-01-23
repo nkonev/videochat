@@ -46,7 +46,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
      */
     @Test
     public void testNotAuthorized() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API + Constants.Urls.PROFILE, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.EXTERNAL_API + Constants.Urls.PROFILE, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(401, responseEntity.getStatusCodeValue());
 
@@ -79,7 +79,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
 
     @Test
     public void testSqlExceptionIsHidden() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API + TestConstants.SQL_URL, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.EXTERNAL_API + TestConstants.SQL_URL, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(500, responseEntity.getStatusCodeValue());
 
@@ -95,7 +95,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
 
     @Test
     public void testUserDetailsWithPasswordIsNotSerialized() throws Exception {
-        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.PUBLIC_API + TestConstants.USER_DETAILS, String.class);
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.EXTERNAL_API + TestConstants.USER_DETAILS, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(500, responseEntity.getStatusCodeValue());
 
