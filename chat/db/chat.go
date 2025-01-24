@@ -1260,7 +1260,7 @@ func (db *DB) GetUserChatNotificationSettings(ctx context.Context, userId, chatI
 }
 
 // see also getRowNumbers
-func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64, edgeChatId *int64, pageSize int, reverse bool, searchString string, additionalFoundUserIds []int64) (bool, error) {
+func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64, reverse bool, searchString string, additionalFoundUserIds []int64) (bool, error) {
 
 	orderDirection := "desc"
 	if reverse {
@@ -1275,42 +1275,28 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 	var row *sql.Row
 	if searchString != "" {
 		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
-			with first_page as (
-				select inn3.* from (
-					select inn2.* from (
-						select id, rn FROM (
-							select id, row_number() over (%s %s) as rn 
+			with a_page as (
+				select id, row_number() over (%s %s) as rn 
 							%s
 							where %s
-						) inn
-					) inn2 limit $4
-				) inn3
 			)
-			select exists (select * from first_page where id = $5) -- chat id to probe
-				and (($6::bigint is null) or exists (select * from first_page where id = $6))
+			select exists (select * from a_page where id = $4)
 		`, chat_order, orderDirection, chatFrom(true), getChatSearchClause(additionalFoundUserIds)),
-			participantId, searchStringWithPercents, searchString, pageSize, chatId, edgeChatId)
+			participantId, searchStringWithPercents, searchString, chatId)
 		// last line:
 		// edge on the screen - here we ensure that this is the first page, in (1, 2) means the first place for the toppest element or the second place after sorting
 		// checking ($6::bigint is null) is needed for the case no items on the screen so frontend has edgeChatId == null
 		// casing to bigint needed because of https://github.com/jackc/pgx/issues/281
 	} else {
 		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
-			with first_page as (
-				select inn3.* from (
-					select inn2.* from (
-						select id, rn FROM (
-							select id, row_number() over (%s %s) as rn 
+			with a_page as (
+				select id, row_number() over (%s %s) as rn 
 							%s
 							where %s
-						) inn
-					) inn2 limit $2
-			  	) inn3
 			)
-			select exists (select * from first_page where id = $3) -- chat id to probe
-				and (($4::bigint is null) or exists (select * from first_page where id = $4)) 
+			select exists (select * from a_page where id = $2)
 		`, chat_order, orderDirection, chatFrom(true), chat_where),
-			participantId, pageSize, chatId, edgeChatId)
+			participantId, chatId)
 	}
 	if row.Err() != nil {
 		tx.lgr.WithTracing(ctx).Errorf("Error during get Search %v", row.Err())

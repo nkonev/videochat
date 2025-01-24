@@ -220,9 +220,7 @@ func (ch *ChatHandler) HasNewMessages(c echo.Context) error {
 
 type ChatFilterDto struct {
 	SearchString string `json:"searchString"`
-	PageSize     int    `json:"pageSize"`
-	ChatId       int64  `json:"chatId"`     // id of probe element
-	EdgeChatId   *int64 `json:"edgeChatId"` // edge chatId on the this page on screen
+	ChatId       int64  `json:"chatId"` // id of probe element
 }
 
 func (ch *ChatHandler) Filter(c echo.Context) error {
@@ -243,7 +241,7 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		found, err := tx.ChatFilter(c.Request().Context(), userPrincipalDto.UserId, bindTo.ChatId, bindTo.EdgeChatId, bindTo.PageSize, reverse, searchString, additionalFoundUserIds)
+		found, err := tx.ChatFilter(c.Request().Context(), userPrincipalDto.UserId, bindTo.ChatId, reverse, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
 		}

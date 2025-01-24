@@ -578,32 +578,15 @@ export default {
         })
     },
     onEditChat(dto) {
-          axios.post(`/api/chat/filter`, {
-            searchString: this.searchString,
-            pageSize: PAGE_SIZE,
-            chatId: dto.id,
-            edgeChatId: this.startingFromItemIdTop,
-          }, {
-            params: {
-              reverse: false
-            },
-            signal: this.requestAbortController.signal
-          }).then(({data}) => {
-            if (data.found) {
-              // chat can change the position after chat_edited so we reflect it here
-              let idxOf = findIndex(this.items, dto);
-              if (idxOf !== -1) { // hasItem()
-                const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
-                this.changeItem(changedDto);
-              } else {
-                this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
-              }
-              this.performMarking();
-            } else {
-              console.log("Not found for editing, removing from the current view", dto);
-              this.removeItem(dto);
-            }
-          })
+      // chat can change the position after chat_edited so we reflect it here
+      let idxOf = findIndex(this.items, dto);
+      if (idxOf !== -1) { // hasItem()
+        const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
+        this.changeItem(changedDto);
+      } else {
+        this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
+      }
+      this.performMarking();
     },
     redrawItem(dto) {
       if (this.searchString == publicallyAvailableForSearchChatsQuery) {
