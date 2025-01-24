@@ -10,9 +10,9 @@ import {
 } from "@/router/routes";
 import he from "he";
 
-export const defaultVideoPreviewUrl = '/api/storage/assets/video.png';
-export const defaultAudioPreviewUrl = '/api/storage/assets/audio.jpg';
-export const defaultIframePreviewUrl = '/api/storage/assets/iframe.png';
+export const defaultVideoPreviewUrl = prefix + '/images/covers/video.png';
+export const defaultAudioPreviewUrl = prefix + '/images/covers/audio.jpg';
+export const defaultIframePreviewUrl = prefix + '/images/covers/iframe.png';
 
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1

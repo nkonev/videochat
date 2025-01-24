@@ -25,7 +25,7 @@ func ConfigureStaticMiddleware(lgr *logger.Logger) StaticMiddleware {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/api/storage/assets") || reqUrl == "/git.json" {
+			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || reqUrl == "/git.json" {
 				h.ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			} else {

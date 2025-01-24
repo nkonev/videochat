@@ -373,7 +373,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 // in case getting file list
 // see also chat/handlers/blog.go :: makeUrlPublic
 func makeUrlPublic(src string, additionalSegment string, overrideChatId, overrideMessageId int64) (string, error) {
-	if strings.HasPrefix(src, "/api/storage/assets/") { // don't touch built-in default urls (used for video-by-link, audio)
+	if strings.HasPrefix(src, "/images/covers/") { // don't touch built-in default urls (used for video-by-link, audio)
 		return src, nil
 	}
 

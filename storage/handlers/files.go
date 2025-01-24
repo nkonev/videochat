@@ -37,8 +37,8 @@ type RenameDto struct {
 	Newname string `json:"newname"`
 }
 
-const NotFoundImage = "/api/storage/assets/not_found.png"
-const ConvertingImage = "/api/storage/assets/ffmpeg_converting.jpg"
+const NotFoundImage = "/images/covers/not_found.png"
+const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 
 func NewFilesHandler(
 	lgr *logger.Logger,
