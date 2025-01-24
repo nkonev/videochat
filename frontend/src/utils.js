@@ -477,3 +477,19 @@ export const setSplitter = (parentSelector, varName, enable) => {
         splitPanes.style.setProperty(varName, enable ? 'unset' : 'none');
     }
 }
+
+export const upsertToWritingUsers = (writingUsers, data) => {
+    const idx = writingUsers.findIndex(value => value.login === data.login);
+    if (idx !== -1) { // update
+        writingUsers[idx].timestamp = +new Date();
+    } else { // add
+        writingUsers.push({timestamp: +new Date(), login: data.login})
+    }
+}
+export const buildWritingUsersSubtitleInfo = (writingUsers, $vuetify) => {
+    return writingUsers.map(v => v.login).join(', ') + " " + $vuetify.locale.t('$vuetify.user_is_writing');
+}
+export const filterOutOldWritingUsers = (writingUsers) => {
+    const curr = +new Date();
+    return writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
+}

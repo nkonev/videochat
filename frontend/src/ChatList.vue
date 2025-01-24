@@ -39,7 +39,7 @@
                     </v-list-item-title>
                     <v-list-item-subtitle :style="isSearchResult(item) ? {color: 'gray'} : {}" :class="getParticipantsClass(item)" v-html="printParticipants(item)">
                     </v-list-item-subtitle>
-                    <v-list-item-subtitle v-if="item.lastMessagePreview" class="subtitle-thin my-1" v-html="item.lastMessagePreview"></v-list-item-subtitle>
+                    <v-list-item-subtitle v-if="shouldShowThirdLine(item)" class="subtitle-thin my-1" v-html="thirdLine(item)"></v-list-item-subtitle>
                 </template>
 
                 <template v-slot:append v-if="!isMobile() && !embedded">
@@ -90,20 +90,20 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
-    CHAT_ADD,
-    CHAT_DELETED,
-    CHAT_EDITED, CHAT_REDRAW,
-    CLOSE_SIMPLE_MODAL,
-    LOGGED_OUT,
-    OPEN_CHAT_EDIT,
-    OPEN_SIMPLE_MODAL,
-    PROFILE_SET,
-    REFRESH_ON_WEBSOCKET_RESTORED,
-    SEARCH_STRING_CHANGED,
-    UNREAD_MESSAGES_CHANGED,
-    CO_CHATTED_PARTICIPANT_CHANGED,
-    VIDEO_CALL_SCREEN_SHARE_CHANGED,
-    VIDEO_CALL_USER_COUNT_CHANGED
+  CHAT_ADD,
+  CHAT_DELETED,
+  CHAT_EDITED, CHAT_REDRAW,
+  CLOSE_SIMPLE_MODAL,
+  LOGGED_OUT,
+  OPEN_CHAT_EDIT,
+  OPEN_SIMPLE_MODAL,
+  PROFILE_SET,
+  REFRESH_ON_WEBSOCKET_RESTORED,
+  SEARCH_STRING_CHANGED,
+  UNREAD_MESSAGES_CHANGED,
+  CO_CHATTED_PARTICIPANT_CHANGED,
+  VIDEO_CALL_SCREEN_SHARE_CHANGED,
+  VIDEO_CALL_USER_COUNT_CHANGED, USER_TYPING
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -112,10 +112,18 @@ import {
   dynamicSortMultiple,
   findIndex,
   hasLength,
-  isSetEqual, isChatRoute, publicallyAvailableForSearchChatsQuery, replaceInArray,
+  isSetEqual,
+  isChatRoute,
+  publicallyAvailableForSearchChatsQuery,
+  replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
-  setTitle, getLoginColoredStyle, isChatHash,
+  setTitle,
+  getLoginColoredStyle,
+  isChatHash,
+  upsertToWritingUsers,
+  buildWritingUsersSubtitleInfo,
+  filterOutOldWritingUsers,
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -133,6 +141,8 @@ const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
 
 const scrollerName = 'ChatList';
+
+let writingUsersTimerId;
 
 export default {
   mixins: [
@@ -231,7 +241,7 @@ export default {
           const items = res.data;
           console.log("Get items in ", scrollerName, items, "direction", this.aDirection);
           items.forEach((item) => {
-                this.transformItem(item);
+                this.transformItemOverride(item);
           });
 
           // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
@@ -538,7 +548,7 @@ export default {
     },
     addItem(dto) {
       console.log("Adding item", dto);
-      this.transformItem(dto);
+      this.transformItemOverride(dto);
       this.items.unshift(dto);
       this.sort(this.items);
       this.reduceListAfterAdd(false);
@@ -546,7 +556,7 @@ export default {
     },
     changeItem(dto) {
       console.log("Replacing item", dto);
-      // this.transformItem(dto); // not needed here because it resets online and in video. see applyState()
+      // this.transformItemOverride(dto); // not needed here because it resets online and in video. see applyStateOverride()
       replaceInArray(this.items, dto);
       this.sort(this.items);
       this.updateTopAndBottomIds();
@@ -581,12 +591,23 @@ export default {
       // chat can change the position after chat_edited so we reflect it here
       let idxOf = findIndex(this.items, dto);
       if (idxOf !== -1) { // hasItem()
-        const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
+        const changedDto = this.applyStateOverride(this.items[idxOf], dto); // preserve online and isInVideo
         this.changeItem(changedDto);
       } else {
         this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
       }
       this.performMarking();
+    },
+    transformItemOverride(item) {
+      this.transformItem(item);
+      item.writingUsers = [];
+      item.usersWritingSubtitleInfo = null;
+    },
+    applyStateOverride(existing, newItem) {
+      const s = this.applyState(existing, newItem);
+      s.writingUsers = existing.writingUsers;
+      s.usersWritingSubtitleInfo = existing.usersWritingSubtitleInfo;
+      return s;
     },
     redrawItem(dto) {
       if (this.searchString == publicallyAvailableForSearchChatsQuery) {
@@ -718,6 +739,25 @@ export default {
     isAppropriateHash(hash) {
       return isChatHash(hash)
     },
+
+    onUserTyping(data) {
+      const chatItem = this.items.find(it => it.id === data.chatId);
+      if (chatItem) {
+        upsertToWritingUsers(chatItem.writingUsers, data);
+        chatItem.usersWritingSubtitleInfo = buildWritingUsersSubtitleInfo(chatItem.writingUsers, this.$vuetify);
+      }
+    },
+
+    shouldShowThirdLine(item) {
+      return !!item.lastMessagePreview || !!item.usersWritingSubtitleInfo
+    },
+    thirdLine(item) {
+      if (item.usersWritingSubtitleInfo) {
+        return item.usersWritingSubtitleInfo
+      } else if (item.lastMessagePreview) {
+        return item.lastMessagePreview
+      }
+    },
   },
   components: {
     MessageItemContextMenu,
@@ -784,12 +824,25 @@ export default {
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
+    bus.on(USER_TYPING, this.onUserTyping);
 
     if (this.routeName == chat_list_name) {
       this.setTopTitle();
       this.chatStore.isShowSearch = true;
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
+
+    writingUsersTimerId = setInterval(()=>{
+      for (const chatItem of this.items) {
+        chatItem.writingUsers = filterOutOldWritingUsers(chatItem.writingUsers);
+        if (chatItem.writingUsers.length == 0) {
+          chatItem.usersWritingSubtitleInfo = null;
+        } else {
+          chatItem.usersWritingSubtitleInfo = buildWritingUsersSubtitleInfo(chatItem.writingUsers, this.$vuetify);
+        }
+      }
+    }, 500);
+
     this.installOnFocus();
   },
 
@@ -815,6 +868,9 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
+    bus.off(USER_TYPING, this.onUserTyping);
+
+    clearInterval(writingUsersTimerId);
 
     if (this.routeName == chat_list_name) {
       setTitle(null);

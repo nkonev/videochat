@@ -64,7 +64,12 @@ import {
   isChatRoute,
   new_message,
   setTitle,
-  goToPreservingQuery, setSplitter, isMobileBrowser
+  goToPreservingQuery,
+  setSplitter,
+  isMobileBrowser,
+  upsertToWritingUsers,
+  buildWritingUsersSubtitleInfo,
+  filterOutOldWritingUsers
 } from "@/utils";
 import bus, {
     CHAT_DELETED,
@@ -866,32 +871,9 @@ export default {
 
     onUserTyping(data) {
       if (data.chatId == this.chatId) {
-        console.debug("OnUserTyping", data);
-
-        if (this.chatStore.currentUser?.id == data.participantId) {
-          console.log("Skipping myself typing notifications");
-          return;
-        }
-
-        this.upsertToWritingUsers(this.writingUsers, data);
-
-        this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
+        upsertToWritingUsers(this.writingUsers, data);
+        this.chatStore.usersWritingSubtitleInfo = buildWritingUsersSubtitleInfo(this.writingUsers, this.$vuetify);
       }
-    },
-    upsertToWritingUsers(writingUsers, data) {
-      const idx = writingUsers.findIndex(value => value.login === data.login);
-      if (idx !== -1) { // update
-        writingUsers[idx].timestamp = +new Date();
-      } else { // add
-        writingUsers.push({timestamp: +new Date(), login: data.login})
-      }
-    },
-    buildWritingUsersSubtitleInfo(writingUsers) {
-      return writingUsers.map(v => v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
-    },
-    filterOutOldWritingUsers(writingUsers) {
-      const curr = +new Date();
-      return writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
     },
   },
   watch: {
@@ -962,11 +944,11 @@ export default {
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
 
     writingUsersTimerId = setInterval(()=>{
-      this.writingUsers = this.filterOutOldWritingUsers(this.writingUsers);
+      this.writingUsers = filterOutOldWritingUsers(this.writingUsers);
       if (this.writingUsers.length == 0) {
         this.chatStore.usersWritingSubtitleInfo = null;
       } else {
-        this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
+        this.chatStore.usersWritingSubtitleInfo = buildWritingUsersSubtitleInfo(this.writingUsers, this.$vuetify);
       }
     }, 500);
 
