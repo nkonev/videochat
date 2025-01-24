@@ -587,26 +587,6 @@ export default {
             this.getInfo(this.chatId);
         }
     },
-    onUserTyping(data) {
-      console.debug("OnUserTyping", data);
-
-      if (this.chatStore.currentUser?.id == data.participantId) {
-        console.log("Skipping myself typing notifications");
-        return;
-      }
-
-      const idx = this.writingUsers.findIndex(value => value.login === data.login);
-      if (idx !== -1) { // update
-        this.writingUsers[idx].timestamp = + new Date();
-      } else { // add
-        this.writingUsers.push({timestamp: +new Date(), login: data.login})
-      }
-
-      this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
-    },
-    buildWritingUsersSubtitleInfo(writingUsers) {
-      return writingUsers.map(v => v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
-    },
     onUserBroadcast(dto) {
       console.log("onUserBroadcast", dto);
       const stripped = dto.text;
@@ -890,6 +870,34 @@ export default {
         return "new-fab-b"
       }
     },
+
+    onUserTyping(data) {
+      console.debug("OnUserTyping", data);
+
+      if (this.chatStore.currentUser?.id == data.participantId) {
+        console.log("Skipping myself typing notifications");
+        return;
+      }
+
+      this.upsertToWritingUsers(this.writingUsers, data);
+
+      this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
+    },
+    upsertToWritingUsers(writingUsers, data) {
+      const idx = writingUsers.findIndex(value => value.login === data.login);
+      if (idx !== -1) { // update
+        writingUsers[idx].timestamp = +new Date();
+      } else { // add
+        writingUsers.push({timestamp: +new Date(), login: data.login})
+      }
+    },
+    buildWritingUsersSubtitleInfo(writingUsers) {
+      return writingUsers.map(v => v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
+    },
+    filterOutOldWritingUsers(writingUsers) {
+      const curr = +new Date();
+      return writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
+    },
   },
   watch: {
     '$route': {
@@ -959,8 +967,7 @@ export default {
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
 
     writingUsersTimerId = setInterval(()=>{
-      const curr = + new Date();
-      this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
+      this.writingUsers = this.filterOutOldWritingUsers(this.writingUsers);
       if (this.writingUsers.length == 0) {
         this.chatStore.usersWritingSubtitleInfo = null;
       } else {
