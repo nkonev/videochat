@@ -536,6 +536,11 @@ export default {
               return false
           }
     },
+    removeTopElementToMatchSizeIfNeed() {
+      if (this.items.length >= PAGE_SIZE) {
+        this.items.slice(0, -1);
+      }
+    },
     addItem(dto) {
       console.log("Adding item", dto);
       this.transformItem(dto);
@@ -562,7 +567,6 @@ export default {
           searchString: this.searchString,
           pageSize: PAGE_SIZE,
           chatId: dto.id,
-          edgeChatId: this.startingFromItemIdTop,
         }, {
           params: {
             reverse: false
@@ -570,7 +574,9 @@ export default {
           signal: this.requestAbortController.signal
         }).then(({data}) => {
           if (data.found) {
+            this.removeTopElementToMatchSizeIfNeed();
             this.addItem(dto);
+            // TODO /fresh
             this.performMarking();
           } else {
             console.log("Skipping adding", dto)
@@ -582,7 +588,6 @@ export default {
             searchString: this.searchString,
             pageSize: PAGE_SIZE,
             chatId: dto.id,
-            edgeChatId: this.startingFromItemIdTop,
           }, {
             params: {
               reverse: false
@@ -596,12 +601,14 @@ export default {
                 const changedDto = this.applyState(this.items[idxOf], dto); // preserve online and isInVideo
                 this.changeItem(changedDto);
               } else {
+                this.removeTopElementToMatchSizeIfNeed();
                 this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
               }
+              // TODO /fresh
               this.performMarking();
             } else {
-              console.log("Not found for editing, removing from the current view", dto);
-              this.removeItem(dto);
+              console.log("Not matched after editing, removing from the current view", dto);
+              this.onDeleteChat(dto);
             }
           })
     },
@@ -613,11 +620,12 @@ export default {
       }
     },
     onDeleteChat(dto) {
-          if (this.hasItem(dto)) {
-              this.removeItem(dto);
-          } else {
-              console.log("Item was not been removed", dto);
-          }
+        if (this.hasItem(dto)) {
+            this.removeItem(dto);
+            // TODO /fresh
+        } else {
+            console.log("Item was not been removed", dto);
+        }
     },
       // does should change items list (new item added to visible part or not for example)
     hasItem(item) {
