@@ -1287,7 +1287,7 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 				) inn3
 			)
 			select exists (select * from first_page where id = $5) -- chat id to probe
-				and (($6::bigint is null) or exists (select * from first_page where id = $6 and rn in (1, 2)))
+				and (($6::bigint is null) or exists (select * from first_page where id = $6))
 		`, chat_order, orderDirection, chatFrom(true), getChatSearchClause(additionalFoundUserIds)),
 			participantId, searchStringWithPercents, searchString, pageSize, chatId, edgeChatId)
 		// last line:
@@ -1308,7 +1308,7 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 			  	) inn3
 			)
 			select exists (select * from first_page where id = $3) -- chat id to probe
-				and (($4::bigint is null) or exists (select * from first_page where id = $4 and rn in (1, 2))) 
+				and (($4::bigint is null) or exists (select * from first_page where id = $4)) 
 		`, chat_order, orderDirection, chatFrom(true), chat_where),
 			participantId, pageSize, chatId, edgeChatId)
 	}
