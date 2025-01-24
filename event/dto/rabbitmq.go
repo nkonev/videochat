@@ -44,7 +44,6 @@ type ChatEvent struct {
 	UserId                       int64                         `json:"userId"`
 	MessageNotification          *DisplayMessageDto            `json:"messageNotification"`
 	MessageDeletedNotification   *MessageDeletedDto            `json:"messageDeletedNotification"`
-	UserTypingNotification       *UserTypingNotification       `json:"userTypingNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	PreviewCreatedEvent          *PreviewCreatedEvent          `json:"previewCreatedEvent"`
 	Participants                 *[]*UserWithAdmin             `json:"participants"`
@@ -107,6 +106,7 @@ type GlobalUserEvent struct {
 	VideoCallScreenShareChangedDto   *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
 	HasUnreadMessagesChanged         *HasUnreadMessagesChanged       `json:"hasUnreadMessagesChanged"`
 	BrowserNotification              *BrowserNotification            `json:"browserNotification"`
+	UserTypingNotification           *UserTypingNotification         `json:"userTypingNotification"`
 }
 
 func (GlobalUserEvent) Name() eventbus.EventName {

@@ -543,14 +543,6 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 		}
 	}
 
-	userTypingEvent := e.UserTypingNotification
-	if userTypingEvent != nil {
-		result.UserTypingEvent = &model.UserTypingDto{
-			Login:         userTypingEvent.Login,
-			ParticipantID: userTypingEvent.ParticipantId,
-		}
-	}
-
 	messageBroadcast := e.MessageBroadcastNotification
 	if messageBroadcast != nil {
 		result.MessageBroadcastEvent = &model.MessageBroadcastNotification{
@@ -862,6 +854,15 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			MessageText: browserNotification.MessageText,
 			OwnerID:     browserNotification.OwnerId,
 			OwnerLogin:  browserNotification.OwnerLogin,
+		}
+	}
+
+	userTypingEvent := e.UserTypingNotification
+	if userTypingEvent != nil {
+		ret.UserTypingEvent = &model.UserTypingDto{
+			Login:         userTypingEvent.Login,
+			ParticipantID: userTypingEvent.ParticipantId,
+			ChatID:        userTypingEvent.ChatId,
 		}
 	}
 

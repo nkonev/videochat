@@ -16,30 +16,30 @@ type EmbedMessageResponse struct {
 }
 
 type PublishedMessageDto struct {
-	Id             int64                 `json:"id"`
-	Text           string                `json:"text"`
-	ChatId         int64                 `json:"chatId"`
-	OwnerId        int64                 `json:"ownerId"`
-	Owner          *User                 `json:"owner"`
-	CanPublish     bool                  `json:"canPublish"`
-	CreateDateTime time.Time             `json:"createDateTime"`
+	Id             int64     `json:"id"`
+	Text           string    `json:"text"`
+	ChatId         int64     `json:"chatId"`
+	OwnerId        int64     `json:"ownerId"`
+	Owner          *User     `json:"owner"`
+	CanPublish     bool      `json:"canPublish"`
+	CreateDateTime time.Time `json:"createDateTime"`
 }
 
 type PinnedMessageDto struct {
-	Id             int64                 `json:"id"`
-	Text           string                `json:"text"`
-	ChatId         int64                 `json:"chatId"`
-	OwnerId        int64                 `json:"ownerId"`
-	Owner          *User                 `json:"owner"`
-	PinnedPromoted bool                  `json:"pinnedPromoted"`
-	CreateDateTime time.Time             `json:"createDateTime"`
-	CanPin         bool                  `json:"canPin"`
+	Id             int64     `json:"id"`
+	Text           string    `json:"text"`
+	ChatId         int64     `json:"chatId"`
+	OwnerId        int64     `json:"ownerId"`
+	Owner          *User     `json:"owner"`
+	PinnedPromoted bool      `json:"pinnedPromoted"`
+	CreateDateTime time.Time `json:"createDateTime"`
+	CanPin         bool      `json:"canPin"`
 }
 
 type Reaction struct {
-	Count    int64  `json:"count"`
+	Count    int64   `json:"count"`
 	Users    []*User `json:"users"`
-	Reaction string `json:"reaction"`
+	Reaction string  `json:"reaction"`
 }
 
 type DisplayMessageDto struct {
@@ -57,7 +57,7 @@ type DisplayMessageDto struct {
 	Pinned         bool                  `json:"pinned"`
 	BlogPost       bool                  `json:"blogPost"`
 	PinnedPromoted *bool                 `json:"pinnedPromoted"`
-	Reactions []Reaction				 `json:"reactions"`
+	Reactions      []Reaction            `json:"reactions"`
 	Published      bool                  `json:"published"`
 	CanPublish     bool                  `json:"canPublish"`
 	CanPin         bool                  `json:"canPin"`
@@ -71,6 +71,7 @@ type MessageDeletedDto struct {
 type UserTypingNotification struct {
 	Login         string `json:"login"`
 	ParticipantId int64  `json:"participantId"`
+	ChatId        int64  `json:"chatId"`
 }
 
 type MessageBroadcastNotification struct {

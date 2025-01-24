@@ -66,7 +66,6 @@ type ChatEvent struct {
 	EventType             string                        `json:"eventType"`
 	MessageEvent          *DisplayMessageDto            `json:"messageEvent"`
 	MessageDeletedEvent   *MessageDeletedDto            `json:"messageDeletedEvent"`
-	UserTypingEvent       *UserTypingDto                `json:"userTypingEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 	PreviewCreatedEvent   *PreviewCreatedEvent          `json:"previewCreatedEvent"`
 	ParticipantsEvent     []*ParticipantWithAdmin       `json:"participantsEvent"`
@@ -161,6 +160,7 @@ type GlobalEvent struct {
 	ForceLogout                    *ForceLogoutEvent               `json:"forceLogout"`
 	HasUnreadMessagesChanged       *HasUnreadMessagesChangedEvent  `json:"hasUnreadMessagesChanged"`
 	BrowserNotification            *BrowserNotification            `json:"browserNotification"`
+	UserTypingEvent                *UserTypingDto                  `json:"userTypingEvent"`
 }
 
 type HasUnreadMessagesChangedEvent struct {
@@ -329,6 +329,7 @@ type UserStatusEvent struct {
 type UserTypingDto struct {
 	Login         string `json:"login"`
 	ParticipantID int64  `json:"participantId"`
+	ChatID        int64  `json:"chatId"`
 }
 
 type VideoCallInvitationDto struct {

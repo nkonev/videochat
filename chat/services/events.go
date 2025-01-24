@@ -273,6 +273,7 @@ func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, u
 	ut := dto.UserTypingNotification{
 		Login:         user.Login,
 		ParticipantId: user.Id,
+		ChatId:        chatId,
 	}
 
 	err := co.IterateOverChatParticipantIds(ctx, chatId, func(participantIds []int64) error {
@@ -281,11 +282,10 @@ func (not *Events) NotifyAboutMessageTyping(ctx context.Context, chatId int64, u
 				continue
 			}
 
-			err := not.rabbitEventPublisher.Publish(ctx, dto.ChatEvent{
+			err := not.rabbitEventPublisher.Publish(ctx, dto.GlobalUserEvent{
+				UserId:                 participantId,
 				EventType:              eventType,
 				UserTypingNotification: &ut,
-				UserId:                 participantId,
-				ChatId:                 chatId,
 			})
 			if err != nil {
 				not.lgr.WithTracing(ctx).Errorf("Error during sending to rabbitmq : %s", err)

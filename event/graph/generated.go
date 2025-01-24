@@ -112,7 +112,6 @@ type ComplexityRoot struct {
 		PromoteMessageEvent   func(childComplexity int) int
 		PublishedMessageEvent func(childComplexity int) int
 		ReactionChangedEvent  func(childComplexity int) int
-		UserTypingEvent       func(childComplexity int) int
 	}
 
 	ChatUnreadMessageChanged struct {
@@ -195,6 +194,7 @@ type ComplexityRoot struct {
 		HasUnreadMessagesChanged       func(childComplexity int) int
 		NotificationEvent              func(childComplexity int) int
 		UnreadMessagesNotification     func(childComplexity int) int
+		UserTypingEvent                func(childComplexity int) int
 		VideoCallInvitation            func(childComplexity int) int
 		VideoCallScreenShareChangedDto func(childComplexity int) int
 		VideoParticipantDialEvent      func(childComplexity int) int
@@ -367,6 +367,7 @@ type ComplexityRoot struct {
 	}
 
 	UserTypingDto struct {
+		ChatID        func(childComplexity int) int
 		Login         func(childComplexity int) int
 		ParticipantID func(childComplexity int) int
 	}
@@ -791,13 +792,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatEvent.ReactionChangedEvent(childComplexity), true
-
-	case "ChatEvent.userTypingEvent":
-		if e.complexity.ChatEvent.UserTypingEvent == nil {
-			break
-		}
-
-		return e.complexity.ChatEvent.UserTypingEvent(childComplexity), true
 
 	case "ChatUnreadMessageChanged.chatId":
 		if e.complexity.ChatUnreadMessageChanged.ChatID == nil {
@@ -1225,6 +1219,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalEvent.UnreadMessagesNotification(childComplexity), true
+
+	case "GlobalEvent.userTypingEvent":
+		if e.complexity.GlobalEvent.UserTypingEvent == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.UserTypingEvent(childComplexity), true
 
 	case "GlobalEvent.videoCallInvitation":
 		if e.complexity.GlobalEvent.VideoCallInvitation == nil {
@@ -1982,6 +1983,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserStatusEvent.UserID(childComplexity), true
+
+	case "UserTypingDto.chatId":
+		if e.complexity.UserTypingDto.ChatID == nil {
+			break
+		}
+
+		return e.complexity.UserTypingDto.ChatID(childComplexity), true
 
 	case "UserTypingDto.login":
 		if e.complexity.UserTypingDto.Login == nil {
@@ -4243,53 +4251,6 @@ func (ec *executionContext) fieldContext_ChatEvent_messageDeletedEvent(_ context
 				return ec.fieldContext_MessageDeletedDto_chatId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MessageDeletedDto", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ChatEvent_userTypingEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserTypingEvent, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.UserTypingDto)
-	fc.Result = res
-	return ec.marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChatEvent_userTypingEvent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChatEvent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "login":
-				return ec.fieldContext_UserTypingDto_login(ctx, field)
-			case "participantId":
-				return ec.fieldContext_UserTypingDto_participantId(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UserTypingDto", field.Name)
 		},
 	}
 	return fc, nil
@@ -7680,6 +7641,55 @@ func (ec *executionContext) fieldContext_GlobalEvent_browserNotification(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalEvent_userTypingEvent(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_userTypingEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserTypingEvent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserTypingDto)
+	fc.Result = res
+	return ec.marshalOUserTypingDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐUserTypingDto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_userTypingEvent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "login":
+				return ec.fieldContext_UserTypingDto_login(ctx, field)
+			case "participantId":
+				return ec.fieldContext_UserTypingDto_participantId(ctx, field)
+			case "chatId":
+				return ec.fieldContext_UserTypingDto_chatId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserTypingDto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx context.Context, field graphql.CollectedField, obj *model.HasUnreadMessagesChangedEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_HasUnreadMessagesChangedEvent_hasUnreadMessages(ctx, field)
 	if err != nil {
@@ -10576,8 +10586,6 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 				return ec.fieldContext_ChatEvent_messageEvent(ctx, field)
 			case "messageDeletedEvent":
 				return ec.fieldContext_ChatEvent_messageDeletedEvent(ctx, field)
-			case "userTypingEvent":
-				return ec.fieldContext_ChatEvent_userTypingEvent(ctx, field)
 			case "messageBroadcastEvent":
 				return ec.fieldContext_ChatEvent_messageBroadcastEvent(ctx, field)
 			case "previewCreatedEvent":
@@ -10693,6 +10701,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(_ context.Con
 				return ec.fieldContext_GlobalEvent_hasUnreadMessagesChanged(ctx, field)
 			case "browserNotification":
 				return ec.fieldContext_GlobalEvent_browserNotification(ctx, field)
+			case "userTypingEvent":
+				return ec.fieldContext_GlobalEvent_userTypingEvent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalEvent", field.Name)
 		},
@@ -12491,6 +12501,50 @@ func (ec *executionContext) _UserTypingDto_participantId(ctx context.Context, fi
 }
 
 func (ec *executionContext) fieldContext_UserTypingDto_participantId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserTypingDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserTypingDto_chatId(ctx context.Context, field graphql.CollectedField, obj *model.UserTypingDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserTypingDto_chatId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChatID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserTypingDto_chatId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserTypingDto",
 		Field:      field,
@@ -15436,8 +15490,6 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._ChatEvent_messageEvent(ctx, field, obj)
 		case "messageDeletedEvent":
 			out.Values[i] = ec._ChatEvent_messageDeletedEvent(ctx, field, obj)
-		case "userTypingEvent":
-			out.Values[i] = ec._ChatEvent_userTypingEvent(ctx, field, obj)
 		case "messageBroadcastEvent":
 			out.Values[i] = ec._ChatEvent_messageBroadcastEvent(ctx, field, obj)
 		case "previewCreatedEvent":
@@ -15942,6 +15994,8 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._GlobalEvent_hasUnreadMessagesChanged(ctx, field, obj)
 		case "browserNotification":
 			out.Values[i] = ec._GlobalEvent_browserNotification(ctx, field, obj)
+		case "userTypingEvent":
+			out.Values[i] = ec._GlobalEvent_userTypingEvent(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17096,6 +17150,11 @@ func (ec *executionContext) _UserTypingDto(ctx context.Context, sel ast.Selectio
 			}
 		case "participantId":
 			out.Values[i] = ec._UserTypingDto_participantId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "chatId":
+			out.Values[i] = ec._UserTypingDto_chatId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

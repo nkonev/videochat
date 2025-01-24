@@ -197,7 +197,7 @@ import bus, {
   NOTIFICATION_CLEAR_ALL,
   WEBSOCKET_LOST,
   WEBSOCKET_CONNECTED,
-  NOTIFICATION_COUNT_CHANGED,
+  NOTIFICATION_COUNT_CHANGED, USER_TYPING,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -493,6 +493,11 @@ export default {
                         ownerId
                         ownerLogin
                       }
+                      userTypingEvent {
+                        login
+                        participantId
+                        chatId
+                      }
                     }
                   }
               `
@@ -552,10 +557,13 @@ export default {
           } else if (getGlobalEventsData(e).eventType === 'browser_notification_remove_message') {
               removeBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
           } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
-            const d = getGlobalEventsData(e).forceLogout;
-            console.log("Killed sessions, reason:", d.reasonType)
-            this.chatStore.unsetUser();
-            bus.emit(LOGGED_OUT);
+              const d = getGlobalEventsData(e).forceLogout;
+              console.log("Killed sessions, reason:", d.reasonType)
+              this.chatStore.unsetUser();
+              bus.emit(LOGGED_OUT);
+          } else if (getGlobalEventsData(e).eventType === "user_typing") {
+              const d = getGlobalEventsData(e).userTypingEvent;
+              bus.emit(USER_TYPING, d);
           }
         },
         onChatAvatarClick() {

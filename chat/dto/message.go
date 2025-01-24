@@ -97,6 +97,7 @@ type MessageDeletedDto struct {
 type UserTypingNotification struct {
 	Login         string `json:"login"`
 	ParticipantId int64  `json:"participantId"`
+	ChatId        int64  `json:"chatId"`
 }
 
 type MessageBroadcastNotification struct {

@@ -395,10 +395,6 @@ export default {
                                       id
                                       chatId
                                     }
-                                    userTypingEvent {
-                                      login
-                                      participantId
-                                    }
                                     messageBroadcastEvent {
                                       login
                                       userId
@@ -509,9 +505,6 @@ export default {
       } else if (getChatEventsData(e).eventType === 'message_edited') {
         const d = getChatEventsData(e).messageEvent;
         bus.emit(MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "user_typing") {
-        const d = getChatEventsData(e).userTypingEvent;
-        bus.emit(USER_TYPING, d);
       } else if (getChatEventsData(e).eventType === "user_broadcast") {
         const d = getChatEventsData(e).messageBroadcastEvent;
         bus.emit(MESSAGE_BROADCAST, d);
@@ -872,16 +865,18 @@ export default {
     },
 
     onUserTyping(data) {
-      console.debug("OnUserTyping", data);
+      if (data.chatId == this.chatId) {
+        console.debug("OnUserTyping", data);
 
-      if (this.chatStore.currentUser?.id == data.participantId) {
-        console.log("Skipping myself typing notifications");
-        return;
+        if (this.chatStore.currentUser?.id == data.participantId) {
+          console.log("Skipping myself typing notifications");
+          return;
+        }
+
+        this.upsertToWritingUsers(this.writingUsers, data);
+
+        this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
       }
-
-      this.upsertToWritingUsers(this.writingUsers, data);
-
-      this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
     },
     upsertToWritingUsers(writingUsers, data) {
       const idx = writingUsers.findIndex(value => value.login === data.login);
