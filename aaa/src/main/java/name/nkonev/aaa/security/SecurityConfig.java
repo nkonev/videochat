@@ -175,7 +175,7 @@ public class SecurityConfig {
     @Bean
     OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver() {
         DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, API_LOGIN_OAUTH);
-        return new WithRefererInStateOAuth2AuthorizationRequestResolver(defaultOAuth2AuthorizationRequestResolver, refererService);
+        return new WithRefererInSessionOAuth2AuthorizationRequestResolver(defaultOAuth2AuthorizationRequestResolver, refererService);
     }
 
     @Bean
