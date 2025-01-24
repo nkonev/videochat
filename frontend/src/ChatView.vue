@@ -596,13 +596,18 @@ export default {
       }
 
       const idx = this.writingUsers.findIndex(value => value.login === data.login);
-      if (idx !== -1) {
+      if (idx !== -1) { // update
         this.writingUsers[idx].timestamp = + new Date();
-      } else {
+      } else { // add
         this.writingUsers.push({timestamp: +new Date(), login: data.login})
       }
 
-      this.chatStore.usersWritingSubtitleInfo = this.writingUsers.map(v=>v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
+      this.buildWritingUsersSubtitleInfo();
+    },
+    buildWritingUsersSubtitleInfo() {
+      if (this.writingUsers.length) {
+        this.chatStore.usersWritingSubtitleInfo = this.writingUsers.map(v => v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
+      }
     },
     onUserBroadcast(dto) {
       console.log("onUserBroadcast", dto);
@@ -960,6 +965,8 @@ export default {
       this.writingUsers = this.writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
       if (this.writingUsers.length == 0) {
         this.chatStore.usersWritingSubtitleInfo = null;
+      } else {
+        this.buildWritingUsersSubtitleInfo();
       }
     }, 500);
 
