@@ -12,6 +12,7 @@
                   v-model="tab"
                   bg-color="indigo"
                   @update:modelValue="onUpdateTab"
+                  :disabled="isRecording"
               >
                   <v-tab value="video">{{$vuetify.locale.t('$vuetify.video')}}</v-tab>
                   <v-tab value="audio">{{$vuetify.locale.t('$vuetify.audio')}}</v-tab>
