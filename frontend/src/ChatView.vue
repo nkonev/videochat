@@ -594,7 +594,6 @@ export default {
         console.log("Skipping myself typing notifications");
         return;
       }
-      this.showTooltip = true;
 
       const idx = this.writingUsers.findIndex(value => value.login === data.login);
       if (idx !== -1) {
