@@ -209,6 +209,12 @@ export default {
         shouldReactOnPageChange() {
             return true
         },
+        // to mitigate an issue when user opens a page with set reactions on their message
+        // and due to subscription still not established
+        // misses the notification update caused by message read
+        onInitialized() {
+            this.chatStore.fetchNotificationsCount()
+        },
     },
     computed: {
         ...mapStores(useChatStore),
