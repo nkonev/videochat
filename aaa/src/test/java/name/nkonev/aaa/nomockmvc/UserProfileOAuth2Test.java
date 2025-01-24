@@ -47,7 +47,11 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
     }
 
     private void openOauth2TestPage() throws IOException {
-        currentPage = webClient.getPage(templateEngineUrlPrefix+"/oauth2.html");
+        openOauth2TestPage("");
+    }
+
+    private void openOauth2TestPage(String suffix) throws IOException {
+        currentPage = webClient.getPage(templateEngineUrlPrefix+"/oauth2.html" + suffix);
     }
 
     private void clickFacebook() throws IOException {
@@ -125,11 +129,11 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
     @Test
     public void testFacebookLoginAndAlsoBindVkontakte(CapturedOutput output) throws InterruptedException, IOException {
 
-        openOauth2TestPage();
+        openOauth2TestPage("?q=тест");
 
         clickFacebook();
 
-        await().until(() -> output.getAll().contains("Storing referer url http://localhost:9080/oauth2.html for still non-user with addr"));
+        await().until(() -> output.getAll().contains("Storing referer url http://localhost:9080/oauth2.html?q=%D1%82%D0%B5%D1%81%D1%82 for still non-user with addr"));
 
         UserAccount userAccount = await().ignoreExceptions().until(() -> userAccountRepository.findByUsername(facebookLogin).orElseThrow(), o -> true);
         Long facebookLoggedId = userAccount.id();
@@ -142,7 +146,7 @@ public class UserProfileOAuth2Test extends AbstractHtmlUnitRunner {
 
         // here we rely on redirect in WithRefererInStateOAuth2AuthorizationRequestResolver and OAuth2AuthenticationSuccessHandler
         await().until(() -> output.getAll().contains("Redirecting user with id"));
-        assertThat(output).contains("to the restored referer url http://localhost:9080/oauth2.html");
+        assertThat(output).contains("to the restored referer url http://localhost:9080/oauth2.html?q=%D1%82%D0%B5%D1%81%D1%82");
 
         clickVkontakte();
 
