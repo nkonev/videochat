@@ -602,12 +602,10 @@ export default {
         this.writingUsers.push({timestamp: +new Date(), login: data.login})
       }
 
-      this.buildWritingUsersSubtitleInfo();
+      this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
     },
-    buildWritingUsersSubtitleInfo() {
-      if (this.writingUsers.length) {
-        this.chatStore.usersWritingSubtitleInfo = this.writingUsers.map(v => v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
-      }
+    buildWritingUsersSubtitleInfo(writingUsers) {
+      return writingUsers.map(v => v.login).join(', ') + " " + this.$vuetify.locale.t('$vuetify.user_is_writing');
     },
     onUserBroadcast(dto) {
       console.log("onUserBroadcast", dto);
@@ -966,7 +964,7 @@ export default {
       if (this.writingUsers.length == 0) {
         this.chatStore.usersWritingSubtitleInfo = null;
       } else {
-        this.buildWritingUsersSubtitleInfo();
+        this.chatStore.usersWritingSubtitleInfo = this.buildWritingUsersSubtitleInfo(this.writingUsers);
       }
     }, 500);
 
