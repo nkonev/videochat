@@ -3,6 +3,13 @@ import {Plugin, PluginKey} from 'prosemirror-state';
 
 export const buildImageHandler = (uploadFunction) => {
     return Image.extend({
+        parseHTML() {
+            return [
+                {
+                    tag: 'img[class="image-custom-class"]',
+                },
+            ]
+        },
         addAttributes() {
             return {
                 src: {
