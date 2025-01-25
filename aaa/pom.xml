@@ -18,6 +18,7 @@
         <skipTests>false</skipTests>
         <owasp.encoder.version>1.2.3</owasp.encoder.version>
         <liquibase.session.lock.version>1.6.9</liquibase.session.lock.version>
+        <logback-access.version>2.0.6</logback-access.version>
     </properties>
 
     <repositories>
@@ -264,6 +265,17 @@
             <groupId>org.owasp.encoder</groupId>
             <artifactId>encoder</artifactId>
             <version>${owasp.encoder.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback.access</groupId>
+            <artifactId>logback-access-common</artifactId>
+            <version>${logback-access.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback.access</groupId>
+            <artifactId>logback-access-tomcat</artifactId>
+            <version>${logback-access.version}</version>
         </dependency>
 
         <dependency>

@@ -56,16 +56,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .build();
     }
 
-    @ConditionalOnProperty("custom.request.dump")
-    @Bean
-    public FilterRegistrationBean<?> requestDumperFilter() {
-        var registration = new FilterRegistrationBean<>();
-        var requestDumperFilter = new RequestDumperFilter();
-        registration.setFilter(requestDumperFilter);
-        registration.addUrlPatterns("/*");
-        return registration;
-    }
-
     // see https://github.com/spring-projects/spring-boot/issues/14302#issuecomment-418712080 if you want to customize management tomcat
     @Bean
     public ServletWebServerFactory servletContainer(Valve... valves) {
