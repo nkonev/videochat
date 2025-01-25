@@ -56,22 +56,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .build();
     }
 
-    // see https://github.com/spring-projects/spring-boot/issues/14302#issuecomment-418712080 if you want to customize management tomcat
-    @Bean
-    public ServletWebServerFactory servletContainer(Valve... valves) {
-        var tomcat = new TomcatServletWebServerFactory();
-        if (valves != null) {
-            tomcat.addContextValves(valves);
-        }
-        final File baseDir = serverProperties.getTomcat().getBasedir();
-        if (baseDir!=null) {
-            File docRoot = new File(baseDir, "document-root");
-            docRoot.mkdirs();
-            tomcat.setDocumentRoot(docRoot);
-        }
-
-        tomcat.setProtocol("org.apache.coyote.http11.Http11Nio2Protocol");
-
-        return tomcat;
-    }
 }

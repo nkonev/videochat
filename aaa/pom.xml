@@ -18,6 +18,7 @@
         <skipTests>false</skipTests>
         <owasp.encoder.version>1.2.3</owasp.encoder.version>
         <liquibase.session.lock.version>1.6.9</liquibase.session.lock.version>
+        <logback-access-spring-boot-starter.version>4.4.0</logback-access-spring-boot-starter.version>
         <logback-access.version>2.0.6</logback-access.version>
     </properties>
 
@@ -267,6 +268,17 @@
             <version>${owasp.encoder.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.12</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.akkinoc.spring.boot</groupId>
+            <artifactId>logback-access-spring-boot-starter</artifactId>
+            <version>${logback-access-spring-boot-starter.version}</version>
+        </dependency>
         <dependency>
             <groupId>ch.qos.logback.access</groupId>
             <artifactId>logback-access-common</artifactId>
