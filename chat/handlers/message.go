@@ -752,6 +752,10 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if errors.As(errOuter, &mediaError) {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": mediaError.Error(), "businessErrorCode": badMediaUrl})
 		}
+		var mediaOverflowError *MediaOverflowErr
+		if errors.As(errOuter, &mediaOverflowError) {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": mediaOverflowError.Error()})
+		}
 		var npe *notParticipantError
 		if errors.As(errOuter, &npe) {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": "You are not allowed to write to this chat"})
@@ -1093,6 +1097,11 @@ func (mc *MessageHandler) EditMessage(c echo.Context) error {
 		var mediaError *MediaUrlErr
 		if errors.As(errOuter, &mediaError) {
 			return c.JSON(http.StatusBadRequest, &utils.H{"message": mediaError.Error(), "businessErrorCode": badMediaUrl})
+		}
+
+		var mediaOverflowError *MediaOverflowErr
+		if errors.As(errOuter, &mediaOverflowError) {
+			return c.JSON(http.StatusBadRequest, &utils.H{"message": mediaOverflowError.Error()})
 		}
 
 		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", errOuter)

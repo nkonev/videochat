@@ -207,6 +207,15 @@ func (s *MediaUrlErr) Error() string {
 	return fmt.Sprintf("Media url is not allowed in %v: %v", s.where, s.url)
 }
 
+type MediaOverflowErr struct {
+	allowed int
+	given   int
+}
+
+func (s *MediaOverflowErr) Error() string {
+	return fmt.Sprintf("Too many medias: allowed %v, given %v", s.allowed, s.given)
+}
+
 func TrimAmdSanitizeMessage(ctx context.Context, lgr *logger.Logger, policy *services.SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
 
@@ -267,7 +276,8 @@ func TrimAmdSanitizeMessage(ctx context.Context, lgr *logger.Logger, policy *ser
 	}
 
 	if mediaCount > maxMediasCount {
-		return "", errors.New("Too many medias")
+		retErr = &MediaOverflowErr{maxMediasCount, mediaCount}
+		return "", retErr
 	}
 
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
