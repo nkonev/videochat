@@ -980,8 +980,6 @@ html {
   margin-inline-start: .5rem;
 }
 
-// see also dialogModal.styl
-
 </style>
 
 <style lang="stylus">

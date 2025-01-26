@@ -14,7 +14,6 @@
                       :variant="provider.textFieldVariant"
                       :autofocus="isMobile()"
                       hide-details
-                      single-line
                       :model-value="provider.getModelValue()"
                       @update:model-value="provider.setModelValue"
                       clearable clear-icon="mdi-close-circle"

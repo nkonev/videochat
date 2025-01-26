@@ -26,7 +26,6 @@ axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
 const webSplitpanesCss = () => import('@/splitpanesWeb.css');
 const mobileSplitpanesCss = () => import("@/splitpanesMobile.scss");
-const dialogModalStyles = () => import("@/dialogModal.styl");
 
 // it's placed here, before app creation
 // otherwise, if we put it into ChatView.created()
@@ -39,7 +38,6 @@ if (isMobileBrowser()) {
   mobileSplitpanesCss()
 } else {
   webSplitpanesCss()
-  dialogModalStyles()
 }
 
 const chatStore = useChatStore();

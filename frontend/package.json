@@ -47,7 +47,7 @@
     "uuid": "^11.0.3",
     "vue": "3.5.13",
     "vue-router": "4.5.0",
-    "vuetify": "3.7.4"
+    "vuetify": "3.7.7"
   },
   "type": "module",
   "devDependencies": {

@@ -11,15 +11,6 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import {isMobileBrowser} from '../common/utils.js'
-
-const dialogModalStyles = () => import("../common/styles/dialogModal.styl");
-
-if (isMobileBrowser()) {
-
-} else {
-  dialogModalStyles()
-}
 
 const vuetify = createVuetify({
     components,
