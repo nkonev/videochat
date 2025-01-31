@@ -645,8 +645,11 @@ export default {
           this.chatStore.moreImportantSubtitleInfo = null;
         },
         onWsRestored() {
-          console.warn("REFRESH_ON_WEBSOCKET_RESTORED auto");
+          console.info("REFRESH_ON_WEBSOCKET_RESTORED auto");
           bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+        },
+        onWsRestoredRefresh() {
+          this.doOnFocus();
         },
         resetVideoInvitation() {
             this.invitedVideoChatState = false;
@@ -877,6 +880,7 @@ export default {
         bus.on(WEBSOCKET_CONNECTED, this.onWsConnected);
         bus.on(WEBSOCKET_LOST, this.onWsLost);
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
+        bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
         bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
@@ -901,6 +905,7 @@ export default {
         bus.off(WEBSOCKET_CONNECTED, this.onWsConnected);
         bus.off(WEBSOCKET_LOST, this.onWsLost);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
+        bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
         bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
         bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
