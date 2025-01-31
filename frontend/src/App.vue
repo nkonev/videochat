@@ -164,11 +164,11 @@ import {
   setLanguageToVuetify, stopCall, unescapeHtml, goToPreservingQuery
 } from "@/utils";
 import {
-    chat_list_name,
-    confirmation_pending_name,
-    forgot_password_name, check_email_name, password_restore_enter_new_name,
-    registration_name,
-    videochat_name, registration_resend_email_name
+  chat_list_name,
+  confirmation_pending_name,
+  forgot_password_name, check_email_name, password_restore_enter_new_name,
+  registration_name,
+  videochat_name, registration_resend_email_name, chat_name
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
@@ -359,7 +359,7 @@ export default {
             this.chatStore.unsetNotificationsAndHasNewMessages();
         },
         canSwitchSearchType() {
-            return this.isInChat() || this.$route.name == chat_list_name
+            return this.$route.name == chat_name // not to allow in video, because there is no chats
         },
         switchSearchType() {
           this.chatStore.switchSearchType()

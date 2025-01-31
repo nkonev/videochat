@@ -71,6 +71,7 @@ import VideoButtons from "./VideoButtons.vue"
 import speakingMixin from "@/mixins/speakingMixin.js";
 import PresenterContextMenu from "@/PresenterContextMenu.vue";
 import UserVideoContextMenu from "@/UserVideoContextMenu.vue";
+import {SEARCH_MODE_MESSAGES} from "@/mixins/searchString.js";
 
 const first = 'first';
 const second = 'second';
@@ -1097,6 +1098,8 @@ export default {
     bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
     bus.on(PIN_VIDEO, this.onPinVideo);
     bus.on(UN_PIN_VIDEO, this.onUnpinVideo);
+
+    this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
     window.addEventListener("resize", this.recalculateLayout);
 
