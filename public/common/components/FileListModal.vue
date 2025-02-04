@@ -257,7 +257,11 @@ export default {
           if (!this.isMobile()) {
             return 7
           } else {
-            return 6
+            if (this.page == FIRST_PAGE) {
+              return 6
+            } else {
+              return 5
+            }
           }
         },
         closeModal() {

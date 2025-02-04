@@ -86,7 +86,11 @@ export default () => {
                 if (!this.isMobile()) {
                     return 7
                 } else {
-                    return 6
+                    if (this.page == firstPage) {
+                        return 6
+                    } else {
+                        return 5
+                    }
                 }
             },
 
