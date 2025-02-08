@@ -13,7 +13,8 @@ import (
 
 type Logger struct {
 	*zap.SugaredLogger
-	file *os.File
+	ZapLogger *zap.Logger
+	file      *os.File
 }
 
 func Iso3339CleanTime(t time.Time) string {
@@ -71,14 +72,17 @@ func NewLogger() *Logger {
 
 	co := zapcore.NewCore(enc, ws, lvl)
 
-	le := zap.New(co,
+	zl := zap.New(co,
 		zap.WithCaller(true),
 		zap.Fields(zap.String("service", app.APP_NAME)),
-	).Sugar()
+	)
+
+	le := zl.Sugar()
 
 	return &Logger{
 		SugaredLogger: le,
 		file:          fileVar,
+		ZapLogger:     zl,
 	}
 }
 
@@ -98,10 +102,6 @@ func (l *Logger) WithTracing(context context.Context) *zap.SugaredLogger {
 	} else {
 		return l.SugaredLogger
 	}
-}
-
-func (l *Logger) Printf(s string, args ...interface{}) {
-	l.Infof(s, args...)
 }
 
 func (l *Logger) Write(p []byte) (int, error) {

@@ -23,6 +23,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -49,8 +50,10 @@ func main() {
 	lgr := logger.NewLogger()
 
 	appFx := fx.New(
-		fx.Logger(lgr),
 		fx.Supply(lgr),
+		fx.WithLogger(func(log *logger.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: log.ZapLogger}
+		}),
 		fx.Provide(
 			configureTracer,
 			configureInternalMinio,
@@ -309,7 +312,7 @@ func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvi
 		OnStop: func(ctx context.Context) error {
 			lgr.Infof("Stopping tracer")
 			if err := tp.Shutdown(context.Background()); err != nil {
-				lgr.Printf("Error shutting down tracer provider: %v", err)
+				lgr.Errorf("Error shutting down tracer provider: %v", err)
 			}
 			return nil
 		},
