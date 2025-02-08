@@ -7,18 +7,23 @@ import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.security.SecurityConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.*;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Map;
 import static name.nkonev.aaa.security.SecurityConfig.PASSWORD_PARAMETER;
 import static name.nkonev.aaa.security.SecurityConfig.USERNAME_PARAMETER;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(OutputCaptureExtension.class)
 public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorControllerTest.class);
@@ -78,7 +83,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
     }
 
     @Test
-    public void testSqlExceptionIsHidden() throws Exception {
+    public void testSqlExceptionIsHiddenAndErrorIsWrittenToLog(CapturedOutput output) throws Exception {
         ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+ Constants.Urls.EXTERNAL_API + TestConstants.SQL_URL, String.class);
         String str = responseEntity.getBody();
         Assertions.assertEquals(500, responseEntity.getStatusCodeValue());
@@ -91,6 +96,9 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertFalse(resp.containsValue(TestConstants.SQL_QUERY));
 
         Assertions.assertEquals("internal error", resp.get("message"));
+
+        assertThat(output).contains("AaaErrorController:");
+        assertThat(output).contains("Message: internal error, error: null, exception: org.springframework.dao.DataIntegrityViolationException, trace: org.springframework.dao.DataIntegrityViolationException: select * from fake_users;");
     }
 
     @Test
