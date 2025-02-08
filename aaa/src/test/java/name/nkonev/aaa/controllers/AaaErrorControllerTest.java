@@ -28,7 +28,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorControllerTest.class);
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void testAuth() throws Exception {
         // auth
         MvcResult loginResult = mockMvc.perform(
@@ -67,7 +67,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
         Assertions.assertNotNull(resp.get("message"));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void testNotFoundJs() throws Exception {
         ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(urlWithContextPath()+"/not-exists", String.class);
         String str = responseEntity.getBody();

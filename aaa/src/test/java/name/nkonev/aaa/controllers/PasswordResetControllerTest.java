@@ -134,7 +134,7 @@ public class PasswordResetControllerTest extends AbstractMockMvcTestRunner {
         ;
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void resetPasswordSetNewPasswordValidation() throws Exception {
         String emptyPassword = null;
         PasswordResetDTO passwordResetDto = new PasswordResetDTO(UUID.randomUUID(), emptyPassword);
