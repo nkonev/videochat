@@ -252,6 +252,15 @@ export default {
       this.items = this.items.slice(-this.getReduceToLength()); // retain last n
       this.startingFromItemIdTop = this.findTopElementId();
     },
+    enableHashInRoute() {
+      return false
+    },
+    convertLoadedFromStoreHash(obj) {
+      return userIdHashPrefix + obj
+    },
+    extractIdFromElementForStoring(element) {
+      return this.getIdFromRouteHash(element.id)
+    },
     saveScroll(top) {
       this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
       console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
@@ -266,7 +275,7 @@ export default {
       });
     },
     async onFirstLoad(loadedResult) {
-      await this.doScrollOnFirstLoad(userIdHashPrefix);
+      await this.doScrollOnFirstLoad();
       if (loadedResult === true) {
         removeTopUserPosition();
       }
@@ -278,7 +287,31 @@ export default {
     getPositionFromStore() {
       return getTopUserPosition()
     },
+    async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
+      const res = await axios.post(`/api/aaa/user/search`, {
+        startingFromItemId: startingFromItemId,
+        includeStartingFrom: !!includeStartingFrom,
+        size: PAGE_SIZE,
+        reverse: reverse,
+        searchString: this.searchString,
+      }, {
+        signal: this.requestAbortController.signal
+      })
+      const items = res.data.items;
+      console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom);
+      items.forEach((item) => {
+        this.transformItem(item);
+      });
 
+      if (!res.data.hasNext) {
+        if (this.isTopDirection()) {
+          this.loadedTop = true;
+        } else {
+          this.loadedBottom = true;
+        }
+      }
+      return items
+    },
     async load() {
       if (!this.canDrawUsers()) {
         return Promise.resolve()
@@ -288,48 +321,32 @@ export default {
 
       const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
-      return axios.post(`/api/aaa/user/search`, {
-          startingFromItemId: startingFromItemId,
-          size: PAGE_SIZE,
-          reverse: this.isTopDirection(),
-          searchString: this.searchString,
-          hasHash: hasHash,
-        }, {
-          signal: this.requestAbortController.signal
-        })
-        .then((res) => {
-          const items = res.data;
-          console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom);
-          items.forEach((item) => {
-            this.transformItem(item);
-          });
+      try {
+        let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
+        if (hasHash) {
+          const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
+          items = portion.reverse().concat(items);
+        }
 
-          if (this.isTopDirection()) {
-              replaceOrPrepend(this.items, items);
-          } else {
-              replaceOrAppend(this.items, items);
-          }
+        if (this.isTopDirection()) {
+          replaceOrPrepend(this.items, items);
+        } else {
+          replaceOrAppend(this.items, items);
+        }
 
-          if (items.length < PAGE_SIZE) {
-            if (this.isTopDirection()) {
-              this.loadedTop = true;
-            } else {
-              this.loadedBottom = true;
-            }
-          }
-          this.updateTopAndBottomIds();
+        this.updateTopAndBottomIds();
 
-          if (!this.isFirstLoad) {
-            this.clearRouteHash()
-          }
+        if (!this.isFirstLoad) {
+          this.clearRouteHash()
+        }
 
-          this.graphQlUserStatusSubscribe();
-          this.performMarking();
-          this.requestStatuses();
-          return Promise.resolve(true)
-        }).finally(()=>{
-          this.chatStore.decrementProgressCount();
-        })
+        this.graphQlUserStatusSubscribe();
+        this.performMarking();
+        this.requestStatuses();
+        return Promise.resolve(true)
+      } finally {
+        this.chatStore.decrementProgressCount();
+      }
     },
     afterScrollRestored(el) {
       el?.parentElement?.scrollBy({

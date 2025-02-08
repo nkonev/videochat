@@ -14,70 +14,47 @@ import (
 
 const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
 
-const real_chat_columns = `
-	id, 
-	title, 
-	avatar, 
-	avatar_big,
-	last_update_date_time,
-	tet_a_tet,
-	can_resend,
-	available_to_search,
-	pinned,
-	blog,
-	regular_participant_can_publish_message,
-	regular_participant_can_pin_message,
-	blog_about,
-	regular_participant_can_write_message
-
-`
-
 // expects $1 is userId
-func selectChat(performPersonalization bool) string {
-	var pp string
+func selectChatClause(performPersonalization bool) string {
+	bldr := ""
+
+	var p string
 	if performPersonalization {
-		pp = "cp.user_id IS NOT NULL as pinned"
+		p = "cp.user_id IS NOT NULL"
 	} else {
-		pp = "($1::bigint != $1::bigint) as pinned" // to consume the given user_id
+		p = "($1::bigint != $1::bigint)" // to consume the given user_id
 	}
-	s := fmt.Sprintf(`
-SELECT 
-	ch.id, 
-	ch.title, 
-	ch.avatar, 
-	ch.avatar_big,
-	ch.last_update_date_time,
-	ch.tet_a_tet,
-	ch.can_resend,
-	ch.available_to_search,
-	%s,
-	ch.blog,
-	ch.regular_participant_can_publish_message,
-	ch.regular_participant_can_pin_message,
-	ch.blog_about,
-	ch.regular_participant_can_write_message
+	bldr += fmt.Sprintf(`
+		SELECT 
+			ch.id, 
+			ch.title, 
+			ch.avatar, 
+			ch.avatar_big,
+			ch.last_update_date_time,
+			ch.tet_a_tet,
+			ch.can_resend,
+			ch.available_to_search,
+			%s as pinned,
+			ch.blog,
+			ch.regular_participant_can_publish_message,
+			ch.regular_participant_can_pin_message,
+			ch.blog_about,
+			ch.regular_participant_can_write_message
+	`, p)
 
-`, pp)
-	return s
-}
-
-const chat_order = " ORDER BY (cp.user_id is not null, ch.last_update_date_time, ch.id) "
-
-// expects $1 is userId
-func chatFrom(performPersonalization bool) string {
 	var pp string
 	if performPersonalization {
 		pp = "LEFT JOIN chat_pinned cp on (ch.id = cp.chat_id and cp.user_id = $1)"
 	}
 
-	s := fmt.Sprintf(`
-	FROM chat ch 
-	%s
-	
-	`, pp)
+	bldr += fmt.Sprintf(` FROM chat ch %s `, pp)
 
-	return s
+	return bldr
 }
+
+// to use only with wrapped selectChatClause(), e. g.
+// select * from (%s) ch
+const chat_order = " ORDER BY (ch.pinned, ch.last_update_date_time, ch.id) "
 
 const chat_of_participant = "SELECT chat_id FROM chat_participant WHERE user_id = $1"
 const chat_where = "ch.id IN ( " + chat_of_participant + " )"
@@ -156,18 +133,6 @@ func (tx *Tx) IsExistsTetATet(ctx context.Context, participant1 int64, participa
 	return true, chatId, nil
 }
 
-// expects $1 is userId
-func selectChatWithRowNumbersClause(orderDirection string) string {
-	return selectChat(true) + `
-			, row_number() over ( ` + chat_order + orderDirection + ` ) as rn		
-` + chatFrom(true)
-}
-
-// expects $1 is userId
-func selectChatClause(performPersonalization bool) string {
-	return selectChat(performPersonalization) + chatFrom(performPersonalization)
-}
-
 func provideScanToChat(chat *Chat) []any {
 	return []any{
 		&chat.Id,
@@ -191,7 +156,7 @@ func provideScanToChat(chat *Chat) []any {
 // $1 - owner_id
 // $2 - searchStringWithPercents
 // $3 - searchString
-func getChatSearchClause(additionalFoundUserIds []int64) string {
+func getChatSearchWhereClause(additionalFoundUserIds []int64) string {
 	var additionalUserIds = ""
 	first := true
 	for _, userId := range additionalFoundUserIds {
@@ -329,72 +294,48 @@ func getLastMessagePreview(ctx context.Context, co CommonOperations, chatIds []i
 	return ret, nil
 }
 
-func getChats(ctx context.Context, co CommonOperations, participantId int64, limit int, leftRowNumber, rightRowNumber int64, orderDirection string, searchString, searchStringPercents string, additionalFoundUserIds []int64) ([]*Chat, error) {
-	list := make([]*Chat, 0)
-
-	var rows *sql.Rows
-	var err error
-
-	if searchString != "" {
-		rows, err = co.QueryContext(ctx, fmt.Sprintf(`
-					select %s from (
-						%v
-						WHERE 
-								%s
-					) inn
-					WHERE	inn.rn >= $5
-						AND inn.rn <= $6 
-					LIMIT $4`, real_chat_columns, selectChatWithRowNumbersClause(orderDirection), getChatSearchClause(additionalFoundUserIds)),
-			participantId, searchStringPercents, searchString,
-			limit, leftRowNumber, rightRowNumber)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		}
-		defer rows.Close()
-	} else {
-		rows, err = co.QueryContext(ctx, fmt.Sprintf(`
-					select %s from (
-						%v
-						WHERE 
-								%s
-					) inn
-					WHERE	inn.rn >= $3 
-						AND inn.rn <= $4
-					LIMIT $2`, real_chat_columns, selectChatWithRowNumbersClause(orderDirection), chat_where),
-			participantId,
-			limit, leftRowNumber, rightRowNumber)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		}
-		defer rows.Close()
+func getPaginationWhereAndClause(startingFromItemId *ChatId, reverse bool) string {
+	if startingFromItemId == nil {
+		return ""
 	}
-	for rows.Next() {
-		chat := Chat{}
-		if err = rows.Scan(provideScanToChat(&chat)[:]...); err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		} else {
-			list = append(list, &chat)
-		}
+	bldr := ""
+
+	nonEquality := "<="
+	if reverse {
+		nonEquality = ">="
 	}
-	return list, nil
+
+	bldr += fmt.Sprintf("(pinned, last_update_date_time, id) %s (%v, '%s', %v)", nonEquality,
+		startingFromItemId.Pinned, startingFromItemId.LastUpdateDateTime.Format("2006-01-02T15:04:05.999999Z"), startingFromItemId.Id)
+	bldr += " AND"
+	return bldr
 }
 
-func getChatsSimple(ctx context.Context, co CommonOperations, participantId int64, limit int, reverse bool, searchString, searchStringPercents string, additionalFoundUserIds []int64) ([]*Chat, error) {
+// implements keyset pagination
+func getChatsSimple(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId *ChatId, includeStartingFrom, reverse bool, searchString, searchStringPercents string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	list := make([]*Chat, 0)
 
 	order := "desc"
+	offset := " OFFSET 1" // to make behaviour the same as in users, messages (there is > or <)
 	if reverse {
 		order = "asc"
 	}
+	// see also getSafeDefaultUserId() in aaa
+	if includeStartingFrom || startingFromItemId == nil {
+		offset = ""
+	}
+
 	var err error
 	var rows *sql.Rows
 
+	// we wrap an existing ch and cp into select * from (%s) ch in order to search by pinned (there is no such column)
 	if searchString != "" {
-		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-			WHERE   
+		q := fmt.Sprintf(`select * from (%s) ch
+			WHERE   %s
 					%s
 			%s %s 
-			LIMIT $4`, selectChatClause(true), getChatSearchClause(additionalFoundUserIds), chat_order, order),
+			LIMIT $4 %s`, selectChatClause(true), getPaginationWhereAndClause(startingFromItemId, reverse), getChatSearchWhereClause(additionalFoundUserIds), chat_order, order, offset)
+		rows, err = co.QueryContext(ctx, q,
 			participantId, searchStringPercents, searchString,
 			limit)
 		if err != nil {
@@ -402,11 +343,12 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 		}
 		defer rows.Close()
 	} else {
-		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-			WHERE 
+		q := fmt.Sprintf(`select * from (%s) ch
+			WHERE 	 %s
 			         %s
 			%s %s 
-			LIMIT $2`, selectChatClause(true), chat_where, chat_order, order),
+			LIMIT $2 %s`, selectChatClause(true), getPaginationWhereAndClause(startingFromItemId, reverse), chat_where, chat_order, order, offset)
+		rows, err = co.QueryContext(ctx, q,
 			participantId,
 			limit)
 		if err != nil {
@@ -427,154 +369,33 @@ func getChatsSimple(ctx context.Context, co CommonOperations, participantId int6
 	return list, nil
 }
 
-// see also ChatFilter
-func getRowNumbers(ctx context.Context, co CommonOperations, participantId int64, orderDirection string, startingFromItemId int64, limit, leftLimit, rightLimit int, searchString, searchStringPercents string, additionalFoundUserIds []int64) (*int64, *int64, bool, error) {
-	var leftRowNumber, rightRowNumber *int64
-	var noData bool
-
-	var limitRes *sql.Row
-	if searchString != "" {
-		limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
-				select inn4.minrn, inn4.maxrn from (
-					select inn3.*, lag(rn, $5, inn3.mmin) over() as minrn, lead(rn, $6, inn3.mmax) over() as maxrn from (
-						select inn2.*, id = $4 as central_element from (
-							select id, rn, (min(inn.rn) over ()) as mmin, (max(inn.rn) over ()) as mmax FROM (
-								select id, row_number() over (%s %s) as rn 
-								%s
-								where %s
-							) inn
-						) inn2
-					) inn3
-				) inn4 where central_element = true
-			`, chat_order, orderDirection, chatFrom(true), getChatSearchClause(additionalFoundUserIds)),
-			participantId, searchStringPercents, searchString, startingFromItemId, leftLimit, rightLimit)
-	} else {
-		limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
-				select inn4.minrn, inn4.maxrn from (
-					select inn3.*, lag(rn, $3, inn3.mmin) over() as minrn, lead(rn, $4, inn3.mmax) over() as maxrn from (
-						select inn2.*, id = $2 as central_element from (
-							select id, rn, (min(inn.rn) over ()) as mmin, (max(inn.rn) over ()) as mmax FROM (
-								select id, row_number() over (%s %s) as rn 
-								%s
-								where %s
-							) inn
-						) inn2
-					) inn3
-				) inn4 where central_element = true
-			`, chat_order, orderDirection, chatFrom(true), chat_where),
-			participantId, startingFromItemId, leftLimit, rightLimit)
-	}
-	err := limitRes.Scan(&leftRowNumber, &rightRowNumber)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// there were no rows, but otherwise no error occurred
-			// false is not an error
-			// testcase: Open Chats
-			// then open Welcome
-			// then Public chats
-			return nil, nil, false, nil
-		}
-		return nil, nil, false, eris.Wrap(err, "error during interacting with db")
-	}
-
-	// 1001 962 (39) = ok
-	// 1001 1   (1000) = not ok
-	// 414 454  (40)   = ok
-	if (rightRowNumber != nil && leftRowNumber != nil) && ((*rightRowNumber)-(*leftRowNumber) > int64(limit)) {
-		noData = true
-	}
-
-	return leftRowNumber, rightRowNumber, noData, nil
+type ChatId struct {
+	Pinned             bool
+	LastUpdateDateTime time.Time
+	Id                 int64
 }
 
-func getChatsCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
+func getChatsCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, startingFromItemId *ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64) ([]*Chat, error) {
 	list := make([]*Chat, 0)
 	var err error
-	orderDirection := "desc"
-	if reverse {
-		orderDirection = "asc"
-	}
 	var searchStringPercents = ""
 	if searchString != "" {
 		searchStringPercents = "%" + searchString + "%"
 	}
 
-	if hasHash {
-		// has hash means that frontend's page has chat hash
-		// it means we need to calculate page/2 to the top and to the bottom
-		// to respond page containing from two halves
-		leftLimit := limit / 2
-		rightLimit := limit / 2
-
-		if leftLimit == 0 {
-			leftLimit = 1
-		}
-		if rightLimit == 0 {
-			rightLimit = 1
-		}
-
-		var leftRowNumber, rightRowNumber *int64
-		var noData bool
-		if startingFromItemId != nil {
-			leftRowNumber, rightRowNumber, noData, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, limit, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		}
-
-		if noData {
-			// leave empty list
-		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
-			co.logger().WithTracing(ctx).Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
-			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		} else {
-			list, err = getChats(ctx, co, participantId, limit, *leftRowNumber, *rightRowNumber, orderDirection, searchString, searchStringPercents, additionalFoundUserIds)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		}
-	} else {
-		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
-		leftLimit := -1 // not to send the element with startingFromItemId to response
-		rightLimit := limit
-
-		var leftRowNumber, rightRowNumber *int64
-		var noData bool
-
-		if startingFromItemId != nil {
-			leftRowNumber, rightRowNumber, noData, err = getRowNumbers(ctx, co, participantId, orderDirection, *startingFromItemId, limit, leftLimit, rightLimit, searchString, searchStringPercents, additionalFoundUserIds)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		}
-
-		if noData {
-			// leave empty list
-		} else if startingFromItemId == nil || (leftRowNumber == nil || rightRowNumber == nil) {
-			co.logger().WithTracing(ctx).Infof("Got leftItemId=%v, rightItemId=%v startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftRowNumber, rightRowNumber, startingFromItemId, reverse, searchString)
-			list, err = getChatsSimple(ctx, co, participantId, limit, reverse, searchString, searchStringPercents, additionalFoundUserIds)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		} else {
-			list, err = getChats(ctx, co, participantId, limit, *leftRowNumber, *rightRowNumber, orderDirection, searchString, searchStringPercents, additionalFoundUserIds)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		}
+	list, err = getChatsSimple(ctx, co, participantId, limit, startingFromItemId, includeStartingFrom, reverse, searchString, searchStringPercents, additionalFoundUserIds)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 
 	return list, nil
 }
 
-func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperations, participantId int64, limit int, startingFromItemId *ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
 	var err error
 	var chats []*Chat
 
-	chats, err = getChatsCommon(ctx, commonOps, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+	chats, err = getChatsCommon(ctx, commonOps, participantId, limit, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds)
 
 	if err != nil {
 		return nil, err
@@ -617,12 +438,12 @@ func getChatsWithParticipantsCommon(ctx context.Context, commonOps CommonOperati
 		return list, nil
 	}
 }
-func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
+func (db *DB) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(ctx, db, participantId, limit, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
-func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
-	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
+func (tx *Tx) GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error) {
+	return getChatsWithParticipantsCommon(ctx, tx, participantId, limit, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds, participantsSize, participantsOffset)
 }
 
 func (tx *Tx) GetChatWithParticipants(ctx context.Context, performPersonalization bool, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error) {
@@ -1276,12 +1097,12 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 	if searchString != "" {
 		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
 			with a_page as (
-				select id, row_number() over (%s %s) as rn 
-							%s
+							select * from (%s) ch
 							where %s
+							%s %s
 			)
 			select exists (select * from a_page where id = $4)
-		`, chat_order, orderDirection, chatFrom(true), getChatSearchClause(additionalFoundUserIds)),
+		`, selectChatClause(true), getChatSearchWhereClause(additionalFoundUserIds), chat_order, orderDirection),
 			participantId, searchStringWithPercents, searchString, chatId)
 		// last line:
 		// edge on the screen - here we ensure that this is the first page, in (1, 2) means the first place for the toppest element or the second place after sorting
@@ -1290,12 +1111,12 @@ func (tx *Tx) ChatFilter(ctx context.Context, participantId int64, chatId int64,
 	} else {
 		row = tx.QueryRowContext(ctx, fmt.Sprintf(`
 			with a_page as (
-				select id, row_number() over (%s %s) as rn 
-							%s
+							select * from (%s) ch
 							where %s
+							%s %s
 			)
 			select exists (select * from a_page where id = $2)
-		`, chat_order, orderDirection, chatFrom(true), chat_where),
+		`, selectChatClause(true), chat_where, chat_order, orderDirection),
 			participantId, chatId)
 	}
 	if row.Err() != nil {

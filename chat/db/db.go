@@ -63,6 +63,7 @@ type CommonOperations interface {
 	GetChat(ctx context.Context, performPersonalization bool, participantId, chatId int64) (*Chat, error)
 	GetChatWithParticipants(ctx context.Context, performPersonalization bool, behalfParticipantId, chatId int64, participantsSize, participantsOffset int) (*ChatWithParticipants, error)
 	GetParticipantsCountBatch(ctx context.Context, chatIds []int64) (map[int64]int, error)
+	GetMessages(ctx context.Context, chatId int64, limit int, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string) ([]*Message, error)
 	GetMessage(ctx context.Context, chatId int64, userId int64, messageId int64) (*Message, error)
 	GetUnreadMessagesCount(ctx context.Context, chatId int64, userId int64) (int64, error)
 	SetAdmin(ctx context.Context, userId int64, chatId int64, newAdmin bool) error
@@ -71,7 +72,7 @@ type CommonOperations interface {
 	GetBlogPostsByLimitOffset(ctx context.Context, reverse bool, limit int, offset int) ([]*Blog, error)
 	GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPost, error)
 	GetMessageBasic(ctx context.Context, chatId int64, messageId int64) (*MessageBasic, error)
-	GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
+	GetChatsWithParticipants(ctx context.Context, participantId int64, limit int, startingFromItemId *ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64, participantsSize, participantsOffset int) ([]*ChatWithParticipants, error)
 	CountChatsPerUser(ctx context.Context, userId int64) (int64, error)
 	FlipReaction(ctx context.Context, userId int64, chatId int64, messageId int64, reaction string) (bool, error)
 	GetChatIds(ctx context.Context, chatsSize, chatsOffset int) ([]int64, error)

@@ -1,7 +1,7 @@
 import {hasLength} from "@/utils";
 import {directionBottom} from "@/mixins/infiniteScrollMixin.js";
 
-// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection(), isAppropriateHash()
+// expects methods: doDefaultScroll(), getPositionFromStore(), conditionToSaveLastVisible(), itemSelector(), setPositionToStore(), scrollerSelector(), itemSelector(), initialDirection(), isAppropriateHash(), enableHashInRoute(), convertLoadedFromRouteHash(), convertLoadedFromStoreHash(), extractIdFromElementForStoring()
 // isTopDirection() - from infiniteScrollMixin.js
 export default () => {
     return {
@@ -16,7 +16,7 @@ export default () => {
         },
         computed: {
             highlightItemId() {
-                if (this.isAppropriateHash(this.$route.hash)) {
+                if (this.enableHashInRoute() && this.isAppropriateHash(this.$route.hash)) {
                     return this.getIdFromRouteHash(this.$route.hash);
                 } else {
                     return null
@@ -28,13 +28,15 @@ export default () => {
                 return this.isTopDirection() ? this.startingFromItemIdTop : this.startingFromItemIdBottom;
             },
             initializeHashVariables() {
-                this.hasHashFromRoute = hasLength(this.highlightItemId);
+                if (this.enableHashInRoute()) {
+                    this.hasHashFromRoute = hasLength(this.highlightItemId);
+                }
                 this.loadedFromStoreHash = this.getPositionFromStore();
             },
             prepareHashesForRequest() {
                 let startingFromItemId;
                 let hasHash;
-                if (this.hasHashFromRoute) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
+                if (this.enableHashInRoute() && this.hasHashFromRoute) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
                     // how to check:
                     // 1. click on hash
                     // 2. reload page
@@ -51,11 +53,11 @@ export default () => {
                 }
                 return {startingFromItemId, hasHash}
             },
-            async doScrollOnFirstLoad(prefix) {
-                if (this.highlightItemId) {
-                    await this.scrollTo(prefix + this.highlightItemId);
+            async doScrollOnFirstLoad() {
+                if (this.enableHashInRoute() && this.highlightItemId) {
+                    await this.scrollTo(this.convertLoadedFromRouteHash(this.highlightItemId));
                 } else if (this.loadedFromStoreHash) {
-                    await this.scrollTo(prefix + this.loadedFromStoreHash);
+                    await this.scrollTo(this.convertLoadedFromStoreHash(this.loadedFromStoreHash));
                 } else {
                     await this.doDefaultScroll(); // we need it to prevent browser's scrolling
                 }
@@ -103,7 +105,7 @@ export default () => {
                     }
                     const desiredVisible = this.doSaveTheFirstItem() ?  visible[0].item : visible[visible.length - 1].item;
 
-                    const iid = this.getIdFromRouteHash(desiredVisible.id);
+                    const iid = this.extractIdFromElementForStoring(desiredVisible);
                     console.log("For storing to localstore found desiredVisible", desiredVisible, "itemId", iid, "obj", obj);
 
                     this.setPositionToStore(iid, obj)

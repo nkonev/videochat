@@ -203,6 +203,18 @@
           this.items = this.items.slice(0, this.getReduceToLength()); // remove last from array, retain first N - reduce top on the page (due to reverse)
           this.startingFromItemIdTop = this.getMinimumItemId();
         },
+        enableHashInRoute() {
+          return true
+        },
+        convertLoadedFromRouteHash(obj) {
+          return messageIdHashPrefix + obj
+        },
+        convertLoadedFromStoreHash(obj) {
+          return messageIdHashPrefix + obj
+        },
+        extractIdFromElementForStoring(element) {
+          return this.getIdFromRouteHash(element.id)
+        },
         saveScroll(top) {
           this.preservedScroll = top ? this.getMinimumItemId() : this.getMaximumItemId();
           console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
@@ -211,7 +223,7 @@
           return directionTop
         },
         async onFirstLoad(loadedResult) {
-            await this.doScrollOnFirstLoad(messageIdHashPrefix);
+            await this.doScrollOnFirstLoad();
             if (loadedResult === true) {
                 removeTopMessagePosition(this.chatId);
             }
@@ -223,7 +235,35 @@
               await this.scrollDown(); // we need it to prevent browser's scrolling
               this.loadedBottom = true;
         },
+        async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
+          const res = await axios.get(`/api/chat/${this.chatId}/message/search`, {
+            params: {
+              startingFromItemId: startingFromItemId,
+              includeStartingFrom: !!includeStartingFrom,
+              size: PAGE_SIZE,
+              reverse: reverse,
+              searchString: this.searchString,
+            },
+            signal: this.requestAbortController.signal
+          });
 
+          if (res.status == 204) {
+            // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
+            return []
+          }
+
+          const items = res.data.items;
+          console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
+
+          if (!res.data.hasNext) {
+            if (this.isTopDirection()) {
+              this.loadedTop = true;
+            } else {
+              this.loadedBottom = true;
+            }
+          }
+          return items
+        },
         async load() {
           if (!this.canDrawMessages()) {
               return Promise.resolve()
@@ -233,24 +273,12 @@
 
           const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
-          return axios.get(`/api/chat/${this.chatId}/message`, {
-            params: {
-              startingFromItemId: startingFromItemId,
-              size: PAGE_SIZE,
-              reverse: this.isTopDirection(),
-              searchString: this.searchString,
-              hasHash: hasHash
-            },
-            signal: this.requestAbortController.signal
-          })
-          .then((response) => {
-            if (response.status == 204) {
-              // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
-              return Promise.resolve()
+          try {
+            let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
+            if (hasHash) {
+              const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
+              items = portion.reverse().concat(items);
             }
-
-            const items = response.data;
-            console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
             if (this.isTopDirection()) {
               replaceOrAppend(this.items, items);
@@ -258,19 +286,12 @@
               replaceOrPrepend(this.items, items);
             }
 
-            if (items.length < PAGE_SIZE) {
-              if (this.isTopDirection()) {
-                this.loadedTop = true;
-              } else {
-                this.loadedBottom = true;
-              }
-            }
             this.updateTopAndBottomIds();
 
             if ((!startingFromItemId || this.isFirstLoad) && this.items.length) {
-                axios.put(`/api/chat/${this.chatId}/message/read/${this.startingFromItemIdBottom}`, null, {
-                  signal: this.requestAbortController.signal
-                })
+              axios.put(`/api/chat/${this.chatId}/message/read/${this.startingFromItemIdBottom}`, null, {
+                signal: this.requestAbortController.signal
+              })
             }
 
             if (!this.isFirstLoad) {
@@ -278,9 +299,9 @@
             }
             this.performMarking();
             return Promise.resolve(true)
-          }).finally(()=>{
-              this.chatStore.decrementProgressCount();
-          })
+          } finally {
+            this.chatStore.decrementProgressCount();
+          }
         },
         afterScrollRestored(el) {
             el?.parentElement?.scrollBy({

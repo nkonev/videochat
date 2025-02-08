@@ -3,8 +3,8 @@ package name.nkonev.aaa.dto;
 public record SearchUsersRequestDTO(
     int size,
     Long startingFromItemId,
+    boolean includeStartingFrom,
     boolean reverse,
-    boolean hasHash,
     String searchString
 ) {
 }

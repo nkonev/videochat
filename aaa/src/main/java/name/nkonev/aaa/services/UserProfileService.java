@@ -138,16 +138,18 @@ public class UserProfileService {
 
 
     @Transactional
-    public List<UserAccountDTOExtended> searchUsers(
+    public SearchUsersResponseDTO searchUsers(
             UserAccountDetailsDTO userAccount,
             SearchUsersRequestDTO request
     ) {
         var searchString = request.searchString() != null ? request.searchString().trim() : "";
         var size = PageUtils.fixSize(request.size());
 
-        var result = userListViewRepository.getUsers(size, request.startingFromItemId(), request.reverse(), request.hasHash(), searchString);
+        var result = userListViewRepository.getUsers(size, request.startingFromItemId(), request.includeStartingFrom(), request.reverse(), searchString);
 
-        return result.stream().map(getConvertToUserAccountDTO(userAccount)).toList();
+        var hasMore = result.size() == size;
+
+        return new SearchUsersResponseDTO(result.stream().map(getConvertToUserAccountDTO(userAccount)).toList(), hasMore);
     }
 
     @Transactional
@@ -156,10 +158,9 @@ public class UserProfileService {
         var size = PageUtils.fixSize(size0);
         var reverse = false; // false for edge chat
         var searchString = searchString0 != null ? searchString0.trim() : "";
+        var includeStartingFrom = false;
 
-        var hasHash = false;
-
-        var result = userListViewRepository.getUsers(size, startingFromItemId, reverse, hasHash, searchString);
+        var result = userListViewRepository.getUsers(size, startingFromItemId, includeStartingFrom, reverse, searchString);
 
         var edge = true;
 

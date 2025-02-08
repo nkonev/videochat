@@ -291,7 +291,7 @@
                     })
                         .then((response) => {
                             console.log("Fetched users", response.data);
-                            this.people = response.data;
+                            this.people = response.data.items;
                         })
                         .finally(() => {
                             this.searchLoading = false;

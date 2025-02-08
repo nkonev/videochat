@@ -214,7 +214,7 @@
                 this.chatId = chatId;
             },
             initiateRequest() {
-                return axios.get(`/api/chat/${this.chatId}/participant`, {
+                return axios.get(`/api/chat/${this.chatId}/participant/search`, {
                     params: {
                         page: this.translatePage(),
                         size: pageSize,

@@ -61,7 +61,7 @@ public class UserProfileController {
     @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PreAuthorize("isAuthenticated()")
     @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.SEARCH)
-    public List<name.nkonev.aaa.dto.UserAccountDTOExtended> searchUsers(
+    public SearchUsersResponseDTO searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
             @RequestBody SearchUsersRequestDTO request
     ) {

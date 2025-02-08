@@ -9,7 +9,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"math"
 	"net/http"
 	"net/url"
 	"nkonev.name/chat/auth"
@@ -106,7 +105,7 @@ func (mc *MessageHandler) FindMessageByFileItemUuid(c echo.Context) error {
 
 }
 
-func (mc *MessageHandler) getMessages(ctx context.Context, tx *db.Tx, chatId int64, userId int64, size int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*dto.DisplayMessageDto, bool, error) {
+func (mc *MessageHandler) getMessages(ctx context.Context, tx *db.Tx, chatId int64, userId int64, size int, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string) ([]*dto.DisplayMessageDto, bool, error) {
 	isParticipant, err := tx.IsParticipant(ctx, userId, chatId)
 	if err != nil {
 		return nil, false, err
@@ -115,7 +114,7 @@ func (mc *MessageHandler) getMessages(ctx context.Context, tx *db.Tx, chatId int
 		return nil, true, nil
 	}
 
-	messages, err := tx.GetMessages(ctx, chatId, size, startingFromItemId, reverse, hasHash, searchString)
+	messages, err := tx.GetMessages(ctx, chatId, size, startingFromItemId, includeStartingFrom, reverse, searchString)
 	if err != nil {
 		mc.lgr.WithTracing(ctx).Errorf("Error get messages from db %v", err)
 		return nil, false, err
@@ -144,6 +143,11 @@ func (mc *MessageHandler) getMessages(ctx context.Context, tx *db.Tx, chatId int
 	return messageDtos, false, nil
 }
 
+type MessagesResponseDto struct {
+	Items   []*dto.DisplayMessageDto `json:"items"`
+	HasNext bool                     `json:"hasNext"`
+}
+
 func (mc *MessageHandler) GetMessages(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -151,22 +155,20 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	var startingFromItemId int64
-	startingFromItemIdString := c.QueryParam("startingFromItemId")
-	if startingFromItemIdString == "" {
-		startingFromItemId = math.MaxInt64
-	} else {
-		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
-		if err != nil {
-			return err
-		}
-		startingFromItemId = startingFromItemId2
-	}
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := utils.GetBoolean(c.QueryParam("reverse"))
 	searchString := c.QueryParam("searchString")
 	searchString = TrimAmdSanitize(mc.policy, searchString)
-	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
+	var startingFromItemId *int64
+	startingFromItemIdString := c.QueryParam("startingFromItemId")
+	if startingFromItemIdString != "" {
+		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
+		if err != nil {
+			return err
+		}
+		startingFromItemId = &startingFromItemId2
+	}
+	includeStartingFrom := utils.GetBoolean(c.QueryParam("includeStartingFrom"))
 
 	chatIdString := c.Param("id")
 	chatId, err := utils.ParseInt64(chatIdString)
@@ -176,7 +178,7 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 
 	return db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
 
-		messageDtos, notAparticipant, err := mc.getMessages(c.Request().Context(), tx, chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString)
+		messageDtos, notAparticipant, err := mc.getMessages(c.Request().Context(), tx, chatId, userPrincipalDto.UserId, size, startingFromItemId, includeStartingFrom, reverse, searchString)
 		if err != nil {
 			return err
 		}
@@ -186,7 +188,10 @@ func (mc *MessageHandler) GetMessages(c echo.Context) error {
 		}
 
 		mc.lgr.WithTracing(c.Request().Context()).Debugf("Successfully returning %v messages", len(messageDtos))
-		return c.JSON(http.StatusOK, messageDtos)
+		return c.JSON(http.StatusOK, MessagesResponseDto{
+			Items:   messageDtos,
+			HasNext: len(messageDtos) == size,
+		})
 	})
 }
 
@@ -426,13 +431,12 @@ func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	var startingFromItemId int64 = math.MaxInt64 // MaxInt64 for edge
+	var startingFromItemId *int64 = nil
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := true // true for edge
 	searchString := c.QueryParam("searchString")
 	searchString = TrimAmdSanitize(mc.policy, searchString)
-	hasHash := false // false for edge
-
+	includeStartingFrom := false
 	chatIdString := c.Param("id")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
@@ -447,7 +451,7 @@ func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 
 	edge := true
 	return db.Transact(c.Request().Context(), mc.db, func(tx *db.Tx) error {
-		messageDtos, notAparticipant, err := mc.getMessages(c.Request().Context(), tx, chatId, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString)
+		messageDtos, notAparticipant, err := mc.getMessages(c.Request().Context(), tx, chatId, userPrincipalDto.UserId, size, startingFromItemId, includeStartingFrom, reverse, searchString)
 		if err != nil {
 			return err
 		}

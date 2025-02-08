@@ -298,8 +298,8 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                     .with(csrf())
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].email").doesNotExist())
-                .andExpect(jsonPath("$[0].login").value(USER_BOB))
+                .andExpect(jsonPath("$.items[0].email").doesNotExist())
+                .andExpect(jsonPath("$.items[0].login").value(USER_BOB))
                 .andExpect(content().string(CoreMatchers.not(CoreMatchers.containsString(bobEmail))))
                 .andReturn();
 
@@ -383,9 +383,9 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                     LOGGER.info(result.getResponse().getContentAsString());
                 })
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[2].canDelete").value(false))
-                .andExpect(jsonPath("$[2].canChangeRole").value(false))
-                .andExpect(jsonPath("$[2].canLock").value(false))
+                .andExpect(jsonPath("$.items[2].canDelete").value(false))
+                .andExpect(jsonPath("$.items[2].canChangeRole").value(false))
+                .andExpect(jsonPath("$.items[2].canLock").value(false))
 
                 .andReturn();
     }
@@ -404,9 +404,9 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                     LOGGER.info(result.getResponse().getContentAsString());
                 })
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[2].canDelete").value(true))
-                .andExpect(jsonPath("$[2].canChangeRole").value(true))
-                .andExpect(jsonPath("$[2].canLock").value(true))
+                .andExpect(jsonPath("$.items[2].canDelete").value(true))
+                .andExpect(jsonPath("$.items[2].canChangeRole").value(true))
+                .andExpect(jsonPath("$.items[2].canLock").value(true))
 
                 .andReturn();
     }
@@ -468,8 +468,8 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                         .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$.[0].login").value("John Smith"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].login").value("John Smith"))
                 .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
@@ -490,8 +490,8 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$.[0].login").value("John Smith"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].login").value("John Smith"))
                 .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);
@@ -749,7 +749,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
             )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.[0].login").value("forgot-password-user"))
+            .andExpect(jsonPath("$.items[0].login").value("forgot-password-user"))
             .andReturn();
         String getStr = getPostRequest.getResponse().getContentAsString();
         LOGGER.info(getStr);

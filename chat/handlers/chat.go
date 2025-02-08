@@ -98,8 +98,8 @@ func (ch *ChatHandler) getAdditionalUserIds(ctx context.Context, searchString st
 	return additionalFoundUserIds
 }
 
-func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, size int, startingFromItemId *int64, reverse, hasHash bool, searchString string, additionalFoundUserIds []int64) ([]*dto.ChatDto, error) {
-	dbChats, err := tx.GetChatsWithParticipants(ctx, userId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds, 0, 0)
+func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, size int, startingFromItemId *db.ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64) ([]*dto.ChatDto, error) {
+	dbChats, err := tx.GetChatsWithParticipants(ctx, userId, size, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds, 0, 0)
 	if err != nil {
 		ch.lgr.WithTracing(ctx).Errorf("Error get chats from db %v", err)
 		return nil, err
@@ -162,6 +162,19 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 	return chatDtos, nil
 }
 
+type GetChatsRequestDto struct {
+	StartingFromItemId  *dto.ChatId `json:"startingFromItemId"`
+	IncludeStartingFrom bool        `json:"includeStartingFrom"`
+	Size                int         `json:"size"`
+	Reverse             bool        `json:"reverse"`
+	SearchString        string      `json:"searchString"`
+}
+
+type GetChatsResponseDto struct {
+	Items   []*dto.ChatDto `json:"items"`
+	HasNext bool           `json:"hasNext"`
+}
+
 func (ch *ChatHandler) GetChats(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -169,36 +182,30 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	var startingFromItemId *int64
-	startingFromItemIdString := c.QueryParam("startingFromItemId")
-	if startingFromItemIdString == "" {
-		startingFromItemId = nil
-	} else {
-		startingFromItemId2, err := utils.ParseInt64(startingFromItemIdString) // exclusive
-		if err != nil {
-			return err
-		}
-		startingFromItemId = &startingFromItemId2
+	var bindTo = new(GetChatsRequestDto)
+	if err := c.Bind(bindTo); err != nil {
+		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
+		return err
 	}
 
-	size := utils.FixSizeString(c.QueryParam("size"))
-	reverse := utils.GetBoolean(c.QueryParam("reverse"))
-	searchString := c.QueryParam("searchString")
+	size := utils.FixSize(bindTo.Size)
+	reverse := bindTo.Reverse
+	searchString := bindTo.SearchString
 	searchString = TrimAmdSanitize(ch.policy, searchString)
-
-	hasHash := utils.GetBoolean(c.QueryParam("hasHash"))
+	startingFromItemId := ch.convertChatId(bindTo.StartingFromItemId)
+	includeStartingFrom := bindTo.IncludeStartingFrom
 
 	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 
-		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
 		}
 
 		ch.lgr.WithTracing(c.Request().Context()).Debugf("Successfully returning %v chats", len(chatDtos))
-		return c.JSON(http.StatusOK, chatDtos)
+		return c.JSON(http.StatusOK, GetChatsResponseDto{chatDtos, len(chatDtos) == size})
 	})
 }
 
@@ -236,7 +243,7 @@ func (ch *ChatHandler) Filter(c echo.Context) error {
 		return err
 	}
 
-	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+	reverse := false
 	searchString := TrimAmdSanitize(ch.policy, bindTo.SearchString)
 	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
@@ -415,19 +422,18 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 		return err
 	}
 
-	var startingFromItemId *int64 = nil // nil for edge
+	var startingFromItemId *db.ChatId = nil // nil for edge
 	size := utils.FixSizeString(c.QueryParam("size"))
 	reverse := false // false for edge chat
 	searchString := c.QueryParam("searchString")
 	searchString = TrimAmdSanitize(ch.policy, searchString)
-
-	hasHash := false // false for edge
+	includeStartingFrom := false
 
 	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
 	edge := true
 	return db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
-		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, reverse, hasHash, searchString, additionalFoundUserIds)
+		chatDtos, err := ch.getChats(c.Request().Context(), tx, userPrincipalDto.UserId, size, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds)
 		if err != nil {
 			return err
 		}
@@ -2161,4 +2167,15 @@ func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
 		}
 		return c.NoContent(http.StatusOK)
 	})
+}
+
+func (ch *ChatHandler) convertChatId(chatId *dto.ChatId) *db.ChatId {
+	if chatId == nil {
+		return nil
+	}
+	return &db.ChatId{
+		Pinned:             chatId.Pinned,
+		LastUpdateDateTime: chatId.LastUpdateDateTime,
+		Id:                 chatId.Id,
+	}
 }

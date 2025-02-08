@@ -192,7 +192,7 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.GET("/api/chat", ch.GetChats)
+	e.POST("/api/chat/search", ch.GetChats)
 	e.GET("/api/chat/has-new-messages", ch.HasNewMessages)
 	e.POST("/api/chat/filter", ch.Filter)
 	e.GET("/api/chat/:id", ch.GetChat)
@@ -202,7 +202,7 @@ func configureEcho(
 	e.PUT("/api/chat", ch.EditChat)
 	e.PUT("/api/chat/:id/leave", ch.LeaveChat)
 	e.PUT("/api/chat/:id/join", ch.JoinChat)
-	e.GET("/api/chat/:id/participant", ch.GetParticipants)
+	e.GET("/api/chat/:id/participant/search", ch.GetParticipants)
 	e.POST("/api/chat/:id/participant/filter", ch.FilterParticipants)
 	e.POST("/api/chat/:id/participant/count", ch.CountParticipants)
 	e.PUT("/api/chat/:id/participant", ch.AddParticipants)
@@ -225,7 +225,7 @@ func configureEcho(
 	e.PUT("/api/chat/:id/notification", ch.PutUserChatNotificationSettings)
 	e.GET("/api/chat/:id/notification", ch.GetUserChatNotificationSettings)
 
-	e.GET("/api/chat/:id/message", mc.GetMessages)
+	e.GET("/api/chat/:id/message/search", mc.GetMessages)
 	e.GET("/api/chat/:id/message/:messageId", mc.GetMessage)
 	e.POST("/api/chat/:id/message/fresh", mc.IsFreshMessagesPage)
 	e.PUT("/api/chat/:id/message/:messageId/reaction", mc.ReactionMessage)

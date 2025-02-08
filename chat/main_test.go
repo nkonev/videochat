@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -155,9 +156,9 @@ func waitForChatServer() {
 			"X-Auth-Userid":    {"1"},
 		}
 		getChatRequest := &http.Request{
-			Method: "GET",
+			Method: "POST",
 			Header: requestHeaders1,
-			URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat"),
+			URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat/search"),
 		}
 		getChatResponse, err := restClient.Do(getChatRequest)
 		if err != nil {
@@ -301,7 +302,7 @@ func createFanoutNotificationsChannel(connection *rabbitmq.Connection, lc fx.Lif
 
 func TestGetChats(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		c, b, _ := request("GET", "/api/chat", nil, e)
+		c, b, _ := request("POST", "/api/chat/search", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
 	})
@@ -326,73 +327,106 @@ func TestGetChatsPaginated(t *testing.T) {
 	defer emu.Close()
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat?size=40", nil, e)
+		firstReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
+			Size: 40,
+		})
+		httpFirstPage, bodyFirstPage, _ := request("POST", "/api/chat/search", bytes.NewReader(firstReqBytes), e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
-		typedResFirstPageIds := getJsonPathResult(t, bodyFirstPage, "$.id").([]interface{})
-		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.name").([]interface{})
+		typedResFirst := handlers.GetChatsResponseDto{}
+		err := json.Unmarshal([]byte(bodyFirstPage), &typedResFirst)
+		assert.NoError(t, err)
 
-		assert.Equal(t, 40, len(typedResFirstPage))
+		assert.Equal(t, 40, len(typedResFirst.Items))
 
-		assert.Equal(t, "generated_chat1000", typedResFirstPage[0])
-		assert.Equal(t, "generated_chat999", typedResFirstPage[1])
-		assert.Equal(t, "generated_chat998", typedResFirstPage[2])
-		assert.Equal(t, "generated_chat961", typedResFirstPage[39])
+		assert.Equal(t, "generated_chat1000", typedResFirst.Items[0].Name)
+		assert.Equal(t, "generated_chat999", typedResFirst.Items[1].Name)
+		assert.Equal(t, "generated_chat998", typedResFirst.Items[2].Name)
+		assert.Equal(t, "generated_chat961", typedResFirst.Items[39].Name)
 
 		// also check get additional info from aaa emu
-		firstChatParticipantLogins := getJsonPathResult(t, bodyFirstPage, "$[0].participants.login").([]interface{})
-		assert.Equal(t, "testor_protobuf", firstChatParticipantLogins[0])
+		assert.Equal(t, "testor_protobuf", typedResFirst.Items[0].Participants[0].Login)
+		assert.Equal(t, null.StringFrom("http://image.jpg"), typedResFirst.Items[0].Participants[0].Avatar)
 
-		firstChatParticipantAvatars := getJsonPathResult(t, bodyFirstPage, "$[0].participants.avatar").([]interface{})
-		assert.Equal(t, "http://image.jpg", firstChatParticipantAvatars[0])
+		lastPinned := typedResFirst.Items[len(typedResFirst.Items)-1].Pinned
+		lastId := typedResFirst.Items[len(typedResFirst.Items)-1].Id
+		lastLastUpdateDateTime := typedResFirst.Items[len(typedResFirst.Items)-1].LastUpdateDateTime
 
-		lastId := typedResFirstPageIds[len(typedResFirstPageIds)-1].(float64)
-
+		secondReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
+			StartingFromItemId: &dto.ChatId{
+				Pinned:             lastPinned,
+				LastUpdateDateTime: lastLastUpdateDateTime,
+				Id:                 lastId,
+			},
+			Size: 40,
+		})
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?size=40&startingFromItemId="+utils.Float64ToString(lastId), nil, e)
+		httpSecondPage, bodySecondPage, _ := request("POST", "/api/chat/search", bytes.NewReader(secondReqBytes), e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
-		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.name").([]interface{})
+		typedResSecond := handlers.GetChatsResponseDto{}
+		err = json.Unmarshal([]byte(bodySecondPage), &typedResSecond)
+		assert.NoError(t, err)
 
-		assert.Equal(t, 40, len(typedResSecondPage))
+		assert.Equal(t, 40, len(typedResSecond.Items))
 
-		assert.Equal(t, "generated_chat960", typedResSecondPage[0])
-		assert.Equal(t, "generated_chat959", typedResSecondPage[1])
-		assert.Equal(t, "generated_chat958", typedResSecondPage[2])
-		assert.Equal(t, "generated_chat921", typedResSecondPage[39])
+		assert.Equal(t, "generated_chat960", typedResSecond.Items[0].Name)
+		assert.Equal(t, "generated_chat959", typedResSecond.Items[1].Name)
+		assert.Equal(t, "generated_chat958", typedResSecond.Items[2].Name)
+		assert.Equal(t, "generated_chat921", typedResSecond.Items[39].Name)
 	})
 }
 
 func TestGetChatsPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat?size=40&searchString=gen", nil, e)
+		firstReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
+			Size:         40,
+			SearchString: "gen",
+		})
+		httpFirstPage, bodyFirstPage, _ := request("POST", "/api/chat/search", bytes.NewReader(firstReqBytes), e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
-		typedResFirstPageIds := getJsonPathResult(t, bodyFirstPage, "$.id").([]interface{})
-		typedResFirstPage := getJsonPathResult(t, bodyFirstPage, "$.name").([]interface{})
+		typedResFirst := handlers.GetChatsResponseDto{}
+		err := json.Unmarshal([]byte(bodyFirstPage), &typedResFirst)
+		assert.NoError(t, err)
 
-		assert.Equal(t, 40, len(typedResFirstPage))
+		assert.Equal(t, 40, len(typedResFirst.Items))
 
-		assert.Equal(t, "generated_chat1000", typedResFirstPage[0])
-		assert.Equal(t, "generated_chat999", typedResFirstPage[1])
-		assert.Equal(t, "generated_chat998", typedResFirstPage[2])
-		assert.Equal(t, "generated_chat961", typedResFirstPage[39])
+		assert.Equal(t, "generated_chat1000", typedResFirst.Items[0].Name)
+		assert.Equal(t, "generated_chat999", typedResFirst.Items[1].Name)
+		assert.Equal(t, "generated_chat998", typedResFirst.Items[2].Name)
+		assert.Equal(t, "generated_chat961", typedResFirst.Items[39].Name)
 
-		lastId := typedResFirstPageIds[len(typedResFirstPageIds)-1].(float64)
+		lastPinned := typedResFirst.Items[len(typedResFirst.Items)-1].Pinned
+		lastId := typedResFirst.Items[len(typedResFirst.Items)-1].Id
+		lastLastUpdateDateTime := typedResFirst.Items[len(typedResFirst.Items)-1].LastUpdateDateTime
+
+		secondReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
+			StartingFromItemId: &dto.ChatId{
+				Pinned:             lastPinned,
+				LastUpdateDateTime: lastLastUpdateDateTime,
+				Id:                 lastId,
+			},
+			Size:         40,
+			SearchString: "gen",
+		})
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat?size=40&startingFromItemId="+utils.Float64ToString(lastId), nil, e)
+		httpSecondPage, bodySecondPage, _ := request("POST", "/api/chat/search", bytes.NewReader(secondReqBytes), e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
-		typedResSecondPage := getJsonPathResult(t, bodySecondPage, "$.name").([]interface{})
 
-		assert.Equal(t, 40, len(typedResSecondPage))
+		typedResSecond := handlers.GetChatsResponseDto{}
+		err = json.Unmarshal([]byte(bodySecondPage), &typedResSecond)
+		assert.NoError(t, err)
 
-		assert.Equal(t, "generated_chat960", typedResSecondPage[0])
-		assert.Equal(t, "generated_chat959", typedResSecondPage[1])
-		assert.Equal(t, "generated_chat958", typedResSecondPage[2])
-		assert.Equal(t, "generated_chat921", typedResSecondPage[39])
+		assert.Equal(t, 40, len(typedResSecond.Items))
+
+		assert.Equal(t, "generated_chat960", typedResSecond.Items[0].Name)
+		assert.Equal(t, "generated_chat959", typedResSecond.Items[1].Name)
+		assert.Equal(t, "generated_chat958", typedResSecond.Items[2].Name)
+		assert.Equal(t, "generated_chat921", typedResSecond.Items[39].Name)
 	})
 }
 
@@ -562,13 +596,14 @@ func TestBadRequestShouldReturn400(t *testing.T) {
 func TestGetMessagesPaginated(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=6&size=3", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message/search?startingFromItemId=6&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
-		firstPageResult := []dto.DisplayMessageDto{}
-		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
+		firstPageResultWrapper := new(handlers.MessagesResponseDto)
+		err := json.Unmarshal([]byte(bodyFirstPage), firstPageResultWrapper)
 		assert.NoError(t, err)
+		firstPageResult := firstPageResultWrapper.Items
 
 		assert.Equal(t, 3, len(firstPageResult))
 		assert.True(t, strings.HasPrefix(firstPageResult[0].Text, "generated_message5"))
@@ -579,13 +614,14 @@ func TestGetMessagesPaginated(t *testing.T) {
 		assert.Equal(t, int64(9), firstPageResult[2].Id)
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=9&size=3", nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message/search?startingFromItemId=9&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 
-		secondPageResult := []dto.DisplayMessageDto{}
-		err = json.Unmarshal([]byte(bodySecondPage), &secondPageResult)
+		secondPageResultWrapper := new(handlers.MessagesResponseDto)
+		err = json.Unmarshal([]byte(bodySecondPage), secondPageResultWrapper)
 		assert.NoError(t, err)
+		secondPageResult := secondPageResultWrapper.Items
 
 		assert.Equal(t, 3, len(secondPageResult))
 		assert.True(t, strings.HasPrefix(secondPageResult[0].Text, "generated_message8"))
@@ -600,13 +636,14 @@ func TestGetMessagesPaginated(t *testing.T) {
 func TestGetMessagesPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=6&size=3&searchString=gen", nil, e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message/search?startingFromItemId=6&size=3&searchString=gen", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 
-		firstPageResult := []dto.DisplayMessageDto{}
-		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
+		firstPageResultWrapper := new(handlers.MessagesResponseDto)
+		err := json.Unmarshal([]byte(bodyFirstPage), firstPageResultWrapper)
 		assert.NoError(t, err)
+		firstPageResult := firstPageResultWrapper.Items
 
 		assert.Equal(t, 3, len(firstPageResult))
 		assert.True(t, strings.HasPrefix(firstPageResult[0].Text, "generated_message5"))
@@ -617,13 +654,14 @@ func TestGetMessagesPaginatedSearch(t *testing.T) {
 		assert.Equal(t, int64(9), firstPageResult[2].Id)
 
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=9&size=3", nil, e)
+		httpSecondPage, bodySecondPage, _ := request("GET", "/api/chat/1/message/search?startingFromItemId=9&size=3", nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 
-		secondPageResult := []dto.DisplayMessageDto{}
-		err = json.Unmarshal([]byte(bodySecondPage), &secondPageResult)
+		secondPageResultWrapper := new(handlers.MessagesResponseDto)
+		err = json.Unmarshal([]byte(bodySecondPage), secondPageResultWrapper)
 		assert.NoError(t, err)
+		secondPageResult := secondPageResultWrapper.Items
 
 		assert.Equal(t, 3, len(secondPageResult))
 		assert.True(t, strings.HasPrefix(secondPageResult[0].Text, "generated_message8"))
@@ -632,76 +670,6 @@ func TestGetMessagesPaginatedSearch(t *testing.T) {
 		assert.Equal(t, int64(10), secondPageResult[0].Id)
 		assert.Equal(t, int64(11), secondPageResult[1].Id)
 		assert.Equal(t, int64(12), secondPageResult[2].Id)
-	})
-}
-
-func TestGetMessagesHasHash(t *testing.T) {
-	runTest(t, func(e *echo.Echo) {
-		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=7&size=10&hasHash=true", nil, e)
-		assert.Equal(t, http.StatusOK, httpFirstPage)
-		assert.NotEmpty(t, bodyFirstPage)
-
-		firstPageResult := []dto.DisplayMessageDto{}
-		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
-		assert.NoError(t, err)
-
-		assert.Equal(t, 10, len(firstPageResult))
-		assert.True(t, strings.HasPrefix(firstPageResult[0].Text, "generated_message0"))
-		assert.True(t, strings.HasPrefix(firstPageResult[1].Text, "generated_message1"))
-		assert.True(t, strings.HasPrefix(firstPageResult[2].Text, "generated_message2"))
-		assert.True(t, strings.HasPrefix(firstPageResult[3].Text, "generated_message3"))
-		assert.True(t, strings.HasPrefix(firstPageResult[4].Text, "generated_message4"))
-		assert.True(t, strings.HasPrefix(firstPageResult[5].Text, "generated_message5"))
-		assert.True(t, strings.HasPrefix(firstPageResult[6].Text, "generated_message6"))
-		assert.True(t, strings.HasPrefix(firstPageResult[7].Text, "generated_message7"))
-		assert.True(t, strings.HasPrefix(firstPageResult[8].Text, "generated_message8"))
-		assert.True(t, strings.HasPrefix(firstPageResult[9].Text, "generated_message9"))
-		assert.Equal(t, int64(2), firstPageResult[0].Id)
-		assert.Equal(t, int64(3), firstPageResult[1].Id)
-		assert.Equal(t, int64(4), firstPageResult[2].Id)
-		assert.Equal(t, int64(5), firstPageResult[3].Id)
-		assert.Equal(t, int64(6), firstPageResult[4].Id)
-		assert.Equal(t, int64(7), firstPageResult[5].Id)
-		assert.Equal(t, int64(8), firstPageResult[6].Id)
-		assert.Equal(t, int64(9), firstPageResult[7].Id)
-		assert.Equal(t, int64(10), firstPageResult[8].Id)
-		assert.Equal(t, int64(11), firstPageResult[9].Id)
-	})
-}
-
-func TestGetMessagesHasHashSearch(t *testing.T) {
-	runTest(t, func(e *echo.Echo) {
-		// get first page
-		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/1/message?startingFromItemId=7&size=10&hasHash=true&searchString=gen", nil, e)
-		assert.Equal(t, http.StatusOK, httpFirstPage)
-		assert.NotEmpty(t, bodyFirstPage)
-
-		firstPageResult := []dto.DisplayMessageDto{}
-		err := json.Unmarshal([]byte(bodyFirstPage), &firstPageResult)
-		assert.NoError(t, err)
-
-		assert.Equal(t, 10, len(firstPageResult))
-		assert.True(t, strings.HasPrefix(firstPageResult[0].Text, "generated_message0"))
-		assert.True(t, strings.HasPrefix(firstPageResult[1].Text, "generated_message1"))
-		assert.True(t, strings.HasPrefix(firstPageResult[2].Text, "generated_message2"))
-		assert.True(t, strings.HasPrefix(firstPageResult[3].Text, "generated_message3"))
-		assert.True(t, strings.HasPrefix(firstPageResult[4].Text, "generated_message4"))
-		assert.True(t, strings.HasPrefix(firstPageResult[5].Text, "generated_message5"))
-		assert.True(t, strings.HasPrefix(firstPageResult[6].Text, "generated_message6"))
-		assert.True(t, strings.HasPrefix(firstPageResult[7].Text, "generated_message7"))
-		assert.True(t, strings.HasPrefix(firstPageResult[8].Text, "generated_message8"))
-		assert.True(t, strings.HasPrefix(firstPageResult[9].Text, "generated_message9"))
-		assert.Equal(t, int64(2), firstPageResult[0].Id)
-		assert.Equal(t, int64(3), firstPageResult[1].Id)
-		assert.Equal(t, int64(4), firstPageResult[2].Id)
-		assert.Equal(t, int64(5), firstPageResult[3].Id)
-		assert.Equal(t, int64(6), firstPageResult[4].Id)
-		assert.Equal(t, int64(7), firstPageResult[5].Id)
-		assert.Equal(t, int64(8), firstPageResult[6].Id)
-		assert.Equal(t, int64(9), firstPageResult[7].Id)
-		assert.Equal(t, int64(10), firstPageResult[8].Id)
-		assert.Equal(t, int64(11), firstPageResult[9].Id)
 	})
 }
 

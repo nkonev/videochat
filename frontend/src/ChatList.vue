@@ -7,6 +7,8 @@
                 v-for="(item, index) in items"
                 :key="item.id"
                 :id="getItemId(item.id)"
+                :data-pinned="item.pinned"
+                :data-last-update-date-time="item.lastUpdateDateTime"
                 class="list-item-prepend-spacer pb-2 chat-item-root"
                 @contextmenu.stop="onShowContextMenu($event, item)"
                 @click.prevent="openChat(item)"
@@ -190,18 +192,40 @@ export default {
         this.items = this.items.slice(-this.getReduceToLength());
         this.startingFromItemIdTop = this.findTopElementId();
     },
+    enableHashInRoute() {
+      return false
+    },
+    convertLoadedFromStoreHash(obj) {
+      return chatIdHashPrefix + obj?.id
+    },
+    extractIdFromElementForStoring(element) {
+      return {pinned: element.getAttribute("data-pinned") === "true", lastUpdateDateTime: element.getAttribute("data-last-update-date-time"), id: parseInt(this.getIdFromRouteHash(element.id))}
+    },
     findBottomElementId() {
-        return this.items[this.items.length-1]?.id
+        if (!this.items.length) {
+          return null
+        }
+        const e = this.items[this.items.length-1];
+        return {pinned: e.pinned, lastUpdateDateTime: e.lastUpdateDateTime, id: e.id}
     },
     findTopElementId() {
-        return this.items[0]?.id
+        if (!this.items.length) {
+          return null
+        }
+        const e = this.items[0];
+        return {pinned: e.pinned, lastUpdateDateTime: e.lastUpdateDateTime, id: e.id}
     },
     updateTopAndBottomIds() {
       this.startingFromItemIdTop = this.findTopElementId();
       this.startingFromItemIdBottom = this.findBottomElementId();
     },
     saveScroll(top) {
-        this.preservedScroll = top ? this.findTopElementId() : this.findBottomElementId();
+        const obj = top ? this.findTopElementId() : this.findBottomElementId();
+        if (obj) {
+          this.preservedScroll = obj.id;
+        } else {
+          this.preservedScroll = null;
+        }
         console.log("Saved scroll", this.preservedScroll, "in ", scrollerName);
     },
     async scrollTop() {
@@ -214,10 +238,36 @@ export default {
       return directionBottom
     },
     async onFirstLoad(loadedResult) {
-      await this.doScrollOnFirstLoad(chatIdHashPrefix);
+      await this.doScrollOnFirstLoad();
       if (loadedResult === true) {
         removeTopChatPosition();
       }
+    },
+    async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
+      const res = await axios.post(`/api/chat/search`, {
+          startingFromItemId: startingFromItemId,
+          includeStartingFrom: !!includeStartingFrom,
+          size: PAGE_SIZE,
+          reverse: reverse,
+          searchString: this.searchString,
+        }, {
+          signal: this.requestAbortController.signal
+      })
+      const items = res.data.items;
+      console.log("Get items in ", scrollerName, items, "direction", this.aDirection);
+      items.forEach((item) => {
+        this.transformItemOverride(item);
+      });
+
+      if (!res.data.hasNext) {
+        if (this.isTopDirection()) {
+          this.loadedTop = true;
+        } else {
+          this.loadedBottom = true;
+        }
+      }
+
+      return items
     },
     async load() {
       if (!this.canDrawChats()) {
@@ -227,55 +277,38 @@ export default {
       const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
       this.chatStore.incrementProgressCount();
-      return axios.get(`/api/chat`, {
-        params: {
-          startingFromItemId: startingFromItemId,
-          size: PAGE_SIZE,
-          reverse: this.isTopDirection(),
-          searchString: this.searchString,
-          hasHash: hasHash
-        },
-        signal: this.requestAbortController.signal
-      })
-        .then((res) => {
-          const items = res.data;
-          console.log("Get items in ", scrollerName, items, "direction", this.aDirection);
-          items.forEach((item) => {
-                this.transformItemOverride(item);
-          });
 
-          // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
-          // e.g. some chat has been popped up on sever due to somebody updated it
-          if (this.isTopDirection()) {
-              replaceOrPrepend(this.items, items);
-              // sorts possibly wrong order after loading items, appeared on server while user was scrolling
-              // it makes sense only when user scrolls to top - in order to have more or less "fresh" view
-              this.sort(this.items);
-          } else {
-              replaceOrAppend(this.items, items);
-          }
+      try {
+        let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
+        if (hasHash) {
+          const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
+          items = portion.reverse().concat(items);
+        }
 
-          if (items.length < PAGE_SIZE) {
-            if (this.isTopDirection()) {
-              this.loadedTop = true;
-            } else {
-              this.loadedBottom = true;
-            }
-          }
+        // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
+        // e.g. some chat has been popped up on sever due to somebody updated it
+        if (this.isTopDirection()) {
+          replaceOrPrepend(this.items, items);
+          // sorts possibly wrong order after loading items, appeared on server while user was scrolling
+          // it makes sense only when user scrolls to top - in order to have more or less "fresh" view
+          this.sort(this.items);
+        } else {
+          replaceOrAppend(this.items, items);
+        }
 
-          this.updateTopAndBottomIds();
-          if (!this.isFirstLoad) {
-            this.clearRouteHash()
-          }
+        this.updateTopAndBottomIds();
+        if (!this.isFirstLoad) {
+          this.clearRouteHash()
+        }
 
-          this.performMarking();
+        this.performMarking();
 
-          this.requestStatuses();
+        this.requestStatuses();
 
-          return Promise.resolve(true)
-        }).finally(()=>{
-          this.chatStore.decrementProgressCount();
-        })
+        return Promise.resolve(true)
+      } finally {
+        this.chatStore.decrementProgressCount();
+      }
     },
     afterScrollRestored(el) {
         el?.parentElement?.scrollBy({
@@ -572,11 +605,7 @@ export default {
           searchString: this.searchString,
           pageSize: PAGE_SIZE,
           chatId: dto.id,
-          edgeChatId: this.startingFromItemIdTop,
         }, {
-          params: {
-            reverse: false
-          },
           signal: this.requestAbortController.signal
         }).then(({data}) => {
           if (data.found) {
@@ -730,8 +759,8 @@ export default {
     itemSelector() {
       return '.chat-item-root'
     },
-    setPositionToStore(chatId) {
-      setTopChatPosition(chatId)
+    setPositionToStore(chatIdObj) {
+      setTopChatPosition(chatIdObj)
     },
     beforeUnload() {
       this.saveLastVisibleElement();
@@ -847,14 +876,14 @@ export default {
   },
 
   beforeUnmount() {
+    this.saveLastVisibleElement();
+
     this.uninstallOnFocus();
 
     this.graphQlUserStatusUnsubscribe();
     this.uninstallScroller();
 
     removeEventListener("beforeunload", this.beforeUnload);
-
-    this.saveLastVisibleElement();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.off(PROFILE_SET, this.onProfileSet);

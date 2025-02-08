@@ -104,125 +104,14 @@ func selectMessageReactionsClause(chatId int64) string {
 }
 
 // see also its copy in aaa::UserListViewRepository
-func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
+func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, limit int, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string) ([]*Message, error) {
 	list := make([]*Message, 0)
 	var err error
-	if hasHash {
-		// has hash means that frontend's page has message hash
-		// it means we need to calculate page/2 to the top and to the bottom
-		// to respond page containing from two halves
-		leftLimit := limit / 2
-		rightLimit := limit / 2
 
-		if leftLimit == 0 {
-			leftLimit = 1
-		}
-		if rightLimit == 0 {
-			rightLimit = 1
-		}
-
-		var leftItemId, rightItemId *int64
-		var searchStringPercents = ""
-		if searchString != "" {
-			searchStringPercents = "%" + searchString + "%"
-		}
-
-		var noData bool
-
-		var limitRes *sql.Row
-		if searchString != "" {
-			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
-				select inner3.minid, inner3.maxid from (
-					select inner2.*, lag(id, $2, inner2.mmin) over() as minid, lead(id, $3, inner2.mmax) over() as maxid from (
-						select inn.*, id = $1 as central_element from (
-							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from message_chat_%v m where strip_tags(m.text) ilike $4 order by id
-					   	) inn
-				 	) inner2
-			  	) inner3 where central_element = true
-			`, chatId), startingFromItemId, leftLimit, rightLimit, searchStringPercents)
-		} else {
-			limitRes = co.QueryRowContext(ctx, fmt.Sprintf(`
-				select inner3.minid, inner3.maxid from (
-					select inner2.*, lag(id, $2, inner2.mmin) over() as minid, lead(id, $3, inner2.mmax) over() as maxid from (
-						select inn.*, id = $1 as central_element from (
-							select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from message_chat_%v order by id
-					   	) inn
-				 	) inner2
-			  	) inner3 where central_element = true
-			`, chatId), startingFromItemId, leftLimit, rightLimit)
-		}
-		err = limitRes.Scan(&leftItemId, &rightItemId)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				noData = true
-			} else {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		}
-
-		if noData {
-			// leave empty list
-		} else if leftItemId == nil || rightItemId == nil {
-			co.logger().WithTracing(ctx).Infof("Got leftItemId=%v, rightItemId=%v for chatId=%v, startingFromItemId=%v, reverse=%v, searchString=%v, fallback to simple", leftItemId, rightItemId, chatId, startingFromItemId, reverse, searchString)
-			var startedFromItemIdSafe int64
-			if reverse {
-				startedFromItemIdSafe = math.MaxInt64
-			} else {
-				startedFromItemIdSafe = 0
-			}
-			list, err = getMessagesSimple(ctx, co, chatId, limit, startedFromItemIdSafe, reverse, searchString)
-			if err != nil {
-				return nil, eris.Wrap(err, "error during interacting with db")
-			}
-		} else {
-
-			order := "asc"
-			if reverse {
-				order = "desc"
-			}
-
-			var rows *sql.Rows
-			if searchString != "" {
-				rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-					WHERE 
-							m.id >= $2 
-						AND m.id <= $3 
-						AND strip_tags(m.text) ILIKE $4
-					ORDER BY m.id %s 
-					LIMIT $1`, selectMessageClause(chatId), order),
-					limit, *leftItemId, *rightItemId, searchStringPercents)
-				if err != nil {
-					return nil, eris.Wrap(err, "error during interacting with db")
-				}
-				defer rows.Close()
-			} else {
-				rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-					WHERE 
-							m.id >= $2 
-						AND m.id <= $3 
-					ORDER BY m.id %s 
-					LIMIT $1`, selectMessageClause(chatId), order),
-					limit, *leftItemId, *rightItemId)
-				if err != nil {
-					return nil, eris.Wrap(err, "error during interacting with db")
-				}
-				defer rows.Close()
-			}
-			for rows.Next() {
-				message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
-				if err = rows.Scan(provideScanToMessage(&message)[:]...); err != nil {
-					return nil, eris.Wrap(err, "error during interacting with db")
-				} else {
-					list = append(list, &message)
-				}
-			}
-		}
-	} else {
-		// otherwise, startingFromItemId is used as the top or the bottom limit of the portion
-		list, err = getMessagesSimple(ctx, co, chatId, limit, startingFromItemId, reverse, searchString)
-		if err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		}
+	// startingFromItemId is used as the top or the bottom limit of the portion
+	list, err = getMessagesSimple(ctx, co, chatId, limit, startingFromItemId, includeStartingFrom, reverse, searchString)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 
 	err = enrichMessagesWithReactions(ctx, co, chatId, list)
@@ -233,14 +122,42 @@ func getMessagesCommon(ctx context.Context, co CommonOperations, chatId int64, l
 	return list, nil
 }
 
-func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, limit int, startingFromItemId int64, reverse bool, searchString string) ([]*Message, error) {
+// implements keyset pagination
+func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, limit int, startingFromItemId0 *int64, includeStartingFrom, reverse bool, searchString string) ([]*Message, error) {
 	list := make([]*Message, 0)
 
-	order := "asc"
-	nonEquality := "m.id > $2"
+	// see also getSafeDefaultUserId() in aaa
+	var startingFromItemIdVal int64
+	if startingFromItemId0 == nil {
+		if reverse {
+			startingFromItemIdVal = math.MaxInt64
+		} else {
+			startingFromItemIdVal = 0
+		}
+	} else {
+		startingFromItemIdVal = *startingFromItemId0
+	}
+
+	order := ""
+	nonEquality := ""
 	if reverse {
 		order = "desc"
-		nonEquality = "m.id < $2"
+		s := ""
+		if includeStartingFrom {
+			s = "<="
+		} else {
+			s = "<"
+		}
+		nonEquality = fmt.Sprintf("m.id %v $2", s)
+	} else {
+		order = "asc"
+		s := ""
+		if includeStartingFrom {
+			s = ">="
+		} else {
+			s = ">"
+		}
+		nonEquality = fmt.Sprintf("m.id %v $2", s)
 	}
 	var err error
 	var rows *sql.Rows
@@ -252,7 +169,7 @@ func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, l
 				AND strip_tags(m.text) ILIKE $3 
 			ORDER BY m.id %s 
 			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
-			limit, startingFromItemId, searchStringPercents)
+			limit, startingFromItemIdVal, searchStringPercents)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
 		}
@@ -263,7 +180,7 @@ func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, l
 				  %s 
 			ORDER BY m.id %s 
 			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
-			limit, startingFromItemId)
+			limit, startingFromItemIdVal)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
 		}
@@ -282,12 +199,12 @@ func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, l
 	return list, nil
 }
 
-func (db *DB) GetMessages(ctx context.Context, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
-	return getMessagesCommon(ctx, db, chatId, limit, startingFromItemId, reverse, hasHash, searchString)
+func (db *DB) GetMessages(ctx context.Context, chatId int64, limit int, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string) ([]*Message, error) {
+	return getMessagesCommon(ctx, db, chatId, limit, startingFromItemId, includeStartingFrom, reverse, searchString)
 }
 
-func (tx *Tx) GetMessages(ctx context.Context, chatId int64, limit int, startingFromItemId int64, reverse, hasHash bool, searchString string) ([]*Message, error) {
-	return getMessagesCommon(ctx, tx, chatId, limit, startingFromItemId, reverse, hasHash, searchString)
+func (tx *Tx) GetMessages(ctx context.Context, chatId int64, limit int, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string) ([]*Message, error) {
+	return getMessagesCommon(ctx, tx, chatId, limit, startingFromItemId, includeStartingFrom, reverse, searchString)
 }
 
 type embedMessage struct {

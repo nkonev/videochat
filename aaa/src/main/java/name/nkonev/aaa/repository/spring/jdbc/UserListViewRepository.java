@@ -47,7 +47,7 @@ public class UserListViewRepository {
     }
 
     // copy-paste from chat/db/message.go::getMessagesCommon
-    public List<UserAccount> getUsers(int limit, Long startingFromItemId0, boolean reverse, boolean hasHash, String searchString) {
+    public List<UserAccount> getUsers(int limit, Long startingFromItemId0, boolean includeStartingFrom, boolean reverse, String searchString) {
 
         final long startingFromItemId;
         if (startingFromItemId0 == null) {
@@ -56,140 +56,35 @@ public class UserListViewRepository {
             startingFromItemId = startingFromItemId0;
         }
 
-        List<UserAccount> list;
-        if (hasHash) {
-            // has hash means that frontend's page has message hash
-            // it means we need to calculate page/2 to the top and to the bottom
-            // to respond page containing from two halves
-            var leftLimit = limit / 2;
-            var rightLimit = limit / 2;
-
-            if (leftLimit == 0) {
-                leftLimit = 1;
-            }
-            if (rightLimit == 0) {
-                rightLimit = 1;
-            }
-
-            Long leftItemId = null;
-            Long rightItemId = null;
-            var searchStringPercents = "";
-            if (StringUtils.hasLength(searchString)) {
-                searchStringPercents = "%" + searchString + "%";
-            }
-
-            var order = "desc";
-            if (reverse) {
-                order = "asc";
-            }
-
-            if (StringUtils.hasLength(searchString)) {
-                List<MinMax> mm = jdbcTemplate.query(
-                    """
-                    select inner3.minid, inner3.maxid from (
-                        select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
-                            select inn.*, id = :startingFromItemId as central_element from (
-                                select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from user_account u where u.id > 0 AND %s order by id
-                            ) inn
-                        ) inner2
-                    ) inner3 where central_element = true
-                    """.formatted(USERNAME_SEARCH),
-                    Map.of(
-                        "startingFromItemId", startingFromItemId,
-                        "leftLimit", leftLimit,
-                        "rightLimit", rightLimit,
-                        "searchStringPercents", searchStringPercents
-                    ),
-                    mmRowMapper
-                );
-                if (!mm.isEmpty()) {
-                    leftItemId = mm.getFirst().leftId();
-                    rightItemId = mm.getFirst().rightId();
-                }
-            } else {
-                List<MinMax> mm = jdbcTemplate.query(
-                    """
-                    select inner3.minid, inner3.maxid from (
-                        select inner2.*, lag(id, :leftLimit, inner2.mmin) over() as minid, lead(id, :rightLimit, inner2.mmax) over() as maxid from (
-                            select inn.*, id = :startingFromItemId as central_element from (
-                                select id, row_number() over () as rn, (min(id) over ()) as mmin, (max(id) over ()) as mmax from user_account u where u.id > 0 order by id
-                            ) inn
-                        ) inner2
-                    ) inner3 where central_element = true
-                    """,
-                    Map.of(
-                        "startingFromItemId", startingFromItemId,
-                        "leftLimit", leftLimit,
-                        "rightLimit", rightLimit
-                    ),
-                    mmRowMapper
-                );
-                if (!mm.isEmpty()) {
-                    leftItemId = mm.getFirst().leftId();
-                    rightItemId = mm.getFirst().rightId();
-                }
-            }
-
-            if (leftItemId == null || rightItemId == null) {
-                LOGGER.info("Got leftItemId={}, rightItemId={} for startingFromItemId={}, reverse={}, searchString={}, fallback to simple", leftItemId, rightItemId, startingFromItemId, reverse, searchString);
-                long startedFromItemIdSafe = getSafeDefaultUserId(reverse);;
-                list = getUsersSimple(limit, startedFromItemIdSafe, reverse, searchString);
-            } else {
-
-                if (StringUtils.hasLength(searchString)) {
-                    list = jdbcTemplate.query("""
-                                SELECT u.* FROM user_account u
-                                WHERE
-                                u.id > 0 AND
-                                u.id >= :leftMessageId
-                                AND u.id <= :rightMessageId
-                                AND %s
-                                ORDER BY u.id %s
-                                LIMIT :limit
-                            """.formatted(USERNAME_SEARCH, order),
-                        Map.of(
-                            "limit", limit,
-                            "leftMessageId", leftItemId,
-                            "rightMessageId", rightItemId,
-                            "searchStringPercents", searchStringPercents
-                        ),
-                        userAccountRowMapper
-                    );
-                } else {
-                    list = jdbcTemplate.query(
-                        """
-                                SELECT u.* FROM user_account u
-                                WHERE
-                                u.id > 0 AND
-                                u.id >= :leftMessageId
-                                AND u.id <= :rightMessageId
-                                ORDER BY u.id %s
-                                LIMIT :limit
-                            """.formatted(order),
-                        Map.of(
-                            "limit", limit,
-                            "leftMessageId", leftItemId,
-                            "rightMessageId", rightItemId
-                        ),
-                        userAccountRowMapper
-                    );
-                }
-            }
-        } else {
-            // otherwise, startingFromItemId is used as the top or the bottom limit of the portion
-            list = getUsersSimple(limit, startingFromItemId, reverse, searchString);
-        }
+        // startingFromItemId is used as the top or the bottom limit of the portion
+        var list = getUsersSimple(limit, startingFromItemId, includeStartingFrom, reverse, searchString);
 
         return list;
     }
 
-    private List<UserAccount> getUsersSimple(int limit, long startingFromItemId, boolean reverse, String searchString) {
+    // implements keyset pagination
+    private List<UserAccount> getUsersSimple(int limit, long startingFromItemId, boolean includeStartingFrom, boolean reverse, String searchString) {
         List<UserAccount> list;
-        var order = "desc";
-        var nonEquality = "u.id < :startingFromItemId";
+        var order = "";
+        var nonEquality = "";
         if (reverse) {
             order = "asc";
-            nonEquality = "u.id > :startingFromItemId";
+            var s = "";
+            if (includeStartingFrom) {
+                s = ">=";
+            } else {
+                s = ">";
+            }
+            nonEquality = "u.id " + s + " :startingFromItemId";
+        } else {
+            order = "desc";
+            var s = "";
+            if (includeStartingFrom) {
+                s = "<=";
+            } else {
+                s = "<";
+            }
+            nonEquality = "u.id " + s + " :startingFromItemId";
         }
         if (StringUtils.hasLength(searchString)) {
             var searchStringPercents = "%" + searchString + "%";
