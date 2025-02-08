@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 	"go.uber.org/fx/fxtest"
 	"io"
 	"io/ioutil"
@@ -239,8 +240,10 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 	var s fx.Shutdowner
 	app := fxtest.New(
 		t,
-		fx.Logger(lgr),
 		fx.Supply(lgr),
+		fx.WithLogger(func(log *logger.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: log.ZapLogger}
+		}),
 		fx.Populate(&s),
 		fx.Provide(
 			createTypedConfig,
