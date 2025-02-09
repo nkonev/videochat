@@ -33,7 +33,6 @@ import (
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/tasks"
 	"nkonev.name/chat/type_registry"
-	"nkonev.name/chat/utils"
 )
 
 const EXTERNAL_TRACE_ID_HEADER = "trace-id"
@@ -112,18 +111,12 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 	return mw
 }
 
-const processedKey = "processed"
-const processedValue = "true"
-
-func createCustomHTTPErrorHandler(lgr *logger.Logger) func(err error, c echo.Context) {
+func createCustomHTTPErrorHandler(lgr *logger.Logger, e *echo.Echo) func(err error, c echo.Context) {
+	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
-		if c.Get(processedKey) == processedValue {
-			return
-		}
-		c.Set(processedKey, processedValue)
 		formattedStr := eris.ToString(err, true)
 		lgr.WithTracing(c.Request().Context()).Errorf("Unhandled error: %v", formattedStr)
-		c.JSON(http.StatusInternalServerError, utils.H{"message": "Internal Server Error"})
+		originalHandler(err, c)
 	}
 }
 
@@ -143,7 +136,7 @@ func configureEcho(
 	e := echo.New()
 	e.Logger.SetOutput(lgr)
 
-	e.HTTPErrorHandler = createCustomHTTPErrorHandler(lgr)
+	e.HTTPErrorHandler = createCustomHTTPErrorHandler(lgr, e)
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpentelemetryMiddleware(tp))
