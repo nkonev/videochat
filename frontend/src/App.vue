@@ -145,6 +145,8 @@
         <ChooseColorModal/>
         <PublishedMessagesModal/>
         <SetPasswordModal/>
+        <!-- we store MessageEditMediaModal here in order to make its cache working -->
+        <MessageEditMediaModal/>
       </v-main>
 
     <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
@@ -244,6 +246,7 @@ import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@
 import {getHumanReadableDate} from "@/date.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 import SetPasswordModal from "@/SetPasswordModal.vue";
+import MessageEditMediaModal from "@/MessageEditMediaModal.vue";
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -843,6 +846,7 @@ export default {
         ChooseSmileyModal,
         PublishedMessagesModal,
         SetPasswordModal,
+        MessageEditMediaModal,
     },
     watch: {
       'chatStore.notificationsCount': {

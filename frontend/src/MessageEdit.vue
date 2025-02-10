@@ -120,7 +120,6 @@
 
       <!-- We store modals outside of container in order they not to contribute into the height (as it is done in App.vue) -->
       <MessageEditLinkModal/>
-      <MessageEditMediaModal/>
       <RecordingModal/>
     </v-container>
 </template>
@@ -166,7 +165,6 @@
     } from "@/store/localStore"
 
     import MessageEditLinkModal from "@/MessageEditLinkModal";
-    import MessageEditMediaModal from "@/MessageEditMediaModal";
     import {mapStores} from "pinia";
     import {fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore";
     import throttle from "lodash/throttle";
@@ -703,7 +701,6 @@
         components: {
             Tiptap,
             MessageEditLinkModal,
-            MessageEditMediaModal,
             RecordingModal,
         }
     }
