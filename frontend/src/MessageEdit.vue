@@ -276,10 +276,11 @@
                   this.afterSetMessage();
                 }
               } else {
-                if (mbExisting && mbExisting.id == dto.id) {
-                  if (actionType == reply_message) {
-                    setEmbed(mbExisting, getEmbed(dto))
-                  }
+                if (mbExisting && actionType == reply_message) {
+                  setEmbed(mbExisting, getEmbed(dto));
+                  this.editMessageDto = mbExisting;
+                  this.afterSetMessage();
+                } else if (mbExisting && mbExisting.id == dto.id) {
                   this.editMessageDto = mbExisting;
                   this.afterSetMessage();
                 } else {
