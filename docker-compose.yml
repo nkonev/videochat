@@ -59,7 +59,6 @@ services:
       - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
       - ./docker/citus/coordinator/docker-entrypoint-initdb.d/003-coordinator-init.sh:/docker-entrypoint-initdb.d/003-coordinator-init.sh:z
       - ./scripts/wait-for-it.sh:/sbin/wait-for-it.sh:z
-      - ./docker/citus/coordinator/opt/init/make-cluster.sql:/opt/init/make-cluster.sql:z
       - postgres_chat_citus_coordinator_1_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
