@@ -109,13 +109,11 @@ export default {
             if (!silent) {
                 this.loading = true;
             }
-            axios.get('/api/chat', {
-                params: {
-                  size: PAGE_SIZE,
-                  searchString: this.searchString,
-                },
+            axios.post(`/api/chat/search`, {
+                size: PAGE_SIZE,
+                searchString: this.searchString,
             }).then(({data}) => {
-                this.chats = data;
+                this.chats = data.items;
             }).finally(()=>{
                 if (!silent) {
                     this.loading = false;
