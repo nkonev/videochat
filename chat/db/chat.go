@@ -962,10 +962,10 @@ type BlogPost struct {
 	FileItemUuid *string
 }
 
-func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, ids []int64) ([]*BlogPost, error) {
+func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, chatIds []int64) ([]*BlogPost, error) {
 	var builder = ""
 	var first = true
-	for _, chatId := range ids {
+	for _, chatId := range chatIds {
 		if !first {
 			builder += " UNION ALL "
 		}

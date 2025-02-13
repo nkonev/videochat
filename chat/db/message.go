@@ -624,6 +624,11 @@ func getCountUnreadMessages(marker, chatId, userId int64) string {
 	return fmt.Sprintf(`SELECT %v, COUNT(1) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)`, marker, chatId, userId, chatId)
 }
 
+// TODO
+//
+//	SELECT %v, EXISTS(SELECT 1 FROM message WHERE chat_id = %v AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn
+//	introduce the independent message_id
+//	make primary key (chat_id, id)
 func getHasUnreadMessages(marker, chatId, userId int64) string {
 	return fmt.Sprintf(`SELECT %v, EXISTS(SELECT 1 FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn`, marker, chatId, userId, chatId)
 }
