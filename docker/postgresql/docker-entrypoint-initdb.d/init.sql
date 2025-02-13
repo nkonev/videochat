@@ -8,7 +8,6 @@ ALTER SYSTEM SET full_page_writes=FALSE;
 ALTER SYSTEM SET commit_delay=100000;
 ALTER SYSTEM SET commit_siblings=10;
 -- ALTER SYSTEM SET work_mem='50MB';
-ALTER SYSTEM SET max_locks_per_transaction = 256; -- only needed for test to remove all the tables from RecreateDb()
 ALTER SYSTEM SET log_line_prefix = '%a %u@%d ';
 
 create user aaa with password 'aaaPazZw0rd';
@@ -23,13 +22,6 @@ create database aaa with owner aaa;
 -- ALTER SYSTEM set log_disconnections = on;
 -- ALTER SYSTEM set log_duration = on;
 --
-
-
-create user chat with password 'chatPazZw0rd';
--- superuser only for test!
-alter role chat superuser;
-create database chat with owner chat;
-\connect chat;
 
 create user notification with password 'notificationPazZw0rd';
 create database notification with owner notification;

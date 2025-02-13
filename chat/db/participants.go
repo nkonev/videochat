@@ -273,20 +273,11 @@ func getParticipantsCountBatchCommon(ctx context.Context, qq CommonOperations, c
 		return res, nil
 	}
 
-	var builder = ""
-	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf("(SELECT %v, count(*) FROM chat_participant WHERE chat_id = %v)", chatId, chatId)
-
-		first = false
-	}
+	var q = "SELECT chat_id, COUNT(chat_id) FROM chat_participant WHERE chat_id = ANY($1) GROUP BY chat_id ORDER BY chat_id"
 
 	var rows *sql.Rows
 	var err error
-	rows, err = qq.QueryContext(ctx, builder)
+	rows, err = qq.QueryContext(ctx, q, chatIds)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {

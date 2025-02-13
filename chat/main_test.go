@@ -689,11 +689,11 @@ func TestMessageValidation(t *testing.T) {
 
 func TestMessageCrud(t *testing.T) {
 	runTest(t, func(e *echo.Echo, db *db.DB) {
-		messagesBefore, _ := db.CountMessages(context.Background())
+		messagesBefore, _ := db.CountMessages(context.Background(), 1)
 		c, b, _ := request("POST", "/api/chat/1/message", strings.NewReader(`{"text": "Ultra new message"}`), e)
 		assert.Equal(t, http.StatusCreated, c)
 
-		messagesAfterCreate, _ := db.CountMessages(context.Background())
+		messagesAfterCreate, _ := db.CountMessages(context.Background(), 1)
 		assert.Equal(t, messagesBefore+1, messagesAfterCreate)
 
 		idInterface := getJsonPathResult(t, b, "$.id").(interface{})
@@ -719,7 +719,7 @@ func TestMessageCrud(t *testing.T) {
 
 		c1, _, _ := request("DELETE", "/api/chat/1/message/"+idString, nil, e)
 		assert.Equal(t, http.StatusAccepted, c1)
-		messagesAfterDelete, _ := db.CountMessages(context.Background())
+		messagesAfterDelete, _ := db.CountMessages(context.Background(), 1)
 		assert.Equal(t, messagesBefore, messagesAfterDelete)
 	})
 }

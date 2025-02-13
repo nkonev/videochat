@@ -146,8 +146,8 @@ jobs:
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d postgresql redis rabbitmq jaeger
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          docker compose up -d postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq jaeger
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
@@ -367,8 +367,9 @@ jobs:
       - name: Start and wait docker-compose
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d fluentbit postgresql redis rabbitmq jaeger minio traefik 
+          docker compose up -d fluentbit postgresql postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq jaeger minio traefik 
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available

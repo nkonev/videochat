@@ -177,6 +177,46 @@
   tags:
     - videochat
 
+- name: Create PostgreSQL Citus common config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/postgresql-citus/common/docker-entrypoint-initdb.d"
+    state: directory
+  tags:
+    - videochat
+- name: Create PostgreSQL Citus coordinator config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/postgresql-citus/coordinator/docker-entrypoint-initdb.d"
+    state: directory
+  tags:
+    - videochat
+- name: Create PostgreSQL Citus 002-common-init.sql
+  ansible.builtin.copy:
+    src: files/002-common-init.sql
+    dest: "{{ dir_prefix }}/postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql"
+  tags:
+    - videochat
+- name: Create PostgreSQL Citus coordinator 003-coordinator-init.sh
+  ansible.builtin.copy:
+    src: files/003-coordinator-init.sh
+    dest: "{{ dir_prefix }}/postgresql-citus/coordinator/docker-entrypoint-initdb.d/003-coordinator-init.sh"
+  tags:
+    - videochat
+
+- name: Create scripts directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/scripts"
+    state: directory
+  tags:
+    - videochat
+- name: Create wait-for-it
+  ansible.builtin.copy:
+    src: files/wait-for-it.sh
+    dest: "{{ dir_prefix }}/scripts/wait-for-it.sh"
+    mode: a+x
+  tags:
+    - videochat
+
+
 - name: Create RabbitMQ config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/rabbitmq"
@@ -234,6 +274,35 @@
     group: 70
   tags:
     - videochat
+
+- name: Create PostgreSQL Citus Coordinator 1 data directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-citus-coordinator-1
+    state: directory
+    mode: u=rwx,g-rwx,o-rwx
+    owner: 70
+    group: 70
+  tags:
+    - videochat
+- name: Create PostgreSQL Citus Worker 1 data directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-citus-worker-1
+    state: directory
+    mode: u=rwx,g-rwx,o-rwx
+    owner: 70
+    group: 70
+  tags:
+    - videochat
+- name: Create PostgreSQL Citus Worker 2 data directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-citus-worker-2
+    state: directory
+    mode: u=rwx,g-rwx,o-rwx
+    owner: 70
+    group: 70
+  tags:
+    - videochat
+
 
 - name: Create Docker Compose Infra
   template:

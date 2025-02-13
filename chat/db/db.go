@@ -200,11 +200,19 @@ func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 
 func (db *DB) RecreateDb() {
 	_, err := db.Exec(`
-	DROP SCHEMA IF EXISTS public CASCADE;
-	CREATE SCHEMA IF NOT EXISTS public;
-    GRANT ALL ON SCHEMA public TO chat;
-    GRANT ALL ON SCHEMA public TO public;
-    COMMENT ON SCHEMA public IS 'standard public schema';
+	drop table if exists message_read;
+	drop table if exists message_reaction;
+	drop table if exists message;
+	drop table if exists chat_pinned;
+	drop table if exists chat_participant_notification;
+	drop table if exists chat_participant;
+	drop table if exists chat;
+	drop table if exists go_migrate;
+	drop table if exists go_migrate_test;
+	
+	drop procedure if exists delete_chat(chat_id bigint);
+	drop function if exists strip_tags(TEXT);
+	drop function if exists utc_now();
 `)
 	db.lgr.Warn("Recreating database")
 	if err != nil {

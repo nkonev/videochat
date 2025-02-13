@@ -39,7 +39,7 @@ services:
         - "traefik.http.routers.chat-version-router.middlewares=chat-stripprefix-middleware"
 
     environment:
-      - CHAT_POSTGRESQL.URL=postgres://chat:chatPazZw0rd@postgresql:5432/chat?sslmode=disable&application_name=chat-app
+      - CHAT_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/chat?sslmode=disable&application_name=chat-app
       - CHAT_SERVER.BODY.LIMIT=2M
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672

@@ -103,8 +103,11 @@ func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error
 		return 0, nil, eris.New("title required")
 	}
 
-	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7, $8, $9) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage)
+	res := tx.QueryRowContext(ctx, `
+		INSERT INTO chat(title, tet_a_tet, can_resend, available_to_search, blog, regular_participant_can_publish_message, regular_participant_can_pin_message, blog_about, regular_participant_can_write_message)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, last_update_date_time;
+	`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -269,14 +272,13 @@ func getLastMessagePreview(ctx context.Context, co CommonOperations, chatIds []i
 
 	maxPrevSizeDb := viper.GetInt("previewMaxTextSizeDb")
 
-	bldr := ""
-	for i, chatId := range chatIds {
-		if i != 0 {
-			bldr += " UNION ALL "
-		}
-		bldr += fmt.Sprintf("(select %v, substring(strip_tags(text), 0, %v), owner_id from message_chat_%v order by id desc limit 1)", chatId, maxPrevSizeDb, chatId)
-	}
-	rows, err := co.QueryContext(ctx, bldr)
+	rows, err := co.QueryContext(ctx, `
+		select m.chat_id, substring(strip_tags(m.text), 0, $2), m.owner_id 
+		from message m
+		join (
+			select chat_id, max(id) as message_id from message where chat_id = any($1) group by chat_id
+		) inn on m.id = inn.message_id and m.chat_id = inn.chat_id
+	`, chatIds, maxPrevSizeDb)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -962,21 +964,12 @@ type BlogPost struct {
 	FileItemUuid *string
 }
 
-func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, ids []int64) ([]*BlogPost, error) {
-	var builder = ""
-	var first = true
-	for _, chatId := range ids {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf("(select %v, id, owner_id, text, file_item_uuid from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
-
-		first = false
-	}
-
+func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, chatIds []int64) ([]*BlogPost, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = co.QueryContext(ctx, builder)
+	rows, err = co.QueryContext(ctx, `
+		select m.chat_id, m.id, m.owner_id, m.text, m.file_item_uuid from message m where chat_id = any($1) and blog_post = true
+	`, chatIds)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -1003,7 +996,7 @@ func (db *DB) GetBlogPostsByChatIds(ctx context.Context, ids []int64) ([]*BlogPo
 }
 
 func (db *DB) GetBlogPostMessageId(ctx context.Context, chatId int64) (int64, error) {
-	res := db.QueryRowContext(ctx, fmt.Sprintf("(select id from message_chat_%v where blog_post is true order by id limit 1)", chatId))
+	res := db.QueryRowContext(ctx, fmt.Sprintf("(select id from message where chat_id = %v and blog_post is true order by id limit 1)", chatId))
 	var messageId int64
 	if err := res.Scan(&messageId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -1015,27 +1008,18 @@ func (db *DB) GetBlogPostMessageId(ctx context.Context, chatId int64) (int64, er
 	return messageId, nil
 }
 
-func (db *DB) GetBlobPostModifiedDates(ctx context.Context, chatIds []int64) (map[int64]time.Time, error) {
+func (db *DB) GetBlogPostModifiedDates(ctx context.Context, chatIds []int64) (map[int64]time.Time, error) {
 	res := map[int64]time.Time{}
 
 	if len(chatIds) == 0 {
 		return res, nil
 	}
 
-	var builder = ""
-	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf("(select %v, coalesce(edit_date_time, create_date_time) from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
-
-		first = false
-	}
-
 	var rows *sql.Rows
 	var err error
-	rows, err = db.QueryContext(ctx, builder)
+	rows, err = db.QueryContext(ctx, `
+		select m.chat_id, coalesce(m.edit_date_time, m.create_date_time) from message m where chat_id = any($1) and blog_post = true
+	`)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}

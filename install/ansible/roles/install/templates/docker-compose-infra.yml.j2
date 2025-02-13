@@ -45,6 +45,51 @@ services:
       options:
         tag: chat-postgresql
 
+  postgresql-citus-coordinator-1:
+    image: citusdata/citus:13.0.1-alpine
+    hostname: postgresql-citus-coordinator-1
+    volumes:
+      - ./postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
+      - ./postgresql-citus/coordinator/docker-entrypoint-initdb.d/003-coordinator-init.sh:/docker-entrypoint-initdb.d/003-coordinator-init.sh:z
+      - ./scripts/wait-for-it.sh:/sbin/wait-for-it.sh:z
+      - /mnt/chat-citus-coordinator-1:/var/lib/postgresql/data:z
+    environment:
+      - POSTGRES_PASSWORD=postgresqlPassword
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-postgresql-citus-coordinator-1
+  postgresql-citus-worker-1:
+    image: citusdata/citus:13.0.1-alpine
+    hostname: postgresql-citus-worker-1
+    volumes:
+      - ./postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
+      - /mnt/chat-citus-worker-1:/var/lib/postgresql/data:z
+    environment:
+      - POSTGRES_PASSWORD=postgresqlPassword
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-postgresql-citus-worker-1
+  postgresql-citus-worker-2:
+    image: citusdata/citus:13.0.1-alpine
+    hostname: postgresql-citus-worker-2
+    volumes:
+      - ./postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
+      - /mnt/chat-citus-worker-2:/var/lib/postgresql/data:z
+    environment:
+      - POSTGRES_PASSWORD=postgresqlPassword
+    networks:
+      backend:
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-postgresql-citus-worker-2
+
   redis:
     image: valkey/valkey:8.0.0-alpine3.20
     hostname: redis
@@ -249,8 +294,6 @@ services:
       - PGADMIN_LISTEN_ADDRESS=0.0.0.0
       - PGADMIN_LISTEN_PORT=8080
       - SCRIPT_NAME=/postgresql
-    networks:
-      backend:
     logging:
       driver: "journald"
       options:

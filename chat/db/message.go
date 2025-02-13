@@ -52,7 +52,7 @@ type Message struct {
 	Reactions   []Reaction
 }
 
-func selectMessageClause(chatId int64) string {
+func selectMessageClause() string {
 	return fmt.Sprintf(`SELECT 
     		m.id, 
     		m.text, 
@@ -71,10 +71,14 @@ func selectMessageClause(chatId int64) string {
 			m.pin_promoted,
 			m.blog_post,
 			m.published
-		FROM message_chat_%v m 
-		LEFT JOIN message_chat_%v me 
-			ON (m.embed_message_id = me.id AND m.embed_message_type = '%v')
-		`, chatId, chatId, dto.EmbedMessageTypeReply)
+		FROM message m 
+		LEFT JOIN message me 
+			ON (m.chat_id = me.chat_id and m.embed_message_id = me.id AND m.embed_message_type = '%v')
+		`, dto.EmbedMessageTypeReply)
+}
+
+func messageChatWhere(chatId int64) string {
+	return fmt.Sprintf("m.chat_id = %v", chatId)
 }
 
 func provideScanToMessage(message *Message) []any {
@@ -99,8 +103,12 @@ func provideScanToMessage(message *Message) []any {
 	}
 }
 
-func selectMessageReactionsClause(chatId int64) string {
-	return fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction_chat_%v ", chatId)
+func selectMessageReactionsClause() string {
+	return fmt.Sprintf("SELECT user_id, message_id, reaction FROM message_reaction ")
+}
+
+func messageReactionsChatWhere(chatId int64) string {
+	return fmt.Sprintf("chat_id = %v", chatId)
 }
 
 // see also its copy in aaa::UserListViewRepository
@@ -164,11 +172,11 @@ func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, l
 	if searchString != "" {
 		searchStringPercents := "%" + searchString + "%"
 		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-			WHERE 
+			WHERE 	%s AND
 		    	    %s 
 				AND strip_tags(m.text) ILIKE $3 
 			ORDER BY m.id %s 
-			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
+			LIMIT $1`, selectMessageClause(), messageChatWhere(chatId), nonEquality, order),
 			limit, startingFromItemIdVal, searchStringPercents)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
@@ -176,10 +184,10 @@ func getMessagesSimple(ctx context.Context, co CommonOperations, chatId int64, l
 		defer rows.Close()
 	} else {
 		rows, err = co.QueryContext(ctx, fmt.Sprintf(`%v
-			WHERE 
+			WHERE %s AND
 				  %s 
 			ORDER BY m.id %s 
-			LIMIT $1`, selectMessageClause(chatId), nonEquality, order),
+			LIMIT $1`, selectMessageClause(), messageChatWhere(chatId), nonEquality, order),
 			limit, startingFromItemIdVal)
 		if err != nil {
 			return nil, eris.Wrap(err, "error during interacting with db")
@@ -234,7 +242,7 @@ func initEmbedMessageRequestStruct(m *Message) (embedMessage, error) {
 
 func (tx *Tx) HasMessages(ctx context.Context, chatId int64) (bool, error) {
 	var exists bool = false
-	row := tx.QueryRowContext(ctx, fmt.Sprintf(`SELECT exists(SELECT * FROM message_chat_%v LIMIT 1)`, chatId))
+	row := tx.QueryRowContext(ctx, fmt.Sprintf(`SELECT exists(SELECT * FROM message WHERE chat_id = %v LIMIT 1)`, chatId))
 	if err := row.Scan(&exists); err != nil {
 		return false, eris.Wrap(err, "error during interacting with db")
 	} else {
@@ -242,27 +250,36 @@ func (tx *Tx) HasMessages(ctx context.Context, chatId int64) (bool, error) {
 	}
 }
 
-func (tx *Tx) CreateMessage(ctx context.Context, m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {
+func (tx *Tx) CreateMessage(ctx context.Context, m *Message) (id int64, err error) {
 	if m == nil {
-		return id, createDatetime, editDatetime, eris.New("message required")
+		return id, eris.New("message required")
 	} else if m.Text == "" {
-		return id, createDatetime, editDatetime, eris.New("text required")
+		return id, eris.New("text required")
+	}
+
+	var messageId int64
+	res := tx.QueryRowContext(ctx, "UPDATE chat SET last_generated_message_id = last_generated_message_id + 1 WHERE id = $1 RETURNING last_generated_message_id;", m.ChatId)
+	if err := res.Scan(&messageId); err != nil {
+		return id, eris.Wrap(err, "error during generating message id")
 	}
 
 	embed, err := initEmbedMessageRequestStruct(m)
 	if err != nil {
-		return id, createDatetime, editDatetime, eris.Wrap(err, "error during initializing embed struct")
+		return id, eris.Wrap(err, "error during initializing embed struct")
 	}
-	res := tx.QueryRowContext(ctx, fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type, blog_post) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost)
-	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
-		return id, createDatetime, editDatetime, eris.Wrap(err, "error during interacting with db")
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO message (id, chat_id, text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type, blog_post) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		messageId, m.ChatId, m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost)
+	if err != nil {
+		return id, eris.Wrap(err, "error during creating the message")
 	}
-	return id, createDatetime, editDatetime, nil
+	return messageId, nil
 }
 
-func (db *DB) CountMessages(ctx context.Context) (int64, error) {
+func (db *DB) CountMessages(ctx context.Context, chatId int64) (int64, error) {
 	var count int64
-	row := db.QueryRowContext(ctx, "SELECT count(*) FROM message")
+	row := db.QueryRowContext(ctx, "SELECT count(*) FROM message WHERE chat_id = $1", chatId)
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
@@ -271,11 +288,14 @@ func (db *DB) CountMessages(ctx context.Context) (int64, error) {
 	}
 }
 func getMessageCommon(ctx context.Context, co CommonOperations, chatId int64, userId int64, messageId int64) (*Message, error) {
-	row := co.QueryRowContext(ctx, fmt.Sprintf(`%v
-	WHERE 
-	    m.id = $1 
-		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)`, selectMessageClause(chatId)),
-		messageId, userId, chatId)
+	q := fmt.Sprintf(`%v
+		WHERE %s AND m.id = $1
+		AND $3 in (SELECT chat_id FROM chat_participant WHERE user_id = $2 AND chat_id = $3)
+		LIMIT 1`,
+		selectMessageClause(), messageChatWhere(chatId))
+
+	row := co.QueryRowContext(ctx, q, messageId, userId, chatId)
+
 	message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
 	err := row.Scan(provideScanToMessage(&message)[:]...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -306,8 +326,9 @@ func (tx *Tx) GetMessage(ctx context.Context, chatId int64, userId int64, messag
 func getMessagePublicCommon(ctx context.Context, co CommonOperations, chatId int64, messageId int64) (*Message, error) {
 	row := co.QueryRowContext(ctx, fmt.Sprintf(`%v
 	WHERE 
+		%s AND
 	    m.id = $1 
-		AND m.published = true`, selectMessageClause(chatId)),
+		AND m.published = true`, selectMessageClause(), messageChatWhere(chatId)),
 		messageId)
 	message := Message{ChatId: chatId, Reactions: make([]Reaction, 0)}
 	err := row.Scan(provideScanToMessage(&message)[:]...)
@@ -337,7 +358,7 @@ func (tx *Tx) GetMessagePublic(ctx context.Context, chatId int64, messageId int6
 }
 
 func (tx *Tx) SetBlogPost(ctx context.Context, chatId int64, messageId int64, desiredValue bool) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_chat_%v SET blog_post = $2 WHERE id = $1", chatId), messageId, desiredValue)
+	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message SET blog_post = $2 WHERE chat_id = %v AND id = $1", chatId), messageId, desiredValue)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
@@ -351,8 +372,9 @@ func getMessageBasicCommon(ctx context.Context, co CommonOperations, chatId int6
     	m.blog_post,
     	m.published,
     	m.file_item_uuid
-	FROM message_chat_%v m 
+	FROM message m 
 	WHERE 
+	    m.chat_id = %v AND
 	    m.id = $1 
 `, chatId),
 		messageId)
@@ -389,8 +411,9 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 	row := tx.QueryRowContext(ctx, fmt.Sprintf(`
 							SELECT 
 								m.id 
-							FROM message_chat_%v m 
+							FROM message m 
 							WHERE 
+							    m.chat_id = %v AND
 								m.blog_post IS TRUE
 							ORDER BY id LIMIT 1
 						`, chatId),
@@ -409,23 +432,32 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 }
 
 func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId int64, messageId *int64) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf(`
-		WITH calced_last_message_id AS (SELECT COALESCE((SELECT max(id) from message_chat_%v), 0))
-		INSERT INTO message_read (last_message_id, user_id, chat_id) 
-			VALUES((SELECT * FROM calced_last_message_id), $1, $2)
+	r := tx.QueryRowContext(ctx, fmt.Sprintf(`SELECT COALESCE((SELECT max(id) from message WHERE chat_id = %v), 0)`, chatId))
+	if r.Err() != nil {
+		return eris.Wrap(r.Err(), "error during interacting with db")
+	}
+	var lastMessageId int64
+	err := r.Scan(&lastMessageId)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+
+	_, err = tx.ExecContext(ctx, fmt.Sprintf(`
+		INSERT INTO message_read (last_message_id, user_id, chat_id)
+			SELECT %v, $1, $2
 		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
 			CASE 
-				WHEN ($3::bigint <= (SELECT * FROM calced_last_message_id)) THEN (
+				WHEN ($3::bigint <= %v) THEN (
 					CASE 
 						WHEN ($3::bigint > message_read.last_message_id) THEN $3::bigint
 						ELSE message_read.last_message_id
 					END
 				)
-				ELSE (SELECT * FROM calced_last_message_id)
+				ELSE %v
 			END
 		) 
 			WHERE message_read.user_id = $1 AND message_read.chat_id = $2
-		`, chatId),
+		`, lastMessageId, lastMessageId, lastMessageId),
 		participantId, chatId, messageId)
 	return err
 }
@@ -475,7 +507,17 @@ func (tx *Tx) EditMessage(ctx context.Context, m *Message) error {
 		return err
 	}
 
-	if res, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET text = $1, edit_date_time = utc_now(), file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8, blog_post = $9 WHERE owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost); err != nil {
+	r := tx.QueryRowContext(ctx, `SELECT utc_now()`)
+	if r.Err() != nil {
+		return eris.Wrap(r.Err(), "error during interacting with db")
+	}
+	var dt time.Time
+	err = r.Scan(&dt)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+
+	if res, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message SET text = $1, edit_date_time = $10, file_item_uuid = $2, embed_message_id = $5, embed_chat_id = $6, embed_owner_id = $7, embed_message_type = $8, blog_post = $9 WHERE chat_id = %v AND owner_id = $3 AND id = $4`, m.ChatId), m.Text, m.FileItemUuid, m.OwnerId, m.Id, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost, dt); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		affected, err := res.RowsAffected()
@@ -490,7 +532,7 @@ func (tx *Tx) EditMessage(ctx context.Context, m *Message) error {
 }
 
 func deleteMessageCommon(ctx context.Context, co CommonOperations, messageId int64, ownerId int64, chatId int64) error {
-	if res, err := co.ExecContext(ctx, fmt.Sprintf(`DELETE FROM message_chat_%v WHERE id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
+	if res, err := co.ExecContext(ctx, fmt.Sprintf(`DELETE FROM message WHERE chat_id = %v AND id = $1 AND owner_id = $2`, chatId), messageId, ownerId); err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	} else {
 		affected, err := res.RowsAffected()
@@ -513,7 +555,7 @@ func (tx *Tx) DeleteMessage(ctx context.Context, messageId int64, ownerId int64,
 }
 
 func (dbR *DB) SetFileItemUuidToNull(ctx context.Context, ownerId, chatId int64, fileItemUuid string) (int64, bool, error) {
-	res := dbR.QueryRowContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = NULL WHERE file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), fileItemUuid, ownerId)
+	res := dbR.QueryRowContext(ctx, fmt.Sprintf(`UPDATE message SET file_item_uuid = NULL WHERE chat_id = %v AND file_item_uuid = $1 AND owner_id = $2 RETURNING id`, chatId), fileItemUuid, ownerId)
 
 	if res.Err() != nil {
 		dbR.lgr.WithTracing(ctx).Errorf("Error during nulling file_item_uuid message id %v", res.Err())
@@ -533,7 +575,7 @@ func (dbR *DB) SetFileItemUuidToNull(ctx context.Context, ownerId, chatId int64,
 }
 
 func (dbR *DB) SetFileItemUuidTo(ctx context.Context, ownerId, chatId, messageId int64, fileItemUuid *string) error {
-	_, err := dbR.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET file_item_uuid = $1 WHERE id = $2 AND owner_id = $3`, chatId), fileItemUuid, messageId, ownerId)
+	_, err := dbR.ExecContext(ctx, fmt.Sprintf(`UPDATE message SET file_item_uuid = $1 WHERE chat_id = %v AND id = $2 AND owner_id = $3`, chatId), fileItemUuid, messageId, ownerId)
 
 	if err != nil {
 		dbR.lgr.WithTracing(ctx).Errorf("Error during nulling file_item_uuid message id %v", err)
@@ -621,11 +663,11 @@ func getNotificationSettingsByUsersBatch(ctx context.Context, co CommonOperation
 }
 
 func getCountUnreadMessages(marker, chatId, userId int64) string {
-	return fmt.Sprintf(`SELECT %v, COUNT(1) FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)`, marker, chatId, userId, chatId)
+	return fmt.Sprintf(`SELECT %v, COUNT(1) FROM message WHERE chat_id = %v AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)`, marker, chatId, userId, chatId)
 }
 
 func getHasUnreadMessages(marker, chatId, userId int64) string {
-	return fmt.Sprintf(`SELECT %v, EXISTS(SELECT 1 FROM message_chat_%v WHERE id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn`, marker, chatId, userId, chatId)
+	return fmt.Sprintf(`SELECT %v, EXISTS(SELECT 1 FROM message WHERE chat_id = %v AND id > COALESCE((SELECT last_message_id FROM message_read WHERE user_id = %v AND chat_id = %v), 0)) inn`, marker, chatId, userId, chatId)
 }
 
 func getUnreadMessagesCountByChatsBatchCommon(ctx context.Context, co CommonOperations, chatIds []int64, userId int64) (map[int64]int64, error) {
@@ -835,7 +877,7 @@ func (tx *Tx) ShouldSendHasUnreadMessagesCountBatch(ctx context.Context, chatId 
 }
 
 func (tx *Tx) PublishMessage(ctx context.Context, chatId, messageId int64, shouldPublish bool) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_chat_%v SET published = $1 WHERE id = $2", chatId), shouldPublish, messageId)
+	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message SET published = $1 WHERE chat_id = %v AND id = $2", chatId), shouldPublish, messageId)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
@@ -843,7 +885,7 @@ func (tx *Tx) PublishMessage(ctx context.Context, chatId, messageId int64, shoul
 }
 
 func (tx *Tx) PinMessage(ctx context.Context, chatId, messageId int64, shouldPin bool) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message_chat_%v SET pinned = $1 WHERE id = $2", chatId), shouldPin, messageId)
+	_, err := tx.ExecContext(ctx, fmt.Sprintf("UPDATE message SET pinned = $1 WHERE chat_id = %v AND id = $2", chatId), shouldPin, messageId)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
@@ -852,10 +894,10 @@ func (tx *Tx) PinMessage(ctx context.Context, chatId, messageId int64, shouldPin
 
 func (tx *Tx) GetPinnedMessages(ctx context.Context, chatId int64, limit, offset int) ([]*Message, error) {
 	rows, err := tx.QueryContext(ctx, fmt.Sprintf(`%v
-			WHERE 
+			WHERE %s AND
 			    m.pinned IS TRUE
 			ORDER BY m.pin_promoted DESC, m.id DESC
-			LIMIT $1 OFFSET $2`, selectMessageClause(chatId)),
+			LIMIT $1 OFFSET $2`, selectMessageClause(), messageChatWhere(chatId)),
 		limit, offset)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
@@ -876,10 +918,10 @@ func (tx *Tx) GetPinnedMessages(ctx context.Context, chatId int64, limit, offset
 
 func (tx *Tx) GetPublishedMessages(ctx context.Context, chatId int64, limit, offset int) ([]*Message, error) {
 	rows, err := tx.QueryContext(ctx, fmt.Sprintf(`%v
-			WHERE 
+			WHERE %s AND
 			    m.published IS TRUE
 			ORDER BY m.id DESC
-			LIMIT $1 OFFSET $2`, selectMessageClause(chatId)),
+			LIMIT $1 OFFSET $2`, selectMessageClause(), messageChatWhere(chatId)),
 		limit, offset)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
@@ -899,7 +941,7 @@ func (tx *Tx) GetPublishedMessages(ctx context.Context, chatId int64, limit, off
 }
 
 func commonGetPinnedMessagesCount(ctx context.Context, co CommonOperations, chatId int64) (int64, error) {
-	row := co.QueryRowContext(ctx, fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE pinned IS TRUE`, chatId))
+	row := co.QueryRowContext(ctx, fmt.Sprintf(`SELECT COUNT(*) FROM message WHERE chat_id = %v AND pinned IS TRUE`, chatId))
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -920,7 +962,7 @@ func (db *DB) GetPinnedMessagesCount(ctx context.Context, chatId int64) (int64, 
 }
 
 func commonGetPublishedMessagesCount(ctx context.Context, co CommonOperations, chatId int64) (int64, error) {
-	row := co.QueryRowContext(ctx, fmt.Sprintf(`SELECT COUNT(*) FROM message_chat_%v WHERE published IS TRUE`, chatId))
+	row := co.QueryRowContext(ctx, fmt.Sprintf(`SELECT COUNT(*) FROM message WHERE chat_id = %v AND published IS TRUE`, chatId))
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -941,26 +983,26 @@ func (db *DB) GetPublishedMessagesCount(ctx context.Context, chatId int64) (int6
 }
 
 func (tx *Tx) UnpromoteMessages(ctx context.Context, chatId int64) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = FALSE`, chatId))
+	_, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message SET pin_promoted = FALSE WHERE chat_id = %v`, chatId))
 	return eris.Wrap(err, "error during interacting with db")
 }
 
 func (tx *Tx) PromoteMessage(ctx context.Context, chatId, messageId int64) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = TRUE WHERE id = $1`, chatId), messageId)
+	_, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message SET pin_promoted = TRUE WHERE chat_id = %v AND id = $1`, chatId), messageId)
 	return eris.Wrap(err, "error during interacting with db")
 }
 
 func (tx *Tx) PromotePreviousMessage(ctx context.Context, chatId int64) error {
-	_, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message_chat_%v SET pin_promoted = TRUE WHERE id IN (SELECT id FROM message_chat_%v WHERE pinned IS TRUE ORDER BY id DESC LIMIT 1)`, chatId, chatId))
+	_, err := tx.ExecContext(ctx, fmt.Sprintf(`UPDATE message SET pin_promoted = TRUE WHERE chat_id = %v AND id IN (SELECT id FROM message WHERE chat_id = %v AND pinned IS TRUE ORDER BY id DESC LIMIT 1)`, chatId, chatId))
 	return eris.Wrap(err, "error during interacting with db")
 }
 
 func (tx *Tx) GetPinnedPromoted(ctx context.Context, chatId int64) (*Message, error) {
 	row := tx.QueryRowContext(ctx, fmt.Sprintf(`%v
-			WHERE 
+			WHERE %s AND
 			    m.pinned IS TRUE AND m.pin_promoted IS TRUE
 			ORDER BY m.id desc
-			LIMIT 1`, selectMessageClause(chatId)),
+			LIMIT 1`, selectMessageClause(), messageChatWhere(chatId)),
 	)
 	if row.Err() != nil {
 		tx.lgr.WithTracing(ctx).Errorf("Error during get pinned messages %v", row.Err())
@@ -1031,7 +1073,7 @@ func (db *DB) FindMessageByFileItemUuid(ctx context.Context, chatId int64, fileI
 	}
 	fileItemUuidWithPercents := "%" + fileItemUuid + "%"
 	sqlFormatted := fmt.Sprintf(`
-			select id from message_chat_%v where file_item_uuid = $1 or text ilike $2 order by id limit 1
+			select id from message where chat_id = %v AND file_item_uuid = $1 or text ilike $2 order by id limit 1
 			`, chatId,
 	)
 	row := db.QueryRowContext(ctx, sqlFormatted, fileItemUuid, fileItemUuidWithPercents)
@@ -1057,7 +1099,7 @@ func flipReactionCommon(ctx context.Context, co CommonOperations, userId int64, 
 	var wasAdded bool
 
 	var exists bool
-	row := co.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_reaction_chat_%v WHERE user_id = $1 AND message_id = $2 AND reaction = $3)", chatId), userId, messageId, reaction)
+	row := co.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM message_reaction WHERE chat_id = %v AND user_id = $1 AND message_id = $2 AND reaction = $3)", chatId), userId, messageId, reaction)
 	err := eris.Wrap(row.Scan(&exists), "error during interacting with db")
 	if err != nil {
 		return false, err
@@ -1065,14 +1107,14 @@ func flipReactionCommon(ctx context.Context, co CommonOperations, userId int64, 
 
 	if exists {
 		// if reaction exists - remove it
-		_, err2 := co.ExecContext(ctx, fmt.Sprintf("DELETE FROM message_reaction_chat_%v WHERE user_id = $1 AND message_id = $2 AND reaction = $3", chatId), userId, messageId, reaction)
+		_, err2 := co.ExecContext(ctx, fmt.Sprintf("DELETE FROM message_reaction WHERE chat_id = %v AND user_id = $1 AND message_id = $2 AND reaction = $3", chatId), userId, messageId, reaction)
 		err = eris.Wrap(err2, "error during interacting with db")
 		if err != nil {
 			return false, err
 		}
 	} else {
 		// else insert reaction
-		_, err2 := co.ExecContext(ctx, fmt.Sprintf("INSERT INTO message_reaction_chat_%v(user_id, message_id, reaction) VALUES ($1, $2, $3)", chatId), userId, messageId, reaction)
+		_, err2 := co.ExecContext(ctx, fmt.Sprintf("INSERT INTO message_reaction(user_id, message_id, reaction, chat_id) VALUES ($1, $2, $3, %v)", chatId), userId, messageId, reaction)
 		err = eris.Wrap(err2, "error during interacting with db")
 		if err != nil {
 			return false, err
@@ -1091,7 +1133,7 @@ func (tx *Tx) FlipReaction(ctx context.Context, userId int64, chatId int64, mess
 }
 
 func getReactionUsersCommon(ctx context.Context, co CommonOperations, chatId int64, messageId int64, reaction string) ([]int64, error) {
-	rows, err := co.QueryContext(ctx, fmt.Sprintf("SELECT user_id FROM message_reaction_chat_%v WHERE message_id = $1 AND reaction = $2", chatId), messageId, reaction)
+	rows, err := co.QueryContext(ctx, fmt.Sprintf("SELECT user_id FROM message_reaction WHERE chat_id = %v AND message_id = $1 AND reaction = $2", chatId), messageId, reaction)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -1120,7 +1162,7 @@ func (tx *Tx) GetReactionUsers(ctx context.Context, chatId int64, messageId int6
 func getMessageReactionsCommon(ctx context.Context, co CommonOperations, chatId, messageId int64) ([]Reaction, error) {
 	var reactions []Reaction = make([]Reaction, 0)
 
-	rows, err := co.QueryContext(ctx, fmt.Sprintf("%s WHERE message_id = $1", selectMessageReactionsClause(chatId)), messageId)
+	rows, err := co.QueryContext(ctx, fmt.Sprintf("%s WHERE %s AND message_id = $1", selectMessageReactionsClause(), messageReactionsChatWhere(chatId)), messageId)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -1151,7 +1193,7 @@ func enrichMessagesWithReactions(ctx context.Context, co CommonOperations, chatI
 		messageIds = append(messageIds, message.Id)
 	}
 
-	rows, err := co.QueryContext(ctx, fmt.Sprintf("%s WHERE message_id = ANY ($1)", selectMessageReactionsClause(chatId)), messageIds)
+	rows, err := co.QueryContext(ctx, fmt.Sprintf("%s WHERE %s AND message_id = ANY ($1)", selectMessageReactionsClause(), messageReactionsChatWhere(chatId)), messageIds)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
@@ -1174,7 +1216,7 @@ func enrichMessagesWithReactions(ctx context.Context, co CommonOperations, chatI
 
 func (tx *Tx) MessageFilter(ctx context.Context, chatId int64, searchString string, messageId int64) (bool, error) {
 	searchStringWithPercents := "%" + searchString + "%"
-	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT * FROM message_chat_%v m WHERE m.id = $1 AND strip_tags(m.text) ILIKE $2)", chatId), messageId, searchStringWithPercents)
+	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT EXISTS (SELECT * FROM message m WHERE m.chat_id = %v AND m.id = $1 AND strip_tags(m.text) ILIKE $2)", chatId), messageId, searchStringWithPercents)
 	if row.Err() != nil {
 		tx.lgr.WithTracing(ctx).Errorf("Error during get Search %v", row.Err())
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
@@ -1199,10 +1241,10 @@ func getCommentsCommon(ctx context.Context, co CommonOperations, chatId int64, b
 	var err error
 	var rows *sql.Rows
 	var preparedSql = fmt.Sprintf(`%v
-			WHERE
+			WHERE %s AND
 				  m.id > $3 
 			ORDER BY m.id %s 
-			LIMIT $1 OFFSET $2`, selectMessageClause(chatId), order)
+			LIMIT $1 OFFSET $2`, selectMessageClause(), messageChatWhere(chatId), order)
 	rows, err = co.QueryContext(ctx, preparedSql,
 		limit, offset, blogPostId)
 	if err != nil {
@@ -1237,7 +1279,7 @@ func (tx *Tx) GetComments(ctx context.Context, chatId int64, blogPostId int64, l
 }
 
 func countCommentsCommon(ctx context.Context, co CommonOperations, chatId int64, messageId int64) (int64, error) {
-	res := co.QueryRowContext(ctx, fmt.Sprintf("SELECT count(*) FROM message_chat_%v m WHERE m.id > $1", chatId), messageId)
+	res := co.QueryRowContext(ctx, fmt.Sprintf("SELECT count(*) FROM message m WHERE m.chat_id = %v AND m.id > $1", chatId), messageId)
 	var count int64
 	if err := res.Scan(&count); err != nil {
 		return 0, eris.Wrap(err, "error during interacting with db")
