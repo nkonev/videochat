@@ -7,7 +7,7 @@ services:
   # https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4
   keycloak:
     # https://quay.io/repository/keycloak/keycloak
-    image: quay.io/keycloak/keycloak:26.0.0-0
+    image: quay.io/keycloak/keycloak:26.1.2-0
     restart: unless-stopped
     volumes:
       - ./docker/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro,z
