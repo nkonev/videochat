@@ -296,16 +296,7 @@ export const setTopChatPosition = (chatId) => {
 }
 
 export const getTopChatPosition = () => {
-    const v = localStorage.getItem(KEY_TOP_CHAT);
-    if (v == null) {
-        return JSON.parse(v);
-    } else if (v.includes("{")) {
-        return JSON.parse(v);
-    } else {
-        // migration
-        removeTopChatPosition();
-        return null
-    }
+    return JSON.parse(localStorage.getItem(KEY_TOP_CHAT));
 }
 
 export const removeTopChatPosition = () => {
