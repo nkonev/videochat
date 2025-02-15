@@ -103,8 +103,11 @@ func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error
 		return 0, nil, eris.New("title required")
 	}
 
-	// https://stackoverflow.com/questions/4547672/return-multiple-fields-as-a-record-in-postgresql-with-pl-pgsql/6085167#6085167
-	res := tx.QueryRowContext(ctx, `SELECT chat_id, last_update_date_time FROM CREATE_CHAT($1, $2, $3, $4, $5, $6, $7, $8, $9) AS (chat_id BIGINT, last_update_date_time TIMESTAMP)`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage)
+	res := tx.QueryRowContext(ctx, `
+		INSERT INTO chat(title, tet_a_tet, can_resend, available_to_search, blog, regular_participant_can_publish_message, regular_participant_can_pin_message, blog_about, regular_participant_can_write_message)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, last_update_date_time;
+	`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -495,8 +498,14 @@ func (tx *Tx) CountChatsPerUser(ctx context.Context, userId int64) (int64, error
 }
 
 func (tx *Tx) DeleteChat(ctx context.Context, id int64) error {
-	if _, err := tx.ExecContext(ctx, `CALL DELETE_CHAT($1)`, id); err != nil {
-		return eris.Wrap(err, "error during interacting with db")
+	if _, err := tx.ExecContext(ctx, `DELETE FROM message WHERE chat_id = $1`, id); err != nil {
+		return eris.Wrap(err, "error during removing messages")
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM message_reaction WHERE chat_id = $1`, id); err != nil {
+		return eris.Wrap(err, "error during removing reactions")
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM chat WHERE id = $1`, id); err != nil {
+		return eris.Wrap(err, "error during removing chat")
 	}
 	return nil
 }

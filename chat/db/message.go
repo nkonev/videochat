@@ -242,22 +242,31 @@ func (tx *Tx) HasMessages(ctx context.Context, chatId int64) (bool, error) {
 	}
 }
 
-func (tx *Tx) CreateMessage(ctx context.Context, m *Message) (id int64, createDatetime time.Time, editDatetime null.Time, err error) {
+func (tx *Tx) CreateMessage(ctx context.Context, m *Message) (id int64, err error) {
 	if m == nil {
-		return id, createDatetime, editDatetime, eris.New("message required")
+		return id, eris.New("message required")
 	} else if m.Text == "" {
-		return id, createDatetime, editDatetime, eris.New("text required")
+		return id, eris.New("text required")
+	}
+
+	var messageId int64
+	res := tx.QueryRowContext(ctx, "UPDATE chat SET last_generated_message_id = last_generated_message_id + 1 WHERE id = $1 RETURNING last_generated_message_id;", m.ChatId)
+	if err := res.Scan(&messageId); err != nil {
+		return id, eris.Wrap(err, "error during generating message id")
 	}
 
 	embed, err := initEmbedMessageRequestStruct(m)
 	if err != nil {
-		return id, createDatetime, editDatetime, eris.Wrap(err, "error during initializing embed struct")
+		return id, eris.Wrap(err, "error during initializing embed struct")
 	}
-	res := tx.QueryRowContext(ctx, fmt.Sprintf(`INSERT INTO message_chat_%v (text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type, blog_post) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, create_date_time, edit_date_time`, m.ChatId), m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost)
-	if err := res.Scan(&id, &createDatetime, &editDatetime); err != nil {
-		return id, createDatetime, editDatetime, eris.Wrap(err, "error during interacting with db")
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO message (id, text, owner_id, file_item_uuid, embed_message_id, embed_chat_id, embed_owner_id, embed_message_type, blog_post) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		messageId, m.Text, m.OwnerId, m.FileItemUuid, embed.embedMessageId, embed.embedMessageChatId, embed.embedMessageOwnerId, embed.embedMessageType, m.BlogPost)
+	if err != nil {
+		return id, eris.Wrap(err, "error during creating the message")
 	}
-	return id, createDatetime, editDatetime, nil
+	return messageId, nil
 }
 
 func (db *DB) CountMessages(ctx context.Context) (int64, error) {

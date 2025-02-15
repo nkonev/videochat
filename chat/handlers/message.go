@@ -737,7 +737,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 			}
 		}
 
-		messageId, _, _, err := tx.CreateMessage(c.Request().Context(), creatableMessage)
+		messageId, err := tx.CreateMessage(c.Request().Context(), creatableMessage)
 		if err != nil {
 			return 0, err
 		}
