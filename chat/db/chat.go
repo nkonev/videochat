@@ -496,11 +496,9 @@ func (tx *Tx) CountChatsPerUser(ctx context.Context, userId int64) (int64, error
 }
 
 func (tx *Tx) DeleteChat(ctx context.Context, id int64) error {
+	// we don't remove message_reaction, because it is colocated with message and has a foreign key on it
 	if _, err := tx.ExecContext(ctx, `DELETE FROM message WHERE chat_id = $1`, id); err != nil {
 		return eris.Wrap(err, "error during removing messages")
-	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM message_reaction WHERE chat_id = $1`, id); err != nil {
-		return eris.Wrap(err, "error during removing reactions")
 	}
 	if _, err := tx.ExecContext(ctx, `DELETE FROM chat WHERE id = $1`, id); err != nil {
 		return eris.Wrap(err, "error during removing chat")
