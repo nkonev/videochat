@@ -5,14 +5,14 @@ DROP PROCEDURE IF EXISTS DELETE_CHAT(IN chat_id BIGINT);
 ALTER TABLE message ADD COLUMN chat_id BIGINT NOT NULL;
 ALTER TABLE message_reaction ADD COLUMN chat_id BIGINT NOT NULL;
 
-alter table message drop constraint message_file_item_uuid_key;
-alter table message_reaction drop constraint message_reaction_message_id_fkey;
-alter table message_reaction drop constraint message_reaction_pkey;
-alter table message drop constraint message_pkey;
-alter table message add primary key (chat_id, id);
-alter table message_reaction add primary key (chat_id, message_id, user_id, reaction);
+ALTER TABLE message DROP CONSTRAINT message_file_item_uuid_key;
+ALTER TABLE message_reaction DROP CONSTRAINT message_reaction_message_id_fkey;
+ALTER TABLE message_reaction DROP CONSTRAINT message_reaction_pkey;
+ALTER TABLE message DROP CONSTRAINT message_pkey;
+ALTER TABLE message ADD PRIMARY KEY (chat_id, id);
+ALTER TABLE message_reaction ADD PRIMARY KEY (chat_id, message_id, user_id, reaction);
 -- the foreign key on it is possible because message_reaction and message are colocated
-alter table message_reaction add foreign key (message_id, chat_id) references message(id, chat_id) on delete cascade;
+ALTER TABLE message_reaction ADD FOREIGN KEY (message_id, chat_id) REFERENCES message(id, chat_id) ON DELETE CASCADE;
 -- impossible, because chat isn't distributed
 -- alter table message add foreign key (chat_id) references chat(id) on delete cascade;
 
