@@ -10,8 +10,10 @@ ALTER SYSTEM SET commit_siblings=10;
 -- ALTER SYSTEM SET work_mem='50MB';
 ALTER SYSTEM SET log_line_prefix = '%a %u@%d ';
 
+-- https://docs.citusdata.com/en/stable/admin_guide/cluster_management.html#create-db
 create user chat with password 'chatPazZw0rd';
 -- superuser only for test!
 alter role chat superuser;
 create database chat with owner chat;
 \connect chat;
+CREATE EXTENSION citus;
