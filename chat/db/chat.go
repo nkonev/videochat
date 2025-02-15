@@ -272,14 +272,12 @@ func getLastMessagePreview(ctx context.Context, co CommonOperations, chatIds []i
 
 	maxPrevSizeDb := viper.GetInt("previewMaxTextSizeDb")
 
-	bldr := ""
-	for i, chatId := range chatIds {
-		if i != 0 {
-			bldr += " UNION ALL "
-		}
-		bldr += fmt.Sprintf("(select %v, substring(strip_tags(text), 0, %v), owner_id from message_chat_%v order by id desc limit 1)", chatId, maxPrevSizeDb, chatId)
-	}
-	rows, err := co.QueryContext(ctx, bldr)
+	rows, err := co.QueryContext(ctx, `
+		select m.chat_id, substring(strip_tags(m.text), 0, $1), m.owner_id from message m join
+		(
+			select chat_id, max(id) as message_id from message where chat_id = any($2) group by chat_id
+		) inn on m.id = inn.message_id and m.chat_id = inn.chat_id
+	`, maxPrevSizeDb, chatIds)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
