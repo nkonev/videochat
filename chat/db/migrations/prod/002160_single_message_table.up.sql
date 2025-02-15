@@ -14,7 +14,7 @@ ALTER TABLE message_reaction ADD PRIMARY KEY (chat_id, message_id, user_id, reac
 -- the foreign key on it is possible because message_reaction and message are colocated
 ALTER TABLE message_reaction ADD FOREIGN KEY (message_id, chat_id) REFERENCES message(id, chat_id) ON DELETE CASCADE;
 -- impossible, because chat isn't distributed
--- alter table message add foreign key (chat_id) references chat(id) on delete cascade;
+-- ALTER TABLE message ADD FOREIGN KEY (chat_id) REFERENCES chat(id) ON DELETE CASCADE;
 
 SELECT create_distributed_table('message', 'chat_id');
 
