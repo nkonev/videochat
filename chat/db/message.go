@@ -658,21 +658,14 @@ func getUnreadMessagesCountByChatsBatchCommon(ctx context.Context, co CommonOper
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 
-	var builder = ""
-	var first = true
-	for chatId, allow := range chatAllowCounting {
-		if allow {
-			if !first {
-				builder += " UNION ALL "
-			}
-			builder += getCountUnreadMessages(chatId, chatId, userId)
-
-			first = false
-		}
-	}
-
 	var rows *sql.Rows
-	rows, err = co.QueryContext(ctx, builder)
+	rows, err = co.QueryContext(ctx, `
+		with user_read as (
+			SELECT mr.last_message_id, mr.chat_id FROM message_read mr WHERE mr.user_id = $1 AND mr.chat_id = any($2) 
+		)
+		select m.chat_id, count(m.id) filter (where m.id > COALESCE((select ur.last_message_id from user_read ur where ur.chat_id = m.chat_id), 0)) from message m
+		where m.chat_id = any($2) group by m.chat_id;
+	`, userId, chatAllowCounting)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
