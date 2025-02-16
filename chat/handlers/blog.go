@@ -256,7 +256,7 @@ func (h *BlogHandler) GetAllBlogPostsForSeo(c echo.Context) error {
 		chatIds = append(chatIds, post.Id)
 	}
 
-	dates, err := h.db.GetBlobPostModifiedDates(c.Request().Context(), chatIds)
+	dates, err := h.db.GetBlogPostModifiedDates(c.Request().Context(), chatIds)
 	if err != nil {
 		return err
 	}

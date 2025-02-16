@@ -1012,27 +1012,18 @@ func (db *DB) GetBlogPostMessageId(ctx context.Context, chatId int64) (int64, er
 	return messageId, nil
 }
 
-func (db *DB) GetBlobPostModifiedDates(ctx context.Context, chatIds []int64) (map[int64]time.Time, error) {
+func (db *DB) GetBlogPostModifiedDates(ctx context.Context, chatIds []int64) (map[int64]time.Time, error) {
 	res := map[int64]time.Time{}
 
 	if len(chatIds) == 0 {
 		return res, nil
 	}
 
-	var builder = ""
-	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf("(select %v, coalesce(edit_date_time, create_date_time) from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
-
-		first = false
-	}
-
 	var rows *sql.Rows
 	var err error
-	rows, err = db.QueryContext(ctx, builder)
+	rows, err = db.QueryContext(ctx, `
+		select m.chat_id, coalesce(m.edit_date_time, m.create_date_time) from message m where chat_id = any($1) and blog_post = true
+	`)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
