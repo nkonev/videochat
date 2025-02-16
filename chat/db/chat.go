@@ -273,11 +273,12 @@ func getLastMessagePreview(ctx context.Context, co CommonOperations, chatIds []i
 	maxPrevSizeDb := viper.GetInt("previewMaxTextSizeDb")
 
 	rows, err := co.QueryContext(ctx, `
-		select m.chat_id, substring(strip_tags(m.text), 0, $1), m.owner_id from message m join
-		(
-			select chat_id, max(id) as message_id from message where chat_id = any($2) group by chat_id
+		select m.chat_id, substring(strip_tags(m.text), 0, $2), m.owner_id 
+		from message m
+		join (
+			select chat_id, max(id) as message_id from message where chat_id = any($1) group by chat_id
 		) inn on m.id = inn.message_id and m.chat_id = inn.chat_id
-	`, maxPrevSizeDb, chatIds)
+	`, chatIds, maxPrevSizeDb)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -968,20 +969,11 @@ type BlogPost struct {
 }
 
 func getBlogPostsByChatIdsCommon(ctx context.Context, co CommonOperations, chatIds []int64) ([]*BlogPost, error) {
-	var builder = ""
-	var first = true
-	for _, chatId := range chatIds {
-		if !first {
-			builder += " UNION ALL "
-		}
-		builder += fmt.Sprintf("(select %v, id, owner_id, text, file_item_uuid from message_chat_%v where blog_post is true order by id limit 1)", chatId, chatId)
-
-		first = false
-	}
-
 	var rows *sql.Rows
 	var err error
-	rows, err = co.QueryContext(ctx, builder)
+	rows, err = co.QueryContext(ctx, `
+		select m.chat_id, m.id, m.owner_id, m.text, m.file_item_uuid from message m where chat_id = any($1) and blog_post = true
+	`, chatIds)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {
