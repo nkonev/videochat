@@ -1,6 +1,9 @@
 <template>
-    <!-- Used in Mobile Android -->
-    <v-dialog v-model="show" fullscreen>
+    <!-- Used only in Mobile.
+     eager need in order to invoke mount() in MessageEdit
+     in order to set chatStore.isMessageEditing
+     -->
+    <v-dialog v-model="show" fullscreen :eager="isMobile()">
         <v-card>
             <v-toolbar
                 dark
@@ -17,12 +20,12 @@
                     </v-btn>
                 </span>
                 <span class="d-flex flex-grow-1">
-                  <v-toolbar-title>{{ !isEditing ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
+                  <v-toolbar-title>{{ !chatStore.isMessageEditing ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
                 </span>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
-                <MessageEdit :chatId="chatId" @setEditingTitle="onSetEditingTitle"/>
+                <MessageEdit :chatId="chatId"/>
             </div>
         </v-card>
     </v-dialog>
@@ -36,12 +39,13 @@
     } from "./bus/bus";
     import MessageEdit from "@/MessageEdit.vue";
     import heightMixin from "@/mixins/heightMixin";
+    import {useChatStore} from "@/store/chatStore";
+    import {mapStores} from "pinia";
 
     export default {
         data() {
             return {
                 show: false,
-                isEditing: false,
             }
         },
         mixins:[
@@ -56,10 +60,6 @@
             },
             closeModal() {
                 this.show = false;
-                this.isEditing = false;
-            },
-            onSetEditingTitle() {
-                this.isEditing = true;
             },
         },
         watch: {
@@ -76,6 +76,7 @@
             chatId() {
                 return this.$route.params.id
             },
+            ...mapStores(useChatStore),
         },
         mounted() {
             bus.on(OPEN_EDIT_MESSAGE, this.showModal);

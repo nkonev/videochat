@@ -140,11 +140,11 @@
         <ChatEditModal/>
         <PermissionsWarningModal/>
         <VideoAddNewSourceModal/>
-        <MessageEditModal/>
         <ChooseSmileyModal/>
         <ChooseColorModal/>
         <PublishedMessagesModal/>
         <SetPasswordModal/>
+        <MessageEditModal/>
         <!-- we store MessageEditMediaModal here in order to make its cache working -->
         <MessageEditMediaModal/>
       </v-main>

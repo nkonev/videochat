@@ -209,6 +209,7 @@
               console.log("Resetting text input");
               this.$refs.tipTapRef.clearContent();
               this.editMessageDto = chatEditMessageDtoFactory();
+              this.setIsMessageEditing();
               this.resetAnswer();
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
@@ -287,9 +288,6 @@
                   this.editMessageDto = dto;
                   this.afterSetMessage();
                 }
-              }
-              if (this.editMessageDto.id) {
-                this.$emit("setEditingTitle");
               }
             },
             onSetMessage({dto, actionType}) {
@@ -567,7 +565,11 @@
               }).then(()=>{
                 this.$refs.tipTapRef.setCursorToEnd();
               });
+              this.setIsMessageEditing();
               this.emitExpandEventIfNeed();
+            },
+            setIsMessageEditing() {
+              this.chatStore.isMessageEditing = !!this.editMessageDto.id
             },
             emitExpandEventIfNeed() {
               if (hasLength(this.editMessageDto?.text)) {
@@ -633,6 +635,10 @@
           ...mapStores(useChatStore),
         },
         mounted() {
+            if (this.chatStore.currentUser) {
+                this.onProfileSet();
+            }
+
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
