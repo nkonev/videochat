@@ -259,8 +259,6 @@ func configureEcho(
 	e.GET("/api/blog/:id", bh.GetBlogPost)
 	e.GET("/api/blog/:id/comment", bh.GetBlogPostComments)
 
-	e.PUT("/internal/migrate-messages", mc.Migrate)
-
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			// do some work on application stop (like closing connections and files)

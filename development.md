@@ -1422,13 +1422,3 @@ There are the following mandatory fields every microservice should write
 * `service` in lower case, which is the name of microservice
 * `trace_id`
 * `span_id`
-
-# Messages Migration
-```
-shut down storage before starting this version in order to to clean it up
-curl -i -X PUT --url 'http://localhost:1235/internal/migrate-messages' -H 'Content-Type: application/json' -d '{"fromDb": "postgres://chat:chatPazZw0rd@localhost:35432/chat?sslmode=disable&application_name=chat-app",  "toDb": "postgres://chat:chatPazZw0rd@localhost:45401/chat?sslmode=disable&application_name=chat-app"}'
-
-# Prod
-curl -i -X PUT --url 'http://localhost:1235/internal/migrate-messages' -H 'Content-Type: application/json' -d '{"fromDb": "postgres://chat:chatPazZw0rd@postgresql:5432/chat?sslmode=disable&application_name=chat-app",  "toDb": "postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/chat?sslmode=disable&application_name=chat-app"}'
-
-```

@@ -2464,23 +2464,3 @@ func addTimeToUrl(src string) (string, error) {
 func addTimeToUrlValues(query *url.Values) {
 	query.Set("time", utils.Int64ToString(time.Now().UTC().Unix()))
 }
-
-type MigrateDTO struct {
-	FromDb string `json:"fromDb"`
-	ToDb   string `json:"toDb"`
-}
-
-func (mc *MessageHandler) Migrate(c echo.Context) error {
-	var bindTo = new(MigrateDTO)
-	if err := c.Bind(bindTo); err != nil {
-		mc.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
-		return err
-	}
-
-	err := db.MigrateMessages(c.Request().Context(), mc.lgr, bindTo.FromDb, bindTo.ToDb)
-	if err != nil {
-		mc.lgr.WithTracing(c.Request().Context()).Errorf("Error during migration: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	return c.NoContent(http.StatusOK)
-}
