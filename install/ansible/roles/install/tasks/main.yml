@@ -101,7 +101,7 @@
 
 - name: Create FluentBit socket dir
   ansible.builtin.file:
-    path: "/var/run/fluent-bit"
+    path: "/opt/videochat/fluent-bit/var/run"
     state: directory
   tags:
     - videochat

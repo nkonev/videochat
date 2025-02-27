@@ -307,7 +307,7 @@ services:
     hostname: fluentbit
     volumes:
       - ./fluent-bit/etc:/fluent-bit/etc:z
-      - /var/run/fluent-bit:/var/run/fluent-bit:z
+      - /opt/videochat/fluent-bit/var/run:/var/run/fluent-bit:z
     networks:
       backend:
     logging:
