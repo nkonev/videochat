@@ -189,6 +189,12 @@
     state: directory
   tags:
     - videochat
+- name: Create PostgreSQL Citus pg_hba
+  ansible.builtin.copy:
+    src: files/pg_hba.conf
+    dest: "{{ dir_prefix }}/postgresql-citus/common/pg_hba.conf"
+  tags:
+    - videochat
 - name: Create PostgreSQL Citus 002-common-init.sql
   ansible.builtin.copy:
     src: files/002-common-init.sql

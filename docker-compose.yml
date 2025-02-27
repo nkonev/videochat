@@ -57,6 +57,7 @@ services:
     ports:
       - 45401:5432
     volumes:
+      - ./docker/citus/common/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf:z # https://stackoverflow.com/questions/70477676/citus-rebalance-table-shards-fe-sendauth-no-password-supplied/70494597#70494597
       - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
       - ./docker/citus/coordinator/docker-entrypoint-initdb.d/003-coordinator-init.sh:/docker-entrypoint-initdb.d/003-coordinator-init.sh:z
       - ./scripts/wait-for-it.sh:/sbin/wait-for-it.sh:z
@@ -77,6 +78,7 @@ services:
     ports:
       - 45501:5432
     volumes:
+      - ./docker/citus/common/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf:z
       - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
       - postgres_chat_citus_worker_1_data:/var/lib/postgresql/data:z
     environment:
@@ -95,6 +97,7 @@ services:
     ports:
       - 45502:5432
     volumes:
+      - ./docker/citus/common/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf:z
       - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
       - postgres_chat_citus_worker_2_data:/var/lib/postgresql/data:z
     environment:
