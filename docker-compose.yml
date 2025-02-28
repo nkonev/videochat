@@ -57,8 +57,8 @@ services:
     ports:
       - 45401:5432
     volumes:
-      - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
-      - ./docker/citus/coordinator/docker-entrypoint-initdb.d/003-coordinator-init.sh:/docker-entrypoint-initdb.d/003-coordinator-init.sh:z
+      - ./docker/postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
+      - ./docker/postgresql-citus/coordinator/docker-entrypoint-initdb.d/003-coordinator-init.sh:/docker-entrypoint-initdb.d/003-coordinator-init.sh:z
       - ./scripts/wait-for-it.sh:/sbin/wait-for-it.sh:z
       - postgres_chat_citus_coordinator_1_data:/var/lib/postgresql/data:z
     environment:
@@ -77,7 +77,7 @@ services:
     ports:
       - 45501:5432
     volumes:
-      - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
+      - ./docker/postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
       - postgres_chat_citus_worker_1_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
@@ -95,7 +95,7 @@ services:
     ports:
       - 45502:5432
     volumes:
-      - ./docker/citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
+      - ./docker/postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
       - postgres_chat_citus_worker_2_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
