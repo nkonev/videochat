@@ -77,7 +77,7 @@ jobs:
         run: |
           (cd frontend; make check-env clean download package)
       - name: Deploy docker image to server
-        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master'
+        if: env.SHOULD_RUN == 'true' && github.ref == 'refs/heads/master' || github.ref == 'refs/heads/sw'
         run: |
           (
             mkdir -p ~/.ssh && openssl aes-256-cbc -K ${{ secrets.EncryptedKey }} -iv ${{ secrets.EncryptedIv }} -in ./.secret_keys/id_rsa.enc -out ~/.ssh/id_rsa -d
