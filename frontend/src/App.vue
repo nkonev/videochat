@@ -119,7 +119,6 @@
             </template>
           </v-snackbar>
 
-
           <router-view />
         </v-container>
 
