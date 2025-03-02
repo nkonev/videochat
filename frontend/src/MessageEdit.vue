@@ -85,10 +85,10 @@
           </v-slide-group>
 
           <div class="custom-toolbar-send">
-              <v-btn v-if="!this.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
+              <v-btn v-if="!this.chatStore.editMessageDto.fileItemUuid" icon rounded="0" variant="plain" density="comfortable" :size="getBtnSize()" :width="getBtnWidth()" :height="getBtnHeight()" @click="openFileUploadForAddingFiles()" :title="$vuetify.locale.t('$vuetify.message_edit_file')">
                 <v-icon :size="getIconSize()" color="primary">mdi-file-upload</v-icon>
               </v-btn>
-              <template v-if="this.editMessageDto.fileItemUuid">
+              <template v-if="this.chatStore.editMessageDto.fileItemUuid">
                   <v-badge
                       :value="fileCount"
                       :content="fileCount"
@@ -176,7 +176,6 @@
         props:['chatId'],
         data() {
             return {
-                editMessageDto: chatEditMessageDtoFactory(),
                 fileCount: null,
                 sendBroadcast: false,
                 sending: false,
@@ -192,9 +191,9 @@
                 return this.$refs.tipTapRef.getContent();
             },
             sendMessageToChat() {
-                if (this.messageTextIsPresent(this.editMessageDto.text) || this.editMessageDto.fileItemUuid) {
+                if (this.messageTextIsPresent(this.chatStore.editMessageDto.text) || this.chatStore.editMessageDto.fileItemUuid) {
                     this.sending = true;
-                    (this.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.editMessageDto))
+                    (this.chatStore.editMessageDto.id ? axios.put(`/api/chat/`+this.chatId+'/message', this.chatStore.editMessageDto) : axios.post(`/api/chat/`+this.chatId+'/message', this.chatStore.editMessageDto))
                         .then(response => {
                             this.resetInput();
                             bus.emit(CLOSE_EDIT_MESSAGE);
@@ -208,8 +207,7 @@
 
               console.log("Resetting text input");
               this.$refs.tipTapRef.clearContent();
-              this.editMessageDto = chatEditMessageDtoFactory();
-              this.setIsMessageEditing();
+              this.chatStore.editMessageDto = chatEditMessageDtoFactory();
               this.resetAnswer();
               this.fileCount = null;
               this.notifyAboutBroadcast(true);
@@ -221,9 +219,9 @@
                 return text && text !== ""
             },
             loadFilesCount() {
-                if (this.editMessageDto.fileItemUuid) {
+                if (this.chatStore.editMessageDto.fileItemUuid) {
                     return axios.post(`/api/storage/${this.chatId}/file/count`, {
-                        fileItemUuid: this.editMessageDto.fileItemUuid
+                        fileItemUuid: this.chatStore.editMessageDto.fileItemUuid
                     })
                         .then((response) => {
                             this.fileCount = response.data.count;
@@ -238,7 +236,7 @@
                     this.loadFilesCount().then((resp) => {
                         if (resp) {
                             if (this.fileCount === 0) {
-                                this.editMessageDto.fileItemUuid = null;
+                                this.chatStore.editMessageDto.fileItemUuid = null;
                                 this.saveToStore();
                             }
                         }
@@ -249,7 +247,7 @@
             resetAnswer() {
                 this.showAnswer = false;
                 this.answerOnPreview = null;
-                this.editMessageDto.embedMessage = null;
+                this.chatStore.editMessageDto.embedMessage = null;
                 this.saveToStore();
             },
             loadEmbedPreviewIfNeed(dto) {
@@ -270,31 +268,31 @@
 
               if (actionType == new_message) { // in case actionType == new_message we any way should check for existing and for reply
                 if (mbExisting) {
-                  this.editMessageDto = mbExisting;
+                  this.chatStore.editMessageDto = mbExisting;
                   this.afterSetMessage();
                 } else {
-                  this.editMessageDto = chatEditMessageDtoFactory();
+                  this.chatStore.editMessageDto = chatEditMessageDtoFactory();
                   this.afterSetMessage();
                 }
               } else {
                 if (mbExisting && actionType == reply_message) {
                   setEmbed(mbExisting, getEmbed(dto));
-                  this.editMessageDto = mbExisting;
+                  this.chatStore.editMessageDto = mbExisting;
                   this.afterSetMessage();
                 } else if (mbExisting && mbExisting.id == dto.id) {
-                  this.editMessageDto = mbExisting;
+                  this.chatStore.editMessageDto = mbExisting;
                   this.afterSetMessage();
                 } else {
-                  this.editMessageDto = dto;
+                  this.chatStore.editMessageDto = dto;
                   this.afterSetMessage();
                 }
               }
             },
             onSetMessage({dto, actionType}) {
               if (actionType == reply_message) {
-                setEmbed(this.editMessageDto, getEmbed(dto));
+                setEmbed(this.chatStore.editMessageDto, getEmbed(dto));
               } else {
-                this.editMessageDto = dto;
+                this.chatStore.editMessageDto = dto;
               }
               this.afterSetMessage();
             },
@@ -315,7 +313,7 @@
                 }
             },
             onInput(val) {
-                this.editMessageDto.text = val;
+                this.chatStore.editMessageDto.text = val;
 
                 this.saveToStore();
 
@@ -362,18 +360,18 @@
               }
             },
             openFileUploadForAddingFiles() {
-                const fileItemUuid = this.editMessageDto.fileItemUuid;
+                const fileItemUuid = this.chatStore.editMessageDto.fileItemUuid;
                 this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
             },
             onFilesClicked() {
                 this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.chatStore.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
             },
             onFileItemUuid({fileItemUuid, chatId}) {
               if (chatId == this.chatId) {
                 this.$refs.tipTapRef.setFileItemUuid(fileItemUuid);
-                this.editMessageDto.fileItemUuid = fileItemUuid;
+                this.chatStore.editMessageDto.fileItemUuid = fileItemUuid;
                 this.saveToStore();
               }
             },
@@ -547,41 +545,37 @@
             loadFromStore() {
                 const editMessageDto = getStoredChatEditMessageDto(this.chatId, chatEditMessageDtoFactory());
                 this.removeOwnerFromSavedMessageIfNeed(editMessageDto);
-                this.editMessageDto = editMessageDto;
+                this.chatStore.editMessageDto = editMessageDto;
 
                 this.setContentToEditorAndLoad();
             },
             setContentToEditorAndLoad() {
-              this.loadEmbedPreviewIfNeed(this.editMessageDto);
+              this.loadEmbedPreviewIfNeed(this.chatStore.editMessageDto);
               this.loadFilesCount();
-              if (!this.$refs.tipTapRef.messageHasMeaningfulContent(this.editMessageDto.text)) {
+              if (!this.$refs.tipTapRef.messageHasMeaningfulContent(this.chatStore.editMessageDto.text)) {
                 this.chatStore.isEditingBigText = false;
               }
               this.$nextTick(()=>{
-                this.$refs.tipTapRef.setContent(this.editMessageDto.text);
-                if (hasLength(this.editMessageDto.fileItemUuid)) {
-                  this.$refs.tipTapRef.setFileItemUuid(this.editMessageDto.fileItemUuid);
+                this.$refs.tipTapRef.setContent(this.chatStore.editMessageDto.text);
+                if (hasLength(this.chatStore.editMessageDto.fileItemUuid)) {
+                  this.$refs.tipTapRef.setFileItemUuid(this.chatStore.editMessageDto.fileItemUuid);
                 }
               }).then(()=>{
                 this.$refs.tipTapRef.setCursorToEnd();
               });
-              this.setIsMessageEditing();
               this.emitExpandEventIfNeed();
             },
-            setIsMessageEditing() {
-              this.chatStore.isMessageEditing = !!this.editMessageDto.id
-            },
             emitExpandEventIfNeed() {
-              if (hasLength(this.editMessageDto?.text)) {
-                const numRows = this.editMessageDto.text.split("<p>").length - 1;
-                const numCodes = this.editMessageDto.text.split("<code>").length - 1;
+              if (hasLength(this.chatStore.editMessageDto?.text)) {
+                const numRows = this.chatStore.editMessageDto.text.split("<p>").length - 1;
+                const numCodes = this.chatStore.editMessageDto.text.split("<code>").length - 1;
                 if (numRows > 1 || numCodes >= 1) {
                   this.chatStore.isEditingBigText = true;
                 }
               }
             },
             saveToStore() {
-                setStoredChatEditMessageDto(this.editMessageDto, this.chatId);
+                setStoredChatEditMessageDto(this.chatStore.editMessageDto, this.chatId);
             },
             removeFromStore() {
                 removeStoredChatEditMessageDto(this.chatId);
@@ -614,7 +608,7 @@
                 bus.emit(OPEN_SETTINGS, 'message_edit_settings')
             },
             openRecordingModal() {
-                bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.editMessageDto.fileItemUuid})
+                bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.chatStore.editMessageDto.fileItemUuid})
             },
             onFileCreatedEvent(dto) {
                 if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId) {
@@ -669,6 +663,7 @@
             this.resizeObserver = null;
             this.targetElement = null;
             this.shouldShowButtons = false;
+            this.chatStore.editMessageDto = chatEditMessageDtoFactory();
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);

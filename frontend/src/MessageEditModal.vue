@@ -20,7 +20,7 @@
                     </v-btn>
                 </span>
                 <span class="d-flex flex-grow-1">
-                  <v-toolbar-title>{{ !chatStore.isMessageEditing ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
+                  <v-toolbar-title>{{ !chatStore.isMessageEditing() ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
                 </span>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->

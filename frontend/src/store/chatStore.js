@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
 import axios from "axios";
-import {isMobileBrowser, setIcon} from "@/utils";
+import {chatEditMessageDtoFactory, isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import {setStoredLanguage} from "@/store/localStore";
 import bus, {NOTIFICATION_COUNT_CHANGED, PROFILE_SET} from "@/bus/bus.js";
@@ -79,7 +79,7 @@ export const useChatStore = defineStore('chat', {
         videoMiniaturesEnabled: true,
         videoMessagesEnabled: true,
         oppositeUserOnline: false,
-        isMessageEditing: false,
+        editMessageDto: chatEditMessageDtoFactory(),
     }
   },
   actions: {
@@ -198,6 +198,9 @@ export const useChatStore = defineStore('chat', {
     },
     canAudioMuteParticipant(userId) {
         return this.chatDto.canAudioMute && userId != this.currentUser.id
+    },
+    isMessageEditing() {
+        return !!this.editMessageDto.id
     },
   },
 
