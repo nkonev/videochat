@@ -33,7 +33,20 @@
             <MessageList :isCompact="isVideoRoute()"/>
 
             <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
-            <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" color="primary" :icon="chatStore.isMessageEditing() ? 'mdi-pencil' : 'mdi-plus'" class="new-fab-b" @click="openNewMessageDialog()"></v-btn>
+            <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" icon color="primary" class="new-fab-b" @click="openNewMessageDialog()">
+              <v-badge
+                  color="red"
+                  dot
+                  location="right top"
+                  overlap
+                  bordered
+                  offset-x="-9"
+                  offset-y="-9"
+                  :model-value="chatStore.hasMessageEditingText()"
+              >
+                <v-icon>{{chatStore.isMessageEditing() ? 'mdi-pencil' : 'mdi-plus'}}</v-icon>
+              </v-badge>
+            </v-btn>
           </pane>
           <pane class="message-edit-pane d-flex flex-row justify-center align-center" v-if="showBottomPane()" :size="bottomPaneSize()" style="background: white; color: #3a3a3e">
             <MessageEdit v-if="canWriteMessage" :chatId="this.chatId"/>

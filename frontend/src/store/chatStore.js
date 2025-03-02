@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
 import axios from "axios";
-import {chatEditMessageDtoFactory, isMobileBrowser, setIcon} from "@/utils";
+import {chatEditMessageDtoFactory, hasLength, isMobileBrowser, setIcon} from "@/utils";
 import {SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import {setStoredLanguage} from "@/store/localStore";
 import bus, {NOTIFICATION_COUNT_CHANGED, PROFILE_SET} from "@/bus/bus.js";
@@ -201,6 +201,9 @@ export const useChatStore = defineStore('chat', {
     },
     isMessageEditing() {
         return !!this.editMessageDto.id
+    },
+    hasMessageEditingText() {
+        return hasLength(this.editMessageDto.text)
     },
   },
 
