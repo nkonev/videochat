@@ -222,12 +222,16 @@ services:
   pgadmin:
     restart: unless-stopped
     hostname: pgadmin
-    image: dcagatay/pwless-pgadmin4:8.13
+    image: dcagatay/pwless-pgadmin4:9.1
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgresqlPassword
-      - POSTGRES_HOST=postgresql
-      - POSTGRES_PORT=5432
+      - POSTGRES_USER_1=postgres
+      - POSTGRES_PASSWORD_1=postgresqlPassword
+      - POSTGRES_HOST_1=postgresql
+      - POSTGRES_PORT_1=5432
+      - POSTGRES_USER_2=postgres
+      - POSTGRES_PASSWORD_2=postgresqlPassword
+      - POSTGRES_HOST_2=postgresql-citus-coordinator-1
+      - POSTGRES_PORT_2=5432
       - PGADMIN_DISABLE_POSTFIX=1
       - PGADMIN_LISTEN_ADDRESS=0.0.0.0
       - PGADMIN_LISTEN_PORT=8080
