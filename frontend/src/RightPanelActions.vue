@@ -240,11 +240,7 @@ export default {
       return this.chatStore.currentUser
     },
     shouldShowHome() {
-      if (!this.isMobile()) {
-        return true
-      } else {
-        return !isChatRoute(this.$route)
-      }
+      return true
     },
     shouldShowUpperChats() {
       if (this.isMobile()) {
