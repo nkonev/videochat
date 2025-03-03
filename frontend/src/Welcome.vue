@@ -70,6 +70,11 @@
               Disable periodic message
             </template>
           </v-btn>
+          <v-btn :size="getBtnSize()" @click.prevent="sendAMessage()" text variant="outlined">
+            <template v-slot:default>
+              Send a message
+            </template>
+          </v-btn>
 
         </v-card-actions>
       </v-card>
@@ -148,7 +153,12 @@ import {getLoginColoredStyle, publicallyAvailableForSearchChatsQuery, setTitle} 
       },
 
       enableNotifications() {
-        Notification.requestPermission()
+        console.log("Enabling notifications")
+        Notification.requestPermission().then((result) => {
+          console.log("Notifications were successfully enabled")
+        }).catch((e) => {
+          console.error("An error during enabling notifications", e)
+        })
       },
       async enableServiceWorker() {
         this.registerServiceWorker();
@@ -165,10 +175,19 @@ import {getLoginColoredStyle, publicallyAvailableForSearchChatsQuery, setTitle} 
       disablePeriodicMessage() {
         clearInterval(this.interval)
       },
-
+      sendAMessage() {
+        console.warn("Sending a notification");
+        this.sendNotification();
+      },
       async registerServiceWorker() {
-        await navigator.serviceWorker.register('/service-worker.js')
-        // updateUI();
+        console.log("Registering serviceWorker");
+        if ('serviceWorker' in navigator) {
+          await navigator.serviceWorker.register('/service-worker.js');
+          console.log("The serviceWorker was registered");
+          // updateUI();
+        } else {
+          console.warn("No serviceWorker in navigator");
+        }
       },
 
       getRegistration() {
