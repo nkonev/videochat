@@ -223,7 +223,7 @@ import {getLoginColoredStyle, publicallyAvailableForSearchChatsQuery, setTitle} 
           if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage(notification);
           } else {
-            console.log('No service worker controller found. Try a soft reload.');
+            console.log('No service worker controller found. Try a soft reload.'); // TODO
           }
         } else {
           console.log('No service worker registration found. Try a soft reload.');
