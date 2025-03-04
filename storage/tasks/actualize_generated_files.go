@@ -80,7 +80,9 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			}
 
 			// _converted.webm
-			_, _, _, isMessageRecording, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
+			isMessageRecordingStr := fileOjInfo.UserMetadata[services.MessageRecordingKey(true)]
+			isMessageRecording := utils.GetBoolean(isMessageRecordingStr)
+
 			if err != nil {
 				srv.lgr.WithTracing(c).Errorf("Unable to convert metadata for key %v: %v", fileOjInfo.Key, err)
 				continue
@@ -97,7 +99,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 				srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
 				continue
 			}
-			if !convertedExists && utils.IsVideo(fileOjInfo.Key) && utils.NullableToBoolean(isMessageRecording) && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
+			if !convertedExists && utils.IsVideo(fileOjInfo.Key) && isMessageRecording && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
 				srv.lgr.WithTracing(c).Infof("Create missed converted for %v", fileOjInfo.Key)
 				srv.convertingService.Convert(c, fileOjInfo.Key)
 			}

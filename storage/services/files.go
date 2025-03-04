@@ -279,7 +279,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 
 	metadata := objInfo.UserMetadata
 
-	_, fileOwnerId, correlationId, _, err := DeserializeMetadata(metadata, hasAmzPrefix)
+	_, fileOwnerId, correlationId, err := DeserializeMetadata(metadata, hasAmzPrefix)
 	if err != nil {
 		h.lgr.WithTracing(c).Errorf("Error get metadata: %v", err)
 		return nil, err
@@ -502,7 +502,7 @@ func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, 
 
 const xAmzMetaPrefix = "X-Amz-Meta-"
 
-func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, *bool, error) {
+func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, error) {
 	var prefix = ""
 	if hasAmzPrefix {
 		prefix = xAmzMetaPrefix
@@ -510,34 +510,24 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 
 	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
 	if !ok {
-		return 0, 0, "", nil, errors.New("Unable to get owner id")
+		return 0, 0, "", errors.New("Unable to get owner id")
 	}
 	ownerId, err := utils.ParseInt64(ownerIdString)
 	if err != nil {
-		return 0, 0, "", nil, err
+		return 0, 0, "", err
 	}
 
 	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
 	if !ok {
-		return 0, 0, "", nil, errors.New("Unable to get chat id")
+		return 0, 0, "", errors.New("Unable to get chat id")
 	}
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
-		return 0, 0, "", nil, err
+		return 0, 0, "", err
 	}
 	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
 
-	var isMessageRecording *bool
-	isMessageRecordingString, ok := userMetadata[prefix+strings.Title(messageRecordingKey)]
-	if ok {
-		isMessageRecordingVar, err := utils.ParseBoolean(isMessageRecordingString)
-		if err != nil {
-			return 0, 0, "", nil, err
-		}
-		isMessageRecording = &isMessageRecordingVar
-	}
-
-	return chatId, ownerId, correlationId, isMessageRecording, nil
+	return chatId, ownerId, correlationId, nil
 }
 
 func GetKey(filename string, chatFileItemUuid string, chatId int64) string {
