@@ -138,6 +138,7 @@ type FileInfoDto struct {
 	CanPlayAsAudio bool         `json:"canPlayAsAudio"`
 	FileItemUUID   string       `json:"fileItemUuid"`
 	CorrelationID  *string      `json:"correlationId"`
+	Previewable    bool         `json:"previewable"`
 }
 
 type ForceLogoutEvent struct {

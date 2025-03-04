@@ -599,6 +599,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanPlayAsAudio: fileEvent.FileInfoDto.CanPlayAsAudio,
 				FileItemUUID:   fileEvent.FileInfoDto.FileItemUuid,
 				CorrelationID:  fileEvent.FileInfoDto.CorrelationId,
+				Previewable:    fileEvent.FileInfoDto.Previewable,
 			},
 		}
 	}

@@ -611,7 +611,8 @@
                 bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.chatStore.editMessageDto.fileItemUuid})
             },
             onFileCreatedEvent(dto) {
-                if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId) {
+                // for non-previewable. for previewable - see in TipTapEditor.onPreviewCreated()
+                if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId && (dto?.fileInfoDto != null && !dto?.fileInfoDto.previewable)) {
                     if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
                         this.sendMessageToChat();
                         this.chatStore.resetSendMessageAfterMediaInsertRoutine();

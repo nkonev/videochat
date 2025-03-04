@@ -174,6 +174,7 @@ type ComplexityRoot struct {
 		Owner          func(childComplexity int) int
 		OwnerID        func(childComplexity int) int
 		PreviewURL     func(childComplexity int) int
+		Previewable    func(childComplexity int) int
 		PublishedURL   func(childComplexity int) int
 		Size           func(childComplexity int) int
 		URL            func(childComplexity int) int
@@ -1121,6 +1122,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FileInfoDto.PreviewURL(childComplexity), true
+
+	case "FileInfoDto.previewable":
+		if e.complexity.FileInfoDto.Previewable == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.Previewable(childComplexity), true
 
 	case "FileInfoDto.publishedUrl":
 		if e.complexity.FileInfoDto.PublishedURL == nil {
@@ -6818,6 +6826,50 @@ func (ec *executionContext) fieldContext_FileInfoDto_correlationId(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_previewable(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_previewable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Previewable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_previewable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13246,6 +13298,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(_ contex
 				return ec.fieldContext_FileInfoDto_fileItemUuid(ctx, field)
 			case "correlationId":
 				return ec.fieldContext_FileInfoDto_correlationId(ctx, field)
+			case "previewable":
+				return ec.fieldContext_FileInfoDto_previewable(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FileInfoDto", field.Name)
 		},
@@ -15888,6 +15942,11 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 			}
 		case "correlationId":
 			out.Values[i] = ec._FileInfoDto_correlationId(ctx, field, obj)
+		case "previewable":
+			out.Values[i] = ec._FileInfoDto_previewable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

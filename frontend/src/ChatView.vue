@@ -493,6 +493,7 @@ export default {
                                         canPlayAsAudio
                                         fileItemUuid
                                         correlationId
+                                        previewable
                                       }
                                     }
                                     reactionChangedEvent {

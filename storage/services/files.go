@@ -365,6 +365,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		CanPlayAsAudio: utils.IsAudio(objInfo.Key),
 		FileItemUuid:   itemUuid,
 		CorrelationId:  theCorrelationId,
+		Previewable:    utils.IsVideo(objInfo.Key) || utils.IsImage(objInfo.Key),
 	}
 	return info, nil
 }

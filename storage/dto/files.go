@@ -22,6 +22,7 @@ type FileInfoDto struct {
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
 	FileItemUuid   string    `json:"fileItemUuid"`
 	CorrelationId  *string   `json:"correlationId"`
+	Previewable    bool      `json:"previewable"`
 }
 
 type WrappedFileInfoDto struct {
