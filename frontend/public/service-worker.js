@@ -20,4 +20,27 @@ self.addEventListener('message', (event) => {
     ).catch((error) => {
         console.log(error);
     });
+
+
+    var pubGateWs = new WebSocket("wss://fx-ws.gateio.ws/v4/ws/btc");
+
+    pubGateWs.addEventListener("open", function() {
+        pubGateWs.send(JSON.stringify({
+            "time": 123456,
+            "channel": "futures.tickers",
+            "event": "subscribe",
+            "payload": ["BTC_USD", "ETH_USD"]
+        }))
+    });
+
+    pubGateWs.addEventListener("message", function(e) {
+        console.log("Got", e)
+        self.registration.showNotification(
+            e.data,
+        ).catch((error) => {
+            console.log(error);
+        });
+    });
+
+    pubGateWs.addEventListener("close", function() {});
 });
