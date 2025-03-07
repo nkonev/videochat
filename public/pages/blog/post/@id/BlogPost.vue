@@ -22,9 +22,9 @@
                 <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(pageContext.data.blogDto.owner, true)" :href="getProfileLink(pageContext.data.blogDto.owner)">{{pageContext.data.blogDto.owner.login}}</a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(pageContext.data.blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
-              <div class="ma-0 pa-0 ml-4 go-to-chat">
-                <v-btn variant="plain" tile size="large" :href="getChatMessageLink()" title="Go to the message in chat" min-width="32px"><v-icon size="large">mdi-forum</v-icon></v-btn>
-                <v-btn v-if="pageContext.data.blogDto.fileItemUuid" variant="plain" tile size="large" @click="onFilesClickedPostHeader()" title="Attached message files" min-width="32px"><v-icon size="large">mdi-file-download</v-icon> </v-btn>
+              <div class="ma-0 pa-0 go-to-chat">
+                <v-btn variant="plain" tile size="large" :href="getChatMessageLink()" title="Go to the message in chat" min-width="32px" class="pl-4"><v-icon size="large">mdi-forum</v-icon></v-btn>
+                <v-btn v-if="pageContext.data.blogDto.fileItemUuid" variant="plain" tile size="large" @click="onFilesClickedPostHeader()" title="Attached message files" min-width="32px" class="pl-2"><v-icon size="large">mdi-file-download</v-icon> </v-btn>
               </div>
             </div>
           </template>
