@@ -222,7 +222,7 @@ services:
   pgadmin:
     restart: unless-stopped
     hostname: pgadmin
-    image: dcagatay/pwless-pgadmin4:9.1
+    image: dcagatay/pwless-pgadmin4:8.13
     environment:
       - POSTGRES_USER_1=postgres
       - POSTGRES_PASSWORD_1=postgresqlPassword
