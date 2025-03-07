@@ -121,6 +121,15 @@
                             color="primary"
                         ></v-checkbox>
 
+                        <v-checkbox
+                            :class="isMobile() ? 'mt-2': ''"
+                            v-model="editDto.canReact"
+                            :label="$vuetify.locale.t('$vuetify.can_react')"
+                            hide-details
+                            density="compact"
+                            color="primary"
+                        ></v-checkbox>
+
                         <template v-if="!isNew">
                             <v-container class="pa-0 ma-0 mt-2">
                                 <img v-if="hasAva"
@@ -187,7 +196,8 @@
             participantIds: [ ],
             canResend: false,
             availableToSearch: false, // it's default for all the new chats, excluding tet-a-tet
-            regularParticipantCanWriteMessage: true ,
+            regularParticipantCanWriteMessage: true,
+            canReact: true,
         }
     };
 
@@ -260,6 +270,7 @@
                 regularParticipantCanPublishMessage: chatDto.regularParticipantCanPublishMessage,
                 regularParticipantCanPinMessage: chatDto.regularParticipantCanPinMessage,
                 regularParticipantCanWriteMessage: chatDto.regularParticipantCanWriteMessage,
+                canReact: chatDto.canReact,
               }
             },
             loadCanCreateBlog() {

@@ -60,6 +60,7 @@ type ChatDto struct {
 	RegularParticipantCanWriteMessage   bool           `json:"regularParticipantCanWriteMessage"`
 	CanWriteMessage                     bool           `json:"canWriteMessage"`
 	LastMessagePreview                  *string        `json:"lastMessagePreview"`
+	CanReact                            bool           `json:"canReact"`
 }
 
 type ChatEvent struct {

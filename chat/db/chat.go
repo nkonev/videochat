@@ -39,7 +39,8 @@ func selectChatClause(performPersonalization bool) string {
 			ch.regular_participant_can_publish_message,
 			ch.regular_participant_can_pin_message,
 			ch.blog_about,
-			ch.regular_participant_can_write_message
+			ch.regular_participant_can_write_message,
+			ch.can_react
 	`, p)
 
 	var pp string
@@ -75,6 +76,7 @@ type Chat struct {
 	RegularParticipantCanPinMessage     bool
 	BlogAbout                           bool
 	RegularParticipantCanWriteMessage   bool
+	CanReact                            bool
 }
 
 type Blog struct {
@@ -104,10 +106,10 @@ func (tx *Tx) CreateChat(ctx context.Context, u *Chat) (int64, *time.Time, error
 	}
 
 	res := tx.QueryRowContext(ctx, `
-		INSERT INTO chat(title, tet_a_tet, can_resend, available_to_search, blog, regular_participant_can_publish_message, regular_participant_can_pin_message, blog_about, regular_participant_can_write_message)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO chat(title, tet_a_tet, can_resend, available_to_search, blog, regular_participant_can_publish_message, regular_participant_can_pin_message, blog_about, regular_participant_can_write_message, can_react)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, last_update_date_time;
-	`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage)
+	`, u.Title, u.TetATet, u.CanResend, u.AvailableToSearch, u.Blog, u.RegularParticipantCanPublishMessage, u.RegularParticipantCanPinMessage, u.BlogAbout, u.RegularParticipantCanWriteMessage, u.CanReact)
 	var id int64
 	var lastUpdateDateTime time.Time
 	if err := res.Scan(&id, &lastUpdateDateTime); err != nil {
@@ -152,6 +154,7 @@ func provideScanToChat(chat *Chat) []any {
 		&chat.RegularParticipantCanPinMessage,
 		&chat.BlogAbout,
 		&chat.RegularParticipantCanWriteMessage,
+		&chat.CanReact,
 	}
 }
 
@@ -515,14 +518,15 @@ func (tx *Tx) EditChat(
 	regularParticipantCanPinMessage bool,
 	blogAbout bool,
 	regularParticipantCanWriteMessage bool,
+	canReact bool,
 ) (*time.Time, error) {
 	var res sql.Result
 	var err error
 	if blog != nil {
 		isBlog := utils.NullableToBoolean(blog)
-		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9, blog_about = $10, regular_participant_can_write_message = $11 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, blogAbout, regularParticipantCanWriteMessage)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, blog = $7, regular_participant_can_publish_message = $8, regular_participant_can_pin_message = $9, blog_about = $10, regular_participant_can_write_message = $11, can_react = $12 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, isBlog, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, blogAbout, regularParticipantCanWriteMessage, canReact)
 	} else {
-		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8, regular_participant_can_write_message = $9 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, regularParticipantCanWriteMessage)
+		res, err = tx.ExecContext(ctx, `UPDATE chat SET title = $2, avatar = $3, avatar_big = $4, last_update_date_time = utc_now(), can_resend = $5, available_to_search = $6, regular_participant_can_publish_message = $7, regular_participant_can_pin_message = $8, regular_participant_can_write_message = $9, can_react = $10 WHERE id = $1`, id, newTitle, avatar, avatarBig, canResend, availableToSearch, regularParticipantCanPublishMessage, regularParticipantCanPinMessage, regularParticipantCanWriteMessage, canReact)
 	}
 	if err != nil {
 		tx.lgr.WithTracing(ctx).Errorf("Error during editing chat id %v", err)
@@ -583,12 +587,13 @@ func getChatBasicCommon(ctx context.Context, co CommonOperations, chatId int64) 
 				ch.blog,
 				ch.regular_participant_can_publish_message,
 				ch.regular_participant_can_pin_message,
-				ch.regular_participant_can_write_message
+				ch.regular_participant_can_write_message,
+				ch.can_react
 			FROM chat ch 
 			WHERE ch.id = $1
 `, chatId)
 	chat := BasicChatDto{}
-	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage, &chat.RegularParticipantCanWriteMessage)
+	err := row.Scan(&chat.Id, &chat.Title, &chat.IsTetATet, &chat.CanResend, &chat.AvailableToSearch, &chat.IsBlog, &chat.RegularParticipantCanPublishMessage, &chat.RegularParticipantCanPinMessage, &chat.RegularParticipantCanWriteMessage, &chat.CanReact)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return nil, nil
@@ -670,7 +675,8 @@ func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[i
 			c.blog,
 			c.regular_participant_can_publish_message,
 			c.regular_participant_can_pin_message,
-			c.regular_participant_can_write_message
+			c.regular_participant_can_write_message,
+			c.can_react
 		FROM chat c 
 		    LEFT JOIN chat_participant cp 
 		        ON (c.id = cp.chat_id AND cp.user_id = $1) 
@@ -683,7 +689,7 @@ func getChatsBasicCommon(ctx context.Context, co CommonOperations, chatIds map[i
 		list := make([]*BasicChatDtoExtended, 0)
 		for rows.Next() {
 			dto := new(BasicChatDtoExtended)
-			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage, &dto.RegularParticipantCanWriteMessage); err != nil {
+			if err := rows.Scan(&dto.Id, &dto.Title, &dto.BehalfUserIsParticipant, &dto.IsTetATet, &dto.CanResend, &dto.AvailableToSearch, &dto.IsBlog, &dto.RegularParticipantCanPublishMessage, &dto.RegularParticipantCanPinMessage, &dto.RegularParticipantCanWriteMessage, &dto.CanReact); err != nil {
 				return nil, eris.Wrap(err, "error during interacting with db")
 			} else {
 				list = append(list, dto)
@@ -715,6 +721,7 @@ type BasicChatDto struct {
 	RegularParticipantCanPublishMessage bool
 	RegularParticipantCanPinMessage     bool
 	RegularParticipantCanWriteMessage   bool
+	CanReact                            bool
 }
 
 type BasicBlogDto struct {

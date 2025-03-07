@@ -337,5 +337,6 @@ export default {
     file_mode_switch_to_list: "Переключить на список",
     file_mode_switch_to_miniatures: "Переключить на миниатюры",
     set_password_for: "Задать пароль для '{0}'",
-    smiley_stay_unclosed: "Оставить"
+    smiley_stay_unclosed: "Оставить",
+    can_react: "Разрешить реакции"
 }

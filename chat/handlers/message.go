@@ -327,6 +327,16 @@ func (mc *MessageHandler) ReactionMessage(c echo.Context) error {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
+		chatBasic, err := tx.GetChatBasic(c.Request().Context(), chatId)
+		if err != nil {
+			mc.lgr.WithTracing(c.Request().Context()).Warnf("Error during getting chat basic %v", err)
+			return err
+		}
+
+		if !chatBasic.CanReact {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		var bindTo = new(ReactionPut)
 		if err := c.Bind(bindTo); err != nil {
 			mc.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
@@ -864,6 +874,7 @@ func toChatBasic(chatDto *dto.ChatDto) *db.BasicChatDto {
 			RegularParticipantCanPublishMessage: chatDto.RegularParticipantCanPublishMessage,
 			RegularParticipantCanPinMessage:     chatDto.RegularParticipantCanPinMessage,
 			RegularParticipantCanWriteMessage:   chatDto.RegularParticipantCanWriteMessage,
+			CanReact:                            chatDto.CanReact,
 		}
 	}
 }

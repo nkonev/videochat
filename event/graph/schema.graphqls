@@ -93,6 +93,7 @@ type ChatDto {
     regularParticipantCanWriteMessage: Boolean!
     canWriteMessage: Boolean!
     lastMessagePreview: String
+    canReact: Boolean!
 }
 
 type ChatDeletedDto {

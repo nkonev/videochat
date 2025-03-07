@@ -15,7 +15,7 @@
                     <v-icon class="mx-1" v-if="item.canDelete" color="red" @click="deleteMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.delete_btn')">mdi-delete</v-icon>
                     <v-icon class="mx-1" v-if="item.canEdit" color="primary" @click="editMessage(item)" dark size="small" :title="$vuetify.locale.t('$vuetify.edit')">mdi-lead-pencil</v-icon>
                     <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.reply')" @click="replyOnMessage(item)">mdi-reply</v-icon>
-                    <v-icon class="mx-1" size="small" :title="$vuetify.locale.t('$vuetify.add_reaction_on_message')" @click="reactionOnMessage(item)">mdi-emoticon-outline</v-icon>
+                    <v-icon class="mx-1" v-if="areReactionsAllowed" size="small" :title="$vuetify.locale.t('$vuetify.add_reaction_on_message')" @click="reactionOnMessage(item)">mdi-emoticon-outline</v-icon>
                     <a v-if="item.blogPost" class="mx-1 colored-link" :href="getBlogLink(item)" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"><v-icon size="small">mdi-postage-stamp</v-icon></a>
                 </span>
             </v-container>
@@ -54,9 +54,17 @@
     import "./itemAvatar.styl";
 
     import {chat_name, messageIdHashPrefix, profile, profile_name} from "@/router/routes"
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore.js";
 
     export default {
         props: ['id', 'item', 'chatId', 'my', 'highlight', 'isCompact'],
+        computed: {
+          ...mapStores(useChatStore),
+          areReactionsAllowed() {
+            return this.chatStore.chatDto.canReact
+          },
+        },
         methods: {
             getLoginColoredStyle,
             hasLength,
@@ -189,7 +197,9 @@
               return classes
             },
             onExistingReactionClick(reaction) {
-              this.$emit('onreactionclick', {id: this.item.id, reaction: reaction})
+              if (this.areReactionsAllowed) {
+                this.$emit('onreactionclick', {id: this.item.id, reaction: reaction})
+              }
             },
             reactionClass(i) {
               const classes = [];

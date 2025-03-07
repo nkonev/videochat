@@ -119,7 +119,13 @@ export default {
                 if (this.isBlog) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('goToBlog', this.menuableItem)});
                 }
-                ret.push({title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message'), icon: 'mdi-emoticon-outline', action: () => this.$emit('addReaction', this.menuableItem)});
+                if (this.areReactionsAllowed) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message'),
+                    icon: 'mdi-emoticon-outline',
+                    action: () => this.$emit('addReaction', this.menuableItem)
+                  });
+                }
                 if (this.menuableItem.canPublish) {
                     if (this.menuableItem.published) {
                         ret.push({
@@ -171,6 +177,9 @@ export default {
             return this.$route.params.id
         },
         ...mapStores(useChatStore),
+        areReactionsAllowed() {
+          return this.chatStore.chatDto.canReact
+        },
     },
 }
 </script>

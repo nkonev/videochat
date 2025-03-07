@@ -421,6 +421,7 @@ export default {
                         regularParticipantCanWriteMessage
                         canWriteMessage
                         lastMessagePreview
+                        canReact
                       }
                       chatDeletedEvent {
                         id

@@ -740,6 +740,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			RegularParticipantCanWriteMessage:   chatEvent.RegularParticipantCanWriteMessage,
 			CanWriteMessage:                     chatEvent.CanWriteMessage,
 			LastMessagePreview:                  chatEvent.LastMessagePreview,
+			CanReact:                            chatEvent.CanReact,
 		}
 	}
 

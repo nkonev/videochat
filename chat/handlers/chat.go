@@ -46,6 +46,7 @@ type CreateChatDto struct {
 	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
 	BlogAbout                           bool        `json:"blogAbout"`
 	RegularParticipantCanWriteMessage   bool        `json:"regularParticipantCanWriteMessage"`
+	CanReact                            bool        `json:"canReact"`
 }
 
 type ChatHandler struct {
@@ -504,6 +505,7 @@ func (ch *ChatHandler) convertToDto(c *db.ChatWithParticipants, performPersonali
 		RegularParticipantCanPinMessage:     c.RegularParticipantCanPinMessage,
 		BlogAbout:                           c.BlogAbout,
 		RegularParticipantCanWriteMessage:   c.RegularParticipantCanWriteMessage,
+		CanReact:                            c.CanReact,
 	}
 
 	if performPersonalization {
@@ -635,6 +637,7 @@ func convertToCreatableChat(d *CreateChatDto, policy *services.StripTagsPolicy) 
 		RegularParticipantCanPinMessage:     d.RegularParticipantCanPinMessage,
 		BlogAbout:                           d.BlogAbout,
 		RegularParticipantCanWriteMessage:   d.RegularParticipantCanWriteMessage,
+		CanReact:                            d.CanReact,
 	}
 }
 
@@ -750,6 +753,7 @@ func (ch *ChatHandler) EditChat(c echo.Context) error {
 			bindTo.RegularParticipantCanPinMessage,
 			bindTo.BlogAbout,
 			bindTo.RegularParticipantCanWriteMessage,
+			bindTo.CanReact,
 		)
 		if err != nil {
 			return err
