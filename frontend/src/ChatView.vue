@@ -27,6 +27,7 @@
                   density="compact"
               >
                 <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
+                <v-btn style="position: absolute; right: 4px; top: 4px; bottom: 4px" tile size="small" density="compact">list</v-btn>
               </v-alert>
             </div>
 
@@ -1005,7 +1006,7 @@ export default {
 
 .pinned-promoted {
   font-size: 0.875rem
-  position: absolute
+  position: relative
   left 0
   margin-right 2em
   z-index: 4;
