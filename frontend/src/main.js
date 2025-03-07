@@ -140,8 +140,10 @@ axios.interceptors.response.use((response) => {
         chatStore.unsetUser();
         bus.emit(LOGGED_OUT);
         return Promise.reject(error)
-    }  else if (error.code == 'ECONNABORTED') { // removes error snackbar caused by cancelled message read request
+    } else if (error.code == 'ECONNABORTED') { // removes error snackbar caused by cancelled message read request
         console.warn("Connection aborted")
+        return Promise.reject(error)
+    } else if (error.config.url == '/api/aaa/ping') { // removes error snackbar caused by cancelled message read request
         return Promise.reject(error)
     } else {
         const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);

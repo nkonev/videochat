@@ -165,7 +165,6 @@ import {
   setLanguageToVuetify, stopCall, unescapeHtml, goToPreservingQuery
 } from "@/utils";
 import {
-  chat_list_name,
   confirmation_pending_name,
   forgot_password_name, check_email_name, password_restore_enter_new_name,
   registration_name,
@@ -252,6 +251,8 @@ const audio = new Audio(`${prefix}/call.mp3`);
 const getGlobalEventsData = (message) => {
   return message.data?.globalEvents
 };
+
+let sessionPingedTimer;
 
 export default {
     mixins: [
@@ -820,6 +821,18 @@ export default {
         onNotificationCountChanged() {
           this.updateNotificationBadge();
         },
+        pingSession() {
+          if (this.chatStore.currentUser) {
+            // used to update getLastAccessedTime() of Spring Session
+            // see aaa -> UserOnlineTask -> aaaUserDetailsService.getUsersOnlineByUsers() ->
+            // AaaUserDetailsService.calcOnline()
+            axios.put("/api/aaa/ping").catch(e => {
+              console.warn("allowed error during ping")
+            })
+          } else {
+            console.log("Skipping ping because of currentUser is null")
+          }
+        },
     },
     components: {
         ChooseColorModal,
@@ -899,6 +912,8 @@ export default {
         });
 
         this.installOnFocus();
+
+        sessionPingedTimer = setInterval(this.pingSession, 1 * 60 * 1000)
     },
     beforeUnmount() {
         this.uninstallOnFocus();
@@ -921,6 +936,8 @@ export default {
         this.selfProfileEventsSubscription = null;
 
         destroyGraphqlClient();
+
+        clearInterval(sessionPingedTimer);
     },
 }
 </script>

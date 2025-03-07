@@ -276,4 +276,9 @@ public class UserProfileController {
         passwordResetService.setPassword(setPasswordDTO, userId);
     }
 
+    @ResponseBody
+    @PutMapping(Constants.Urls.EXTERNAL_API + Constants.Urls.PING)
+    public Map<String, Boolean> pingSession(@AuthenticationPrincipal UserAccountDetailsDTO userAccount){
+        return Map.of("status", userAccount != null);
+    }
 }
