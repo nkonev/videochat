@@ -23,18 +23,10 @@ public class UserListViewRepository {
     @Autowired
     private RowMapper<UserAccount> userAccountRowMapper;
 
-    private record MinMax(Long leftId, Long rightId) { }
-
-    private final RowMapper<MinMax> mmRowMapper = (rs, rowNum) -> {
-        Long min = (Long) rs.getObject("minid");
-        Long max = (Long) rs.getObject("maxid");
-        return new MinMax(min, max);
-    };
-
     private static final String USERNAME_SEARCH = """ 
         (
-            (u.username ilike :searchStringPercents)
-            or (cyrillic_transliterate(u.username) ilike '%' || cyrillic_transliterate(:searchStringPercents) || '%')
+            (u.login ilike :searchStringPercents)
+            or (cyrillic_transliterate(u.login) ilike '%' || cyrillic_transliterate(:searchStringPercents) || '%')
         )
     """;
 

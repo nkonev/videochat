@@ -82,7 +82,7 @@ public class UserAccountConverter {
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new UserAccountDetailsDTO(
                 userAccount.id(),
-                userAccount.username(),
+                userAccount.login(),
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
@@ -153,7 +153,7 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         return new name.nkonev.aaa.dto.UserAccountDTO(
                 userAccount.id(),
-                userAccount.username(),
+                userAccount.login(),
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
@@ -169,7 +169,7 @@ public class UserAccountConverter {
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new name.nkonev.aaa.dto.UserAccountEventDTO(
                 userAccount.id(),
-                userAccount.username(),
+                userAccount.login(),
                 userAccount.email(),
                 awaitingForConfirmEmailChange,
                 userAccount.avatar(),
@@ -193,7 +193,7 @@ public class UserAccountConverter {
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new UserAccountDTOExtended(
                 userAccount.id(),
-                userAccount.username(),
+                userAccount.login(),
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
@@ -512,7 +512,7 @@ public class UserAccountConverter {
         var emailAction = UpdateUserAccountEntityNotEmptyResponse.Action.NO_ACTION;
         String newEmail = null;
         if (StringUtils.hasLength(userAccountDTO.login())) {
-            userAccount = userAccount.withUsername(userAccountDTO.login());
+            userAccount = userAccount.withLogin(userAccountDTO.login());
         }
         String password = userAccountDTO.password();
         if (StringUtils.hasLength(password)) {
@@ -559,7 +559,7 @@ public class UserAccountConverter {
 
     public static name.nkonev.aaa.dto.EditUserDTO convertToEditUserDto(UserAccount userAccount) {
         return new name.nkonev.aaa.dto.EditUserDTO(
-                userAccount.username(),
+                userAccount.login(),
                 userAccount.avatar(),
                 null,
                 null,

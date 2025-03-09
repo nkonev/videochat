@@ -33,17 +33,17 @@ public class SyncKeycloakConflictRenameUserTest extends AbstractMockMvcTestRunne
                 conflictingLogin, null, null, null, null,false, false, true, true,
                 new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
-        var before = userAccountRepository.findByUsername(conflictingLogin).get();
+        var before = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());
 
         syncKeycloakTask.doWork();
 
-        var after = userAccountRepository.findByUsername(conflictingLogin).get();
+        var after = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertNotEquals(nonConflictingEmail, after.email());
         Assertions.assertEquals(keycloakEmail, after.email());
         Assertions.assertNotEquals(before.id(), after.id());
 
-        Assertions.assertTrue(userAccountRepository.findByUsername(KEYCLOAK_CONFLICT_PREFIX + conflictingLogin).isPresent());
+        Assertions.assertTrue(userAccountRepository.findByLogin(KEYCLOAK_CONFLICT_PREFIX + conflictingLogin).isPresent());
     }
 
 }

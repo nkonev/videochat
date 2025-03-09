@@ -11,7 +11,7 @@ public record UserAccount(
 
     @Id Long id,
     @NotNull CreationType creationType,
-    String username,
+    String login,
     String password, // hash
     String avatar, // avatar url
     String avatarBig, // avatar url
@@ -41,7 +41,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 newPassword,
                 avatar,
                 avatarBig,
@@ -66,11 +66,11 @@ public record UserAccount(
         );
     }
 
-    public UserAccount withUsername(String newUsername) {
+    public UserAccount withLogin(String newLogin) {
         return new UserAccount(
                 id,
                 creationType,
-                newUsername,
+                newLogin,
                 password,
                 avatar,
                 avatarBig,
@@ -99,7 +99,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 newAvatar,
                 avatarBig,
@@ -128,7 +128,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 newAvatarBig,
@@ -157,7 +157,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -186,7 +186,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -215,7 +215,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -244,7 +244,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -273,7 +273,7 @@ public record UserAccount(
         return new UserAccount(
             id,
             creationType,
-            username,
+            login,
             password,
             avatar,
             avatarBig,
@@ -294,7 +294,7 @@ public record UserAccount(
             syncLdapDateTime,
             syncKeycloakDateTime,
             syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+            syncLdapRolesDateTime
         );
     }
 
@@ -302,7 +302,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -331,7 +331,7 @@ public record UserAccount(
         return new UserAccount(
             id,
             creationType,
-            username,
+            login,
             password,
             avatar,
             avatarBig,
@@ -360,7 +360,7 @@ public record UserAccount(
         return new UserAccount(
             id,
             creationType,
-            username,
+            login,
             password,
             avatar,
             avatarBig,
@@ -389,7 +389,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -418,7 +418,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -447,7 +447,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,
@@ -476,7 +476,7 @@ public record UserAccount(
         return new UserAccount(
                 id,
                 creationType,
-                username,
+                login,
                 password,
                 avatar,
                 avatarBig,

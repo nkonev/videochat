@@ -31,7 +31,7 @@ public class SyncLdapConflictIgnoreTest extends AbstractMockMvcTestRunner {
                 conflictingLogin, null, null, null, null,false, false, true, true,
                 new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
-        var before = userAccountRepository.findByUsername(conflictingLogin).get();
+        var before = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());
 
         var ldapUsersBefore = userAccountRepository.countLdap();
@@ -42,7 +42,7 @@ public class SyncLdapConflictIgnoreTest extends AbstractMockMvcTestRunner {
         var ldapUsersAfter = userAccountRepository.countLdap();
         Assertions.assertEquals(3L, ldapUsersAfter);
 
-        var after = userAccountRepository.findByUsername(conflictingLogin).get();
+        var after = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, after.email());
         Assertions.assertNotEquals(USER_BEN_LDAP_EMAIL, after.email());
         Assertions.assertEquals(before.id(), after.id());

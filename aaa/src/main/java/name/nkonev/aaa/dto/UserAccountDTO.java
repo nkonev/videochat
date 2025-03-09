@@ -53,7 +53,7 @@ public record UserAccountDTO (
     }
 
     @JsonIgnore // to use in Freemarker template header.ftlh
-    public String getUsername() {
+    public String getUserLogin() {
         return login;
     }
 

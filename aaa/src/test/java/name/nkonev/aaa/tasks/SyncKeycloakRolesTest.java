@@ -29,9 +29,9 @@ public class SyncKeycloakRolesTest extends AbstractMockMvcTestRunner {
 
         syncKeycloakTask.doWork();
 
-        var after = userAccountRepository.findByUsername(login).get();
+        var after = userAccountRepository.findByLogin(login).get();
         Assertions.assertEquals(Set.of(UserRole.ROLE_USER, UserRole.ROLE_ADMIN), Arrays.stream(after.roles()).collect(Collectors.toSet()));
-        Assertions.assertEquals(keycloakLogin, after.username());
+        Assertions.assertEquals(keycloakLogin, after.login());
         Assertions.assertEquals(keycloakEmail, after.email());
     }
 

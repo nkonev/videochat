@@ -12,7 +12,7 @@
 <div id="app-container">
     <h1>Login page</h1>
     <form action="/api/aaa/login" method="post">
-        <input id="username" name="username" type="text" placeholder="Username"/>
+        <input id="login" name="login" type="text" placeholder="Login"/>
         <input id="password" name="password" type="password" placeholder="Password"/>
         <#if _csrf??>
             <input name="${_csrf.parameterName}" type="hidden" value="${_csrf.token}"/>

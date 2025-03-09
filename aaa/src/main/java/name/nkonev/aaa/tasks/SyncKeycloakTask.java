@@ -127,9 +127,9 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         var keycloakUserId = keycloakEntry.getId();
         var keycloakUsername = keycloakEntry.username();
         if (StringUtils.hasLength(keycloakUsername)) {
-            if (!keycloakUsername.equals(userAccount.username())) {
-                LOGGER.info("For userId={}, keycloakId={}, setting username={}", userAccount.id(), keycloakUserId, keycloakUsername);
-                userAccount = userAccount.withUsername(keycloakUsername);
+            if (!keycloakUsername.equals(userAccount.login())) {
+                LOGGER.info("For userId={}, keycloakId={}, setting login={}", userAccount.id(), keycloakUserId, keycloakUsername);
+                userAccount = userAccount.withLogin(keycloakUsername);
                 shouldUpdateInDb = true;
             }
         } else {

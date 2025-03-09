@@ -1,5 +1,5 @@
 <#if myPrincipal??>
-    Logged as <b> ${myPrincipal.username} </b>
+    Logged as <b> ${myPrincipal.userLogin} </b>
 
     <div id="principalId">id: ${myPrincipal.identificator}</div>
 

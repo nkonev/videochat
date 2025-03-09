@@ -105,7 +105,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     }
 
     private UserAccount getUserFromBd(String userName) {
-        return userAccountRepository.findByUsername(userName).orElseThrow(() ->  new RuntimeException("User '" + userName + "' not found during test"));
+        return userAccountRepository.findByLogin(userName).orElseThrow(() ->  new RuntimeException("User '" + userName + "' not found during test"));
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)
@@ -187,7 +187,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     @WithUserDetails(USER_BOB)
     public void fullyAuthenticatedUserCannotChangeForeignProfile() throws Exception {
         UserAccount foreignUserAccount = getUserFromBd(TestConstants.USER_ALICE);
-        String foreignUserAccountLogin = foreignUserAccount.username();
+        String foreignUserAccountLogin = foreignUserAccount.login();
         EditUserDTO edit = UserAccountConverter.convertToEditUserDto(foreignUserAccount);
 
         final String badLogin = "stolen";
@@ -206,7 +206,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
         LOGGER.info(mvcResult.getResponse().getContentAsString());
 
         UserAccount foreignPotentiallyAffectedUserAccount = getUserFromBd(TestConstants.USER_ALICE);
-        Assertions.assertEquals(foreignUserAccountLogin, foreignPotentiallyAffectedUserAccount.username());
+        Assertions.assertEquals(foreignUserAccountLogin, foreignPotentiallyAffectedUserAccount.login());
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)
@@ -293,7 +293,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
         MvcResult mvcResult = mockMvc.perform(
                 post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
-                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDTO(0, null, false, false, bob.username())))
+                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDTO(0, null, false, false, bob.login())))
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf())
         )
@@ -568,7 +568,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     public void ldapLoginTest() throws Exception {
         // https://spring.io/guides/gs/authenticating-ldap/
         getMockMvcSession(USER_BOB_LDAP, USER_BOB_LDAP_PASSWORD);
-        Optional<UserAccount> bob = userAccountRepository.findByUsername(USER_BOB_LDAP);
+        Optional<UserAccount> bob = userAccountRepository.findByLogin(USER_BOB_LDAP);
         Assertions.assertTrue(bob.isPresent());
         var gotBob = bob.get();
         Assertions.assertEquals(USER_BOB_LDAP_ID, gotBob.ldapId());
@@ -582,13 +582,13 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                 .withRoles(new UserRole[]{})
         );
 
-        var overridedBob = userAccountRepository.findByUsername(USER_BOB_LDAP).get();
+        var overridedBob = userAccountRepository.findByLogin(USER_BOB_LDAP).get();
         Assertions.assertEquals("a@b.com", overridedBob.email());
         Assertions.assertEquals(0, overridedBob.roles().length);
 
         syncLdapTask.doWork();
 
-        var restoredBob = userAccountRepository.findByUsername(USER_BOB_LDAP).get();
+        var restoredBob = userAccountRepository.findByLogin(USER_BOB_LDAP).get();
         Assertions.assertEquals(USER_BOB_LDAP_EMAIL, restoredBob.email());
         Assertions.assertTrue(Arrays.asList(restoredBob.roles()).contains(UserRole.ROLE_ADMIN));
         Assertions.assertTrue(restoredBob.syncLdapDateTime().isAfter(gotBob.syncLdapDateTime()));
@@ -625,7 +625,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
             .andExpect(status().isOk())
             .andReturn();
 
-        var user = userAccountRepository.findByUsername(username).get();
+        var user = userAccountRepository.findByLogin(username).get();
         Assertions.assertEquals(oldEmail, user.email());
 
         Assertions.assertEquals(email, getTokenNewEmail(user.id()));
@@ -648,7 +648,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
             ;
             Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(user.id()));
 
-            var userAfterConfirm = userAccountRepository.findByUsername(username).get();
+            var userAfterConfirm = userAccountRepository.findByLogin(username).get();
             Assertions.assertEquals(email, userAfterConfirm.email());
         }
 
@@ -680,7 +680,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
             .andExpect(status().isOk())
             .andReturn();
 
-        var user = userAccountRepository.findByUsername(username).get();
+        var user = userAccountRepository.findByLogin(username).get();
         Assertions.assertEquals(oldEmail, user.email());
         Assertions.assertEquals(email, getTokenNewEmail(user.id()));
 
@@ -725,7 +725,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
             ;
             Assertions.assertFalse(changeEmailConfirmationTokenRepository.existsById(user.id()));
 
-            var userAfterConfirm = userAccountRepository.findByUsername(username).get();
+            var userAfterConfirm = userAccountRepository.findByLogin(username).get();
             Assertions.assertEquals(email, userAfterConfirm.email());
         }
 

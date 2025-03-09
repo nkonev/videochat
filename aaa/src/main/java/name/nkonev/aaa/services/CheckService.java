@@ -22,7 +22,7 @@ public class CheckService {
     }
 
     public Optional<UserAccount> checkLogin(String login) {
-        var t = userAccountRepository.findByUsername(login);
+        var t = userAccountRepository.findByLogin(login);
         if (t.isPresent()) {
             LOGGER.info("user with login '{}' already present", login);
         }
@@ -35,9 +35,9 @@ public class CheckService {
             return res;
         }
         List<String> notNullLogins = logins.stream().filter(Objects::nonNull).toList();
-        var users = userAccountRepository.findByUsernameInOrderById(notNullLogins);
+        var users = userAccountRepository.findByLoginInOrderById(notNullLogins);
         for (var u : users) {
-            res.put(u.username(), u);
+            res.put(u.login(), u);
         }
         return res;
     }

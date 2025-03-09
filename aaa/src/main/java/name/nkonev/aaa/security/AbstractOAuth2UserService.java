@@ -77,7 +77,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
 
             Optional<UserAccount> maybeUserAccount = findByOAuth2Id(oauthId);
             if (maybeUserAccount.isPresent() && !maybeUserAccount.get().id().equals(principal.getId())){
-                logger().info("With {}Id={} already present another user '{}', id={}", getOAuth2Name(), oauthId, maybeUserAccount.get().username(), maybeUserAccount.get().id());
+                logger().info("With {}Id={} already present another user '{}', id={}", getOAuth2Name(), oauthId, maybeUserAccount.get().login(), maybeUserAccount.get().id());
                 throw new OAuth2IdConflictException("Somebody already taken this "+ getOAuth2Name()+" id="+oauthId+". " +
                         "If this is you and you want to merge your profiles please delete another profile and bind "+ getOAuth2Name()+" to this. If not please contact administrator.");
             }

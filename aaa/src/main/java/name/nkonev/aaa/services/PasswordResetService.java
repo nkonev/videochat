@@ -80,7 +80,7 @@ public class PasswordResetService {
 
         passwordResetToken = passwordResetTokenRepository.save(passwordResetToken);
 
-        asyncEmailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.username(), language);
+        asyncEmailService.sendPasswordResetToken(userAccount.email(), passwordResetToken, userAccount.login(), language);
     }
 
     @Transactional

@@ -88,7 +88,7 @@ public class RegistrationService {
             userSettingsRepository.insertDefault(userAccount.id());
             userSettingsRepository.updateLanguage(userAccount.id(), language);
             UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount, referer, httpServletRequest);
-            asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.username(), language);
+            asyncEmailService.sendUserConfirmationToken(userAccount.email(), userConfirmationToken, userAccount.login(), language);
             return userAccount;
         });
         if (userAccountOuter != null) {
@@ -158,7 +158,7 @@ public class RegistrationService {
         }
 
         UserConfirmationToken userConfirmationToken = createUserConfirmationToken(userAccount, referer, httpServletRequest);
-        asyncEmailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.username(), language);
+        asyncEmailService.sendUserConfirmationToken(email, userConfirmationToken, userAccount.login(), language);
     }
 
     private UserConfirmationToken createUserConfirmationToken(UserAccount userAccount, String referer, HttpServletRequest currentHttpRequest) {

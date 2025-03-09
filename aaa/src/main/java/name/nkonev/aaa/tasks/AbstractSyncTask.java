@@ -247,7 +247,7 @@ public abstract class AbstractSyncTask<T extends ExternalSyncEntity, TIR extends
                 var toSaveToDb = toMakeWithoutAdminRole.stream()
                         .map(u -> {
                             if (Arrays.stream(u.roles()).collect(Collectors.toSet()).contains(UserRole.ROLE_ADMIN)) {
-                                getLogger().info("Removing role {} from user id = {}, login = {}, {}Id = {}", UserRole.ROLE_ADMIN, u.id(), u.username(), getName(), getExtId(u));
+                                getLogger().info("Removing role {} from user id = {}, login = {}, {}Id = {}", UserRole.ROLE_ADMIN, u.id(), u.login(), getName(), getExtId(u));
                                 aaaUserDetailsService.killSessions(u.id(), ForceKillSessionsReasonType.user_roles_changed);
                                 eventsContainer.add(eventService.convertProfileUpdated(u));
                                 return setSyncExtRolesTime(u

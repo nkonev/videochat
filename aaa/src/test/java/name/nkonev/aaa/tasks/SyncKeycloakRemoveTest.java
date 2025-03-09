@@ -10,11 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-
-import static name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests.keycloakEmail;
-import static name.nkonev.aaa.nomockmvc.OAuth2EmulatorTests.keycloakLogin;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 @TestPropertySource(properties = {"custom.keycloak.resolve-conflicts-strategy=IGNORE"})
@@ -35,12 +30,12 @@ public class SyncKeycloakRemoveTest extends AbstractMockMvcTestRunner {
                 login, null, null, null, null,false, false, true, true,
                 new UserRole[]{UserRole.ROLE_USER}, email, null, null, null, null, "20-123", null, null, null, getNowUTC().minusSeconds(1), null, null);
         userAccountRepository.save(userAccount);
-        var before = userAccountRepository.findByUsername(login).get();
+        var before = userAccountRepository.findByLogin(login).get();
         Assertions.assertEquals(email, before.email());
 
         syncKeycloakTask.doWork();
 
-        Assertions.assertFalse(userAccountRepository.findByUsername(login).isPresent());
+        Assertions.assertFalse(userAccountRepository.findByLogin(login).isPresent());
     }
 
 }

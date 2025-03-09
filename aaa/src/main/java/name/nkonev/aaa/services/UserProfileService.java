@@ -178,7 +178,7 @@ public class UserProfileService {
                 break;
             }
 
-            if (!Objects.equals(gottenUser.userAccountDTO().login(), currentUser.username())) {
+            if (!Objects.equals(gottenUser.userAccountDTO().login(), currentUser.login())) {
                 edge = false;
                 break;
             }
@@ -361,7 +361,7 @@ public class UserProfileService {
             }
 
             // check login already present
-            if (userAccountDTO.login() != null && !exists.username().equals(userAccountDTO.login())) {
+            if (userAccountDTO.login() != null && !exists.login().equals(userAccountDTO.login())) {
                 checkService.checkLoginIsFreeOrThrow(userAccountDTO.login());
             }
 
@@ -372,7 +372,7 @@ public class UserProfileService {
             switch (resp.action()) {
                 case NEW_EMAIL_WAS_SET -> {
                     var changeEmailConfirmationToken = createChangeEmailConfirmationToken(exists.id(), resp.newEmail());
-                    asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, exists.username(), language);
+                    asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, exists.login(), language);
                 }
                 case SHOULD_REMOVE_NEW_EMAIL -> changeEmailConfirmationTokenRepository.deleteById(userAccount.getId());
             }
@@ -456,7 +456,7 @@ public class UserProfileService {
         }
 
         var changeEmailConfirmationToken = createChangeEmailConfirmationToken(theUserAccount.id(), previousToken.newEmail());
-        asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, theUserAccount.username(), language);
+        asyncEmailService.sendChangeEmailConfirmationToken(changeEmailConfirmationToken, theUserAccount.login(), language);
     }
 
     @Transactional

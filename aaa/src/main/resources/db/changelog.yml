@@ -140,3 +140,10 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: db/migration/V20__last_seen.sql
+
+  - changeSet:
+      id: 21
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: db/migration/V21__login.sql

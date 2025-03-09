@@ -30,12 +30,12 @@ public class SyncKeycloakConflictIgnoreTest extends AbstractMockMvcTestRunner {
                 conflictingLogin, null, null, null, null,false, false, true, true,
                 new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
-        var before = userAccountRepository.findByUsername(conflictingLogin).get();
+        var before = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());
 
         syncKeycloakTask.doWork();
 
-        var after = userAccountRepository.findByUsername(conflictingLogin).get();
+        var after = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, after.email());
         Assertions.assertNotEquals(keycloakEmail, after.email());
         Assertions.assertEquals(before.id(), after.id());

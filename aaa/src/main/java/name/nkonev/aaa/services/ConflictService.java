@@ -33,14 +33,14 @@ public class ConflictService {
         if (newUsers.isEmpty()) {
             return;
         }
-        var conflictingByUsernamesOldUsers = checkService.checkLogins(newUsers.stream().map(UserAccount::username).toList());
+        var conflictingByLoginsOldUsers = checkService.checkLogins(newUsers.stream().map(UserAccount::login).toList());
         var conflictingEmailsOldUsers = checkService.checkEmails(newUsers.stream().map(UserAccount::email).toList());
 
         if (action == PotentiallyConflictingAction.UPDATE) {
             for (var nu : newUsers) {
-                var conflByUsername = conflictingByUsernamesOldUsers.get(nu.username());
-                if (conflByUsername != null && conflByUsername.id().equals(nu.id())) { // remove myself
-                    conflictingByUsernamesOldUsers.remove(nu.username());
+                var conflByLogin = conflictingByLoginsOldUsers.get(nu.login());
+                if (conflByLogin != null && conflByLogin.id().equals(nu.id())) { // remove myself
+                    conflictingByLoginsOldUsers.remove(nu.login());
                 }
 
                 var conflByEmail = conflictingEmailsOldUsers.get(nu.email());
@@ -51,7 +51,7 @@ public class ConflictService {
         }
 
         var nonConflictingUsers = new ArrayList<>(newUsers);
-        nonConflictingUsers.removeIf(u -> conflictingByUsernamesOldUsers.containsKey(u.username()));
+        nonConflictingUsers.removeIf(u -> conflictingByLoginsOldUsers.containsKey(u.login()));
         nonConflictingUsers.removeIf(u -> conflictingEmailsOldUsers.containsKey(u.email()));
 
         // ... so we save them in batch
@@ -76,23 +76,23 @@ public class ConflictService {
         var conflictingNewUsers = new ArrayList<UserAccount>();
         for (var inputUser : newUsers) {
             // prevent duplication
-            if (conflictingByUsernamesOldUsers.containsKey(inputUser.username())) {
+            if (conflictingByLoginsOldUsers.containsKey(inputUser.login())) {
                 conflictingNewUsers.add(inputUser);
             } else if (conflictingEmailsOldUsers.containsKey(inputUser.email())) {
                 conflictingNewUsers.add(inputUser);
             }
         }
 
-        LOGGER.info("For new users {} found conflicting old users: by username {}, by email {}", conflictingNewUsers, conflictingByUsernamesOldUsers.values(), conflictingEmailsOldUsers.values());
+        LOGGER.info("For new users {} found conflicting old users: by login {}, by email {}", conflictingNewUsers, conflictingByLoginsOldUsers.values(), conflictingEmailsOldUsers.values());
 
         for (var newUser : conflictingNewUsers) {
             Map<ConflictBy, UserAccount> conflictBy = new HashMap<>(); // can be different old users
 
-            var oldUserConflictingByUsername = conflictingByUsernamesOldUsers.get(newUser.username());
-            if (oldUserConflictingByUsername != null) {
-                conflictBy.put(ConflictBy.USERNAME, oldUserConflictingByUsername);
+            var oldUserConflictingByLogin = conflictingByLoginsOldUsers.get(newUser.login());
+            if (oldUserConflictingByLogin != null) {
+                conflictBy.put(ConflictBy.LOGIN, oldUserConflictingByLogin);
             }
-            // can be a conflict by both username and email
+            // can be a conflict by both login and email
             var oldUserConflictingByEmail = conflictingEmailsOldUsers.get(newUser.email());
             if (oldUserConflictingByEmail != null) {
                 conflictBy.put(ConflictBy.EMAIL, oldUserConflictingByEmail);
@@ -128,10 +128,10 @@ public class ConflictService {
             case WRITE_NEW_AND_RENAME_OLD:
                 conflictBy.forEach((cb, oldUser) -> {
                     switch (cb) {
-                        case USERNAME:
-                            var rl = renamingPrefix + oldUser.username();
+                        case LOGIN:
+                            var rl = renamingPrefix + oldUser.login();
                             LOGGER.info("Saving old conflicting user {} with renamed login {}", oldUser, rl);
-                            var oldUserU = oldUser.withUsername(rl);
+                            var oldUserU = oldUser.withLogin(rl);
                             conflictResolvingActions.updateUser(oldUserU, eventsContainer);
                             break;
                         case EMAIL:

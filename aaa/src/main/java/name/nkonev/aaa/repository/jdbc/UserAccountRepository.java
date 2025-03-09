@@ -16,7 +16,7 @@ import java.util.Set;
 @Repository
 public interface UserAccountRepository extends ListCrudRepository<UserAccount, Long> {
 
-    Optional<UserAccount> findByUsername(String username);
+    Optional<UserAccount> findByLogin(String login);
 
     Optional<UserAccount> findByLdapId(String ldapId);
 
@@ -31,8 +31,8 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     Optional<UserAccount> findByKeycloakId(String keycloakId);
 
     @Modifying
-    @Query("update user_account set last_seen_date_time = :newLastSeenDateTime where username = :userName")
-    void updateLastSeen(@Param("userName") String username, @Param("newLastSeenDateTime") LocalDateTime localDateTime);
+    @Query("update user_account set last_seen_date_time = :newLastSeenDateTime where login = :login")
+    void updateLastSeen(@Param("login") String login, @Param("newLastSeenDateTime") LocalDateTime localDateTime);
 
     List<UserAccount> findByIdInOrderById(List<Long> userIds);
 
@@ -40,7 +40,7 @@ public interface UserAccountRepository extends ListCrudRepository<UserAccount, L
     @Query("select u.id from user_account u where u.id in (:userIds)")
     Set<Long> findUserIds(List<Long> userIds);
 
-    List<UserAccount> findByUsernameInOrderById(List<String> logins);
+    List<UserAccount> findByLoginInOrderById(List<String> logins);
 
     List<UserAccount> findByEmailInOrderById(List<String> emails);
 

@@ -22,7 +22,7 @@ public record UserSelfProfileDTO(
 ) {
     public UserSelfProfileDTO(
             Long id,
-            String username,
+            String login,
             String avatar,
             String avatarBig,
             String shortInfo,
@@ -38,7 +38,7 @@ public record UserSelfProfileDTO(
     ) {
         this(new UserAccountDTO(
                 id,
-                username,
+                login,
                 avatar,
                 avatarBig,
                 shortInfo,

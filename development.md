@@ -249,7 +249,7 @@ docker service scale VIDEOCHATSTACK_storage=1
 
 ## Login via curl
 ```
-curl -i 'http://localhost:8060/api/aaa/login' -X POST -H 'Accept: application/json, text/plain, */*' -H 'Content-Type: application/x-www-form-urlencoded;charset=utf-8' -H 'X-XSRF-TOKEN: 724f5acd-3d1e-421b-a386-eb17dcacece8' -H 'Cookie: VIDEOCHAT_XSRF_TOKEN=724f5acd-3d1e-421b-a386-eb17dcacece8' --data-raw 'username=admin&password=admin'
+curl -i 'http://localhost:8060/api/aaa/login' -X POST -H 'Accept: application/json, text/plain, */*' -H 'Content-Type: application/x-www-form-urlencoded;charset=utf-8' -H 'X-XSRF-TOKEN: 724f5acd-3d1e-421b-a386-eb17dcacece8' -H 'Cookie: VIDEOCHAT_XSRF_TOKEN=724f5acd-3d1e-421b-a386-eb17dcacece8' --data-raw 'login=admin&password=admin'
 ```
 
 ## aaa-with-oauth2

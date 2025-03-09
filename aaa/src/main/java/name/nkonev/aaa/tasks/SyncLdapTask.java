@@ -129,9 +129,9 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
         if (StringUtils.hasLength(aaaProperties.ldap().attributeNames().username())) {
             var ldapUsername = ldapEntry.username();
             if (StringUtils.hasLength(ldapUsername)) {
-                if (!ldapUsername.equals(userAccount.username())) {
-                    LOGGER.info("For userId={}, ldapId={}, setting username={}", userAccount.id(), ldapUserId, ldapUsername);
-                    userAccount = userAccount.withUsername(ldapUsername);
+                if (!ldapUsername.equals(userAccount.login())) {
+                    LOGGER.info("For userId={}, ldapId={}, setting login={}", userAccount.id(), ldapUserId, ldapUsername);
+                    userAccount = userAccount.withLogin(ldapUsername);
                     shouldUpdateInDb = true;
                 }
             } else {

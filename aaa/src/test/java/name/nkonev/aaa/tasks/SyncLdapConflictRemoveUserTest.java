@@ -34,7 +34,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
                 conflictingLogin, null, null, null, null,false, false, true, true,
                 new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
-        var before = userAccountRepository.findByUsername(conflictingLogin).get();
+        var before = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());
 
         var ldapUsersBefore = userAccountRepository.countLdap();
@@ -45,7 +45,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
         var ldapUsersAfter = userAccountRepository.countLdap();
         Assertions.assertEquals(4L, ldapUsersAfter);
 
-        var after = userAccountRepository.findByUsername(conflictingLogin).get();
+        var after = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertNotEquals(nonConflictingEmail, after.email());
         Assertions.assertEquals(USER_BEN_LDAP_EMAIL, after.email());
         Assertions.assertNotEquals(before.id(), after.id());
@@ -83,9 +83,9 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
         var ldapUsersAfter = userAccountRepository.countLdap();
         Assertions.assertEquals(4L, ldapUsersAfter);
 
-        Assertions.assertTrue(userAccountRepository.findByUsername(nonConflictingLogin).isEmpty()); // removed because conflicted by email
+        Assertions.assertTrue(userAccountRepository.findByLogin(nonConflictingLogin).isEmpty()); // removed because conflicted by email
 
-        var replace = userAccountRepository.findByUsername(ldapLogin);
+        var replace = userAccountRepository.findByLogin(ldapLogin);
         Assertions.assertTrue(replace.isPresent());
         Assertions.assertEquals(USER_BEN_LDAP_EMAIL, replace.get().email());
     }

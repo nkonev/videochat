@@ -57,7 +57,7 @@ public class AaaUserDetailsService implements UserDetailsService {
     @Override
     public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
         return userAccountRepository
-                .findByUsername(username)
+                .findByLogin(username)
                 .map(userAccountConverter::convertToUserAccountDetailsDTO)
                 .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
     }
@@ -79,7 +79,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("userIds cannon be null");
         }
         return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastSeenDateTime()))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.login())), u.lastSeenDateTime()))
                 .toList();
     }
 
@@ -88,7 +88,7 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException("users cannon be null");
         }
         return users.stream()
-                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.username())), u.lastSeenDateTime()))
+                .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.login())), u.lastSeenDateTime()))
                 .toList();
     }
 
@@ -117,7 +117,7 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     public void killSessions(UserAccount userToFillSessions, ForceKillSessionsReasonType reasonType, String filterOutSession, Long currentUserId){
         var userId = userToFillSessions.id();
-        var userName = userToFillSessions.username();
+        var userName = userToFillSessions.login();
         LOGGER.info("Killing sessions for userId={}, reason={}", userId, reasonType);
         Map<String, Session> sessionMap = getSessions(userName);
         sessionMap.keySet().stream().filter(aSession -> filterOutSession != null ? !aSession.equals(filterOutSession) : true).forEach(session -> redisOperationsSessionRepository.deleteById(session));
@@ -132,6 +132,6 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     public Map<String, Session> getSessions(long userId) {
         UserAccount userAccount = getUserAccount(userId);
-        return getSessions(userAccount.username());
+        return getSessions(userAccount.login());
     }
 }

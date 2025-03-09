@@ -33,7 +33,7 @@ public class SyncLdapConflictRenameUserTest extends AbstractMockMvcTestRunner {
                 conflictingLogin, null, null, null, null,false, false, true, true,
                 new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
-        var before = userAccountRepository.findByUsername(conflictingLogin).get();
+        var before = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());
 
         var ldapUsersBefore = userAccountRepository.countLdap();
@@ -44,12 +44,12 @@ public class SyncLdapConflictRenameUserTest extends AbstractMockMvcTestRunner {
         var ldapUsersAfter = userAccountRepository.countLdap();
         Assertions.assertEquals(4L, ldapUsersAfter);
 
-        var after = userAccountRepository.findByUsername(conflictingLogin).get();
+        var after = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertNotEquals(nonConflictingEmail, after.email());
         Assertions.assertEquals(USER_BEN_LDAP_EMAIL, after.email());
         Assertions.assertNotEquals(before.id(), after.id());
 
-        Assertions.assertTrue(userAccountRepository.findByUsername(LDAP_CONFLICT_PREFIX + conflictingLogin).isPresent());
+        Assertions.assertTrue(userAccountRepository.findByLogin(LDAP_CONFLICT_PREFIX + conflictingLogin).isPresent());
     }
 
 }

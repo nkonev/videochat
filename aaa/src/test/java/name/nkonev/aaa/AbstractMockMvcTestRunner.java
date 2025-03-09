@@ -33,16 +33,16 @@ public abstract class AbstractMockMvcTestRunner extends AbstractTestRunner {
 
     /**
      * This method changes in runtime with ReflectionUtils Spring Security Csrf Filter .with(csrf()) so it ignores any CSRF token
-     * @param username
+     * @param login
      * @param password
      * @return
      * @throws Exception
      */
-    protected String getMockMvcSession(String username, String password) throws Exception {
+    protected String getMockMvcSession(String login, String password) throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                 post(SecurityConfig.API_LOGIN_URL)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param(USERNAME_PARAMETER, username)
+                        .param(USERNAME_PARAMETER, login)
                         .param(PASSWORD_PARAMETER, password)
                         .with(csrf())
         ).andDo(mvcResult1 -> {

@@ -360,8 +360,8 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
         // check that initial user account is not affected
         Assertions.assertEquals(userAccountBefore.id(), userAccountAfter.id());
         Assertions.assertEquals(userAccountBefore.avatar(), userAccountAfter.avatar());
-        Assertions.assertEquals(TestConstants.USER_ALICE, userAccountBefore.username());
-        Assertions.assertEquals(userAccountBefore.username(), userAccountAfter.username());
+        Assertions.assertEquals(TestConstants.USER_ALICE, userAccountBefore.login());
+        Assertions.assertEquals(userAccountBefore.login(), userAccountAfter.login());
         Assertions.assertEquals(userAccountBefore.password(), userAccountAfter.password());
         Assertions.assertArrayEquals(userAccountBefore.roles(), userAccountAfter.roles());
 

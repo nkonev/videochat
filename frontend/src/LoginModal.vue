@@ -29,13 +29,13 @@
                         ref="form"
                         v-model="valid"
                         lazy-validation
-                        @keyup.native.enter="loginWithUsername"
+                        @keyup.native.enter="loginWithLogin"
                         class="pb-2"
                     >
                         <v-text-field
                                 id="login-text"
-                                v-model="username"
-                                :rules="usernameRules"
+                                v-model="login"
+                                :rules="loginRules"
                                 :label="$vuetify.locale.t('$vuetify.login')"
                                 required
                                 :disabled="disable"
@@ -73,7 +73,7 @@
                                 :disabled="!valid || disable"
                                 color="success"
                                 class="mr-2 mb-2"
-                                @click="loginWithUsername"
+                                @click="loginWithLogin"
                                 min-width="80px"
                                 :loading="loadingLogin"
                         >
@@ -147,8 +147,8 @@ import {getStoredLanguage} from "@/store/localStore";
                 loadingKeycloak: false,
 
                 valid: true,
-                username: '',
-                usernameRules: [
+                login: '',
+                loginRules: [
                     v => !!v || 'Login is required',
                 ],
                 password: '',
@@ -210,7 +210,7 @@ import {getStoredLanguage} from "@/store/localStore";
             resetValidation () {
                 this.$refs.form.resetValidation()
             },
-            loginWithUsername() {
+            loginWithLogin() {
                 this.disable = true;
                 this.loadingLogin = true;
                 const valid = this.validate();
@@ -218,7 +218,7 @@ import {getStoredLanguage} from "@/store/localStore";
                 if (valid) {
                     this.hideAlert();
                     const dto = {
-                        username: this.$data.username,
+                        login: this.$data.login,
                         password: this.$data.password
                     };
                     const params = new URLSearchParams();
