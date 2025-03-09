@@ -47,6 +47,7 @@ public class Constants {
         public static final String ROLE = "/role";
         public static final String REQUEST_FOR_ONLINE = "/request-for-online";
         public static final String PING = "/ping";
+        public static final String CONFIG = "/config";
     }
 
     public static class Headers {

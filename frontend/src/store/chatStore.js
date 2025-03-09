@@ -80,6 +80,7 @@ export const useChatStore = defineStore('chat', {
         videoMessagesEnabled: true,
         oppositeUserOnline: false,
         editMessageDto: chatEditMessageDtoFactory(),
+        aaaSessionPingInterval: -1, // in milliseconds
     }
   },
   actions: {
@@ -98,13 +99,15 @@ export const useChatStore = defineStore('chat', {
             })
         });
     },
-    fetchAvailableOauth2Providers() {
-          return axios.get(`/api/aaa/oauth2/providers`).then(( {data} ) => {
-              console.debug("fetched oauth2 providers =", data);
-              this.availableOAuth2Providers = data.map(p => p.providerName);
-              for (const p of data) {
+    fetchAaaConfig() {
+          return axios.get(`/api/aaa/config`).then(( {data} ) => {
+              const providers = data.providers;
+              console.debug("fetched oauth2 providers =", providers);
+              this.availableOAuth2Providers = providers.map(p => p.providerName);
+              for (const p of providers) {
                   this.OAuth2ProvidersAllowUnbind[p.providerName] = p.allowUnbind;
               }
+              this.aaaSessionPingInterval = data.frontendSessionPingInterval;
           });
     },
     updateRedDot() {

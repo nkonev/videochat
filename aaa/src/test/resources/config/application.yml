@@ -62,6 +62,8 @@ custom:
     token:
       ttl: 20m
   online-estimation: 10m
+  # an interval should be less than online-estimation
+  frontend-session-ping-interval: 1m
   schedulers:
     user-online:
       enabled: false

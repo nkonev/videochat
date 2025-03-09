@@ -1,6 +1,7 @@
 package name.nkonev.aaa.controllers;
 
 import name.nkonev.aaa.Constants;
+import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.*;
 import name.nkonev.aaa.services.OAuth2ProvidersService;
 import name.nkonev.aaa.services.UserProfileService;
@@ -33,6 +34,9 @@ public class UserProfileController {
 
     @Autowired
     private PasswordResetService passwordResetService;
+
+    @Autowired
+    private AaaProperties aaaProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserProfileController.class);
 
@@ -252,9 +256,9 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @GetMapping(Constants.Urls.EXTERNAL_API + "/oauth2/providers")
-    public List<OAuth2ProvidersDTO> availableOauth2Providers() {
-        return oAuth2ProvidersService.availableOauth2Providers();
+    @GetMapping(Constants.Urls.EXTERNAL_API + Constants.Urls.CONFIG)
+    public ConfigDTO aaaConfig() {
+        return new ConfigDTO(oAuth2ProvidersService.availableOauth2Providers(), aaaProperties.frontendSessionPingInterval().toMillis());
     }
 
     @ResponseBody

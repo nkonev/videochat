@@ -32,7 +32,9 @@ public record AaaProperties(
 
     String allowedAvatarUrls,
     RoleMappings roleMappings,
-    AdminsCornerProperties adminsCorner
+    AdminsCornerProperties adminsCorner,
+
+    Duration frontendSessionPingInterval
 ) {
     public List<String> getAllowedAvatarUrlsList() {
         if (allowedAvatarUrls == null) {

@@ -629,8 +629,12 @@ export default {
         shouldShowSubtitle() {
             return !!this.chatStore.chatUsersCount || !!this.chatStore.moreImportantSubtitleInfo || !!this.chatStore.usersWritingSubtitleInfo || this.chatStore.oppositeUserLastSeenDateTime
         },
-        afterRouteInitialized() {
-            return this.chatStore.fetchAvailableOauth2Providers()
+        afterRouteInitializedOnce() {
+            return this.chatStore.fetchAaaConfig().then(()=>{
+              const i = this.chatStore.aaaSessionPingInterval;
+              console.debug("Setting aaa ping interval", i);
+              sessionPingedTimer = setInterval(this.pingSession, i)
+            })
         },
         fetchProfileIfNeed() {
             if (!this.chatStore.currentUser) {
@@ -880,14 +884,14 @@ export default {
     },
 
     created() {
-        this.afterRouteInitialized = once(this.afterRouteInitialized);
+        this.afterRouteInitializedOnce = once(this.afterRouteInitializedOnce);
     },
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
 
         createGraphQlClient();
 
-        // create subscription object before ON_PROFILE_SET (afterRouteInitialized())
+        // create subscription object before ON_PROFILE_SET (afterRouteInitializedOnce())
         this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
         this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
 
@@ -906,14 +910,12 @@ export default {
         // To trigger fetching profile that 's going to trigger starting subscriptions
         // It's placed after each route in order not to have a race-condition
         this.$router.afterEach((to, from) => {
-          this.afterRouteInitialized().then(()=>{
+          this.afterRouteInitializedOnce().then(()=>{
             this.fetchProfileIfNeed();
           })
         });
 
         this.installOnFocus();
-
-        sessionPingedTimer = setInterval(this.pingSession, 1 * 60 * 1000)
     },
     beforeUnmount() {
         this.uninstallOnFocus();
