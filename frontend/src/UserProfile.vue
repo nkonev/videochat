@@ -51,19 +51,21 @@
       </v-container>
     </v-container>
 
-    <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.roles') }}</v-card-title>
-    <v-card-actions class="mx-2 nominheight">
-        <v-chip v-for="(role, index) in viewableUser?.additionalData?.roles"
-          density="comfortable"
-          text-color="white"
-        >
-          <template v-slot:default>
-              <span>
-                {{role}}
-              </span>
-          </template>
-        </v-chip>
-    </v-card-actions>
+    <template v-if="viewableUser?.additionalData">
+      <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.roles') }}</v-card-title>
+      <v-card-actions class="mx-2 nominheight">
+          <v-chip v-for="(role, index) in viewableUser?.additionalData?.roles"
+            density="comfortable"
+            text-color="white"
+          >
+            <template v-slot:default>
+                <span>
+                  {{role}}
+                </span>
+            </template>
+          </v-chip>
+      </v-card-actions>
+    </template>
 
     <v-card-title class="title pb-0 pt-1" v-if="viewableUser.ldap">LDAP</v-card-title>
     <v-chip
