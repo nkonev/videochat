@@ -175,7 +175,7 @@ import bus, {
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
 import {
-  deepCopy, findIndex, getExtendedUserFragment, getLoginColoredStyle,
+  deepCopy, findIndex, findIndexNonStrictly, getExtendedUserFragment, getLoginColoredStyle,
   hasLength, isSetEqual, isStrippedUserLogin, isUserHash, replaceInArray,
   replaceOrAppend,
   replaceOrPrepend,
@@ -304,13 +304,16 @@ export default {
       });
 
       if (!res.data.hasNext) {
-        if (this.isTopDirection()) {
-          this.loadedTop = true;
-        } else {
-          this.loadedBottom = true;
-        }
+        this.setLoadedFinished();
       }
       return items
+    },
+    setLoadedFinished() {
+      if (this.isTopDirection()) {
+        this.loadedTop = true;
+      } else {
+        this.loadedBottom = true;
+      }
     },
     async load() {
       if (!this.canDrawUsers()) {
@@ -326,6 +329,11 @@ export default {
         if (hasHash) {
           const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
           items = portion.reverse().concat(items);
+
+          if (findIndexNonStrictly(items, {id: startingFromItemId}) === -1) {
+            items = [];
+            this.setLoadedFinished();
+          }
         }
 
         if (this.isTopDirection()) {

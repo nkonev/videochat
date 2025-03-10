@@ -114,23 +114,27 @@ export default (name) => {
           this.scrollerProbeCurrent = 0;
           this.preservedScroll = null;
       },
-      setNoScroll() {
-          if (isFireFox()) { // This works well only on Firefox, in case Chrome it both doesn't needed and breaks pagination in a random manner
-              this.scrollerDiv.classList.add("stop-scrolling");
-          }
+      async setNoScroll() {
+          return this.$nextTick(()=>{
+              if (isFireFox()) { // This works well only on Firefox, in case Chrome it both doesn't needed and breaks pagination in a random manner
+                  this.scrollerDiv.classList.add("stop-scrolling");
+              }
+          })
       },
-      unsetNoScroll() {
-          if (isFireFox()) {
-              this.scrollerDiv.classList.remove("stop-scrolling");
-          }
+      async unsetNoScroll() {
+          return this.$nextTick(()=>{
+              if (isFireFox()) {
+                  this.scrollerDiv.classList.remove("stop-scrolling");
+              }
+          })
       },
       async initialLoad() {
         if (this.scrollerDiv == null) {
           this.scrollerDiv = document.querySelector(this.scrollerSelector());
         }
-        this.setNoScroll();
+        await this.setNoScroll();
         const loadedResult = await this.load();
-        this.unsetNoScroll()
+        await this.unsetNoScroll()
         await this.$nextTick();
         await this.onFirstLoad(loadedResult);
         this.isFirstLoad = false;
@@ -139,23 +143,23 @@ export default (name) => {
       async loadTop() {
           console.log("going to load top in", name);
           this.saveScroll(true); // saves scroll between new portion load
-          this.setNoScroll();
+          await this.setNoScroll();
           await this.load(); // restores scroll after new portion load
           await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(true);
-          this.unsetNoScroll()
+          await this.unsetNoScroll()
       },
 
       async loadBottom() {
           console.log("going to load bottom in", name);
           this.saveScroll(false);
-          this.setNoScroll();
+          await this.setNoScroll();
           await this.load();
           await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(false);
-          this.unsetNoScroll()
+          await this.unsetNoScroll()
       },
       isReady() {
           return this.scrollerDiv != null
@@ -236,6 +240,7 @@ export default (name) => {
       },
       async reloadItems() {
         this.uninstallScroller();
+        await this.$nextTick();
         await this.initialLoad();
         await this.$nextTick(() => {
           this.installScroller();

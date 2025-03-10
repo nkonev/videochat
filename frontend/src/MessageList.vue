@@ -73,7 +73,7 @@
     import {
       checkUpByTree, checkUpByTreeObj,
       deepCopy, edit_message, embed_message_reply,
-      findIndex, getBlogLink, getPublicMessageLink,
+      findIndex, findIndexNonStrictly, getBlogLink, getPublicMessageLink,
       hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash,
       replaceInArray,
       replaceOrAppend,
@@ -248,6 +248,7 @@
           });
 
           if (res.status == 204) {
+            this.setLoadedFinished();
             // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
             return []
           }
@@ -256,13 +257,16 @@
           console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
           if (!res.data.hasNext) {
-            if (this.isTopDirection()) {
-              this.loadedTop = true;
-            } else {
-              this.loadedBottom = true;
-            }
+            this.setLoadedFinished();
           }
           return items
+        },
+        setLoadedFinished() {
+          if (this.isTopDirection()) {
+            this.loadedTop = true;
+          } else {
+            this.loadedBottom = true;
+          }
         },
         async load() {
           if (!this.canDrawMessages()) {
@@ -278,6 +282,11 @@
             if (hasHash) {
               const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
               items = portion.reverse().concat(items);
+
+              if (findIndexNonStrictly(items, {id: startingFromItemId}) === -1) {
+                items = [];
+                this.setLoadedFinished();
+              }
             }
 
             if (this.isTopDirection()) {
