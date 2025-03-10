@@ -103,6 +103,7 @@ export default (name) => {
         }
       },
 
+      // invoked from reset()
       resetInfiniteScrollVars() {
           this.items = [];
           this.isFirstLoad = true;
