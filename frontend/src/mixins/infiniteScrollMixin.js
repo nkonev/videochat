@@ -23,16 +23,12 @@ export default (name) => {
 
         scrollerDiv: null,
 
-        loadedTop: false,
-        loadedBottom: false,
-
         aDirection: this.initialDirection(),
 
         scrollerProbeCurrent: 0,
         scrollerProbePrevious: 0,
 
         preservedScroll: 0,
-        timeout: null,
       }
     },
     methods: {
@@ -45,12 +41,10 @@ export default (name) => {
           return this.$nextTick(() => {
             if (this.isTopDirection()) {
                 this.reduceBottom();
-                this.loadedBottom = false;
             } else {
                 this.reduceTop();
-                this.loadedTop = false;
             }
-            console.log("Reduced to", this.getMaxItemsLength(), this.loadedBottom, this.loadedTop, "in", name);
+            console.log("Reduced to", this.getMaxItemsLength(), "in", name);
           });
         }
       },
@@ -58,12 +52,10 @@ export default (name) => {
         if (this.items.length > this.getMaxItemsLength()) {
             if (fromTop) {
                 this.reduceTop();
-                this.loadedTop = false;
             } else {
                 this.reduceBottom();
-                this.loadedBottom = false;
             }
-            console.log("Reduced after add to", this.getMaxItemsLength(), this.loadedBottom, this.loadedTop, "in", name);
+            console.log("Reduced after add to", this.getMaxItemsLength(), "in", name);
         }
       },
       onScroll(e) {
@@ -107,30 +99,34 @@ export default (name) => {
       resetInfiniteScrollVars() {
           this.items = [];
           this.isFirstLoad = true;
-          this.loadedTop = false;
-          this.loadedBottom = false;
           this.aDirection = this.initialDirection();
           this.scrollerProbePrevious = 0;
           this.scrollerProbeCurrent = 0;
           this.preservedScroll = null;
       },
-      setNoScroll() {
-          if (isFireFox()) { // This works well only on Firefox, in case Chrome it both doesn't needed and breaks pagination in a random manner
-              this.scrollerDiv.classList.add("stop-scrolling");
-          }
+      async setNoScroll() {
+          return this.$nextTick(()=>{
+              if (isFireFox()) { // This works well only on Firefox, in case Chrome it both doesn't needed and breaks pagination in a random manner
+                  this.scrollerDiv.classList.add("stop-scrolling");
+              }
+          })
       },
-      unsetNoScroll() {
-          if (isFireFox()) {
-              this.scrollerDiv.classList.remove("stop-scrolling");
-          }
+      async unsetNoScroll() {
+          return this.$nextTick(()=>{
+              if (isFireFox()) {
+                  this.scrollerDiv.classList.remove("stop-scrolling");
+              }
+          })
       },
       async initialLoad() {
-        if (this.scrollerDiv == null) {
-          this.scrollerDiv = document.querySelector(this.scrollerSelector());
-        }
-        this.setNoScroll();
+        await this.$nextTick(()=>{
+            if (this.scrollerDiv == null) {
+                this.scrollerDiv = document.querySelector(this.scrollerSelector());
+            }
+        })
+        await this.setNoScroll();
         const loadedResult = await this.load();
-        this.unsetNoScroll()
+        await this.unsetNoScroll()
         await this.$nextTick();
         await this.onFirstLoad(loadedResult);
         this.isFirstLoad = false;
@@ -139,23 +135,23 @@ export default (name) => {
       async loadTop() {
           console.log("going to load top in", name);
           this.saveScroll(true); // saves scroll between new portion load
-          this.setNoScroll();
+          await this.setNoScroll();
           await this.load(); // restores scroll after new portion load
           await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(true);
-          this.unsetNoScroll()
+          await this.unsetNoScroll()
       },
 
       async loadBottom() {
           console.log("going to load bottom in", name);
           this.saveScroll(false);
-          this.setNoScroll();
+          await this.setNoScroll();
           await this.load();
           await this.$nextTick();
           await this.reduceListIfNeed();
           this.restoreScroll(false);
-          this.unsetNoScroll()
+          await this.unsetNoScroll()
       },
       isReady() {
           return this.scrollerDiv != null
@@ -187,14 +183,14 @@ export default (name) => {
           console.log("Invoking callback in", name, mappedEntries);
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection(), "in", name);
-            if (!this.loadedTop && this.isTopDirection()) {
+            console.debug("attempting to load top", this.isTopDirection(), "in", name);
+            if (this.isTopDirection()) {
               await this.loadTop();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection(), "in", name);
-            if (!this.loadedBottom && !this.isTopDirection()) {
+            console.debug("attempting to load bottom", !this.isTopDirection(), "in", name);
+            if (!this.isTopDirection()) {
               await this.loadBottom();
             }
           }
@@ -206,39 +202,34 @@ export default (name) => {
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.topElementSelector()));
       },
-      destroyScroller() {
-        this.observer?.disconnect();
-        this.observer = null;
-        this.scrollerDiv = null;
+      async destroyScroller() {
+          return this.$nextTick(()=>{
+              this.observer?.disconnect();
+              this.observer = null;
+              this.scrollerDiv = null;
+          })
       },
-
-      installScroller() {
-        this.timeout = setTimeout(()=>{
-          this.$nextTick(()=>{
+      async installScroller() {
+        return this.$nextTick(()=>{
             this.initScroller();
             console.log("Scroller", name, "has been installed");
-            this.timeout = null;
-          })
-        }, 1500); // must be > than debounce millis in observer (it seems this strange behavior can be explained by optimizations in Firefox)
+        })
         // tests in Firefox
         // a) refresh page 30 times
         // b) refresh page 30 times when the hash is present (#message-523)
         // c) input search string - search by messages
       },
-      uninstallScroller() {
-        if (this.timeout) {
-          clearTimeout(this.timeout);
-          this.timeout = null;
-        }
-        this.destroyScroller();
+      async uninstallScroller() {
+        await this.destroyScroller();
         this.reset();
         console.log("Scroller", name, "has been uninstalled");
       },
       async reloadItems() {
-        this.uninstallScroller();
+        await this.uninstallScroller();
+        await this.$nextTick();
         await this.initialLoad();
-        await this.$nextTick(() => {
-          this.installScroller();
+        await this.$nextTick(async () => {
+          await this.installScroller();
         })
       },
     }
