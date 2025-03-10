@@ -41,7 +41,6 @@ public class SecurityConfig {
 
     public static final String USERNAME_PARAMETER = "login";
     public static final String PASSWORD_PARAMETER = "password";
-    public static final String REMEMBER_ME_PARAMETER = "remember-me";
 
     public static final String API_LOGIN_OAUTH = Constants.Urls.EXTERNAL_API + "/login/oauth2";
     private static final String AUTHORIZATION_RESPONSE_BASE_URI = API_LOGIN_OAUTH + "/code/*";
@@ -187,13 +186,6 @@ public class SecurityConfig {
         authenticationProvider.setPostAuthenticationChecks(aaaPostAuthenticationChecks);
         return authenticationProvider;
     }
-
-//    @Bean
-//    public PersistentTokenBasedRememberMeServices getPersistentTokenBasedRememberMeServices() {
-//        PersistentTokenBasedRememberMeServices tokenBasedservice = new PersistentTokenBasedRememberMeServices(
-//                REMEMBER_ME_PARAMETER, userDetailsService, tokenRepository);
-//        return tokenBasedservice;
-//    }
 
 //    @Bean
 //    public AuthenticationTrustResolver getAuthenticationTrustResolver() {
