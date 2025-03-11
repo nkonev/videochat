@@ -301,7 +301,7 @@ export default {
 
         this.updateTopAndBottomIds();
         if (!this.isFirstLoad) {
-          this.clearRouteHash()
+          await this.clearRouteHash()
         }
 
         this.performMarking();

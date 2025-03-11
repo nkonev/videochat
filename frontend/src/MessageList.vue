@@ -299,7 +299,7 @@
             }
 
             if (!this.isFirstLoad) {
-              this.clearRouteHash()
+              await this.clearRouteHash()
             }
             this.performMarking();
             return Promise.resolve(true)
@@ -365,7 +365,7 @@
         },
 
         async onScrollDownButton() {
-          this.clearRouteHash();
+          await this.clearRouteHash();
           await this.reloadItems();
         },
 

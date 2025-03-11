@@ -81,9 +81,9 @@ export default () => {
                     await this.initializeHashVariablesAndReloadItems();
                 }
             },
-            clearRouteHash() {
+            async clearRouteHash() {
                 // console.log("Cleaning hash");
-                this.$router.push({ hash: null, query: this.$route.query })
+                return this.$router.push({ hash: null, query: this.$route.query })
             },
             async initializeHashVariablesAndReloadItems() {
                 this.initializeHashVariables();

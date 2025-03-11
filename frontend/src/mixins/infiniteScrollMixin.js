@@ -128,9 +128,11 @@ export default (name) => {
           })
       },
       async initialLoad() {
-        if (this.scrollerDiv == null) {
-          this.scrollerDiv = document.querySelector(this.scrollerSelector());
-        }
+        await this.$nextTick(()=>{
+            if (this.scrollerDiv == null) {
+                this.scrollerDiv = document.querySelector(this.scrollerSelector());
+            }
+        })
         await this.setNoScroll();
         const loadedResult = await this.load();
         await this.unsetNoScroll()
