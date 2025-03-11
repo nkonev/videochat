@@ -32,7 +32,6 @@ export default (name) => {
         scrollerProbePrevious: 0,
 
         preservedScroll: 0,
-        timeout: null,
       }
     },
     methods: {
@@ -210,40 +209,34 @@ export default (name) => {
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.topElementSelector()));
       },
-      destroyScroller() {
-        this.observer?.disconnect();
-        this.observer = null;
-        this.scrollerDiv = null;
+      async destroyScroller() {
+          return this.$nextTick(()=>{
+              this.observer?.disconnect();
+              this.observer = null;
+              this.scrollerDiv = null;
+          })
       },
-
-      installScroller() {
-        this.timeout = setTimeout(()=>{
-          this.$nextTick(()=>{
+      async installScroller() {
+        return this.$nextTick(()=>{
             this.initScroller();
             console.log("Scroller", name, "has been installed");
-            this.timeout = null;
-          })
-        }, 1500); // must be > than debounce millis in observer (it seems this strange behavior can be explained by optimizations in Firefox)
+        })
         // tests in Firefox
         // a) refresh page 30 times
         // b) refresh page 30 times when the hash is present (#message-523)
         // c) input search string - search by messages
       },
-      uninstallScroller() {
-        if (this.timeout) {
-          clearTimeout(this.timeout);
-          this.timeout = null;
-        }
-        this.destroyScroller();
+      async uninstallScroller() {
+        await this.destroyScroller();
         this.reset();
         console.log("Scroller", name, "has been uninstalled");
       },
       async reloadItems() {
-        this.uninstallScroller();
+        await this.uninstallScroller();
         await this.$nextTick();
         await this.initialLoad();
-        await this.$nextTick(() => {
-          this.installScroller();
+        await this.$nextTick(async () => {
+          await this.installScroller();
         })
       },
     }
