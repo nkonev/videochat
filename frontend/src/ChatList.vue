@@ -793,24 +793,6 @@ export default {
               }
           }
       },
-      '$route': {
-        handler: async function (newValue, oldValue) {
-
-          const newQuery = newValue.query[SEARCH_MODE_CHATS];
-          const oldQuery = oldValue.query[SEARCH_MODE_CHATS];
-
-          // reaction on setting hash
-          if (isChatRoute(newValue)) {
-            // reaction on setting hash
-            if (hasLength(newValue.hash) && this.isAppropriateHash(newValue.hash) && newValue.hash != oldValue.hash) {
-              console.log("Changed route hash, going to scroll", newValue.hash)
-              await this.scrollToOrLoad(newValue.hash, newQuery == oldQuery);
-              return
-            }
-          }
-        }
-      }
-
   },
   async mounted() {
     this.markInstance = new Mark("div#chat-list-items .chat-name");
