@@ -73,7 +73,7 @@
     import {
       checkUpByTree, checkUpByTreeObj,
       deepCopy, edit_message, embed_message_reply,
-      findIndex, getBlogLink, getPublicMessageLink,
+      findIndex, findIndexNonStrictly, getBlogLink, getPublicMessageLink,
       hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash,
       replaceInArray,
       replaceOrAppend,
@@ -234,14 +234,14 @@
         async doDefaultScroll() {
               await this.scrollDown(); // we need it to prevent browser's scrolling
         },
-        async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
+        async fetchItems(searchString, startingFromItemId, reverse, includeStartingFrom) {
           const res = await axios.get(`/api/chat/${this.chatId}/message/search`, {
             params: {
               startingFromItemId: startingFromItemId,
               includeStartingFrom: !!includeStartingFrom,
               size: PAGE_SIZE,
               reverse: reverse,
-              searchString: this.searchString,
+              searchString: searchString,
             },
             signal: this.requestAbortController.signal
           });
@@ -266,10 +266,22 @@
           const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
           try {
-            let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
+            let items = await this.fetchItems(this.searchString, startingFromItemId, this.isTopDirection());
             if (hasHash) {
-              const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
+              const portion = await this.fetchItems(this.searchString, startingFromItemId, !this.isTopDirection(), true);
               items = portion.reverse().concat(items);
+
+              // To fix the controversial:
+              // there is searchString, e.g. ?qm=searchString
+              // and user opens or scrolls to the message which embed (embed_type = reply) the another message WITHOUT that searchString
+              // this code allow kinda last resort to try to search and draw this item
+              // in cost of 2 more requests and the viewable messages which isn't correspond to the searchString
+              if (findIndexNonStrictly(items, {id: startingFromItemId}) === -1) {
+                console.log("Trying to search without searchString")
+                items = await this.fetchItems(null, startingFromItemId, this.isTopDirection());
+                const portion = await this.fetchItems(null, startingFromItemId, !this.isTopDirection(), true);
+                items = portion.reverse().concat(items);
+              }
             }
 
             if (this.isTopDirection()) {
