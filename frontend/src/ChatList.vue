@@ -881,12 +881,12 @@ export default {
   beforeUnmount() {
     this.saveLastVisibleElement();
 
+    removeEventListener("beforeunload", this.beforeUnload);
+
     this.uninstallOnFocus();
 
     this.graphQlUserStatusUnsubscribe();
     this.uninstallScroller();
-
-    removeEventListener("beforeunload", this.beforeUnload);
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
     bus.off(PROFILE_SET, this.onProfileSet);
