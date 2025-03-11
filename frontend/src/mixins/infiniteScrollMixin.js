@@ -84,15 +84,17 @@ export default (name) => {
         return this.aDirection === directionTop
       },
 
-      restoreScroll(top) {
-        const restored = this.preservedScroll;
-        const q = this.scrollerSelector() + " " + "#"+this.getItemId(restored);
-        const el = document.querySelector(q);
-        console.debug("Restored scroll to element id", restored, "in", name, "selector", q, "element", el);
-        el?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
-        if (this.afterScrollRestored) {
-          this.afterScrollRestored(el)
-        }
+      async restoreScroll(top) {
+          return this.$nextTick(()=>{
+            const restored = this.preservedScroll;
+            const q = this.scrollerSelector() + " " + "#"+this.getItemId(restored);
+            const el = document.querySelector(q);
+            console.debug("Restored scroll to element id", restored, "in", name, "selector", q, "element", el);
+            el?.scrollIntoView({behavior: 'instant', block: top ? "start": "end"});
+            if (this.afterScrollRestored) {
+              this.afterScrollRestored(el)
+            }
+          })
       },
 
       // invoked from reset()
@@ -139,7 +141,7 @@ export default (name) => {
           await this.load(); // restores scroll after new portion load
           await this.$nextTick();
           await this.reduceListIfNeed();
-          this.restoreScroll(true);
+          await this.restoreScroll(true);
           await this.unsetNoScroll()
       },
 
@@ -150,7 +152,7 @@ export default (name) => {
           await this.load();
           await this.$nextTick();
           await this.reduceListIfNeed();
-          this.restoreScroll(false);
+          await this.restoreScroll(false);
           await this.unsetNoScroll()
       },
       isReady() {
