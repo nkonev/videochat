@@ -125,7 +125,7 @@ import {
   isChatHash,
   upsertToWritingUsers,
   buildWritingUsersSubtitleInfo,
-  filterOutOldWritingUsers,
+  filterOutOldWritingUsers, findIndexNonStrictly,
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -275,6 +275,10 @@ export default {
         if (hasHash) {
           const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
           items = portion.reverse().concat(items);
+
+          if (findIndexNonStrictly(items, {id: startingFromItemId}) === -1) {
+            items = [];
+          }
         }
 
         // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,

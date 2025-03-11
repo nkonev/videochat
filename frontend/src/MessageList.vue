@@ -73,7 +73,7 @@
     import {
       checkUpByTree, checkUpByTreeObj,
       deepCopy, edit_message, embed_message_reply,
-      findIndex, getBlogLink, getPublicMessageLink,
+      findIndex, findIndexNonStrictly, getBlogLink, getPublicMessageLink,
       hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash,
       replaceInArray,
       replaceOrAppend,
@@ -270,6 +270,10 @@
             if (hasHash) {
               const portion = await this.fetchItems(startingFromItemId, !this.isTopDirection(), true);
               items = portion.reverse().concat(items);
+
+              if (findIndexNonStrictly(items, {id: startingFromItemId}) === -1) {
+                items = [];
+              }
             }
 
             if (this.isTopDirection()) {
