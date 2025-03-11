@@ -233,7 +233,6 @@
         },
         async doDefaultScroll() {
               await this.scrollDown(); // we need it to prevent browser's scrolling
-              this.loadedBottom = true;
         },
         async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
           const res = await axios.get(`/api/chat/${this.chatId}/message/search`, {
@@ -248,7 +247,6 @@
           });
 
           if (res.status == 204) {
-            this.setLoadedFinished();
             // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
             return []
           }
@@ -256,17 +254,7 @@
           const items = res.data.items;
           console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
-          if (!res.data.hasNext) {
-            this.setLoadedFinished();
-          }
           return items
-        },
-        setLoadedFinished() {
-          if (this.isTopDirection()) {
-            this.loadedTop = true;
-          } else {
-            this.loadedBottom = true;
-          }
         },
         async load() {
           if (!this.canDrawMessages()) {
@@ -375,13 +363,6 @@
 
         onScrollCallback() {
           this.chatStore.showScrollDown = !this.isScrolledToBottom();
-          if (this.chatStore.showScrollDown) {
-            // during scrolling we disable adding new elements, so some messages can appear on server, so
-            // we set loadedBottom to false in order to force infiniteScrollMixin to fetch new messages during scrollBottom()
-            // also this setting loaded* to false helps to avoid non-loading new portion when response with hashHash=true returned less than PAGE_SIZE
-            this.loadedBottom = false;
-            this.loadedTop = false;
-          }
         },
         isScrolledToBottom() {
           if (this.scrollerDiv) {

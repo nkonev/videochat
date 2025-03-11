@@ -281,7 +281,6 @@ export default {
       }
     },
     async doDefaultScroll() {
-      this.loadedTop = true;
       await this.scrollTop();
     },
     getPositionFromStore() {
@@ -303,17 +302,7 @@ export default {
         this.transformItem(item);
       });
 
-      if (!res.data.hasNext) {
-        this.setLoadedFinished();
-      }
       return items
-    },
-    setLoadedFinished() {
-      if (this.isTopDirection()) {
-        this.loadedTop = true;
-      } else {
-        this.loadedBottom = true;
-      }
     },
     async load() {
       if (!this.canDrawUsers()) {
@@ -429,17 +418,6 @@ export default {
                 this.markInstance.mark(this.searchString);
             }
         })
-    },
-    onScrollCallback() {
-          const isScrolledToTop = this.isScrolledToTop();
-          if (!isScrolledToTop) {
-              // during scrolling we disable adding new elements, so some users can appear on server, so
-              // we set loadedTop to false in order to force infiniteScrollMixin to fetch new messages during scrollTop()
-              // also this setting loaded* to false helps to avoid non-loading new portion when response with hashHash=true returned less than PAGE_SIZE
-              this.loadedTop = false;
-              this.loadedBottom = false;
-              // see also this.sort(this.items) in load()
-          }
     },
     isScrolledToTop() {
           if (this.scrollerDiv) {

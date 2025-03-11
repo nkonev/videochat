@@ -23,9 +23,6 @@ export default (name) => {
 
         scrollerDiv: null,
 
-        loadedTop: false,
-        loadedBottom: false,
-
         aDirection: this.initialDirection(),
 
         scrollerProbeCurrent: 0,
@@ -44,12 +41,10 @@ export default (name) => {
           return this.$nextTick(() => {
             if (this.isTopDirection()) {
                 this.reduceBottom();
-                this.loadedBottom = false;
             } else {
                 this.reduceTop();
-                this.loadedTop = false;
             }
-            console.log("Reduced to", this.getMaxItemsLength(), this.loadedBottom, this.loadedTop, "in", name);
+            console.log("Reduced to", this.getMaxItemsLength(), "in", name);
           });
         }
       },
@@ -57,12 +52,10 @@ export default (name) => {
         if (this.items.length > this.getMaxItemsLength()) {
             if (fromTop) {
                 this.reduceTop();
-                this.loadedTop = false;
             } else {
                 this.reduceBottom();
-                this.loadedBottom = false;
             }
-            console.log("Reduced after add to", this.getMaxItemsLength(), this.loadedBottom, this.loadedTop, "in", name);
+            console.log("Reduced after add to", this.getMaxItemsLength(), "in", name);
         }
       },
       onScroll(e) {
@@ -106,8 +99,6 @@ export default (name) => {
       resetInfiniteScrollVars() {
           this.items = [];
           this.isFirstLoad = true;
-          this.loadedTop = false;
-          this.loadedBottom = false;
           this.aDirection = this.initialDirection();
           this.scrollerProbePrevious = 0;
           this.scrollerProbeCurrent = 0;
@@ -192,14 +183,14 @@ export default (name) => {
           console.log("Invoking callback in", name, mappedEntries);
 
           if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load top", !this.loadedTop, this.isTopDirection(), "in", name);
-            if (!this.loadedTop && this.isTopDirection()) {
+            console.debug("attempting to load top", this.isTopDirection(), "in", name);
+            if (this.isTopDirection()) {
               await this.loadTop();
             }
           }
           if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
-            console.debug("attempting to load bottom", !this.loadedBottom, !this.isTopDirection(), "in", name);
-            if (!this.loadedBottom && !this.isTopDirection()) {
+            console.debug("attempting to load bottom", !this.isTopDirection(), "in", name);
+            if (!this.isTopDirection()) {
               await this.loadBottom();
             }
           }
