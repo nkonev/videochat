@@ -184,13 +184,13 @@ export default (name) => {
 
           console.log("Invoking callback in", name, mappedEntries);
 
-          if (lastElementEntry && lastElementEntry.entry.isIntersecting) {
+          if (this.items.length && lastElementEntry && lastElementEntry.entry.isIntersecting) {
             console.debug("attempting to load top", this.isTopDirection(), "in", name);
             if (this.isTopDirection()) {
               await this.loadTop();
             }
           }
-          if (firstElementEntry && firstElementEntry.entry.isIntersecting) {
+          if (this.items.length && firstElementEntry && firstElementEntry.entry.isIntersecting) {
             console.debug("attempting to load bottom", !this.isTopDirection(), "in", name);
             if (!this.isTopDirection()) {
               await this.loadBottom();
