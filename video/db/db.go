@@ -166,11 +166,11 @@ func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 
 func (db *DB) RecreateDb() {
 	_, err := db.Exec(`
-	DROP SCHEMA IF EXISTS public CASCADE;
-	CREATE SCHEMA IF NOT EXISTS public;
-    GRANT ALL ON SCHEMA public TO chat;
-    GRANT ALL ON SCHEMA public TO public;
-    COMMENT ON SCHEMA public IS 'standard public schema';
+	drop table if exists user_call_state;
+	drop table if exists go_migrate;
+	drop table if exists go_migrate_test;
+	
+	drop function if exists utc_now();
 `)
 	db.lgr.Warn("Recreating database")
 	if err != nil {
