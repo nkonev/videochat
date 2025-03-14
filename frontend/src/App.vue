@@ -137,7 +137,7 @@
         <FileTextEditModal/>
         <PlayerModal/>
         <ChatEditModal/>
-        <PermissionsWarningModal/>
+        <PermissionAudioAutoplayModal/>
         <VideoAddNewSourceModal/>
         <ChooseSmileyModal/>
         <ChooseColorModal/>
@@ -181,7 +181,8 @@ import bus, {
   NOTIFICATION_DELETE,
   OPEN_FILE_UPLOAD_MODAL,
   OPEN_PARTICIPANTS_DIALOG,
-  OPEN_PERMISSIONS_WARNING_MODAL,
+  OPEN_PERMISSION_AUDIO_AUTOPLAY_MODAL,
+  ON_PERMISSION_AUDIO_AUTOPLAY_GRANTED,
   PLAYER_MODAL,
   PROFILE_SET,
   REFRESH_ON_WEBSOCKET_RESTORED,
@@ -225,7 +226,7 @@ import FileTextEditModal from "@/FileTextEditModal.vue";
 import PlayerModal from "@/PlayerModal.vue";
 import ChatEditModal from "@/ChatEditModal.vue";
 import {once} from "lodash/function";
-import PermissionsWarningModal from "@/PermissionsWarningModal.vue";
+import PermissionAudioAutoplayModal from "@/PermissionAudioAutoplayModal.vue";
 import {prefix} from "@/router/routes"
 import VideoAddNewSourceModal from "@/VideoAddNewSourceModal.vue";
 import MessageEdit from "@/MessageEdit.vue";
@@ -271,6 +272,8 @@ export default {
             selfProfileEventsSubscription: null,
             showNotificationBadge: false,
             showVideoBadge: false,
+
+            grantAudioAutoplayPermissionUserInteracted: null,
         }
     },
     computed: {
@@ -679,7 +682,6 @@ export default {
                   createBrowserNotificationIfPermitted(this.$router, data.chatId, data.chatName, data.avatar, null, this.$vuetify.locale.t('$vuetify.you_called_short', this.invitedVideoChatId), NOTIFICATION_TYPE_CALL);
                   audio.play().catch(error => {
                       console.warn("Unable to play sound", error);
-                      bus.emit(OPEN_PERMISSIONS_WARNING_MODAL);
                   })
               })
 
@@ -837,6 +839,38 @@ export default {
             console.log("Skipping ping because of currentUser is null")
           }
         },
+        resetAudio() {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+        },
+        onAudioAutoplayPermissionGranted() {
+          audio.play().then(this.resetAudio).then(()=>{
+            console.log("the permission for autoplaying audio was granted");
+          });
+        },
+        grantAudioAutoplayPermission() {
+          console.log("Acquiring audio autoplaying permission");
+          this.grantAudioAutoplayPermissionUserInteracted = setInterval(()=>{
+            if (this.chatStore.currentUser) {
+              audio.play()
+                  .then(() => {
+                    this.cancelGrantAudioAutoplayPermission();
+                  })
+                  .catch(() => {
+                    console.log("waiting for user interaction to autoplay audio");
+                    this.openPermissionAudioAutoplayModalOnce();
+                  });
+            }
+          },1000)
+        },
+        openPermissionAudioAutoplayModalOnce() {
+          bus.emit(OPEN_PERMISSION_AUDIO_AUTOPLAY_MODAL);
+        },
+        cancelGrantAudioAutoplayPermission() {
+          this.resetAudio();
+          clearInterval(this.grantAudioAutoplayPermissionUserInteracted);
+        },
     },
     components: {
         ChooseColorModal,
@@ -856,7 +890,7 @@ export default {
         MessageResendToModal,
         FileTextEditModal,
         PlayerModal,
-        PermissionsWarningModal,
+        PermissionAudioAutoplayModal,
         VideoAddNewSourceModal,
         MessageEditModal,
         CollapsedSearch,
@@ -885,6 +919,7 @@ export default {
 
     created() {
         this.afterRouteInitializedOnce = once(this.afterRouteInitializedOnce);
+        this.openPermissionAudioAutoplayModalOnce = once(this.openPermissionAudioAutoplayModalOnce);
     },
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
@@ -906,6 +941,7 @@ export default {
         bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
         bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         bus.on(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
+        bus.on(ON_PERMISSION_AUDIO_AUTOPLAY_GRANTED, this.onAudioAutoplayPermissionGranted);
 
         // To trigger fetching profile that 's going to trigger starting subscriptions
         // It's placed after each route in order not to have a race-condition
@@ -916,6 +952,8 @@ export default {
         });
 
         this.installOnFocus();
+
+        this.grantAudioAutoplayPermission();
     },
     beforeUnmount() {
         this.uninstallOnFocus();
@@ -931,6 +969,7 @@ export default {
         bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
         bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         bus.off(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
+        bus.off(ON_PERMISSION_AUDIO_AUTOPLAY_GRANTED, this.onAudioAutoplayPermissionGranted);
 
         this.globalEventsSubscription.graphQlUnsubscribe();
         this.selfProfileEventsSubscription.graphQlUnsubscribe();
@@ -940,6 +979,7 @@ export default {
         destroyGraphqlClient();
 
         clearInterval(sessionPingedTimer);
+        this.cancelGrantAudioAutoplayPermission();
     },
 }
 </script>

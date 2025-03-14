@@ -118,7 +118,8 @@ export const ADD_VIDEO_SOURCE_DIALOG = "addVideoSourceDialog";
 export const CHANGE_VIDEO_SOURCE_DIALOG = "changeVideoSourceDialog";
 
 export const REFRESH_ON_WEBSOCKET_RESTORED = "refreshOnWsRestored";
-export const OPEN_PERMISSIONS_WARNING_MODAL = "openPermissionsWarningModal";
+export const OPEN_PERMISSION_AUDIO_AUTOPLAY_MODAL = "openPermissionAudioAutoplayModal";
+export const ON_PERMISSION_AUDIO_AUTOPLAY_GRANTED = "onPermissionAudioAutoplayGranted";
 
 export const CHANGE_ROLE_DIALOG = "changeRoleDialog";
 
