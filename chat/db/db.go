@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	dbP "database/sql"
 	"embed"
+	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
@@ -16,6 +17,9 @@ import (
 	"nkonev.name/chat/logger"
 	"time"
 )
+
+const prodMigrationsTable = "go_migrate"
+const testMigrationsTable = "go_migrate_test"
 
 // https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
 type DB struct {
@@ -169,12 +173,12 @@ func migrateInternal(lgr *logger.Logger, db *sql.DB, path, migrationTable string
 
 func (db *DB) Migrate(migrationsConfig *MigrationsConfig) {
 	db.lgr.Infof("Starting prod migration")
-	migrateInternal(db.lgr, db.DB, "/prod", "go_migrate")
+	migrateInternal(db.lgr, db.DB, "/prod", prodMigrationsTable)
 	db.lgr.Infof("Migration successful prod completed")
 
 	if migrationsConfig.AppendTestData {
 		db.lgr.Infof("Starting test migration")
-		migrateInternal(db.lgr, db.DB, "/test", "go_migrate_test")
+		migrateInternal(db.lgr, db.DB, "/test", testMigrationsTable)
 		db.lgr.Infof("Migration successful test completed")
 	}
 }
@@ -199,7 +203,7 @@ func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 }
 
 func (db *DB) RecreateDb() {
-	_, err := db.Exec(`
+	_, err := db.Exec(fmt.Sprintf(`
 	drop table if exists message_read;
 	drop table if exists message_reaction;
 	drop table if exists message;
@@ -207,13 +211,13 @@ func (db *DB) RecreateDb() {
 	drop table if exists chat_participant_notification;
 	drop table if exists chat_participant;
 	drop table if exists chat;
-	drop table if exists go_migrate;
-	drop table if exists go_migrate_test;
+	drop table if exists %s;
+	drop table if exists %s;
 	
 	drop procedure if exists delete_chat(chat_id bigint);
 	drop function if exists strip_tags(TEXT);
 	drop function if exists utc_now();
-`)
+`, prodMigrationsTable, testMigrationsTable))
 	db.lgr.Warn("Recreating database")
 	if err != nil {
 		db.lgr.Panicf("Error during dropping db: %v", err)

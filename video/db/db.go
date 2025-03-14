@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	dbP "database/sql"
 	"embed"
+	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
@@ -15,6 +16,9 @@ import (
 	"nkonev.name/video/logger"
 	"time"
 )
+
+const prodMigrationsTable = "go_migrate"
+const testMigrationsTable = "go_migrate_test"
 
 // https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
 type DB struct {
@@ -135,12 +139,12 @@ func migrateInternal(lgr *logger.Logger, db *sql.DB, path, migrationTable string
 
 func (db *DB) Migrate(lgr *logger.Logger, migrationsConfig *MigrationsConfig) {
 	lgr.Infof("Starting prod migration")
-	migrateInternal(lgr, db.DB, "/prod", "go_migrate")
+	migrateInternal(lgr, db.DB, "/prod", prodMigrationsTable)
 	lgr.Infof("Migration successful prod completed")
 
 	if migrationsConfig.AppendTestData {
 		lgr.Infof("Starting test migration")
-		migrateInternal(lgr, db.DB, "/test", "go_migrate_test")
+		migrateInternal(lgr, db.DB, "/test", testMigrationsTable)
 		lgr.Infof("Migration successful test completed")
 	}
 }
@@ -165,13 +169,13 @@ func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 }
 
 func (db *DB) RecreateDb() {
-	_, err := db.Exec(`
+	_, err := db.Exec(fmt.Sprintf(`
 	drop table if exists user_call_state;
-	drop table if exists go_migrate;
-	drop table if exists go_migrate_test;
+	drop table if exists %s;
+	drop table if exists %s;
 	
 	drop function if exists utc_now();
-`)
+`, prodMigrationsTable, testMigrationsTable))
 	db.lgr.Warn("Recreating database")
 	if err != nil {
 		db.lgr.Panicf("Error during dropping db: %v", err)

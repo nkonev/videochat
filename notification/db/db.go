@@ -16,6 +16,9 @@ import (
 	"time"
 )
 
+const prodMigrationsTable = "go_migrate"
+const testMigrationsTable = "go_migrate_test"
+
 // https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
 type DB struct {
 	*sql.DB
@@ -126,12 +129,12 @@ func migrateInternal(lgr *logger.Logger, db *sql.DB, path, migrationTable string
 
 func (db *DB) Migrate(migrationsConfig *MigrationsConfig) {
 	db.lgr.Infof("Starting prod migration")
-	migrateInternal(db.lgr, db.DB, "/prod", "go_migrate")
+	migrateInternal(db.lgr, db.DB, "/prod", prodMigrationsTable)
 	db.lgr.Infof("Migration successful prod completed")
 
 	if migrationsConfig.AppendTestData {
 		db.lgr.Infof("Starting test migration")
-		migrateInternal(db.lgr, db.DB, "/test", "go_migrate_test")
+		migrateInternal(db.lgr, db.DB, "/test", testMigrationsTable)
 		db.lgr.Infof("Migration successful test completed")
 	}
 }
