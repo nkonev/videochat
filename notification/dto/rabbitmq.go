@@ -16,9 +16,9 @@ type ReplyDto struct {
 }
 
 type ReactionEvent struct {
-	UserId int64 `json:"userId"` // who gave this reaction
-	Reaction string `json:"reaction"`
-	MessageId int64 `json:"messageId"`
+	UserId    int64  `json:"userId"` // who gave this reaction
+	Reaction  string `json:"reaction"`
+	MessageId int64  `json:"messageId"`
 }
 
 // for input data from another microservies
@@ -33,11 +33,18 @@ type NotificationEvent struct {
 	ByLogin                string                  `json:"byLogin"`
 	ByAvatar               *string                 `json:"byAvatar"`
 	ChatTitle              string                  `json:"chatTitle"`
-	ReactionEvent          *ReactionEvent		   `json:"reactionEvent"`
+	ReactionEvent          *ReactionEvent          `json:"reactionEvent"`
 }
 
 type GlobalUserEvent struct {
-	EventType             string           `json:"eventType"`
-	UserId                int64            `json:"userId"`
+	EventType             string                  `json:"eventType"`
+	UserId                int64                   `json:"userId"`
 	UserNotificationEvent *WrapperNotificationDto `json:"userNotificationEvent"`
+	VideoChatInvitation   *VideoCallInvitation    `json:"videoCallInvitation"`
+}
+
+type NotificationEphemeralEvent struct {
+	EventType           string               `json:"eventType"`
+	UserId              int64                `json:"userId"`
+	VideoChatInvitation *VideoCallInvitation `json:"videoCallInvitation"`
 }

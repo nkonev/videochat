@@ -9,9 +9,11 @@ import (
 	myRabbit "nkonev.name/notification/rabbitmq"
 )
 
-const NotificationsExchange = "notifications-exchange"
+const NotificationsPersistentFanoutExchange = "notifications-persistent-exchange"
+const NotificationsEphemeralFanoutExchange = "notifications-ephemeral-exchange"
 
-type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
+type FanoutNotificationsPersistentChannel struct{ *rabbitmq.Channel }
+type FanoutNotificationsEphemeralChannel struct{ *rabbitmq.Channel }
 
 func create(lgr *logger.Logger, name string, consumeCh *rabbitmq.Channel) *amqp.Queue {
 	var err error
@@ -54,10 +56,10 @@ func createAndBind(lgr *logger.Logger, name string, key string, exchange string,
 	return &q
 }
 
-func CreateNotificationsChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage NotificationsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
-	var queueName = "notifications"
+func CreateNotificationsPersistentChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage NotificationsPersistentListener, lc fx.Lifecycle) FanoutNotificationsPersistentChannel {
+	var queueName = "notifications-persistent"
 
-	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+	return FanoutNotificationsPersistentChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
 		connection,
 		func(channel *rabbitmq.Channel) error {
@@ -68,12 +70,38 @@ func CreateNotificationsChannel(lgr *logger.Logger, connection *rabbitmq.Connect
 				},
 			})
 
-			err := channel.ExchangeDeclare(NotificationsExchange, "direct", true, false, false, false, nil)
+			err := channel.ExchangeDeclare(NotificationsPersistentFanoutExchange, "direct", true, false, false, false, nil)
 			if err != nil {
 				return err
 			}
 
-			aQueue := createAndBind(lgr, queueName, "", NotificationsExchange, channel)
+			aQueue := createAndBind(lgr, queueName, "", NotificationsPersistentFanoutExchange, channel)
+			listen(lgr, channel, aQueue, onMessage, lc)
+			return nil
+		},
+	)}
+}
+
+func CreateNotificationsEphemeralChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage NotificationsEphemeralListener, lc fx.Lifecycle) FanoutNotificationsEphemeralChannel {
+	var queueName = "notifications-ephemeral"
+
+	return FanoutNotificationsEphemeralChannel{myRabbit.CreateRabbitMqChannelWithCallback(
+		lgr,
+		connection,
+		func(channel *rabbitmq.Channel) error {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					lgr.Infof("Stopping queue listening '%v'", queueName)
+					return channel.Close()
+				},
+			})
+
+			err := channel.ExchangeDeclare(NotificationsEphemeralFanoutExchange, "direct", true, false, false, false, nil)
+			if err != nil {
+				return err
+			}
+
+			aQueue := createAndBind(lgr, queueName, "", NotificationsEphemeralFanoutExchange, channel)
 			listen(lgr, channel, aQueue, onMessage, lc)
 			return nil
 		},

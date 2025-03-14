@@ -13,7 +13,8 @@ import (
 )
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
-const NotificationsFanoutExchange = "notifications-exchange"
+const NotificationsPersistentFanoutExchange = "notifications-persistent-exchange"
+const NotificationsEphemeralFanoutExchange = "notifications-ephemeral-exchange"
 
 func (rp *RabbitUserCountPublisher) Publish(ctx context.Context, participantIds []int64, chatNotifyDto *dto.VideoCallUserCountChangedDto) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
@@ -107,7 +108,7 @@ func NewRabbitUserIdsPublisher(lgr *logger.Logger, connection *rabbitmq.Connecti
 func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto.VideoCallInvitation, toUserId int64) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 
-	event := dto.GlobalUserEvent{
+	event := dto.NotificationEphemeralEvent{
 		EventType:           "video_call_invitation",
 		UserId:              toUserId,
 		VideoChatInvitation: invitationDto,
@@ -128,7 +129,7 @@ func (rp *RabbitInvitePublisher) Publish(ctx context.Context, invitationDto *dto
 		Headers:      headers,
 	}
 
-	if err := rp.channel.Publish(AsyncEventsFanoutExchange, "", false, false, msg); err != nil {
+	if err := rp.channel.Publish(NotificationsEphemeralFanoutExchange, "", false, false, msg); err != nil {
 		rp.lgr.WithTracing(ctx).Error(err, "Error during publishing")
 	}
 	return err
@@ -274,7 +275,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, notificatio
 		Headers:      headers,
 	}
 
-	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
+	if err := rp.channel.Publish(NotificationsPersistentFanoutExchange, "", false, false, msg); err != nil {
 		rp.lgr.WithTracing(ctx).Error(err, "Error during publishing dto")
 		return err
 	} else {

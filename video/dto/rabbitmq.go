@@ -1,13 +1,18 @@
 package dto
 
 type GlobalUserEvent struct {
-	EventType                 string                        `json:"eventType"`
-	UserId                    int64                         `json:"userId"`
-	VideoCallUserCountEvent   *VideoCallUserCountChangedDto `json:"videoCallUserCountEvent"`
-	VideoChatInvitation       *VideoCallInvitation          `json:"videoCallInvitation"`
-	VideoParticipantDialEvent *VideoDialChanges             `json:"videoParticipantDialEvent"`
-	VideoCallRecordingEvent   *VideoCallRecordingChangedDto `json:"videoCallRecordingEvent"`
+	EventType                      string                          `json:"eventType"`
+	UserId                         int64                           `json:"userId"`
+	VideoCallUserCountEvent        *VideoCallUserCountChangedDto   `json:"videoCallUserCountEvent"`
+	VideoParticipantDialEvent      *VideoDialChanges               `json:"videoParticipantDialEvent"`
+	VideoCallRecordingEvent        *VideoCallRecordingChangedDto   `json:"videoCallRecordingEvent"`
 	VideoCallScreenShareChangedDto *VideoCallScreenShareChangedDto `json:"videoCallScreenShareChangedDto"`
+}
+
+type NotificationEphemeralEvent struct {
+	EventType           string               `json:"eventType"`
+	UserId              int64                `json:"userId"`
+	VideoChatInvitation *VideoCallInvitation `json:"videoCallInvitation"`
 }
 
 type MissedCallNotification struct {
@@ -25,6 +30,6 @@ type NotificationEvent struct {
 }
 
 type GeneralEvent struct {
-	EventType string `json:"eventType"`
+	EventType                            string                              `json:"eventType"`
 	VideoCallUsersCallStatusChangedEvent *VideoCallUsersCallStatusChangedDto `json:"videoCallUsersCallStatusChangedEvent"`
 }

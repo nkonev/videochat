@@ -51,15 +51,19 @@ func main() {
 			handlers.NewMessageHandler,
 			configureMigrations,
 			db.ConfigureDb,
-			listener.CreateNotificationsListener,
+			listener.CreateNotificationsPersistentListener,
+			listener.CreateNotificationsEphemeralListener,
 			rabbitmq.CreateRabbitMqConnection,
-			services.CreateNotificationService,
+			services.CreateNotificationPersistentService,
+			services.CreateNotificationEphemeralService,
 			producer.NewRabbiEventPublisher,
+			producer.NewRabbitInvitePublisher,
 		),
 		fx.Invoke(
 			runMigrations,
 			runEcho,
-			listener.CreateNotificationsChannel,
+			listener.CreateNotificationsPersistentChannel,
+			listener.CreateNotificationsEphemeralChannel,
 		),
 	)
 	appFx.Run()

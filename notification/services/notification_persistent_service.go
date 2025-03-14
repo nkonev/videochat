@@ -11,14 +11,14 @@ import (
 	"nkonev.name/notification/producer"
 )
 
-type NotificationService struct {
+type NotificationPersistentService struct {
 	dbs                   *db.DB
 	rabbitEventsPublisher *producer.RabbitEventPublisher
 	lgr                   *logger.Logger
 }
 
-func CreateNotificationService(dbs *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher, lgr *logger.Logger) *NotificationService {
-	return &NotificationService{
+func CreateNotificationPersistentService(dbs *db.DB, rabbitEventsPublisher *producer.RabbitEventPublisher, lgr *logger.Logger) *NotificationPersistentService {
+	return &NotificationPersistentService{
 		dbs:                   dbs,
 		rabbitEventsPublisher: rabbitEventsPublisher,
 		lgr:                   lgr,
@@ -29,7 +29,7 @@ const NotificationAdd = "notification_add"
 const NotificationDelete = "notification_delete"
 const NotificationClearAll = "notification_clear_all"
 
-func (srv *NotificationService) HandleChatNotification(ctx context.Context, event *dto.NotificationEvent) {
+func (srv *NotificationPersistentService) HandleChatNotification(ctx context.Context, event *dto.NotificationEvent) {
 
 	settings, err := srv.getNotificationSettings(ctx, event)
 	if err != nil {
@@ -295,7 +295,7 @@ func (srv *NotificationService) HandleChatNotification(ctx context.Context, even
 
 }
 
-func (srv *NotificationService) getNotificationSettings(ctx context.Context, event *dto.NotificationEvent) (*dto.NotificationGlobalSettings, error) {
+func (srv *NotificationPersistentService) getNotificationSettings(ctx context.Context, event *dto.NotificationEvent) (*dto.NotificationGlobalSettings, error) {
 
 	userNotificationsGlobalSettings, err := srv.dbs.GetNotificationGlobalSettings(ctx, event.UserId)
 	if err != nil {
@@ -336,7 +336,7 @@ func (srv *NotificationService) getNotificationSettings(ctx context.Context, eve
 	return &result, nil
 }
 
-func (srv *NotificationService) removeExcessNotificationsIfNeed(ctx context.Context, userId int64) error {
+func (srv *NotificationPersistentService) removeExcessNotificationsIfNeed(ctx context.Context, userId int64) error {
 	count, err := srv.dbs.GetNotificationCount(ctx, userId)
 	if err != nil {
 		srv.lgr.WithTracing(ctx).Errorf("Unable to get notification count %v", err)

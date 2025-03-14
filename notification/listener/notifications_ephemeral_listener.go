@@ -11,21 +11,21 @@ import (
 	"nkonev.name/notification/services"
 )
 
-type NotificationsListener func(*amqp.Delivery) error
+type NotificationsEphemeralListener func(*amqp.Delivery) error
 
-func CreateNotificationsListener(service *services.NotificationService, lgr *logger.Logger) NotificationsListener {
+func CreateNotificationsEphemeralListener(service *services.NotificationEphemeralService, lgr *logger.Logger) NotificationsEphemeralListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
 		ctx := rabbitmq.ExtractAMQPHeaders(context.Background(), msg.Headers)
-		ctx, span := tr.Start(ctx, "notification.listener")
+		ctx, span := tr.Start(ctx, "notification.ephemeral.listener")
 		defer span.End()
 
 		bytesData := msg.Body
 		strData := string(bytesData)
 		lgr.WithTracing(ctx).Debugf("Received %v", strData)
 
-		var bindTo = new(dto.NotificationEvent)
+		var bindTo = new(dto.NotificationEphemeralEvent)
 		err := json.Unmarshal(msg.Body, bindTo)
 		if err != nil {
 			lgr.WithTracing(ctx).Errorf("Unable to unmarshall notification %v", err)

@@ -12,7 +12,7 @@ import (
 )
 
 const EventsFanoutExchange = "async-events-exchange"
-const NotificationsFanoutExchange = "notifications-exchange"
+const NotificationsPersistentFanoutExchange = "notifications-persistent-exchange"
 
 func (rp *RabbitEventsPublisher) Publish(ctx context.Context, aDto interface{}) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
@@ -71,7 +71,7 @@ func (rp *RabbitNotificationsPublisher) Publish(ctx context.Context, aDto interf
 		Headers:      headers,
 	}
 
-	if err := rp.channel.Publish(NotificationsFanoutExchange, "", false, false, msg); err != nil {
+	if err := rp.channel.Publish(NotificationsPersistentFanoutExchange, "", false, false, msg); err != nil {
 		rp.lgr.WithTracing(ctx).Error(err, "Error during publishing dto")
 		return err
 	} else {
