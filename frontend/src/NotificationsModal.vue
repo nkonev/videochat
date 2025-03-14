@@ -11,7 +11,11 @@
                     <v-list class="py-0 notification-list" v-if="!loading">
                         <template v-if="itemsDto.items.length > 0">
                             <template v-for="(item, index) in itemsDto.items">
-                                <v-list-item link @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
+                                <!-- :value was added to fix "Multiple nodes with the same ID" warning
+                                in case several missed calls from the same chat
+                                see https://github.com/vuetifyjs/vuetify/issues/20516#issuecomment-2593078955
+                                -->
+                                <v-list-item link :value="item.id" @click.prevent="onNotificationClick(item)" :href="getLink(item)" >
                                   <template v-slot:prepend>
                                     <v-icon size="x-large">
                                       {{ getNotificationIcon(item.notificationType) }}
