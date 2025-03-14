@@ -179,9 +179,13 @@ export default {
     },
     setCursorToEnd() {
         this.$nextTick(()=>{
+          return this.editor.commands.focus('end')
+        }).then(()=>{
+          if (this.isMobile()) { // fix an issue related to long text and mobile virtual keyboard
             setTimeout(()=>{
-                this.editor.commands.focus('end')
-            }, 1)
+              this.editor.commands.scrollIntoView()
+            }, 300)
+          }
         })
     },
     addImage() {
