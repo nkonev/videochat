@@ -22,6 +22,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
@@ -65,8 +66,8 @@ public class AaaErrorController extends AbstractErrorController {
             LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
         }
 
-        if (acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {
-            response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        if (acceptValues.contains(MediaType.APPLICATION_JSON_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE)) {
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             try {
                 if (aaaProperties.debugResponse()) {
                     objectMapper.writeValue(response.getWriter(), new AaaError(
@@ -91,8 +92,15 @@ public class AaaErrorController extends AbstractErrorController {
             return null;
         } else {
             HttpStatus status = getStatus(request);
-
-            Map<String, Object> model = Collections.unmodifiableMap(errorAttributes);
+            Map<String, Object> model;
+            if (aaaProperties.debugResponse()) {
+                model = Collections.unmodifiableMap(errorAttributes);
+            } else {
+                model = Collections.unmodifiableMap(errorAttributes.entrySet().stream()
+                        .filter(e -> !"trace".equals(e.getKey()))
+                        .filter(e -> !"exception".equals(e.getKey()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+            }
             response.setStatus(status.value());
             ModelAndView modelAndView = resolveErrorView(request, response, status, model);
             return (modelAndView == null ? new ModelAndView("error", model) : modelAndView);
