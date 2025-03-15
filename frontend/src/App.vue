@@ -64,7 +64,7 @@
             <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           </v-badge>
           <div class="app-title ml-2 align-self-center" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
-            <span class="app-title-text pl-1" v-html="getTitle()"></span>
+            <div class="app-title-text pl-1" v-html="getTitle()"></div>
             <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext pl-1">
               {{ getSubtitle() }}
             </div>
@@ -975,10 +975,11 @@ html {
   overflow: hidden;
 
   &-text {
+    display: inline;
     font-size: .875rem;
     font-weight: 500;
     letter-spacing: .09em;
-    height: 1.6em;
+    line-height: 1.8em;
   }
 
   &-subtext {
