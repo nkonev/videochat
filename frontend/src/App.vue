@@ -979,7 +979,6 @@ html {
     font-size: .875rem;
     font-weight: 500;
     letter-spacing: .09em;
-    line-height: 1.8em;
   }
 
   &-subtext {
