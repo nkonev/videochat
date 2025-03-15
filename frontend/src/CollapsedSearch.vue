@@ -59,16 +59,14 @@ export default {
 
 <style lang="stylus">
 .search-card {
+    align-self center
     min-width: 330px;
-    padding-top 0.3em
-    padding-bottom 0.3em
     margin-left: 0.4em;
     margin-right: 2px;
 }
 .search-card-mobile {
+    align-self center
     width: 100%;
-    padding-top 0.3em
-    padding-bottom 0.3em
     margin-right: 0.4em;
 }
 </style>
