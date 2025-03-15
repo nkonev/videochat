@@ -72,10 +72,10 @@ public class AaaExceptionHandler {
     }
 
     @ResponseBody
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    @org.springframework.web.bind.annotation.ExceptionHandler(UnauthorizedException.class)
-    public AaaError unauthorized(UnauthorizedException e) {
-        return new AaaError(HttpStatus.UNAUTHORIZED.value(), "unauthorized", e.getMessage(), new Date().toString());
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @org.springframework.web.bind.annotation.ExceptionHandler(ForbiddenActionException.class)
+    public AaaError unauthorized(ForbiddenActionException e) {
+        return new AaaError(HttpStatus.FORBIDDEN.value(), "forbidden", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody

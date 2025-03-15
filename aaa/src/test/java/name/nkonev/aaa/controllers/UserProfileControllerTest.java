@@ -780,8 +780,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
             .andDo(result -> {
                 LOGGER.info(result.getResponse().getContentAsString());
             })
-            .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.message").value(Matchers.allOf(Matchers.containsString("user with id"), Matchers.containsString("cannot access this path"))))
+            .andExpect(status().isForbidden())
             .andReturn();
     }
 }

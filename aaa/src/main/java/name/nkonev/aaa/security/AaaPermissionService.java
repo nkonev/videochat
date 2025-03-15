@@ -8,13 +8,19 @@ import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.LockDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.Optional;
 
 import static name.nkonev.aaa.Constants.DELETED_ID;
+import static name.nkonev.aaa.converter.UserAccountConverter.convertRoles2Enum;
+import static name.nkonev.aaa.utils.NullUtils.trimToNull;
 
 /**
  * Central entrypoint for access decisions
@@ -30,6 +36,8 @@ public class AaaPermissionService {
 
     @Autowired
     private AaaProperties aaaProperties;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaPermissionService.class);
 
     public boolean hasSessionManagementPermission(PrincipalToCheck userAccount) {
         if (userAccount==null){
@@ -184,6 +192,21 @@ public class AaaPermissionService {
 
     public boolean canSetPassword(UserAccountDetailsDTO userAccount, Long userId) {
         return canSetPassword(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), userId);
+    }
+
+    public boolean checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpHeaders requestHeaders) {
+        if (userAccount==null){
+            return false;
+        }
+        var path = trimToNull(requestHeaders.getFirst("x-forwarded-uri")); // nullable
+        if (isManagementUrlPath(path)) {
+            var roles = convertRoles2Enum(userAccount.getRoles());
+            if (!canAccessToManagementUrlPath(roles)) {
+                LOGGER.debug("user with id %s and roles %s cannot access this path".formatted(userAccount.getId(), userAccount.roles()));
+                return false;
+            }
+        }
+        return true;
     }
 
 }

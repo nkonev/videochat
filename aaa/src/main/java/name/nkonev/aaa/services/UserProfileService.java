@@ -8,7 +8,7 @@ import name.nkonev.aaa.entity.redis.ChangeEmailConfirmationToken;
 import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.exception.DataNotFoundException;
 import name.nkonev.aaa.exception.DataNotFoundInternalException;
-import name.nkonev.aaa.exception.UnauthorizedException;
+import name.nkonev.aaa.exception.ForbiddenActionException;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.repository.spring.jdbc.UserListViewRepository;
@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import static name.nkonev.aaa.Constants.*;
 import static name.nkonev.aaa.Constants.Headers.*;
 import static name.nkonev.aaa.converter.UserAccountConverter.*;
-import static name.nkonev.aaa.utils.NullUtils.trimToNull;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 @Service
@@ -101,15 +100,7 @@ public class UserProfileService {
     }
 
     @Transactional
-    public HttpHeaders checkAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session, HttpHeaders requestHeaders) {
-        var path = trimToNull(requestHeaders.getFirst("x-forwarded-uri")); // nullable
-        if (aaaPermissionService.isManagementUrlPath(path)) {
-            var roles = convertRoles2Enum(userAccount.getRoles());
-            if (!aaaPermissionService.canAccessToManagementUrlPath(roles)) {
-                throw new UnauthorizedException("user with id %s and roles %s cannot access this path".formatted(userAccount.getId(), userAccount.roles()));
-            }
-        }
-
+    public HttpHeaders processAuthenticatedInternal(UserAccountDetailsDTO userAccount, HttpSession session) {
         final var now = getNowUTC();
         if (userAccount.getLastSeenDateTime() == null || now.minus(aaaProperties.onlineEstimation()).isAfter(userAccount.getLastSeenDateTime())) {
             userAccountRepository.updateLastSeen(userAccount.getUsername(), now);
@@ -586,7 +577,7 @@ public class UserProfileService {
                     if (aaaProperties.keycloak().allowUnbind()) {
                         yield userAccount.oauth2Identifiers().withKeycloakId(null);
                     } else {
-                        throw new UnauthorizedException("Unbinding is prohibited");
+                        throw new ForbiddenActionException("Unbinding is prohibited");
                     }
                 }
                 default -> throw new RuntimeException("Wrong OAuth2 provider: " + provider);
