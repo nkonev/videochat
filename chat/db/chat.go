@@ -862,11 +862,11 @@ func (tx *Tx) RenameChat(ctx context.Context, chatId int64, title string) error 
 func getChatIdsByParticipantIdCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, offset int) ([]int64, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = co.QueryContext(ctx, fmt.Sprintf(`SELECT ch.id from chat ch
-		WHERE %s
-		ORDER BY ch.id
+	rows, err = co.QueryContext(ctx, fmt.Sprintf(`SELECT DISTINCT cp.chat_id from chat_participant cp
+	 	WHERE cp.user_id = $1
+		ORDER BY cp.chat_id
 		LIMIT $2 OFFSET $3
-	`, chat_where), participantId, limit, offset)
+	`), participantId, limit, offset)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	} else {

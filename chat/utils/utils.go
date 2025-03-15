@@ -45,6 +45,8 @@ const DefaultSize = 20
 const DefaultPage = 0
 const DefaultOffset = 0
 
+const PaginationMaxSize = 200
+
 func FixPage(page int) int {
 	if page < 0 {
 		return DefaultPage
