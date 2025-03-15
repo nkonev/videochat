@@ -1026,7 +1026,7 @@ func (db *DB) GetBlogPostModifiedDates(ctx context.Context, chatIds []int64) (ma
 	var err error
 	rows, err = db.QueryContext(ctx, `
 		select m.chat_id, coalesce(m.edit_date_time, m.create_date_time) from message m where chat_id = any($1) and blog_post = true
-	`)
+	`, chatIds)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
