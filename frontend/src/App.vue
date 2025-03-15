@@ -52,7 +52,7 @@
           </v-btn>
 
         <template v-if="showSearchButton">
-          <v-badge
+          <v-badge class="align-self-center"
               :color="getTetATetBadgeColor()"
               dot
               location="right bottom"
@@ -62,9 +62,9 @@
           >
             <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           </v-badge>
-          <div class="app-title ml-2" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
-            <span class="app-title-text" v-html="getTitle()"></span>
-            <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
+          <div class="app-title ml-2 align-self-center" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
+            <span class="app-title-text pl-1" v-html="getTitle()"></span>
+            <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext pl-1">
               {{ getSubtitle() }}
             </div>
           </div>
