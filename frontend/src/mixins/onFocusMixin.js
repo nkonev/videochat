@@ -18,7 +18,7 @@ export default () => {
                 })
             },
             installOnFocus() {
-                this.doOnFocus = debounce(this.doOnFocus, 200, {leading: false, trailing: true});
+                this.doOnFocus = debounce(this.doOnFocus, 300, {leading: false, trailing: true});
                 window.addEventListener("focus", this.doOnFocus);
             },
             uninstallOnFocus() {
