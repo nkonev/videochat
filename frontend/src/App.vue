@@ -14,76 +14,76 @@
           ></v-progress-linear>
 
           <v-container fluid class="ma-0 pa-0 d-flex">
-          <v-badge
-              :content="notificationsCount"
-              :model-value="showNotificationBadge"
-              color="red"
-              overlap
-              offset-y="10"
-          >
-              <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-          </v-badge>
+            <v-badge
+                :content="notificationsCount"
+                :model-value="showNotificationBadge"
+                color="red"
+                overlap
+                offset-y="10"
+            >
+                <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+            </v-badge>
 
-          <template v-if="chatStore.showCallManagement">
-            <template v-if="showSearchButton || !isMobile()">
-                <v-badge
-                         :content="chatStore.videoChatUsersCount"
-                         :model-value="showVideoBadge"
-                         color="green"
-                         overlap
-                         offset-y="1.8em"
-                >
-                    <v-btn v-if="chatStore.isReady()" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
-                        <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
-                    </v-btn>
-                    <v-btn v-else-if="chatStore.isInCall()" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
-                        <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
-                    </v-btn>
-                </v-badge>
+            <template v-if="chatStore.showCallManagement">
+              <template v-if="showSearchButton || !isMobile()">
+                  <v-badge
+                           :content="chatStore.videoChatUsersCount"
+                           :model-value="showVideoBadge"
+                           color="green"
+                           overlap
+                           offset-y="1.8em"
+                  >
+                      <v-btn v-if="chatStore.isReady()" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
+                          <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
+                      </v-btn>
+                      <v-btn v-else-if="chatStore.isInCall()" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+                          <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
+                      </v-btn>
+                  </v-badge>
+              </template>
             </template>
+
+            <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
+              <v-icon>mdi-postage-stamp</v-icon>
+            </v-btn>
+
+            <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
+                {{ chatStore.fileUploadOverallProgress + "%" }}
+            </v-btn>
+
+          <template v-if="showSearchButton">
+            <div class="ml-2"></div>
+            <v-badge class="align-self-center"
+                :color="getTetATetBadgeColor()"
+                dot
+                location="right bottom"
+                overlap
+                bordered
+                :model-value="showTetATetBadge"
+            >
+              <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
+            </v-badge>
+            <div class="app-title ml-2 align-self-center" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
+              <div class="app-title-text pl-1" v-html="getTitle()"></div>
+              <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext pl-1">
+                {{ getSubtitle() }}
+              </div>
+            </div>
           </template>
 
-          <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
-            <v-icon>mdi-postage-stamp</v-icon>
-          </v-btn>
-
-          <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
-              {{ chatStore.fileUploadOverallProgress + "%" }}
-          </v-btn>
-
-        <template v-if="showSearchButton">
-          <div class="ml-2"></div>
-          <v-badge class="align-self-center"
-              :color="getTetATetBadgeColor()"
-              dot
-              location="right bottom"
-              overlap
-              bordered
-              :model-value="showTetATetBadge"
-          >
-            <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
-          </v-badge>
-          <div class="app-title ml-2 align-self-center" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
-            <div class="app-title-text pl-1" v-html="getTitle()"></div>
-            <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext pl-1">
-              {{ getSubtitle() }}
-            </div>
-          </div>
-        </template>
-
-        <template v-if="shouldShowSearch">
-          <CollapsedSearch :provider="{
-              getModelValue: this.getModelValue,
-              setModelValue: this.setModelValue,
-              getShowSearchButton: this.getShowSearchButton,
-              setShowSearchButton: this.setShowSearchButton,
-              searchName: this.searchName,
-              switchSearchType: this.switchSearchType,
-              canSwitchSearchType: this.canSwitchSearchType,
-              searchIcon: this.searchIcon,
-              textFieldVariant: 'solo',
-          }"/>
-        </template>
+          <template v-if="shouldShowSearch">
+            <CollapsedSearch :provider="{
+                getModelValue: this.getModelValue,
+                setModelValue: this.setModelValue,
+                getShowSearchButton: this.getShowSearchButton,
+                setShowSearchButton: this.setShowSearchButton,
+                searchName: this.searchName,
+                switchSearchType: this.switchSearchType,
+                canSwitchSearchType: this.canSwitchSearchType,
+                searchIcon: this.searchIcon,
+                textFieldVariant: 'solo',
+            }"/>
+          </template>
         </v-container>
       </v-app-bar>
 
