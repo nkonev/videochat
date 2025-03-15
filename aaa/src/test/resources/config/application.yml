@@ -8,6 +8,7 @@ logging:
     org.springframework.security: WARN
     org.mockserver: WARN
     org.htmlunit: ERROR
+    # org.springframework.web: TRACE
   pattern:
     console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
 
@@ -85,6 +86,7 @@ custom:
       expiration: "30m"
     await-for-termination: "5m"
     pool-size: 5
+  debug-response: false
 
 server.port: 9080
 

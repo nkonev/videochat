@@ -11,6 +11,7 @@
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type: TRACE
 # logging.level.org.springframework.jdbc.core: TRACE
+# logging.level.org.springframework.web: TRACE
 
 custom.api-url: "http://localhost:8081/api/aaa"
 custom.frontend-url: "http://localhost:8081"
@@ -85,6 +86,7 @@ custom:
       expiration: "30m"
     await-for-termination: "5m"
     pool-size: 5
+  debug-response: false
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'

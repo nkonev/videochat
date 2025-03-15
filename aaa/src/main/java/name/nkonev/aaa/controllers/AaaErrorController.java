@@ -1,6 +1,7 @@
 package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.tracing.Tracer;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
@@ -40,6 +41,9 @@ public class AaaErrorController extends AbstractErrorController {
 
     @Autowired
     private AaaProperties aaaProperties;
+
+    @Autowired
+    private Tracer tracer;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorController.class);
 
@@ -92,16 +96,23 @@ public class AaaErrorController extends AbstractErrorController {
             return null;
         } else {
             HttpStatus status = getStatus(request);
-            Map<String, Object> model;
+            Map<String, Object> m;
             if (aaaProperties.debugResponse()) {
-                model = Collections.unmodifiableMap(errorAttributes);
+                m = new HashMap<>(errorAttributes);
             } else {
-                model = Collections.unmodifiableMap(errorAttributes.entrySet().stream()
+                m = new HashMap<>(errorAttributes.entrySet().stream()
                         .filter(e -> !"trace".equals(e.getKey()))
                         .filter(e -> !"exception".equals(e.getKey()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
             }
+            var traceId = getTraceId();
+            if (traceId != null) {
+                m.put("traceId", traceId);
+            }
+            m.put("status", status.value());
+            var model = Collections.unmodifiableMap(m);
             response.setStatus(status.value());
+            // see ErrorMvcAutoConfiguration.StaticView
             ModelAndView modelAndView = resolveErrorView(request, response, status, model);
             return (modelAndView == null ? new ModelAndView("error", model) : modelAndView);
         }
@@ -109,5 +120,20 @@ public class AaaErrorController extends AbstractErrorController {
 
     private Map<String, Object> getCustomErrorAttributes(HttpServletRequest request) {
         return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
+    }
+
+    private String getTraceId() {
+        var currentSpan = this.tracer.currentSpan();
+        if (currentSpan == null) {
+            return null;
+        } else {
+            var context = currentSpan.context();
+            if (context != null) {
+                var traceId = context.traceId();
+                return traceId != null ? traceId.toString() : null;
+            } else {
+                return null;
+            }
+        }
     }
 }
