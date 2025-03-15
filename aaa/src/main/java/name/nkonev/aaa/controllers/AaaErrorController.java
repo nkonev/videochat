@@ -1,7 +1,6 @@
 package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.tracing.Tracer;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static name.nkonev.aaa.controllers.TracerHeaderWriteFilter.EXTERNAL_TRACE_ID_HEADER;
 import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
 /**
@@ -41,9 +41,6 @@ public class AaaErrorController extends AbstractErrorController {
 
     @Autowired
     private AaaProperties aaaProperties;
-
-    @Autowired
-    private Tracer tracer;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorController.class);
 
@@ -105,7 +102,7 @@ public class AaaErrorController extends AbstractErrorController {
                         .filter(e -> !"exception".equals(e.getKey()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
             }
-            var traceId = getTraceId();
+            var traceId = getTraceId(response);
             if (traceId != null) {
                 m.put("traceId", traceId);
             }
@@ -122,18 +119,7 @@ public class AaaErrorController extends AbstractErrorController {
         return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
     }
 
-    private String getTraceId() {
-        var currentSpan = this.tracer.currentSpan();
-        if (currentSpan == null) {
-            return null;
-        } else {
-            var context = currentSpan.context();
-            if (context != null) {
-                var traceId = context.traceId();
-                return traceId != null ? traceId.toString() : null;
-            } else {
-                return null;
-            }
-        }
+    private String getTraceId(HttpServletResponse response) {
+        return response.getHeader(EXTERNAL_TRACE_ID_HEADER);
     }
 }
