@@ -2,7 +2,7 @@
     <v-row justify="center">
         <v-dialog v-model="show" max-width="800" height="100%" scrollable :persistent="hasSearchString()" :fullscreen="isMobile()">
             <v-card>
-                <v-card-title class="d-flex align-center ml-2">
+                <v-card-title class="d-flex align-center ml-2 py-1">
                     <template v-if="showSearchButton">
                       Attached files
                     </template>
