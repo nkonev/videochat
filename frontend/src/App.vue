@@ -62,7 +62,7 @@
           >
             <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           </v-badge>
-          <div class="app-title" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
+          <div class="app-title ml-2" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
             <span class="app-title-text" v-html="getTitle()"></span>
             <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
               {{ getSubtitle() }}
@@ -968,6 +968,7 @@ html {
 
 
 .app-title {
+  width: 100%;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
