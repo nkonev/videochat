@@ -13,6 +13,7 @@
             absolute
           ></v-progress-linear>
 
+          <v-container fluid class="ma-0 pa-0 d-flex">
           <v-badge
               :content="notificationsCount"
               :model-value="showNotificationBadge"
@@ -61,8 +62,8 @@
           >
             <img v-if="shouldShowAvatar() && !isMobile()" @click="onChatAvatarClick()" class="ml-2 v-avatar chat-avatar" :src="chatStore.avatar"/>
           </v-badge>
-          <div class="d-flex flex-column app-title mx-2" :class="isInChat() ? 'app-title-hoverable' : 'app-title'" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
-            <div :class="!isMobile() ? ['align-self-center'] : []" class="app-title-text" v-html="getTitle()"></div>
+          <div class="app-title" :class="isInChat() ? 'app-title-hoverable' : ''" @click="onInfoClicked()" :style="{'cursor': isInChat() ? 'pointer' : 'default'}">
+            <span class="app-title-text" v-html="getTitle()"></span>
             <div v-if="shouldShowSubtitle()" :class="!isMobile() ? ['align-self-center'] : []" class="app-title-subtext">
               {{ getSubtitle() }}
             </div>
@@ -82,6 +83,7 @@
               textFieldVariant: 'solo',
           }"/>
         </template>
+        </v-container>
       </v-app-bar>
 
       <v-main>
@@ -964,16 +966,17 @@ html {
   50% { opacity: 30% }
 }
 
+
 .app-title {
-  width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 
   &-text {
     font-size: .875rem;
     font-weight: 500;
     letter-spacing: .09em;
     height: 1.6em;
-    white-space: break-spaces;
-    overflow: hidden;
   }
 
   &-subtext {
