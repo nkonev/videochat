@@ -14,7 +14,7 @@
                       setShowSearchButton: this.setShowSearchButton,
                       searchName: this.searchName,
                       textFieldVariant: 'outlined',
-                    }"/>
+                    }" paddings-y="true"/>
 
                 </v-card-title>
 

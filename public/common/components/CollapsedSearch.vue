@@ -9,6 +9,7 @@
     </v-btn>
 
     <v-card v-if="!provider.getShowSearchButton() || !isMobile()" variant="plain" :class="isMobile() ? 'search-card-mobile' : 'search-card'">
+      <div :class="wrapperClass()">
         <v-text-field density="compact"
                       @focusout="onFocusOut"
                       :variant="provider.textFieldVariant"
@@ -22,6 +23,7 @@
                 <v-btn icon density="compact" :disabled="true"><v-icon class="search-icon">{{ provider.searchIcon() }}</v-icon></v-btn>
             </template>
         </v-text-field>
+      </div>
     </v-card>
 
 </template>
@@ -42,6 +44,7 @@ export default {
     },
     props: [
         'provider', // .getModelValue, .setModelValue, .getShowSearchButton, .setShowSearchButton, .searchName, .switchSearchType, .canSwitchSearchType, .searchIcon, .textFieldVariant
+        'paddingsY'
     ],
     methods: {
         isMobile() {
@@ -60,6 +63,13 @@ export default {
           if (this.isMobile()) {
             this.provider.setShowSearchButton(true);
           }
+        },
+        wrapperClass() {
+          let cl = [];
+          if (this.paddingsY) {
+            cl.push('py-2')
+          }
+          return cl
         },
     },
     mounted() {
