@@ -44,7 +44,7 @@
                   offset-y="-9"
                   :model-value="chatStore.hasMessageEditingText()"
               >
-                <v-icon>{{chatStore.isMessageEditing() ? 'mdi-pencil' : 'mdi-plus'}}</v-icon>
+                <v-icon>{{chatStore.isMessageEditing() ? 'mdi-lead-pencil' : 'mdi-plus-thick'}}</v-icon>
               </v-badge>
             </v-btn>
           </pane>
