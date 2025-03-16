@@ -27,6 +27,7 @@
             <template v-if="chatStore.showCallManagement">
               <template v-if="showSearchButton || !isMobile()">
                   <v-badge
+                           :class="isMobile() ? ['ml-2'] : []"
                            :content="chatStore.videoChatUsersCount"
                            :model-value="showVideoBadge"
                            color="green"
@@ -52,8 +53,7 @@
             </v-btn>
 
           <template v-if="showSearchButton">
-            <div class="ml-2"></div>
-            <v-badge class="align-self-center"
+            <v-badge :class="isMobile() ? ['align-self-center', 'ml-2'] : ['align-self-center']"
                 :color="getTetATetBadgeColor()"
                 dot
                 location="right bottom"
