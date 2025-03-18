@@ -553,10 +553,14 @@ func convertToMessageDtoWithoutPersonalized(ctx context.Context, lgr *logger.Log
 		}
 	} else if dbMessage.ResponseEmbeddedMessageResendOwnerId != nil {
 		embeddedUser := users[*dbMessage.ResponseEmbeddedMessageResendOwnerId]
-		basicChat := chats[*dbMessage.ResponseEmbeddedMessageResendChatId]
+		basicEmbeddedChat := chats[*dbMessage.ResponseEmbeddedMessageResendChatId]
 		var embedChatName *string = nil
-		if !basicChat.IsTetATet {
-			embedChatName = &basicChat.Title
+		var isParticipant bool
+		if basicEmbeddedChat != nil { // basicEmbeddedChat can be deleted
+			if !basicEmbeddedChat.IsTetATet {
+				embedChatName = &basicEmbeddedChat.Title
+			}
+			isParticipant = basicEmbeddedChat.BehalfUserIsParticipant
 		}
 
 		ret.EmbedMessage = &dto.EmbedMessageResponse{
@@ -566,7 +570,7 @@ func convertToMessageDtoWithoutPersonalized(ctx context.Context, lgr *logger.Log
 			Text:          dbMessage.Text,
 			EmbedType:     *dbMessage.ResponseEmbeddedMessageType,
 			Owner:         embeddedUser,
-			IsParticipant: basicChat.BehalfUserIsParticipant,
+			IsParticipant: isParticipant,
 		}
 		ret.Text = ""
 	}
