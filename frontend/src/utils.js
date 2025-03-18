@@ -493,3 +493,36 @@ export const filterOutOldWritingUsers = (writingUsers) => {
     const curr = +new Date();
     return writingUsers.filter(value => (value.timestamp + 1*1000) > curr);
 }
+
+const domParser = new DOMParser();
+const collapseSize = 256;
+export const shouldMessageBeCollapsed = (item) => {
+    const text = item?.embedMessage?.text;
+    if (!text) {
+        return {
+            initiallyCollapsed: false,
+            collapsedText: "",
+        }
+    }
+
+    if (item.embedMessage?.embedType == embed_message_reply) {
+        const htmlDoc = domParser.parseFromString(text, 'text/html');
+
+        const videos = htmlDoc.getElementsByTagName('video');
+        const audios = htmlDoc.getElementsByTagName('audio');
+        const iframes = htmlDoc.getElementsByTagName('iframe');
+        const images = htmlDoc.getElementsByTagName('img');
+        const textContent = htmlDoc.documentElement.textContent.trim();
+
+        if (textContent.length > collapseSize || images.length > 1 || iframes.length > 1 || audios.length > 1 || videos.length > 1) {
+            return {
+                initiallyCollapsed: true,
+                collapsedText: textContent.slice(0, collapseSize) + "...",
+            }
+        }
+    }
+    return {
+        initiallyCollapsed: false,
+        collapsedText: "",
+    }
+}

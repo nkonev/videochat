@@ -29,7 +29,13 @@
                             {{getEmbedHeadLite(item)}}
                         </div>
                     </template>
-                    <div :class="embedClass()" v-html="item.embedMessage.text"></div>
+                    <div :class="embedClass()">
+                      <span v-html="buildEmbedHtml(item)"></span>
+                      <template v-if="item.embedMessage.initiallyCollapsed">
+                        <span class="caption-small" v-if="item.embedMessage.collapsed" @click="item.embedMessage.collapsed = false" style="cursor: pointer"> ...{{$vuetify.locale.t('$vuetify.expand')}}</span>
+                        <span class="caption-small" v-if="!item.embedMessage.collapsed" @click="item.embedMessage.collapsed = true" style="cursor: pointer"> ...{{$vuetify.locale.t('$vuetify.collapse')}}</span>
+                      </template>
+                    </div>
                 </div>
                 <v-container v-if="shouldShowMainContainer(item)" v-html="item.text" :class="messageClass(item)"></v-container>
                 <div class="mt-0 ml-2 mr-4 reactions" v-if="shouldShowReactions(item)">
@@ -212,7 +218,13 @@
             getReactedUsers(reactionObj) {
                 return reactionObj.users?.map(u => u.login).join(", ")
             },
-
+            buildEmbedHtml(item) {
+              if (item.embedMessage.collapsed) {
+                return item.embedMessage.collapsedText
+              } else {
+                return item.embedMessage.text
+              }
+            },
         },
         created() {
             this.onMessageMouseMove = debounce(this.onMessageMouseMove, 1000, {leading:true, trailing:false});

@@ -79,6 +79,7 @@
       replaceOrAppend,
       replaceOrPrepend, reply_message,
       setAnswerPreviewFields,
+      shouldMessageBeCollapsed,
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -132,12 +133,14 @@
       methods: {
         addItem(dto) {
           console.log("Adding item", dto);
+          this.transformItem(dto);
           this.items.unshift(dto);
           this.reduceListAfterAdd(true);
           this.updateTopAndBottomIds();
         },
         changeItem(dto) {
           console.log("Replacing item", dto);
+          this.transformItem(dto);
           replaceInArray(this.items, dto);
           this.updateTopAndBottomIds();
         },
@@ -254,6 +257,10 @@
           const items = res.data.items;
           console.log("Get items in ", scrollerName, items, "page", this.startingFromItemIdTop, this.startingFromItemIdBottom, "chosen", startingFromItemId);
 
+          items.forEach((item) => {
+            this.transformItem(item);
+          });
+
           return items
         },
         async load() {
@@ -305,6 +312,17 @@
             return Promise.resolve(true)
           } finally {
             this.chatStore.decrementProgressCount();
+          }
+        },
+        transformItem(item) {
+          if (item.embedMessage) {
+            item.embedMessage.initiallyCollapsed = false;
+            const {initiallyCollapsed, collapsedText} = shouldMessageBeCollapsed(item);
+            if (initiallyCollapsed) {
+              item.embedMessage.initiallyCollapsed = true;
+              item.embedMessage.collapsedText = collapsedText;
+            }
+            item.embedMessage.collapsed = item.embedMessage.initiallyCollapsed;
           }
         },
         afterScrollRestored(el) {

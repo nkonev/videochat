@@ -338,5 +338,7 @@ export default {
     file_mode_switch_to_miniatures: "Переключить на миниатюры",
     set_password_for: "Задать пароль для '{0}'",
     smiley_stay_unclosed: "Оставить",
-    can_react: "Разрешить реакции"
+    can_react: "Разрешить реакции",
+    "expand": "развернуть",
+    "collapse": "свернуть"
 }

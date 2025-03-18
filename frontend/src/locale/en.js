@@ -338,5 +338,7 @@ export default {
     file_mode_switch_to_miniatures: "Switch to miniatures",
     set_password_for: "Set password for '{0}'",
     smiley_stay_unclosed: "Stay",
-    can_react: "Allow reactions"
+    can_react: "Allow reactions",
+    "expand": "expand",
+    "collapse": "collapse"
 }
