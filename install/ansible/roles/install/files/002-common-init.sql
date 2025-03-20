@@ -8,9 +8,13 @@
 -- ALTER SYSTEM SET commit_delay=100000;
 -- ALTER SYSTEM SET commit_siblings=10;
 -- ALTER SYSTEM SET work_mem='50MB';
-ALTER SYSTEM SET work_mem='512MB';
 ALTER SYSTEM SET random_page_cost=1.1; -- for ssd
 ALTER SYSTEM SET log_line_prefix = '%a %u@%d ';
+
+-- https://docs.citusdata.com/en/v11.2/performance/performance_tuning.html
+alter system set citus.max_adaptive_executor_pool_size = 1;
+alter system set work_mem = '256MB';
+alter system set citus.executor_slow_start_interval = 200;
 
 -- https://docs.citusdata.com/en/stable/admin_guide/cluster_management.html#create-db
 create database chat;
