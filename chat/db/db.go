@@ -204,7 +204,7 @@ func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 
 func (db *DB) RecreateDb() {
 	_, err := db.Exec(fmt.Sprintf(`
-	drop table if exists message_read;
+	drop table if exists message_unread;
 	drop table if exists message_reaction;
 	drop table if exists message;
 	drop table if exists chat_pinned;

@@ -431,34 +431,71 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 	}
 }
 
-func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId int64, messageId *int64) error {
-	r := tx.QueryRowContext(ctx, fmt.Sprintf(`SELECT COALESCE((SELECT max(id) from message WHERE chat_id = %v), 0)`, chatId))
-	if r.Err() != nil {
-		return eris.Wrap(r.Err(), "error during interacting with db")
+func (tx *Tx) MarkAllMessagesAsRead(ctx context.Context, chatId int64, participantId int64) error {
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO message_unread (user_id, chat_id, unread_messages)
+			VALUES($1, $2, $3)
+			ON CONFLICT (user_id, chat_id)
+			DO UPDATE SET unread_messages = $3
+		`,
+		participantId, chatId, 0)
+	return err
+}
+
+func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId int64, messageId int64) error {
+	var maxMessageId int64
+	maxR := tx.QueryRowContext(ctx, `SELECT COALESCE((SELECT max(id) from message WHERE chat_id = $1), 0)`, chatId)
+	if maxR.Err() != nil {
+		return eris.Wrap(maxR.Err(), "error during interacting with db")
 	}
-	var lastMessageId int64
-	err := r.Scan(&lastMessageId)
+	err := maxR.Scan(&maxMessageId)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	// optimization, fast path
+	if messageId == maxMessageId {
+		return tx.MarkAllMessagesAsRead(ctx, chatId, participantId)
+	}
+
+	existsR := tx.QueryRowContext(ctx, `SELECT EXISTS((SELECT id from message WHERE chat_id = $1 AND id = $2)`, chatId, messageId)
+	if existsR.Err() != nil {
+		return eris.Wrap(existsR.Err(), "error during interacting with db")
+	}
+	var exists bool
+	err = existsR.Scan(&exists)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}
 
-	_, err = tx.ExecContext(ctx, fmt.Sprintf(`
-		INSERT INTO message_read (last_message_id, user_id, chat_id)
-			SELECT %v, $1, $2
-		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
-			CASE 
-				WHEN ($3::bigint <= %v) THEN (
-					CASE 
-						WHEN ($3::bigint > message_read.last_message_id) THEN $3::bigint
-						ELSE message_read.last_message_id
-					END
-				)
-				ELSE %v
-			END
-		) 
-			WHERE message_read.user_id = $1 AND message_read.chat_id = $2
-		`, lastMessageId, lastMessageId, lastMessageId),
-		participantId, chatId, messageId)
+	var normalizedMessageId int64
+	if !exists {
+		normalizedMessageId = maxMessageId
+	} else {
+		normalizedMessageId = messageId
+	}
+
+	var count int64
+	cr := tx.QueryRowContext(ctx, `SELECT COUNT(m.id) FILTER(WHERE m.id > $2::bigint) FROM message m WHERE chat_id = $1`, chatId, normalizedMessageId)
+	if cr.Err() != nil {
+		return eris.Wrap(cr.Err(), "error during interacting with db")
+	}
+	err = cr.Scan(&count)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO message_unread (user_id, chat_id, unread_messages)
+			VALUES($1, $2, $3)
+			ON CONFLICT (user_id, chat_id)
+			DO UPDATE SET unread_messages = (
+				CASE 
+					WHEN ($3::bigint < message_unread.unread_messages) THEN $3::bigint
+					ELSE message_unread.unread_messages
+				END
+			)
+		`,
+		participantId, chatId, count)
 	return err
 }
 

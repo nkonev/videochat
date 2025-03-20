@@ -755,8 +755,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 		if err != nil {
 			return 0, err
 		}
-		mp := &messageId
-		err = tx.MarkMessageAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId, mp) // not to send to myself (1/2)
+		err = tx.MarkAllMessagesAsRead(c.Request().Context(), chatId, userPrincipalDto.UserId) // not to send to myself (1/2)
 		if err != nil {
 			return 0, err
 		}
@@ -1457,8 +1456,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 }
 
 func (mc *MessageHandler) addMessageReadAndSendIt(tx *db.Tx, ctx context.Context, chatId int64, messageId int64, userId int64) error {
-	mp := &messageId
-	err := tx.MarkMessageAsRead(ctx, chatId, userId, mp)
+	err := tx.MarkMessageAsRead(ctx, chatId, userId, messageId)
 	if err != nil {
 		return err
 	}
