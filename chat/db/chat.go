@@ -862,7 +862,7 @@ func (tx *Tx) RenameChat(ctx context.Context, chatId int64, title string) error 
 func getChatIdsByParticipantIdCommon(ctx context.Context, co CommonOperations, participantId int64, limit int, offset int) ([]int64, error) {
 	var rows *sql.Rows
 	var err error
-	rows, err = co.QueryContext(ctx, fmt.Sprintf(`SELECT DISTINCT cp.chat_id from chat_participant cp
+	rows, err = co.QueryContext(ctx, fmt.Sprintf(`SELECT cp.chat_id from chat_participant cp
 	 	WHERE cp.user_id = $1
 		ORDER BY cp.chat_id
 		LIMIT $2 OFFSET $3

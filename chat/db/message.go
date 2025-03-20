@@ -9,7 +9,6 @@ import (
 	"github.com/rotisserie/eris"
 	"math"
 	"nkonev.name/chat/dto"
-	"nkonev.name/chat/utils"
 	"time"
 )
 
@@ -442,23 +441,23 @@ func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId
 		return eris.Wrap(err, "error during interacting with db")
 	}
 
-	_, err = tx.ExecContext(ctx, fmt.Sprintf(`
+	_, err = tx.ExecContext(ctx, `
 		INSERT INTO message_read (last_message_id, user_id, chat_id)
-			SELECT %v, $1, $2
+			SELECT $4, $1, $2
 		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
 			CASE 
-				WHEN ($3::bigint <= %v) THEN (
+				WHEN ($3::bigint <= $4::bigint) THEN (
 					CASE 
 						WHEN ($3::bigint > message_read.last_message_id) THEN $3::bigint
 						ELSE message_read.last_message_id
 					END
 				)
-				ELSE %v
+				ELSE $4::bigint
 			END
 		) 
 			WHERE message_read.user_id = $1 AND message_read.chat_id = $2
-		`, lastMessageId, lastMessageId, lastMessageId),
-		participantId, chatId, messageId)
+		`,
+		participantId, chatId, messageId, lastMessageId)
 	return err
 }
 
@@ -867,29 +866,47 @@ func (tx *Tx) HasUnreadMessagesByChatIdsBatch(ctx context.Context, chatIds []int
 }
 
 func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId int64) (bool, error) {
-	shouldContinue := true
 
-	const size = utils.PaginationMaxSize
+	// combined from getChatIdsByParticipantIdCommon(), hasUnreadMessagesBatchByChatIdsCommon() { getNotificationSettingsByChatsBatch() }
+	// and modyfying because we don't need count
+	q := `
+	select exists (
+		select * from (
+			with allowed_chat_ids as (
+				select chat_id from (
+					SELECT cp.chat_id, coalesce(cpn.consider_messages_as_unread, true) as should_consider
+					FROM chat_participant cp 
+					LEFT JOIN chat_participant_notification cpn ON (cp.chat_id, cp.user_id) = (cpn.chat_id, cpn.user_id)
+					WHERE cp.user_id = $1
+				) cpi where cpi.should_consider = true
+			),
+			reads as (
+			  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
+			  (select chat_id from allowed_chat_ids) all_chats
+			  left join (
+				select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $1 AND chat_id in (select chat_id from allowed_chat_ids) 
+			  ) rds on all_chats.chat_id = rds.read_chat_id
+			)
+			select maxes.chat_id, max_message_id > normalized_last_message_id as has_new_message_for_user from
+			(select chat_id, max(id) as max_message_id from message where chat_id in (select chat_id from allowed_chat_ids) group by chat_id) maxes 
+			join reads
+			on maxes.chat_id = reads.chat_id
+		) hases
+		where hases.has_new_message_for_user = true
+	)
+	`
 
-	for i := 0; shouldContinue; i++ {
-		chatIds, err := getChatIdsByParticipantIdCommon(ctx, co, userId, size, size*i)
-		if err != nil {
-			return false, err
-		}
-		if len(chatIds) < size {
-			shouldContinue = false
-		}
-		messageUnreads, err := hasUnreadMessagesBatchByChatIdsCommon(ctx, co, chatIds, userId)
-		if err != nil {
-			return false, err
-		}
-		for _, hasMessageUnread := range messageUnreads {
-			if hasMessageUnread {
-				return true, nil
-			}
-		}
+	row := co.QueryRowContext(ctx, q, userId)
+	if row.Err() != nil {
+		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
-	return false, nil
+
+	var has bool
+	err := row.Scan(&has)
+	if err != nil {
+		return false, err
+	}
+	return has, nil
 }
 
 func (db *DB) HasUnreadMessages(ctx context.Context, userId int64) (bool, error) {
