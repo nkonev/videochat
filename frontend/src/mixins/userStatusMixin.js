@@ -71,12 +71,9 @@ export default (nameForLog) => {
                     handler(e?.data?.userStatusEvents);
                 }
                 const onError_ = (e) => {
+                    console.error(`Got err in ${subscriptionElement.name} subscription`, e);
                     if (Array.isArray(e)) {
-                        console.error(`Got err in ${subscriptionElement.name} subscription`, e);
                         this.setError(null, `Error in onError ${subscriptionElement.name} subscription`);
-                    } else {
-                        console.error(`Got connection err in ${subscriptionElement.name} subscription, reconnecting`, e);
-                        subscriptionElement.timeout = setTimeout(() => this.performSubscription(subscriptionElement, getGraphQlSubscriptionQuery, handler), 2000);
                     }
                 }
                 const onComplete_ = () => {
@@ -101,10 +98,6 @@ export default (nameForLog) => {
                 if (subscriptionElement.unsubscribe) {
                     subscriptionElement.unsubscribe();
                     subscriptionElement.unsubscribe = null;
-                }
-                if (subscriptionElement.timeout) {
-                    clearInterval(subscriptionElement.timeout);
-                    subscriptionElement.timeout = null;
                 }
             },
             graphQlUserStatusUnsubscribe() {
