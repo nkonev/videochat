@@ -21,6 +21,7 @@ create database chat;
 \connect chat;
 CREATE EXTENSION citus;
 
+-- to fix cluster restart
 -- https://stackoverflow.com/questions/70477676/citus-rebalance-table-shards-fe-sendauth-no-password-supplied/70494597#70494597
 -- https://postgrespro.ru/docs/enterprise/16/citus
 INSERT INTO pg_dist_authinfo(nodeid, rolename, authinfo) VALUES
