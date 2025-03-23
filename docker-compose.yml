@@ -63,6 +63,8 @@ services:
       - postgres_chat_citus_coordinator_1_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
+    # Fix could not resize shared memory segment /PostgreSQL No space left on device (https://stackoverflow.com/questions/56751565/pq-could-not-resize-shared-memory-segment-no-space-left-on-device/56754077#56754077)
+    shm_size: 1g
     networks:
       backend:
     logging:
@@ -81,6 +83,7 @@ services:
       - postgres_chat_citus_worker_1_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
+    shm_size: 1g
     networks:
       backend:
     logging:
@@ -99,6 +102,7 @@ services:
       - postgres_chat_citus_worker_2_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
+    shm_size: 1g
     networks:
       backend:
     logging:
