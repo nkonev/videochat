@@ -431,39 +431,40 @@ func (tx *Tx) GetBlogPostMessageId(ctx context.Context, chatId int64) (*int64, e
 }
 
 func (tx *Tx) MarkMessageAsRead(ctx context.Context, chatId int64, participantId int64, messageId *int64) error {
-	r := tx.QueryRowContext(ctx, fmt.Sprintf(`SELECT COALESCE((SELECT max(id) from message WHERE chat_id = %v), 0)`, chatId))
-	if r.Err() != nil {
-		return eris.Wrap(r.Err(), "error during interacting with db")
-	}
-	var lastMessageId int64
-	err := r.Scan(&lastMessageId)
-	if err != nil {
-		return eris.Wrap(err, "error during interacting with db")
-	}
-
-	_, err = tx.ExecContext(ctx, `
-		INSERT INTO message_read (last_message_id, user_id, chat_id)
-			SELECT $4, $1, $2
-		ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
-			CASE 
-				WHEN ($3::bigint <= $4::bigint) THEN (
-					CASE 
-						WHEN ($3::bigint > message_read.last_message_id) THEN $3::bigint
-						ELSE message_read.last_message_id
-					END
-				)
-				ELSE $4::bigint
-			END
-		) 
-			WHERE message_read.user_id = $1 AND message_read.chat_id = $2
-		`,
-		participantId, chatId, messageId, lastMessageId)
-	return err
+	//r := tx.QueryRowContext(ctx, fmt.Sprintf(`SELECT COALESCE((SELECT max(id) from message WHERE chat_id = %v), 0)`, chatId))
+	//if r.Err() != nil {
+	//	return eris.Wrap(r.Err(), "error during interacting with db")
+	//}
+	//var lastMessageId int64
+	//err := r.Scan(&lastMessageId)
+	//if err != nil {
+	//	return eris.Wrap(err, "error during interacting with db")
+	//}
+	//
+	//_, err = tx.ExecContext(ctx, `
+	//	INSERT INTO message_read (last_message_id, user_id, chat_id)
+	//		SELECT $4, $1, $2
+	//	ON CONFLICT (user_id, chat_id) DO UPDATE SET last_message_id = (
+	//		CASE
+	//			WHEN ($3::bigint <= $4::bigint) THEN (
+	//				CASE
+	//					WHEN ($3::bigint > message_read.last_message_id) THEN $3::bigint
+	//					ELSE message_read.last_message_id
+	//				END
+	//			)
+	//			ELSE $4::bigint
+	//		END
+	//	)
+	//		WHERE message_read.user_id = $1 AND message_read.chat_id = $2
+	//	`,
+	//	participantId, chatId, messageId, lastMessageId)
+	return nil
 }
 
 func deleteMessageReadCommon(ctx context.Context, co CommonOperations, userId int64, chatId int64) error {
-	_, err := co.ExecContext(ctx, `DELETE FROM message_read WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
-	return eris.Wrap(err, "error during interacting with db")
+	//_, err := co.ExecContext(ctx, `DELETE FROM message_read WHERE chat_id = $1 AND user_id = $2`, chatId, userId)
+	//return eris.Wrap(err, "error during interacting with db")
+	return nil
 }
 
 func (db *DB) DeleteMessageRead(ctx context.Context, userId int64, chatId int64) error {
@@ -475,8 +476,9 @@ func (tx *Tx) DeleteMessageRead(ctx context.Context, userId int64, chatId int64)
 }
 
 func deleteAllMessageReadCommon(ctx context.Context, co CommonOperations, userId int64) error {
-	_, err := co.ExecContext(ctx, `DELETE FROM message_read WHERE user_id = $1`, userId)
-	return eris.Wrap(err, "error during interacting with db")
+	//_, err := co.ExecContext(ctx, `DELETE FROM message_read WHERE user_id = $1`, userId)
+	//return eris.Wrap(err, "error during interacting with db")
+	return nil
 }
 
 func (db *DB) DeleteAllMessageRead(ctx context.Context, userId int64) error {
@@ -672,54 +674,54 @@ func getUnreadMessagesCountByChatsBatchCommon(ctx context.Context, co CommonOper
 		res[cid] = 0
 	}
 
-	chatAllowCounting, err := getNotificationSettingsByChatsBatch(ctx, co, chatIds, userId)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-
-	allowedChatIds := make([]int64, 0)
-	for cid, a := range chatAllowCounting {
-		if a {
-			allowedChatIds = append(allowedChatIds, cid)
-		}
-	}
-
-	// reads cte in order to process a cornercase when for an user there is still no record in message_read
-	// we query chat_participant because of
-	// 1) there can be no rows in message_read, but we need to get user_id or chat_id with coalesce(last_message_id, 0)
-	// 2) in order to filter out only rows which correspond to the real user_id or chat_id, e.g. to filter with caution in case adjacent user_id or chat_id
-	var q = `
-		with reads as (
-		  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from 
-		  (select chat_id from chat_participant where user_id = $2 and chat_id = ANY($1)) all_chats
-		  left join (
-		    select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $2 AND chat_id = any($1) order by user_id
-		  ) rds on all_chats.chat_id = rds.read_chat_id
-		)
-		select m.chat_id, count(m.id) FILTER(WHERE m.id > reads.normalized_last_message_id) as new_messages_for_user 
-		from message m
-		join reads
-		on m.chat_id = reads.chat_id
-		where m.chat_id = ANY($1) 
-		group by m.chat_id 
-		order by m.chat_id;
-	`
-
-	var rows *sql.Rows
-	rows, err = co.QueryContext(ctx, q, allowedChatIds, userId)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var chatId int64
-		var count int64
-		if err := rows.Scan(&chatId, &count); err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		} else {
-			res[chatId] = count
-		}
-	}
+	//chatAllowCounting, err := getNotificationSettingsByChatsBatch(ctx, co, chatIds, userId)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//
+	//allowedChatIds := make([]int64, 0)
+	//for cid, a := range chatAllowCounting {
+	//	if a {
+	//		allowedChatIds = append(allowedChatIds, cid)
+	//	}
+	//}
+	//
+	//// reads cte in order to process a cornercase when for an user there is still no record in message_read
+	//// we query chat_participant because of
+	//// 1) there can be no rows in message_read, but we need to get user_id or chat_id with coalesce(last_message_id, 0)
+	//// 2) in order to filter out only rows which correspond to the real user_id or chat_id, e.g. to filter with caution in case adjacent user_id or chat_id
+	//var q = `
+	//	with reads as (
+	//	  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
+	//	  (select chat_id from chat_participant where user_id = $2 and chat_id = ANY($1)) all_chats
+	//	  left join (
+	//	    select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $2 AND chat_id = any($1) order by user_id
+	//	  ) rds on all_chats.chat_id = rds.read_chat_id
+	//	)
+	//	select m.chat_id, count(m.id) FILTER(WHERE m.id > reads.normalized_last_message_id) as new_messages_for_user
+	//	from message m
+	//	join reads
+	//	on m.chat_id = reads.chat_id
+	//	where m.chat_id = ANY($1)
+	//	group by m.chat_id
+	//	order by m.chat_id;
+	//`
+	//
+	//var rows *sql.Rows
+	//rows, err = co.QueryContext(ctx, q, allowedChatIds, userId)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//defer rows.Close()
+	//for rows.Next() {
+	//	var chatId int64
+	//	var count int64
+	//	if err := rows.Scan(&chatId, &count); err != nil {
+	//		return nil, eris.Wrap(err, "error during interacting with db")
+	//	} else {
+	//		res[chatId] = count
+	//	}
+	//}
 	return res, nil
 }
 
@@ -742,51 +744,51 @@ func getUnreadMessagesCountBatchByParticipantsCommon(ctx context.Context, co Com
 		res[uid] = 0
 	}
 
-	userAllowCounting, err := getNotificationSettingsByUsersBatch(ctx, co, chatId, userIds)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-	allowedUserIds := make([]int64, 0)
-	for uid, a := range userAllowCounting {
-		if a {
-			allowedUserIds = append(allowedUserIds, uid)
-		}
-	}
-
-	// reads cte in order to process a cornercase when for an user there is still no record in message_read
-	// we query chat_participant because of
-	// 1) there can be no rows in message_read, but we need to get user_id or chat_id with coalesce(last_message_id, 0)
-	// 2) in order to filter out only rows which correspond to the real user_id or chat_id, e.g. to filter with caution in case adjacent user_id or chat_id
-	var q = `
-		with reads as (
-		  select user_id, $1 as normalized_chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
-		  (select user_id from chat_participant where chat_id = $1 and user_id = ANY($2)) all_users
-		  left join (
-		   select user_id as read_user_id, chat_id, last_message_id from message_read WHERE user_id = ANY($2) AND chat_id = $1 order by user_id
-		  ) rds on all_users.user_id = rds.read_user_id
-		)
-		SELECT user_id, (select count(m.id) FILTER(WHERE m.id > reads.normalized_last_message_id)) 
-		FROM message m 
-		join reads on m.chat_id = reads.normalized_chat_id
-		where m.chat_id = $1
-		group by user_id;
-	`
-
-	var rows *sql.Rows
-	rows, err = co.QueryContext(ctx, q, chatId, allowedUserIds)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var userId int64
-		var count int64
-		if err := rows.Scan(&userId, &count); err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		} else {
-			res[userId] = count
-		}
-	}
+	//userAllowCounting, err := getNotificationSettingsByUsersBatch(ctx, co, chatId, userIds)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//allowedUserIds := make([]int64, 0)
+	//for uid, a := range userAllowCounting {
+	//	if a {
+	//		allowedUserIds = append(allowedUserIds, uid)
+	//	}
+	//}
+	//
+	//// reads cte in order to process a cornercase when for an user there is still no record in message_read
+	//// we query chat_participant because of
+	//// 1) there can be no rows in message_read, but we need to get user_id or chat_id with coalesce(last_message_id, 0)
+	//// 2) in order to filter out only rows which correspond to the real user_id or chat_id, e.g. to filter with caution in case adjacent user_id or chat_id
+	//var q = `
+	//	with reads as (
+	//	  select user_id, $1 as normalized_chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
+	//	  (select user_id from chat_participant where chat_id = $1 and user_id = ANY($2)) all_users
+	//	  left join (
+	//	   select user_id as read_user_id, chat_id, last_message_id from message_read WHERE user_id = ANY($2) AND chat_id = $1 order by user_id
+	//	  ) rds on all_users.user_id = rds.read_user_id
+	//	)
+	//	SELECT user_id, (select count(m.id) FILTER(WHERE m.id > reads.normalized_last_message_id))
+	//	FROM message m
+	//	join reads on m.chat_id = reads.normalized_chat_id
+	//	where m.chat_id = $1
+	//	group by user_id;
+	//`
+	//
+	//var rows *sql.Rows
+	//rows, err = co.QueryContext(ctx, q, chatId, allowedUserIds)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//defer rows.Close()
+	//for rows.Next() {
+	//	var userId int64
+	//	var count int64
+	//	if err := rows.Scan(&userId, &count); err != nil {
+	//		return nil, eris.Wrap(err, "error during interacting with db")
+	//	} else {
+	//		res[userId] = count
+	//	}
+	//}
 	return res, nil
 }
 
@@ -809,51 +811,51 @@ func hasUnreadMessagesBatchByChatIdsCommon(ctx context.Context, co CommonOperati
 		res[cid] = false
 	}
 
-	chatAllowCounting, err := getNotificationSettingsByChatsBatch(ctx, co, chatIds, userId)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-
-	allowedChatIds := make([]int64, 0)
-	for cid, a := range chatAllowCounting {
-		if a {
-			allowedChatIds = append(allowedChatIds, cid)
-		}
-	}
-
-	// reads cte in order to process a cornercase when for an user there is still no record in message_read
-	// we query chat_participant because of
-	// 1) there can be no rows in message_read, but we need to get user_id or chat_id with coalesce(last_message_id, 0)
-	// 2) in order to filter out only rows which correspond to the real user_id or chat_id, e.g. to filter with caution in case adjacent user_id or chat_id
-	var q = `
-		with reads as (
-		  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from 
-		  (select chat_id from chat_participant where user_id = $2 and chat_id = ANY($1)) all_chats
-		  left join (
-		    select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $2 AND chat_id = any($1) order by user_id
-		  ) rds on all_chats.chat_id = rds.read_chat_id
-		)
-		select maxes.chat_id, max_message_id > normalized_last_message_id as has_new_message_for_user from
-		(select chat_id, max(id) as max_message_id from message where chat_id = ANY($1) group by chat_id order by chat_id) maxes 
-		join reads
-		on maxes.chat_id = reads.chat_id;
-	`
-
-	var rows *sql.Rows
-	rows, err = co.QueryContext(ctx, q, allowedChatIds, userId)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var chatId int64
-		var has bool
-		if err := rows.Scan(&chatId, &has); err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		} else {
-			res[chatId] = has
-		}
-	}
+	//chatAllowCounting, err := getNotificationSettingsByChatsBatch(ctx, co, chatIds, userId)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//
+	//allowedChatIds := make([]int64, 0)
+	//for cid, a := range chatAllowCounting {
+	//	if a {
+	//		allowedChatIds = append(allowedChatIds, cid)
+	//	}
+	//}
+	//
+	//// reads cte in order to process a cornercase when for an user there is still no record in message_read
+	//// we query chat_participant because of
+	//// 1) there can be no rows in message_read, but we need to get user_id or chat_id with coalesce(last_message_id, 0)
+	//// 2) in order to filter out only rows which correspond to the real user_id or chat_id, e.g. to filter with caution in case adjacent user_id or chat_id
+	//var q = `
+	//	with reads as (
+	//	  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
+	//	  (select chat_id from chat_participant where user_id = $2 and chat_id = ANY($1)) all_chats
+	//	  left join (
+	//	    select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $2 AND chat_id = any($1) order by user_id
+	//	  ) rds on all_chats.chat_id = rds.read_chat_id
+	//	)
+	//	select maxes.chat_id, max_message_id > normalized_last_message_id as has_new_message_for_user from
+	//	(select chat_id, max(id) as max_message_id from message where chat_id = ANY($1) group by chat_id order by chat_id) maxes
+	//	join reads
+	//	on maxes.chat_id = reads.chat_id;
+	//`
+	//
+	//var rows *sql.Rows
+	//rows, err = co.QueryContext(ctx, q, allowedChatIds, userId)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//defer rows.Close()
+	//for rows.Next() {
+	//	var chatId int64
+	//	var has bool
+	//	if err := rows.Scan(&chatId, &has); err != nil {
+	//		return nil, eris.Wrap(err, "error during interacting with db")
+	//	} else {
+	//		res[chatId] = has
+	//	}
+	//}
 	return res, nil
 }
 
@@ -869,43 +871,43 @@ func hasUnreadMessagesCommon(ctx context.Context, co CommonOperations, userId in
 
 	// combined from getChatIdsByParticipantIdCommon(), hasUnreadMessagesBatchByChatIdsCommon() { getNotificationSettingsByChatsBatch() }
 	// and modyfying because we don't need count
-	q := `
-	select exists (
-		select * from (
-			with allowed_chat_ids as (
-				select chat_id from (
-					SELECT cp.chat_id, coalesce(cpn.consider_messages_as_unread, true) as should_consider
-					FROM chat_participant cp 
-					LEFT JOIN chat_participant_notification cpn ON (cp.chat_id, cp.user_id) = (cpn.chat_id, cpn.user_id)
-					WHERE cp.user_id = $1
-				) cpi where cpi.should_consider = true
-			),
-			reads as (
-			  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
-			  (select chat_id from allowed_chat_ids) all_chats
-			  left join (
-				select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $1 AND chat_id in (select chat_id from allowed_chat_ids) 
-			  ) rds on all_chats.chat_id = rds.read_chat_id
-			)
-			select maxes.chat_id, max_message_id > normalized_last_message_id as has_new_message_for_user from
-			(select chat_id, max(id) as max_message_id from message where chat_id in (select chat_id from allowed_chat_ids) group by chat_id) maxes 
-			join reads
-			on maxes.chat_id = reads.chat_id
-		) hases
-		where hases.has_new_message_for_user = true
-	)
-	`
-
-	row := co.QueryRowContext(ctx, q, userId)
-	if row.Err() != nil {
-		return false, eris.Wrap(row.Err(), "error during interacting with db")
-	}
-
+	//q := `
+	//select exists (
+	//	select * from (
+	//		with allowed_chat_ids as (
+	//			select chat_id from (
+	//				SELECT cp.chat_id, coalesce(cpn.consider_messages_as_unread, true) as should_consider
+	//				FROM chat_participant cp
+	//				LEFT JOIN chat_participant_notification cpn ON (cp.chat_id, cp.user_id) = (cpn.chat_id, cpn.user_id)
+	//				WHERE cp.user_id = $1
+	//			) cpi where cpi.should_consider = true
+	//		),
+	//		reads as (
+	//		  select chat_id, coalesce(last_message_id, 0) as normalized_last_message_id from
+	//		  (select chat_id from allowed_chat_ids) all_chats
+	//		  left join (
+	//			select chat_id as read_chat_id, last_message_id from message_read WHERE user_id = $1 AND chat_id in (select chat_id from allowed_chat_ids)
+	//		  ) rds on all_chats.chat_id = rds.read_chat_id
+	//		)
+	//		select maxes.chat_id, max_message_id > normalized_last_message_id as has_new_message_for_user from
+	//		(select chat_id, max(id) as max_message_id from message where chat_id in (select chat_id from allowed_chat_ids) group by chat_id) maxes
+	//		join reads
+	//		on maxes.chat_id = reads.chat_id
+	//	) hases
+	//	where hases.has_new_message_for_user = true
+	//)
+	//`
+	//
+	//row := co.QueryRowContext(ctx, q, userId)
+	//if row.Err() != nil {
+	//	return false, eris.Wrap(row.Err(), "error during interacting with db")
+	//}
+	//
 	var has bool
-	err := row.Scan(&has)
-	if err != nil {
-		return false, err
-	}
+	//err := row.Scan(&has)
+	//if err != nil {
+	//	return false, err
+	//}
 	return has, nil
 }
 
@@ -1074,48 +1076,48 @@ func (tx *Tx) GetPinnedPromoted(ctx context.Context, chatId int64) (*Message, er
 }
 
 func (db *DB) GetParticipantsRead(ctx context.Context, chatId, messageId int64, limit, offset int) ([]int64, error) {
-	rows, err := db.QueryContext(ctx, fmt.Sprintf(`
-			select user_id from message_read where chat_id = $1 and last_message_id >= $2
-			ORDER BY user_id asc
-			LIMIT $3 OFFSET $4`,
-	),
-		chatId, messageId,
-		limit, offset)
-	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
-	}
-
-	defer rows.Close()
+	//rows, err := db.QueryContext(ctx, fmt.Sprintf(`
+	//		select user_id from message_read where chat_id = $1 and last_message_id >= $2
+	//		ORDER BY user_id asc
+	//		LIMIT $3 OFFSET $4`,
+	//),
+	//	chatId, messageId,
+	//	limit, offset)
+	//if err != nil {
+	//	return nil, eris.Wrap(err, "error during interacting with db")
+	//}
+	//
+	//defer rows.Close()
 	list := make([]int64, 0)
-	for rows.Next() {
-		var anUserId int64
-		if err := rows.Scan(&anUserId); err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		} else {
-			list = append(list, anUserId)
-		}
-	}
+	//for rows.Next() {
+	//	var anUserId int64
+	//	if err := rows.Scan(&anUserId); err != nil {
+	//		return nil, eris.Wrap(err, "error during interacting with db")
+	//	} else {
+	//		list = append(list, anUserId)
+	//	}
+	//}
 	return list, nil
 }
 
 func (db *DB) GetParticipantsReadCount(ctx context.Context, chatId, messageId int64) (int, error) {
-	row := db.QueryRowContext(ctx, fmt.Sprintf(`
-			select count(user_id) from message_read where chat_id = $1 and last_message_id >= $2
-			`,
-	),
-		chatId, messageId)
-	if row.Err() != nil {
-		db.lgr.WithTracing(ctx).Errorf("Error during get count of participants read the message %v", row.Err())
-		return 0, eris.Wrap(row.Err(), "error during interacting with db")
-	}
+	//row := db.QueryRowContext(ctx, fmt.Sprintf(`
+	//		select count(user_id) from message_read where chat_id = $1 and last_message_id >= $2
+	//		`,
+	//),
+	//	chatId, messageId)
+	//if row.Err() != nil {
+	//	db.lgr.WithTracing(ctx).Errorf("Error during get count of participants read the message %v", row.Err())
+	//	return 0, eris.Wrap(row.Err(), "error during interacting with db")
+	//}
 
 	var count int
-	err := row.Scan(&count)
-	if err != nil {
-		return 0, eris.Wrap(err, "error during interacting with db")
-	} else {
-		return count, nil
-	}
+	//err := row.Scan(&count)
+	//if err != nil {
+	//	return 0, eris.Wrap(err, "error during interacting with db")
+	//} else {
+	return count, nil
+	//}
 }
 
 func (db *DB) FindMessageByFileItemUuid(ctx context.Context, chatId int64, fileItemUuid string) (int64, error) {
