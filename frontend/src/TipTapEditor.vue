@@ -112,8 +112,8 @@ import {profile} from "@/router/routes.js";
 
 const empty = "";
 
-const embedUploadFunction = (chatId, files, correlationId, fileItemId, shouldAddDateToTheFilename) => {
-    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemId, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
+const embedUploadFunction = (chatId, files, correlationId, shouldAddDateToTheFilename) => {
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
@@ -130,7 +130,6 @@ export default {
     return {
       editor: null,
       fileInput: null,
-      fileItemUuid: null,
     };
   },
 
@@ -219,9 +218,6 @@ export default {
           this.editor.chain().focus().setIframe(obj).run()
       }
     },
-    resetFileItemUuid() {
-        this.fileItemUuid = null;
-    },
     // it's correlationId, not fileItemUuid
     setCorrelationId(newCorrelationId) {
       this.chatStore.correlationId = newCorrelationId;
@@ -266,9 +262,6 @@ export default {
     },
     addText(text) {
       this.editor.commands.insertContent(text)
-    },
-    setFileItemUuid(fileItemUuid) {
-        this.fileItemUuid = fileItemUuid;
     },
     editorContainer() {
       const ret = ["richText__content"];
@@ -408,7 +401,7 @@ export default {
     const imagePluginInstance = buildImageHandler(
     (image, shouldAddDateToTheFilename) => {
         this.setCorrelationId(uuidv4());
-        embedUploadFunction(this.chatId, [image], this.chatStore.correlationId, this.fileItemUuid, shouldAddDateToTheFilename);
+        embedUploadFunction(this.chatId, [image], this.chatStore.correlationId, shouldAddDateToTheFilename);
     })
         .configure({
             inline: true,
@@ -531,7 +524,7 @@ export default {
           this.setCorrelationId(uuidv4());
           if (e.target.files.length) {
               const files = Array.from(e.target.files);
-              embedUploadFunction(this.chatId, files, this.chatStore.correlationId, this.fileItemUuid)
+              embedUploadFunction(this.chatId, files, this.chatStore.correlationId)
           }
         }
     })
@@ -543,7 +536,6 @@ export default {
     bus.off(PREVIEW_CREATED, this.onPreviewCreated);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
-    this.resetFileItemUuid();
 
     this.editor.destroy();
     if (this.fileInput) {

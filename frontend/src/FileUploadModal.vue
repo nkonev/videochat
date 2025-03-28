@@ -68,7 +68,6 @@
 import bus, {
     OPEN_FILE_UPLOAD_MODAL,
     CLOSE_FILE_UPLOAD_MODAL,
-    MESSAGE_EDIT_SET_FILE_ITEM_UUID,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     ATTACH_FILES_TO_MESSAGE_MODAL,
     MESSAGE_EDIT_LOAD_FILES_COUNT
@@ -87,7 +86,7 @@ export default {
         return {
             show: false,
             inputFiles: [],
-            fileItemUuid: null,
+            // fileUploadingQueue deliberately in chatStore because an user can change chat
             limitError: null,
             showFileInput: false,
             isLoadingPresignedLinks: false,
@@ -100,9 +99,8 @@ export default {
         }
     },
     methods: {
-        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType, isMessageRecording}) {
+        showModal({showFileInput, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType, isMessageRecording}) {
             this.$data.show = true;
-            this.$data.fileItemUuid = fileItemUuid;
             this.$data.showFileInput = showFileInput;
             this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
             if (predefinedFiles) {
@@ -115,7 +113,7 @@ export default {
                 this.chatStore.setFileUploadingSessionType(fileUploadingSessionType)
             }
             this.isMessageRecording = isMessageRecording;
-            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
+            console.log("Opened FileUploadModal with fileItemUuid=", this.chatStore.fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
         },
         hideModal() {
             this.$data.show = false;
@@ -123,7 +121,6 @@ export default {
             this.limitError = null;
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
-            this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
             this.correlationId = null;
             this.messageIdToAttachFiles = null;
@@ -187,6 +184,8 @@ export default {
             }
             this.checkingLimitsStep = false;
 
+            // can be null in the very initial, but be set in case adding files to the existing fileItemUuid (an user decided to change message)
+            let savedFileItemUuid = this.chatStore.fileItemUuid;
             while (this.fileInputQueueHasElements) {
                 const file = this.inputFiles.shift();
                 if (file.isProcessing) {
@@ -199,7 +198,7 @@ export default {
 
                 // [1/3] init s3's multipart upload
                 const response = await axios.put(`/api/storage/${chatId}/upload/init`, {
-                    fileItemUuid: this.fileItemUuid, // nullable
+                    fileItemUuid: savedFileItemUuid, // nullable (in case the first file)
                     fileSize: file.size,
                     fileName: file.name,
                     correlationId: this.correlationId, // nullable
@@ -225,9 +224,17 @@ export default {
                     shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage,
                     chunkSize: response.data.chunkSize,
                 })
-                this.$data.fileItemUuid = response.data.fileItemUuid;
+                savedFileItemUuid = response.data.fileItemUuid;
+
+                // in order to propagate it back to MessageEdit and others
+                // actually we set this.chatStore.fileItemUuid after the upload of the first file and reuse for the subsequent
+                if (this.$data.shouldSetFileUuidToMessage) {
+                  // in the case when an user switched the chat and the change below shouldn't take effect
+                  if (response.data.chatId == this.chatId) {
+                    this.chatStore.fileItemUuid = response.data.fileItemUuid; // to set in MessageEdit via watch
+                  }
+                }
             }
-            this.$data.fileItemUuid = null;
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
 
@@ -289,13 +296,6 @@ export default {
                       }, retryOptions);
 
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
-                    }
-
-                    if (fileToUpload.shouldSetFileUuidToMessage) {
-                      bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {
-                        fileItemUuid: fileToUpload.fileItemUuid,
-                        chatId: fileToUpload.chatId,
-                      });
                     }
 
                     // [3/3] concatenate parts

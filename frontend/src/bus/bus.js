@@ -30,7 +30,6 @@ export const SET_EDIT_MESSAGE = "setEditMessageDto";
 export const SET_EDIT_MESSAGE_MODAL = "setEditMessageDtoModal";
 export const OPEN_EDIT_MESSAGE = "openEditMessage";
 export const CLOSE_EDIT_MESSAGE = "closeEditMessage";
-export const MESSAGE_EDIT_SET_FILE_ITEM_UUID = "setFileItemUuid";
 export const MEDIA_LINK_SET = "mediaLinkSet";
 export const EMBED_LINK_SET = "embedLinkSet";
 export const PREVIEW_CREATED = "previewCreated";

@@ -140,7 +140,6 @@
         PROFILE_SET,
         SET_EDIT_MESSAGE,
         SET_EDIT_MESSAGE_MODAL,
-        MESSAGE_EDIT_SET_FILE_ITEM_UUID,
         OPEN_SETTINGS,
         ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
         OPEN_RECORDING_MODAL, FILE_CREATED,
@@ -213,7 +212,7 @@
               this.notifyAboutBroadcast(true);
 
               this.chatStore.isEditingBigText = false;
-              this.$refs.tipTapRef.resetFileItemUuid();
+              this.chatStore.fileItemUuid = null;
             },
             messageTextIsPresent(text) {
                 return text && text !== ""
@@ -361,20 +360,17 @@
               }
             },
             openFileUploadForAddingFiles() {
-                const fileItemUuid = this.chatStore.editMessageDto.fileItemUuid;
                 this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
             },
             onFilesClicked() {
                 this.chatStore.correlationId = uuidv4();
                 bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.chatStore.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
             },
-            onFileItemUuid({fileItemUuid, chatId}) {
-              if (chatId == this.chatId) {
-                this.$refs.tipTapRef.setFileItemUuid(fileItemUuid);
+            // be careful, it's invoked on change this.chatStore.fileItemUuid ...
+            onChangeInChatStoreFileItemUuid(fileItemUuid) {
                 this.chatStore.editMessageDto.fileItemUuid = fileItemUuid;
-                this.saveToStore();
-              }
+                this.saveToStore(); // ... not to introduce recursion here !
             },
             boldValue() {
                 return this.$refs.tipTapRef?.$data.editor.isActive('bold')
@@ -552,15 +548,15 @@
             },
             setContentToEditorAndLoad() {
               this.loadEmbedPreviewIfNeed(this.chatStore.editMessageDto);
-              this.loadFilesCount();
               if (!this.$refs.tipTapRef.messageHasMeaningfulContent(this.chatStore.editMessageDto.text)) {
                 this.chatStore.isEditingBigText = false;
               }
               this.$nextTick(()=>{
                 this.$refs.tipTapRef.setContent(this.chatStore.editMessageDto.text);
                 if (hasLength(this.chatStore.editMessageDto.fileItemUuid)) {
-                  this.$refs.tipTapRef.setFileItemUuid(this.chatStore.editMessageDto.fileItemUuid);
+                  this.chatStore.fileItemUuid = this.chatStore.editMessageDto.fileItemUuid;
                 }
+                this.loadFilesCount();
               }).then(()=>{
                 this.$refs.tipTapRef.setCursorToEnd();
               });
@@ -609,7 +605,7 @@
                 bus.emit(OPEN_SETTINGS, 'message_edit_settings')
             },
             openRecordingModal() {
-                bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.chatStore.editMessageDto.fileItemUuid})
+                bus.emit(OPEN_RECORDING_MODAL)
             },
             onFileCreatedEvent(dto) {
                 // for non-previewable. for previewable - see in TipTapEditor.onPreviewCreated()
@@ -637,7 +633,6 @@
 
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
-            bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
@@ -653,7 +648,6 @@
         beforeUnmount() {
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
-            bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(COLOR_SET, this.onColorSet);
             bus.off(PROFILE_SET, this.onProfileSet);
@@ -701,6 +695,11 @@
                     }
                 }
             },
+            'chatStore.fileItemUuid': {
+              handler: function (newValue, oldValue) {
+                this.onChangeInChatStoreFileItemUuid(newValue)
+              },
+            }
         },
         components: {
             Tiptap,

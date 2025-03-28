@@ -62,7 +62,7 @@ import bus, {
     OPEN_RECORDING_MODAL,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     OPEN_FILE_UPLOAD_MODAL,
-    MESSAGE_EDIT_SET_FILE_ITEM_UUID, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG
+    CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG
 } from "@/bus/bus";
 import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore";
@@ -85,16 +85,14 @@ export default {
       recordingLabel: "",
       recordingLabelUpdateInterval: null,
       mediaDevicesGotten: false,
-      fileItemUuid: null,
       overrideVideoDeviceId: null,
       overrideAudioDeviceId: null,
     }
   },
   methods: {
-    showModal({fileItemUuid}) {
+    showModal() {
         this.tab = getStoreRecordingTab('video');
         this.$data.show = true;
-        this.fileItemUuid = fileItemUuid;
         this.onShow();
     },
     onUpdateTab(tab) {
@@ -105,16 +103,10 @@ export default {
 
         this.onShow();
     },
-    onFileItemUuid({fileItemUuid, chatId}) {
-      if (chatId == this.chatId) {
-          this.fileItemUuid = fileItemUuid;
-      }
-    },
     closeModal() {
       this.$data.show = false;
       this.tab = null;
       this.mediaDevicesGotten = false;
-      this.fileItemUuid = null;
       this.overrideVideoDeviceId = null;
       this.overrideAudioDeviceId = null;
       this.onClose();
@@ -250,7 +242,7 @@ export default {
     onAddToMessage() {
       this.chatStore.correlationId = uuidv4();
       const files = this.makeFiles();
-      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: this.chatStore.correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia, isMessageRecording: true});
+      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: this.chatStore.correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia, isMessageRecording: true});
       bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 
       this.closeModal();
@@ -283,12 +275,10 @@ export default {
   },
   beforeUnmount() {
     bus.off(OPEN_RECORDING_MODAL, this.showModal);
-    bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
     bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
   },
   mounted() {
     bus.on(OPEN_RECORDING_MODAL, this.showModal);
-    bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
     bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
 
     this.overrideVideoDeviceId = getStoredRecordingVideoDeviceId();

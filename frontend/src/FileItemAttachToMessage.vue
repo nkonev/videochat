@@ -61,9 +61,11 @@
 <script>
 
 import bus, {
-  ATTACH_FILES_TO_MESSAGE_MODAL, MESSAGE_EDIT_LOAD_FILES_COUNT, MESSAGE_EDIT_SET_FILE_ITEM_UUID,
+  ATTACH_FILES_TO_MESSAGE_MODAL, MESSAGE_EDIT_LOAD_FILES_COUNT,
 } from "./bus/bus";
 import axios from "axios";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore.js";
 
 const firstPage = 1;
 const pageSize = 20;
@@ -121,13 +123,17 @@ export default {
             return accumulator + (currentIndex > 0 ? ", " : "") + currentValue.filename
           }, "")
         },
+        // attaches files to the current being edited message
         setFileItemUuidToMessage(item) {
           console.log("Setting fileItemUuid to message", item)
           axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
             messageId: this.messageId,
             fileItemUuid: item.fileItemUuid
           }).then(()=> {
-            bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {fileItemUuid: item.fileItemUuid, chatId: this.chatId});
+            // the PUT method above is fast, and this dialog is opened only within one chat
+            // so we set it without worrying about chatId
+            this.chatStore.fileItemUuid = item.fileItemUuid; // to set in MessageEdit via watch
+            // and update file count
             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal()
           })
@@ -154,6 +160,7 @@ export default {
         shouldShowPagination() {
             return this.dto != null && this.dto.files && this.dto.count > pageSize
         },
+        ...mapStores(useChatStore),
     },
 
     watch: {

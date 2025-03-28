@@ -159,7 +159,6 @@ import bus, {
   OPEN_SIMPLE_MODAL,
   OPEN_TEXT_EDIT_MODAL,
   OPEN_VIEW_FILES_DIALOG,
-  MESSAGE_EDIT_SET_FILE_ITEM_UUID,
   FILE_CREATED,
   FILE_REMOVED,
   PLAYER_MODAL,
@@ -178,12 +177,17 @@ import {messageIdHashPrefix} from "@/router/routes";
 import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
 import {getStoredFileListMode, setStoredFileListMode} from "@/store/localStore.js";
 import FileListContextMenu from "@/FileListContextMenu.vue";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore.js";
 
 export default {
     mixins: [pageableModalMixin()],
     data () {
         return {
             messageIdToDetachFiles: null,
+            // we cannot remove it, because it's used as a view and it should be detached from chatStore.fileItemUuid
+            // example: user is editing a message with files, and he decided to see all the files of this chat
+            // to support this case this dialog maintains its own fileItemUuid connected to the current view
             fileItemUuid: null,
             isOpenedFromMessageEditing: false, // is opened from message editing
             searchString: null,
@@ -210,6 +214,7 @@ export default {
             return this.$vuetify.locale.t('$vuetify.file_mode_switch_to_miniatures')
           }
         },
+        ...mapStores(useChatStore),
     },
 
     methods: {
@@ -265,14 +270,14 @@ export default {
             item.loadingHasNoMessage = false;
         },
         openUploadModal() {
-            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.isOpenedFromMessageEditing, fileUploadingSessionType: this.fileUploadingSessionType, correlationId: this.correlationId});
+            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: this.isOpenedFromMessageEditing, fileUploadingSessionType: this.fileUploadingSessionType, correlationId: this.correlationId});
         },
         onDetachFilesFromMessage () {
           axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
             messageId: this.messageIdToDetachFiles,
             fileItemUuid: null
           }).then(()=>{
-            bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {fileItemUuid: null, chatId: this.chatId});
+            this.chatStore.fileItemUuid = null; // to set in MessageEdit via watch
             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal();
           })

@@ -117,10 +117,11 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
+	// generated for the first file
 	chatFileItemUuid := utils.GetFileItemId()
-
 	fileItemUuidString := reqDto.FileItemUuid
 	if fileItemUuidString != nil && *fileItemUuidString != "" {
+		// and reused for the subsequent
 		chatFileItemUuid = *fileItemUuidString
 	}
 

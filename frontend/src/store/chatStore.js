@@ -70,6 +70,7 @@ export const useChatStore = defineStore('chat', {
         sendMessageAfterMediaInsert: false,
         oppositeUserLastSeenDateTime: null,
         correlationId: null,
+        fileItemUuid: null,
         videoTokenId: null,
         compactMessages: false,
         videoPosition: null,
