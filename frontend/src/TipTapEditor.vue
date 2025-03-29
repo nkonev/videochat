@@ -113,6 +113,7 @@ import {profile} from "@/router/routes.js";
 const empty = "";
 
 const embedUploadFunction = (chatId, files, shouldAddDateToTheFilename) => {
+    // this.chatStore.fileItemUuid is already set
     // this.chatStore.correlationId -- it's correlationId which is per file; but fileItemUuid is per message
     bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);

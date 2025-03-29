@@ -268,6 +268,7 @@ export default {
             item.loadingHasNoMessage = false;
         },
         openUploadModal() {
+            this.chatStore.fileItemUuid = this.fileItemUuid; // for the case we want to add more files to the existing fileItemUuid // TODO bug: pen MessageItem -> ContextMenu -> FileList -> FileUpload -> it leads to setting green badge on MessageItem
             bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: this.isOpenedFromMessageEditing, fileUploadingSessionType: this.fileUploadingSessionType});
         },
         onDetachFilesFromMessage () {

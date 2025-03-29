@@ -360,6 +360,7 @@
               }
             },
             openFileUploadForAddingFiles() {
+                // this.chatStore.fileItemUuid is already set
                 this.chatStore.correlationId = uuidv4(); // in order to catch in onFileCreatedEvent()
                 bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
             },
