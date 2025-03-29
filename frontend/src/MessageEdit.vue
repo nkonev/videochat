@@ -34,16 +34,16 @@
                   <v-icon :size="getIconSize()">mdi-format-strikethrough-variant</v-icon>
               </v-btn>
 
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
+                <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
+              </v-btn>
+
               <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeValue()" @click="codeClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_code')">
                   <v-icon :size="getIconSize()">mdi-code-braces</v-icon>
               </v-btn>
 
               <v-btn icon rounded="0" :size="getBtnSize()" :variant="codeBlockValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="codeBlockValue()" @click="codeBlockClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_code_block')">
                   <v-icon :size="getIconSize()">mdi-code-tags</v-icon>
-              </v-btn>
-
-              <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
-                  <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
               </v-btn>
 
               <v-btn icon rounded="0" :size="getBtnSize()" variant="plain" density="comfortable" @click="embedClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_embed')">
