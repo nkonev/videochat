@@ -216,7 +216,7 @@
               this.$refs.tipTapRef.resetFileItemUuid();
             },
             messageTextIsPresent(text) {
-                return text && text !== ""
+                return hasLength(text)
             },
             loadFilesCount() {
                 if (this.chatStore.editMessageDto.fileItemUuid) {
