@@ -121,13 +121,17 @@ export default {
             return accumulator + (currentIndex > 0 ? ", " : "") + currentValue.filename
           }, "")
         },
+        // attaches files to the current being edited message
         setFileItemUuidToMessage(item) {
           console.log("Setting fileItemUuid to message", item)
           axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
             messageId: this.messageId,
             fileItemUuid: item.fileItemUuid
           }).then(()=> {
+            // the PUT method above is fast, and this dialog is opened only within one chat
+            // so we set it without worrying about chatId
             bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {fileItemUuid: item.fileItemUuid, chatId: this.chatId});
+            // and update file count
             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
             this.closeModal()
           })

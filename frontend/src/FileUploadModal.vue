@@ -87,6 +87,8 @@ export default {
         return {
             show: false,
             inputFiles: [],
+            // we cannot remove it, because all the attempts lead to the bugs which shows
+            // that it's better to have a dedicated copy of it per view than have one and have unexpected side effects
             fileItemUuid: null,
             limitError: null,
             showFileInput: false,
@@ -291,6 +293,7 @@ export default {
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
+                    // in order to propagate it back to MessageEdit, TipTapEditor and others
                     if (fileToUpload.shouldSetFileUuidToMessage) {
                       bus.emit(MESSAGE_EDIT_SET_FILE_ITEM_UUID, {
                         fileItemUuid: fileToUpload.fileItemUuid,
