@@ -131,6 +131,7 @@ export default {
       editor: null,
       fileInput: null,
       fileItemUuid: null,
+      receivedPreviews: 0,
     };
   },
 
@@ -236,8 +237,14 @@ export default {
                 this.setAudio(dto.url)
             }
             if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia) {
-                this.$emit("sendMessage");
-                this.chatStore.resetSendMessageAfterMediaInsertRoutine();
+                this.receivedPreviews++;
+                console.log("Got previews ", this.receivedPreviews, "expected", this.chatStore.sendMessageAfterMediaNumFiles)
+
+                if (this.chatStore.sendMessageAfterMediaNumFiles == this.receivedPreviews) {
+                  this.$emit("sendMessage");
+                  this.chatStore.resetSendMessageAfterMediaInsertRoutine();
+                  this.receivedPreviews = 0;
+                }
             }
         }
     },
@@ -550,6 +557,7 @@ export default {
       this.fileInput.onchange = null;
     }
     this.fileInput = null;
+    this.receivedPreviews = 0;
   },
 };
 </script>

@@ -68,6 +68,7 @@ export const useChatStore = defineStore('chat', {
         hasNewMessages: false,
         chatDto: chatDtoFactory(),
         sendMessageAfterMediaInsert: false,
+        sendMessageAfterMediaNumFiles: 0,
         oppositeUserLastSeenDateTime: null,
         correlationId: null,
         videoTokenId: null,
@@ -191,6 +192,7 @@ export const useChatStore = defineStore('chat', {
     },
     resetSendMessageAfterMediaInsertRoutine() {
       this.sendMessageAfterMediaInsert = false;
+      this.sendMessageAfterMediaNumFiles = 0;
       this.resetFileUploadingSessionType();
     },
     canDeleteParticipant(userId) {

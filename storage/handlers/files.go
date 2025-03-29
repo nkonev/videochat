@@ -205,6 +205,8 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 	existingCount := h.getCountFilesInFileItem(c.Request().Context(), bucketName, filenameChatPrefix)
 
+	previewable := utils.IsPreviewable(aKey)
+
 	return c.JSON(http.StatusOK, &utils.H{
 		"status":        "ready",
 		"uploadId":      upload.UploadId,
@@ -215,6 +217,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		"newFileName":   filteredFilename,
 		"key":           aKey,
 		"chatId":        chatId,
+		"previewable":   previewable,
 	})
 }
 
@@ -507,7 +510,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
 
 	var filter = func(objInfo *minio.ObjectInfo) bool {
-		return utils.IsVideo(objInfo.Key) || utils.IsImage(objInfo.Key)
+		return utils.IsPreviewable(objInfo.Key)
 	}
 
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{

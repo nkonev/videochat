@@ -226,13 +226,14 @@ export default {
                     chatId: response.data.chatId,
                     shouldSetFileUuidToMessage: this.$data.shouldSetFileUuidToMessage,
                     chunkSize: response.data.chunkSize,
+                    previewable: response.data.previewable,
                 })
                 this.$data.fileItemUuid = response.data.fileItemUuid;
             }
             this.$data.fileItemUuid = null;
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
-
+            this.chatStore.sendMessageAfterMediaNumFiles = this.chatStore.fileUploadingQueue.filter(f => f.previewable).length
 
             console.log("Sending files to storage", this.chatStore.fileUploadingQueue);
 

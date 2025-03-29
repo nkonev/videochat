@@ -264,6 +264,10 @@ func IsVideo(minioKey string) bool {
 	return StringContains(videoTypes2, GetDotExtensionStr(minioKey))
 }
 
+func IsPreviewable(minioKey string) bool {
+	return IsImage(minioKey) || IsVideo(minioKey)
+}
+
 func IsAudio(minioKey string) bool {
 	videoTypes := viper.GetStringSlice("types.audio")
 	videoTypes2 := toLower(videoTypes)
