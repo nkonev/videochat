@@ -91,7 +91,6 @@ export default {
             showFileInput: false,
             isLoadingPresignedLinks: false,
             shouldSetFileUuidToMessage: false,
-            correlationId: null,
             messageIdToAttachFiles: null,
             shouldAddDateToTheFilename: null,
             checkingLimitsStep: false,
@@ -99,7 +98,7 @@ export default {
         }
     },
     methods: {
-        showModal({showFileInput, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType, isMessageRecording}) {
+        showModal({showFileInput, shouldSetFileUuidToMessage, predefinedFiles, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType, isMessageRecording}) {
             this.$data.show = true;
             this.$data.showFileInput = showFileInput;
             this.$data.shouldSetFileUuidToMessage = shouldSetFileUuidToMessage;
@@ -107,13 +106,12 @@ export default {
                 this.$data.inputFiles = predefinedFiles;
             }
             this.messageIdToAttachFiles = messageIdToAttachFiles;
-            this.correlationId = correlationId;
             this.shouldAddDateToTheFilename = shouldAddDateToTheFilename;
             if (!this.chatStore.fileUploadingQueue.length) { // there is no prev active uploading
                 this.chatStore.setFileUploadingSessionType(fileUploadingSessionType)
             }
             this.isMessageRecording = isMessageRecording;
-            console.log("Opened FileUploadModal with fileItemUuid=", this.chatStore.fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
+            console.log("Opened FileUploadModal with fileItemUuid=", this.chatStore.fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", this.chatStore.correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
         },
         hideModal() {
             this.$data.show = false;
@@ -122,7 +120,6 @@ export default {
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
             this.$data.shouldSetFileUuidToMessage = false;
-            this.correlationId = null;
             this.messageIdToAttachFiles = null;
             this.shouldAddDateToTheFilename = null;
             this.isMessageRecording = null;
@@ -201,7 +198,7 @@ export default {
                     fileItemUuid: savedFileItemUuid, // nullable (in case the first file)
                     fileSize: file.size,
                     fileName: file.name,
-                    correlationId: this.correlationId, // nullable
+                    correlationId: this.chatStore.correlationId, // nullable
                     shouldAddDateToTheFilename: this.shouldAddDateToTheFilename, // nullable
                     isMessageRecording: this.isMessageRecording, // nullable
                 })

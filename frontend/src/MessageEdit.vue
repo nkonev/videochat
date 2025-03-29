@@ -360,12 +360,12 @@
               }
             },
             openFileUploadForAddingFiles() {
-                this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                this.chatStore.correlationId = uuidv4(); // in order to catch in onFileCreatedEvent()
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
             },
             onFilesClicked() {
                 this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.chatStore.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.chatStore.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit});
             },
             // be careful, it's invoked on change this.chatStore.fileItemUuid ...
             onChangeInChatStoreFileItemUuid(fileItemUuid) {

@@ -112,8 +112,9 @@ import {profile} from "@/router/routes.js";
 
 const empty = "";
 
-const embedUploadFunction = (chatId, files, correlationId, shouldAddDateToTheFilename) => {
-    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
+const embedUploadFunction = (chatId, files, shouldAddDateToTheFilename) => {
+    // this.chatStore.correlationId -- it's correlationId which is per file; but fileItemUuid is per message
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
@@ -217,10 +218,6 @@ export default {
       if (obj.src) {
           this.editor.chain().focus().setIframe(obj).run()
       }
-    },
-    // it's correlationId, not fileItemUuid
-    setCorrelationId(newCorrelationId) {
-      this.chatStore.correlationId = newCorrelationId;
     },
     onPreviewCreated(dto) {
         if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto.correlationId) {
@@ -400,8 +397,8 @@ export default {
 
     const imagePluginInstance = buildImageHandler(
     (image, shouldAddDateToTheFilename) => {
-        this.setCorrelationId(uuidv4());
-        embedUploadFunction(this.chatId, [image], this.chatStore.correlationId, shouldAddDateToTheFilename);
+        this.chatStore.correlationId = uuidv4();
+        embedUploadFunction(this.chatId, [image], shouldAddDateToTheFilename);
     })
         .configure({
             inline: true,
@@ -521,10 +518,10 @@ export default {
         this.fileInput = document.getElementById('file-input');
         // triggered when we upload image or video after this.fileInput.click()
         this.fileInput.onchange = e => {
-          this.setCorrelationId(uuidv4());
+          this.chatStore.correlationId = uuidv4();
           if (e.target.files.length) {
               const files = Array.from(e.target.files);
-              embedUploadFunction(this.chatId, files, this.chatStore.correlationId)
+              embedUploadFunction(this.chatId, files)
           }
         }
     })

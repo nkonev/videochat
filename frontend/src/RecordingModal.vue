@@ -242,7 +242,7 @@ export default {
     onAddToMessage() {
       this.chatStore.correlationId = uuidv4();
       const files = this.makeFiles();
-      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: this.chatStore.correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia, isMessageRecording: true});
+      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, predefinedFiles: files, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia, isMessageRecording: true});
       bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 
       this.closeModal();
