@@ -145,9 +145,11 @@ export default {
     setContent(value) {
         // https://tiptap.dev/api/commands/set-content
         this.editor.commands.setContent(value, false, { preserveWhitespace: "full" });
+        this.receivedPreviews = 0;
     },
     clearContent() {
-      this.editor.commands.setContent(empty, false);
+        this.editor.commands.setContent(empty, false);
+        this.receivedPreviews = 0;
     },
     getContent() {
       const value = this.editor.getHTML();
