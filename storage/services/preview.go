@@ -74,11 +74,14 @@ func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEv
 				normalizedKey: normalizedKey,
 			}
 		}
-	} else {
+	} else if utils.IsImage(normalizedKey) {
 		s.CreatePreview(ctx, normalizedKey)
 		return &PreviewResponse{
 			normalizedKey: normalizedKey,
 		}
+	} else {
+		s.lgr.WithTracing(ctx).Errorf("Unknown type for %v", normalizedKey)
+		return nil
 	}
 }
 

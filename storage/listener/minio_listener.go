@@ -76,14 +76,14 @@ func CreateMinioEventsListener(
 		if isEventForEventService(eventType) {
 			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType)
 		}
-		if isEventForPreviewService(eventType, previewAlreadyExists) {
+		if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
 			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
 		}
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
 			if isEventForEventService(eventType) {
 				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
 			}
-			if isEventForPreviewService(eventType, previewAlreadyExists) {
+			if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
 			}
 			return nil
@@ -108,8 +108,8 @@ func isEventForEventService(eventType utils.EventType) bool {
 	}
 }
 
-func isEventForPreviewService(eventType utils.EventType, previewExists bool) bool {
-	return eventType == utils.FILE_CREATED && !previewExists
+func isEventForPreviewService(eventType utils.EventType, previewExists bool, normalizedKey string) bool {
+	return eventType == utils.FILE_CREATED && !previewExists && utils.IsPreviewable(normalizedKey)
 }
 
 func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.MinioEvent, previewExists, isMessageRecording bool) bool {
