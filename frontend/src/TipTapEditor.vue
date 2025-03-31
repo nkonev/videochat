@@ -242,7 +242,7 @@ export default {
                 this.receivedPreviews++;
                 console.log("Got previews ", this.receivedPreviews, "expected", this.chatStore.sendMessageAfterMediaNumFiles)
 
-                if (this.chatStore.sendMessageAfterMediaNumFiles == this.receivedPreviews) {
+                if (this.chatStore.sendMessageAfterMediaNumFiles <= this.receivedPreviews) {
                   this.$emit("sendMessage");
                   this.chatStore.resetSendMessageAfterMediaInsertRoutine();
                   this.receivedPreviews = 0;
