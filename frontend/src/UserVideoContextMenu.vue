@@ -120,7 +120,7 @@ export default {
                   icon: 'mdi-close',
                   iconColor: 'error',
                   action: () => {
-                    this.menuableItem.onClose()
+                    this.menuableItem.onLocalClose()
                   },
                   enabled: true,
                 });

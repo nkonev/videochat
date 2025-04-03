@@ -148,7 +148,7 @@ export default {
             }
             this.setDisplayVideoMute(requestedState, skipStoreUpdate);
         },
-        onClose() {
+        onLocalClose() {
             this.localVideoProperties.localParticipant.unpublishTrack(this.videoPublication?.videoTrack);
             this.localVideoProperties.localParticipant.unpublishTrack(this.audioPublication?.audioTrack);
         },
