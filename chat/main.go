@@ -20,7 +20,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net/http"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
@@ -88,20 +87,15 @@ func main() {
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) (err error) {
-			handler := http.HandlerFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					ctx.SetRequest(r)
-					ctx.SetResponse(echo.NewResponse(w, ctx.Echo()))
-					existsSpan := trace.SpanFromContext(ctx.Request().Context())
-					if existsSpan.SpanContext().HasTraceID() {
-						w.Header().Set(EXTERNAL_TRACE_ID_HEADER, existsSpan.SpanContext().TraceID().String())
-					}
-					err = next(ctx)
-				},
-			)
-			handler.ServeHTTP(ctx.Response(), ctx.Request())
-			return
+		return func(c echo.Context) error {
+			existsSpan := trace.SpanFromContext(c.Request().Context())
+			if existsSpan.SpanContext().HasTraceID() {
+				c.Response().Header().Set(EXTERNAL_TRACE_ID_HEADER, existsSpan.SpanContext().TraceID().String())
+			}
+			if err := next(c); err != nil {
+				c.Error(err)
+			}
+			return nil
 		}
 	}
 }
@@ -114,6 +108,10 @@ func configureOpentelemetryMiddleware(tp *sdktrace.TracerProvider) echo.Middlewa
 func createCustomHTTPErrorHandler(lgr *logger.Logger, e *echo.Echo) func(err error, c echo.Context) {
 	originalHandler := e.DefaultHTTPErrorHandler
 	return func(err error, c echo.Context) {
+		if c.Response().Committed {
+			return
+		}
+
 		formattedStr := eris.ToString(err, true)
 		lgr.WithTracing(c.Request().Context()).Errorf("Unhandled error: %v", formattedStr)
 		originalHandler(err, c)
@@ -140,8 +138,6 @@ func configureEcho(
 
 	e.Pre(echo.MiddlewareFunc(staticMiddleware))
 	e.Use(configureOpentelemetryMiddleware(tp))
-	e.Use(configureWriteHeaderMiddleware())
-	e.Use(echo.MiddlewareFunc(authMiddleware))
 	skipper := func(c echo.Context) bool {
 		// Skip health check endpoint
 		return c.Request().URL.Path == "/health"
@@ -188,7 +184,8 @@ func configureEcho(
 			return nil
 		},
 	}))
-
+	e.Use(configureWriteHeaderMiddleware())
+	e.Use(echo.MiddlewareFunc(authMiddleware))
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
