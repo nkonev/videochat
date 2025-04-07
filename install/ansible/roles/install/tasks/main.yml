@@ -42,7 +42,7 @@
       - docker-ce-cli
       - containerd.io
       - docker-compose-plugin
-    state: latest
+    state: present
   tags:
     - videochat
 
@@ -324,7 +324,7 @@
     name:
       - python
       - pip
-    state: latest
+    state: present
   tags:
     - videochat
 
