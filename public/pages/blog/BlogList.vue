@@ -84,7 +84,7 @@ import {
 import {path_prefix, blog_post, blogIdPrefix, blogIdHashPrefix, profile} from "#root/common/router/routes";
 import {usePageContext} from "#root/renderer/usePageContext.js";
 import debounce from "lodash/debounce.js";
-import bus, {SEARCH_STRING_CHANGED} from "#root/common/bus.js";
+import bus, {SEARCH_STRING_CHANGED, SET_SET_SEARCH_STRING_NO_EMIT} from "#root/common/bus.js";
 import { navigate } from 'vike/client/router';
 const SCROLLING_THRESHHOLD = 200; // px
 const KEY_TOP_BLOG = 'topBlog';
@@ -222,6 +222,7 @@ export default {
       })
     },
     async onFirstLoad(loadedResult) {
+      bus.emit(SET_SET_SEARCH_STRING_NO_EMIT, this.pageContext.data.searchStringFacade); // restore CollapsedSearch's value from pageContext as from source of truth
       await this.doScrollOnFirstLoad(blogIdHashPrefix);
       if (loadedResult === true) {
           this.removeTopBlogPosition();

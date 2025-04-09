@@ -38,7 +38,7 @@
 <script>
     import {hasLength} from "#root/common/utils";
     import {blog, path_prefix, blog_post, videochat} from "#root/common/router/routes.js";
-    import bus, {SEARCH_STRING_CHANGED, SET_LOADING} from "#root/common/bus.js";
+    import bus, {SEARCH_STRING_CHANGED, SET_LOADING, SET_SET_SEARCH_STRING_NO_EMIT} from "#root/common/bus.js";
     import {usePageContext} from "./usePageContext.js";
     import CollapsedSearch from "#root/common/components/CollapsedSearch.vue";
     import PlayerModal from "#root/common/components/PlayerModal.vue";
@@ -67,6 +67,7 @@
             aboutPostId: this.pageContext.data.header?.aboutPostId,
             showSearchButton: this.pageContext.data.showSearchButton,
             pageLoading: false,
+            searchStringFacade: this.pageContext.data.searchStringFacade,
           }
         },
         methods: {
@@ -133,9 +134,13 @@
                 return this.searchStringFacade
             },
             setModelValue(v) {
-                this.searchStringFacade = v
+                this.setModelValueNoEmit(v);
 
-                bus.emit(SEARCH_STRING_CHANGED, v)
+                bus.emit(SEARCH_STRING_CHANGED, v);
+            },
+            setModelValueNoEmit(v) {
+              // comes from public/pages/blog/+data.js
+              this.searchStringFacade = v
             },
             getShowSearchButton() {
                 return this.$data.showSearchButton
@@ -173,9 +178,11 @@
         },
         mounted() {
           bus.on(SET_LOADING, this.setLoading)
+          bus.on(SET_SET_SEARCH_STRING_NO_EMIT, this.setModelValueNoEmit)
         },
         beforeUnmount() {
           bus.off(SET_LOADING, this.setLoading)
+          bus.off(SET_SET_SEARCH_STRING_NO_EMIT, this.setModelValueNoEmit)
         }
     }
 
