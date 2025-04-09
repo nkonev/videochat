@@ -8,7 +8,7 @@ PORT=$2
 echo "Got $HOST $PORT"
 
 echo "Creating index template"
-curl -i -Ss -X PUT "http://$HOST:$PORT/_index_template/videochat_template" -H 'Content-Type: application/json' -d'
+curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/videochat_template" -H 'Content-Type: application/json' -d'
 {
   "index_patterns": [
     "videochat-*"
@@ -27,7 +27,7 @@ curl -i -Ss -X PUT "http://$HOST:$PORT/_index_template/videochat_template" -H 'C
 echo "Creating index template finished"
 
 echo "Creating policy"
-curl -i -Ss -X PUT "http://$HOST:$PORT/_plugins/_ism/policies/delete_old_indexes_policy?pretty" -H 'Content-Type: application/json' -d'
+curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_plugins/_ism/policies/delete_old_indexes_policy?pretty" -H 'Content-Type: application/json' -d'
 {
   "policy": {
     "description": "delete old indexes",
@@ -64,7 +64,7 @@ curl -i -Ss -X PUT "http://$HOST:$PORT/_plugins/_ism/policies/delete_old_indexes
 echo "Creating policy finished"
 
 echo "Configuring task interval"
-curl -i -Ss -X PUT "http://$HOST:$PORT/_cluster/settings?pretty=true" -H 'Content-Type: application/json' -d'
+curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_cluster/settings?pretty=true" -H 'Content-Type: application/json' -d'
 {
   "persistent" : {
     "plugins.index_state_management.job_interval" : 1

@@ -1362,10 +1362,12 @@ curl -Ss 'http://localhost:9200/_plugins/_ism/policies?pretty'
 curl -i -X PUT 'http://localhost:9200/.opendistro-ism-config'
 curl -Ss -X DELETE 'http://localhost:9200/.opendistro-ism-config'
 curl -Ss -X DELETE 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes_policy?pretty'
+curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes_policy?pretty'
 
 # AUTO CLEANING check, should be "enabled" : true
 # explain
 curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/videochat-2025.01.05?pretty'
+curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/videochat-*?pretty'
 
 # Warning!
 # It can change from "enabled" : null to "enabled" : true after roughly 5 minutes ! 
