@@ -77,7 +77,7 @@ export const createGraphQlClient = () => {
     });
     graphQlClient.on('closed', (ev) => {
         console.info("Close GraphQL", ev);
-        bus.emit(WEBSOCKET_LOST);
+        // bus.emit(WEBSOCKET_LOST);
     });
     bus.on(LOGGED_OUT, () => {
         initialized = false;
