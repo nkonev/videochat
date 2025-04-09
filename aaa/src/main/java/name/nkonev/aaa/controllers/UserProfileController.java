@@ -258,7 +258,7 @@ public class UserProfileController {
     @ResponseBody
     @GetMapping(Constants.Urls.EXTERNAL_API + Constants.Urls.CONFIG)
     public ConfigDTO aaaConfig() {
-        return new ConfigDTO(oAuth2ProvidersService.availableOauth2Providers(), aaaProperties.frontendSessionPingInterval().toMillis());
+        return new ConfigDTO(oAuth2ProvidersService.availableOauth2Providers(), aaaProperties.frontendSessionPingInterval().toMillis(), Constants.MIN_PASSWORD_LENGTH, Constants.MAX_PASSWORD_LENGTH);
     }
 
     @ResponseBody

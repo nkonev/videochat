@@ -526,3 +526,13 @@ export const shouldMessageBeCollapsed = (item) => {
         collapsedText: "",
     }
 }
+
+export const tryExtractMeaningfulError = (e) => {
+    if (e?.response?.data?.validationErrors?.length) {
+        return e.response.data.validationErrors.map(v => v.field + ": " + v.message).join(", ")
+    } if (e?.response?.data?.message?.length) {
+        return e.response.data.message
+    } else {
+        return e?.message
+    }
+}

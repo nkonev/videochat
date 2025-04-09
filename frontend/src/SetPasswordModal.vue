@@ -10,17 +10,29 @@
                   color="primary"
                 ></v-progress-linear>
 
-                <v-card-text>
+                <v-card-text @keyup.native.enter="onSet">
                   <v-text-field
                       v-model="password"
                       :append-icon="showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append="showInputablePassword = !showInputablePassword"
+                      @input="hideAlert()"
                       :label="$vuetify.locale.t('$vuetify.password')"
                       required
                       :type="showInputablePassword ? 'text' : 'password'"
+                      :rules="[rules.required, rules.min]"
                       :disabled="loading"
                       variant="underlined"
                   ></v-text-field>
+                  <v-alert
+                      dismissible
+                      v-model="isShowAlert"
+                      type="error"
+                      class="mb-4"
+                  >
+                    <v-row align="center">
+                      <v-col class="grow">{{passwordError}}</v-col>
+                    </v-row>
+                  </v-alert>
 
                 </v-card-text>
 
@@ -37,6 +49,10 @@
 <script>
     import bus, {OPEN_SET_PASSWORD_MODAL} from "./bus/bus";
     import axios from "axios";
+    import {tryExtractMeaningfulError} from "@/utils.js";
+    import userProfileValidationRules from "@/mixins/userProfileValidationRules.js";
+    import {mapStores} from "pinia";
+    import {useChatStore} from "@/store/chatStore.js";
 
     export default {
         data () {
@@ -47,7 +63,15 @@
                 showInputablePassword: false,
                 userId: null,
                 userName: null,
+                isShowAlert: false,
+                passwordError: "",
             }
+        },
+        mixins: [
+          userProfileValidationRules(),
+        ],
+        computed: {
+          ...mapStores(useChatStore),
         },
         methods: {
             showModal(newData) {
@@ -57,19 +81,28 @@
             },
             onClose() {
                 this.$data.show = false;
-                this.$data.loading = false;
                 this.$data.showInputablePassword = false;
                 this.$data.loading = false;
                 this.$data.password = null;
                 this.$data.userId = null;
                 this.$data.userName = null;
+                this.hideAlert();
             },
             onSet() {
               this.$data.loading = true;
               axios.put(`/api/aaa/user/${this.$data.userId}/password`, {password: this.password})
-                  .finally(()=>{
+                  .then(()=>{
                     this.onClose();
+                  }).catch(e => {
+                    this.$data.isShowAlert = true;
+                    this.$data.passwordError = tryExtractMeaningfulError(e);
+                  }).finally(()=>{
+                    this.$data.loading = false;
                   })
+            },
+            hideAlert() {
+              this.$data.isShowAlert = false;
+              this.$data.passwordError = "";
             },
         },
         mounted() {

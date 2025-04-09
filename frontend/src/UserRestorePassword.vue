@@ -27,7 +27,7 @@ import {hasLength, setTitle} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {confirmation_pending_name, check_email_name} from "@/router/routes";
+import {check_email_name} from "@/router/routes";
 
 export default {
   mixins: [userProfileValidationRules()],
@@ -75,7 +75,7 @@ export default {
   beforeUnmount() {
     this.chatStore.title = null;
     setTitle(null);
-    this.error = "";
+    this.hideAlert();
   }
 }
 </script>

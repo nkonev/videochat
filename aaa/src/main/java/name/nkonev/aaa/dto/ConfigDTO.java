@@ -4,6 +4,8 @@ import java.util.List;
 
 public record ConfigDTO(
         List<OAuth2ProvidersDTO> providers,
-        long frontendSessionPingInterval
+        long frontendSessionPingInterval,
+        int minPasswordLength,
+        int maxPasswordLength
 ) {
 }

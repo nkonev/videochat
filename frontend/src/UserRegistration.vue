@@ -49,7 +49,7 @@
 
 <script>
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
-import {hasLength, setTitle} from "@/utils";
+import {hasLength, setTitle, tryExtractMeaningfulError} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
@@ -85,7 +85,7 @@ export default {
           this.$router.push({name: confirmation_pending_name} )
         })
         .catch(e => {
-          this.error = e.message
+          this.error = tryExtractMeaningfulError(e)
         })
     },
     hideAlert() {
@@ -115,7 +115,7 @@ export default {
   beforeUnmount() {
     this.chatStore.title = null;
     setTitle(null);
-    this.error = "";
+    this.hideAlert();
     this.showInputablePassword = false;
   }
 }

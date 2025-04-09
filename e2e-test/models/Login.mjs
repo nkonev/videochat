@@ -34,7 +34,7 @@ export default class Login {
     assertWrongLogin() {
         const alertLocator = this.page.locator('.v-dialog .v-form .v-alert');
         return expect(alertLocator).toBeVisible().then(() => {
-            return expect(alertLocator).toHaveText("Wrong login or password");
+            return expect(alertLocator).toHaveText("Unauthorized");
         });
     }
 

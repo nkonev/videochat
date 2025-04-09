@@ -27,7 +27,6 @@
                 <v-card-text :class="isMobile() ? 'pa-4 py-0' : 'pl-4 py-0'">
                     <v-form
                         ref="form"
-                        v-model="valid"
                         lazy-validation
                         @keyup.native.enter="loginWithLogin"
                         class="pb-2"
@@ -70,7 +69,7 @@
 
                         <v-btn
                                 id="login-btn"
-                                :disabled="!valid || disable"
+                                :disabled="disable"
                                 color="success"
                                 class="mr-2 mb-2"
                                 @click="loginWithLogin"
@@ -117,18 +116,18 @@
 </template>
 
 <script>
-import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
+    import bus, {LOGGED_IN, LOGGED_OUT, OPEN_SETTINGS} from "./bus/bus";
     import axios from "axios";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
-import {
-  confirmation_pending_name, forgot_password,
-  forgot_password_name, check_email_name,
-  password_restore_enter_new_name, registration,
-  registration_name, blog
-} from "@/router/routes";
-import {setLanguageToVuetify} from "@/utils";
-import {getStoredLanguage} from "@/store/localStore";
+    import {
+      forgot_password,
+      forgot_password_name,
+      registration,
+      registration_name, blog
+    } from "@/router/routes";
+    import {setLanguageToVuetify, tryExtractMeaningfulError} from "@/utils";
+    import {getStoredLanguage} from "@/store/localStore";
 
     export default {
         data() {
@@ -146,7 +145,6 @@ import {getStoredLanguage} from "@/store/localStore";
                 loadingGoogle: false,
                 loadingKeycloak: false,
 
-                valid: true,
                 login: '',
                 loginRules: [
                     v => !!v || 'Login is required',
@@ -240,11 +238,7 @@ import {getStoredLanguage} from "@/store/localStore";
                             // handle error
                             console.log("Handling error on login", error.response);
                             this.$data.isShowAlert = true;
-                            if (error.response.status === 401) {
-                                this.$data.loginError = "Wrong login or password";
-                            } else {
-                                this.$data.loginError = "Unknown error " + error.response.status;
-                            }
+                            this.$data.loginError = tryExtractMeaningfulError(error)
                         }).finally(() => {
                             this.loadingLogin = false;
                             this.disable = false;

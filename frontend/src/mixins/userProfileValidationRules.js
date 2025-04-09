@@ -2,7 +2,7 @@ export default () => {
   return {
     computed: {
       rules() {
-        const minChars = 8;
+        const minChars = this.chatStore.minPasswordLength;
         const requiredMessage = this.$vuetify.locale.t('$vuetify.required');
         const minCharsMessage = this.$vuetify.locale.t('$vuetify.min_characters', minChars);
         const invalidEmailMessage = this.$vuetify.locale.t('$vuetify.invalid_email');

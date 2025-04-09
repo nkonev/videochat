@@ -143,7 +143,13 @@ axios.interceptors.response.use((response) => {
     } else if (error.code == 'ECONNABORTED') { // removes error snackbar caused by cancelled message read request
         console.warn("Connection aborted")
         return Promise.reject(error)
-    } else if (error.config.url == '/api/aaa/ping') { // removes error snackbar caused by cancelled message read request
+    } else if (error.config.url == '/api/aaa/ping') { // removes error snackbar caused by ping
+        return Promise.reject(error)
+    // removes error snackbar caused by wrong password in
+    } else if (error.config.url.match(/\/api\/aaa\/user\/\d+\/password/) || // SetPasswordModal.vue
+        error.config.url.match(/\/api\/aaa\/password-reset-set-new/) ||
+        error.config.url.match(/\/api\/aaa\/register/)
+    ) {
         return Promise.reject(error)
     } else {
         const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);

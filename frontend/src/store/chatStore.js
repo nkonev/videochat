@@ -82,6 +82,7 @@ export const useChatStore = defineStore('chat', {
         oppositeUserOnline: false,
         editMessageDto: chatEditMessageDtoFactory(),
         aaaSessionPingInterval: -1, // in milliseconds
+        minPasswordLength: 0,
     }
   },
   actions: {
@@ -103,12 +104,13 @@ export const useChatStore = defineStore('chat', {
     fetchAaaConfig() {
           return axios.get(`/api/aaa/config`).then(( {data} ) => {
               const providers = data.providers;
-              console.debug("fetched oauth2 providers =", providers);
               this.availableOAuth2Providers = providers.map(p => p.providerName);
               for (const p of providers) {
                   this.OAuth2ProvidersAllowUnbind[p.providerName] = p.allowUnbind;
               }
               this.aaaSessionPingInterval = data.frontendSessionPingInterval;
+              this.minPasswordLength = data.minPasswordLength;
+              console.log("config: oauth2 providers", JSON.stringify(this.availableOAuth2Providers), "minPasswordLength", this.minPasswordLength)
           });
     },
     updateRedDot() {

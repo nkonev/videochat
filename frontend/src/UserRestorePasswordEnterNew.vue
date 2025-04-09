@@ -23,12 +23,12 @@
             </template>
         </v-text-field>
 
-      <v-alert
-        v-if="showError"
-        density="compact"
-        type="error"
-        :text="error"
-      ></v-alert>
+        <v-alert
+          v-if="showError"
+          density="compact"
+          type="error"
+          :text="error"
+        ></v-alert>
 
       <v-btn type="submit" color="primary" block class="mt-2">{{ $vuetify.locale.t('$vuetify.set_new_password') }}</v-btn>
     </v-form>
@@ -37,11 +37,11 @@
 
 <script>
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
-import {hasLength, setLanguageToVuetify, setTitle} from "@/utils";
+import {hasLength, setLanguageToVuetify, setTitle, tryExtractMeaningfulError} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import axios from "axios";
-import {confirmation_pending_name, check_email_name, root_name} from "@/router/routes";
+import {root_name} from "@/router/routes";
 import {getStoredLanguage} from "@/store/localStore";
 
 export default {
@@ -73,7 +73,7 @@ export default {
           })
         })
         .catch(e => {
-          this.error = e.message
+          this.error = tryExtractMeaningfulError(e)
         })
     },
     hideAlert() {
