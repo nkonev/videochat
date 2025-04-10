@@ -97,6 +97,8 @@ spring.servlet.multipart.max-file-size: 6MB
 spring.servlet.multipart.max-request-size: 8MB
 server.servlet.encoding.force-response: true
 server.servlet.session.cookie.name: VIDEOCHAT_SESSION
+# in order not to remove cookie on mobile browser unloading
+server.servlet.session.cookie.max-age: ${spring.session.timeout}
 
 custom.csrf.cookie:
   name: VIDEOCHAT_XSRF_TOKEN
