@@ -163,10 +163,11 @@ axios.interceptors.response.use((response) => {
         if (respHeaders) {
           traceId = respHeaders['trace-id']
         }
+        const methodUrl = "" + error.config?.method + " " + error.config?.url;
         if (error.response) {
-            app.config.globalProperties.setError(maybeBusinessMessage, errorMessage, traceId);
+            app.config.globalProperties.setError(methodUrl + " " + maybeBusinessMessage, errorMessage, traceId);
         } else {
-            app.config.globalProperties.setErrorSilent(errorMessage, traceId);
+            app.config.globalProperties.setErrorSilent(methodUrl + " " + errorMessage, traceId);
         }
         return Promise.reject(error)
     }
