@@ -98,6 +98,9 @@ public class SecurityConfig {
             responseCookieBuilder.sameSite(aaaProperties.csrf().cookie().sameSite());
             responseCookieBuilder.secure(aaaProperties.csrf().cookie().secure());
             responseCookieBuilder.httpOnly(aaaProperties.csrf().cookie().httpOnly());
+            if (!aaaProperties.csrf().cookie().maxAge().isZero()) {
+                responseCookieBuilder.maxAge(aaaProperties.csrf().cookie().maxAge());
+            }
         });
         return cookieCsrfTokenRepository;
     }

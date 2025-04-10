@@ -103,6 +103,7 @@ server.servlet.session.cookie.max-age: ${spring.session.timeout}
 custom.csrf.cookie:
   name: VIDEOCHAT_XSRF_TOKEN
   same-site: ""
+  max-age: ${spring.session.timeout}
 
 # this is URL
 spring.mvc.static-path-pattern: /**
