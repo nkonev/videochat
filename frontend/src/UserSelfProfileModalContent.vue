@@ -25,6 +25,7 @@
               <template v-else>
                 <v-container class="ma-0 pa-0 d-flex flex-row">
                   <v-text-field
+                    @input="hideLoginAlert()"
                     v-model="login"
                     :rules="[rules.required]"
                     :label="$vuetify.locale.t('$vuetify.login')"
@@ -42,6 +43,12 @@
                 </v-container>
               </template>
             </v-container>
+            <v-alert
+                v-if="showLoginError"
+                density="compact"
+                type="error"
+                :text="loginError"
+            ></v-alert>
             <v-divider></v-divider>
 
             <v-container class="ma-0 pa-0 d-flex flex-row">
@@ -54,6 +61,7 @@
               <template v-else>
                 <v-container class="ma-0 pa-0 d-flex flex-row">
                   <v-text-field
+                    @input="hideEmailAlert()"
                     v-model="email"
                     :rules="[rules.required, rules.email]"
                     :label="$vuetify.locale.t('$vuetify.email')"
@@ -71,6 +79,12 @@
                 </v-container>
               </template>
             </v-container>
+            <v-alert
+                v-if="showEmailError"
+                density="compact"
+                type="error"
+                :text="emailError"
+            ></v-alert>
             <v-container class="ma-0 pa-0 d-flex flex-column text-caption" v-if="chatStore.currentUser.awaitingForConfirmEmailChange">
                 <span>{{ $vuetify.locale.t('$vuetify.confirm_email_to_change_part_1') }}</span>
                 <span>
@@ -203,6 +217,7 @@
         <template v-else>
           <v-container class="ma-0 py-0 d-flex flex-row user-self-settings-container">
             <v-text-field
+              @input="hidePasswordAlert()"
               v-model="password"
               :type="showInputablePassword ? 'text' : 'password'"
               :rules="[rules.required, rules.min]"
@@ -218,6 +233,13 @@
               </template>
             </v-text-field>
           </v-container>
+          <v-alert
+              class="mx-4"
+              v-if="showPasswordError"
+              density="compact"
+              type="error"
+              :text="passwordError"
+          ></v-alert>
         </template>
 
         <v-divider class="mx-4"></v-divider>
@@ -235,6 +257,7 @@
         <template v-else>
           <v-container class="ma-0 pt-0 d-flex flex-row user-self-settings-container">
             <v-text-field
+              @input="hideShortInfoAlert()"
               v-model="shortInfo"
               label="Short info"
               @keyup.native.enter="sendShortInfo()"
@@ -248,6 +271,13 @@
               </template>
             </v-text-field>
           </v-container>
+          <v-alert
+              class="mx-4"
+              v-if="showShortInfoErrorError"
+              density="compact"
+              type="error"
+              :text="shortInfoError"
+          ></v-alert>
         </template>
 
         <v-divider class="mx-4"></v-divider>
@@ -260,6 +290,13 @@
                 <v-icon dark>mdi-invert-colors</v-icon>
             </template>
         </v-btn>
+        <v-alert
+            class="mx-4"
+            v-if="showLoginColorError"
+            density="compact"
+            type="error"
+            :text="loginColorError"
+        ></v-alert>
 
     </v-card>
 </template>
@@ -268,7 +305,7 @@
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
-import {colorLogin, getLoginColoredStyle, hasLength, unescapeHtml} from "@/utils";
+import {colorLogin, getLoginColoredStyle, hasLength, tryExtractMeaningfulError, unescapeHtml} from "@/utils";
 import userProfileValidationRules from "@/mixins/userProfileValidationRules";
 import bus, {COLOR_SET, OPEN_CHOOSE_COLOR} from "@/bus/bus";
 
@@ -291,6 +328,12 @@ export default {
             password: null,
             email: null,
             shortInfo: null,
+
+            loginError: "",
+            emailError: "",
+            passwordError: "",
+            shortInfoError: "",
+            loginColorError: "",
         }
     },
     computed: {
@@ -311,7 +354,21 @@ export default {
           const maybeUser = this.chatStore.currentUser;
           return hasLength(maybeUser?.avatarBig) || hasLength(maybeUser?.avatar)
         },
-
+        showLoginError() {
+          return hasLength(this.loginError)
+        },
+        showEmailError() {
+          return hasLength(this.emailError)
+        },
+        showPasswordError() {
+          return hasLength(this.passwordError)
+        },
+        showShortInfoErrorError() {
+          return hasLength(this.shortInfoError)
+        },
+        showLoginColorError() {
+          return hasLength(this.loginColorError)
+        },
     },
     methods: {
         getLoginColoredStyle,
@@ -430,6 +487,7 @@ export default {
                 })
         },
         changeLoginColor() {
+            this.hideLoginColorAlert();
             bus.emit(OPEN_CHOOSE_COLOR, {colorMode: colorLogin, color: this.chatStore.currentUser.loginColor});
         },
         onColorSet({color, colorMode}) {
@@ -443,6 +501,9 @@ export default {
                   dto.removeLoginColor = true;
                 }
                 axios.patch('/api/aaa/profile', dto)
+                    .catch(e => {
+                      this.loginColorError = tryExtractMeaningfulError(e)
+                    })
                     .finally(()=>{
                         this.loading = false;
                     })
@@ -454,6 +515,8 @@ export default {
           axios.patch('/api/aaa/profile', {login: this.login})
               .then((response) => {
                 this.showLoginInput = false;
+              }).catch(e => {
+                this.loginError = tryExtractMeaningfulError(e)
               }).finally(()=>{
                 this.loading = false;
               })
@@ -473,6 +536,8 @@ export default {
             }})
               .then((response) => {
                 this.showEmailInput = false;
+              }).catch(e => {
+                this.emailError = tryExtractMeaningfulError(e)
               }).finally(()=>{
                 this.loading = false;
               })
@@ -490,6 +555,8 @@ export default {
           axios.patch('/api/aaa/profile', {password: this.password})
               .then((response) => {
                 this.showPasswordInput = false;
+              }).catch(e => {
+                this.passwordError = tryExtractMeaningfulError(e)
               }).finally(()=>{
                 this.loading = false;
               })
@@ -511,6 +578,8 @@ export default {
           axios.patch('/api/aaa/profile', {shortInfo: this.shortInfo, removeShortInfo})
               .then((response) => {
                 this.showShortInfoInput = false;
+              }).catch(e => {
+                this.shortInfoError = tryExtractMeaningfulError(e)
               }).finally(()=>{
                 this.loading = false;
               })
@@ -522,12 +591,34 @@ export default {
         onCancelShortInfoEditing() {
           this.showShortInfoInput = false;
         },
+
+        hideLoginAlert() {
+          this.loginError = "";
+        },
+        hideEmailAlert() {
+          this.emailError = "";
+        },
+        hidePasswordAlert() {
+          this.passwordError = "";
+        },
+        hideShortInfoAlert() {
+          this.shortInfoError = "";
+        },
+        hideLoginColorAlert() {
+          this.loginColorError = "";
+        },
+
     },
     mounted() {
         bus.on(COLOR_SET, this.onColorSet);
     },
     beforeUnmount() {
         bus.off(COLOR_SET, this.onColorSet);
+        this.hideLoginAlert();
+        this.hideEmailAlert();
+        this.hidePasswordAlert();
+        this.hideShortInfoAlert();
+        this.hideLoginColorAlert();
     },
 }
 </script>

@@ -146,10 +146,12 @@ axios.interceptors.response.use((response) => {
     } else if (error.config.url == '/api/aaa/ping') { // removes error snackbar caused by ping
         return Promise.reject(error)
     // removes error snackbar caused by wrong password in
-    } else if (error.config.url.match(/\/api\/aaa\/user\/\d+\/password/) || // SetPasswordModal.vue
-        error.config.url.match(/\/api\/aaa\/password-reset-set-new/) ||
-        error.config.url.match(/\/api\/aaa\/register/)
-    ) {
+    } else if (error.response.status == 400 && (
+            error.config.url.match(/\/api\/aaa\/user\/\d+\/password/) || // SetPasswordModal.vue
+            error.config.url == "/api/aaa/password-reset-set-new" ||
+            error.config.url == "/api/aaa/register" ||
+            error.config.url == "/api/aaa/profile"
+    )) {
         return Promise.reject(error)
     } else {
         const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
