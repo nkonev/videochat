@@ -190,7 +190,7 @@ export default {
       })
     },
     onLogout() {
-      this.partialReset();
+      this.partialReset(true);
       this.initialLoaded = false;
       this.chatEventsSubscription.graphQlUnsubscribe();
     },
@@ -640,7 +640,7 @@ export default {
     onWsRestoredRefresh() {
       this.getInfo(this.chatId)
     },
-    partialReset() {
+    partialReset(keepTitle) {
       this.chatStore.resetChatDto();
 
       this.chatStore.videoChatUsersCount=0;
@@ -651,8 +651,10 @@ export default {
       this.chatStore.showRecordStopButton = false;
       this.chatStore.showChatEditButton = false;
 
-      this.chatStore.title = null;
-      setTitle(null);
+      if (!keepTitle) {
+        this.chatStore.title = null;
+        setTitle(null);
+      }
       this.chatStore.avatar = null;
       this.chatStore.showGoToBlogButton = null;
 
