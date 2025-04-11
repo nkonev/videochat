@@ -1,20 +1,25 @@
 <template>
     <v-app>
         <v-app-bar color='indigo' dark :density="getDensity()">
+          <v-container fluid class="ma-0 pa-0 d-flex">
             <template v-if="getShowSearchButton()">
                 <v-breadcrumbs
                     :items="getBreadcrumbs()"
                 />
                 <v-spacer/>
-                <span v-if="shouldShowTitle()" class="app-title-text">{{chatTitle}}</span>
+                <div class="app-title ml-2 align-self-center" v-if="shouldShowTitle()">
+                  <div class="app-title-text pl-1">{{chatTitle}}</div>
+                </div>
                 <v-spacer/>
-                <span v-if="shouldShowAboutTitle()" class="mr-4 app-title-text"><a class="v-breadcrumbs-item--link" :href="aboutPostTitleHref">{{aboutPostTitle}}</a></span>
-                <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
+                <span v-if="shouldShowAboutTitle()" class="mr-4 align-content-center app-title-text"><a class="v-breadcrumbs-item--link" :href="aboutPostTitleHref">{{aboutPostTitle}}</a></span>
+                <div class="ma-0 pa-0 mr-1 align-content-center">
+                  <v-btn variant="tonal" v-if="shouldShowGoToChatButton()" @click.prevent="onGoToChat()" :href="chatMessageHref">Go to message</v-btn>
+                </div>
             </template>
             <template v-if="isShowSearch()">
                 <CollapsedSearch :provider="getProvider()"/>
             </template>
-
+          </v-container>
         </v-app-bar>
 
         <v-main>
@@ -243,13 +248,19 @@ html {
 
 <style lang="stylus" scoped>
 
+.app-title {
+  width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 .app-title-text {
+    display: inline;
     font-size: .875rem;
     font-weight: 500;
     letter-spacing: .09em;
-    height: 1.6em;
-    white-space: break-spaces;
-    overflow: hidden;
+    line-height: 1.75em;
 }
 
 </style>
