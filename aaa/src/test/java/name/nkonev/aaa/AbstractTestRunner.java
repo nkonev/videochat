@@ -191,10 +191,10 @@ public abstract class AbstractTestRunner {
 
 
     public static class XsrfCookiesHolder {
-        final List<String> sessionCookies;
+        final public List<String> sessionCookies;
         final public String newXsrf;
 
-        final String xsrfCookieHeaderValue;
+        final public String xsrfCookieHeaderValue;
 
         public XsrfCookiesHolder(List<String> sessionCookies, String newXsrf, String xsrfCookieHeaderValue) {
             this.sessionCookies = sessionCookies;
@@ -204,7 +204,7 @@ public abstract class AbstractTestRunner {
 
     }
 
-    private XsrfCookiesHolder getXsrf() {
+    protected XsrfCookiesHolder getXsrf() {
         var url = urlWithContextPath();
         url += "/login.html";
         var bldr = RequestEntity.get(url);

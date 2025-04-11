@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Order(Ordered.HIGHEST_PRECEDENCE + 1)
+@Order(Ordered.HIGHEST_PRECEDENCE + 2)
 @Component
 public class TracerHeaderWriteFilter extends HttpFilter {
     private final Tracer tracer;
@@ -31,7 +31,7 @@ public class TracerHeaderWriteFilter extends HttpFilter {
             chain.doFilter(request, response);
         } else {
             var context = currentSpan.context();
-            if (context != null && !currentSpan.isNoop()) {
+            if (context != null) {
                 var traceId = context.traceId();
                 response.setHeader(EXTERNAL_TRACE_ID_HEADER, traceId);
             }

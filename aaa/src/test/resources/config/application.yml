@@ -9,8 +9,8 @@ logging:
     org.mockserver: WARN
     org.htmlunit: ERROR
     # org.springframework.web: TRACE
-  pattern:
-    console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
+#  pattern:
+#    console: "%d{dd.MM.yyyy HH:mm:ss.SSS} %-5level @aaa [%thread] %logger{36}:%line %msg%n"
 
 custom.api-url: "http://localhost:${server.port}/api/aaa"
 custom.frontend-url: "http://localhost:9080"

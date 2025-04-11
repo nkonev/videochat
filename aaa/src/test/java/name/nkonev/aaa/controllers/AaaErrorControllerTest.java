@@ -97,7 +97,7 @@ public class AaaErrorControllerTest extends AbstractMockMvcTestRunner {
 
         Assertions.assertEquals("internal error", resp.get("message"));
 
-        assertThat(output).contains("AaaErrorController:");
+        assertThat(output).contains("AaaErrorController");
         assertThat(output).contains("Message: internal error, error: null, exception: org.springframework.dao.DataIntegrityViolationException, trace: org.springframework.dao.DataIntegrityViolationException: select * from fake_users;");
     }
 
