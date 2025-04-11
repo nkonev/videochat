@@ -6,12 +6,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Order(1)
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 @Component
 public class TracerHeaderWriteFilter extends HttpFilter {
     private final Tracer tracer;
@@ -30,7 +31,7 @@ public class TracerHeaderWriteFilter extends HttpFilter {
             chain.doFilter(request, response);
         } else {
             var context = currentSpan.context();
-            if (context != null) {
+            if (context != null && !currentSpan.isNoop()) {
                 var traceId = context.traceId();
                 response.setHeader(EXTERNAL_TRACE_ID_HEADER, traceId);
             }
