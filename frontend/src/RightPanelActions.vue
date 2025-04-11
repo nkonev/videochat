@@ -29,6 +29,7 @@
       <v-list-item v-if="shouldShowUpperChats()" @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
       <v-list-item v-if="shouldDisplayCopyCallLink()" @click.prevent="copyCallLink()" prepend-icon="mdi-content-copy" :title="$vuetify.locale.t('$vuetify.copy_video_call_link')"></v-list-item>
       <v-list-item v-if="shouldShowLowerChats()" @click.prevent="goChats()" :href="getRouteChats()" prepend-icon="mdi-forum" :title="$vuetify.locale.t('$vuetify.chats')"></v-list-item>
+      <v-list-item v-if="shouldShowGoToBlogPost()" @click.prevent="goToBlogPost()" :href="getRouteGoToBlogPost()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')"></v-list-item>
       <v-list-item @click.prevent="goBlogs()" :href="getRouteBlogs()" prepend-icon="mdi-postage-stamp" :title="$vuetify.locale.t('$vuetify.blogs')"></v-list-item>
       <v-list-item v-if="shouldDisplayCreateChat()" @click="createChat()" prepend-icon="mdi-plus" id="test-new-chat-dialog-button" :title="$vuetify.locale.t('$vuetify.new_chat')"></v-list-item>
       <v-list-item @click="editChat()" v-if="shouldDisplayEditChat()" prepend-icon="mdi-lead-pencil" :title="$vuetify.locale.t('$vuetify.edit_chat')"></v-list-item>
@@ -81,7 +82,7 @@ import bus, {
     OPEN_SETTINGS,
     OPEN_VIEW_FILES_DIALOG, PROFILE_SET
 } from "@/bus/bus";
-import {copyCallLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
+import {copyCallLink, getBlogLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 
@@ -175,6 +176,9 @@ export default {
     getRouteBlogs() {
       return blog
     },
+    getRouteGoToBlogPost() {
+      return getBlogLink(this.chatId)
+    },
     getRouteUsers() {
       return profiles;
     },
@@ -188,6 +192,9 @@ export default {
     },
     goBlogs() {
       window.location.href = blog
+    },
+    goToBlogPost() {
+      window.location.href = this.getRouteGoToBlogPost()
     },
     openUsers() {
       this.chatStore.incrementProgressCount();
@@ -254,6 +261,13 @@ export default {
         return true
       } else {
         return !isChatRoute(this.$route)
+      }
+    },
+    shouldShowGoToBlogPost() {
+      if (!this.isMobile()) {
+        return false
+      } else {
+        return this.chatStore.showGoToBlogButton
       }
     },
     onProfileSet() {
