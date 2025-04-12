@@ -139,11 +139,11 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
                     .content(objectMapper.writeValueAsString(createUserDTO))
                     .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
                     .with(csrf())
-            )
+            ).andDo(result -> {
+                    LOGGER.info(result.getResponse().getContentAsString());
+                })
             .andExpect(status().isOk())
             .andReturn();
-        String createAccountStr = createAccountRequest.getResponse().getContentAsString();
-        LOGGER.info(createAccountStr);
 
         // login unconfirmed fail
         mockMvc.perform(

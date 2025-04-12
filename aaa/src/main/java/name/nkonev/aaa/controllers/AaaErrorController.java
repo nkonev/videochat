@@ -1,6 +1,8 @@
 package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.tracing.Tracer;
+import jakarta.servlet.RequestDispatcher;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
@@ -16,6 +18,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -24,7 +27,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static name.nkonev.aaa.controllers.TracerHeaderWriteFilter.EXTERNAL_TRACE_ID_HEADER;
 import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
 /**
@@ -34,7 +36,7 @@ import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 @Controller
 public class AaaErrorController extends AbstractErrorController {
 
-    private static final String PATH = "/error";
+    public static final String PATH = "/error";
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -42,13 +44,16 @@ public class AaaErrorController extends AbstractErrorController {
     @Autowired
     private AaaProperties aaaProperties;
 
+    @Autowired
+    private Tracer tracer;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorController.class);
 
     public AaaErrorController(ErrorAttributes errorAttributes, List<ErrorViewResolver> errorViewResolvers) {
         super(errorAttributes, errorViewResolvers);
     }
 
-    private final Set<Class<?>> noErrorExceptions = Set.of(AuthorizationDeniedException.class);
+    private final Set<Class<?>> noErrorExceptions = Set.of(AuthorizationDeniedException.class, AuthenticationException.class);
 
     @RequestMapping(value = PATH)
     public ModelAndView error(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -57,17 +62,24 @@ public class AaaErrorController extends AbstractErrorController {
 
         Map<String, Object> errorAttributes = getCustomErrorAttributes(request);
 
-        if (noErrorExceptions.stream()
-                .map(Class::getCanonicalName)
-                .filter(Objects::nonNull)
-                .anyMatch(se -> se.equals(errorAttributes.get("exception")))
+        if (
+                noErrorExceptions.stream().anyMatch(noErrorExceptionClass -> {
+                    var gotException = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                    if (gotException instanceof Exception && noErrorExceptionClass.isAssignableFrom(gotException.getClass())) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                })
         ) {
             LOGGER.debug("Message: {}, error: {}, exception: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"));
         } else {
             LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
         }
 
+        HttpStatus status = getStatus(request);
         if (acceptValues.contains(MediaType.APPLICATION_JSON_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE)) {
+            response.setStatus(status.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             try {
                 if (aaaProperties.debugResponse()) {
@@ -92,7 +104,6 @@ public class AaaErrorController extends AbstractErrorController {
             }
             return null;
         } else {
-            HttpStatus status = getStatus(request);
             Map<String, Object> m;
             if (aaaProperties.debugResponse()) {
                 m = new HashMap<>(errorAttributes);
@@ -120,6 +131,16 @@ public class AaaErrorController extends AbstractErrorController {
     }
 
     private String getTraceId(HttpServletResponse response) {
-        return response.getHeader(EXTERNAL_TRACE_ID_HEADER);
+        var currentSpan = this.tracer.currentSpan();
+        if (currentSpan == null) {
+            return null;
+        } else {
+            var context = currentSpan.context();
+            if (context != null) {
+                var traceId = context.traceId();
+                return traceId;
+            }
+            return null;
+        }
     }
 }
