@@ -7,15 +7,29 @@ PORT=$2
 
 echo "Got $HOST $PORT"
 
+# https://stackoverflow.com/a/49979996
+echo "Disabling threshold"
+curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_cluster/settings" -H 'Content-Type: application/json' -d'
+{
+  "persistent": {
+    "cluster": {
+      "routing": {
+        "allocation.disk.threshold_enabled": false
+      }
+    }
+  }
+}'
+echo "Disabling finished"
+
 echo "Creating index template"
-curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/videochat_template" -H 'Content-Type: application/json' -d'
+curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/log_template" -H 'Content-Type: application/json' -d'
 {
   "index_patterns": [
-    "videochat-*"
+    "log-*"
   ],
   "template": {
     "aliases": {
-      "videochat": {}
+      "log": {}
     },
     "settings": {
       "number_of_shards": 1,
@@ -55,7 +69,7 @@ curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_plugins/_ism/policies/d
       }
     ],
     "ism_template": {
-      "index_patterns": ["videochat-*"],
+      "index_patterns": ["log-*"],
       "priority": 100
     }
   }

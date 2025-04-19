@@ -1219,7 +1219,7 @@ go generate ./...
 curl -Ss -X GET 'http://localhost:9200/_cat/indices'
 
 # by trace id, without jq, but with pretty, to use inside from opensearch container
-curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Type: application/json' -d'
+curl -Ss -X GET 'http://localhost:9200/log/_search?pretty' -H 'Content-Type: application/json' -d'
 {
   "size": 1000,
   "query": {
@@ -1236,7 +1236,7 @@ curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Typ
 '
 
 # last 100 docs, without jq, but with pretty, to use inside from opensearch container
-curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Type: application/json' -d'
+curl -Ss -X GET 'http://localhost:9200/log/_search?pretty' -H 'Content-Type: application/json' -d'
 {
   "size": 100,
   "query": {
@@ -1251,7 +1251,7 @@ curl -Ss -X GET 'http://localhost:9200/videochat/_search?pretty' -H 'Content-Typ
 '
 
 # by date https://www.elastic.co/guide/en/elasticsearch/reference/current/api-conventions.html#api-date-math-index-names
-docker exec -t $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_opensearch --filter desired-state=running -q)) curl -Ss -X GET 'http://localhost:9200/%3Cvideochat-%7Bnow%2Fd-1d%7D%3E%2C%3Cvideochat-%7Bnow%2Fd%7D%3E/_search?pretty' -H 'Content-Type: application/json' -d'
+docker exec -t $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_opensearch --filter desired-state=running -q)) curl -Ss -X GET 'http://localhost:9200/%3Clog-%7Bnow%2Fd-1d%7D%3E%2C%3Clog-%7Bnow%2Fd%7D%3E/_search?pretty' -H 'Content-Type: application/json' -d'
 {
   "size": 10000,
   "query": {
@@ -1267,7 +1267,7 @@ docker exec -t $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}
 less /tmp/logs.json
 
 
-curl -Ss -X GET 'http://localhost:9200/videochat-*/_mapping' | jq
+curl -Ss -X GET 'http://localhost:9200/log-*/_mapping' | jq
 
 # AUTO CLEANING 2
 # create a policy to delete old idx
@@ -1301,7 +1301,7 @@ curl -Ss -X PUT 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes
       }
     ],
     "ism_template": {
-      "index_patterns": ["videochat-*"],
+      "index_patterns": ["log-*"],
       "priority": 100
     }
   }
@@ -1347,15 +1347,14 @@ curl -Ss -X PUT 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes
       }
     ],
     "ism_template": {
-      "index_patterns": ["videochat-*"],
+      "index_patterns": ["log-*"],
       "priority": 100
     }
   }
 }
 '
 
-curl -Ss -X GET 'http://localhost:9200/_cat/count/videochat-2025.01.05'
-curl -Ss -X GET 'http://localhost:9200/videochat/_count'
+curl -Ss -X GET 'http://localhost:9200/log/_count'
 
 # also
 curl -Ss 'http://localhost:9200/_plugins/_ism/policies?pretty'
@@ -1366,14 +1365,14 @@ curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/policies/delete_old_indexes
 
 # AUTO CLEANING check, should be "enabled" : true
 # explain
-curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/videochat-2025.01.05?pretty'
-curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/videochat-*?pretty'
+curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/log-2025.01.05?pretty'
+curl -Ss -X GET 'http://localhost:9200/_plugins/_ism/explain/log-*?pretty'
 
 # Warning!
 # It can change from "enabled" : null to "enabled" : true after roughly 5 minutes ! 
 
 # make yellow -> green (https://opster.com/guides/opensearch/opensearch-basics/yellow-status/)
-curl -i -X PUT 'http://localhost:9200/videochat-2025.01.05/_settings' -H 'Content-Type: application/json' -d'
+curl -i -X PUT 'http://localhost:9200/log-2025.01.05/_settings' -H 'Content-Type: application/json' -d'
 {
     "index" : {
         "number_of_replicas" : 0
@@ -1394,14 +1393,14 @@ curl -i 'http://localhost:9200/_cluster/health/?level=shards&pretty'
 
 # AUTO CLEANING 1
 # should be created beforehand in order to make policy working (policy searches templates)
-curl -i -X PUT 'http://localhost:9200/_index_template/videochat_template' -H 'Content-Type: application/json' -d'
+curl -i -X PUT 'http://localhost:9200/_index_template/log_template' -H 'Content-Type: application/json' -d'
 {
   "index_patterns": [
-    "videochat-*"
+    "log-*"
   ],
   "template": {
     "aliases": {
-      "videochat": {}
+      "log": {}
     },
     "settings": {
       "number_of_shards": 1,
@@ -1412,7 +1411,7 @@ curl -i -X PUT 'http://localhost:9200/_index_template/videochat_template' -H 'Co
 '
 
 # if an index videochat-2025.01.05 was created before, just remove it
-curl -Ss -X DELETE 'http://localhost:9200/videochat-2025.01.05'
+curl -Ss -X DELETE 'http://localhost:9200/log-2025.01.05'
 
 ```
 
