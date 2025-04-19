@@ -75,17 +75,20 @@ export default {
   computed: {
     ...mapStores(useChatStore),
     videoButtonsControlClass() {
+      const classes = [];
       if (this.videoIsHorizontal() || this.videoIsGallery() || this.isMobile()) {
-        return ["video-buttons-control", "video-buttons-control-horizontal"]
+        classes.push("video-buttons-control", "video-buttons-control-horizontal");
       } else if (this.videoIsVertical())  {
         if (!this.chatStore.presenterEnabled) {
-          return ["video-buttons-control", "video-buttons-control-vertical"];
+          classes.push("video-buttons-control", "video-buttons-control-vertical");
         } else {
-          return ["video-buttons-control", "video-buttons-control-horizontal"]
+          classes.push("video-buttons-control", "video-buttons-control-horizontal")
         }
-      } else {
-        return null;
       }
+      if (this.isMobile()) {
+        classes.push("video-buttons-control-mobile");
+      }
+      return classes
     },
     positionItems() {
       return positionItems()
@@ -185,6 +188,10 @@ export default {
   flex-direction: column;
   z-index 20
   bottom 16px
+}
+
+.video-buttons-control-mobile {
+  bottom 32px
 }
 
 .video-position-select {

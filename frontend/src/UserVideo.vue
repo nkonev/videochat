@@ -184,7 +184,7 @@ export default {
           this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
         },
         shouldShowCaption() {
-          return !(this.isMobile() && this.chatStore.presenterEnabled)
+          return !(this.isMobile() && this.chatStore.presenterEnabled) || this.videoIsGallery()
         },
     },
     computed: {
