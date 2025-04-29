@@ -25,7 +25,7 @@
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
             <div class="message-edit-dialog" :style="heightWithoutAppBar">
-                <MessageEdit :chatId="chatId"/>
+                <MessageEdit :chatId="chatId" ref="messageEdit"/>
             </div>
         </v-card>
     </v-dialog>
@@ -61,6 +61,9 @@
             closeModal() {
                 this.show = false;
             },
+            reactOnMobileKeyboardChange(event) {
+              this.$refs.messageEdit?.$refs.tipTapRef?.scrollToCursor()
+            },
         },
         watch: {
             show(newValue) {
@@ -81,10 +84,16 @@
         mounted() {
             bus.on(OPEN_EDIT_MESSAGE, this.showModal);
             bus.on(CLOSE_EDIT_MESSAGE, this.closeModal);
+            if ('visualViewport' in window && this.isMobile()) {
+              window.visualViewport.addEventListener('resize', this.reactOnMobileKeyboardChange);
+            }
         },
         beforeUnmount() {
             bus.off(OPEN_EDIT_MESSAGE, this.showModal);
             bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
+            if ('visualViewport' in window && this.isMobile()) {
+              window.visualViewport.removeEventListener('resize', this.reactOnMobileKeyboardChange);
+            }
         },
     }
 </script>

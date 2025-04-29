@@ -191,6 +191,11 @@ export default {
           }
         })
     },
+    scrollToCursor() {
+      setTimeout(()=>{
+        this.editor.commands.scrollIntoView()
+      }, 300) // fix an issue related to long text and mobile virtual keyboard
+    },
     addImage() {
         this.fileInput.click();
     },
