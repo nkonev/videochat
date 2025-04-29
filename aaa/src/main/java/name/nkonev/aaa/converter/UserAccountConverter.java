@@ -184,12 +184,7 @@ public class UserAccountConverter {
 
     public name.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) { return null; }
-        name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO;
-        if (aaaSecurityService.hasSessionManagementPermission(currentUser)){
-            dataDTO = new name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
-        } else {
-            dataDTO = null;
-        }
+        name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO = new name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new UserAccountDTOExtended(
                 userAccount.id(),
