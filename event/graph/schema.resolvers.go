@@ -488,14 +488,9 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		userAccountEvent.Email = user.Email.Ptr()
 		userAccountEvent.AwaitingForConfirmEmailChange = &user.AwaitingForConfirmEmailChange
 	}
-	if aDto.AdditionalData != nil {
-		userAccountEvent.AdditionalData = &model.DataDto{
-			Enabled:   aDto.AdditionalData.Enabled,
-			Expired:   aDto.AdditionalData.Expired,
-			Locked:    aDto.AdditionalData.Locked,
-			Confirmed: aDto.AdditionalData.Confirmed,
-			Roles:     aDto.AdditionalData.Roles,
-		}
+
+	if user.AdditionalData != nil {
+		userAccountEvent.AdditionalData = convertAdditionalData(user.AdditionalData)
 	}
 
 	return userAccountEvent
@@ -742,6 +737,10 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			LastMessagePreview:                  chatEvent.LastMessagePreview,
 			CanReact:                            chatEvent.CanReact,
 		}
+
+		if chatEvent.AdditionalData != nil {
+			ret.ChatEvent.AdditionalData = convertAdditionalData(chatEvent.AdditionalData)
+		}
 	}
 
 	chatDeleted := e.ChatDeletedDto
@@ -753,13 +752,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 
 	userProfileDto := e.CoChattedParticipantNotification
 	if userProfileDto != nil {
-		ret.CoChattedParticipantEvent = &model.Participant{
-			ID:         userProfileDto.Id,
-			Login:      userProfileDto.Login,
-			Avatar:     userProfileDto.Avatar.Ptr(),
-			ShortInfo:  userProfileDto.ShortInfo.Ptr(),
-			LoginColor: userProfileDto.LoginColor.Ptr(),
-		}
+		ret.CoChattedParticipantEvent = convertParticipant(userProfileDto)
 	}
 
 	videoUserCountEvent := e.VideoCallUserCountEvent
@@ -882,13 +875,19 @@ func convertParticipant(owner *dto.User) *model.Participant {
 	if owner == nil {
 		return nil
 	}
-	return &model.Participant{
+	p := model.Participant{
 		ID:         owner.Id,
 		Login:      owner.Login,
 		Avatar:     owner.Avatar.Ptr(),
 		ShortInfo:  owner.ShortInfo.Ptr(),
 		LoginColor: owner.LoginColor.Ptr(),
 	}
+
+	if owner.AdditionalData != nil {
+		p.AdditionalData = convertAdditionalData(owner.AdditionalData)
+	}
+
+	return &p
 }
 func convertParticipants(participants []*dto.User) []*model.Participant {
 	if participants == nil {
@@ -904,13 +903,31 @@ func convertParticipantWithAdmin(owner *dto.UserWithAdmin) *model.ParticipantWit
 	if owner == nil {
 		return nil
 	}
-	return &model.ParticipantWithAdmin{
+	p := model.ParticipantWithAdmin{
 		ID:         owner.Id,
 		Login:      owner.Login,
 		Avatar:     owner.Avatar.Ptr(),
 		Admin:      owner.Admin,
 		ShortInfo:  owner.ShortInfo.Ptr(),
 		LoginColor: owner.LoginColor.Ptr(),
+	}
+
+	if owner.AdditionalData != nil {
+		p.AdditionalData = convertAdditionalData(owner.AdditionalData)
+	}
+
+	return &p
+}
+func convertAdditionalData(ad *dto.AdditionalData) *model.AdditionalData {
+	if ad == nil {
+		return nil
+	}
+	return &model.AdditionalData{
+		Enabled:   ad.Enabled,
+		Expired:   ad.Expired,
+		Locked:    ad.Locked,
+		Confirmed: ad.Confirmed,
+		Roles:     ad.Roles,
 	}
 }
 func convertParticipantsWithAdmin(participants []*dto.UserWithAdmin) []*model.ParticipantWithAdmin {

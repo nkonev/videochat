@@ -1,8 +1,6 @@
 package name.nkonev.aaa.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import name.nkonev.aaa.Constants;
 import jakarta.validation.constraints.NotEmpty;
 
 import java.time.LocalDateTime;
@@ -23,12 +21,12 @@ public record UserAccountDTO (
 
     String shortInfo,
 
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern= Constants.DATE_FORMAT)
     LocalDateTime lastSeenDateTime,
 
     OAuth2IdentifiersDTO oauth2Identifiers,
     String loginColor,
-    boolean ldap // has ldap
+    boolean ldap, // has ldap
+    AdditionalDataDTO additionalData
 ) {
     public UserAccountDTO(
             Long id,
@@ -39,7 +37,8 @@ public record UserAccountDTO (
             LocalDateTime lastSeenDateTime,
             OAuth2IdentifiersDTO oauth2Identifiers,
             String loginColor,
-            boolean ldap
+            boolean ldap,
+            AdditionalDataDTO additionalData
     ) {
         this.id = id;
         this.login = login;
@@ -50,6 +49,7 @@ public record UserAccountDTO (
         this.oauth2Identifiers = oauth2Identifiers;
         this.loginColor = loginColor;
         this.ldap = ldap;
+        this.additionalData = additionalData;
     }
 
     @JsonIgnore // to use in Freemarker template header.ftlh
@@ -73,7 +73,8 @@ public record UserAccountDTO (
                 newLastSeenDateTime,
                 oauth2Identifiers,
                 loginColor,
-                ldap
+                ldap,
+                additionalData
         );
     }
 }

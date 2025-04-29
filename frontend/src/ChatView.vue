@@ -82,36 +82,36 @@ import {
   isMobileBrowser,
   upsertToWritingUsers,
   buildWritingUsersSubtitleInfo,
-  filterOutOldWritingUsers
+  filterOutOldWritingUsers, isStrippedUserLogin
 } from "@/utils";
 import bus, {
-    CHAT_DELETED,
-    CHAT_EDITED,
-    FILE_CREATED,
-    FILE_REMOVED,
-    FILE_UPDATED,
-    LOGGED_OUT,
-    MESSAGE_ADD,
-    MESSAGE_BROADCAST,
-    MESSAGE_DELETED,
-    MESSAGE_EDITED, MESSAGES_RELOAD,
-    OPEN_EDIT_MESSAGE,
-    PARTICIPANT_ADDED,
-    PARTICIPANT_DELETED,
-    PARTICIPANT_EDITED, PINNED_MESSAGE_EDITED,
-    PINNED_MESSAGE_PROMOTED,
-    PINNED_MESSAGE_UNPROMOTED,
-    PREVIEW_CREATED,
-    PROFILE_SET,
-    PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED,
-    PUBLISHED_MESSAGE_REMOVE,
-    REACTION_CHANGED,
-    REACTION_REMOVED,
-    REFRESH_ON_WEBSOCKET_RESTORED,
-    SCROLL_DOWN,
-    USER_TYPING,
-    VIDEO_CALL_USER_COUNT_CHANGED,
-    VIDEO_DIAL_STATUS_CHANGED
+  CHAT_DELETED,
+  CHAT_EDITED, CO_CHATTED_PARTICIPANT_CHANGED,
+  FILE_CREATED,
+  FILE_REMOVED,
+  FILE_UPDATED,
+  LOGGED_OUT,
+  MESSAGE_ADD,
+  MESSAGE_BROADCAST,
+  MESSAGE_DELETED,
+  MESSAGE_EDITED, MESSAGES_RELOAD,
+  OPEN_EDIT_MESSAGE,
+  PARTICIPANT_ADDED,
+  PARTICIPANT_DELETED,
+  PARTICIPANT_EDITED, PINNED_MESSAGE_EDITED,
+  PINNED_MESSAGE_PROMOTED,
+  PINNED_MESSAGE_UNPROMOTED,
+  PREVIEW_CREATED,
+  PROFILE_SET,
+  PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED,
+  PUBLISHED_MESSAGE_REMOVE,
+  REACTION_CHANGED,
+  REACTION_REMOVED,
+  REFRESH_ON_WEBSOCKET_RESTORED,
+  SCROLL_DOWN,
+  USER_TYPING,
+  VIDEO_CALL_USER_COUNT_CHANGED,
+  VIDEO_DIAL_STATUS_CHANGED
 } from "@/bus/bus";
 import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -227,10 +227,14 @@ export default {
         this.canWriteMessage = data.canWriteMessage;
         return Promise.resolve(data);
     },
+    setParticipantsFields(data) {
+      this.chatStore.title = data.name;
+      this.chatStore.titleStrike = isStrippedUserLogin(data);
+      setTitle(data.name);
+      this.chatStore.avatar = data.avatar;
+    },
     commonChatEdit(data) {
-        this.chatStore.title = data.name;
-        setTitle(data.name);
-        this.chatStore.avatar = data.avatar;
+        this.setParticipantsFields(data);
         this.chatStore.chatUsersCount = data.participantsCount;
         this.chatStore.showChatEditButton = data.canEdit;
         this.chatStore.canBroadcastTextMessage = data.canBroadcast;
@@ -365,6 +369,13 @@ export default {
                                     avatar
                                     shortInfo
                                     loginColor
+                                    additionalData {
+                                      enabled,
+                                      expired,
+                                      locked,
+                                      confirmed,
+                                      roles,
+                                    }
                                   }
                                   canEdit
                                   canDelete
@@ -380,6 +391,13 @@ export default {
                                       avatar
                                       shortInfo
                                       loginColor
+                                      additionalData {
+                                        enabled,
+                                        expired,
+                                        locked,
+                                        confirmed,
+                                        roles,
+                                      }
                                     }
                                     embedType
                                     isParticipant
@@ -395,6 +413,13 @@ export default {
                                       avatar
                                       shortInfo
                                       loginColor
+                                      additionalData {
+                                        enabled,
+                                        expired,
+                                        locked,
+                                        confirmed,
+                                        roles,
+                                      }
                                     }
                                     reaction
                                   }
@@ -432,6 +457,13 @@ export default {
                                       admin
                                       shortInfo
                                       loginColor
+                                      additionalData {
+                                        enabled,
+                                        expired,
+                                        locked,
+                                        confirmed,
+                                        roles,
+                                      }
                                     }
                                     promoteMessageEvent {
                                       count
@@ -446,6 +478,13 @@ export default {
                                           avatar
                                           shortInfo
                                           loginColor
+                                          additionalData {
+                                            enabled,
+                                            expired,
+                                            locked,
+                                            confirmed,
+                                            roles,
+                                          }
                                         }
                                         pinnedPromoted
                                         createDateTime
@@ -465,6 +504,13 @@ export default {
                                           avatar
                                           shortInfo
                                           loginColor
+                                          additionalData {
+                                            enabled,
+                                            expired,
+                                            locked,
+                                            confirmed,
+                                            roles,
+                                          }
                                         }
                                         createDateTime
                                         canPublish
@@ -487,6 +533,15 @@ export default {
                                           id
                                           login
                                           avatar
+                                          shortInfo
+                                          loginColor
+                                          additionalData {
+                                            enabled,
+                                            expired,
+                                            locked,
+                                            confirmed,
+                                            roles,
+                                          }
                                         }
                                         canPlayAsVideo
                                         canShowAsImage
@@ -506,6 +561,13 @@ export default {
                                           avatar
                                           shortInfo
                                           loginColor
+                                          additionalData {
+                                            enabled,
+                                            expired,
+                                            locked,
+                                            confirmed,
+                                            roles,
+                                          }
                                         }
                                         reaction
                                       }
@@ -652,6 +714,7 @@ export default {
       this.chatStore.showChatEditButton = false;
 
       if (!keepTitle) {
+        this.chatStore.titleStrike = false;
         this.chatStore.title = null;
         setTitle(null);
       }
@@ -891,6 +954,20 @@ export default {
         this.chatStore.usersWritingSubtitleInfo = buildWritingUsersSubtitleInfo(this.writingUsers, this.$vuetify);
       }
     },
+    onCoChattedParticipantChanged(user) {
+      if (this.chatStore.chatDto.tetATet && this.chatStore.chatDto.participantIds.find(participantId => participantId == user.id)) {
+        const o = {
+          name: user.login,
+          additionalData: user.additionalData,
+          avatar: user.avatar,
+        }
+        this.setParticipantsFields(o);
+        this.chatStore.setChatDto({
+          ...this.chatStore.chatDto,
+          ...o,
+        });
+      }
+    },
   },
   watch: {
     '$route': {
@@ -930,6 +1007,7 @@ export default {
 
   },
   async mounted() {
+    this.chatStore.titleStrike = false;
     this.chatStore.title = `Chat #${this.chatId}`;
     this.chatStore.chatUsersCount = 0;
     this.chatStore.isShowSearch = true;
@@ -958,6 +1036,7 @@ export default {
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
+    bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
 
     writingUsersTimerId = setInterval(()=>{
       this.writingUsers = filterOutOldWritingUsers(this.writingUsers);
@@ -988,6 +1067,7 @@ export default {
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.off(PARTICIPANT_DELETED, this.onParticipantDeleted);
+    bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
 
     this.chatStore.isShowSearch = false;
 

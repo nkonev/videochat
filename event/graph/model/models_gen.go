@@ -10,6 +10,14 @@ type UserAccountEventDto interface {
 	IsUserAccountEventDto()
 }
 
+type AdditionalData struct {
+	Enabled   bool     `json:"enabled"`
+	Expired   bool     `json:"expired"`
+	Locked    bool     `json:"locked"`
+	Confirmed bool     `json:"confirmed"`
+	Roles     []string `json:"roles"`
+}
+
 type AllUnreadMessages struct {
 	AllUnreadMessages int64 `json:"allUnreadMessages"`
 }
@@ -29,38 +37,39 @@ type ChatDeletedDto struct {
 }
 
 type ChatDto struct {
-	ID                                  int64          `json:"id"`
-	Name                                string         `json:"name"`
-	Avatar                              *string        `json:"avatar"`
-	AvatarBig                           *string        `json:"avatarBig"`
-	ShortInfo                           *string        `json:"shortInfo"`
-	LastUpdateDateTime                  time.Time      `json:"lastUpdateDateTime"`
-	ParticipantIds                      []int64        `json:"participantIds"`
-	CanEdit                             *bool          `json:"canEdit"`
-	CanDelete                           *bool          `json:"canDelete"`
-	CanLeave                            *bool          `json:"canLeave"`
-	UnreadMessages                      int64          `json:"unreadMessages"`
-	CanBroadcast                        bool           `json:"canBroadcast"`
-	CanVideoKick                        bool           `json:"canVideoKick"`
-	CanChangeChatAdmins                 bool           `json:"canChangeChatAdmins"`
-	TetATet                             bool           `json:"tetATet"`
-	CanAudioMute                        bool           `json:"canAudioMute"`
-	Participants                        []*Participant `json:"participants"`
-	ParticipantsCount                   int            `json:"participantsCount"`
-	CanResend                           bool           `json:"canResend"`
-	AvailableToSearch                   bool           `json:"availableToSearch"`
-	IsResultFromSearch                  *bool          `json:"isResultFromSearch"`
-	Pinned                              bool           `json:"pinned"`
-	Blog                                bool           `json:"blog"`
-	LoginColor                          *string        `json:"loginColor"`
-	RegularParticipantCanPublishMessage bool           `json:"regularParticipantCanPublishMessage"`
-	LastSeenDateTime                    *time.Time     `json:"lastSeenDateTime"`
-	RegularParticipantCanPinMessage     bool           `json:"regularParticipantCanPinMessage"`
-	BlogAbout                           bool           `json:"blogAbout"`
-	RegularParticipantCanWriteMessage   bool           `json:"regularParticipantCanWriteMessage"`
-	CanWriteMessage                     bool           `json:"canWriteMessage"`
-	LastMessagePreview                  *string        `json:"lastMessagePreview"`
-	CanReact                            bool           `json:"canReact"`
+	ID                                  int64           `json:"id"`
+	Name                                string          `json:"name"`
+	Avatar                              *string         `json:"avatar"`
+	AvatarBig                           *string         `json:"avatarBig"`
+	ShortInfo                           *string         `json:"shortInfo"`
+	LastUpdateDateTime                  time.Time       `json:"lastUpdateDateTime"`
+	ParticipantIds                      []int64         `json:"participantIds"`
+	CanEdit                             *bool           `json:"canEdit"`
+	CanDelete                           *bool           `json:"canDelete"`
+	CanLeave                            *bool           `json:"canLeave"`
+	UnreadMessages                      int64           `json:"unreadMessages"`
+	CanBroadcast                        bool            `json:"canBroadcast"`
+	CanVideoKick                        bool            `json:"canVideoKick"`
+	CanChangeChatAdmins                 bool            `json:"canChangeChatAdmins"`
+	TetATet                             bool            `json:"tetATet"`
+	CanAudioMute                        bool            `json:"canAudioMute"`
+	Participants                        []*Participant  `json:"participants"`
+	ParticipantsCount                   int             `json:"participantsCount"`
+	CanResend                           bool            `json:"canResend"`
+	AvailableToSearch                   bool            `json:"availableToSearch"`
+	IsResultFromSearch                  *bool           `json:"isResultFromSearch"`
+	Pinned                              bool            `json:"pinned"`
+	Blog                                bool            `json:"blog"`
+	LoginColor                          *string         `json:"loginColor"`
+	RegularParticipantCanPublishMessage bool            `json:"regularParticipantCanPublishMessage"`
+	LastSeenDateTime                    *time.Time      `json:"lastSeenDateTime"`
+	RegularParticipantCanPinMessage     bool            `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool            `json:"blogAbout"`
+	RegularParticipantCanWriteMessage   bool            `json:"regularParticipantCanWriteMessage"`
+	CanWriteMessage                     bool            `json:"canWriteMessage"`
+	LastMessagePreview                  *string         `json:"lastMessagePreview"`
+	CanReact                            bool            `json:"canReact"`
+	AdditionalData                      *AdditionalData `json:"additionalData"`
 }
 
 type ChatEvent struct {
@@ -80,14 +89,6 @@ type ChatUnreadMessageChanged struct {
 	ChatID             int64     `json:"chatId"`
 	UnreadMessages     int64     `json:"unreadMessages"`
 	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
-}
-
-type DataDto struct {
-	Enabled   bool     `json:"enabled"`
-	Expired   bool     `json:"expired"`
-	Locked    bool     `json:"locked"`
-	Confirmed bool     `json:"confirmed"`
-	Roles     []string `json:"roles"`
 }
 
 type DisplayMessageDto struct {
@@ -201,20 +202,22 @@ type OAuth2Identifiers struct {
 }
 
 type Participant struct {
-	ID         int64   `json:"id"`
-	Login      string  `json:"login"`
-	Avatar     *string `json:"avatar"`
-	ShortInfo  *string `json:"shortInfo"`
-	LoginColor *string `json:"loginColor"`
+	ID             int64           `json:"id"`
+	Login          string          `json:"login"`
+	Avatar         *string         `json:"avatar"`
+	ShortInfo      *string         `json:"shortInfo"`
+	LoginColor     *string         `json:"loginColor"`
+	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
 type ParticipantWithAdmin struct {
-	ID         int64   `json:"id"`
-	Login      string  `json:"login"`
-	Avatar     *string `json:"avatar"`
-	Admin      bool    `json:"admin"`
-	ShortInfo  *string `json:"shortInfo"`
-	LoginColor *string `json:"loginColor"`
+	ID             int64           `json:"id"`
+	Login          string          `json:"login"`
+	Avatar         *string         `json:"avatar"`
+	Admin          bool            `json:"admin"`
+	ShortInfo      *string         `json:"shortInfo"`
+	LoginColor     *string         `json:"loginColor"`
+	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
 type PinnedMessageDto struct {
@@ -273,18 +276,6 @@ type ReactionChangedEvent struct {
 type Subscription struct {
 }
 
-type UserAccountDto struct {
-	ID                int64              `json:"id"`
-	Login             string             `json:"login"`
-	Avatar            *string            `json:"avatar"`
-	AvatarBig         *string            `json:"avatarBig"`
-	ShortInfo         *string            `json:"shortInfo"`
-	LastSeenDateTime  *time.Time         `json:"lastSeenDateTime"`
-	Oauth2Identifiers *OAuth2Identifiers `json:"oauth2Identifiers"`
-	LoginColor        *string            `json:"loginColor"`
-	Ldap              bool               `json:"ldap"`
-}
-
 type UserAccountEvent struct {
 	EventType        string              `json:"eventType"`
 	UserAccountEvent UserAccountEventDto `json:"userAccountEvent"`
@@ -300,7 +291,7 @@ type UserAccountExtendedDto struct {
 	ShortInfo                     *string            `json:"shortInfo"`
 	LastSeenDateTime              *time.Time         `json:"lastSeenDateTime"`
 	Oauth2Identifiers             *OAuth2Identifiers `json:"oauth2Identifiers"`
-	AdditionalData                *DataDto           `json:"additionalData"`
+	AdditionalData                *AdditionalData    `json:"additionalData"`
 	CanLock                       bool               `json:"canLock"`
 	CanEnable                     bool               `json:"canEnable"`
 	CanDelete                     bool               `json:"canDelete"`

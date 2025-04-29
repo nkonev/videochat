@@ -2,12 +2,21 @@ scalar Time
 scalar Int64
 scalar UUID
 
+type AdditionalData {
+    enabled: Boolean!
+    expired: Boolean!
+    locked: Boolean!
+    confirmed: Boolean!
+    roles: [String!]!
+}
+
 type Participant {
     id:     Int64!
     login:  String!
     avatar: String
     shortInfo:           String
     loginColor: String
+    additionalData: AdditionalData
 }
 
 type EmbedMessageResponse {
@@ -59,6 +68,7 @@ type ParticipantWithAdmin {
     admin: Boolean!
     shortInfo:           String
     loginColor: String
+    additionalData: AdditionalData
 }
 
 type ChatDto {
@@ -94,6 +104,7 @@ type ChatDto {
     canWriteMessage: Boolean!
     lastMessagePreview: String
     canReact: Boolean!
+    additionalData: AdditionalData
 }
 
 type ChatDeletedDto {
@@ -306,28 +317,8 @@ type OAuth2Identifiers {
     keycloakId: String
 }
 
-type UserAccountDto {
-    id:         Int64!
-    login:      String!
-    avatar:     String # url
-    avatarBig:  String # url
-    shortInfo: String
-    lastSeenDateTime: Time
-    oauth2Identifiers: OAuth2Identifiers
-    loginColor: String
-    ldap: Boolean!
-}
-
 type UserDeletedDto {
     id:         Int64!
-}
-
-type DataDTO {
-    enabled: Boolean!
-    expired: Boolean!
-    locked: Boolean!
-    confirmed: Boolean!
-    roles: [String!]!
 }
 
 type UserAccountExtendedDto {
@@ -340,7 +331,7 @@ type UserAccountExtendedDto {
     shortInfo: String
     lastSeenDateTime: Time
     oauth2Identifiers: OAuth2Identifiers
-    additionalData: DataDTO
+    additionalData: AdditionalData
     canLock: Boolean!
     canEnable: Boolean!
     canDelete: Boolean!

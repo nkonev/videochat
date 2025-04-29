@@ -125,7 +125,7 @@ import {
   isChatHash,
   upsertToWritingUsers,
   buildWritingUsersSubtitleInfo,
-  filterOutOldWritingUsers,
+  filterOutOldWritingUsers, isStrippedUserLogin,
 } from "@/utils";
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
@@ -376,11 +376,15 @@ export default {
       return res;
     },
     getChatName(item) {
-          let bldr = item.name;
-          if (item.tetATet) {
-              bldr += this.getUserName(item);
-          }
-          return bldr;
+      let bldr = item.name;
+      if (item.tetATet) {
+        if (isStrippedUserLogin(item)) {
+          bldr = "<s>" + bldr + "</s>"
+        }
+
+        bldr += this.getUserName(item);
+      }
+      return bldr;
     },
     onShowContextMenu(e, menuableItem) {
         this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
@@ -638,27 +642,28 @@ export default {
           let idxOf = findIndex(this.items, item);
           return idxOf !== -1;
     },
-    onUserProfileChanged(user) {
+    onCoChattedParticipantChanged(user) {
       this.items.forEach(item => {
         replaceInArray(item.participants, user); // replaces participants of "normal" chat
         if (item.tetATet) {
             if (this.isNormalTetAtTet(item)) { // replace for counterpart
                 if (this.filterOutMe(item).map(p => p.id).includes(user.id)) { // replaces content of tet-a-tet. It's better to move it to chat
-                    item.avatar = user.avatar;
-                    item.name = user.login;
-                    item.shortInfo = user.shortInfo;
-                    item.loginColor = user.loginColor;
+                    this.mapParticipant(user, item);
                 }
             } else if (this.withMyselfTetATet(item)) { // replace for with himself tet-a-tet
                 if (item.participants.map(p => p.id).includes(user.id)) {
-                    item.avatar = user.avatar;
-                    item.name = user.login;
-                    item.shortInfo = user.shortInfo;
-                    item.loginColor = user.loginColor;
+                    this.mapParticipant(user, item);
                 }
             }
         }
       });
+    },
+    mapParticipant(from, to) {
+      to.avatar = from.avatar;
+      to.name = from.login;
+      to.shortInfo = from.shortInfo;
+      to.loginColor = from.loginColor;
+      to.additionalData = from.additionalData;
     },
     onVideoCallChanged(dto) {
           this.items.forEach(item => {
@@ -811,7 +816,7 @@ export default {
     bus.on(CHAT_EDITED, this.onEditChat);
     bus.on(CHAT_REDRAW, this.redrawItem);
     bus.on(CHAT_DELETED, this.onDeleteChat);
-    bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+    bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
@@ -855,7 +860,7 @@ export default {
     bus.off(CHAT_EDITED, this.onEditChat);
     bus.off(CHAT_REDRAW, this.redrawItem);
     bus.off(CHAT_DELETED, this.onDeleteChat);
-    bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+    bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);

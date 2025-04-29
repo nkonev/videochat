@@ -39,6 +39,7 @@ export const useChatStore = defineStore('chat', {
         searchType: SEARCH_MODE_CHATS,
         showScrollDown: false,
         title: "",
+        titleStrike: false,
         avatar: null,
         chatUsersCount: 0,
         showChatEditButton: false,

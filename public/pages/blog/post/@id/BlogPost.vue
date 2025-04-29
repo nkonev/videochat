@@ -19,7 +19,7 @@
           <template v-slot:default>
             <div class="ma-0 pa-0 d-flex top-panel">
               <div class="author-and-date" v-if="pageContext.data.blogDto.owner">
-                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(pageContext.data.blogDto.owner, true)" :href="getProfileLink(pageContext.data.blogDto.owner)">{{pageContext.data.blogDto.owner.login}}</a></v-list-item-title>
+                <v-list-item-title><a class="nodecorated-link" :style="getLoginColoredStyle(pageContext.data.blogDto.owner, true)" :href="getProfileLink(pageContext.data.blogDto.owner)" v-html="getOwner(pageContext.data.blogDto.owner)"></a></v-list-item-title>
                 <v-list-item-subtitle>{{getDate(pageContext.data.blogDto.createDateTime)}}</v-list-item-subtitle>
               </div>
               <div class="ma-0 pa-0 go-to-chat">
@@ -71,7 +71,7 @@
 
 <script>
 import MessageItem from "#root/common/components/MessageItem.vue";
-import {hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM, onClickTrap} from "#root/common/utils";
+import {hasLength, getLoginColoredStyle, PAGE_SIZE, PAGE_PARAM, onClickTrap, isStrippedUserLogin} from "#root/common/utils";
 import {
   getHumanReadableDate,
 } from "#root/common/date";
@@ -157,6 +157,15 @@ export default {
         fileItemUuid : this.pageContext.data.blogDto.fileItemUuid
       };
       bus.emit(OPEN_VIEW_FILES_DIALOG, obj);
+    },
+    getOwner(owner) {
+      let bldr = owner?.login;
+      if (bldr) {
+        if (isStrippedUserLogin(owner)) {
+          bldr = "<s>" + bldr + "</s>"
+        }
+      }
+      return bldr
     },
   },
   components: {

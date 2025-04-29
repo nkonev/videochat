@@ -538,7 +538,7 @@
               this.onClickTrap(e)
           }
         },
-        onUserProfileChanged(user) {
+        onCoChattedParticipantChanged(user) {
           this.items.forEach(item => {
             if (item.owner?.id == user.id) {
               item.owner = user;
@@ -865,7 +865,7 @@
         bus.on(MESSAGE_EDITED, this.onEditMessage);
         bus.on(REACTION_CHANGED, this.onReactionChanged);
         bus.on(REACTION_REMOVED, this.onReactionRemoved);
-        bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+        bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
@@ -895,7 +895,7 @@
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
-        bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+        bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);

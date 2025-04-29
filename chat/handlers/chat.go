@@ -901,6 +901,19 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 		return errOuter
 	}
 
+	users, err := ch.restClient.GetUsers(c.Request().Context(), []int64{userPrincipalDto.UserId})
+	if err != nil {
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Error during act transaction %v", err)
+		return err
+	}
+
+	if len(users) != 1 {
+		ch.lgr.WithTracing(c.Request().Context()).Errorf("Expected 1 got %v", len(users))
+		return errors.New("Not enough users")
+	}
+
+	userDto := users[0]
+
 	errOuter = db.Transact(c.Request().Context(), ch.db, func(tx *db.Tx) error {
 		chatDto, err := ch.getChatWithoutPersonalization(c.Request().Context(), tx, chatId, 0, 0)
 		if err != nil {
@@ -915,10 +928,7 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 
 			ch.notificator.NotifyAboutNewParticipants(c.Request().Context(), participantIds, chatId, []*dto.UserWithAdmin{
 				{
-					User: dto.User{
-						Id:    userPrincipalDto.UserId,
-						Login: userPrincipalDto.UserLogin,
-					},
+					User:  *userDto,
 					Admin: isAdmin,
 				},
 			})
@@ -1865,6 +1875,7 @@ type simpleChat struct {
 	ShortInfo        null.String
 	LoginColor       null.String
 	LastSeenDateTime null.Time
+	AdditionalData   *dto.AdditionalData
 }
 
 func (r *simpleChat) GetId() int64 {
@@ -1901,6 +1912,10 @@ func (r *simpleChat) GetIsTetATet() bool {
 
 func (r *simpleChat) SetLastSeenDateTime(t null.Time) {
 	r.LastSeenDateTime = t
+}
+
+func (r *simpleChat) SetAdditionalData(ad *dto.AdditionalData) {
+	r.AdditionalData = ad
 }
 
 func (ch *ChatHandler) GetNameForInvite(c echo.Context) error {

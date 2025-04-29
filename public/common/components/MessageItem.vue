@@ -7,7 +7,7 @@
         </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex align-center caption-small">
-                <a :href="getOwnerLink(item)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{getOwner(item.owner)}}</a>
+                <a :href="getOwnerLink(item)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)" v-html="getOwner(item.owner)"></a>
                 <span class="with-space"> at </span>
                 <span class="mr-1">{{getDate(item)}}</span>
                 <span class="message-quick-buttons">
@@ -42,6 +42,7 @@
         embed_message_reply,
         embed_message_resend,
         getLoginColoredStyle, hasLength,
+        isStrippedUserLogin,
     } from "#root/common/utils";
     import {
       getHumanReadableDate,
@@ -73,7 +74,13 @@
             },
 
             getOwner(owner) {
-                return owner?.login
+              let bldr = owner?.login;
+              if (bldr) {
+                if (isStrippedUserLogin(owner)) {
+                  bldr = "<s>" + bldr + "</s>"
+                }
+              }
+              return bldr
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)

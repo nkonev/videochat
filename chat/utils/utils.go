@@ -204,7 +204,7 @@ func SecondsToStringMilliseconds(seconds int64) string {
 	return fmt.Sprintf("%v000", seconds)
 }
 
-func setLastSeenForteATet(
+func setLastSeenForTeATet(
 	participantsOnline map[int64]bool,
 	participant *dto.User, behalfParticipantId int64, isSingleTetATetParticipant bool, chatDto dto.ChatDtoWithTetATet,
 ) {
@@ -230,10 +230,11 @@ func ReplaceForTetATet(chatDto dto.ChatDtoWithTetATet, participantsOnline map[in
 			chatDto.SetAvatar(participant.Avatar)
 			chatDto.SetShortInfo(participant.ShortInfo)
 			chatDto.SetLoginColor(participant.LoginColor)
+			chatDto.SetAdditionalData(participant.AdditionalData)
 		}
 
 		// we cannot use the same branch participant.Id != behalfParticipantId because the second condition is the different
-		setLastSeenForteATet(participantsOnline, participant, behalfParticipantId, isSingleTetATetParticipant, chatDto)
+		setLastSeenForTeATet(participantsOnline, participant, behalfParticipantId, isSingleTetATetParticipant, chatDto)
 	}
 }
 

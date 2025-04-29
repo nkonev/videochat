@@ -80,6 +80,8 @@ public class UserAccountConverter {
     public UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
+        AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
+
         return new UserAccountDetailsDTO(
                 userAccount.id(),
                 userAccount.login(),
@@ -97,7 +99,8 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                userAccount.ldapId()
+                userAccount.ldapId(),
+                dataDTO
         );
     }
 
@@ -113,6 +116,7 @@ public class UserAccountConverter {
         if (userAccount == null) { return null; }
         var roles = convertRoles2Enum(userAccount.getRoles());
         var canShowAdminsCorner = canAccessToAdminsCorner(roles);
+        AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), new HashSet<>(roles));
         return new name.nkonev.aaa.dto.UserSelfProfileDTO(
                 userAccount.getId(),
                 userAccount.getUsername(),
@@ -127,7 +131,8 @@ public class UserAccountConverter {
                 expiresAt,
                 userAccount.getLoginColor(),
                 isLdapSet(userAccount),
-                canShowAdminsCorner
+                canShowAdminsCorner,
+                dataDTO
         );
     }
 
@@ -151,6 +156,7 @@ public class UserAccountConverter {
 
     public static name.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
+        AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
         return new name.nkonev.aaa.dto.UserAccountDTO(
                 userAccount.id(),
                 userAccount.login(),
@@ -160,13 +166,16 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                isLdapSet(userAccount)
+                isLdapSet(userAccount),
+                dataDTO
         );
     }
 
     public name.nkonev.aaa.dto.UserAccountEventDTO convertToUserAccountEventDTO(UserAccount userAccount) {
         if (userAccount == null) { return null; }
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
+        AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
+
         return new name.nkonev.aaa.dto.UserAccountEventDTO(
                 userAccount.id(),
                 userAccount.login(),
@@ -178,32 +187,35 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                isLdapSet(userAccount)
+                isLdapSet(userAccount),
+                dataDTO
         );
     }
 
     public name.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) { return null; }
-        name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO dataDTO = new name.nkonev.aaa.dto.UserAccountDTOExtended.DataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
+        AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         return new UserAccountDTOExtended(
-                userAccount.id(),
-                userAccount.login(),
-                userAccount.avatar(),
-                userAccount.avatarBig(),
-                userAccount.shortInfo(),
-                dataDTO,
-                userAccount.lastSeenDateTime(),
-                convertOAuth2(userAccount.oauth2Identifiers()),
+                new UserAccountDTO(
+                    userAccount.id(),
+                    userAccount.login(),
+                    userAccount.avatar(),
+                    userAccount.avatarBig(),
+                    userAccount.shortInfo(),
+                    userAccount.lastSeenDateTime(),
+                    convertOAuth2(userAccount.oauth2Identifiers()),
+                    userAccount.loginColor(),
+                    isLdapSet(userAccount),
+                    dataDTO
+                ),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canEnable(currentUser, userAccount),
                 aaaSecurityService.canDelete(currentUser, userAccount),
                 aaaSecurityService.canChangeRole(currentUser, userAccount),
                 aaaSecurityService.canConfirm(currentUser, userAccount),
                 awaitingForConfirmEmailChange,
-                userAccount.loginColor(),
                 aaaSecurityService.canRemoveSessions(currentUser, userAccount.id()),
-                isLdapSet(userAccount),
                 aaaSecurityService.canSetPassword(currentUser, userAccount.id())
         );
     }

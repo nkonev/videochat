@@ -411,6 +411,13 @@ export default {
                           avatar
                           shortInfo
                           loginColor
+                          additionalData {
+                            enabled,
+                            expired,
+                            locked,
+                            confirmed,
+                            roles,
+                          }
                         }
                         canResend
                         availableToSearch
@@ -418,6 +425,13 @@ export default {
                         pinned
                         blog
                         loginColor
+                        additionalData {
+                          enabled,
+                          expired,
+                          locked,
+                          confirmed,
+                          roles,
+                        }
                         regularParticipantCanPublishMessage
                         lastSeenDateTime
                         regularParticipantCanPinMessage
@@ -436,6 +450,13 @@ export default {
                         avatar
                         shortInfo
                         loginColor
+                        additionalData {
+                          enabled,
+                          expired,
+                          locked,
+                          confirmed,
+                          roles,
+                        }
                       }
                       videoUserCountChangedEvent {
                         usersCount
@@ -608,6 +629,9 @@ export default {
         },
         getTitle() {
             let bldr = this.chatStore.title;
+            if (this.chatStore.titleStrike) {
+              bldr = "<s>" + bldr + "</s>"
+            }
             if (!this.shouldShowAvatar()) {
               if (this.chatStore.oppositeUserOnline) {
                 bldr += " (" + this.$vuetify.locale.t('$vuetify.user_online') + ")";

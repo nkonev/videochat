@@ -43,7 +43,7 @@
 
                                     <v-row no-gutters align="center" class="d-flex flex-row">
                                         <v-col class="flex-grow-0 flex-shrink-0">
-                                            <v-list-item-title><a class="nodecorated-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)" :style="getLoginColoredStyle(item, true)">{{getUserNameWrapper(item)}}</a></v-list-item-title>
+                                            <v-list-item-title><a class="nodecorated-link" @click.prevent="onParticipantClick(item)" :href="getLink(item)" :style="getLoginColoredStyle(item, true)" v-html="getUserNameWrapper(item)"></a></v-list-item-title>
                                         </v-col>
                                         <v-col v-if="!isMobile()" class="ml-4 flex-grow-1 flex-shrink-0">
                                             <v-progress-linear
@@ -166,13 +166,13 @@
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
     import {
-        deepCopy,
-        findIndex,
-        getLoginColoredStyle,
-        hasLength,
-        isCalling,
-        isSetEqual,
-        replaceInArray
+      deepCopy,
+      findIndex,
+      getLoginColoredStyle,
+      hasLength,
+      isCalling,
+      isSetEqual, isStrippedUserLogin,
+      replaceInArray
     } from "@/utils";
     import debounce from "lodash/debounce";
     import {mapStores} from "pinia";
@@ -363,6 +363,11 @@
             },
             getUserNameWrapper(item) {
                 let bldr = this.getUserName(item);
+
+                if (isStrippedUserLogin(item)) {
+                  bldr = "<s>" + bldr + "</s>"
+                }
+
                 if (item.id == this.chatStore.currentUser.id) {
                     bldr += " ";
                     bldr += this.$vuetify.locale.t('$vuetify.you_brackets');
@@ -382,8 +387,9 @@
                 return eventDto
             },
 
-            onUserProfileChanged(user) {
+            onCoChattedParticipantChanged(user) {
                 const tmp = deepCopy(user);
+
                 const arrTmp = [tmp];
                 this.transformItems(arrTmp);
 
@@ -495,7 +501,7 @@
           bus.on(PARTICIPANT_EDITED, this.onItemUpdatedEvent);
           bus.on(CHAT_DELETED, this.onChatDelete);
           bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-          bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+          bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
           bus.on(LOGGED_OUT, this.onLogout);
           bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
@@ -508,7 +514,7 @@
             bus.off(PARTICIPANT_EDITED, this.onItemUpdatedEvent);
             bus.off(CHAT_DELETED, this.onChatDelete);
             bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
-            bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onUserProfileChanged);
+            bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
             bus.off(LOGGED_OUT, this.onLogout);
             bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 

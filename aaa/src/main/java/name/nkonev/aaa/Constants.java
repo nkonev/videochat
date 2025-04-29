@@ -90,6 +90,4 @@ public class Constants {
 
     public static final int USERS_ONLINE_LENGTH = 500;
 
-    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-
 }

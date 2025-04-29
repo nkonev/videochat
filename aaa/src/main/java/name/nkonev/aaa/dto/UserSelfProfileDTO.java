@@ -34,7 +34,8 @@ public record UserSelfProfileDTO(
             Long expiresAt,
             String loginColor,
             boolean ldap,
-            boolean canShowAdminsCorner
+            boolean canShowAdminsCorner,
+            AdditionalDataDTO additionalDataDTO
     ) {
         this(new UserAccountDTO(
                 id,
@@ -45,7 +46,8 @@ public record UserSelfProfileDTO(
                 lastSeenDateTime,
                 oauth2Identifiers,
                 loginColor,
-                ldap
+                ldap,
+                additionalDataDTO
         ), email, awaitingForConfirmEmailChange, roles, expiresAt, canShowAdminsCorner);
     }
 

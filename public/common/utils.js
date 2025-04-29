@@ -259,3 +259,10 @@ export const deepCopy = (aVal) => {
 export const isMobileBrowser = () => {
     return navigator.userAgent.indexOf('Mobile') !== -1
 }
+
+export const isStrippedUserLogin = (u) => {
+    if (u == null) {
+        return false
+    }
+    return u.additionalData && (!u.additionalData.confirmed || u.additionalData.locked || !u.additionalData.enabled)
+}

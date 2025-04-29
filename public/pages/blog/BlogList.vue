@@ -43,7 +43,7 @@
                             </template>
 
                             <template v-slot:default>
-                                <v-list-item-title><a :href="getProfileLink(item.owner)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)">{{ item?.owner?.login }}</a></v-list-item-title>
+                                <v-list-item-title><a :href="getProfileLink(item.owner)" class="nodecorated-link" :style="getLoginColoredStyle(item.owner, true)" v-html="getOwner(item?.owner)"></a></v-list-item-title>
                                 <v-list-item-subtitle>
                                     {{ getDate(item) }}
                                 </v-list-item-subtitle>
@@ -77,7 +77,7 @@
 
 <script>
 import Mark from "mark.js";
-import {hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE} from "#root/common/utils";
+import {hasLength, getLoginColoredStyle, SEARCH_MODE_POSTS, PAGE_PARAM, PAGE_SIZE, isStrippedUserLogin} from "#root/common/utils";
 import {
   getHumanReadableDate,
 } from "#root/common/date";
@@ -227,6 +227,15 @@ export default {
       if (loadedResult === true) {
           this.removeTopBlogPosition();
       }
+    },
+    getOwner(owner) {
+      let bldr = owner?.login;
+      if (bldr) {
+        if (isStrippedUserLogin(owner)) {
+          bldr = "<s>" + bldr + "</s>"
+        }
+      }
+      return bldr
     },
   },
   watch: {

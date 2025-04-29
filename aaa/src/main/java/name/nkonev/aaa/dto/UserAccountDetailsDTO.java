@@ -1,7 +1,6 @@
 package name.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -17,7 +16,6 @@ import java.util.Map;
 /**
  * Internal class for Spring Security, it shouldn't be passed to browser via Rest API
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 public record UserAccountDetailsDTO (
     UserAccountDTO userAccountDTO,
@@ -57,11 +55,21 @@ public record UserAccountDetailsDTO (
             LocalDateTime lastSeenDateTime,
             OAuth2IdentifiersDTO oauthIdentifiers,
             String loginColor,
-            String ldapId
+            String ldapId,
+            AdditionalDataDTO additionalDataDTO
     ) {
         this(
                 new UserAccountDTO(
-                    id, login, avatar, avatarBig, shortInfo, lastSeenDateTime, oauthIdentifiers, loginColor, ldapId != null
+                    id,
+                    login,
+                    avatar,
+                    avatarBig,
+                    shortInfo,
+                    lastSeenDateTime,
+                    oauthIdentifiers,
+                    loginColor,
+                    ldapId != null,
+                    additionalDataDTO
                 ),
                 new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange, ldapId
         );
@@ -162,7 +170,15 @@ public record UserAccountDetailsDTO (
     public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
         return new UserAccountDetailsDTO(
                 new UserAccountDTO(
-                        userAccountDTO.id(), userAccountDTO.login(), userAccountDTO.avatar(), userAccountDTO.avatarBig(), userAccountDTO.shortInfo(), userAccountDTO.lastSeenDateTime(), newOauth2Identifiers, userAccountDTO.loginColor(), ldapId != null
+                    userAccountDTO.id(),
+                    userAccountDTO.login(),
+                    userAccountDTO.avatar(),
+                    userAccountDTO.avatarBig(),
+                    userAccountDTO.shortInfo(),
+                    userAccountDTO.lastSeenDateTime(),
+                    newOauth2Identifiers, userAccountDTO.loginColor(),
+                    ldapId != null,
+                    userAccountDTO.additionalData()
                 ),
                 oauth2Attributes,
                 idToken,

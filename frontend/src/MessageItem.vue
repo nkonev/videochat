@@ -7,7 +7,7 @@
         </div>
         <div class="message-item-with-buttons-wrapper">
             <v-container class="ma-0 pa-0 d-flex align-center caption-small">
-                <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)" :title="getDate(item)">{{getOwner(item.owner)}}</a>
+                <a :href="getOwnerLink(item)" class="nodecorated-link" @click.prevent.stop="onProfileClick(item)" :style="getLoginColoredStyle(item.owner, true)" :title="getDate(item)" v-html="getOwner(item.owner)"></a>
                 <span class="with-space" v-if="!isCompact"> {{$vuetify.locale.t('$vuetify.time_at')}} </span>
                 <router-link v-if="!isCompact" class="gray-link" :to="getMessageLink(item)" :title="$vuetify.locale.t('$vuetify.link')"><span class="mr-1">{{getDate(item)}}</span></router-link>
                 <span v-if="!isMobile() && !isCompact" class="ma-0 pa-0 message-quick-buttons">
@@ -50,9 +50,9 @@
     import axios from "axios";
     import debounce from "lodash/debounce";
     import {
-        embed_message_reply,
-        embed_message_resend, getBlogLink,
-        getLoginColoredStyle, getMessageLinkRouteObject, hasLength,
+      embed_message_reply,
+      embed_message_resend, getBlogLink,
+      getLoginColoredStyle, getMessageLinkRouteObject, hasLength, isStrippedUserLogin,
     } from "@/utils";
     import { getHumanReadableDate } from "@/date.js";
     import "./messageBody.styl";
@@ -118,7 +118,13 @@
             },
 
             getOwner(owner) {
-                return owner?.login
+                let bldr = owner?.login;
+                if (bldr) {
+                  if (isStrippedUserLogin(owner)) {
+                    bldr = "<s>" + bldr + "</s>"
+                  }
+                }
+                return bldr
             },
             getDate(item) {
                 return getHumanReadableDate(item.createDateTime)

@@ -49,6 +49,14 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AdditionalData struct {
+		Confirmed func(childComplexity int) int
+		Enabled   func(childComplexity int) int
+		Expired   func(childComplexity int) int
+		Locked    func(childComplexity int) int
+		Roles     func(childComplexity int) int
+	}
+
 	AllUnreadMessages struct {
 		AllUnreadMessages func(childComplexity int) int
 	}
@@ -68,6 +76,7 @@ type ComplexityRoot struct {
 	}
 
 	ChatDto struct {
+		AdditionalData                      func(childComplexity int) int
 		AvailableToSearch                   func(childComplexity int) int
 		Avatar                              func(childComplexity int) int
 		AvatarBig                           func(childComplexity int) int
@@ -119,14 +128,6 @@ type ComplexityRoot struct {
 		ChatID             func(childComplexity int) int
 		LastUpdateDateTime func(childComplexity int) int
 		UnreadMessages     func(childComplexity int) int
-	}
-
-	DataDTO struct {
-		Confirmed func(childComplexity int) int
-		Enabled   func(childComplexity int) int
-		Expired   func(childComplexity int) int
-		Locked    func(childComplexity int) int
-		Roles     func(childComplexity int) int
 	}
 
 	DisplayMessageDto struct {
@@ -240,20 +241,22 @@ type ComplexityRoot struct {
 	}
 
 	Participant struct {
-		Avatar     func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Login      func(childComplexity int) int
-		LoginColor func(childComplexity int) int
-		ShortInfo  func(childComplexity int) int
+		AdditionalData func(childComplexity int) int
+		Avatar         func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Login          func(childComplexity int) int
+		LoginColor     func(childComplexity int) int
+		ShortInfo      func(childComplexity int) int
 	}
 
 	ParticipantWithAdmin struct {
-		Admin      func(childComplexity int) int
-		Avatar     func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Login      func(childComplexity int) int
-		LoginColor func(childComplexity int) int
-		ShortInfo  func(childComplexity int) int
+		AdditionalData func(childComplexity int) int
+		Admin          func(childComplexity int) int
+		Avatar         func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Login          func(childComplexity int) int
+		LoginColor     func(childComplexity int) int
+		ShortInfo      func(childComplexity int) int
 	}
 
 	PinnedMessageDto struct {
@@ -315,18 +318,6 @@ type ComplexityRoot struct {
 		GlobalEvents      func(childComplexity int) int
 		UserAccountEvents func(childComplexity int, userIdsFilter []int64) int
 		UserStatusEvents  func(childComplexity int, userIds []int64) int
-	}
-
-	UserAccountDto struct {
-		Avatar            func(childComplexity int) int
-		AvatarBig         func(childComplexity int) int
-		ID                func(childComplexity int) int
-		LastSeenDateTime  func(childComplexity int) int
-		Ldap              func(childComplexity int) int
-		Login             func(childComplexity int) int
-		LoginColor        func(childComplexity int) int
-		Oauth2Identifiers func(childComplexity int) int
-		ShortInfo         func(childComplexity int) int
 	}
 
 	UserAccountEvent struct {
@@ -445,6 +436,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AdditionalData.confirmed":
+		if e.complexity.AdditionalData.Confirmed == nil {
+			break
+		}
+
+		return e.complexity.AdditionalData.Confirmed(childComplexity), true
+
+	case "AdditionalData.enabled":
+		if e.complexity.AdditionalData.Enabled == nil {
+			break
+		}
+
+		return e.complexity.AdditionalData.Enabled(childComplexity), true
+
+	case "AdditionalData.expired":
+		if e.complexity.AdditionalData.Expired == nil {
+			break
+		}
+
+		return e.complexity.AdditionalData.Expired(childComplexity), true
+
+	case "AdditionalData.locked":
+		if e.complexity.AdditionalData.Locked == nil {
+			break
+		}
+
+		return e.complexity.AdditionalData.Locked(childComplexity), true
+
+	case "AdditionalData.roles":
+		if e.complexity.AdditionalData.Roles == nil {
+			break
+		}
+
+		return e.complexity.AdditionalData.Roles(childComplexity), true
+
 	case "AllUnreadMessages.allUnreadMessages":
 		if e.complexity.AllUnreadMessages.AllUnreadMessages == nil {
 			break
@@ -507,6 +533,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatDeletedDto.ID(childComplexity), true
+
+	case "ChatDto.additionalData":
+		if e.complexity.ChatDto.AdditionalData == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.AdditionalData(childComplexity), true
 
 	case "ChatDto.availableToSearch":
 		if e.complexity.ChatDto.AvailableToSearch == nil {
@@ -822,41 +855,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChatUnreadMessageChanged.UnreadMessages(childComplexity), true
-
-	case "DataDTO.confirmed":
-		if e.complexity.DataDTO.Confirmed == nil {
-			break
-		}
-
-		return e.complexity.DataDTO.Confirmed(childComplexity), true
-
-	case "DataDTO.enabled":
-		if e.complexity.DataDTO.Enabled == nil {
-			break
-		}
-
-		return e.complexity.DataDTO.Enabled(childComplexity), true
-
-	case "DataDTO.expired":
-		if e.complexity.DataDTO.Expired == nil {
-			break
-		}
-
-		return e.complexity.DataDTO.Expired(childComplexity), true
-
-	case "DataDTO.locked":
-		if e.complexity.DataDTO.Locked == nil {
-			break
-		}
-
-		return e.complexity.DataDTO.Locked(childComplexity), true
-
-	case "DataDTO.roles":
-		if e.complexity.DataDTO.Roles == nil {
-			break
-		}
-
-		return e.complexity.DataDTO.Roles(childComplexity), true
 
 	case "DisplayMessageDto.blogPost":
 		if e.complexity.DisplayMessageDto.BlogPost == nil {
@@ -1418,6 +1416,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OAuth2Identifiers.VkontakteID(childComplexity), true
 
+	case "Participant.additionalData":
+		if e.complexity.Participant.AdditionalData == nil {
+			break
+		}
+
+		return e.complexity.Participant.AdditionalData(childComplexity), true
+
 	case "Participant.avatar":
 		if e.complexity.Participant.Avatar == nil {
 			break
@@ -1452,6 +1457,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Participant.ShortInfo(childComplexity), true
+
+	case "ParticipantWithAdmin.additionalData":
+		if e.complexity.ParticipantWithAdmin.AdditionalData == nil {
+			break
+		}
+
+		return e.complexity.ParticipantWithAdmin.AdditionalData(childComplexity), true
 
 	case "ParticipantWithAdmin.admin":
 		if e.complexity.ParticipantWithAdmin.Admin == nil {
@@ -1747,69 +1759,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.UserStatusEvents(childComplexity, args["userIds"].([]int64)), true
-
-	case "UserAccountDto.avatar":
-		if e.complexity.UserAccountDto.Avatar == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.Avatar(childComplexity), true
-
-	case "UserAccountDto.avatarBig":
-		if e.complexity.UserAccountDto.AvatarBig == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.AvatarBig(childComplexity), true
-
-	case "UserAccountDto.id":
-		if e.complexity.UserAccountDto.ID == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.ID(childComplexity), true
-
-	case "UserAccountDto.lastSeenDateTime":
-		if e.complexity.UserAccountDto.LastSeenDateTime == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.LastSeenDateTime(childComplexity), true
-
-	case "UserAccountDto.ldap":
-		if e.complexity.UserAccountDto.Ldap == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.Ldap(childComplexity), true
-
-	case "UserAccountDto.login":
-		if e.complexity.UserAccountDto.Login == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.Login(childComplexity), true
-
-	case "UserAccountDto.loginColor":
-		if e.complexity.UserAccountDto.LoginColor == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.LoginColor(childComplexity), true
-
-	case "UserAccountDto.oauth2Identifiers":
-		if e.complexity.UserAccountDto.Oauth2Identifiers == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.Oauth2Identifiers(childComplexity), true
-
-	case "UserAccountDto.shortInfo":
-		if e.complexity.UserAccountDto.ShortInfo == nil {
-			break
-		}
-
-		return e.complexity.UserAccountDto.ShortInfo(childComplexity), true
 
 	case "UserAccountEvent.eventType":
 		if e.complexity.UserAccountEvent.EventType == nil {
@@ -2362,6 +2311,226 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AdditionalData_enabled(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdditionalData_enabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Enabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdditionalData_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdditionalData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdditionalData_expired(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdditionalData_expired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Expired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdditionalData_expired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdditionalData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdditionalData_locked(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdditionalData_locked(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Locked, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdditionalData_locked(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdditionalData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdditionalData_confirmed(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdditionalData_confirmed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Confirmed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdditionalData_confirmed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdditionalData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdditionalData_roles(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdditionalData_roles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Roles, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdditionalData_roles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdditionalData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _AllUnreadMessages_allUnreadMessages(ctx context.Context, field graphql.CollectedField, obj *model.AllUnreadMessages) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AllUnreadMessages_allUnreadMessages(ctx, field)
@@ -3491,6 +3660,8 @@ func (ec *executionContext) fieldContext_ChatDto_participants(_ context.Context,
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -4146,6 +4317,59 @@ func (ec *executionContext) fieldContext_ChatDto_canReact(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatDto_additionalData(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_additionalData(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AdditionalData)
+	fc.Result = res
+	return ec.marshalOAdditionalData2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAdditionalData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_additionalData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_AdditionalData_enabled(ctx, field)
+			case "expired":
+				return ec.fieldContext_AdditionalData_expired(ctx, field)
+			case "locked":
+				return ec.fieldContext_AdditionalData_locked(ctx, field)
+			case "confirmed":
+				return ec.fieldContext_AdditionalData_confirmed(ctx, field)
+			case "roles":
+				return ec.fieldContext_AdditionalData_roles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AdditionalData", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_eventType(ctx, field)
 	if err != nil {
@@ -4466,6 +4690,8 @@ func (ec *executionContext) fieldContext_ChatEvent_participantsEvent(_ context.C
 				return ec.fieldContext_ParticipantWithAdmin_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_ParticipantWithAdmin_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_ParticipantWithAdmin_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParticipantWithAdmin", field.Name)
 		},
@@ -4791,226 +5017,6 @@ func (ec *executionContext) fieldContext_ChatUnreadMessageChanged_lastUpdateDate
 	return fc, nil
 }
 
-func (ec *executionContext) _DataDTO_enabled(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataDTO_enabled(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Enabled, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataDTO_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataDTO",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DataDTO_expired(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataDTO_expired(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Expired, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataDTO_expired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataDTO",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DataDTO_locked(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataDTO_locked(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Locked, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataDTO_locked(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataDTO",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DataDTO_confirmed(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataDTO_confirmed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Confirmed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataDTO_confirmed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataDTO",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DataDTO_roles(ctx context.Context, field graphql.CollectedField, obj *model.DataDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DataDTO_roles(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Roles, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DataDTO_roles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DataDTO",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _DisplayMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.DisplayMessageDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DisplayMessageDto_id(ctx, field)
 	if err != nil {
@@ -5318,6 +5324,8 @@ func (ec *executionContext) fieldContext_DisplayMessageDto_owner(_ context.Conte
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -6040,6 +6048,8 @@ func (ec *executionContext) fieldContext_EmbedMessageResponse_owner(_ context.Co
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -6659,6 +6669,8 @@ func (ec *executionContext) fieldContext_FileInfoDto_owner(_ context.Context, fi
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -7115,6 +7127,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(_ context.Context
 				return ec.fieldContext_ChatDto_lastMessagePreview(ctx, field)
 			case "canReact":
 				return ec.fieldContext_ChatDto_canReact(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_ChatDto_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChatDto", field.Name)
 		},
@@ -7213,6 +7227,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_coChattedParticipantEvent(_
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -8869,6 +8885,59 @@ func (ec *executionContext) fieldContext_Participant_loginColor(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Participant_additionalData(ctx context.Context, field graphql.CollectedField, obj *model.Participant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Participant_additionalData(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AdditionalData)
+	fc.Result = res
+	return ec.marshalOAdditionalData2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAdditionalData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Participant_additionalData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Participant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_AdditionalData_enabled(ctx, field)
+			case "expired":
+				return ec.fieldContext_AdditionalData_expired(ctx, field)
+			case "locked":
+				return ec.fieldContext_AdditionalData_locked(ctx, field)
+			case "confirmed":
+				return ec.fieldContext_AdditionalData_confirmed(ctx, field)
+			case "roles":
+				return ec.fieldContext_AdditionalData_roles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AdditionalData", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ParticipantWithAdmin_id(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParticipantWithAdmin_id(ctx, field)
 	if err != nil {
@@ -9124,6 +9193,59 @@ func (ec *executionContext) fieldContext_ParticipantWithAdmin_loginColor(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _ParticipantWithAdmin_additionalData(ctx context.Context, field graphql.CollectedField, obj *model.ParticipantWithAdmin) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParticipantWithAdmin_additionalData(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AdditionalData)
+	fc.Result = res
+	return ec.marshalOAdditionalData2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAdditionalData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParticipantWithAdmin_additionalData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParticipantWithAdmin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_AdditionalData_enabled(ctx, field)
+			case "expired":
+				return ec.fieldContext_AdditionalData_expired(ctx, field)
+			case "locked":
+				return ec.fieldContext_AdditionalData_locked(ctx, field)
+			case "confirmed":
+				return ec.fieldContext_AdditionalData_confirmed(ctx, field)
+			case "roles":
+				return ec.fieldContext_AdditionalData_roles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AdditionalData", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PinnedMessageDto_id(ctx context.Context, field graphql.CollectedField, obj *model.PinnedMessageDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PinnedMessageDto_id(ctx, field)
 	if err != nil {
@@ -9346,6 +9468,8 @@ func (ec *executionContext) fieldContext_PinnedMessageDto_owner(_ context.Contex
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -10024,6 +10148,8 @@ func (ec *executionContext) fieldContext_PublishedMessageDto_owner(_ context.Con
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -10486,6 +10612,8 @@ func (ec *executionContext) fieldContext_Reaction_users(_ context.Context, field
 				return ec.fieldContext_Participant_shortInfo(ctx, field)
 			case "loginColor":
 				return ec.fieldContext_Participant_loginColor(ctx, field)
+			case "additionalData":
+				return ec.fieldContext_Participant_additionalData(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Participant", field.Name)
 		},
@@ -10968,394 +11096,6 @@ func (ec *executionContext) fieldContext_Subscription_userAccountEvents(ctx cont
 	if fc.Args, err = ec.field_Subscription_userAccountEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_login(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_login(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Login, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_login(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_avatar(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_avatar(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Avatar, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_avatar(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_avatarBig(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_avatarBig(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AvatarBig, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_avatarBig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_shortInfo(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_shortInfo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ShortInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_shortInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_lastSeenDateTime(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_lastSeenDateTime(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastSeenDateTime, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_lastSeenDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_oauth2Identifiers(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_oauth2Identifiers(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Oauth2Identifiers, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.OAuth2Identifiers)
-	fc.Result = res
-	return ec.marshalOOAuth2Identifiers2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐOAuth2Identifiers(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_oauth2Identifiers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "facebookId":
-				return ec.fieldContext_OAuth2Identifiers_facebookId(ctx, field)
-			case "vkontakteId":
-				return ec.fieldContext_OAuth2Identifiers_vkontakteId(ctx, field)
-			case "googleId":
-				return ec.fieldContext_OAuth2Identifiers_googleId(ctx, field)
-			case "keycloakId":
-				return ec.fieldContext_OAuth2Identifiers_keycloakId(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OAuth2Identifiers", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_loginColor(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_loginColor(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LoginColor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_loginColor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserAccountDto_ldap(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountDto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserAccountDto_ldap(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Ldap, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserAccountDto_ldap(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserAccountDto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
 	}
 	return fc, nil
 }
@@ -11853,9 +11593,9 @@ func (ec *executionContext) _UserAccountExtendedDto_additionalData(ctx context.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.DataDto)
+	res := resTmp.(*model.AdditionalData)
 	fc.Result = res
-	return ec.marshalODataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx, field.Selections, res)
+	return ec.marshalOAdditionalData2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAdditionalData(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserAccountExtendedDto_additionalData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11867,17 +11607,17 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_additionalData(_
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "enabled":
-				return ec.fieldContext_DataDTO_enabled(ctx, field)
+				return ec.fieldContext_AdditionalData_enabled(ctx, field)
 			case "expired":
-				return ec.fieldContext_DataDTO_expired(ctx, field)
+				return ec.fieldContext_AdditionalData_expired(ctx, field)
 			case "locked":
-				return ec.fieldContext_DataDTO_locked(ctx, field)
+				return ec.fieldContext_AdditionalData_locked(ctx, field)
 			case "confirmed":
-				return ec.fieldContext_DataDTO_confirmed(ctx, field)
+				return ec.fieldContext_AdditionalData_confirmed(ctx, field)
 			case "roles":
-				return ec.fieldContext_DataDTO_roles(ctx, field)
+				return ec.fieldContext_AdditionalData_roles(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type DataDTO", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type AdditionalData", field.Name)
 		},
 	}
 	return fc, nil
@@ -15275,6 +15015,65 @@ func (ec *executionContext) _UserAccountEventDto(ctx context.Context, sel ast.Se
 
 // region    **************************** object.gotpl ****************************
 
+var additionalDataImplementors = []string{"AdditionalData"}
+
+func (ec *executionContext) _AdditionalData(ctx context.Context, sel ast.SelectionSet, obj *model.AdditionalData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, additionalDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdditionalData")
+		case "enabled":
+			out.Values[i] = ec._AdditionalData_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expired":
+			out.Values[i] = ec._AdditionalData_expired(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "locked":
+			out.Values[i] = ec._AdditionalData_locked(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "confirmed":
+			out.Values[i] = ec._AdditionalData_confirmed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "roles":
+			out.Values[i] = ec._AdditionalData_roles(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var allUnreadMessagesImplementors = []string{"AllUnreadMessages"}
 
 func (ec *executionContext) _AllUnreadMessages(ctx context.Context, sel ast.SelectionSet, obj *model.AllUnreadMessages) graphql.Marshaler {
@@ -15560,6 +15359,8 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "additionalData":
+			out.Values[i] = ec._ChatDto_additionalData(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15663,65 +15464,6 @@ func (ec *executionContext) _ChatUnreadMessageChanged(ctx context.Context, sel a
 			}
 		case "lastUpdateDateTime":
 			out.Values[i] = ec._ChatUnreadMessageChanged_lastUpdateDateTime(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var dataDTOImplementors = []string{"DataDTO"}
-
-func (ec *executionContext) _DataDTO(ctx context.Context, sel ast.SelectionSet, obj *model.DataDto) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, dataDTOImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("DataDTO")
-		case "enabled":
-			out.Values[i] = ec._DataDTO_enabled(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "expired":
-			out.Values[i] = ec._DataDTO_expired(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "locked":
-			out.Values[i] = ec._DataDTO_locked(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "confirmed":
-			out.Values[i] = ec._DataDTO_confirmed(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "roles":
-			out.Values[i] = ec._DataDTO_roles(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -16416,6 +16158,8 @@ func (ec *executionContext) _Participant(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._Participant_shortInfo(ctx, field, obj)
 		case "loginColor":
 			out.Values[i] = ec._Participant_loginColor(ctx, field, obj)
+		case "additionalData":
+			out.Values[i] = ec._Participant_additionalData(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16471,6 +16215,8 @@ func (ec *executionContext) _ParticipantWithAdmin(ctx context.Context, sel ast.S
 			out.Values[i] = ec._ParticipantWithAdmin_shortInfo(ctx, field, obj)
 		case "loginColor":
 			out.Values[i] = ec._ParticipantWithAdmin_loginColor(ctx, field, obj)
+		case "additionalData":
+			out.Values[i] = ec._ParticipantWithAdmin_additionalData(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16955,67 +16701,6 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
-}
-
-var userAccountDtoImplementors = []string{"UserAccountDto"}
-
-func (ec *executionContext) _UserAccountDto(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccountDto) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountDtoImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserAccountDto")
-		case "id":
-			out.Values[i] = ec._UserAccountDto_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "login":
-			out.Values[i] = ec._UserAccountDto_login(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "avatar":
-			out.Values[i] = ec._UserAccountDto_avatar(ctx, field, obj)
-		case "avatarBig":
-			out.Values[i] = ec._UserAccountDto_avatarBig(ctx, field, obj)
-		case "shortInfo":
-			out.Values[i] = ec._UserAccountDto_shortInfo(ctx, field, obj)
-		case "lastSeenDateTime":
-			out.Values[i] = ec._UserAccountDto_lastSeenDateTime(ctx, field, obj)
-		case "oauth2Identifiers":
-			out.Values[i] = ec._UserAccountDto_oauth2Identifiers(ctx, field, obj)
-		case "loginColor":
-			out.Values[i] = ec._UserAccountDto_loginColor(ctx, field, obj)
-		case "ldap":
-			out.Values[i] = ec._UserAccountDto_ldap(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
 }
 
 var userAccountEventImplementors = []string{"UserAccountEvent"}
@@ -18666,6 +18351,13 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOAdditionalData2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAdditionalData(ctx context.Context, sel ast.SelectionSet, v *model.AdditionalData) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AdditionalData(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOAllUnreadMessages2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐAllUnreadMessages(ctx context.Context, sel ast.SelectionSet, v *model.AllUnreadMessages) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -18725,13 +18417,6 @@ func (ec *executionContext) marshalOChatUnreadMessageChanged2ᚖnkonevᚗnameᚋ
 		return graphql.Null
 	}
 	return ec._ChatUnreadMessageChanged(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalODataDTO2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDataDto(ctx context.Context, sel ast.SelectionSet, v *model.DataDto) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._DataDTO(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODisplayMessageDto2ᚖnkonevᚗnameᚋeventᚋgraphᚋmodelᚐDisplayMessageDto(ctx context.Context, sel ast.SelectionSet, v *model.DisplayMessageDto) graphql.Marshaler {

@@ -189,23 +189,23 @@ public class UserProfileService {
                 break;
             }
 
-            if (gottenUser.additionalData() != null) {
-                if (!Objects.equals(gottenUser.additionalData().confirmed(), currentUser.confirmed())) {
+            if (gottenUser.userAccountDTO().additionalData() != null) {
+                if (!Objects.equals(gottenUser.userAccountDTO().additionalData().confirmed(), currentUser.confirmed())) {
                     edge = false;
                     break;
                 }
 
-                if (!Objects.equals(gottenUser.additionalData().enabled(), currentUser.enabled())) {
+                if (!Objects.equals(gottenUser.userAccountDTO().additionalData().enabled(), currentUser.enabled())) {
                     edge = false;
                     break;
                 }
 
-                if (!Objects.equals(gottenUser.additionalData().locked(), currentUser.locked())) {
+                if (!Objects.equals(gottenUser.userAccountDTO().additionalData().locked(), currentUser.locked())) {
                     edge = false;
                     break;
                 }
 
-                if (!Objects.equals(gottenUser.additionalData().roles(), Arrays.stream(currentUser.roles()).collect(Collectors.toSet()))) {
+                if (!Objects.equals(gottenUser.userAccountDTO().additionalData().roles(), Arrays.stream(currentUser.roles()).collect(Collectors.toSet()))) {
                     edge = false;
                     break;
                 }

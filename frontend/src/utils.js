@@ -432,7 +432,7 @@ awaitingForConfirmEmailChange,
     googleId,
     keycloakId,
   },
-  additionalData, {
+  additionalData {
     enabled,
     expired,
     locked,
