@@ -78,6 +78,7 @@ public class AaaUserDetailsService implements UserDetailsService {
         if (userIds == null){
             throw new RuntimeException("userIds cannon be null");
         }
+        LOGGER.info("is online");
         return StreamSupport.stream(userAccountRepository.findAllById(userIds).spliterator(), false)
                 .map(u -> new UserOnlineResponse(u.id(), calcOnline(getSessions(u.login())), u.lastSeenDateTime()))
                 .toList();
