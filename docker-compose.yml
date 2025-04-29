@@ -205,9 +205,9 @@ services:
     restart: unless-stopped
     ports:
       # https://www.jaegertracing.io/docs/1.54/deployment/
-      - 4318:4318 # OTLP GRPC over HTTP (aaa, traefik)
-      - 4317:4317 # OTLP GRPC (other microservices)
-      - 16686:16686 # web ui
+      - 34318:4318 # OTLP GRPC over HTTP (aaa, traefik)
+      - 34317:4317 # OTLP GRPC (other microservices)
+      - 36686:16686 # web ui
     networks:
       backend:
     environment:

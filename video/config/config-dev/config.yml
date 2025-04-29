@@ -28,7 +28,7 @@ postgresql:
   maxLifetime: 30s
 
 otlp:
-  endpoint: "localhost:4317"
+  endpoint: "localhost:34317"
 
 chat:
   url:

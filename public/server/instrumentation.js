@@ -18,6 +18,10 @@ const collectorOptions = {
     concurrencyLimit: 10, // an optional limit on pending requests
 };
 
+if (!process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
+    collectorOptions.url = 'http://localhost:34318/v1/traces';
+}
+
 // https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http
 const exporter = new OTLPTraceExporter(collectorOptions);
 

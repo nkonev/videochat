@@ -33,7 +33,7 @@ jobs:
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
           docker compose -f docker-compose.keycloak.yml up -d keycloak
           ./scripts/wait-for-keycloak-http.sh 'localhost:9484' 60
       - name: Build and test with Maven
@@ -151,7 +151,7 @@ jobs:
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd chat; make check-env clean download generate test package)
@@ -297,7 +297,7 @@ jobs:
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)
@@ -373,8 +373,7 @@ jobs:
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
           ./scripts/wait-for-rabbitmq-http.sh 'localhost:35672' 60 # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:4318 -- echo 'jaeger is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:16686 -- echo 'jaeger web ui is up' # :6831 doesn't compatible with wait-for-it because it's udp
+          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:39000 -- echo 'minio is up'
           ./scripts/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
       - name: Build microservices
