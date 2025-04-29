@@ -1,5 +1,6 @@
 <template>
     <v-menu
+        attach="#video-splitpanes"
         :class="className()"
         :model-value="showContextMenu"
         :transition="false"
@@ -69,21 +70,14 @@ export default {
             const ret = [];
             if (this.menuableItem) {
                 ret.push({
-                  title: this.userName,
-                  action: () => { },
-                  enabled: false,
+                    title: this.userName,
+                    icon: 'mdi-close',
+                    action: () => {
+                        this.onCloseContextMenu()
+                    },
+                    enabled: true,
                 });
 
-                if (this.isMobile()) {
-                    ret.push({
-                        title: this.$vuetify.locale.t('$vuetify.close'),
-                        icon: 'mdi-close',
-                        action: () => {
-                            this.onCloseContextMenu()
-                        },
-                        enabled: true,
-                    });
-                }
                 if (this.shouldShowMuteAudio) {
                   ret.push({
                     title: this.audioMute ? this.$vuetify.locale.t('$vuetify.unmute_audio') : this.$vuetify.locale.t('$vuetify.mute_audio'),

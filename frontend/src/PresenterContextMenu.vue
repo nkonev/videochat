@@ -1,5 +1,6 @@
 <template>
     <v-menu
+        attach="#video-splitpanes"
         :class="className()"
         :model-value="showContextMenu"
         :transition="false"
@@ -58,22 +59,15 @@ export default {
         getContextMenuItems() {
             const ret = [];
             if (this.menuableItem) {
-                ret.push({
-                  title: this.userName,
-                  action: () => { },
-                  enabled: false,
-                });
 
-                if (this.isMobile()) {
-                    ret.push({
-                        title: this.$vuetify.locale.t('$vuetify.close'),
-                        icon: 'mdi-close',
-                        action: () => {
-                            this.onCloseContextMenu()
-                        },
-                        enabled: true,
-                    });
-                }
+                ret.push({
+                    title: this.userName,
+                    icon: 'mdi-close',
+                    action: () => {
+                        this.onCloseContextMenu()
+                    },
+                    enabled: true,
+                });
 
                 if (!this.chatStore.pinnedTrackSid) {
                   ret.push({
