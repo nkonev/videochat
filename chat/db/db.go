@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	dbP "database/sql"
 	"embed"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
@@ -51,8 +50,8 @@ type UserAdminDbDTO struct {
 
 // enumerates common tx and non-tx operations
 type CommonOperations interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	GetParticipantIds(ctx context.Context, chatId int64, participantsSize, participantsOffset int) ([]int64, error)
 	GetParticipantIdsBatch(ctx context.Context, chatIds []int64, participantsSize int) ([]*ParticipantIds, error)
@@ -85,19 +84,19 @@ type CommonOperations interface {
 	logger() *logger.Logger
 }
 
-func (dbR *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
+func (dbR *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	return dbR.DB.QueryContext(ctx, query, args...)
 }
 
-func (txR *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*dbP.Rows, error) {
+func (txR *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	return txR.Tx.QueryContext(ctx, query, args...)
 }
 
-func (dbR *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row {
+func (dbR *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	return dbR.DB.QueryRowContext(ctx, query, args...)
 }
 
-func (txR *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *dbP.Row {
+func (txR *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	return txR.Tx.QueryRowContext(ctx, query, args...)
 }
 
