@@ -216,6 +216,12 @@ func (db *DB) RecreateDb() {
 	drop procedure if exists delete_chat(chat_id bigint);
 	drop function if exists strip_tags(TEXT);
 	drop function if exists utc_now();
+
+	-- test
+	drop table if exists t1;
+	drop table if exists t2;
+	drop table if exists tr1;
+	drop table if exists tr2;
 `, prodMigrationsTable, testMigrationsTable))
 	db.lgr.Warn("Recreating database")
 	if err != nil {
