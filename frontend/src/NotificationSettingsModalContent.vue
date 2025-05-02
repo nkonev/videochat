@@ -329,26 +329,14 @@
             },
 
             setChatNotificationsToFalse() {
-                this.browserNotificationChatSettings.mentionsEnabled = false;
-                this.browserNotificationChatSettings.missedCallsEnabled = false;
-                this.browserNotificationChatSettings.answersEnabled = false;
-                this.browserNotificationChatSettings.reactionsEnabled = false;
                 this.browserNotificationChatSettings.newMessagesEnabled = false;
                 this.browserNotificationChatSettings.callEnabled = false;
             },
             writeChatNotificationsToLocalStore() {
-                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_MENTIONS, this.browserNotificationChatSettings.mentionsEnabled);
-                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_MISSED_CALLS, this.browserNotificationChatSettings.missedCallsEnabled);
-                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_ANSWERS, this.browserNotificationChatSettings.answersEnabled);
-                setBrowserNotification(this.chatId, NOTIFICATION_TYPE_REACTIONS, this.browserNotificationChatSettings.reactionsEnabled);
                 setBrowserNotification(this.chatId, NOTIFICATION_TYPE_NEW_MESSAGES, this.browserNotificationChatSettings.newMessagesEnabled);
                 setBrowserNotification(this.chatId, NOTIFICATION_TYPE_CALL, this.browserNotificationChatSettings.callEnabled);
             },
             readChatNotificationsFromLocalStore() {
-                this.browserNotificationChatSettings.mentionsEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_MENTIONS)
-                this.browserNotificationChatSettings.missedCallsEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_MISSED_CALLS)
-                this.browserNotificationChatSettings.answersEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_ANSWERS)
-                this.browserNotificationChatSettings.reactionsEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_REACTIONS)
                 this.browserNotificationChatSettings.newMessagesEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_NEW_MESSAGES)
                 this.browserNotificationChatSettings.callEnabled = getBrowserNotification(this.chatId, null, NOTIFICATION_TYPE_CALL)
             },
