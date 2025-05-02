@@ -45,8 +45,7 @@ public class AaaConfig {
                     DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                             .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
                             .parseLenient()
-                            .appendLiteral('.')
-                            .appendFraction(ChronoField.MILLI_OF_SECOND, 0, 3, false)
+                            .appendFraction(ChronoField.MILLI_OF_SECOND, 0, 3, true)
                             .appendLiteral('Z')
                             .toFormatter();
                     LocalDateTimeDeserializer dateTimeDeserializer = new LocalDateTimeDeserializer(formatter);
