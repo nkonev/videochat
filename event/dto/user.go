@@ -1,13 +1,11 @@
 package dto
 
-import "github.com/guregu/null"
-
 type User struct {
 	Id             int64           `json:"id"`
 	Login          string          `json:"login"`
-	Avatar         null.String     `json:"avatar"`
-	ShortInfo      null.String     `json:"shortInfo"`
-	LoginColor     null.String     `json:"loginColor"`
+	Avatar         *string         `json:"avatar"`
+	ShortInfo      *string         `json:"shortInfo"`
+	LoginColor     *string         `json:"loginColor"`
 	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
@@ -22,11 +20,11 @@ type AdditionalData struct {
 type UserAccountEvent struct {
 	Id                            int64           `json:"id"`
 	Login                         string          `json:"login"`
-	Email                         null.String     `json:"email"`
+	Email                         *string         `json:"email"`
 	AwaitingForConfirmEmailChange bool            `json:"awaitingForConfirmEmailChange"`
-	Avatar                        null.String     `json:"avatar"`
-	ShortInfo                     null.String     `json:"shortInfo"`
-	LoginColor                    null.String     `json:"loginColor"`
+	Avatar                        *string         `json:"avatar"`
+	ShortInfo                     *string         `json:"shortInfo"`
+	LoginColor                    *string         `json:"loginColor"`
 	AdditionalData                *AdditionalData `json:"additionalData"`
 }
 

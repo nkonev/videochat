@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/guregu/null"
 	"time"
 )
 
@@ -48,7 +47,7 @@ type DisplayMessageDto struct {
 	ChatId         int64                 `json:"chatId"`
 	OwnerId        int64                 `json:"ownerId"`
 	CreateDateTime time.Time             `json:"createDateTime"`
-	EditDateTime   null.Time             `json:"editDateTime"`
+	EditDateTime   *time.Time            `json:"editDateTime"`
 	Owner          *User                 `json:"owner"`
 	CanEdit        bool                  `json:"canEdit"`
 	CanDelete      bool                  `json:"canDelete"`

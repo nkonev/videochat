@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/oliveagle/jsonpath"
 	"github.com/spf13/viper"
@@ -97,10 +96,11 @@ type AaaEmu struct{}
 func (receiver AaaEmu) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.WriteHeader(200)
 
+	a := "http://image.jpg"
 	u1 := &dto.User{
 		Id:     1,
 		Login:  "testor_protobuf",
-		Avatar: null.StringFrom("http://image.jpg"),
+		Avatar: &a,
 	}
 	u2 := &dto.User{
 		Id:    2,
@@ -346,7 +346,8 @@ func TestGetChatsPaginated(t *testing.T) {
 
 		// also check get additional info from aaa emu
 		assert.Equal(t, "testor_protobuf", typedResFirst.Items[0].Participants[0].Login)
-		assert.Equal(t, null.StringFrom("http://image.jpg"), typedResFirst.Items[0].Participants[0].Avatar)
+		im := "http://image.jpg"
+		assert.Equal(t, &im, typedResFirst.Items[0].Participants[0].Avatar)
 
 		lastPinned := typedResFirst.Items[len(typedResFirst.Items)-1].Pinned
 		lastId := typedResFirst.Items[len(typedResFirst.Items)-1].Id

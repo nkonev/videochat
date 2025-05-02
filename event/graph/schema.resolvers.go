@@ -485,7 +485,7 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		CanSetPassword:    aDto.CanSetPassword,
 	}
 	if myUserId == aDto.Id {
-		userAccountEvent.Email = user.Email.Ptr()
+		userAccountEvent.Email = user.Email
 		userAccountEvent.AwaitingForConfirmEmailChange = &user.AwaitingForConfirmEmailChange
 	}
 
@@ -518,7 +518,7 @@ func convertToUserOnline(userOnline dto.UserOnline) *model.UserStatusEvent {
 		EventType:        "user_online",
 		UserID:           userOnline.UserId,
 		Online:           &userOnline.Online,
-		LastSeenDateTime: userOnline.LastSeenDateTime.Ptr(),
+		LastSeenDateTime: userOnline.LastSeenDateTime,
 	}
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
@@ -616,7 +616,7 @@ func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayM
 		ChatID:         messageDto.ChatId,
 		OwnerID:        messageDto.OwnerId,
 		CreateDateTime: messageDto.CreateDateTime,
-		EditDateTime:   messageDto.EditDateTime.Ptr(),
+		EditDateTime:   messageDto.EditDateTime,
 		Owner:          convertParticipant(messageDto.Owner),
 		CanEdit:        messageDto.CanEdit,
 		CanDelete:      messageDto.CanDelete,
@@ -706,14 +706,14 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 		ret.ChatEvent = &model.ChatDto{
 			ID:                                  chatEvent.Id,
 			Name:                                chatEvent.Name,
-			Avatar:                              chatEvent.Avatar.Ptr(),
-			AvatarBig:                           chatEvent.AvatarBig.Ptr(),
-			ShortInfo:                           chatEvent.ShortInfo.Ptr(),
+			Avatar:                              chatEvent.Avatar,
+			AvatarBig:                           chatEvent.AvatarBig,
+			ShortInfo:                           chatEvent.ShortInfo,
 			LastUpdateDateTime:                  chatEvent.LastUpdateDateTime,
 			ParticipantIds:                      chatEvent.ParticipantIds,
-			CanEdit:                             chatEvent.CanEdit.Ptr(),
-			CanDelete:                           chatEvent.CanDelete.Ptr(),
-			CanLeave:                            chatEvent.CanLeave.Ptr(),
+			CanEdit:                             chatEvent.CanEdit,
+			CanDelete:                           chatEvent.CanDelete,
+			CanLeave:                            chatEvent.CanLeave,
 			UnreadMessages:                      chatEvent.UnreadMessages,
 			CanBroadcast:                        chatEvent.CanBroadcast,
 			CanVideoKick:                        chatEvent.CanVideoKick,
@@ -724,12 +724,12 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			Participants:                        convertParticipants(chatEvent.Participants),
 			CanResend:                           chatEvent.CanResend,
 			AvailableToSearch:                   chatEvent.AvailableToSearch,
-			IsResultFromSearch:                  chatEvent.IsResultFromSearch.Ptr(),
+			IsResultFromSearch:                  chatEvent.IsResultFromSearch,
 			Pinned:                              chatEvent.Pinned,
 			Blog:                                chatEvent.Blog,
-			LoginColor:                          chatEvent.LoginColor.Ptr(),
+			LoginColor:                          chatEvent.LoginColor,
 			RegularParticipantCanPublishMessage: chatEvent.RegularParticipantCanPublishMessage,
-			LastSeenDateTime:                    chatEvent.LastSeenDateTime.Ptr(),
+			LastSeenDateTime:                    chatEvent.LastSeenDateTime,
 			RegularParticipantCanPinMessage:     chatEvent.RegularParticipantCanPinMessage,
 			BlogAbout:                           chatEvent.BlogAbout,
 			RegularParticipantCanWriteMessage:   chatEvent.RegularParticipantCanWriteMessage,
@@ -878,9 +878,9 @@ func convertParticipant(owner *dto.User) *model.Participant {
 	p := model.Participant{
 		ID:         owner.Id,
 		Login:      owner.Login,
-		Avatar:     owner.Avatar.Ptr(),
-		ShortInfo:  owner.ShortInfo.Ptr(),
-		LoginColor: owner.LoginColor.Ptr(),
+		Avatar:     owner.Avatar,
+		ShortInfo:  owner.ShortInfo,
+		LoginColor: owner.LoginColor,
 	}
 
 	if owner.AdditionalData != nil {
@@ -906,10 +906,10 @@ func convertParticipantWithAdmin(owner *dto.UserWithAdmin) *model.ParticipantWit
 	p := model.ParticipantWithAdmin{
 		ID:         owner.Id,
 		Login:      owner.Login,
-		Avatar:     owner.Avatar.Ptr(),
+		Avatar:     owner.Avatar,
 		Admin:      owner.Admin,
-		ShortInfo:  owner.ShortInfo.Ptr(),
-		LoginColor: owner.LoginColor.Ptr(),
+		ShortInfo:  owner.ShortInfo,
+		LoginColor: owner.LoginColor,
 	}
 
 	if owner.AdditionalData != nil {

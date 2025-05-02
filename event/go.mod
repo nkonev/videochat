@@ -6,7 +6,6 @@ require (
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/guregu/null v4.0.0+incompatible
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/montag451/go-eventbus v0.0.0-20220923162824-015489a65e6a
 	github.com/spf13/viper v1.7.0

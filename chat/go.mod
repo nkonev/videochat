@@ -7,7 +7,6 @@ require (
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang-migrate/migrate/v4 v4.15.1
-	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/microcosm-cc/bluemonday v1.0.3
@@ -47,7 +46,6 @@ require (
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

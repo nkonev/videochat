@@ -1,14 +1,16 @@
 package dto
 
-import "github.com/guregu/null"
+import (
+	"time"
+)
 
 type User struct {
 	Id               int64           `json:"id"`
 	Login            string          `json:"login"`
-	Avatar           null.String     `json:"avatar"`
-	ShortInfo        null.String     `json:"shortInfo"`
-	LoginColor       null.String     `json:"loginColor"`
-	LastSeenDateTime null.Time       `json:"lastSeenDateTime"`
+	Avatar           *string         `json:"avatar"`
+	ShortInfo        *string         `json:"shortInfo"`
+	LoginColor       *string         `json:"loginColor"`
+	LastSeenDateTime *time.Time      `json:"lastSeenDateTime"`
 	AdditionalData   *AdditionalData `json:"additionalData"`
 }
 

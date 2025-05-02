@@ -4,7 +4,6 @@ require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/beliyav/go-amqp-reconnect v0.0.0-20200817192340-82ef0f85c3cc
 	github.com/golang-migrate/migrate/v4 v4.15.1
-	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rotisserie/eris v0.5.4

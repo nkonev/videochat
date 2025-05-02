@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"fmt"
-	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
 	"net/url"
 	"nkonev.name/chat/dto"
@@ -216,7 +215,7 @@ func setLastSeenForTeATet(
 			onl, ok := participantsOnline[participant.Id]
 			if ok {
 				if onl { // if the opposite user is online we don't need to show last login
-					chatDto.SetLastSeenDateTime(null.TimeFromPtr(nil))
+					chatDto.SetLastSeenDateTime(nil)
 				}
 			}
 		}

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
 	"math"
 	"nkonev.name/chat/dto"
@@ -26,7 +25,7 @@ type Message struct {
 	ChatId         int64
 	OwnerId        int64
 	CreateDateTime time.Time
-	EditDateTime   null.Time
+	EditDateTime   *time.Time
 	FileItemUuid   *string
 
 	RequestEmbeddedMessageId      *int64

@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/guregu/null"
 	"github.com/montag451/go-eventbus"
 	"time"
 )
@@ -122,9 +121,9 @@ type PreviewCreatedEvent struct {
 }
 
 type UserOnline struct {
-	UserId           int64     `json:"userId"`
-	Online           bool      `json:"online"`
-	LastSeenDateTime null.Time `json:"lastSeenDateTime"`
+	UserId           int64      `json:"userId"`
+	Online           bool       `json:"online"`
+	LastSeenDateTime *time.Time `json:"lastSeenDateTime"`
 }
 
 type ArrayUserOnline struct {

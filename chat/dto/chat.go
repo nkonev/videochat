@@ -1,21 +1,20 @@
 package dto
 
 import (
-	"github.com/guregu/null"
 	"time"
 )
 
 type BaseChatDto struct {
 	Id                                  int64           `json:"id"`
 	Name                                string          `json:"name"`
-	Avatar                              null.String     `json:"avatar"`
-	AvatarBig                           null.String     `json:"avatarBig"`
-	ShortInfo                           null.String     `json:"shortInfo"`
+	Avatar                              *string         `json:"avatar"`
+	AvatarBig                           *string         `json:"avatarBig"`
+	ShortInfo                           *string         `json:"shortInfo"`
 	LastUpdateDateTime                  time.Time       `json:"lastUpdateDateTime"`
 	ParticipantIds                      []int64         `json:"participantIds"`
-	CanEdit                             null.Bool       `json:"canEdit"`
-	CanDelete                           null.Bool       `json:"canDelete"`
-	CanLeave                            null.Bool       `json:"canLeave"`
+	CanEdit                             *bool           `json:"canEdit"`
+	CanDelete                           *bool           `json:"canDelete"`
+	CanLeave                            *bool           `json:"canLeave"`
 	UnreadMessages                      int64           `json:"unreadMessages"`
 	CanBroadcast                        bool            `json:"canBroadcast"`
 	CanVideoKick                        bool            `json:"canVideoKick"`
@@ -25,12 +24,12 @@ type BaseChatDto struct {
 	ParticipantsCount                   int             `json:"participantsCount"`
 	CanResend                           bool            `json:"canResend"`
 	AvailableToSearch                   bool            `json:"availableToSearch"`
-	IsResultFromSearch                  null.Bool       `json:"isResultFromSearch"`
+	IsResultFromSearch                  *bool           `json:"isResultFromSearch"`
 	Pinned                              bool            `json:"pinned"`
 	Blog                                bool            `json:"blog"`
-	LoginColor                          null.String     `json:"loginColor"`
+	LoginColor                          *string         `json:"loginColor"`
 	RegularParticipantCanPublishMessage bool            `json:"regularParticipantCanPublishMessage"`
-	LastSeenDateTime                    null.Time       `json:"lastSeenDateTime"`
+	LastSeenDateTime                    *time.Time      `json:"lastSeenDateTime"`
 	RegularParticipantCanPinMessage     bool            `json:"regularParticipantCanPinMessage"`
 	BlogAbout                           bool            `json:"blogAbout"`
 	RegularParticipantCanWriteMessage   bool            `json:"regularParticipantCanWriteMessage"`
@@ -40,9 +39,12 @@ type BaseChatDto struct {
 }
 
 func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool, pinned bool) {
-	copied.CanEdit = null.BoolFrom(admin && !copied.IsTetATet)
-	copied.CanDelete = null.BoolFrom(admin)
-	copied.CanLeave = null.BoolFrom(!admin && !copied.IsTetATet && participant)
+	canEdit := admin && !copied.IsTetATet
+	copied.CanEdit = &canEdit
+	canDelete := admin
+	copied.CanDelete = &canDelete
+	canLeave := !admin && !copied.IsTetATet && participant
+	copied.CanLeave = &canLeave
 	copied.UnreadMessages = unreadMessages
 	copied.CanVideoKick = admin
 	copied.CanAudioMute = admin
@@ -50,7 +52,8 @@ func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int6
 	copied.CanBroadcast = admin
 
 	if !participant {
-		copied.IsResultFromSearch = null.BoolFrom(true)
+		isResultFromSearch := true
+		copied.IsResultFromSearch = &isResultFromSearch
 	}
 
 	copied.CanWriteMessage = true
@@ -75,13 +78,13 @@ type ChatDto struct {
 type ChatDtoWithTetATet interface {
 	GetId() int64
 	GetName() string
-	GetAvatar() null.String
+	GetAvatar() *string
 	GetIsTetATet() bool
 	SetName(s string)
-	SetAvatar(s null.String)
-	SetShortInfo(s null.String)
-	SetLoginColor(s null.String)
-	SetLastSeenDateTime(t null.Time)
+	SetAvatar(s *string)
+	SetShortInfo(s *string)
+	SetLoginColor(s *string)
+	SetLastSeenDateTime(t *time.Time)
 	SetAdditionalData(ad *AdditionalData)
 }
 
@@ -113,19 +116,19 @@ func (r *BaseChatDto) SetName(s string) {
 	r.Name = s
 }
 
-func (r *BaseChatDto) GetAvatar() null.String {
+func (r *BaseChatDto) GetAvatar() *string {
 	return r.Avatar
 }
 
-func (r *BaseChatDto) SetAvatar(s null.String) {
+func (r *BaseChatDto) SetAvatar(s *string) {
 	r.Avatar = s
 }
 
-func (r *BaseChatDto) SetShortInfo(s null.String) {
+func (r *BaseChatDto) SetShortInfo(s *string) {
 	r.ShortInfo = s
 }
 
-func (r *BaseChatDto) SetLoginColor(s null.String) {
+func (r *BaseChatDto) SetLoginColor(s *string) {
 	r.LoginColor = s
 }
 
@@ -133,7 +136,7 @@ func (r *BaseChatDto) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (r *BaseChatDto) SetLastSeenDateTime(t null.Time) {
+func (r *BaseChatDto) SetLastSeenDateTime(t *time.Time) {
 	r.LastSeenDateTime = t
 }
 
@@ -142,9 +145,9 @@ func (r *BaseChatDto) SetAdditionalData(ad *AdditionalData) {
 }
 
 type ChatName struct {
-	Name   string      `json:"name"`   // chatName or userName in case tet-a-tet
-	Avatar null.String `json:"avatar"` // tet-a-tet -aware
-	UserId int64       `json:"userId"` // userId chatName for
+	Name   string  `json:"name"`   // chatName or userName in case tet-a-tet
+	Avatar *string `json:"avatar"` // tet-a-tet -aware
+	UserId int64   `json:"userId"` // userId chatName for
 }
 
 type ChatUnreadMessageChanged struct {

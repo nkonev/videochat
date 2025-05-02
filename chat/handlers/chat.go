@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
 	"strings"
+	"time"
 )
 
 const minChatNameLen = 1
@@ -35,18 +35,18 @@ type EditChatDto struct {
 }
 
 type CreateChatDto struct {
-	Name                                string      `json:"name"`
-	ParticipantIds                      *[]int64    `json:"participantIds"`
-	Avatar                              null.String `json:"avatar"`
-	AvatarBig                           null.String `json:"avatarBig"`
-	CanResend                           bool        `json:"canResend"`
-	AvailableToSearch                   bool        `json:"availableToSearch"`
-	Blog                                *bool       `json:"blog"`
-	RegularParticipantCanPublishMessage bool        `json:"regularParticipantCanPublishMessage"`
-	RegularParticipantCanPinMessage     bool        `json:"regularParticipantCanPinMessage"`
-	BlogAbout                           bool        `json:"blogAbout"`
-	RegularParticipantCanWriteMessage   bool        `json:"regularParticipantCanWriteMessage"`
-	CanReact                            bool        `json:"canReact"`
+	Name                                string   `json:"name"`
+	ParticipantIds                      *[]int64 `json:"participantIds"`
+	Avatar                              *string  `json:"avatar"`
+	AvatarBig                           *string  `json:"avatarBig"`
+	CanResend                           bool     `json:"canResend"`
+	AvailableToSearch                   bool     `json:"availableToSearch"`
+	Blog                                *bool    `json:"blog"`
+	RegularParticipantCanPublishMessage bool     `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool     `json:"regularParticipantCanPinMessage"`
+	BlogAbout                           bool     `json:"blogAbout"`
+	RegularParticipantCanWriteMessage   bool     `json:"regularParticipantCanWriteMessage"`
+	CanReact                            bool     `json:"canReact"`
 }
 
 type ChatHandler struct {
@@ -1758,7 +1758,7 @@ func (ch *ChatHandler) TetATet(c echo.Context) error {
 }
 
 type UserChatNotificationSettings struct {
-	ConsiderMessagesOfThisChatAsUnread null.Bool `json:"considerMessagesOfThisChatAsUnread"`
+	ConsiderMessagesOfThisChatAsUnread *bool `json:"considerMessagesOfThisChatAsUnread"`
 }
 
 func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
@@ -1786,7 +1786,7 @@ func (ch *ChatHandler) PutUserChatNotificationSettings(c echo.Context) error {
 		return err
 	}
 
-	err = ch.db.PutUserChatNotificationSettings(c.Request().Context(), bindTo.ConsiderMessagesOfThisChatAsUnread.Ptr(), userPrincipalDto.UserId, chatId)
+	err = ch.db.PutUserChatNotificationSettings(c.Request().Context(), bindTo.ConsiderMessagesOfThisChatAsUnread, userPrincipalDto.UserId, chatId)
 	if err != nil {
 		return err
 	}
@@ -1810,7 +1810,7 @@ func (ch *ChatHandler) GetUserChatNotificationSettings(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, UserChatNotificationSettings{ConsiderMessagesOfThisChatAsUnread: null.BoolFromPtr(consider)})
+	return c.JSON(http.StatusOK, UserChatNotificationSettings{ConsiderMessagesOfThisChatAsUnread: consider})
 }
 
 type CleanHtmlTagsRequestDto struct {
@@ -1871,10 +1871,10 @@ type simpleChat struct {
 	Id               int64
 	Name             string
 	IsTetATet        bool
-	Avatar           null.String
-	ShortInfo        null.String
-	LoginColor       null.String
-	LastSeenDateTime null.Time
+	Avatar           *string
+	ShortInfo        *string
+	LoginColor       *string
+	LastSeenDateTime *time.Time
 	AdditionalData   *dto.AdditionalData
 }
 
@@ -1886,7 +1886,7 @@ func (r *simpleChat) GetName() string {
 	return r.Name
 }
 
-func (r *simpleChat) GetAvatar() null.String {
+func (r *simpleChat) GetAvatar() *string {
 	return r.Avatar
 }
 
@@ -1894,15 +1894,15 @@ func (r *simpleChat) SetName(s string) {
 	r.Name = s
 }
 
-func (r *simpleChat) SetAvatar(s null.String) {
+func (r *simpleChat) SetAvatar(s *string) {
 	r.Avatar = s
 }
 
-func (r *simpleChat) SetShortInfo(s null.String) {
+func (r *simpleChat) SetShortInfo(s *string) {
 	r.ShortInfo = s
 }
 
-func (r *simpleChat) SetLoginColor(s null.String) {
+func (r *simpleChat) SetLoginColor(s *string) {
 	r.LoginColor = s
 }
 
@@ -1910,7 +1910,7 @@ func (r *simpleChat) GetIsTetATet() bool {
 	return r.IsTetATet
 }
 
-func (r *simpleChat) SetLastSeenDateTime(t null.Time) {
+func (r *simpleChat) SetLastSeenDateTime(t *time.Time) {
 	r.LastSeenDateTime = t
 }
 

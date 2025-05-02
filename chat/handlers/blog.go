@@ -96,7 +96,7 @@ func (h *BlogHandler) getPostsWoUsers(ctx context.Context, blogs []*db.Blog) ([]
 				}
 
 				if blogPost.ImageUrl == nil {
-					blogPost.ImageUrl = blog.Avatar.Ptr()
+					blogPost.ImageUrl = blog.Avatar
 				}
 
 				t := post.Text

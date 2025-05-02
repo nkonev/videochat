@@ -8,7 +8,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/araddon/dateparse"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
@@ -325,15 +324,15 @@ func removeProtocolHostPortIfNeed(src, frontendUrl string) (string, error) {
 	return parsed.String(), nil
 }
 
-func TrimAmdSanitizeAvatar(ctx context.Context, lgr *logger.Logger, policy *services.SanitizerPolicy, input null.String) null.String {
-	if input.IsZero() {
+func TrimAmdSanitizeAvatar(ctx context.Context, lgr *logger.Logger, policy *services.SanitizerPolicy, input *string) *string {
+	if input == nil {
 		return input
 	}
 
-	trimmed := Trim(input.String)
+	trimmed := Trim(*input)
 
 	if len(trimmed) == 0 {
-		return null.StringFromPtr(nil)
+		return nil
 	}
 
 	sanitizedHtml := SanitizeMessage(policy, trimmed)
@@ -343,10 +342,10 @@ func TrimAmdSanitizeAvatar(ctx context.Context, lgr *logger.Logger, policy *serv
 
 	if !utils.ContainsUrl(lgr, wlArr, sanitizedHtml) {
 		lgr.WithTracing(ctx).Infof("Filtered chat avatar not allowed url in chat avatar src %v", sanitizedHtml)
-		return null.StringFromPtr(nil)
+		return nil
 	}
 
-	return null.StringFrom(sanitizedHtml)
+	return &sanitizedHtml
 }
 
 func ValidateAndRespondError(c echo.Context, lgr *logger.Logger, v validation.Validatable) (bool, error) {

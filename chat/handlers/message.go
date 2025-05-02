@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/guregu/null"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
@@ -825,7 +824,7 @@ func (mc *MessageHandler) PostMessage(c echo.Context) error {
 				if participantId != userPrincipalDto.UserId { // not to send to myself (2/2)
 					mc.notificator.NotifyAboutHasNewMessagesChanged(c.Request().Context(), participantId, hasUnread)
 
-					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: null.StringFromPtr(userPrincipalDto.Avatar)}
+					meAsUser := dto.User{Id: userPrincipalDto.UserId, Login: userPrincipalDto.UserLogin, Avatar: userPrincipalDto.Avatar}
 					var sch dto.ChatDtoWithTetATet = &simpleChat{
 						Id:        chatDto.Id,
 						Name:      chatDto.Name,
@@ -1273,12 +1272,13 @@ func convertToEditableMessage(ctx context.Context, lgr *logger.Logger, dto *Edit
 	if err != nil {
 		return nil, err
 	}
+	editDateTime := time.Now().UTC()
 	return &db.Message{
 		Id:           dto.Id,
 		Text:         trimmedAndSanitized,
 		ChatId:       chatId,
 		OwnerId:      authPrincipal.UserId,
-		EditDateTime: null.TimeFrom(time.Now().UTC()),
+		EditDateTime: &editDateTime,
 		FileItemUuid: dto.FileItemUuid,
 		BlogPost:     dto.BlogPost,
 	}, nil
@@ -1381,7 +1381,7 @@ func (mc *MessageHandler) DeleteMessage(c echo.Context) error {
 			}
 
 			for _, participantId := range participantIds {
-				mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, participantId, chatId, "", null.StringFromPtr(nil), messageId, "", userPrincipalDto.UserId, userPrincipalDto.UserLogin)
+				mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, participantId, chatId, "", nil, messageId, "", userPrincipalDto.UserId, userPrincipalDto.UserLogin)
 			}
 
 			return nil
@@ -1427,7 +1427,7 @@ func (mc *MessageHandler) ReadMessage(c echo.Context) error {
 			ChatId:    chatId,
 		}, &userPrincipalDto.UserId)
 
-		mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, userPrincipalDto.UserId, chatId, "", null.StringFromPtr(nil), messageId, "", NonExistentUser, "")
+		mc.notificator.NotifyNewMessageBrowserNotification(c.Request().Context(), false, userPrincipalDto.UserId, chatId, "", nil, messageId, "", NonExistentUser, "")
 
 		m, err := tx.GetMessageBasic(c.Request().Context(), chatId, messageId)
 		if err != nil {

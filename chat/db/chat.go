@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/guregu/null"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"nkonev.name/chat/utils"
@@ -67,8 +66,8 @@ type Chat struct {
 	LastUpdateDateTime                  time.Time
 	TetATet                             bool
 	CanResend                           bool
-	Avatar                              null.String
-	AvatarBig                           null.String
+	Avatar                              *string
+	AvatarBig                           *string
 	AvailableToSearch                   bool
 	Pinned                              bool
 	Blog                                bool
@@ -83,7 +82,7 @@ type Blog struct {
 	Id             int64
 	Title          string
 	CreateDateTime time.Time
-	Avatar         null.String
+	Avatar         *string
 }
 
 type ChatWithParticipants struct {
@@ -510,7 +509,7 @@ func (tx *Tx) EditChat(
 	ctx context.Context,
 	id int64,
 	newTitle string,
-	avatar, avatarBig null.String,
+	avatar, avatarBig *string,
 	canResend bool,
 	availableToSearch bool,
 	blog *bool, // null is whether to change blog or not

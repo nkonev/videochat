@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/getlantern/deepcopy"
-	"github.com/guregu/null"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/chat/client"
@@ -700,7 +699,7 @@ func (not *Events) NotifyMessagesReloadCommand(ctx context.Context, chatId int64
 
 }
 
-func (not *Events) NotifyNewMessageBrowserNotification(ctx context.Context, add bool, participantId int64, chatId int64, chatName string, chatAvatar null.String, messageId int64, messageText string, ownerId int64, ownerLogin string) {
+func (not *Events) NotifyNewMessageBrowserNotification(ctx context.Context, add bool, participantId int64, chatId int64, chatName string, chatAvatar *string, messageId int64, messageText string, ownerId int64, ownerLogin string) {
 	eventType := "browser_notification_add_message"
 	if !add {
 		eventType = "browser_notification_remove_message"
@@ -715,7 +714,7 @@ func (not *Events) NotifyNewMessageBrowserNotification(ctx context.Context, add 
 		BrowserNotification: &dto.BrowserNotification{
 			ChatId:      chatId,
 			ChatName:    chatName,
-			ChatAvatar:  chatAvatar.Ptr(),
+			ChatAvatar:  chatAvatar,
 			MessageId:   messageId,
 			MessageText: messageText,
 			OwnerId:     ownerId,
