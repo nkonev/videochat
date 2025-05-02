@@ -163,14 +163,6 @@ func (ch *ChatHandler) getChats(ctx context.Context, tx *db.Tx, userId int64, si
 	return chatDtos, nil
 }
 
-type GetChatsRequestDto struct {
-	StartingFromItemId  *dto.ChatId `json:"startingFromItemId"`
-	IncludeStartingFrom bool        `json:"includeStartingFrom"`
-	Size                int         `json:"size"`
-	Reverse             bool        `json:"reverse"`
-	SearchString        string      `json:"searchString"`
-}
-
 type GetChatsResponseDto struct {
 	Items   []*dto.ChatDto `json:"items"`
 	HasNext bool           `json:"hasNext"`
@@ -183,18 +175,16 @@ func (ch *ChatHandler) GetChats(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	var bindTo = new(GetChatsRequestDto)
-	if err := c.Bind(bindTo); err != nil {
-		ch.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
-		return err
-	}
-
-	size := utils.FixSize(bindTo.Size)
-	reverse := bindTo.Reverse
-	searchString := bindTo.SearchString
+	size := utils.FixSizeString(c.QueryParam("size"))
+	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+	searchString := c.QueryParam("searchString")
 	searchString = TrimAmdSanitize(ch.policy, searchString)
-	startingFromItemId := ch.convertChatId(bindTo.StartingFromItemId)
-	includeStartingFrom := bindTo.IncludeStartingFrom
+	includeStartingFrom := utils.GetBoolean(c.QueryParam("includeStartingFrom"))
+
+	pinned := utils.GetBooleanNullable(c.QueryParam("pinned"))
+	lastUpdateDateTime := utils.GetTimeNullable(c.QueryParam("lastUpdateDateTime"))
+	id := utils.ParseInt64Nullable(c.QueryParam("id"))
+	startingFromItemId := ch.convertChatId(pinned, lastUpdateDateTime, id)
 
 	var additionalFoundUserIds = ch.getAdditionalUserIds(c.Request().Context(), searchString)
 
@@ -2188,13 +2178,13 @@ func (ch *ChatHandler) MarkAsReadAll(c echo.Context) error {
 	})
 }
 
-func (ch *ChatHandler) convertChatId(chatId *dto.ChatId) *db.ChatId {
-	if chatId == nil {
+func (ch *ChatHandler) convertChatId(pinned *bool, lastUpdateDateTime *time.Time, id *int64) *db.ChatId {
+	if pinned == nil || lastUpdateDateTime == nil || id == nil {
 		return nil
 	}
 	return &db.ChatId{
-		Pinned:             chatId.Pinned,
-		LastUpdateDateTime: chatId.LastUpdateDateTime,
-		Id:                 chatId.Id,
+		Pinned:             *pinned,
+		LastUpdateDateTime: *lastUpdateDateTime,
+		Id:                 *id,
 	}
 }

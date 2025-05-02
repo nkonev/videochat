@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -156,7 +155,7 @@ func waitForChatServer() {
 			"X-Auth-Userid":    {"1"},
 		}
 		getChatRequest := &http.Request{
-			Method: "POST",
+			Method: "GET",
 			Header: requestHeaders1,
 			URL:    stringToUrl("http://localhost" + viper.GetString("server.address") + "/api/chat/search"),
 		}
@@ -302,7 +301,7 @@ func createFanoutNotificationsChannel(connection *rabbitmq.Connection, lc fx.Lif
 
 func TestGetChats(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
-		c, b, _ := request("POST", "/api/chat/search", nil, e)
+		c, b, _ := request("GET", "/api/chat/search", nil, e)
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
 	})
@@ -327,10 +326,7 @@ func TestGetChatsPaginated(t *testing.T) {
 	defer emu.Close()
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		firstReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
-			Size: 40,
-		})
-		httpFirstPage, bodyFirstPage, _ := request("POST", "/api/chat/search", bytes.NewReader(firstReqBytes), e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/search?size=40", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 		typedResFirst := handlers.GetChatsResponseDto{}
@@ -353,16 +349,8 @@ func TestGetChatsPaginated(t *testing.T) {
 		lastId := typedResFirst.Items[len(typedResFirst.Items)-1].Id
 		lastLastUpdateDateTime := typedResFirst.Items[len(typedResFirst.Items)-1].LastUpdateDateTime
 
-		secondReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
-			StartingFromItemId: &dto.ChatId{
-				Pinned:             lastPinned,
-				LastUpdateDateTime: lastLastUpdateDateTime,
-				Id:                 lastId,
-			},
-			Size: 40,
-		})
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("POST", "/api/chat/search", bytes.NewReader(secondReqBytes), e)
+		httpSecondPage, bodySecondPage, _ := request("GET", fmt.Sprintf("/api/chat/search?size=40&pinned=%v&lastUpdateDateTime=%v&id=%v", lastPinned, lastLastUpdateDateTime.Format(time.RFC3339Nano), lastId), nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 		typedResSecond := handlers.GetChatsResponseDto{}
@@ -381,11 +369,7 @@ func TestGetChatsPaginated(t *testing.T) {
 func TestGetChatsPaginatedSearch(t *testing.T) {
 	runTest(t, func(e *echo.Echo) {
 		// get initial page
-		firstReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
-			Size:         40,
-			SearchString: "gen",
-		})
-		httpFirstPage, bodyFirstPage, _ := request("POST", "/api/chat/search", bytes.NewReader(firstReqBytes), e)
+		httpFirstPage, bodyFirstPage, _ := request("GET", "/api/chat/search?size=40&searchString=gen", nil, e)
 		assert.Equal(t, http.StatusOK, httpFirstPage)
 		assert.NotEmpty(t, bodyFirstPage)
 		typedResFirst := handlers.GetChatsResponseDto{}
@@ -403,18 +387,8 @@ func TestGetChatsPaginatedSearch(t *testing.T) {
 		lastId := typedResFirst.Items[len(typedResFirst.Items)-1].Id
 		lastLastUpdateDateTime := typedResFirst.Items[len(typedResFirst.Items)-1].LastUpdateDateTime
 
-		secondReqBytes, _ := json.Marshal(handlers.GetChatsRequestDto{
-			StartingFromItemId: &dto.ChatId{
-				Pinned:             lastPinned,
-				LastUpdateDateTime: lastLastUpdateDateTime,
-				Id:                 lastId,
-			},
-			Size:         40,
-			SearchString: "gen",
-		})
-
 		// get second page
-		httpSecondPage, bodySecondPage, _ := request("POST", "/api/chat/search", bytes.NewReader(secondReqBytes), e)
+		httpSecondPage, bodySecondPage, _ := request("GET", fmt.Sprintf("/api/chat/search?size=40&pinned=%v&searchString=gen&lastUpdateDateTime=%v&id=%v", lastPinned, lastLastUpdateDateTime.Format(time.RFC3339Nano), lastId), nil, e)
 		assert.Equal(t, http.StatusOK, httpSecondPage)
 		assert.NotEmpty(t, bodySecondPage)
 

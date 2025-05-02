@@ -160,9 +160,3 @@ type BasicChatDto struct {
 	TetATet        bool    `json:"tetATet"`
 	ParticipantIds []int64 `json:"participantIds"`
 }
-
-type ChatId struct {
-	Pinned             bool      `json:"pinned"`
-	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
-	Id                 int64     `json:"id"`
-}

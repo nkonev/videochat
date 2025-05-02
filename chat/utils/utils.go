@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const USER_PRINCIPAL_DTO = "userPrincipalDto"
@@ -110,11 +111,35 @@ func GetBooleanWithError(s string) (bool, error) {
 	}
 }
 
+func GetBooleanNullable(s string) *bool {
+	if parseBool, err := strconv.ParseBool(s); err != nil {
+		return nil
+	} else {
+		return &parseBool
+	}
+}
+
+func GetTimeNullable(s string) *time.Time {
+	time1, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		return nil
+	}
+	return &time1
+}
+
 func ParseInt64(s string) (int64, error) {
 	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
 		return 0, eris.Wrap(err, "unable to parse int")
 	} else {
 		return i, nil
+	}
+}
+
+func ParseInt64Nullable(s string) *int64 {
+	if i, err := strconv.ParseInt(s, 10, 64); err != nil {
+		return nil
+	} else {
+		return &i
 	}
 }
 

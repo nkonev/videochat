@@ -189,7 +189,7 @@ func configureEcho(
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	e.POST("/api/chat/search", ch.GetChats)
+	e.GET("/api/chat/search", ch.GetChats)
 	e.GET("/api/chat/has-new-messages", ch.HasNewMessages)
 	e.POST("/api/chat/filter", ch.Filter)
 	e.GET("/api/chat/:id", ch.GetChat)

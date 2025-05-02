@@ -244,12 +244,19 @@ export default {
       }
     },
     async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
-      const res = await axios.post(`/api/chat/search`, {
-          startingFromItemId: startingFromItemId,
-          includeStartingFrom: !!includeStartingFrom,
-          size: PAGE_SIZE,
-          reverse: reverse,
-          searchString: this.searchString,
+      const p = {
+        includeStartingFrom: !!includeStartingFrom,
+        size: PAGE_SIZE,
+        reverse: reverse,
+        searchString: this.searchString,
+      }
+      if (startingFromItemId) {
+        p.pinned = startingFromItemId.pinned;
+        p.lastUpdateDateTime = startingFromItemId.lastUpdateDateTime;
+        p.id = startingFromItemId.id;
+      }
+      const res = await axios.get(`/api/chat/search`, {
+          params: p
         }, {
           signal: this.requestAbortController.signal
       })
