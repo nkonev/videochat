@@ -463,7 +463,7 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 				edge = false
 				break
 			}
-			if currentChat.LoginColor != gottenChat.LoginColor {
+			if !utils.CompareStringPointers(currentChat.LoginColor, gottenChat.LoginColor) {
 				edge = false
 				break
 			}
