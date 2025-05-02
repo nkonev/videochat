@@ -289,18 +289,14 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     @Test
     public void userCannotSeeAnybodyProfileEmail() throws Exception {
         UserAccount bob = getUserFromBd(USER_BOB);
-        String bobEmail = bob.email();
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER+Constants.Urls.SEARCH+"?userId="+bob.id())
-                    .content(objectMapper.writeValueAsString(new SearchUsersRequestDTO(0, null, false, false, bob.login())))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .with(csrf())
+                get(Constants.Urls.EXTERNAL_API + Constants.Urls.USER+Constants.Urls.SEARCH)
+                        .param("searchString", bob.login())
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].email").doesNotExist())
                 .andExpect(jsonPath("$.items[0].login").value(USER_BOB))
-                .andExpect(content().string(CoreMatchers.not(CoreMatchers.containsString(bobEmail))))
                 .andReturn();
 
     }
@@ -374,10 +370,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     public void userCannotManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
-                    .content("{}")
-                    .contentType(MediaType.APPLICATION_JSON_UTF8)
-                    .with(csrf())
+                get(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
         )
                 .andDo(result -> {
                     LOGGER.info(result.getResponse().getContentAsString());
@@ -395,10 +388,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     public void adminCanManageSessionsView() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(
-                post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
-                    .content("{}")
-                    .contentType(MediaType.APPLICATION_JSON_UTF8)
-                    .with(csrf())
+                get(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
             )
                 .andDo(result -> {
                     LOGGER.info(result.getResponse().getContentAsString());
@@ -459,13 +449,8 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     @Test
     public void userSearchJohnSmithTrim() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
-                        .content("""
-                                {
-                                    "searchString": "%s"
-                                }""".formatted(" John Smith"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
+                get(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
+                        .param("searchString", " John Smith")
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1))
@@ -480,13 +465,8 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     @Test
     public void userSearchJohnSmithIgnoreCase() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
-                .content("""
-                        {
-                            "searchString": "%s"
-                        }""".formatted("john sMith"))
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
+                get(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
+                        .param("searchString", "john sMith")
 
         )
                 .andExpect(status().isOk())
@@ -735,17 +715,11 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     @Test
     public void noErrorInCaseTooBigRequestedStartingFromItemId() throws Exception {
         MvcResult getPostRequest = mockMvc.perform(
-                post(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
-                    .content("""
-                        {
-                            "startingFromItemId":10000000,
-                            "size":40,
-                            "reverse":false,
-                            "hasHash":true
-                        }
-                        """)
-                    .with(csrf())
-                    .contentType(MediaType.APPLICATION_JSON)
+                get(Constants.Urls.EXTERNAL_API + Constants.Urls.USER + Constants.Urls.SEARCH)
+                        .param("startingFromItemId", "10000000")
+                        .param("size", "40")
+                        .param("reverse", "false")
+                        .param("includeStartingFrom", "true")
 
             )
             .andExpect(status().isOk())

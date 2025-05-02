@@ -62,15 +62,24 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @CrossOrigin(origins="*", methods = RequestMethod.POST)
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.SEARCH)
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER+Constants.Urls.SEARCH)
     public SearchUsersResponseDTO searchUsers(
             @AuthenticationPrincipal UserAccountDetailsDTO userAccount,
-            @RequestBody SearchUsersRequestDTO request
+            @RequestParam(value = "size", required = false, defaultValue = "0") int size,
+            @RequestParam(value = "startingFromItemId", required = false) Long startingFromItemId,
+            @RequestParam(value = "includeStartingFrom", required = false, defaultValue = "false") boolean includeStartingFrom,
+            @RequestParam(value = "reverse", required = false, defaultValue = "false") boolean reverse,
+            @RequestParam(value = "searchString", required = false) String searchString
     ) {
         LOGGER.info("Searching users external");
-        return userProfileService.searchUsers(userAccount, request);
+        return userProfileService.searchUsers(userAccount, new SearchUsersRequestDTO(
+                size,
+                startingFromItemId,
+                includeStartingFrom,
+                reverse,
+                searchString
+        ));
     }
 
     @ResponseBody

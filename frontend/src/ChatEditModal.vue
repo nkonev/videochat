@@ -297,9 +297,11 @@
                 this.searchLoading = true;
 
                 if (this.isNew) {
-                    axios.post(`/api/aaa/user/search`, {
-                        searchString: searchString
-                    })
+                    axios.get(`/api/aaa/user/search`, {
+                          params:{
+                            searchString: searchString
+                          }
+                        })
                         .then((response) => {
                             console.log("Fetched users", response.data);
                             this.people = response.data.items;

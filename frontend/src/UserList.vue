@@ -287,12 +287,14 @@ export default {
       return getTopUserPosition()
     },
     async fetchItems(startingFromItemId, reverse, includeStartingFrom) {
-      const res = await axios.post(`/api/aaa/user/search`, {
-        startingFromItemId: startingFromItemId,
-        includeStartingFrom: !!includeStartingFrom,
-        size: PAGE_SIZE,
-        reverse: reverse,
-        searchString: this.searchString,
+      const res = await axios.get(`/api/aaa/user/search`, {
+        params: {
+          startingFromItemId: startingFromItemId,
+          includeStartingFrom: !!includeStartingFrom,
+          size: PAGE_SIZE,
+          reverse: reverse,
+          searchString: this.searchString,
+        }
       }, {
         signal: this.requestAbortController.signal
       })
