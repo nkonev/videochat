@@ -459,7 +459,7 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 				edge = false
 				break
 			}
-			if currentChat.Avatar != gottenChat.Avatar {
+			if !utils.CompareStringPointers(currentChat.Avatar, gottenChat.Avatar) {
 				edge = false
 				break
 			}

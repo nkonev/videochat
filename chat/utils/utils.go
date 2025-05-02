@@ -300,3 +300,13 @@ func UrlEncode(input string) string {
 	after, _ := strings.CutPrefix(tmp, "prefix=")
 	return after
 }
+
+func CompareStringPointers(p1, p2 *string) bool {
+	if p1 == p2 {
+		return true
+	} else if p1 != nil && p2 != nil {
+		return *p1 == *p2
+	} else {
+		return false
+	}
+}
