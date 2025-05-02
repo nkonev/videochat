@@ -48,7 +48,7 @@ public class JacksonTest extends AbstractMockMvcTestRunner {
                 new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER))
         ));
         LOGGER.info(s);
-        Assertions.assertTrue(s.contains("2024-04-29T19:55:56Z"));
+        Assertions.assertTrue(s.contains("2024-04-29T19:55:56.000Z"));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class JacksonTest extends AbstractMockMvcTestRunner {
                 new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER))
         ));
         LOGGER.info(s);
-        Assertions.assertTrue(s.contains("2024-04-29T19:55:56.12Z"));
+        Assertions.assertTrue(s.contains("2024-04-29T19:55:56.120Z"));
     }
 
     @WithUserDetails(TestConstants.USER_ALICE)

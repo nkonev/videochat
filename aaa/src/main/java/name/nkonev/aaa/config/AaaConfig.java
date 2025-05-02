@@ -2,7 +2,6 @@ package name.nkonev.aaa.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -45,7 +44,7 @@ public class AaaConfig {
                     DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                             .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
                             .parseLenient()
-                            .appendFraction(ChronoField.MILLI_OF_SECOND, 0, 3, true)
+                            .appendFraction(ChronoField.MILLI_OF_SECOND, 3, 3, true)
                             .appendLiteral('Z')
                             .toFormatter();
                     LocalDateTimeDeserializer dateTimeDeserializer = new LocalDateTimeDeserializer(formatter);
