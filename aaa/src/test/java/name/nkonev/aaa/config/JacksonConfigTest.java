@@ -26,9 +26,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class JacksonTest extends AbstractMockMvcTestRunner {
+public class JacksonConfigTest extends AbstractMockMvcTestRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JacksonTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JacksonConfigTest.class);
 
     @Autowired
     private ObjectMapper objectMapper;
