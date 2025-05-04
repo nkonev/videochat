@@ -18,8 +18,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.util.Arrays.stream;
-
 @Configuration
 @EntityScan(basePackages = "name.nkonev.aaa.entity.jdbc")
 @EnableJdbcRepositories(basePackages = "name.nkonev.aaa.repository.jdbc")
@@ -29,7 +27,7 @@ public class DbConfig {
     // sent to JdbcConverter jdbcConverter in AbstractJdbcConfiguration what creates MappingJdbcConverter
     @Bean
     public JdbcCustomConversions jdbcCustomConversions() {
-        return new JdbcCustomConversions(List.of(new UserRoleArrayWritingConverter(), new UserRoleArrayReadingConverter()));
+        return new JdbcCustomConversions(List.of(new UserRoleArrayReadingConverter()));
     }
 
     @Bean
@@ -53,10 +51,3 @@ class UserRoleArrayReadingConverter implements Converter<PgArray, UserRole[]> {
 }
 
 // see CREATE CAST in V1__init.sql
-class UserRoleArrayWritingConverter implements Converter<UserRole[], String[]> {
-
-    @Override
-    public String[] convert(UserRole[] source) {
-        return stream(source).map(UserRole::name).toArray(String[]::new);
-    }
-}

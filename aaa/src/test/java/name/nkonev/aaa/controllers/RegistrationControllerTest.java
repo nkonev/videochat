@@ -4,6 +4,7 @@ import name.nkonev.aaa.AbstractMockMvcTestRunner;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.TestConstants;
 import name.nkonev.aaa.dto.EditUserDTO;
+import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import name.nkonev.aaa.entity.redis.UserConfirmationToken;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
@@ -122,7 +123,9 @@ public class RegistrationControllerTest extends AbstractMockMvcTestRunner {
                 // assert server returns session id
                 .andExpect(cookie().value(SESSION_COOKIE_NAME, Matchers.notNullValue()));
 
-
+        var readyUser = userAccountRepository.findByEmail(email).get();
+        Assertions.assertEquals(1, readyUser.roles().length);
+        Assertions.assertEquals(UserRole.ROLE_USER, readyUser.roles()[0]);
     }
 
     @Test
