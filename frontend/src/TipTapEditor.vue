@@ -181,20 +181,12 @@ export default {
       this.$emit("myinput", value);
     },
     setCursorToEnd() {
-        this.$nextTick(()=>{
-          return this.editor.commands.focus('end')
-        }).then(()=>{
-          if (this.isMobile()) { // fix an issue related to long text and mobile virtual keyboard
-            setTimeout(()=>{
-              this.editor.commands.scrollIntoView()
-            }, 300)
-          }
-        })
+      this.editor.commands.focus('end').then(()=>{
+        this.editor.commands.scrollIntoView() // fix an issue related to long text and mobile virtual keyboard
+      })
     },
     scrollToCursor() {
-      setTimeout(()=>{
-        this.editor.commands.scrollIntoView()
-      }, 300) // fix an issue related to long text and mobile virtual keyboard
+       this.editor.commands.scrollIntoView() // fix an issue related to long text and mobile virtual keyboard
     },
     addImage() {
         this.fileInput.click();
@@ -595,7 +587,6 @@ export default {
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .richText__content__mobile {
