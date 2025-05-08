@@ -95,7 +95,8 @@
     import onFocusMixin from "@/mixins/onFocusMixin.js";
 
     const PAGE_SIZE = 40;
-    const SCROLLING_THRESHHOLD = 200; // px
+    const SCROLLING_THRESHOLD_DESKTOP = 200; // px
+    const SCROLLING_THRESHOLD_MOBILE = 600; // px - to handle case opening virtual keyboard
 
     const scrollerName = 'MessageList';
 
@@ -398,7 +399,8 @@
         },
         isScrolledToBottom() {
           if (this.scrollerDiv) {
-            return Math.abs(this.scrollerDiv.scrollTop) < SCROLLING_THRESHHOLD
+            const threshold = this.isMobile() ? SCROLLING_THRESHOLD_MOBILE : SCROLLING_THRESHOLD_DESKTOP;
+            return Math.abs(this.scrollerDiv.scrollTop) < threshold;
           } else {
             return false
           }
