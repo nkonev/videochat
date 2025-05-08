@@ -2,7 +2,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker push-docker-image-to-registry clean clean-builddir clean-cache push-docker-image-to-server deploy-docker-image run-dev run-docker-image run-demo
+.PHONY: check-env download package-docker push-docker-image-to-registry clean clean-builddir clean-cache push-docker-image-to-server deploy-docker-image run-dev run-docker-image run
 
 BUILDDIR := ./build
 DIST := ./dist
@@ -77,4 +77,4 @@ run-dev:
 run-docker-image:
 	docker run --rm -p 3000:8082 $(IMAGE)
 
-run-demo: check-env download generate run-dev
+run: check-env download generate run-dev

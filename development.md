@@ -64,7 +64,7 @@ docker compose up -d
 ## How to run the code?
 **(Micro)Services**
 ### Without IDE: 
-In general you can look at makefiles in the each (micro)services, they have `run-demo` target.
+In general you can look at makefiles in the each (micro)services, they have `run` target.
 - https://github.com/nkonev/videochat/blob/master/aaa/Makefile
 - https://github.com/nkonev/videochat/blob/master/chat/Makefile
 - https://github.com/nkonev/videochat/blob/master/event/Makefile
@@ -77,12 +77,12 @@ In general you can look at makefiles in the each (micro)services, they have `run
 E. g. for each (micro)service
 ```
 cd aaa
-make run-demo
+make run
 ```
 
 ```
 cd chat
-make run-demo
+make run
 ```
 ...
 

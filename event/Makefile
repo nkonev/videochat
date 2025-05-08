@@ -2,7 +2,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker test push-docker-image-to-registry clean install-graphql push-docker-image-to-server deploy-docker-image run run-demo
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean install-graphql push-docker-image-to-server deploy-docker-image run run-bin
 
 BUILDDIR := ./build
 EXECUTABLE := event
@@ -68,8 +68,8 @@ deploy-docker-image:
 clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
 
-run:
+run-bin:
 	./$(EXECUTABLE)
 
-run-demo: check-env download generate package-go
+run: check-env download generate package-go
 	./$(EXECUTABLE)
