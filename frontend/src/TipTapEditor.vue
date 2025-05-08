@@ -181,20 +181,9 @@ export default {
       this.$emit("myinput", value);
     },
     setCursorToEnd() {
-        this.$nextTick(()=>{
-          return this.editor.commands.focus('end')
-        }).then(()=>{
-          if (this.isMobile()) { // fix an issue related to long text and mobile virtual keyboard
-            setTimeout(()=>{
-              this.editor.commands.scrollIntoView()
-            }, 300)
-          }
-        })
-    },
-    scrollToCursor() {
-      setTimeout(()=>{
-        this.editor.commands.scrollIntoView()
-      }, 300) // fix an issue related to long text and mobile virtual keyboard
+      // this.$nextTick(()=>{
+      //   this.editor.commands.focus('end')
+      // })
     },
     addImage() {
         this.fileInput.click();
@@ -577,10 +566,14 @@ export default {
 }
 .ProseMirror {
     height: 100%;
+    display flex
+    flex-direction column-reverse
+    // -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 .richText {
   display: flex;
-  flex-direction: column;
   color: #0d0d0d;
   background-color: #fff;
   border-bottom: 1px solid;
@@ -593,9 +586,6 @@ export default {
 .richText__content {
   padding: 6px 6px;
   flex: 1 1 auto;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .richText__content__mobile {

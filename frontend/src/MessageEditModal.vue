@@ -61,9 +61,6 @@
             closeModal() {
                 this.show = false;
             },
-            reactOnMobileKeyboardChange(event) {
-              this.$refs.messageEdit?.$refs.tipTapRef?.scrollToCursor()
-            },
         },
         watch: {
             show(newValue) {
@@ -84,16 +81,10 @@
         mounted() {
             bus.on(OPEN_EDIT_MESSAGE, this.showModal);
             bus.on(CLOSE_EDIT_MESSAGE, this.closeModal);
-            if ('visualViewport' in window && this.isMobile()) {
-              window.visualViewport.addEventListener('resize', this.reactOnMobileKeyboardChange);
-            }
         },
         beforeUnmount() {
             bus.off(OPEN_EDIT_MESSAGE, this.showModal);
             bus.off(CLOSE_EDIT_MESSAGE, this.closeModal);
-            if ('visualViewport' in window && this.isMobile()) {
-              window.visualViewport.removeEventListener('resize', this.reactOnMobileKeyboardChange);
-            }
         },
     }
 </script>
