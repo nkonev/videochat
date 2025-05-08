@@ -82,6 +82,8 @@
                 canSwitchSearchType: this.canSwitchSearchType,
                 searchIcon: this.searchIcon,
                 textFieldVariant: 'solo',
+                beforeOpenCallback: this.beforeCollapsedSearchOpenCallback,
+                afterCloseCallback: this.afterCollapsedSearchCloseCallback,
             }"/>
           </template>
         </v-container>
@@ -200,7 +202,10 @@ import bus, {
   NOTIFICATION_CLEAR_ALL,
   WEBSOCKET_LOST,
   WEBSOCKET_CONNECTED,
-  NOTIFICATION_COUNT_CHANGED, USER_TYPING,
+  NOTIFICATION_COUNT_CHANGED,
+  USER_TYPING,
+  BEFORE_TITLE_COLLAPSED_SEARCH_OPEN,
+  AFTER_TITLE_COLLAPSED_SEARCH_CLOSE,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -863,6 +868,12 @@ export default {
           } else {
             console.log("Skipping ping because of currentUser is null")
           }
+        },
+        beforeCollapsedSearchOpenCallback() {
+          bus.emit(BEFORE_TITLE_COLLAPSED_SEARCH_OPEN)
+        },
+        afterCollapsedSearchCloseCallback() {
+          bus.emit(AFTER_TITLE_COLLAPSED_SEARCH_CLOSE)
         },
     },
     components: {

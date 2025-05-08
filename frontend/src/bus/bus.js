@@ -129,3 +129,6 @@ export const OPEN_RECORDING_MODAL = "openRecordingModal";
 export const MESSAGES_RELOAD = "messagesReload";
 export const PIN_VIDEO = "pinVideo";
 export const UN_PIN_VIDEO = "unPinVideo";
+
+export const BEFORE_TITLE_COLLAPSED_SEARCH_OPEN = "beforeTitleCollapsedSearchOpen";
+export const AFTER_TITLE_COLLAPSED_SEARCH_CLOSE = "afterTitleCollapsedSearchClose";

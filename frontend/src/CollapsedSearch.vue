@@ -34,11 +34,14 @@ import {hasLength} from "@/utils";
 
 export default {
     props: [
-        'provider', // .getModelValue, .setModelValue, .getShowSearchButton, .setShowSearchButton, .searchName, .switchSearchType, .canSwitchSearchType, .searchIcon, .textFieldVariant
+        'provider', // .getModelValue, .setModelValue, .getShowSearchButton, .setShowSearchButton, .searchName, .switchSearchType, .canSwitchSearchType, .searchIcon, .textFieldVariant, .beforeOpenCallback, .afterCloseCallback
         'paddingsY'
     ],
     methods: {
         onOpenSearch() {
+            if (this.provider.beforeOpenCallback) {
+              this.provider.beforeOpenCallback()
+            }
             this.provider.setShowSearchButton(false);
         },
         resetInput() {
@@ -50,6 +53,9 @@ export default {
         onFocusOut() {
           if (this.isMobile()) {
             this.provider.setShowSearchButton(true);
+            if (this.provider.afterCloseCallback) {
+              this.provider.afterCloseCallback()
+            }
           }
         },
         wrapperClass() {

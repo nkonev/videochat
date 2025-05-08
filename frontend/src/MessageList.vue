@@ -68,7 +68,11 @@
       OPEN_MESSAGE_EDIT_SMILEY,
       REACTION_CHANGED,
       REACTION_REMOVED,
-      MESSAGES_RELOAD, PLAYER_MODAL, FILE_CREATED,
+      MESSAGES_RELOAD,
+      PLAYER_MODAL,
+      FILE_CREATED,
+      BEFORE_TITLE_COLLAPSED_SEARCH_OPEN,
+      AFTER_TITLE_COLLAPSED_SEARCH_CLOSE,
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -112,6 +116,7 @@
         return {
           markInstance: null,
           storedChatId: null,
+          shouldScrollDownAfterSearching: false,
         }
       },
 
@@ -790,6 +795,19 @@
             })
           }
         },
+        setDesiredScrolledDown() {
+          if (this.isScrolledToBottom()) {
+            this.shouldScrollDownAfterSearching = true
+          }
+        },
+        applyDesiredScrolledDown() {
+          if (this.shouldScrollDownAfterSearching) {
+            this.shouldScrollDownAfterSearching = false;
+            setTimeout(()=>{
+              this.scrollDown();
+            }, 500)
+          }
+        },
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true});
@@ -869,6 +887,8 @@
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
+        bus.on(BEFORE_TITLE_COLLAPSED_SEARCH_OPEN, this.setDesiredScrolledDown);
+        bus.on(AFTER_TITLE_COLLAPSED_SEARCH_CLOSE, this.applyDesiredScrolledDown);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
@@ -899,6 +919,8 @@
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
+        bus.off(BEFORE_TITLE_COLLAPSED_SEARCH_OPEN, this.setDesiredScrolledDown);
+        bus.off(AFTER_TITLE_COLLAPSED_SEARCH_CLOSE, this.applyDesiredScrolledDown);
       }
     }
 </script>
