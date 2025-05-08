@@ -90,7 +90,9 @@
       </v-app-bar>
 
       <v-main>
-        <v-container fluid class="ma-0 pa-0" style="height: 100%; width: 100%">
+
+        <v-container fluid class="ma-0 pa-0" style="height: 100%; width: 100%; position: relative !important;" id="my-app-container">
+          <v-overlay v-model="showOverlay" attach="#my-app-container" contained></v-overlay>
 
           <v-snackbar v-model="chatStore.showAlert" :color="chatStore.errorColor" :timeout="chatStore.alertTimeout ? chatStore.alertTimeout : -1" :transition="false">
             {{ chatStore.lastError }}
@@ -204,8 +206,6 @@ import bus, {
   WEBSOCKET_CONNECTED,
   NOTIFICATION_COUNT_CHANGED,
   USER_TYPING,
-  BEFORE_TITLE_COLLAPSED_SEARCH_OPEN,
-  AFTER_TITLE_COLLAPSED_SEARCH_CLOSE,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -279,6 +279,8 @@ export default {
             selfProfileEventsSubscription: null,
             showNotificationBadge: false,
             showVideoBadge: false,
+
+            showOverlay: false,
         }
     },
     computed: {
@@ -870,10 +872,10 @@ export default {
           }
         },
         beforeCollapsedSearchOpenCallback() {
-          bus.emit(BEFORE_TITLE_COLLAPSED_SEARCH_OPEN)
+          this.showOverlay = true; // to catch clicks and prevent interfere them on scrolling
         },
         afterCollapsedSearchCloseCallback() {
-          bus.emit(AFTER_TITLE_COLLAPSED_SEARCH_CLOSE)
+          this.showOverlay = false;
         },
     },
     components: {

@@ -71,8 +71,6 @@
       MESSAGES_RELOAD,
       PLAYER_MODAL,
       FILE_CREATED,
-      BEFORE_TITLE_COLLAPSED_SEARCH_OPEN,
-      AFTER_TITLE_COLLAPSED_SEARCH_CLOSE,
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -116,7 +114,6 @@
         return {
           markInstance: null,
           storedChatId: null,
-          shouldScrollDownAfterSearching: false,
         }
       },
 
@@ -165,18 +162,18 @@
             this.performMarking();
             this.scrollDown();
           } else if (chatIdsAreEqual && isScrolledToBottom) { // not empty searchString
-              axios.post(`/api/chat/${this.chatId}/message/filter`, {
-                  searchString: this.searchString,
-                  messageId: dto.id
-              }, {
-                signal: this.requestAbortController.signal
-              }).then(({data}) => {
-                  if (data.found) {
-                      this.addItem(dto);
-                      this.performMarking();
-                      this.scrollDown();
-                  }
-              })
+            axios.post(`/api/chat/${this.chatId}/message/filter`, {
+              searchString: this.searchString,
+              messageId: dto.id
+            }, {
+              signal: this.requestAbortController.signal
+            }).then(({data}) => {
+              if (data.found) {
+                this.addItem(dto);
+                this.performMarking();
+                this.scrollDown();
+              }
+            })
           } else {
             console.log("Skipping", dto, chatIdsAreEqual, isScrolledToBottom, emptySearchString)
           }
@@ -198,10 +195,10 @@
         },
 
         getMaxItemsLength() {
-            return 200
+          return 200
         },
         getReduceToLength() {
-            return 100
+          return 100
         },
         reduceBottom() {
           this.items = this.items.slice(-this.getReduceToLength());
@@ -231,16 +228,16 @@
           return directionTop
         },
         async onFirstLoad(loadedResult) {
-            await this.doScrollOnFirstLoad();
-            if (loadedResult === true) {
-                removeTopMessagePosition(this.chatId);
-            }
+          await this.doScrollOnFirstLoad();
+          if (loadedResult === true) {
+            removeTopMessagePosition(this.chatId);
+          }
         },
         getPositionFromStore() {
-              return getTopMessagePosition(this.chatId)
+          return getTopMessagePosition(this.chatId)
         },
         async doDefaultScroll() {
-              await this.scrollDown(); // we need it to prevent browser's scrolling
+          await this.scrollDown(); // we need it to prevent browser's scrolling
         },
         async fetchItems(searchString, startingFromItemId, reverse, includeStartingFrom) {
           const res = await axios.get(`/api/chat/${this.chatId}/message/search`, {
@@ -270,12 +267,12 @@
         },
         async load() {
           if (!this.canDrawMessages()) {
-              return Promise.resolve()
+            return Promise.resolve()
           }
 
           this.chatStore.incrementProgressCount();
 
-          const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
+          const {startingFromItemId, hasHash} = this.prepareHashesForRequest();
 
           try {
             let items = await this.fetchItems(this.searchString, startingFromItemId, this.isTopDirection());
@@ -331,10 +328,10 @@
           }
         },
         afterScrollRestored(el) {
-            el?.parentElement?.scrollBy({
-              top: !this.isTopDirection() ? 14 : -20,
-              behavior: "instant",
-            });
+          el?.parentElement?.scrollBy({
+            top: !this.isTopDirection() ? 14 : -20,
+            behavior: "instant",
+          });
         },
         bottomElementSelector() {
           return ".message-first-element"
@@ -393,7 +390,7 @@
         },
 
         onMessagesReload() {
-            this.reloadItems();
+          this.reloadItems();
         },
 
         onScrollCallback() {
@@ -411,13 +408,13 @@
           this.startingFromItemIdBottom = this.getMaximumItemId();
         },
         conditionToSaveLastVisible() {
-            return !this.isScrolledToBottom()
+          return !this.isScrolledToBottom()
         },
         itemSelector() {
-            return '.message-item-root'
+          return '.message-item-root'
         },
         setPositionToStore(messageId, chatId) {
-            setTopMessagePosition(chatId, messageId)
+          setTopMessagePosition(chatId, messageId)
         },
         beforeUnload() {
           this.saveLastVisibleElement(this.chatId);
@@ -431,26 +428,26 @@
           })
         },
 
-        deleteMessage(dto){
+        deleteMessage(dto) {
           bus.emit(OPEN_SIMPLE_MODAL, {
             buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
             title: this.$vuetify.locale.t('$vuetify.delete_message_title', dto.id),
-            text:  this.$vuetify.locale.t('$vuetify.delete_message_text'),
-            actionFunction: (that)=> {
+            text: this.$vuetify.locale.t('$vuetify.delete_message_text'),
+            actionFunction: (that) => {
               that.loading = true;
               axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`, {
                 signal: this.requestAbortController.signal
               })
-                .then(() => {
-                  bus.emit(CLOSE_SIMPLE_MODAL);
-                })
-                .finally(()=>{
-                  that.loading = false;
-                })
+                  .then(() => {
+                    bus.emit(CLOSE_SIMPLE_MODAL);
+                  })
+                  .finally(() => {
+                    that.loading = false;
+                  })
             }
           });
         },
-        editMessage(dto){
+        editMessage(dto) {
           const editMessageDto = deepCopy(dto);
           if (haveEmbed(dto)) {
             setAnswerPreviewFields(editMessageDto, dto.embedMessage.text, dto.embedMessage.owner?.login);
@@ -463,20 +460,20 @@
         },
         replyOnMessage(dto) {
           const replyMessage = {
-              embedMessage: {
-                  id: dto.id,
-                  embedType: embed_message_reply
-              },
+            embedMessage: {
+              id: dto.id,
+              embedType: embed_message_reply
+            },
           };
           setAnswerPreviewFields(replyMessage, dto.text, dto.owner?.login);
           if (!this.isMobile()) {
-              bus.emit(SET_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
+            bus.emit(SET_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
           } else {
-              bus.emit(OPEN_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
+            bus.emit(OPEN_EDIT_MESSAGE, {dto: replyMessage, actionType: reply_message});
           }
         },
         onFilesClicked(item) {
-          const obj = {chatId: this.chatId, fileItemUuid : item.fileItemUuid};
+          const obj = {chatId: this.chatId, fileItemUuid: item.fileItemUuid};
           if (this.meIsOwnerOfMessage(item)) {
             obj.messageIdToDetachFiles = item.id;
           }
@@ -516,31 +513,31 @@
         },
         addReaction(dto) {
           bus.emit(OPEN_MESSAGE_EDIT_SMILEY,
-            {
-              addSmileyCallback: (smiley) => {
-                axios.put(`/api/chat/${this.chatId}/message/${dto.id}/reaction`, {
-                  reaction: smiley,
-                }, {
-                  signal: this.requestAbortController.signal
-                })
-              },
-              title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message')
-            }
+              {
+                addSmileyCallback: (smiley) => {
+                  axios.put(`/api/chat/${this.chatId}/message/${dto.id}/reaction`, {
+                    reaction: smiley,
+                  }, {
+                    signal: this.requestAbortController.signal
+                  })
+                },
+                title: this.$vuetify.locale.t('$vuetify.add_reaction_on_message')
+              }
           );
         },
-        onShowContextMenu(e, menuableItem){
+        onShowContextMenu(e, menuableItem) {
           // console.log("onShowContextMenu", e, tag, tagParent);
           if (
-            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img") &&
-            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "video") &&
-            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "audio") &&
-            !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
-            !checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions")) &&
-            !checkUpByTree(e?.target, 1, (el) => el?.classList?.contains("media-in-message-wrapper"))
+              !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "img") &&
+              !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "video") &&
+              !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "audio") &&
+              !checkUpByTree(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a") &&
+              !checkUpByTree(e?.target, 3, (el) => el?.classList?.contains("reactions")) &&
+              !checkUpByTree(e?.target, 1, (el) => el?.classList?.contains("media-in-message-wrapper"))
           ) {
             this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
           } else if (this.isMobile()) {
-              this.onClickTrap(e)
+            this.onClickTrap(e)
           }
         },
         onCoChattedParticipantChanged(user) {
@@ -584,143 +581,143 @@
           }
         },
         publishMessage(dto) {
-            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
-                params: {
-                    publish: true
-                },
-                signal: this.requestAbortController.signal
-            }).then(()=>{
-                const link = getPublicMessageLink(this.chatId, dto.id);
-                navigator.clipboard.writeText(link);
-                this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_message_link_copied'));
-            })
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
+            params: {
+              publish: true
+            },
+            signal: this.requestAbortController.signal
+          }).then(() => {
+            const link = getPublicMessageLink(this.chatId, dto.id);
+            navigator.clipboard.writeText(link);
+            this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_message_link_copied'));
+          })
         },
         removePublic(dto) {
-            axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
-                params: {
-                    publish: false
-                },
-                signal: this.requestAbortController.signal
-            });
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/publish`, null, {
+            params: {
+              publish: false
+            },
+            signal: this.requestAbortController.signal
+          });
         },
         onClickTrap(e) {
-            const foundElements = [
-                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
-                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
-                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
-                checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a" && el?.classList?.contains("mention")),
-            ].filter(r => r.found);
-            if (foundElements.length) {
-                e.preventDefault();
-                const found = foundElements[foundElements.length - 1].el;
-                switch (found?.tagName?.toLowerCase()) {
-                    case "img": {
-                        const src = hasLength(found.getAttribute('data-original')) ? found.getAttribute('data-original') : found.src; // found.src is legacy
-                        bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: src, canSwitch: true})
-                        break;
-                    }
-                    case "span": { // span of any of "show in player" or "replace" button
-                        const spanContainer = found.parentElement;
-                        if (spanContainer.classList.contains("media-in-message-wrapper")) {
-                            if (found.classList?.contains("media-in-message-button-open")) { // "show in player" button
-                                const theHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                                if (theHolder) {
-                                  if (!theHolder.classList.contains(videoConvertingClass)) {
-                                    const playerReq = {
-                                      canSwitch: true,
-                                      url: theHolder.getAttribute('data-original'),
-                                      previewUrl: theHolder.src,
-                                    }
-                                    if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
-                                      playerReq.canPlayAsVideo = true
-                                    } else if (spanContainer.classList.contains("media-in-message-wrapper-audio")) {
-                                      playerReq.canPlayAsAudio = true
-                                    }
-                                    bus.emit(PLAYER_MODAL, playerReq);
-                                  }
-                                }
-                            } else if (found.classList?.contains("media-in-message-button-replace")) { // "replace" button
-                                const theHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
-                                if (theHolder) {
-                                  const src = theHolder.src;
-                                  const original = theHolder.getAttribute('data-original');
-
-                                  if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
-                                    spanContainer.removeChild(theHolder);
-                                    spanContainer.removeChild(found);
-
-                                    const openButton = Array.from(spanContainer.children).find(ch => ch?.classList?.contains("media-in-message-button-open"));
-                                    if (openButton) {
-                                      spanContainer.removeChild(openButton);
-                                    }
-
-                                    const videoReplacement = this.createVideoReplacementElement(original, src);
-                                    spanContainer.appendChild(videoReplacement);
-
-                                    axios.post(`/api/storage/view/status`, {
-                                      url: original
-                                    }, {
-                                      signal: this.requestAbortController.signal
-                                    }).then(res => {
-                                      if (res.data.status == "converting") {
-                                        spanContainer.removeChild(videoReplacement);
-
-                                        const imgReplacement = document.createElement("IMG");
-                                        imgReplacement.src = res.data.statusImage;
-                                        imgReplacement.setAttribute(dataForOriginal, original);
-                                        imgReplacement.className = "video-custom-class " + videoConvertingClass;
-                                        spanContainer.appendChild(imgReplacement);
-                                      }
-                                    })
-                                  } else if (spanContainer.classList.contains("media-in-message-wrapper-audio")) {
-                                    spanContainer.removeChild(theHolder);
-                                    spanContainer.removeChild(found);
-
-                                    const openButton = Array.from(spanContainer?.children).find(ch => ch?.classList?.contains("media-in-message-button-open"));
-                                    spanContainer.removeChild(openButton);
-
-                                    const audioReplacement = this.createAudioReplacementElement(original);
-                                    spanContainer.appendChild(audioReplacement);
-
-                                    axios.post(`/api/storage/view/status`, {
-                                      url: original
-                                    }, {
-                                      signal: this.requestAbortController.signal
-                                    }).then((res) => {
-                                      const p = document.createElement("P");
-                                      p.textContent=res.data?.filename;
-                                      spanContainer.prepend(p);
-                                    })
-                                  } else if (spanContainer.classList.contains("media-in-message-wrapper-iframe")) {
-                                    const width = theHolder.getAttribute('data-width');
-                                    const height = theHolder.getAttribute('data-height');
-                                    const allowfullscreen = theHolder.getAttribute('data-allowfullscreen');
-
-                                    spanContainer.removeChild(theHolder);
-                                    spanContainer.removeChild(found);
-
-                                    const iframeReplacement = this.createIframeReplacementElement(original, width, height, allowfullscreen);
-                                    spanContainer.appendChild(iframeReplacement);
-                                  } else {
-                                    console.info("no case for it")
-                                  }
-                                } else {
-                                    console.info("holder is not found")
-                                }
-                            }
+          const foundElements = [
+            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
+            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
+            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
+            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a" && el?.classList?.contains("mention")),
+          ].filter(r => r.found);
+          if (foundElements.length) {
+            e.preventDefault();
+            const found = foundElements[foundElements.length - 1].el;
+            switch (found?.tagName?.toLowerCase()) {
+              case "img": {
+                const src = hasLength(found.getAttribute('data-original')) ? found.getAttribute('data-original') : found.src; // found.src is legacy
+                bus.emit(PLAYER_MODAL, {canShowAsImage: true, url: src, canSwitch: true})
+                break;
+              }
+              case "span": { // span of any of "show in player" or "replace" button
+                const spanContainer = found.parentElement;
+                if (spanContainer.classList.contains("media-in-message-wrapper")) {
+                  if (found.classList?.contains("media-in-message-button-open")) { // "show in player" button
+                    const theHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                    if (theHolder) {
+                      if (!theHolder.classList.contains(videoConvertingClass)) {
+                        const playerReq = {
+                          canSwitch: true,
+                          url: theHolder.getAttribute('data-original'),
+                          previewUrl: theHolder.src,
                         }
-                        break;
-                    }
-                    case "a": {
-                        const userId = found.getAttribute('data-id');
-                        if (hasLength(userId)) {
-                          const route = { name: profile_name, params: { id: userId }};
-                          this.$router.push(route);
+                        if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
+                          playerReq.canPlayAsVideo = true
+                        } else if (spanContainer.classList.contains("media-in-message-wrapper-audio")) {
+                          playerReq.canPlayAsAudio = true
                         }
-                        break;
+                        bus.emit(PLAYER_MODAL, playerReq);
+                      }
                     }
+                  } else if (found.classList?.contains("media-in-message-button-replace")) { // "replace" button
+                    const theHolder = Array.from(spanContainer?.children).find(ch => ch?.tagName?.toLowerCase() == "img");
+                    if (theHolder) {
+                      const src = theHolder.src;
+                      const original = theHolder.getAttribute('data-original');
+
+                      if (spanContainer.classList.contains("media-in-message-wrapper-video")) {
+                        spanContainer.removeChild(theHolder);
+                        spanContainer.removeChild(found);
+
+                        const openButton = Array.from(spanContainer.children).find(ch => ch?.classList?.contains("media-in-message-button-open"));
+                        if (openButton) {
+                          spanContainer.removeChild(openButton);
+                        }
+
+                        const videoReplacement = this.createVideoReplacementElement(original, src);
+                        spanContainer.appendChild(videoReplacement);
+
+                        axios.post(`/api/storage/view/status`, {
+                          url: original
+                        }, {
+                          signal: this.requestAbortController.signal
+                        }).then(res => {
+                          if (res.data.status == "converting") {
+                            spanContainer.removeChild(videoReplacement);
+
+                            const imgReplacement = document.createElement("IMG");
+                            imgReplacement.src = res.data.statusImage;
+                            imgReplacement.setAttribute(dataForOriginal, original);
+                            imgReplacement.className = "video-custom-class " + videoConvertingClass;
+                            spanContainer.appendChild(imgReplacement);
+                          }
+                        })
+                      } else if (spanContainer.classList.contains("media-in-message-wrapper-audio")) {
+                        spanContainer.removeChild(theHolder);
+                        spanContainer.removeChild(found);
+
+                        const openButton = Array.from(spanContainer?.children).find(ch => ch?.classList?.contains("media-in-message-button-open"));
+                        spanContainer.removeChild(openButton);
+
+                        const audioReplacement = this.createAudioReplacementElement(original);
+                        spanContainer.appendChild(audioReplacement);
+
+                        axios.post(`/api/storage/view/status`, {
+                          url: original
+                        }, {
+                          signal: this.requestAbortController.signal
+                        }).then((res) => {
+                          const p = document.createElement("P");
+                          p.textContent = res.data?.filename;
+                          spanContainer.prepend(p);
+                        })
+                      } else if (spanContainer.classList.contains("media-in-message-wrapper-iframe")) {
+                        const width = theHolder.getAttribute('data-width');
+                        const height = theHolder.getAttribute('data-height');
+                        const allowfullscreen = theHolder.getAttribute('data-allowfullscreen');
+
+                        spanContainer.removeChild(theHolder);
+                        spanContainer.removeChild(found);
+
+                        const iframeReplacement = this.createIframeReplacementElement(original, width, height, allowfullscreen);
+                        spanContainer.appendChild(iframeReplacement);
+                      } else {
+                        console.info("no case for it")
+                      }
+                    } else {
+                      console.info("holder is not found")
+                    }
+                  }
                 }
+                break;
+              }
+              case "a": {
+                const userId = found.getAttribute('data-id');
+                if (hasLength(userId)) {
+                  const route = {name: profile_name, params: {id: userId}};
+                  this.$router.push(route);
+                }
+                break;
+              }
             }
+          }
         },
         onFileCreatedEvent(dto) {
           if (dto.fileInfoDto.canPlayAsVideo && isConverted(dto.fileInfoDto.filename)) {
@@ -785,7 +782,7 @@
                 searchString: this.searchString,
               },
               signal: this.requestAbortController.signal
-            }).then((res)=>{
+            }).then((res) => {
               if (!res.data.ok) {
                 console.log("Need to update messages");
                 this.reloadItems();
@@ -793,19 +790,6 @@
                 console.log("No need to update messages");
               }
             })
-          }
-        },
-        setDesiredScrolledDown() {
-          if (this.isScrolledToBottom()) {
-            this.shouldScrollDownAfterSearching = true
-          }
-        },
-        applyDesiredScrolledDown() {
-          if (this.shouldScrollDownAfterSearching) {
-            this.shouldScrollDownAfterSearching = false;
-            setTimeout(()=>{
-              this.scrollDown();
-            }, 500)
           }
         },
       },
@@ -887,8 +871,6 @@
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(MESSAGES_RELOAD, this.onMessagesReload);
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
-        bus.on(BEFORE_TITLE_COLLAPSED_SEARCH_OPEN, this.setDesiredScrolledDown);
-        bus.on(AFTER_TITLE_COLLAPSED_SEARCH_CLOSE, this.applyDesiredScrolledDown);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
@@ -919,8 +901,6 @@
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
-        bus.off(BEFORE_TITLE_COLLAPSED_SEARCH_OPEN, this.setDesiredScrolledDown);
-        bus.off(AFTER_TITLE_COLLAPSED_SEARCH_CLOSE, this.applyDesiredScrolledDown);
       }
     }
 </script>
