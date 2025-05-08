@@ -33,21 +33,25 @@ export default () => {
       onShowContextMenuBase(e, menuableItem) {
         e.preventDefault();
 
-        this.contextMenuX = e.clientX;
-        this.contextMenuY = e.clientY;
+        this.showContextMenu = false;
 
-        this.menuableItem = menuableItem;
+        setTimeout(()=>{
+          this.contextMenuX = e.clientX;
+          this.contextMenuY = e.clientY;
 
-        if (!this.getContextMenuItems().length) {
-          console.log("No items in the context menu");
-          return;
-        }
+          this.menuableItem = menuableItem;
 
-        this.$nextTick(() => {
-          this.showContextMenu = true;
-        }).then(() => {
-          this.setPosition()
-        })
+          if (!this.getContextMenuItems().length) {
+            console.log("No items in the context menu");
+            return;
+          }
+
+          this.$nextTick(() => {
+            this.showContextMenu = true;
+          }).then(() => {
+            this.setPosition()
+          })
+        }, 1)
       },
       onCloseContextMenuBase() {
         this.showContextMenu = false;
