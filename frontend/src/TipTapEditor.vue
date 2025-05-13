@@ -184,7 +184,9 @@ export default {
       this.$emit("myinput", value);
     },
     setCursorToEnd() {
-      this.editor.commands.focus('end').then(()=>{
+      this.$nextTick(()=>{
+        return this.editor.commands.focus('end')
+      }).then(()=>{
         this.editor.commands.scrollIntoView() // fix an issue related to long text and mobile virtual keyboard
       })
     },
