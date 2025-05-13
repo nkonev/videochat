@@ -49,7 +49,7 @@
                         density="comfortable"
                         color="primary"
                         hide-details
-                        v-model="chatStore.sendMessageAfterMediaInsert"
+                        v-model="chatStore.sendMessageAfterUploadsUploaded"
                         :label="$vuetify.locale.t('$vuetify.send_message_after_media_insert')"
                         :title="$vuetify.locale.t('$vuetify.send_message_after_media_insert_description')"
                     ></v-checkbox>
@@ -234,6 +234,7 @@ export default {
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
             this.chatStore.sendMessageAfterMediaNumFiles = this.chatStore.fileUploadingQueue.filter(f => f.previewable).length
+            this.chatStore.sendMessageAfterNumFiles = this.chatStore.fileUploadingQueue.length
 
             console.log("Sending files to storage", this.chatStore.fileUploadingQueue);
 
@@ -337,7 +338,7 @@ export default {
         },
         cancel(item) {
             item.cancelSource.cancel();
-            this.chatStore.sendMessageAfterMediaInsert = false;
+            this.chatStore.sendMessageAfterUploadsUploaded = false;
         },
         updateChosenFiles(files) {
             console.log("updateChosenFiles", files);

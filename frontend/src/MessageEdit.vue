@@ -611,15 +611,6 @@
             openRecordingModal() {
                 bus.emit(OPEN_RECORDING_MODAL, {fileItemUuid: this.chatStore.editMessageDto.fileItemUuid})
             },
-            onFileCreatedEvent(dto) {
-                // for non-previewable. for previewable - see in TipTapEditor.onPreviewCreated()
-                if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId && (dto?.fileInfoDto != null && !dto?.fileInfoDto.previewable)) {
-                    if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
-                        this.sendMessageToChat();
-                        this.chatStore.resetSendMessageAfterMediaInsertRoutine();
-                    }
-                }
-            },
             documentBody() {
               return document.body
             },
@@ -642,7 +633,6 @@
             bus.on(COLOR_SET, this.onColorSet);
             bus.on(PROFILE_SET, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
-            bus.on(FILE_CREATED, this.onFileCreatedEvent);
             this.targetElement = document.getElementById('sendButtonContainer')
             this.setShouldShowSendMessageButtons();
             bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
@@ -659,7 +649,6 @@
             bus.off(PROFILE_SET, this.onProfileSet);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
-            bus.off(FILE_CREATED, this.onFileCreatedEvent);
 
             this.resizeObserver.disconnect();
             this.resizeObserver = null;

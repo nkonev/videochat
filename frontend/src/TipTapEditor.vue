@@ -98,7 +98,7 @@ import bus, {
   PREVIEW_CREATED,
   OPEN_FILE_UPLOAD_MODAL,
   MEDIA_LINK_SET,
-  EMBED_LINK_SET, OPEN_MESSAGE_EDIT_MEDIA, OPEN_MESSAGE_EDIT_LINK,
+  EMBED_LINK_SET, OPEN_MESSAGE_EDIT_MEDIA, OPEN_MESSAGE_EDIT_LINK, FILE_CREATED,
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
@@ -106,7 +106,7 @@ import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
 import {getStoredMessageEditNormalizeText, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
 import {mapStores} from "pinia";
-import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore.js";
+import {fileUploadingSessionTypeMedia, fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore.js";
 import {mergeAttributes} from "@tiptap/core";
 import {profile} from "@/router/routes.js";
 
@@ -132,6 +132,7 @@ export default {
       fileInput: null,
       fileItemUuid: null,
       receivedPreviews: 0,
+      receivedFiles: 0,
     };
   },
 
@@ -146,10 +147,12 @@ export default {
         // https://tiptap.dev/api/commands/set-content
         this.editor.commands.setContent(value, false, { preserveWhitespace: "full" });
         this.receivedPreviews = 0;
+        this.receivedFiles = 0;
     },
     clearContent() {
         this.editor.commands.setContent(empty, false);
         this.receivedPreviews = 0;
+        this.receivedFiles = 0;
     },
     getContent() {
       const value = this.editor.getHTML();
@@ -235,7 +238,7 @@ export default {
             } else if (dto.aType == media_audio) {
                 this.setAudio(dto.url)
             }
-            if (this.chatStore.sendMessageAfterMediaInsert && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia) {
+            if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia) {
                 this.receivedPreviews++;
                 console.log("Got previews ", this.receivedPreviews, "expected", this.chatStore.sendMessageAfterMediaNumFiles)
 
@@ -246,6 +249,21 @@ export default {
                 }
             }
         }
+    },
+    onFileCreatedEvent(dto) {
+      // for any files loaded via MessageEdit. for embedded (image, video, record) - see onPreviewCreated()
+      if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId) {
+        if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
+          this.receivedFiles++;
+          console.log("Got files ", this.receivedFiles, "expected", this.chatStore.sendMessageAfterNumFiles)
+
+          if (this.chatStore.sendMessageAfterNumFiles <= this.receivedFiles) {
+            this.$emit("sendMessage");
+            this.chatStore.resetSendMessageAfterFileInsertRoutine();
+            this.receivedFiles = 0;
+          }
+        }
+      }
     },
     onMediaLinkSet({link, mediaType}) {
         if (mediaType == media_video) {
@@ -408,6 +426,7 @@ export default {
   },
   mounted() {
     bus.on(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.on(FILE_CREATED, this.onFileCreatedEvent);
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
 
@@ -547,6 +566,7 @@ export default {
 
   beforeUnmount() {
     bus.off(PREVIEW_CREATED, this.onPreviewCreated);
+    bus.off(FILE_CREATED, this.onFileCreatedEvent);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
     this.resetFileItemUuid();
@@ -557,6 +577,7 @@ export default {
     }
     this.fileInput = null;
     this.receivedPreviews = 0;
+    this.receivedFiles = 0;
   },
 };
 </script>

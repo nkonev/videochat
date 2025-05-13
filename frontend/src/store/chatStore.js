@@ -8,7 +8,9 @@ import bus, {NOTIFICATION_COUNT_CHANGED, PROFILE_SET} from "@/bus/bus.js";
 
 export const callStateReady = "ready"
 export const callStateInCall = "inCall"
+// just a regular upload from MessageEdit's button
 export const fileUploadingSessionTypeMessageEdit = "fromMessageEdit"
+// when upload embed image, video or recorded video
 export const fileUploadingSessionTypeMedia = "media"
 
 const chatDtoFactory = () => {
@@ -68,8 +70,9 @@ export const useChatStore = defineStore('chat', {
         shouldShowSendMessageButtons: true,
         hasNewMessages: false,
         chatDto: chatDtoFactory(),
-        sendMessageAfterMediaInsert: false,
+        sendMessageAfterUploadsUploaded: false,
         sendMessageAfterMediaNumFiles: 0,
+        sendMessageAfterNumFiles: 0,
         oppositeUserLastSeenDateTime: null,
         correlationId: null,
         videoTokenId: null,
@@ -194,8 +197,13 @@ export const useChatStore = defineStore('chat', {
       this.fileUploadingSessionType = v;
     },
     resetSendMessageAfterMediaInsertRoutine() {
-      this.sendMessageAfterMediaInsert = false;
+      this.sendMessageAfterUploadsUploaded = false;
       this.sendMessageAfterMediaNumFiles = 0;
+      this.resetFileUploadingSessionType();
+    },
+    resetSendMessageAfterFileInsertRoutine() {
+      this.sendMessageAfterUploadsUploaded = false;
+      this.sendMessageAfterNumFiles = 0;
       this.resetFileUploadingSessionType();
     },
     canDeleteParticipant(userId) {
