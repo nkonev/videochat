@@ -28,14 +28,10 @@ jobs:
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d postgresql redis rabbitmq jaeger
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ./scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
-          docker compose -f docker-compose.keycloak.yml up -d keycloak
-          ./scripts/wait-for-http.sh 'localhost:9484' 60 '/health/ready' 'Keycloak'
+          (
+            cd aaa; 
+            make infra infra-test
+          )
       - name: Build and test with Maven
         if: env.SHOULD_RUN == 'true'
         run: |
@@ -146,12 +142,10 @@ jobs:
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq jaeger
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ./scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
+          (
+            cd chat; 
+            make infra infra-test
+          )
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd chat; make check-env clean download generate test package)
@@ -292,12 +286,10 @@ jobs:
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d postgresql redis rabbitmq jaeger
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ./scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
+          (
+            cd video;
+            make infra infra-test
+          )
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
         run: (cd video; make check-env clean download generate test package)
@@ -367,15 +359,7 @@ jobs:
       - name: Start and wait docker-compose
         if: env.SHOULD_RUN == 'true'
         run: |
-          docker compose up -d fluentbit postgresql postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq jaeger minio traefik 
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-          ./scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:39000 -- echo 'minio is up'
-          ./scripts/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
+          make infra
       - name: Build microservices
         if: env.SHOULD_RUN == 'true'
         run: |

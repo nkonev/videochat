@@ -2,7 +2,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run run-bin
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run run-bin infra infra-test
 
 BUILDDIR := ./build
 EXECUTABLE := chat
@@ -68,3 +68,14 @@ run-bin:
 
 run: check-env download generate package-go
 	./$(EXECUTABLE)
+
+infra:
+	docker compose -f ../docker-compose.yml up -d postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq jaeger
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+	../scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
+
+infra-test:
+	echo "No test infra"

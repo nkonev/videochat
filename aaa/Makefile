@@ -6,7 +6,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2 run-with-keycloak run run-with-ldap
+.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2 run-with-keycloak run run-with-ldap infra infra-test
 
 BUILDDIR := ./build
 IMAGE := nkonev/chat-aaa:changing
@@ -86,6 +86,18 @@ run-with-ldap: check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/demo-ldap-opendj.yml || true
 
-run: check-env download generate package-java
+run: check-env download generate package-java infra
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar || true
+
+infra:
+	docker compose -f ../docker-compose.yml up -d postgresql redis rabbitmq jaeger
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
+	../scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
+	../scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
+
+infra-test:
+	docker compose -f ../docker-compose.keycloak.yml up -d keycloak
+	../scripts/wait-for-http.sh 'localhost:9484' 60 '/health/ready' 'Keycloak'
