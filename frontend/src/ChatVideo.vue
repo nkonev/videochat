@@ -972,7 +972,11 @@ export default {
       if (this.videoIsHorizontal()) {
         return 'pane-presenter-horizontal'
       } else {
-        return 'pane-presenter-vertical'
+        if (this.isMobile()) {
+          return ['pane-presenter-vertical', 'pane-presenter-vertical-mobile']
+        } else {
+          return 'pane-presenter-vertical'
+        }
       }
     },
     shouldShowPresenter() {
@@ -1275,6 +1279,12 @@ export default {
 .pane-presenter-vertical {
   .presenter-unpin-button {
     right 2px
+  }
+}
+
+.pane-presenter-vertical-mobile {
+  .presenter-unpin-button {
+    right 30px
   }
 }
 
