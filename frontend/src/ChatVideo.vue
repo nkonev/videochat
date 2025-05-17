@@ -15,10 +15,10 @@
         </pane>
         <pane :class="paneVideoContainerClass"  :size="miniaturesPaneSize()">
             <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoContainerClass"  @click="onClickFromVideos()"></v-col>
-            <VideoButtons v-if="!isMobile() && !shouldShowPresenter" @requestFullScreen="onButtonsFullscreen" @requestPinCurrentVideo="onRequestPinCurrentVideo" v-show="showControls"/>
+            <VideoButtons v-if="!isMobile() && !shouldShowPresenter" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
         </pane>
     </splitpanes>
-    <VideoButtons v-if="isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
+    <VideoButtons v-if="isMobile()" @requestFullScreen="onButtonsFullscreen" @requestPinCurrentVideo="onRequestPinCurrentVideo" v-show="showControls"/>
 </template>
 
 <script>
