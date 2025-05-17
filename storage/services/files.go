@@ -348,6 +348,8 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		}
 	}
 
+	var aType = GetType(objInfo.Key)
+
 	info := &dto.FileInfoDto{
 		Id:             objInfo.Key,
 		Filename:       filename,
@@ -366,6 +368,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		FileItemUuid:   itemUuid,
 		CorrelationId:  theCorrelationId,
 		Previewable:    utils.IsPreviewable(objInfo.Key),
+		Type:           aType,
 	}
 	return info, nil
 }

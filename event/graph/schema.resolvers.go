@@ -595,6 +595,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				FileItemUUID:   fileEvent.FileInfoDto.FileItemUuid,
 				CorrelationID:  fileEvent.FileInfoDto.CorrelationId,
 				Previewable:    fileEvent.FileInfoDto.Previewable,
+				AType:          fileEvent.FileInfoDto.Type,
 			},
 		}
 	}

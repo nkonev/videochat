@@ -181,6 +181,7 @@ type FileInfoDto {
     fileItemUuid: String!
     correlationId: String
     previewable: Boolean!
+    aType: String
 }
 
 type WrappedFileInfoDto {

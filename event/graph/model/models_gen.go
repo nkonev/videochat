@@ -141,6 +141,7 @@ type FileInfoDto struct {
 	FileItemUUID   string       `json:"fileItemUuid"`
 	CorrelationID  *string      `json:"correlationId"`
 	Previewable    bool         `json:"previewable"`
+	AType          *string      `json:"aType"`
 }
 
 type ForceLogoutEvent struct {

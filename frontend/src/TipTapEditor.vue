@@ -255,6 +255,10 @@ export default {
     onFileCreatedEvent(dto) {
       // for any files loaded via MessageEdit. for embedded (image, video, record) - see onPreviewCreated()
       if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId) {
+        if (dto?.fileInfoDto != null && !dto.fileInfoDto.previewable && dto.fileInfoDto.aType == media_audio) {
+          this.setAudio(dto?.fileInfoDto.url)
+        }
+
         if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
           this.receivedFiles++;
           console.log("Got files ", this.receivedFiles, "expected", this.chatStore.sendMessageAfterNumFiles)

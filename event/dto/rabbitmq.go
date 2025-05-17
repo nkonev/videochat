@@ -154,6 +154,7 @@ type FileInfoDto struct {
 	FileItemUuid   string    `json:"fileItemUuid"`
 	CorrelationId  *string   `json:"correlationId"`
 	Previewable    bool      `json:"previewable"`
+	Type           *string   `json:"aType"`
 }
 
 type GeneralEvent struct {

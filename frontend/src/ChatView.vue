@@ -554,6 +554,7 @@ export default {
                                         fileItemUuid
                                         correlationId
                                         previewable
+                                        aType
                                       }
                                     }
                                     reactionChangedEvent {
