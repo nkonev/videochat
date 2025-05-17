@@ -20,13 +20,18 @@
               <span v-html="broadcastMessage"></span>
             </v-tooltip>
 
-            <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.pinned_message')">
+            <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.goto_pinned_message')">
               <v-alert
                   color="red-lighten-4"
                   elevation="2"
                   density="compact"
               >
-                <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
+                <template v-slot:text>
+                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
+                </template>
+                <template v-slot:append>
+                  <v-btn density="compact" icon rounded="0" variant="plain" :title="$vuetify.locale.t('$vuetify.pinned_messages')" @click.stop.prevent="openPinnedMessages()"><v-icon>mdi-view-list-outline</v-icon></v-btn>
+                </template>
               </v-alert>
             </div>
 
@@ -95,7 +100,7 @@ import bus, {
   MESSAGE_BROADCAST,
   MESSAGE_DELETED,
   MESSAGE_EDITED, MESSAGES_RELOAD,
-  OPEN_EDIT_MESSAGE,
+  OPEN_EDIT_MESSAGE, OPEN_PINNED_MESSAGES_MODAL,
   PARTICIPANT_ADDED,
   PARTICIPANT_DELETED,
   PARTICIPANT_EDITED, PINNED_MESSAGE_EDITED,
@@ -968,6 +973,9 @@ export default {
         });
       }
     },
+    openPinnedMessages() {
+      bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.chatId});
+    },
   },
   watch: {
     '$route': {
@@ -1128,10 +1136,11 @@ export default {
 .pinned-promoted {
   .v-alert__content{
     text-overflow: ellipsis;
+    height: 20px; // to force vertical align on Chrome
   }
   .v-alert {
-    padding-top 2px
-    padding-bottom 2px
+    padding-top 0
+    padding-bottom 0
   }
 }
 

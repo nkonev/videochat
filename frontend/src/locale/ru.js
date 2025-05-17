@@ -173,7 +173,7 @@ export default {
     copy_selected: "Скопировать выделенный текст",
     pinned_messages: "Закреплённые сообщ.",
     pinned_messages_full: "Закреплённые сообщения",
-    pinned_message: "Закреплённое сообщение",
+    goto_pinned_message: "Перейти к закреплённому сообщению",
     pin_message: "Закрепить сообщение",
     no_pin_messages: "Нет закреплённых сообщений",
     remove_from_pinned: "Удалить из закреплённых",

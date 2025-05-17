@@ -173,7 +173,7 @@ export default {
     copy_selected: "Copy selected text",
     pinned_messages: "Pinned messages",
     pinned_messages_full: "Pinned messages",
-    pinned_message: "Pinned message",
+    goto_pinned_message: "Go to pinned message",
     pin_message: "Pin the message",
     no_pin_messages: "No pin messages",
     remove_from_pinned: "Remove from pinned",
