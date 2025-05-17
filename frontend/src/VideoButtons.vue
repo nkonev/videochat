@@ -10,7 +10,7 @@
       <v-btn variant="plain" tile icon v-if="chatStore.canShowVideoButton" @click.stop.prevent="doMuteVideo(!chatStore.localVideoEnabled)" :title="!chatStore.localVideoEnabled ? $vuetify.locale.t('$vuetify.unmute_video') : $vuetify.locale.t('$vuetify.mute_video')"><v-icon size="x-large">{{ !chatStore.localVideoEnabled ? 'mdi-video-off' : 'mdi-video' }} </v-icon></v-btn>
       <template v-if="!isMobile()">
         <v-btn variant="plain" tile icon @click.stop.prevent="addScreenSource()" :title="$vuetify.locale.t('$vuetify.screen_share')">
-          <v-icon size="x-large">mdi-monitor-screenshot</v-icon>
+          <v-icon size="x-large">mdi-monitor-share</v-icon>
         </v-btn>
       </template>
       <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
