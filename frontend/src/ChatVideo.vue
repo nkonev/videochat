@@ -1,6 +1,6 @@
 <template>
     <splitpanes ref="splVideo" id="video-splitpanes" class="default-theme" :dbl-click-splitter="false" :horizontal="splitpanesIsHorizontal" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
-        <pane v-if="shouldShowPresenter" :size="presenterPaneSize()">
+        <pane v-if="shouldShowPresenter" :size="presenterPaneSize()" :class="presenterPaneClass">
             <div class="video-presenter-container-element" @contextmenu.stop="onShowContextMenu($event, this)">
                 <video v-show="!presenterVideoMute || !presenterAvatarIsSet" @click.self="onClick()" class="video-presenter-element" ref="presenterRef"/>
                 <img v-show="presenterAvatarIsSet && presenterVideoMute" @click.self="onClick()" class="video-presenter-element" :src="presenterData?.avatar"/>
@@ -9,6 +9,8 @@
                 <VideoButtons v-if="!isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
 
                 <PresenterContextMenu ref="contextMenuRef" :userName="presenterUserName"/>
+
+                <v-btn v-if="chatStore.pinnedTrackSid" class="presenter-unpin-button" @click="doUnpinVideo()" icon="mdi-pin-off-outline" rounded="0" :title="$vuetify.locale.t('$vuetify.unpin_video')"></v-btn>
             </div>
         </pane>
         <pane :class="paneVideoContainerClass"  :size="miniaturesPaneSize()">
@@ -277,6 +279,9 @@ export default {
     onUnpinVideo(){
       this.chatStore.pinnedTrackSid = null;
       this.electNewPresenter();
+    },
+    doUnpinVideo() {
+      bus.emit(UN_PIN_VIDEO)
     },
     // TODO think how to reuse the presenter mode with egress
     detachPresenter() {
@@ -963,6 +968,13 @@ export default {
         return null;
       }
     },
+    presenterPaneClass() {
+      if (this.videoIsHorizontal()) {
+        return 'pane-presenter-horizontal'
+      } else {
+        return 'pane-presenter-vertical'
+      }
+    },
     shouldShowPresenter() {
       return this.chatStore.presenterEnabled && !this.videoIsGallery()
     },
@@ -1253,4 +1265,17 @@ export default {
 #video-splitpanes .splitpanes__splitter {
   display: var(--splitter-h-display);
 }
+
+.presenter-unpin-button {
+  position absolute
+  top 0
+  right 0
+}
+
+.pane-presenter-vertical {
+  .presenter-unpin-button {
+    right 2px
+  }
+}
+
 </style>
