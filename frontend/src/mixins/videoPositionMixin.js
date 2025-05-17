@@ -44,6 +44,10 @@ export default () => {
                 this.chatStore.videoPosition = getStoredVideoPosition();
                 this.chatStore.presenterEnabled = getStoredPresenter();
             },
+
+            pinningIsAvailable() {
+                return this.chatStore.presenterEnabled && this.isPresenterEnabled() // as in UserVideoContextMenu
+            },
         }
     }
 }

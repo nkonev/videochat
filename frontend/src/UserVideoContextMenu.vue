@@ -144,7 +144,7 @@ export default {
                 });
               }
 
-              if (this.chatStore.presenterEnabled && this.isPresenterEnabled()) {
+              if (this.pinningIsAvailable()) {
                 ret.push({
                   title: this.$vuetify.locale.t('$vuetify.pin_video'),
                   icon: 'mdi-pin',

@@ -1,7 +1,7 @@
 <template>
     <div :class="videoContainerElementClass" ref="containerRef" @contextmenu.stop="onShowContextMenu($event, this)">
         <img v-show="avatarIsSet && videoMute" :class="videoElementClass" :src="avatar"/>
-        <video v-show="!videoMute || !avatarIsSet" :class="videoElementClass" :id="id" autoPlay playsInline ref="videoRef"/>
+        <video v-show="!videoMute || !avatarIsSet" :class="videoElementClass" :id="id" autoPlay playsInline ref="videoRef" @click.prevent="pinCurrentVideo()"/>
         <p v-if="shouldShowCaption()" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption', 'inline-caption-base']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
 
         <UserVideoContextMenu
@@ -30,6 +30,7 @@ import {useChatStore} from "@/store/chatStore";
 import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 import speakingMixin from "@/mixins/speakingMixin.js";
 import UserVideoContextMenu from "@/UserVideoContextMenu.vue";
+import bus, {PIN_VIDEO} from "@/bus/bus.js";
 
 export default {
 	  name: 'UserVideo',
@@ -186,6 +187,11 @@ export default {
         shouldShowCaption() {
           return !(this.isMobile() && this.chatStore.presenterEnabled) || this.videoIsGallery()
         },
+        pinCurrentVideo() {
+          if (this.pinningIsAvailable()) {
+            bus.emit(PIN_VIDEO, this.getVideoStreamId())
+          }
+        },
     },
     computed: {
         ...mapStores(useChatStore),
@@ -220,6 +226,10 @@ export default {
             ret.push('video-element-gallery');
           } else {
             ret.push('video-element-vertical');
+          }
+
+          if (this.pinningIsAvailable()) {
+            ret.push("can-pin-video-element")
           }
           return ret;
         },
@@ -289,6 +299,10 @@ export default {
 
     .video-container-element-caption-speaking {
         text-shadow: -2px 0 #9cffa1, 0 2px #9cffa1, 2px 0 #9cffa1, 0 -2px #9cffa1;
+    }
+
+    .can-pin-video-element {
+      cursor pointer
     }
 
 </style>
