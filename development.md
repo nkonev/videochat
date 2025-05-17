@@ -50,11 +50,6 @@ export EDITOR=vim
 sudo dnf install ffmpeg-free
 ```
 
-## Create dir for fluent-bit socket
-```bash
-sudo mkdir /var/run/fluent-bit
-```
-
 ## Environment (PostgreSQL, RabbitMQ, ...)
 To start the environment do
 ```

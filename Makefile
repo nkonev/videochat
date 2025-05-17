@@ -1,7 +1,6 @@
 .PHONY: infra
 
 infra:
-	if [ ! -d "/var/run/fluent-bit" ]; then echo "Creating fluent-bit dir"; sudo mkdir /var/run/fluent-bit; else echo "Fluent-bit dir is already exists"; fi
 	docker compose up -d
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:35432 -- echo 'postgres is up'
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
