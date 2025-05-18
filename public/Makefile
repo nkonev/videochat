@@ -80,7 +80,7 @@ run-dev:
 run-docker-image:
 	docker run --rm --network=host --name chat-public $(IMAGE)
 
-run: check-env download generate run-dev
+run: check-env download generate run-dev infra
 
 infra:
 	docker compose -f ../docker-compose.yml up -d traefik jaeger

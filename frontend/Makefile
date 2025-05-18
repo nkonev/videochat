@@ -77,7 +77,7 @@ run-dev:
 run-docker-image:
 	docker run --rm -p 3000:8082 $(IMAGE)
 
-run: check-env download generate run-dev
+run: check-env download generate run-dev infra
 
 infra:
 	docker compose -f ../docker-compose.yml up -d traefik jaeger

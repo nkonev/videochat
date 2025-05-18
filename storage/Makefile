@@ -66,7 +66,7 @@ clean:
 run-bin:
 	./$(EXECUTABLE)
 
-run: check-env download generate package-go
+run: check-env download generate package-go infra
 	./$(EXECUTABLE)
 
 infra:
