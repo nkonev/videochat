@@ -81,6 +81,12 @@ services:
       - CUSTOM_SCHEDULERS_SYNC-KEYCLOAK_ENABLED=false
       - LOGGING_LEVEL_ROOT=info
       - CUSTOM_ONLINE-ESTIMATION={{ aaa_online_estimation }}
+      - "custom.login-properties.additional-allowed-characters[0]= "
+      - custom.login-properties.additional-allowed-characters[1]=_
+      - custom.login-properties.additional-allowed-characters[2]=-
+      - custom.login-properties.additional-allowed-characters[3]=+
+      - custom.login-properties.additional-allowed-characters[4]=@
+      - custom.login-properties.additional-allowed-characters[5]=.
 
     logging:
       driver: "fluentd"

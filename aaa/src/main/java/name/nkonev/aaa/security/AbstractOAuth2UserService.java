@@ -22,7 +22,6 @@ import org.springframework.util.Assert;
 
 import java.util.*;
 
-import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
 import static name.nkonev.aaa.utils.ServletUtils.getCurrentHttpRequest;
 
 public abstract class AbstractOAuth2UserService implements ConflictResolvingActions {
@@ -112,7 +111,7 @@ public abstract class AbstractOAuth2UserService implements ConflictResolvingActi
         UserAccount userAccount;
         Optional<UserAccount> userAccountOpt = findByOAuth2Id(oauthId);
         if (userAccountOpt.isEmpty()) { // we didn't find an user account by oauth_id
-            var login = validateLengthAndTrimLogin(login0, true);
+            var login = userAccountConverter.validateLengthAndTrimLogin(login0, true);
             var newUserAccount = buildEntity(oauthId, login, attributes, roles);
 
             // insert (optionally with conflict solving)

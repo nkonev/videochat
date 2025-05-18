@@ -54,7 +54,7 @@ import static org.springframework.http.HttpHeaders.COOKIE;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
         // also see in run-with-oauth2.sh
         properties = {
-                "spring.config.location=classpath:/config/application.yml,classpath:/config/oauth2-basic.yml,classpath:/config/oauth2-keycloak.yml,classpath:/config/demo-migration.yml,classpath:/config/user-test-controller.yml"
+                "spring.config.location=classpath:/config/application.yml,classpath:/config/oauth2-basic.yml,classpath:/config/oauth2-keycloak.yml,classpath:/config/demo-migration.yml,classpath:/config/user-test-controller.yml,classpath:/config/login-additional-allowed-characters.yml"
         }
 )
 @Import(UserTestService.class)

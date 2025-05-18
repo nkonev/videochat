@@ -76,7 +76,7 @@ run-oauth2-emu:
 run-with-oauth2:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	# You need to start EmulatorServersController firstly
-	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/user-test-controller.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml || true
+	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/user-test-controller.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/login-additional-allowed-characters.yml || true
 
 run-with-keycloak:
 	# export JAVA_HOME=/usr/lib/jvm/java-21

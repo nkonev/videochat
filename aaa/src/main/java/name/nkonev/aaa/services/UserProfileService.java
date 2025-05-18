@@ -337,7 +337,7 @@ public class UserProfileService {
                 throw new RuntimeException("Not authenticated user can't edit any user account. It can occurs due inpatient refactoring.");
             }
 
-            var userAccountDTO = UserAccountConverter.normalize(editUserAccountDTO, false);
+            var userAccountDTO = userAccountConverter.normalize(editUserAccountDTO, false);
 
             UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
 

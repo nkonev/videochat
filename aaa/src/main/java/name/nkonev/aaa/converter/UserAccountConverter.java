@@ -1,5 +1,6 @@
 package name.nkonev.aaa.converter;
 
+import jakarta.annotation.PostConstruct;
 import name.nkonev.aaa.Constants;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.*;
@@ -9,6 +10,8 @@ import name.nkonev.aaa.exception.BadRequestException;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.security.*;
 import name.nkonev.aaa.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -43,6 +46,13 @@ public class UserAccountConverter {
 
     static final UserRole[] newUserRoles = new UserRole[]{DEFAULT_ROLE};
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserAccountConverter.class);
+
+    @PostConstruct
+    public void pc() {
+        LOGGER.info("Login configured with skipCharactersValidation={}, additionalAllowedCharacters={}", aaaProperties.loginProperties().skipCharactersValidation(), aaaProperties.loginProperties().getAdditionalAllowedCharacters());
+    }
+
     public static String normalizeEmail(String email) {
         return trimToNull(NullEncode.forHtmlEmail(email));
     }
@@ -51,10 +61,15 @@ public class UserAccountConverter {
         login = login != null ? login.trim() : null;
         login = NullEncode.forHtmlLogin(login);
         login = trimToNull(login);
+        if (login != null) {
+            if (FORBIDDEN_USERNAMES.contains(login)) {
+                throw new BadRequestException("forbidden login");
+            }
+        }
         return login;
     }
 
-    public static EditUserDTO normalize(EditUserDTO editUserDTO, boolean isExternalIntegration) {
+    public EditUserDTO normalize(EditUserDTO editUserDTO, boolean isExternalIntegration) {
         var userAccountDTO = editUserDTO.withLogin(checkAndTrimLogin(editUserDTO.login(), isExternalIntegration));
         userAccountDTO = userAccountDTO.withEmail(normalizeEmail(userAccountDTO.email()));
         userAccountDTO = userAccountDTO.withAvatar(trimToNull(NullEncode.forHtmlAttribute(userAccountDTO.avatar())));
@@ -270,7 +285,7 @@ public class UserAccountConverter {
         );
     }
 
-    public static String validateLengthAndTrimLogin(String login, boolean isExternalIntegration) {
+    public String validateLengthAndTrimLogin(String login, boolean isExternalIntegration) {
         login = checkAndTrimLogin(login, isExternalIntegration);
 
         if (!StringUtils.hasLength(login)) {
@@ -286,35 +301,17 @@ public class UserAccountConverter {
         }
     }
 
-    private static String checkAndTrimLogin(String login, boolean isExternalIntegration) {
+    private String checkAndTrimLogin(String login, boolean isExternalIntegration) {
         login = normalizeLogin(login);
 
         if (login != null) {
-            if (FORBIDDEN_USERNAMES.contains(login)) {
-                throw new BadRequestException("forbidden login");
-            }
-
-            for (var c: login.chars().toArray()) {
-                if (
-                    !Character.isLetterOrDigit(c) &&
-                    c != '_' &&
-                    c != ' ' &&
-                    c != '-' &&
-                    c != '+' &&
-                    c != '/' &&
-                    c != '*' &&
-                    c != '=' &&
-                    c != '!' &&
-                    c != '?' &&
-                    c != '$' &&
-                    c != '^' &&
-                    c != '&' &&
-                    c != '@' &&
-                    c != '.' &&
-                    c != ',' &&
-                    c != '#'
-                ) {
-                    throw new BadRequestException("login contains invalid character");
+            if (!aaaProperties.loginProperties().skipCharactersValidation()) {
+                for (var codePoint : login.chars().toArray()) {
+                    if (
+                            !Character.isLetterOrDigit(codePoint) && !aaaProperties.loginProperties().getAdditionalAllowedCharacters().contains(Character.toString(codePoint))
+                    ) {
+                        throw new BadRequestException("login contains invalid character");
+                    }
                 }
             }
         }

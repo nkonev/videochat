@@ -29,10 +29,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static name.nkonev.aaa.Constants.LDAP_CONFLICT_PREFIX;
-import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
 import static name.nkonev.aaa.utils.TimeUtil.getNowUTC;
 
 // https://spring.io/guides/gs/authenticating-ldap
@@ -69,7 +67,7 @@ public class LdapAuthenticationProvider implements AuthenticationProvider, Confl
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         if (aaaProperties.ldap().auth().enabled()) {
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) authentication;
-            var userName = validateLengthAndTrimLogin(usernamePasswordAuthenticationToken.getPrincipal().toString(), true);
+            var userName = userAccountConverter.validateLengthAndTrimLogin(usernamePasswordAuthenticationToken.getPrincipal().toString(), true);
             var password = usernamePasswordAuthenticationToken.getCredentials().toString();
 
             var encodedPassword = encodePassword(password);

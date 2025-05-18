@@ -26,7 +26,6 @@ import org.springframework.util.StringUtils;
 import java.util.Optional;
 import java.util.UUID;
 
-import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthAndTrimLogin;
 import static name.nkonev.aaa.converter.UserAccountConverter.validateLengthEmail;
 
 @Service
@@ -70,8 +69,8 @@ public class RegistrationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
     public void register(EditUserDTO editUserDTO, Language language, String referer, HttpServletRequest httpServletRequest) {
-        var userAccountEditDTO = UserAccountConverter.normalize(editUserDTO, false);
-        var login = validateLengthAndTrimLogin(userAccountEditDTO.login(), false);
+        var userAccountEditDTO = userAccountConverter.normalize(editUserDTO, false);
+        var login = userAccountConverter.validateLengthAndTrimLogin(userAccountEditDTO.login(), false);
         var userAccountDTO = userAccountEditDTO.withLogin(login);
         validateLengthEmail(userAccountDTO.email());
 

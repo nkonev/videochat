@@ -51,6 +51,9 @@ spring:
         enabled: false
 
 custom:
+  login-properties:
+    skip-characters-validation: false
+    additional-allowed-characters: []
   email:
     from: testEmailUsername@test.example.com
   confirmation:

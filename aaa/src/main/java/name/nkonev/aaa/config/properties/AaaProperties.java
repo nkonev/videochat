@@ -3,6 +3,7 @@ package name.nkonev.aaa.config.properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
 @ConfigurationProperties(prefix = "custom")
 public record AaaProperties(
@@ -34,7 +35,8 @@ public record AaaProperties(
     RoleMappings roleMappings,
     AdminsCornerProperties adminsCorner,
 
-    Duration frontendSessionPingInterval
+    Duration frontendSessionPingInterval,
+    LoginProperties loginProperties
 ) {
     public List<String> getAllowedAvatarUrlsList() {
         if (allowedAvatarUrls == null) {

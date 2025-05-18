@@ -1,0 +1,9 @@
+custom:
+  login-properties:
+    additional-allowed-characters:
+      - " "
+      - "_"
+      - "-"
+      - "+"
+      - "@"
+      - "."
