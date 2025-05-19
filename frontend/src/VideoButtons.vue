@@ -13,14 +13,6 @@
           <v-icon size="x-large">mdi-monitor-share</v-icon>
         </v-btn>
       </template>
-      <template v-if="canPinCurrentVideo">
-        <v-btn variant="plain" tile icon @click.stop.prevent="pinCurrentVideo()" :title="$vuetify.locale.t('$vuetify.pin_video')">
-          <v-icon size="x-large">mdi-pin</v-icon>
-        </v-btn>
-        <v-btn v-if="chatStore.pinnedTrackSid" variant="plain" tile icon @click.stop.prevent="unpinCurrentVideo()" :title="$vuetify.locale.t('$vuetify.unpin_video')">
-          <v-icon size="x-large">mdi-pin-off-outline</v-icon>
-        </v-btn>
-      </template>
 
       <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
 
@@ -64,7 +56,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 import {stopCall} from "@/utils.js";
-import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS, UN_PIN_VIDEO} from "@/bus/bus.js";
+import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS} from "@/bus/bus.js";
 import {
   positionItems,
   setStoredPresenter, setStoredVideoMessages, setStoredVideoMiniatures,
@@ -107,9 +99,6 @@ export default {
     },
     enableToggleMiniatures() {
       return this.chatStore.presenterEnabled && this.isPresenterEnabled()
-    },
-    canPinCurrentVideo() {
-      return this.pinningIsAvailable()
     },
   },
   methods: {
@@ -170,12 +159,6 @@ export default {
         const newValue = !this.chatStore.videoMessagesEnabled;
         this.chatStore.videoMessagesEnabled = newValue;
         setStoredVideoMessages(newValue);
-    },
-    pinCurrentVideo() {
-      this.$emit("requestPinCurrentVideo");
-    },
-    unpinCurrentVideo() {
-      bus.emit(UN_PIN_VIDEO)
     },
   }
 }
