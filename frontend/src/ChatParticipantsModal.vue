@@ -108,6 +108,7 @@
                       @kickParticipantFromChat="this.kickFromVideoCall"
                       @forceMuteParticipantInChat="this.forceMute"
                       @changeChatAdmin="this.changeChatAdmin"
+                      @goToUser="this.goToUser"
                     />
 
                     <v-progress-circular
@@ -168,7 +169,7 @@
     import {
       deepCopy,
       findIndex,
-      getLoginColoredStyle,
+      getLoginColoredStyle, getUserLink,
       hasLength,
       isCalling,
       isSetEqual, isStrippedUserLogin,
@@ -237,6 +238,10 @@
                         admin: !item.admin,
                     },
                 });
+            },
+            goToUser(item) {
+              const link = getUserLink(item.id);
+              window.open(link, '_blank').focus();
             },
             inviteToCall(dto) {
                 const call = !dto.callingTo;

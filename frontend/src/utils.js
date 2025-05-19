@@ -3,7 +3,7 @@ import {
     chat,
     chat_name, chatIdHashPrefix,
     messageIdHashPrefix,
-    prefix,
+    prefix, profile,
     public_prefix, userIdHashPrefix,
     video_suffix,
     videochat_name
@@ -78,6 +78,10 @@ export const getBlogLink = (chatId) => {
 export const getPublicMessageLink = (chatId, messageId) => {
     // see also public_message in routes.js
     return getUrlPrefix() + public_prefix + chat + '/' + chatId + '/message/' + messageId;
+}
+
+export const getUserLink = (userId) => {
+    return getUrlPrefix() + profile + '/' + userId
 }
 
 export const getMessageLinkRouteObject = (chatId, messageId) => {

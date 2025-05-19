@@ -71,6 +71,8 @@ export default {
                     });
                 }
 
+                ret.push({title: this.$vuetify.locale.t('$vuetify.goto_user'), icon: 'mdi-eye', action: () => this.$emit('goToUser', this.menuableItem) });
+
                 if (this.dto.canChangeChatAdmins && this.menuableItem.id != this.chatStore.currentUser.id) {
                   if (this.menuableItem.admin) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.revoke_chat_admin'), icon: 'mdi-crown', iconColor: 'disabled', action: () => this.$emit('changeChatAdmin', this.menuableItem) });

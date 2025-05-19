@@ -174,6 +174,7 @@ export default {
     pinned_messages: "Закреплённые сообщ.",
     pinned_messages_full: "Закреплённые сообщения",
     goto_pinned_message: "Перейти к закреплённому сообщению",
+    goto_user: "Перейти к пользователю",
     pin_message: "Закрепить сообщение",
     no_pin_messages: "Нет закреплённых сообщений",
     remove_from_pinned: "Удалить из закреплённых",

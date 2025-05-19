@@ -174,6 +174,7 @@ export default {
     pinned_messages: "Pinned messages",
     pinned_messages_full: "Pinned messages",
     goto_pinned_message: "Go to pinned message",
+    goto_user: "Go to the user",
     pin_message: "Pin the message",
     no_pin_messages: "No pin messages",
     remove_from_pinned: "Remove from pinned",
