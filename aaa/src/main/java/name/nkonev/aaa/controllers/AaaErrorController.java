@@ -1,6 +1,7 @@
 package name.nkonev.aaa.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.tracing.Tracer;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.AaaError;
 import jakarta.servlet.ServletException;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static name.nkonev.aaa.controllers.TracerHeaderWriteFilter.EXTERNAL_TRACE_ID_HEADER;
 import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 
 /**
@@ -41,6 +41,9 @@ public class AaaErrorController extends AbstractErrorController {
 
     @Autowired
     private AaaProperties aaaProperties;
+
+    @Autowired
+    private Tracer tracer;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaErrorController.class);
 
@@ -120,6 +123,16 @@ public class AaaErrorController extends AbstractErrorController {
     }
 
     private String getTraceId(HttpServletResponse response) {
-        return response.getHeader(EXTERNAL_TRACE_ID_HEADER);
+        var currentSpan = this.tracer.currentSpan();
+        if (currentSpan == null) {
+            return null;
+        } else {
+            var context = currentSpan.context();
+            if (context != null) {
+                var traceId = context.traceId();
+                return traceId;
+            }
+            return null;
+        }
     }
 }
