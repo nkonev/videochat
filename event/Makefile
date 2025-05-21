@@ -27,7 +27,7 @@ GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./handlers/static/git.json
 
 generate-git:
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"service\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 install-graphql:
 	go install github.com/99designs/gqlgen@v0.17.46

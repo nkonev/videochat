@@ -33,7 +33,7 @@ STATIC_JSON := $(JSON_DIR)/git.json
 
 generate-git:
 	mkdir -p $(JSON_DIR)
-	echo "{\"commit\": \"$(GIT_COMMIT)\", \"microservice\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
+	echo "{\"commit\": \"$(GIT_COMMIT)\", \"service\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 test:
 	./mvnw test
