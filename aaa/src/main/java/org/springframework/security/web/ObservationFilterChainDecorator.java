@@ -63,7 +63,7 @@ public final class ObservationFilterChainDecorator implements FilterChainProxy.F
 	private final ObservationRegistry registry;
 
 	static {
-		System.out.println("loading patched ObservationFilterChainDecorator");
+		System.out.println("loading patched ObservationFilterChainDecorator, see https://github.com/spring-projects/spring-security/pull/17134");
 	}
 
 	public ObservationFilterChainDecorator(ObservationRegistry registry) {
