@@ -35,7 +35,7 @@ const configuredTransports = [
 if (getWriteLogToFile()) {
     configuredTransports.push(
         new transports.File({
-            filename: 'logs/file.log',
+            filename: 'log/file.log',
             level: getLogLevel(),
             options: {flags: 'w'}
         }),

@@ -227,7 +227,7 @@ logging.config: 'classpath:/config/cf.xml'
 logging.structured.format.console: 'name.nkonev.aaa.config.CompatibleLogFormatter'
 # see org.springframework.boot.logging.LogFile#get, org.springframework.boot.logging.logback.DefaultLogbackConfiguration#apply
 # see also name.nkonev.aaa.AaaApplication
-logging.file.name: logs/file.log
+logging.file.name: log/file.log
 logging.structured.format.file: 'name.nkonev.aaa.config.CompatibleLogFormatter'
 custom.write.log.file: true
 

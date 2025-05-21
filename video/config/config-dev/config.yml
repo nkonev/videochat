@@ -5,7 +5,7 @@ server:
 
 logger:
   level: info
-  dir: "logs"
+  dir: "log"
   filename: "file.log"
   writeToFile: true
 

@@ -251,13 +251,13 @@ services:
     hostname: fluentbit
     volumes:
       - ./docker/fluent-bit/etc:/fluent-bit/etc:z
-      - ./aaa/logs:/var/log/videochat/aaa/logs:z
-      - ./chat/logs:/var/log/videochat/chat/logs:z
-      - ./storage/logs:/var/log/videochat/storage/logs:z
-      - ./video/logs:/var/log/videochat/video/logs:z
-      - ./event/logs:/var/log/videochat/event/logs:z
-      - ./notification/logs:/var/log/videochat/notification/logs:z
-      - ./public/logs:/var/log/videochat/public/logs:z
+      - ./aaa/log:/var/log/videochat/aaa/log:z
+      - ./chat/log:/var/log/videochat/chat/log:z
+      - ./storage/log:/var/log/videochat/storage/log:z
+      - ./video/log:/var/log/videochat/video/log:z
+      - ./event/log:/var/log/videochat/event/log:z
+      - ./notification/log:/var/log/videochat/notification/log:z
+      - ./public/log:/var/log/videochat/public/log:z
     ports:
       - "24224:24224"
       - "24224:24224/udp"
