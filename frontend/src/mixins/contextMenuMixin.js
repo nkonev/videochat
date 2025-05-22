@@ -6,6 +6,7 @@ export default () => {
         menuableItem: null,
         contextMenuX: 0,
         contextMenuY: 0,
+        targetEl: null,
       }
     },
     methods: {
@@ -32,6 +33,7 @@ export default () => {
       },
       onShowContextMenuBase(e, menuableItem) {
         e.preventDefault();
+        this.targetEl = e.target;
 
         this.showContextMenu = false;
 
@@ -56,6 +58,7 @@ export default () => {
       onCloseContextMenuBase() {
         this.showContextMenu = false;
         this.menuableItem = null;
+        this.targetEl = null;
       },
       onUpdate(v) {
         if (!v) {

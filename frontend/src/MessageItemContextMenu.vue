@@ -30,7 +30,7 @@
 
 <script>
 
-import {getMessageLink, getPublicMessageLink, hasLength} from "@/utils";
+import {checkUpByTreeObj, getMessageLink, getPublicMessageLink, hasLength} from "@/utils";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import {SEARCH_MODE_MESSAGES, searchString} from "@/mixins/searchString";
@@ -71,6 +71,11 @@ export default {
                         }
                     });
                 }
+                ret.push({
+                  title: this.$vuetify.locale.t('$vuetify.copy'),
+                  icon: 'mdi-content-copy',
+                  action: this.copy
+                });
                 if (hasLength(this.selection)) {
                     ret.push({
                         title: this.$vuetify.locale.t('$vuetify.copy_selected'),
@@ -162,9 +167,27 @@ export default {
         getSelection() {
             return window.getSelection().toString();
         },
+        copy() {
+          if (this.targetEl) {
+            const {found, el} = checkUpByTreeObj(this.targetEl, 10, (el) => el?.classList?.contains("message-item-wrapper"));
+            if (found) {
+              const type = "text/html";
+              const blob = new Blob([el.innerHTML], { type: type });
+              const clipboardItem = new ClipboardItem({
+                    [blob.type]: blob,
+                  });
+              navigator.clipboard.write([clipboardItem]);
+
+              this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
+            } else {
+              console.warn("not found")
+            }
+          }
+        },
         copySelected() {
             const selectedText = this.selection;
             navigator.clipboard.writeText(selectedText);
+            this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
         },
         searchBySelected() {
             const selectedText = this.selection;

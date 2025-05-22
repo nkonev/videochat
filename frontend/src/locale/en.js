@@ -171,6 +171,8 @@ export default {
     copy_link_to_message: "Copy link to message",
     copy_link_to_chat: "Copy link to chat",
     copy_selected: "Copy selected text",
+    copy: "Copy",
+    message_copied: "Message copied to clipboard",
     pinned_messages: "Pinned messages",
     pinned_messages_full: "Pinned messages",
     goto_pinned_message: "Go to pinned message",

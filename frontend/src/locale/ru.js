@@ -171,6 +171,8 @@ export default {
     copy_link_to_message: "Скопировать ссылку на сообщение",
     copy_link_to_chat: "Скопировать ссылку на чат",
     copy_selected: "Скопировать выделенный текст",
+    copy: "Скопировать",
+    message_copied: "Сообщ. скопировано в буф. обмена",
     pinned_messages: "Закреплённые сообщ.",
     pinned_messages_full: "Закреплённые сообщения",
     goto_pinned_message: "Перейти к закреплённому сообщению",
