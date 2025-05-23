@@ -20,7 +20,7 @@
               <span v-html="broadcastMessage"></span>
             </v-tooltip>
 
-            <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.goto_pinned_message')">
+            <div v-if="pinnedPromoted && chatStore.canShowPinnedLink" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.goto_pinned_message')">
               <v-alert
                   color="red-lighten-4"
                   elevation="2"
