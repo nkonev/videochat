@@ -92,7 +92,7 @@
       <v-main>
 
         <v-container fluid class="ma-0 pa-0" style="height: 100%; width: 100%; position: relative !important;" id="my-app-container">
-          <v-overlay v-model="shouldShowOverlay" attach="#my-app-container" contained></v-overlay>
+          <v-overlay v-model="showOverlay" attach="#my-app-container" contained></v-overlay>
 
           <v-snackbar v-model="chatStore.showAlert" :color="chatStore.errorColor" :timeout="chatStore.alertTimeout ? chatStore.alertTimeout : -1" :transition="false">
             {{ chatStore.lastError }}
@@ -280,7 +280,7 @@ export default {
             showNotificationBadge: false,
             showVideoBadge: false,
 
-            showOverlayForSearch: false,
+            showOverlay: false,
         }
     },
     computed: {
@@ -311,9 +311,6 @@ export default {
         },
         shouldShowSearch() {
             return this.chatStore.isShowSearch && !(this.isVideoRoute() && !this.chatStore.videoMessagesEnabled)
-        },
-        shouldShowOverlay() {
-          return this.showOverlayForSearch || this.chatStore.showOverlay
         },
     },
     methods: {
@@ -875,10 +872,10 @@ export default {
           }
         },
         beforeCollapsedSearchOpenCallback() {
-          this.showOverlayForSearch = true; // to catch clicks and prevent interfere them on scrolling
+          this.showOverlay = true; // to catch clicks and prevent interfere them on scrolling
         },
         afterCollapsedSearchCloseCallback() {
-          this.showOverlayForSearch = false;
+          this.showOverlay = false;
         },
     },
     components: {
