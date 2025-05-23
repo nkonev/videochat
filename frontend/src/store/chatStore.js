@@ -87,6 +87,8 @@ export const useChatStore = defineStore('chat', {
         editMessageDto: chatEditMessageDtoFactory(),
         aaaSessionPingInterval: -1, // in milliseconds
         minPasswordLength: 0,
+
+        canShowPinnedLink: true,
     }
   },
   actions: {

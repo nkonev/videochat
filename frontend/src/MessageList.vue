@@ -778,6 +778,7 @@
         onFocus() {
           if (this.chatStore.currentUser && this.items && this.isScrolledToBottom()) {
             const bottomNElements = this.items.slice(0, PAGE_SIZE);
+            this.chatStore.canShowPinnedLink = false;
             axios.post(`/api/chat/${this.chatId}/message/fresh`, bottomNElements, {
               params: {
                 size: PAGE_SIZE,
@@ -791,6 +792,8 @@
               } else {
                 console.log("No need to update messages");
               }
+            }).finally(()=>{
+              this.chatStore.canShowPinnedLink = true;
             })
           }
         },

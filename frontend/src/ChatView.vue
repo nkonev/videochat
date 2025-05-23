@@ -27,7 +27,7 @@
                   density="compact"
               >
                 <template v-slot:text>
-                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
+                  <router-link v-if="chatStore.canShowPinnedLink" :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
                 </template>
                 <template v-slot:append>
                   <v-btn density="compact" icon rounded="0" variant="plain" :title="$vuetify.locale.t('$vuetify.pinned_messages')" @click.stop.prevent="openPinnedMessages()"><v-icon>mdi-view-list-outline</v-icon></v-btn>
