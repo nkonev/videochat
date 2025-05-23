@@ -20,14 +20,18 @@
               <span v-html="broadcastMessage"></span>
             </v-tooltip>
 
-            <div v-if="pinnedPromoted && chatStore.canShowPinnedLink" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.goto_pinned_message')">
+            <div v-if="pinnedPromoted" :key="pinnedPromotedKey" class="pinned-promoted" :title="$vuetify.locale.t('$vuetify.goto_pinned_message')">
               <v-alert
                   color="red-lighten-4"
                   elevation="2"
                   density="compact"
               >
                 <template v-slot:text>
-                  <router-link :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"></router-link>
+                  <component
+                      :is="chatStore.canShowPinnedLink ? 'router-link' : 'span'"
+                      :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"
+                  >
+                  </component>
                 </template>
                 <template v-slot:append>
                   <v-btn density="compact" icon rounded="0" variant="plain" :title="$vuetify.locale.t('$vuetify.pinned_messages')" @click.stop.prevent="openPinnedMessages()"><v-icon>mdi-view-list-outline</v-icon></v-btn>
