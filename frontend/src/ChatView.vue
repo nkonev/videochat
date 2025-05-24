@@ -27,11 +27,12 @@
                   density="compact"
               >
                 <template v-slot:text>
-                  <component
-                      :is="chatStore.canShowPinnedLink ? 'router-link' : 'span'"
-                      :to="getPinnedRouteObject(pinnedPromoted)" class="pinned-text" v-html="pinnedPromoted.text"
-                  >
-                  </component>
+                  <a
+                      :href="getPinnedPromotedRoute(pinnedPromoted)"
+                      @click.prevent="onClickPinnedPromoted(pinnedPromoted)"
+                      class="pinned-text"
+                      v-html="pinnedPromoted.text"
+                  ></a>
                 </template>
                 <template v-slot:append>
                   <v-btn density="compact" icon rounded="0" variant="plain" :title="$vuetify.locale.t('$vuetify.pinned_messages')" @click.stop.prevent="openPinnedMessages()"><v-icon>mdi-view-list-outline</v-icon></v-btn>
@@ -122,7 +123,7 @@ import bus, {
   VIDEO_CALL_USER_COUNT_CHANGED,
   VIDEO_DIAL_STATUS_CHANGED
 } from "@/bus/bus";
-import {chat_list_name, chat_name, messageIdHashPrefix, videochat_name} from "@/router/routes";
+import {chat, chat_list_name, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
@@ -648,9 +649,19 @@ export default {
           bus.emit(MESSAGES_RELOAD);
       }
     },
-    getPinnedRouteObject(item) {
+    getPinnedPromotedRoute(item) {
+      let mbVideo = "";
+      if (this.isVideoRoute()) {
+        mbVideo = video_suffix;
+      }
+      return chat + "/" + item.chatId + mbVideo + messageIdHashPrefix + item.id
+    },
+    onClickPinnedPromoted(item) {
       const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-      return {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+      const obj = {name: routeName, params: {id: item.chatId}, hash: messageIdHashPrefix + item.id};
+      if (this.chatStore.canShowPinnedLink) {
+        this.$router.push(obj)
+      }
     },
     onPinnedMessagePromoted(item) {
       this.pinnedPromoted = item.message;
