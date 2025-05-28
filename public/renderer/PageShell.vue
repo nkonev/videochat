@@ -4,6 +4,8 @@
           <v-container fluid class="ma-0 pa-0 d-flex">
             <template v-if="getShowSearchButton()">
                 <v-breadcrumbs
+                    class="custom-breadcrumbs"
+                    :density="getDensity()"
                     :items="getBreadcrumbs()"
                 />
                 <v-spacer/>
@@ -261,6 +263,10 @@ html {
     font-weight: 500;
     letter-spacing: .09em;
     line-height: 1.75em;
+}
+
+.custom-breadcrumbs {
+  line-height unset
 }
 
 </style>
