@@ -80,7 +80,8 @@ import bus, {
     OPEN_NOTIFICATIONS_DIALOG,
     OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
     OPEN_SETTINGS,
-    OPEN_VIEW_FILES_DIALOG, PROFILE_SET
+    OPEN_VIEW_FILES_DIALOG,
+    WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import {copyCallLink, getBlogLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
@@ -102,6 +103,7 @@ export default {
       return {
           isLoggingOut: false,
           userState: userStateFactory(),
+          initialized: false,
       }
   },
   computed: {
@@ -271,6 +273,7 @@ export default {
       }
     },
     onProfileSet() {
+      this.initialized = true;
       this.graphQlUserStatusSubscribe();
     },
     onLogOut() {
@@ -305,18 +308,22 @@ export default {
     }
   },
   mounted() {
-      if (this.canDrawUsers()) {
+      if (this.canDrawUsers() && !this.initialized) {
           this.onProfileSet();
       }
 
-      bus.on(PROFILE_SET, this.onProfileSet);
+      bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
       bus.on(LOGGED_OUT, this.onLogOut);
       this.installOnFocus();
   },
   beforeUnmount() {
+      this.onLogOut();
+
       this.uninstallOnFocus();
-      bus.off(PROFILE_SET, this.onProfileSet);
+      bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
       bus.off(LOGGED_OUT, this.onLogOut);
+
+      this.initialized = false;
   },
 
 }

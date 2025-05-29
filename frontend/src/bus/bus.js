@@ -6,7 +6,7 @@ export default emitter
 
 
 export const LOGGED_OUT = "loggedOut";
-export const PROFILE_SET = "profileSetNotNull";
+export const PROFILE_SET = "profileSetNotNull"; // phase 1
 export const LOGGED_IN = "loggedIn";
 
 export const SEARCH_STRING_CHANGED = "searchStringChanged";
@@ -66,6 +66,8 @@ export const NOTIFICATION_CLEAR_ALL = "notificationClearAll";
 export const WEBSOCKET_CONNECTED = "wsConnected";
 export const WEBSOCKET_LOST = "wsLost";
 export const WEBSOCKET_RESTORED = "wsRestored";
+
+export const WEBSOCKET_INITIALIZED = "wsInitialized"; // phase 2
 
 export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";

@@ -50,6 +50,10 @@ export default class ChatList {
         await chatElement.click();
     }
 
+    getHeaderLocator() {
+        return this.page.locator('.app-title-text');
+    }
+
     async assertChatItemCount(expected) {
         return expect(this.getRowsLocator()).toHaveCount(expected);
     }

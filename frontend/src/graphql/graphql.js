@@ -1,6 +1,12 @@
 import { createClient } from 'graphql-ws';
 import {getWebsocketUrlPrefix} from "@/utils";
-import bus, {LOGGED_OUT, WEBSOCKET_CONNECTED, WEBSOCKET_LOST, WEBSOCKET_RESTORED} from "@/bus/bus";
+import bus, {
+    LOGGED_OUT,
+    WEBSOCKET_CONNECTED,
+    WEBSOCKET_INITIALIZED,
+    WEBSOCKET_LOST,
+    WEBSOCKET_RESTORED
+} from "@/bus/bus";
 
 // This is an adaptation of "https://the-guild.dev/graphql/ws/recipes#client-usage-with-abrupt-termination-on-pong-timeout" recipe
 // see also https://github.com/enisdenjo/graphql-ws/discussions/290
@@ -67,6 +73,7 @@ export const createGraphQlClient = () => {
             bus.emit(WEBSOCKET_RESTORED);
         } else {
             console.info("Connected to websocket graphql");
+            bus.emit(WEBSOCKET_INITIALIZED);
         }
         initialized = true;
         bus.emit(WEBSOCKET_CONNECTED);

@@ -131,7 +131,7 @@
                 </template>
 
             </v-list-item>
-            <template v-if="items.length == 0 && !showProgress">
+            <template v-if="items.length == 0 && !isLoading">
               <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.users_not_found')}}</v-sheet>
             </template>
             <div class="user-last-element" style="min-height: 1px; background: white"></div>
@@ -169,8 +169,9 @@ import bus, {
   CHANGE_ROLE_DIALOG,
   CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL, OPEN_SIMPLE_MODAL,
-  PROFILE_SET, REFRESH_ON_WEBSOCKET_RESTORED,
-  SEARCH_STRING_CHANGED
+  REFRESH_ON_WEBSOCKET_RESTORED,
+  SEARCH_STRING_CHANGED,
+  WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -216,13 +217,12 @@ export default {
     return {
         markInstance: null,
         userEventsSubscription: null,
+        isLoading: false,
+        initialized: false,
     }
   },
   computed: {
     ...mapStores(useChatStore),
-    showProgress() {
-      return this.chatStore.progressCount > 0
-    },
     itemIds() {
       return this.getUserIdsSubscribeTo();
     },
@@ -312,6 +312,7 @@ export default {
       }
 
       this.chatStore.incrementProgressCount();
+      this.isLoading = true;
 
       const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
@@ -340,6 +341,7 @@ export default {
         return Promise.resolve(true)
       } finally {
         this.chatStore.decrementProgressCount();
+        this.isLoading = false;
       }
     },
     afterScrollRestored(el) {
@@ -377,6 +379,7 @@ export default {
       }
     },
     async onProfileSet() {
+      this.initialized = true;
       await this.initializeHashVariablesAndReloadItems();
       this.userEventsSubscription.graphQlSubscribe();
     },
@@ -695,29 +698,27 @@ export default {
     this.chatStore.isShowSearch = true;
     this.chatStore.searchType = SEARCH_MODE_USERS;
 
-    // create subscription object before ON_PROFILE_SET
+    // before subscribing with onProfileSet() because former invokes userEventsSubscription
     this.userEventsSubscription = graphqlSubscriptionMixin('userAccountEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
-
-    if (this.canDrawUsers()) {
-      await this.onProfileSet();
-    }
 
     addEventListener("beforeunload", this.beforeUnload);
 
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
-    bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
+    if (this.canDrawUsers() && !this.initialized) {
+      await this.onProfileSet();
+    }
 
     this.installOnFocus();
   },
 
   beforeUnmount() {
-    this.uninstallOnFocus();
+    this.onLoggedOut()
 
-    this.graphQlUserStatusUnsubscribe();
-    this.userEventsSubscription.graphQlUnsubscribe();
-    this.userEventsSubscription = null;
+    this.uninstallOnFocus();
 
     // an analogue of watch(effectively(chatId)) in MessageList.vue
     // used when the user presses Start in the RightPanel
@@ -730,13 +731,16 @@ export default {
     this.uninstallScroller();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
-    bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     setTitle(null);
     this.chatStore.title = null;
     this.chatStore.isShowSearch = false;
+
+    this.userEventsSubscription = null;
+    this.initialized = false;
   }
 }
 </script>

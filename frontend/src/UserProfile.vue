@@ -167,7 +167,7 @@ import bus, {
   CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL,
   OPEN_SIMPLE_MODAL,
-  PROFILE_SET
+  WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
@@ -190,6 +190,7 @@ export default {
       online: false,
       isInVideo: false,
       userProfileEventsSubscription: null,
+      initialized: false,
     }
   },
   computed: {
@@ -350,6 +351,7 @@ export default {
       this.userProfileEventsSubscription.graphQlUnsubscribe();
     },
     onProfileSet() {
+      this.initialized = true;
       this.loadUser();
       this.graphQlUserStatusSubscribe();
       this.userProfileEventsSubscription.graphQlSubscribe();
@@ -417,14 +419,14 @@ export default {
     },
   },
   mounted() {
-    bus.on(LOGGED_OUT, this.onLoggedOut);
-    bus.on(PROFILE_SET, this.onProfileSet);
-    this.setMainTitle();
-
-    // create subscription object before ON_PROFILE_SET
+    // before subscribing with onProfileSet() because former invokes userProfileEventsSubscription
     this.userProfileEventsSubscription = graphqlSubscriptionMixin('userProfileEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
-    if (this.canDrawUsers()) {
+    bus.on(LOGGED_OUT, this.onLoggedOut);
+    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
+    this.setMainTitle();
+
+    if (this.canDrawUsers() && !this.initialized) {
       this.onProfileSet();
     }
 
@@ -433,18 +435,19 @@ export default {
   beforeUnmount() {
     this.uninstallOnFocus();
 
-    this.graphQlUserStatusUnsubscribe();
-    this.userProfileEventsSubscription.graphQlUnsubscribe();
-    this.userProfileEventsSubscription = null;
+    this.onLoggedOut();
 
     bus.off(LOGGED_OUT, this.onLoggedOut);
-    bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
 
     this.unsetMainTitle();
 
     this.viewableUser = null;
     this.online = false;
     this.isInVideo = false;
+
+    this.userProfileEventsSubscription = null;
+    this.initialized = false;
   },
   watch: {
     '$vuetify.locale.current': {

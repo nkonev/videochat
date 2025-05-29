@@ -4,21 +4,73 @@ import Login from "../models/Login.mjs";
 import ChatList from "../models/ChatList.mjs";
 import ChatView from "../models/ChatView.mjs"
 import axios from "axios";
+import fs from "fs";
+
+let googleContext;
+let vkContext;
+
+let googlePage;
+let vkPage;
+
+let tmpVideoGoogle;
+let tmpVideoVk;
+// https://github.com/microsoft/playwright/issues/14164#issuecomment-1131451544
+test.beforeAll(async ({ browser }, testInfo) => {
+    googleContext = await browser.newContext();
+    vkContext = await browser.newContext();
+
+    tmpVideoGoogle = testInfo.outputPath('video-behalf-google');
+    googlePage = await browser.newPage({
+        recordVideo: {
+            dir: tmpVideoGoogle,
+        }
+    });
+
+    tmpVideoVk = testInfo.outputPath('video-behalf-vk');
+    vkPage = await browser.newPage({
+        recordVideo: {
+            dir: tmpVideoVk,
+        }
+    });
+
+    testInfo.outputPath()
+});
+
+test.afterAll(async ({}, testInfo) => {
+    const videoPathGoogle = testInfo.outputPath('video-google.webm');
+    const videoPathVk = testInfo.outputPath('video-vk.webm');
+    await Promise.all([
+        googlePage.video().saveAs(videoPathGoogle),
+        googlePage.close(),
+
+        vkPage.video().saveAs(videoPathVk),
+        vkPage.close(),
+    ]);
+    testInfo.attachments.push({
+        name: 'video-google',
+        path: videoPathGoogle,
+        contentType: 'video/webm'
+    });
+    testInfo.attachments.push({
+        name: 'video-vk',
+        path: videoPathVk,
+        contentType: 'video/webm'
+    });
+
+    fs.rmSync(tmpVideoGoogle, { recursive: true });
+    fs.rmSync(tmpVideoVk, { recursive: true });
+});
 
 // https://playwright.dev/docs/intro
 test('login vkontakte and google then create chat then write a message', async ({ browser }) => {
     await axios.put(recreateAaaOauth2MocksUrl);
     await axios.delete(removeChatParticipantsUrl);
 
-    const googleContext = await browser.newContext();
-    const googlePage = await googleContext.newPage();
     const googleLoginPage = new Login(googlePage);
     await googleLoginPage.navigate();
     await googleLoginPage.submitGoogle();
     await googleLoginPage.assertNickname(defaultGoogleUser.user);
 
-    const vkContext = await browser.newContext();
-    const vkPage = await vkContext.newPage();
     const vkLoginPage = new Login(vkPage);
     await vkLoginPage.navigate();
     await vkLoginPage.submitVkontakte();
@@ -33,12 +85,20 @@ test('login vkontakte and google then create chat then write a message', async (
     await vkChatViewPage.sendMessage(helloMike);
 
     const googleChatList = new ChatList(googlePage);
-    googleChatList.navigate();
+    await googleChatList.navigate();
     await expect(googleChatList.getRowsLocator().nth(0)).toHaveText(chatName);
     const googleChatsCount = await (googleChatList.getRowsLocator().count());
     console.log("count behalf google is", googleChatsCount);
     expect(googleChatsCount).toBe(1);
-    await googleChatList.openChat(0);
+
+    // sometimes browser ignores click, so we repeat it
+    // https://stackoverflow.com/questions/69806337/how-to-pause-the-test-script-for-3-seconds-before-continue-running-it-playwrigh/79637287#79637287
+    await expect
+        .poll(async () => {
+            await googleChatList.openChat(0);
+            return await googleChatList.getHeaderLocator().textContent();
+        })
+        .toBe(chatName);
 
     const googleChatViewPage = new ChatView(googlePage);
     const receivedMikeMessage = await googleChatViewPage.getMessage(0);

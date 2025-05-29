@@ -18,7 +18,7 @@
             @onreactionclick="onExistingReactionClick"
             @click="onClickTrap"
           ></MessageItem>
-          <template v-if="items.length == 0 && !showProgress">
+          <template v-if="items.length == 0 && !isLoading">
             <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.messages_not_found')}}</v-sheet>
           </template>
 
@@ -60,7 +60,6 @@
       OPEN_RESEND_TO_MODAL,
       OPEN_SIMPLE_MODAL,
       OPEN_VIEW_FILES_DIALOG,
-      PROFILE_SET,
       REFRESH_ON_WEBSOCKET_RESTORED,
       SCROLL_DOWN,
       SET_EDIT_MESSAGE,
@@ -71,6 +70,7 @@
       MESSAGES_RELOAD,
       PLAYER_MODAL,
       FILE_CREATED,
+      WEBSOCKET_INITIALIZED,
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -115,6 +115,8 @@
         return {
           markInstance: null,
           storedChatId: null,
+          isLoading: false,
+          initialized: false,
         }
       },
 
@@ -122,9 +124,6 @@
         ...mapStores(useChatStore),
         chatId() {
           return this.$route.params.id
-        },
-        showProgress() {
-          return this.chatStore.progressCount > 0
         },
       },
 
@@ -272,6 +271,7 @@
           }
 
           this.chatStore.incrementProgressCount();
+          this.isLoading = true;
 
           const {startingFromItemId, hasHash} = this.prepareHashesForRequest();
 
@@ -315,6 +315,7 @@
             return Promise.resolve(true)
           } finally {
             this.chatStore.decrementProgressCount();
+            this.isLoading = false;
           }
         },
         transformItem(item) {
@@ -375,6 +376,7 @@
           }
         },
         async onProfileSet() {
+          this.initialized = true;
           await this.initializeHashVariablesAndReloadItems();
         },
         onLoggedOut() {
@@ -853,18 +855,11 @@
       async mounted() {
         this.markInstance = new Mark(this.scrollerSelector() + " .message-item-text");
 
-        // we trigger actions on load if profile was set
-        // else we rely on PROFILE_SET
-        // should be before bus.on(PROFILE_SET, this.onProfileSet);
-        if (this.canDrawMessages()) {
-          await this.onProfileSet();
-        }
-
         addEventListener("beforeunload", this.beforeUnload);
 
         this.storedChatId = this.chatId;
 
-        bus.on(PROFILE_SET, this.onProfileSet);
+        bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
         bus.on(MESSAGE_ADD, this.onNewMessage);
@@ -878,6 +873,10 @@
         bus.on(FILE_CREATED, this.onFileCreatedEvent);
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
+
+        if (this.canDrawMessages() && !this.initialized) {
+          await this.onProfileSet();
+        }
 
         this.installOnFocus();
       },
@@ -899,13 +898,15 @@
         bus.off(MESSAGE_EDITED, this.onEditMessage);
         bus.off(REACTION_CHANGED, this.onReactionChanged);
         bus.off(REACTION_REMOVED, this.onReactionRemoved);
-        bus.off(PROFILE_SET, this.onProfileSet);
+        bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
         bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
+
+        this.initialized = false;
       }
     }
 </script>
