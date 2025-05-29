@@ -127,23 +127,23 @@
 <script>
     import axios from "axios";
     import bus, {
-        CLOSE_EDIT_MESSAGE,
-        MESSAGE_EDIT_LOAD_FILES_COUNT,
-        COLOR_SET,
-        MESSAGE_EDIT_LINK_SET,
-        OPEN_FILE_UPLOAD_MODAL,
-        OPEN_CHOOSE_COLOR,
-        OPEN_MESSAGE_EDIT_LINK,
-        OPEN_MESSAGE_EDIT_MEDIA,
-        OPEN_MESSAGE_EDIT_SMILEY,
-        OPEN_VIEW_FILES_DIALOG,
-        PROFILE_SET,
-        SET_EDIT_MESSAGE,
-        SET_EDIT_MESSAGE_MODAL,
-        MESSAGE_EDIT_SET_FILE_ITEM_UUID,
-        OPEN_SETTINGS,
-        ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
-        OPEN_RECORDING_MODAL, FILE_CREATED,
+      CLOSE_EDIT_MESSAGE,
+      MESSAGE_EDIT_LOAD_FILES_COUNT,
+      COLOR_SET,
+      MESSAGE_EDIT_LINK_SET,
+      OPEN_FILE_UPLOAD_MODAL,
+      OPEN_CHOOSE_COLOR,
+      OPEN_MESSAGE_EDIT_LINK,
+      OPEN_MESSAGE_EDIT_MEDIA,
+      OPEN_MESSAGE_EDIT_SMILEY,
+      OPEN_VIEW_FILES_DIALOG,
+      SET_EDIT_MESSAGE,
+      SET_EDIT_MESSAGE_MODAL,
+      MESSAGE_EDIT_SET_FILE_ITEM_UUID,
+      OPEN_SETTINGS,
+      ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
+      OPEN_RECORDING_MODAL,
+      WEBSOCKET_INITIALIZED,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -631,7 +631,7 @@
             bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(COLOR_SET, this.onColorSet);
-            bus.on(PROFILE_SET, this.onProfileSet);
+            bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             this.targetElement = document.getElementById('sendButtonContainer')
             this.setShouldShowSendMessageButtons();
@@ -646,7 +646,7 @@
             bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(COLOR_SET, this.onColorSet);
-            bus.off(PROFILE_SET, this.onProfileSet);
+            bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
 

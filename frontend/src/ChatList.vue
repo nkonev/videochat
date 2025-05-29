@@ -56,7 +56,7 @@
                     </v-list-item-action>
                 </template>
             </v-list-item>
-            <template v-if="items.length == 0 && !showProgress">
+            <template v-if="items.length == 0 && !isLoading">
               <v-sheet class="mx-2">{{$vuetify.locale.t('$vuetify.chats_not_found')}}</v-sheet>
             </template>
             <div class="chat-last-element" style="min-height: 1px; background: white"></div>
@@ -99,13 +99,14 @@ import bus, {
   LOGGED_OUT,
   OPEN_CHAT_EDIT,
   OPEN_SIMPLE_MODAL,
-  PROFILE_SET,
   REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED,
   UNREAD_MESSAGES_CHANGED,
   CO_CHATTED_PARTICIPANT_CHANGED,
   VIDEO_CALL_SCREEN_SHARE_CHANGED,
-  VIDEO_CALL_USER_COUNT_CHANGED, USER_TYPING
+  VIDEO_CALL_USER_COUNT_CHANGED,
+  USER_TYPING,
+  WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -161,16 +162,14 @@ export default {
         markInstance: null,
         routeName: null,
         startingFromItemIdTop: null,
-        startingFromItemIdBottom: null
+        startingFromItemIdBottom: null,
+        isLoading: false,
     }
   },
   computed: {
     ...mapStores(useChatStore),
       tetAtetParticipants() {
           return this.getTetATetParticipantIds(this.items);
-      },
-      showProgress() {
-          return this.chatStore.progressCount > 0
       },
   },
 
@@ -276,6 +275,7 @@ export default {
       const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
       this.chatStore.incrementProgressCount();
+      this.isLoading = true;
 
       try {
         let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
@@ -307,6 +307,7 @@ export default {
         return Promise.resolve(true)
       } finally {
         this.chatStore.decrementProgressCount();
+        this.isLoading = false;
       }
     },
     afterScrollRestored(el) {
@@ -816,7 +817,7 @@ export default {
     addEventListener("beforeunload", this.beforeUnload);
 
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
-    bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
     bus.on(CHAT_ADD, this.onNewChat);
@@ -860,7 +861,7 @@ export default {
     this.uninstallScroller();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
-    bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLoggedOut);
     bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
     bus.off(CHAT_ADD, this.onNewChat);

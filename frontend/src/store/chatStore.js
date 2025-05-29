@@ -127,14 +127,14 @@ export const useChatStore = defineStore('chat', {
       this.updateRedDot();
     },
     fetchNotificationsCount() {
-      axios.get(`/api/notification/count`).then(( {data} ) => {
+      return axios.get(`/api/notification/count`).then(( {data} ) => {
         console.debug("fetched notifications =", data);
         this.setNotificationCount(data.totalCount);
         bus.emit(NOTIFICATION_COUNT_CHANGED);
       });
     },
     fetchHasNewMessages() {
-      axios.get(`/api/chat/has-new-messages`).then(( {data} ) => {
+      return axios.get(`/api/chat/has-new-messages`).then(( {data} ) => {
           console.debug("fetched has-new-messages =", data);
           this.setHasNewMessages(data.hasUnreadMessages);
       });

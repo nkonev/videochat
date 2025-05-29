@@ -96,7 +96,7 @@ import {
 } from "@/utils";
 import bus, {
   CHAT_DELETED,
-  CHAT_EDITED, CO_CHATTED_PARTICIPANT_CHANGED,
+  CHAT_EDITED, CHAT_EVENTS_INITIALIZED, CO_CHATTED_PARTICIPANT_CHANGED,
   FILE_CREATED,
   FILE_REMOVED,
   FILE_UPDATED,
@@ -111,8 +111,7 @@ import bus, {
   PARTICIPANT_EDITED, PINNED_MESSAGE_EDITED,
   PINNED_MESSAGE_PROMOTED,
   PINNED_MESSAGE_UNPROMOTED,
-  PREVIEW_CREATED,
-  PROFILE_SET,
+  PREVIEW_CREATED, PROFILE_SET,
   PUBLISHED_MESSAGE_ADD, PUBLISHED_MESSAGE_EDITED,
   PUBLISHED_MESSAGE_REMOVE,
   REACTION_CHANGED,
@@ -121,7 +120,7 @@ import bus, {
   SCROLL_DOWN,
   USER_TYPING,
   VIDEO_CALL_USER_COUNT_CHANGED,
-  VIDEO_DIAL_STATUS_CHANGED
+  VIDEO_DIAL_STATUS_CHANGED, WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import {chat, chat_list_name, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -197,6 +196,7 @@ export default {
       return this.getInfo(this.chatId).then(()=>{
         this.chatStore.showCallManagement = true;
         this.chatEventsSubscription.graphQlSubscribe();
+        bus.emit(CHAT_EVENTS_INITIALIZED);
       })
     },
     onLogout() {
@@ -1041,14 +1041,10 @@ export default {
     setSplitter(messagesSplitpanesSelector, messagesSplitterDisplayVarName, videoMessages || !this.isAllowedVideo());
     this.chatStore.videoMessagesEnabled = videoMessages;
 
-    // create subscription object before ON_PROFILE_SET
+    // before subscribing with onProfileSet() because former invokes chatEventsSubscription
     this.chatEventsSubscription = graphqlSubscriptionMixin('chatEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
-    if (this.chatStore.currentUser) {
-      await this.onProfileSet();
-    }
-
-    bus.on(PROFILE_SET, this.onProfileSet);
+    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
     bus.on(LOGGED_OUT, this.onLogout);
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
@@ -1061,6 +1057,10 @@ export default {
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
     bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
+
+    if (this.chatStore.currentUser) {
+      await this.onProfileSet();
+    }
 
     writingUsersTimerId = setInterval(()=>{
       this.writingUsers = filterOutOldWritingUsers(this.writingUsers);
@@ -1076,10 +1076,9 @@ export default {
   beforeUnmount() {
     this.uninstallOnFocus();
 
-    this.chatEventsSubscription.graphQlUnsubscribe();
-    this.chatEventsSubscription = null;
+    this.onLogout();
 
-    bus.off(PROFILE_SET, this.onProfileSet);
+    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
     bus.off(LOGGED_OUT, this.onLogout);
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
@@ -1101,6 +1100,8 @@ export default {
 
     this.chatStore.isEditingBigText = false;
     this.canWriteMessage = true;
+
+    this.chatEventsSubscription = null;
   }
 }
 </script>

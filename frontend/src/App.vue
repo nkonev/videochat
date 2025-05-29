@@ -190,7 +190,6 @@ import bus, {
   OPEN_PARTICIPANTS_DIALOG,
   OPEN_PERMISSIONS_WARNING_MODAL,
   PLAYER_MODAL,
-  PROFILE_SET,
   REFRESH_ON_WEBSOCKET_RESTORED,
   UNREAD_MESSAGES_CHANGED,
   CO_CHATTED_PARTICIPANT_CHANGED,
@@ -206,6 +205,7 @@ import bus, {
   WEBSOCKET_CONNECTED,
   NOTIFICATION_COUNT_CHANGED,
   USER_TYPING,
+  PROFILE_SET, WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -355,17 +355,26 @@ export default {
           stopCall(this.chatStore, this.$route, this.$router);
         },
 
-        onProfileSet(){
-            this.chatStore.fetchNotificationsCount();
-            this.chatStore.fetchHasNewMessages();
+        async onProfileSet(){
+            await Promise.all([
+              this.chatStore.fetchNotificationsCount(),
+              this.chatStore.fetchHasNewMessages()
+            ])
             this.refreshInvitationCall();
+
+            this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
+            this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
+
             this.globalEventsSubscription.graphQlSubscribe();
             this.selfProfileEventsSubscription.graphQlSubscribe();
         },
         onLoggedOut() {
             this.resetVariables();
-            this.globalEventsSubscription.graphQlUnsubscribe();
-            this.selfProfileEventsSubscription.graphQlUnsubscribe();
+            this.globalEventsSubscription?.graphQlUnsubscribe();
+            this.selfProfileEventsSubscription?.graphQlUnsubscribe();
+
+            this.globalEventsSubscription = null;
+            this.selfProfileEventsSubscription = null;
         },
         resetVariables() {
             this.resetVideoInvitation()
@@ -623,7 +632,7 @@ export default {
           }
         },
         refreshInvitationCall() {
-          axios.get(`/api/video/user/being-invited-status`, {
+          return axios.get(`/api/video/user/being-invited-status`, {
               params: {
                   tokenId: this.chatStore.videoTokenId
               }
@@ -931,10 +940,6 @@ export default {
 
         createGraphQlClient();
 
-        // create subscription object before ON_PROFILE_SET (afterRouteInitializedOnce())
-        this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
-        this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
-
         // place onProfileSet() before fetchProfileIfNeed() to start subscription in onProfileSet()
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
@@ -958,6 +963,8 @@ export default {
         this.installOnFocus();
     },
     beforeUnmount() {
+        this.onLoggedOut();
+
         this.uninstallOnFocus();
         window.removeEventListener("resize", this.onWindowResized);
 
@@ -972,14 +979,9 @@ export default {
         bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         bus.off(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
 
-        this.globalEventsSubscription.graphQlUnsubscribe();
-        this.selfProfileEventsSubscription.graphQlUnsubscribe();
-        this.globalEventsSubscription = null;
-        this.selfProfileEventsSubscription = null;
+        clearInterval(sessionPingedTimer);
 
         destroyGraphqlClient();
-
-        clearInterval(sessionPingedTimer);
     },
 }
 </script>

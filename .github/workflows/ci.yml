@@ -367,12 +367,16 @@ jobs:
           (cd frontend; make check-env clean download package)
           (cd chat; make check-env clean download generate package-go)
           (cd event; make check-env clean download generate package-go)
+          (cd notification; make check-env clean download generate package-go)
+          (cd video; make check-env clean download generate package-go)
       - name: Run microservices
         if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make run-with-oauth2 &)
           (cd chat; make run &)
           (cd event; make run &)
+          (cd notification; make run &)
+          (cd video; make run &)
           (cd frontend; make run-docker-image &)
       - name: Wait for microservices
         if: env.SHOULD_RUN == 'true'
@@ -380,6 +384,8 @@ jobs:
           ./scripts/wait-for-it.sh -t 40 127.0.0.1:8060 -- echo 'aaa is up' # because aaa creates schema
           ./scripts/wait-for-it.sh -t 40 127.0.0.1:1235 -- echo 'chat is up'
           ./scripts/wait-for-it.sh -t 40 127.0.0.1:1238 -- echo 'event is up'
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:1230 -- echo 'notification is up'
+          ./scripts/wait-for-it.sh -t 40 127.0.0.1:1237 -- echo 'video is up'
           ./scripts/wait-for-it.sh -t 40 127.0.0.1:3000 -- echo 'front is up'
           # Once we started aaa (compiling) we start the emulator
           (cd aaa; make run-oauth2-emu &)
