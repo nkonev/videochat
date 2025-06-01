@@ -172,6 +172,7 @@ export default {
       initialLoaded: false,
       chatEventsSubscription: null,
       canWriteMessage: true, // for sake prevent disappearing TipTap on switching in the left pane
+      initialized: false,
     }
   },
   components: {
@@ -193,6 +194,7 @@ export default {
   },
   methods: {
     onProfileSet() {
+      this.initialized = true;
       return this.getInfo(this.chatId).then(()=>{
         this.chatStore.showCallManagement = true;
         this.chatEventsSubscription.graphQlSubscribe();
@@ -1058,7 +1060,7 @@ export default {
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
     bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
 
-    if (this.chatStore.currentUser) {
+    if (this.chatStore.currentUser && !this.initialized) {
       await this.onProfileSet();
     }
 
@@ -1102,6 +1104,7 @@ export default {
     this.canWriteMessage = true;
 
     this.chatEventsSubscription = null;
+    this.initialized = false;
   }
 }
 </script>

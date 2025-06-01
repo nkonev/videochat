@@ -218,6 +218,7 @@ export default {
         markInstance: null,
         userEventsSubscription: null,
         isLoading: false,
+        initialized: false,
     }
   },
   computed: {
@@ -378,6 +379,7 @@ export default {
       }
     },
     async onProfileSet() {
+      this.initialized = true;
       await this.initializeHashVariablesAndReloadItems();
       this.userEventsSubscription.graphQlSubscribe();
     },
@@ -706,7 +708,7 @@ export default {
     bus.on(LOGGED_OUT, this.onLoggedOut);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
-    if (this.canDrawUsers()) {
+    if (this.canDrawUsers() && !this.initialized) {
       await this.onProfileSet();
     }
 
@@ -738,6 +740,7 @@ export default {
     this.chatStore.isShowSearch = false;
 
     this.userEventsSubscription = null;
+    this.initialized = false;
   }
 }
 </script>

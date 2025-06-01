@@ -184,6 +184,7 @@
                 targetElement: null,
                 resizeObserver: null,
                 shouldShowButtons: false,
+                initialized: false,
             }
         },
         methods: {
@@ -534,6 +535,7 @@
                 }
             },
             onProfileSet(){
+                this.initialized = true;
                 this.loadFromStore();
             },
             removeOwnerFromSavedMessageIfNeed(editMessageDto) {
@@ -622,10 +624,6 @@
           ...mapStores(useChatStore),
         },
         mounted() {
-            if (this.chatStore.currentUser) {
-                this.onProfileSet();
-            }
-
             bus.on(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.on(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
@@ -636,6 +634,10 @@
             this.targetElement = document.getElementById('sendButtonContainer')
             this.setShouldShowSendMessageButtons();
             bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
+
+            if (this.chatStore.currentUser && !this.initialized) {
+              this.onProfileSet();
+            }
 
             this.resizeObserver = new ResizeObserver(this.setShouldShowSendMessageButtons);
             this.resizeObserver.observe(this.targetElement);
@@ -655,6 +657,8 @@
             this.targetElement = null;
             this.shouldShowButtons = false;
             this.chatStore.editMessageDto = chatEditMessageDtoFactory();
+
+            this.initialized = false;
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);

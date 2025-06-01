@@ -190,6 +190,7 @@ export default {
       online: false,
       isInVideo: false,
       userProfileEventsSubscription: null,
+      initialized: false,
     }
   },
   computed: {
@@ -350,6 +351,7 @@ export default {
       this.userProfileEventsSubscription.graphQlUnsubscribe();
     },
     onProfileSet() {
+      this.initialized = true;
       this.loadUser();
       this.graphQlUserStatusSubscribe();
       this.userProfileEventsSubscription.graphQlSubscribe();
@@ -424,7 +426,7 @@ export default {
     bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
     this.setMainTitle();
 
-    if (this.canDrawUsers()) {
+    if (this.canDrawUsers() && !this.initialized) {
       this.onProfileSet();
     }
 
@@ -445,6 +447,7 @@ export default {
     this.isInVideo = false;
 
     this.userProfileEventsSubscription = null;
+    this.initialized = false;
   },
   watch: {
     '$vuetify.locale.current': {

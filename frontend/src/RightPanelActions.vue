@@ -103,6 +103,7 @@ export default {
       return {
           isLoggingOut: false,
           userState: userStateFactory(),
+          initialized: false,
       }
   },
   computed: {
@@ -272,6 +273,7 @@ export default {
       }
     },
     onProfileSet() {
+      this.initialized = true;
       this.graphQlUserStatusSubscribe();
     },
     onLogOut() {
@@ -306,12 +308,13 @@ export default {
     }
   },
   mounted() {
-      if (this.canDrawUsers()) {
-          this.onProfileSet();
-      }
-
       bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
       bus.on(LOGGED_OUT, this.onLogOut);
+
+      if (this.canDrawUsers() && !this.initialized) {
+        this.onProfileSet();
+      }
+
       this.installOnFocus();
   },
   beforeUnmount() {
@@ -320,6 +323,8 @@ export default {
       this.uninstallOnFocus();
       bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
       bus.off(LOGGED_OUT, this.onLogOut);
+
+      this.initialized = false;
   },
 
 }

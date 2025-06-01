@@ -116,6 +116,7 @@
           markInstance: null,
           storedChatId: null,
           isLoading: false,
+          initialized: false,
         }
       },
 
@@ -375,6 +376,7 @@
           }
         },
         async onProfileSet() {
+          this.initialized = true;
           await this.initializeHashVariablesAndReloadItems();
         },
         onLoggedOut() {
@@ -872,7 +874,7 @@
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
-        if (this.canDrawMessages()) {
+        if (this.canDrawMessages() && !this.initialized) {
           await this.onProfileSet();
         }
 
@@ -903,6 +905,8 @@
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
+
+        this.initialized = false;
       }
     }
 </script>

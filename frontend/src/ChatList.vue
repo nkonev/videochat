@@ -164,6 +164,7 @@ export default {
         startingFromItemIdTop: null,
         startingFromItemIdBottom: null,
         isLoading: false,
+        initialized: false,
     }
   },
   computed: {
@@ -356,6 +357,7 @@ export default {
       this.doOnFocus();
     },
     async onProfileSet() {
+      this.initialized = true;
       await this.initializeHashVariablesAndReloadItems();
     },
     onLoggedOut() {
@@ -810,10 +812,6 @@ export default {
   async mounted() {
     this.markInstance = new Mark("div#chat-list-items .chat-name");
 
-    if (this.canDrawChats()) {
-      await this.onProfileSet();
-    }
-
     addEventListener("beforeunload", this.beforeUnload);
 
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
@@ -829,6 +827,10 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
     bus.on(USER_TYPING, this.onUserTyping);
+
+    if (this.canDrawChats() && !this.initialized) {
+      await this.onProfileSet();
+    }
 
     if (this.routeName == chat_list_name) {
       this.setTopTitle();
@@ -882,6 +884,7 @@ export default {
 
       this.chatStore.isShowSearch = false;
     }
+    this.initialized = false;
   }
 }
 </script>
