@@ -5,7 +5,7 @@ import bus, {
     WEBSOCKET_CONNECTED,
     WEBSOCKET_INITIALIZED,
     WEBSOCKET_LOST,
-    WEBSOCKET_RESTORED
+    WEBSOCKET_RESTORED, WEBSOCKET_UNINITIALIZED
 } from "@/bus/bus";
 
 // This is an adaptation of "https://the-guild.dev/graphql/ws/recipes#client-usage-with-abrupt-termination-on-pong-timeout" recipe
@@ -87,6 +87,7 @@ export const createGraphQlClient = () => {
         // bus.emit(WEBSOCKET_LOST);
     });
     bus.on(LOGGED_OUT, () => {
+        bus.emit(WEBSOCKET_UNINITIALIZED);
         initialized = false;
         graphQlClient.terminate();
     });

@@ -70,7 +70,7 @@
       MESSAGES_RELOAD,
       PLAYER_MODAL,
       FILE_CREATED,
-      WEBSOCKET_INITIALIZED,
+      WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -376,12 +376,23 @@
           }
         },
         async onProfileSet() {
-          this.initialized = true;
           await this.initializeHashVariablesAndReloadItems();
         },
+        async doInitialize() {
+          if (!this.initialized) {
+            this.initialized = true;
+            await this.onProfileSet();
+          }
+        },
         onLoggedOut() {
-          this.reset();
           this.beforeUnload();
+          this.reset();
+        },
+        doUninitialize() {
+          if (this.initialized) {
+            this.onLoggedOut();
+            this.initialized = false;
+          }
         },
         canDrawMessages() {
           return !!this.chatStore.currentUser
@@ -859,8 +870,8 @@
 
         this.storedChatId = this.chatId;
 
-        bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
-        bus.on(LOGGED_OUT, this.onLoggedOut);
+        bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
+        bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
         bus.on(SCROLL_DOWN, this.onScrollDownButton);
         bus.on(MESSAGE_ADD, this.onNewMessage);
         bus.on(MESSAGE_DELETED, this.onDeleteMessage);
@@ -874,21 +885,23 @@
 
         this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
-        if (this.canDrawMessages() && !this.initialized) {
-          await this.onProfileSet();
+        if (this.canDrawMessages()) {
+          await this.doInitialize();
         }
 
         this.installOnFocus();
       },
 
       beforeUnmount() {
+        this.saveLastVisibleElement(this.storedChatId);
+
         this.uninstallOnFocus();
+
+        this.doUninitialize();
 
         this.markInstance.unmark();
         this.markInstance = null;
         removeEventListener("beforeunload", this.beforeUnload);
-
-        this.saveLastVisibleElement(this.storedChatId);
 
         this.storedChatId = null;
 
@@ -898,15 +911,13 @@
         bus.off(MESSAGE_EDITED, this.onEditMessage);
         bus.off(REACTION_CHANGED, this.onReactionChanged);
         bus.off(REACTION_REMOVED, this.onReactionRemoved);
-        bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
-        bus.off(LOGGED_OUT, this.onLoggedOut);
+        bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
+        bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
         bus.off(SCROLL_DOWN, this.onScrollDownButton);
         bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(MESSAGES_RELOAD, this.onMessagesReload);
         bus.off(FILE_CREATED, this.onFileCreatedEvent);
-
-        this.initialized = false;
       }
     }
 </script>

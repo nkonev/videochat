@@ -167,7 +167,7 @@ import bus, {
   CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL,
   OPEN_SIMPLE_MODAL,
-  WEBSOCKET_INITIALIZED,
+  WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
@@ -351,11 +351,22 @@ export default {
       this.userProfileEventsSubscription.graphQlUnsubscribe();
     },
     onProfileSet() {
-      this.initialized = true;
       this.loadUser();
       this.graphQlUserStatusSubscribe();
       this.userProfileEventsSubscription.graphQlSubscribe();
       this.requestStatuses();
+    },
+    doInitialize() {
+      if (!this.initialized) {
+        this.initialized = true;
+        this.onProfileSet();
+      }
+    },
+    doUninitialize() {
+      if (this.initialized) {
+        this.onLoggedOut();
+        this.initialized = false;
+      }
     },
     canDrawUsers() {
       return !!this.chatStore.currentUser
@@ -422,12 +433,12 @@ export default {
     // before subscribing with onProfileSet() because former invokes userProfileEventsSubscription
     this.userProfileEventsSubscription = graphqlSubscriptionMixin('userProfileEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
-    bus.on(LOGGED_OUT, this.onLoggedOut);
-    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
+    bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
+    bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
     this.setMainTitle();
 
-    if (this.canDrawUsers() && !this.initialized) {
-      this.onProfileSet();
+    if (this.canDrawUsers()) {
+      this.doInitialize();
     }
 
     this.installOnFocus();
@@ -435,10 +446,10 @@ export default {
   beforeUnmount() {
     this.uninstallOnFocus();
 
-    this.onLoggedOut();
+    this.doUninitialize();
 
-    bus.off(LOGGED_OUT, this.onLoggedOut);
-    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
+    bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
+    bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
 
     this.unsetMainTitle();
 
@@ -447,7 +458,6 @@ export default {
     this.isInVideo = false;
 
     this.userProfileEventsSubscription = null;
-    this.initialized = false;
   },
   watch: {
     '$vuetify.locale.current': {

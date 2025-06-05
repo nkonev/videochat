@@ -68,6 +68,7 @@ export const WEBSOCKET_LOST = "wsLost";
 export const WEBSOCKET_RESTORED = "wsRestored";
 
 export const WEBSOCKET_INITIALIZED = "wsInitialized"; // phase 2
+export const WEBSOCKET_UNINITIALIZED = "wsUnInitialized"; // phase 2
 
 export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";

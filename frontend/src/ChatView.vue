@@ -120,7 +120,7 @@ import bus, {
   SCROLL_DOWN,
   USER_TYPING,
   VIDEO_CALL_USER_COUNT_CHANGED,
-  VIDEO_DIAL_STATUS_CHANGED, WEBSOCKET_INITIALIZED,
+  VIDEO_DIAL_STATUS_CHANGED, WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {chat, chat_list_name, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "@/router/routes";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
@@ -195,7 +195,6 @@ export default {
   },
   methods: {
     onProfileSet() {
-      this.initialized = true;
       return this.getInfo(this.chatId).then(()=>{
         this.chatStore.showCallManagement = true;
         if (!this.chatEventsSubscribed) {
@@ -204,10 +203,22 @@ export default {
         }
       })
     },
+    async doInitialize() {
+      if (!this.initialized) {
+        this.initialized = true;
+        await this.onProfileSet();
+      }
+    },
     onLogout() {
       this.partialReset(true);
       this.initialLoaded = false;
       this.chatEventsSubscription.graphQlUnsubscribe();
+    },
+    doUninitialize() {
+      if (this.initialized) {
+        this.onLogout();
+        this.initialized = false;
+      }
     },
     fetchAndSetChat(chatId) {
       return axios.get(`/api/chat/${chatId}`, {
@@ -1011,7 +1022,7 @@ export default {
               // used for
               // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
               // 2. to prevent rendering MessageList and get 401
-              this.partialReset();
+              this.partialReset(); // also unsets "this.chatEventsSubscribed"
               this.onProfileSet().then(()=>{
                 this.chatStore.decrementProgressCount();
               })
@@ -1050,8 +1061,8 @@ export default {
     // before subscribing with onProfileSet() because former invokes chatEventsSubscription
     this.chatEventsSubscription = graphqlSubscriptionMixin('chatEvents', this.getGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextSubscriptionElement);
 
-    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
-    bus.on(LOGGED_OUT, this.onLogout);
+    bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.on(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.on(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.on(PINNED_MESSAGE_EDITED, this.onPinnedMessageChanged);
@@ -1064,8 +1075,8 @@ export default {
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
     bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
 
-    if (this.chatStore.currentUser && !this.initialized) {
-      await this.onProfileSet();
+    if (this.chatStore.currentUser) {
+      await this.doInitialize();
     }
 
     writingUsersTimerId = setInterval(()=>{
@@ -1082,10 +1093,10 @@ export default {
   beforeUnmount() {
     this.uninstallOnFocus();
 
-    this.onLogout();
+    this.doUninitialize();
 
-    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
-    bus.off(LOGGED_OUT, this.onLogout);
+    bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.off(PINNED_MESSAGE_PROMOTED, this.onPinnedMessagePromoted);
     bus.off(PINNED_MESSAGE_UNPROMOTED, this.onPinnedMessageUnpromoted);
     bus.off(PINNED_MESSAGE_EDITED, this.onPinnedMessageChanged);
@@ -1108,7 +1119,6 @@ export default {
     this.canWriteMessage = true;
 
     this.chatEventsSubscription = null;
-    this.initialized = false;
   }
 }
 </script>

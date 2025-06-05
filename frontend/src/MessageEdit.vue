@@ -535,8 +535,18 @@
                 }
             },
             onProfileSet(){
-                this.initialized = true;
                 this.loadFromStore();
+            },
+            doInitialize() {
+              if (!this.initialized) {
+                this.initialized = true;
+                this.onProfileSet();
+              }
+            },
+            doUninitialize() {
+              if (this.initialized) {
+                this.initialized = false;
+              }
             },
             removeOwnerFromSavedMessageIfNeed(editMessageDto) {
               if (editMessageDto && editMessageDto.ownerId && editMessageDto.ownerId != this.chatStore.currentUser?.id) {
@@ -629,7 +639,7 @@
             bus.on(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.on(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.on(COLOR_SET, this.onColorSet);
-            bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
+            bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
             bus.on(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             this.targetElement = document.getElementById('sendButtonContainer')
             this.setShouldShowSendMessageButtons();
@@ -638,17 +648,19 @@
             this.resizeObserver = new ResizeObserver(this.setShouldShowSendMessageButtons);
             this.resizeObserver.observe(this.targetElement);
 
-            if (this.chatStore.currentUser && !this.initialized) {
-              this.onProfileSet();
+            if (this.chatStore.currentUser) {
+              this.doInitialize();
             }
         },
         beforeUnmount() {
+            this.doUninitialize();
+
             bus.off(SET_EDIT_MESSAGE, this.onSetMessage);
             bus.off(SET_EDIT_MESSAGE_MODAL, this.onSetMessageFromModal);
             bus.off(MESSAGE_EDIT_SET_FILE_ITEM_UUID, this.onFileItemUuid);
             bus.off(MESSAGE_EDIT_LINK_SET, this.onMessageLinkSet);
             bus.off(COLOR_SET, this.onColorSet);
-            bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
+            bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
 
@@ -657,8 +669,6 @@
             this.targetElement = null;
             this.shouldShowButtons = false;
             this.chatStore.editMessageDto = chatEditMessageDtoFactory();
-
-            this.initialized = false;
         },
         created(){
             this.notifyAboutTyping = throttle(this.notifyAboutTyping, 500);

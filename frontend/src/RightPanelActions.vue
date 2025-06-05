@@ -76,12 +76,12 @@ import {
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
-    LOGGED_OUT, OPEN_CHAT_EDIT,
-    OPEN_NOTIFICATIONS_DIALOG,
-    OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
-    OPEN_SETTINGS,
-    OPEN_VIEW_FILES_DIALOG,
-    WEBSOCKET_INITIALIZED,
+  LOGGED_OUT, OPEN_CHAT_EDIT,
+  OPEN_NOTIFICATIONS_DIALOG,
+  OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
+  OPEN_SETTINGS,
+  OPEN_VIEW_FILES_DIALOG,
+  WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {copyCallLink, getBlogLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
@@ -273,12 +273,23 @@ export default {
       }
     },
     onProfileSet() {
-      this.initialized = true;
       this.graphQlUserStatusSubscribe();
+    },
+    doInitialize() {
+      if (!this.initialized) {
+        this.initialized = true;
+        this.onProfileSet();
+      }
     },
     onLogOut() {
       this.userState = userStateFactory();
       this.graphQlUserStatusUnsubscribe();
+    },
+    doUninitialize() {
+      if (this.initialized) {
+        this.onLogOut();
+        this.initialized = false;
+      }
     },
     canDrawUsers() {
       return !!this.chatStore.currentUser
@@ -308,22 +319,21 @@ export default {
     }
   },
   mounted() {
-      if (this.canDrawUsers() && !this.initialized) {
-          this.onProfileSet();
+      if (this.canDrawUsers()) {
+          this.doInitialize();
       }
 
-      bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
-      bus.on(LOGGED_OUT, this.onLogOut);
+      bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
+      bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
       this.installOnFocus();
   },
   beforeUnmount() {
-      this.onLogOut();
+      this.doUninitialize();
 
       this.uninstallOnFocus();
-      bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
-      bus.off(LOGGED_OUT, this.onLogOut);
+      bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
+      bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
 
-      this.initialized = false;
   },
 
 }

@@ -106,7 +106,7 @@ import bus, {
   VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED,
   USER_TYPING,
-  WEBSOCKET_INITIALIZED,
+  WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -357,14 +357,25 @@ export default {
       this.doOnFocus();
     },
     async onProfileSet() {
-      this.initialized = true;
       await this.initializeHashVariablesAndReloadItems();
     },
+    async doInitialize() {
+      if (!this.initialized) {
+        this.initialized = true;
+        await this.onProfileSet();
+      }
+    },
     onLoggedOut() {
+      this.beforeUnload();
       this.graphQlUserStatusUnsubscribe();
       this.reset();
     },
-
+    doUninitialize() {
+      if (this.initialized) {
+        this.onLoggedOut();
+        this.initialized = false;
+      }
+    },
     canDrawChats() {
       return !!this.chatStore.currentUser
     },
@@ -815,8 +826,8 @@ export default {
     addEventListener("beforeunload", this.beforeUnload);
 
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
-    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
-    bus.on(LOGGED_OUT, this.onLoggedOut);
+    bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
     bus.on(CHAT_ADD, this.onNewChat);
     bus.on(CHAT_EDITED, this.onEditChat);
@@ -834,8 +845,8 @@ export default {
       this.chatStore.searchType = SEARCH_MODE_CHATS;
     }
 
-    if (this.canDrawChats() && !this.initialized) {
-      await this.onProfileSet();
+    if (this.canDrawChats()) {
+      await this.doInitialize();
     }
 
     writingUsersTimerId = setInterval(()=>{
@@ -859,12 +870,12 @@ export default {
 
     this.uninstallOnFocus();
 
-    this.graphQlUserStatusUnsubscribe();
+    this.doUninitialize();
     this.uninstallScroller();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_CHATS, this.onSearchStringChangedDebounced);
-    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
-    bus.off(LOGGED_OUT, this.onLoggedOut);
+    bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
     bus.off(CHAT_ADD, this.onNewChat);
     bus.off(CHAT_EDITED, this.onEditChat);
@@ -884,8 +895,6 @@ export default {
 
       this.chatStore.isShowSearch = false;
     }
-
-    this.initialized = false;
   }
 }
 </script>

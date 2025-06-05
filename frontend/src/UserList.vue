@@ -171,7 +171,7 @@ import bus, {
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL, OPEN_SIMPLE_MODAL,
   REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED,
-  WEBSOCKET_INITIALIZED,
+  WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -379,9 +379,14 @@ export default {
       }
     },
     async onProfileSet() {
-      this.initialized = true;
       await this.initializeHashVariablesAndReloadItems();
       this.userEventsSubscription.graphQlSubscribe();
+    },
+    async doInitialize() {
+      if (!this.initialized) {
+        this.initialized = true;
+        await this.onProfileSet();
+      }
     },
     conditionToSaveLastVisible() {
         return !this.isScrolledToTop();
@@ -397,12 +402,17 @@ export default {
     },
 
     onLoggedOut() {
+      this.beforeUnload();
       this.reset();
       this.graphQlUserStatusUnsubscribe();
       this.userEventsSubscription.graphQlUnsubscribe();
-      this.beforeUnload();
     },
-
+    doUninitialize() {
+      if (this.initialized) {
+        this.onLoggedOut();
+        this.initialized = false;
+      }
+    },
     canDrawUsers() {
       return !!this.chatStore.currentUser
     },
@@ -704,25 +714,25 @@ export default {
     addEventListener("beforeunload", this.beforeUnload);
 
     bus.on(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
-    bus.on(WEBSOCKET_INITIALIZED, this.onProfileSet);
-    bus.on(LOGGED_OUT, this.onLoggedOut);
+    bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
-    if (this.canDrawUsers() && !this.initialized) {
-      await this.onProfileSet();
+    if (this.canDrawUsers()) {
+      await this.doInitialize();
     }
 
     this.installOnFocus();
   },
 
   beforeUnmount() {
-    this.onLoggedOut()
-
-    this.uninstallOnFocus();
-
     // an analogue of watch(effectively(chatId)) in MessageList.vue
     // used when the user presses Start in the RightPanel
     this.saveLastVisibleElement();
+
+    this.doUninitialize();
+
+    this.uninstallOnFocus();
 
     this.markInstance.unmark();
     this.markInstance = null;
@@ -731,8 +741,8 @@ export default {
     this.uninstallScroller();
 
     bus.off(SEARCH_STRING_CHANGED + '.' + SEARCH_MODE_USERS, this.onSearchStringChanged);
-    bus.off(WEBSOCKET_INITIALIZED, this.onProfileSet);
-    bus.off(LOGGED_OUT, this.onLoggedOut);
+    bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     setTitle(null);
@@ -740,7 +750,6 @@ export default {
     this.chatStore.isShowSearch = false;
 
     this.userEventsSubscription = null;
-    this.initialized = false;
   }
 }
 </script>
