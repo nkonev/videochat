@@ -1028,6 +1028,10 @@ go install github.com/99designs/gqlgen@v0.17.20
 gqlgen generate
 ```
 
+```bash
+go run github.com/99designs/gqlgen --verbose generate
+```
+
 ## Subscribing
 ```
 subscription {
@@ -1201,6 +1205,12 @@ mockery --all
 
 # or
 go generate ./...
+```
+
+```bash
+go install github.com/vektra/mockery/v3@v3.3.4
+mockery init
+
 ```
 
 # Admin's corner

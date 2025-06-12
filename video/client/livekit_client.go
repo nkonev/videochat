@@ -8,7 +8,6 @@ import (
 )
 
 // primarily for testing purposes
-//go:generate mockery --name LivekitRoomClient
 type LivekitRoomClient interface {
 	ListParticipants(ctx context.Context, req *livekit.ListParticipantsRequest) (*livekit.ListParticipantsResponse, error)
 	MutePublishedTrack(ctx context.Context, req *livekit.MuteRoomTrackRequest) (*livekit.MuteRoomTrackResponse, error)

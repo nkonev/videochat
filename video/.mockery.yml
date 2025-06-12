@@ -1,0 +1,18 @@
+# https://vektra.github.io/mockery/v3.3/configuration/#parameter-descriptions
+all: false
+dir: '{{.InterfaceDir}}'
+filename: mocks_test.go
+force-file-write: true
+formatter: goimports
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}'
+recursive: false
+require-template-schema-exists: true
+template: testify
+template-schema: '{{.Template}}.schema.json'
+packages:
+  nkonev.name/video/client:
+    config:
+      all: true
+      filename: mocks.go

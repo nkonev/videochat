@@ -46,13 +46,6 @@
   tags:
     - videochat
 
-- name: Remove empty dirs
-  ansible.builtin.file:
-    path: /opt/containerd
-    state: absent
-  tags:
-    - videochat
-
 - name: Install docker proxy
   when: docker_proxy is defined
   template:

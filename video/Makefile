@@ -30,10 +30,10 @@ generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"service\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 install-mockery:
-	go install github.com/vektra/mockery/v2@v2.45.1
+	go install github.com/vektra/mockery/v3@v3.3.4
 
 generate-mocks:
-	go generate ./...
+	mockery
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=20s -p 1
