@@ -177,7 +177,7 @@ services:
         max-size: "50m"
 
   livekit:
-      image: livekit/livekit-server:v1.9.0
+    image: livekit/livekit-server:v1.9.0
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     network_mode: "host"
@@ -246,7 +246,7 @@ services:
         max-file: "1"
 
   fluentbit:
-    image: fluent/fluent-bit:3.2.4
+    image: fluent/fluent-bit:4.0.3
     restart: unless-stopped
     hostname: fluentbit
     volumes:
