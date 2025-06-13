@@ -200,7 +200,8 @@ services:
       - SYS_ADMIN
 
   jaeger:
-    image: jaegertracing/all-in-one:1.58.1
+    # https://www.jaegertracing.io/docs/2.0/getting-started/
+    image: jaegertracing/jaeger:2.7.0
     hostname: jaeger
     restart: unless-stopped
     ports:
@@ -210,15 +211,22 @@ services:
       - 36686:16686 # web ui
     networks:
       backend:
+    # https://www.jaegertracing.io/docs/2.7/deployment/configuration/
+    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/internal/all-in-one.yaml
+    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/config-opensearch.yaml
+    volumes:
+      - ./docker/jaeger/config.yaml:/jaeger/config.yaml
     environment:
-      - QUERY_BASE_PATH=/jaeger
+      - JAEGER_LISTEN_HOST=0.0.0.0
+    command: [
+      "--config",
+      "/jaeger/config.yaml",
+    ]
     logging:
       driver: "json-file"
       options:
         max-size: "50m"
         max-file: "1"
-    command:
-      - --memory.max-traces=100000
 
   pgadmin:
     restart: unless-stopped

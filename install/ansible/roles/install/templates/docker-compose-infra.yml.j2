@@ -243,15 +243,12 @@ services:
         tag: chat-egress
 
   jaeger:
-    image: jaegertracing/all-in-one:1.58.1
+    # https://www.jaegertracing.io/docs/2.0/getting-started/
+    image: jaegertracing/jaeger:2.7.0
     hostname: jaeger
     networks:
       backend:
     deploy:
-      resources:
-        limits:
-#          cpus: '0.40'
-          memory: '2G'
       labels:
         - "traefik.enable=true"
 
@@ -262,10 +259,17 @@ services:
         - "traefik.http.routers.jaeger-ui-router.tls.certresolver=myresolver"
         - "traefik.http.routers.jaeger-ui-router.middlewares=auth-middleware@file,retry-middleware@file"
 
-    command:
-      - --memory.max-traces=10000
+    # https://www.jaegertracing.io/docs/2.7/deployment/configuration/
+    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/internal/all-in-one.yaml
+    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/config-opensearch.yaml
+    volumes:
+      - ./jaeger/config.yaml:/jaeger/config.yaml
     environment:
-      - QUERY_BASE_PATH=/jaeger
+      - JAEGER_LISTEN_HOST=0.0.0.0
+    command: [
+      "--config",
+      "/jaeger/config.yaml",
+    ]
     logging:
       driver: "journald"
       options:

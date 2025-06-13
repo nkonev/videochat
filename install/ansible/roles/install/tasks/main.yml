@@ -113,6 +113,20 @@
   tags:
     - videochat
 
+- name: Create Jaeger config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/jaeger"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create Jaeger config
+  ansible.builtin.copy:
+    src: files/config.yaml
+    dest: "{{ dir_prefix }}/jaeger/config.yaml"
+  tags:
+    - videochat
+
 - name: Create Opensearch config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d"
