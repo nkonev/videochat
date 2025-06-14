@@ -620,7 +620,7 @@
             checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
             checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
             checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
-            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a"),
+            checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a"), // 1 is to handle struck links
           ].filter(r => r.found);
           if (foundElements.length) {
             e.preventDefault();
