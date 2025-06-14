@@ -75,8 +75,8 @@
     import {
       checkUpByTree, checkUpByTreeObj,
       deepCopy, edit_message, embed_message_reply,
-      findIndex, findIndexNonStrictly, getBlogLink, getPublicMessageLink,
-      hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash,
+      findIndex, findIndexNonStrictly, getBlogLink, getPublicMessageLink, goToPreservingQuery,
+      hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash, parseChatLink, parseMessageLink, parseUserLink,
       replaceInArray,
       replaceOrAppend,
       replaceOrPrepend, reply_message,
@@ -88,7 +88,7 @@
     import {useChatStore} from "@/store/chatStore";
     import MessageItem from "@/MessageItem.vue";
     import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
-    import {messageIdHashPrefix, messageIdPrefix, profile_name} from "@/router/routes";
+    import {chat_name, messageIdHashPrefix, messageIdPrefix, profile_name, videochat_name} from "@/router/routes";
     import { getTopMessagePosition, removeTopMessagePosition, setTopMessagePosition } from "@/store/localStore";
     import Mark from "mark.js";
     import hashMixin from "@/mixins/hashMixin";
@@ -620,7 +620,7 @@
             checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
             checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
             checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
-            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a" && el?.classList?.contains("mention")),
+            checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "a"),
           ].filter(r => r.found);
           if (foundElements.length) {
             e.preventDefault();
@@ -724,15 +724,53 @@
                 break;
               }
               case "a": {
-                const userId = found.getAttribute('data-id');
-                if (hasLength(userId)) {
-                  const route = {name: profile_name, params: {id: userId}};
-                  this.$router.push(route);
+                const href = found.getAttribute("href");
+                if (found.classList?.contains("mention")) {
+                  const userId = found.getAttribute('data-id');
+                  if (hasLength(userId)) {
+                    const route = {name: profile_name, params: {id: userId}};
+                    this.$router.push(route);
+                  }
+                  break;
+                } else if (href.startsWith("/")) {
+                    // try to parse message link and go to it - only "/chat/1000#message-1", regardless in video call we are or not
+                    console.info("examining internal link", href);
+
+                    const messageObj = parseMessageLink(href);
+                    if (messageObj) {
+                      console.info("href", href, "is recognized as message", messageObj);
+                      const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+                      const obj = {name: routeName, params: {id: messageObj.chatId}, hash: messageIdHashPrefix + messageObj.id};
+                      goToPreservingQuery(this.$route, this.$router, obj);
+                      break;
+                    }
+
+                    const chatObj = parseChatLink(href);
+                    if (chatObj) {
+                      console.info("href", href, "is recognized as chat", chatObj);
+                      const routeName = chat_name;
+                      const obj = {name: routeName, params: {id: chatObj.chatId}};
+                      goToPreservingQuery(this.$route, this.$router, obj);
+                      break;
+                    }
+
+                    const userObj = parseUserLink(href);
+                    if (userObj) {
+                      console.info("href", href, "is recognized as user", userObj);
+                      const routeName = profile_name;
+                      const obj = {name: routeName, params: {id: userObj.userId}};
+                      goToPreservingQuery(this.$route, this.$router, obj);
+                      break;
+                    }
+
                 }
-                break;
+                window.open(href, '_blank').focus();
               }
             }
           }
+        },
+        isVideoRoute() {
+          return this.$route.name == videochat_name
         },
         onFileCreatedEvent(dto) {
           if (dto.fileInfoDto.canPlayAsVideo && isConverted(dto.fileInfoDto.filename)) {

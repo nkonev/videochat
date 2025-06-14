@@ -317,6 +317,68 @@ export const getIdFromRouteHash = (hash) => {
     return hasLength(str) ? str : null;
 };
 
+// "/chat/1000#message-1"
+export const parseMessageLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length) {
+            if (pathArray[1] == "chat") {
+                const chatId = parseInt(pathArray[2]);
+                const maybeMessageId = getIdFromRouteHash(url.hash);
+                if (maybeMessageId) {
+                    const messageId = parseInt(maybeMessageId);
+                    return {
+                        chatId: chatId,
+                        id: messageId
+                    }
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
+    }
+}
+
+// /chat/1
+export const parseChatLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length) {
+            if (pathArray[1] == "chat") {
+                const chatId = parseInt(pathArray[2]);
+                return {
+                    chatId: chatId,
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
+    }
+}
+
+// /user/1
+export const parseUserLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length) {
+            if (pathArray[1] == "user") {
+                const userId = parseInt(pathArray[2]);
+                return {
+                    userId: userId,
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
+    }
+}
+
 export const defaultAudioMute = true;
 
 export const renameFilePart = (file, newFileName) => {

@@ -742,7 +742,7 @@ export default {
             this.resetVideoInvitation();
           });
         },
-        onVideRecordingChanged(e) {
+        onVideoRecordingChanged(e) {
           if (this.isVideoRoute()) {
             this.chatStore.showRecordStartButton = !e.recordInProgress;
             this.chatStore.showRecordStopButton = e.recordInProgress;
@@ -948,7 +948,7 @@ export default {
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.on(VIDEO_CALL_INVITED, this.onVideoCallInvited);
-        bus.on(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+        bus.on(VIDEO_RECORDING_CHANGED, this.onVideoRecordingChanged);
         bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         bus.on(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
 
@@ -975,7 +975,7 @@ export default {
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
         bus.off(VIDEO_CALL_INVITED, this.onVideoCallInvited);
-        bus.off(VIDEO_RECORDING_CHANGED, this.onVideRecordingChanged);
+        bus.off(VIDEO_RECORDING_CHANGED, this.onVideoRecordingChanged);
         bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
         bus.off(NOTIFICATION_COUNT_CHANGED, this.onNotificationCountChanged);
 
