@@ -1430,3 +1430,9 @@ There are the following mandatory fields every microservice should write
 * `service` in lower case, which is the name of microservice
 * `trace_id`
 * `span_id`
+
+# Docker execs
+```bash
+docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_redis --filter desired-state=running -q)) redis-cli -n 2
+docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_opensearch --filter desired-state=running -q)) bash
+```
