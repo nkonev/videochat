@@ -188,8 +188,15 @@ export default () => {
                             return
                         }
 
-                        const notEnoughItemsOnPage = this.itemsDto.count > pageSize && this.itemsDto.items.length < pageSize;
-                        const nonLastPage = this.page != this.pagesCount;
+                        // usecase:
+                        // there are 20 pinned
+                        // user opens PinnedMessagesModal and sees the last one (#1) and no pagination
+                        // we pin one more message (#21)
+                        // user opens PinnedMessagesModal and sees the newly pinned message (#21) and pagination and doesn't see (#1)
+                        // user unpins (#21) by clicking trash button in PinnedMessagesModal
+                        // without this fix user won't see (#1) again
+                        const notEnoughItemsOnPage = this.itemsDto.count >= pageSize && this.itemsDto.items.length < pageSize;
+                        const nonLastPage = this.page != this.pagesCount || this.page == firstPage; // first page is not last for sake the algorithm
                         if (notEnoughItemsOnPage && nonLastPage) {
                             this.updateItems(true);
                         }
