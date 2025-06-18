@@ -72,7 +72,7 @@ export default {
                     });
                 }
                 ret.push({
-                  title: this.$vuetify.locale.t('$vuetify.copy'),
+                  title: this.isMobile() ? this.$vuetify.locale.t('$vuetify.copy_text') : this.$vuetify.locale.t('$vuetify.copy'),
                   icon: 'mdi-content-copy',
                   action: this.copy
                 });
@@ -167,21 +167,32 @@ export default {
         getSelection() {
             return window.getSelection().toString();
         },
-        copy() {
-          if (this.targetEl) {
-            const {found, el} = checkUpByTreeObj(this.targetEl, 10, (el) => el?.classList?.contains("message-item-wrapper"));
-            if (found) {
-              const type = "text/html";
-              const blob = new Blob([el.innerHTML], { type: type });
-              const clipboardItem = new ClipboardItem({
+        async copy() {
+          try {
+            if (this.targetEl) {
+              const {
+                found,
+                el
+              } = checkUpByTreeObj(this.targetEl, 10, (el) => el?.classList?.contains("message-item-wrapper"));
+              if (found) {
+                if (this.isMobile()) {
+                  navigator.clipboard.writeText(el.textContent);
+                } else {
+                  const type = "text/html";
+                  const blob = new Blob([el.innerHTML], {type: type});
+                  const clipboardItem = new ClipboardItem({
                     [blob.type]: blob,
                   });
-              navigator.clipboard.write([clipboardItem]);
+                  await navigator.clipboard.write([clipboardItem]);
+                }
 
-              this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
-            } else {
-              console.warn("not found")
+                this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
+              } else {
+                this.setWarning("element is not found")
+              }
             }
+          } catch (e) {
+            this.setError(e, "unable to copy")
           }
         },
         copySelected() {

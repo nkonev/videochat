@@ -105,7 +105,7 @@ app.config.globalProperties.setTempNotification = (txt) => {
     chatStore.showAlert = true;
     chatStore.showAlertDebounced = true;
     chatStore.errorColor = "black";
-    chatStore.alertTimeout = 5000;
+    chatStore.alertTimeout = 3000;
 }
 
 // fixes https://stackoverflow.com/questions/49627750/vuetify-closing-snackbar-without-closing-dialog
