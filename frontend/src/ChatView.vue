@@ -327,6 +327,7 @@ export default {
             }
           }
         })
+        this.updateLastUpdateDateTime();
         return Promise.resolve();
       })
     },

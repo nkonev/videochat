@@ -316,6 +316,7 @@ export default {
     },
     onFocus() {
       this.requestStatuses();
+      this.updateLastUpdateDateTime();
     }
   },
   mounted() {

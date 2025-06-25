@@ -630,6 +630,7 @@ export default {
             this.chatStore.fetchHasNewMessages();
             this.refreshInvitationCall();
           }
+          this.updateLastUpdateDateTime();
         },
         refreshInvitationCall() {
           return axios.get(`/api/video/user/being-invited-status`, {
