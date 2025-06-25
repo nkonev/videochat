@@ -625,12 +625,12 @@ export default {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
         },
         onFocus() {
+          this.updateLastUpdateDateTime();
           if (this.chatStore.currentUser) {
             this.chatStore.fetchNotificationsCount();
             this.chatStore.fetchHasNewMessages();
             this.refreshInvitationCall();
           }
-          this.updateLastUpdateDateTime();
         },
         refreshInvitationCall() {
           return axios.get(`/api/video/user/being-invited-status`, {

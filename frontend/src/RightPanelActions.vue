@@ -315,8 +315,8 @@ export default {
       })
     },
     onFocus() {
-      this.requestStatuses();
       this.updateLastUpdateDateTime();
+      this.requestStatuses();
     }
   },
   mounted() {

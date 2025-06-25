@@ -230,13 +230,13 @@ export default (name) => {
       async reloadItems() {
         await this.uninstallScroller();
         await this.$nextTick();
+        if (this.updateLastUpdateDateTime) {
+              this.updateLastUpdateDateTime();
+        }
         await this.initialLoad();
         await this.$nextTick(async () => {
           await this.installScroller();
         });
-        if (this.updateLastUpdateDateTime) {
-            this.updateLastUpdateDateTime();
-        }
       },
     }
   }

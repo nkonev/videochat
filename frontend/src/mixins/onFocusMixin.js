@@ -16,8 +16,8 @@ export default () => {
                 this.$nextTick(() => {
                     if (!!this.$el && ((+new Date()) - this.lastUpdateDateTime) > (5 * 1000)) {
                         if (this.onFocus) {
-                            this.onFocus();
                             this.updateLastUpdateDateTime();
+                            this.onFocus();
                         }
                     }
                 })

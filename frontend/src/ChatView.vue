@@ -296,6 +296,7 @@ export default {
       return !!this.subscriptionElements.length
     },
     getInfo(chatId) {
+      this.updateLastUpdateDateTime();
       return this.fetchAndSetChat(chatId).then((data) => {
         if (this.isRealTetATet(data)) {
             if (!this.hasTetATetUserStatusSubscriptions()) {
@@ -327,7 +328,6 @@ export default {
             }
           }
         })
-        this.updateLastUpdateDateTime();
         return Promise.resolve();
       })
     },

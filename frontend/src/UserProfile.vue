@@ -401,10 +401,10 @@ export default {
         this.viewableUser = u;
     },
     onFocus() {
-        if (this.chatStore.currentUser) {
+      this.updateLastUpdateDateTime();
+      if (this.chatStore.currentUser) {
           this.requestStatuses();
-        }
-        this.updateLastUpdateDateTime();
+      }
     },
     requestStatuses() {
           this.$nextTick(()=>{
