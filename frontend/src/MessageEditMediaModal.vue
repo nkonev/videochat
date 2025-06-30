@@ -188,6 +188,9 @@
                 this.chatId = null;
                 this.type = '';
             },
+            canUpdateItems() {
+              return !!this.chatId
+            },
             resetOnRouteIdChange(){
                 return true
             },

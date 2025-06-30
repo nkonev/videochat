@@ -190,6 +190,9 @@ export default {
                 "pinned-text": true,
             }
         },
+        canUpdateItems() {
+          return !!this.chatId
+        },
         resetOnRouteIdChange() {
             return true
         },

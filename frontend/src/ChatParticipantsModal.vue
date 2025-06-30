@@ -459,6 +459,9 @@
 
                 this.userSearchString = null;
             },
+            canUpdateItems() {
+              return !!this.chatId
+            },
             resetOnRouteIdChange(){
                 return true
             },

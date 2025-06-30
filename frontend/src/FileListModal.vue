@@ -425,6 +425,9 @@ export default {
             this.fileItemUuid = null;
             this.searchString = null;
         },
+        canUpdateItems() {
+          return !!this.chatId
+        },
         resetOnRouteIdChange(){
             return true
         },

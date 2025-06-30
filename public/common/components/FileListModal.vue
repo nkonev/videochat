@@ -229,6 +229,9 @@ export default {
         },
         // smart fetching
         updateItems(silent) {
+          if (!this.canUpdateItems()) {
+            return Promise.resolve()
+          }
           if (!silent) {
             this.loading = true;
           }
@@ -384,6 +387,9 @@ export default {
             this.messageId = null;
             this.fileItemUuid = null;
             this.searchString = null;
+        },
+        canUpdateItems() {
+          return !!this.chatId
         },
         shouldReactOnPageChange() {
             return this.show

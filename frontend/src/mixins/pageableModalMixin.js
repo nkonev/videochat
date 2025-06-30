@@ -7,7 +7,7 @@ export const dtoFactory = () => {return {items: [], count: 0} };
 
 // requires extractDtoFromEventDto(), isCachedRelevantToArguments(), initializeWithArguments(),
 // resetOnRouteIdChange(), initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
-// clearOnClose(), clearOnReset(), shouldReactOnPageChange()
+// clearOnClose(), clearOnReset(), shouldReactOnPageChange(), canUpdateItems()
 
 // optionally transformItems(), performMarking(), onInitialized(), afterFirstDrawItems()
 
@@ -57,6 +57,9 @@ export default () => {
             },
             // smart fetching
             updateItems(silent) {
+                if (!this.canUpdateItems()) {
+                    return Promise.resolve()
+                }
                 if (!silent) {
                     this.loading = true;
                 }

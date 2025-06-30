@@ -207,6 +207,9 @@ export default {
         onClickClearAllNotifications() {
             axios.delete('/api/notification')
         },
+        canUpdateItems() {
+          return true
+        },
         resetOnRouteIdChange() {
             return false
         },

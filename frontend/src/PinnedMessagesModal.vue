@@ -206,6 +206,9 @@ export default {
                 'pinned-bold': !!item.pinnedPromoted,
             }
         },
+        canUpdateItems() {
+          return !!this.chatId
+        },
         resetOnRouteIdChange() {
             return true
         },
