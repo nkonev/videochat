@@ -14,13 +14,19 @@ alter system set citus.max_adaptive_executor_pool_size = 1;
 alter system set work_mem = '256MB';
 alter system set citus.executor_slow_start_interval = 200;
 
+
 -- https://docs.citusdata.com/en/stable/admin_guide/cluster_management.html#create-db
+-- to fix cluster restart we need to insert into pg_dist_authinfo
+-- https://stackoverflow.com/questions/70477676/citus-rebalance-table-shards-fe-sendauth-no-password-supplied/70494597#70494597
+-- https://postgrespro.ru/docs/enterprise/16/citus
 create database chat;
 \connect chat;
 CREATE EXTENSION citus;
-
--- to fix cluster restart
--- https://stackoverflow.com/questions/70477676/citus-rebalance-table-shards-fe-sendauth-no-password-supplied/70494597#70494597
--- https://postgrespro.ru/docs/enterprise/16/citus
 INSERT INTO pg_dist_authinfo(nodeid, rolename, authinfo) VALUES
 (0, 'postgres', 'password=postgresqlPassword');
+
+create database storage;
+\connect storage;
+CREATE EXTENSION citus;
+INSERT INTO pg_dist_authinfo(nodeid, rolename, authinfo) VALUES
+    (0, 'postgres', 'password=postgresqlPassword');

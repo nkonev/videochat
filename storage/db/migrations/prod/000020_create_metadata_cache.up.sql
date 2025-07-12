@@ -1,0 +1,20 @@
+create unlogged table metadata_cache(
+    -- S3 key; see ./services.files.go::GetKey()
+    chat_id bigint not null,
+    file_item_uuid varchar(36) not null,
+    filename varchar(255) not null, -- see ./utils/utils.go::GeneralMaxFilenameLength
+
+    -- S3 metadata (unchangeable)
+    owner_id bigint not null,
+    correlation_id varchar(36),
+    conference_recording boolean,
+    message_recording boolean,
+    original_key varchar(512), -- for previews of image / video / ...
+
+    -- S3 tags (changeable)
+    published boolean not null,
+
+    primary key (chat_id, file_item_uuid, filename)
+);
+
+SELECT create_distributed_table('metadata_cache', 'chat_id');

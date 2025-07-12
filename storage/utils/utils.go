@@ -25,8 +25,8 @@ const converted = "converted"
 const underscoreConverted = "_" + converted
 const ConvertedContentType = "video/webm"
 
-const maxFilenameLength = 255                    // this allows filesystem
-const MaxFilenameLength = maxFilenameLength - 32 // =223. reserve 32 symbols for things like "_converted"
+const GeneralMaxFilenameLength = 255                    // this allows filesystem
+const MaxFilenameLength = GeneralMaxFilenameLength - 32 // =223. reserve 32 symbols for things like "_converted"
 
 func StringsToRegexpArray(strings []string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
