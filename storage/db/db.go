@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -168,7 +169,7 @@ func ConfigureDb(lgr *logger.Logger, lc fx.Lifecycle) (*DB, error) {
 
 func (db *DB) RecreateDb() {
 	_, err := db.Exec(fmt.Sprintf(`
-	drop table if exists user_call_state;
+	drop table if exists metadata_cache;
 	drop table if exists %s;
 	drop table if exists %s;
 	

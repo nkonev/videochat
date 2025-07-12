@@ -5,23 +5,25 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/rotisserie/eris"
-	"nkonev.name/video/dto"
+	"nkonev.name/storage/dto"
 )
 
-func (tx *Tx) Set(ctx context.Context, userState dto.UserCallState) error {
+func (tx *Tx) Set(ctx context.Context, metadataCache dto.MetadataCache) error {
 	_, err := tx.ExecContext(ctx, `
 		insert into metadata_cache(
-			token_id,
-			user_id, 
-		    chat_id,
-			token_taken,
-			owner_token_id,
-		    owner_user_id,                        
-		    status,
-		    chat_tet_a_tet,
-		    owner_avatar,
-			marked_for_remove_at,
-			marked_for_orphan_remove_attempt
+			chat_id,
+			file_item_uuid, 
+		    filename,
+		    
+			owner_user_id,
+			correlation_id,
+		    conference_recording,                        
+		    message_recording,
+		    original_key,
+		    
+		    published,
+		    
+		    create_date_time
 		) values (
 		    $1,
 		    $2,
@@ -32,31 +34,28 @@ func (tx *Tx) Set(ctx context.Context, userState dto.UserCallState) error {
 		  	$7,
 			$8,
 			$9,
-			$10, 
-			$11
-		) on conflict (token_id, user_id) 
+		    $10
+		) on conflict (chat_id, file_item_uuid, filename) 
 		do update set 
-			chat_id = $3,
-			token_taken = $4, 
-			owner_token_id = $5,
-			owner_user_id = $6, 
-			status = $7, 
-			chat_tet_a_tet = $8, 
-			owner_avatar = $9, 
-			marked_for_remove_at = $10,
-			marked_for_orphan_remove_attempt = $11
+			owner_user_id = $4, 
+			correlation_id = $5,
+			conference_recording = $6, 
+			message_recording = $7, 
+			original_key = $8, 
+			published = $9,
+			create_date_time = $10
 	`,
-		userState.TokenId,
-		userState.UserId,
-		userState.ChatId,
-		userState.TokenTaken,
-		userState.OwnerTokenId,
-		userState.OwnerUserId,
-		userState.Status,
-		userState.ChatTetATet,
-		userState.OwnerAvatar,
-		userState.MarkedForRemoveAt,
-		userState.MarkedForOrphanRemoveAttempt,
+		metadataCache.ChatId,
+		metadataCache.FileItemUuid,
+		metadataCache.Filename,
+
+		metadataCache.OwnerId,
+		metadataCache.CorrelationId,
+		metadataCache.ConferenceRecording,
+		metadataCache.MessageRecording,
+		metadataCache.OriginalKey,
+		metadataCache.Published,
+		metadataCache.CreateDateTime,
 	)
 
 	if err != nil {
@@ -66,34 +65,35 @@ func (tx *Tx) Set(ctx context.Context, userState dto.UserCallState) error {
 	return nil
 }
 
-func (tx *Tx) Get(ctx context.Context, user dto.UserCallStateId) (*dto.UserCallState, error) {
+func (tx *Tx) Get(ctx context.Context, metadataCacheId dto.MetadataCacheId) (*dto.MetadataCache, error) {
 	row := tx.QueryRowContext(ctx, `select 
-			token_id,
-			user_id, 
 			chat_id,
-		    token_taken,
-			owner_token_id,
+		    file_item_uuid,
+			filename,
+			
 		    owner_user_id,                        
-		    status,
-		    chat_tet_a_tet,
-		    owner_avatar,
-			marked_for_remove_at,
-			marked_for_orphan_remove_attempt,
+		    correlation_id,
+		    conference_recording,
+		    message_recording,
+			original_key,
+			
+			published,
+			
 			create_date_time
 		from metadata_cache 
-		where (token_id, user_id) = ($1, $2)
-	`, user.TokenId, user.UserId)
+		where (chat_id, file_item_uuid, filename) = ($1, $2, $3)
+	`, metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
-	ucs := dto.UserCallState{}
-	err := row.Scan(provideScanToUserCallState(&ucs)[:]...)
+	ucs := dto.MetadataCache{}
+	err := row.Scan(&ucs.ChatId, &ucs.FileItemUuid, &ucs.Filename, &ucs.OwnerId, &ucs.CorrelationId, &ucs.ConferenceRecording, &ucs.MessageRecording, &ucs.OriginalKey, &ucs.Published, &ucs.CreateDateTime)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
-			ucs.TokenId = user.TokenId
-			ucs.UserId = user.UserId
-			ucs.Status = CallStatusNotFound
+			ucs.ChatId = metadataCacheId.ChatId
+			ucs.FileItemUuid = metadataCacheId.FileItemUuid
+			ucs.Filename = metadataCacheId.Filename
 			return &ucs, nil
 		}
 		return nil, eris.Wrap(err, "error during scanning from db")
@@ -101,10 +101,10 @@ func (tx *Tx) Get(ctx context.Context, user dto.UserCallStateId) (*dto.UserCallS
 	return &ucs, nil
 }
 
-func (tx *Tx) Remove(ctx context.Context, user dto.UserCallStateId) error {
+func (tx *Tx) Remove(ctx context.Context, metadataCacheId dto.MetadataCacheId) error {
 	_, err := tx.ExecContext(ctx, `delete from metadata_cache 
-								where (token_id, user_id) = ($1, $2)`,
-		user.TokenId, user.UserId)
+								where (chat_id, file_item_uuid, filename) = ($1, $2, $3)`,
+		metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}

@@ -30,6 +30,7 @@ import (
 	"nkonev.name/storage/app"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/config"
+	"nkonev.name/storage/db"
 	"nkonev.name/storage/handlers"
 	"nkonev.name/storage/listener"
 	"nkonev.name/storage/logger"
@@ -59,6 +60,8 @@ func main() {
 			configureAwsS3,
 			configureMinioEntities,
 			configureEcho,
+			db.ConfigureDb,
+			configureMigrations,
 			tasks.RedisV9,
 			tasks.RedisLocker,
 			tasks.Scheduler,
@@ -82,6 +85,7 @@ func main() {
 			services.NewRedisInfoService,
 		),
 		fx.Invoke(
+			runMigrations,
 			runScheduler,
 			runEcho,
 			listener.CreateMinioEventsChannel,
@@ -316,6 +320,14 @@ func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvi
 	})
 
 	return tp, nil
+}
+
+func configureMigrations() *db.MigrationsConfig {
+	return &db.MigrationsConfig{}
+}
+
+func runMigrations(lgr *logger.Logger, db *db.DB, migrationsConfig *db.MigrationsConfig) {
+	db.Migrate(lgr, migrationsConfig)
 }
 
 // rely on viper import and it's configured by
