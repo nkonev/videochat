@@ -87,6 +87,13 @@ limits:
 
 selfUrls: "http://localhost:8081,"
 
+postgresql:
+  # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+  url: "postgres://postgres:postgresqlPassword@localhost:45401/storage?sslmode=disable&application_name=storage-app"
+  maxOpenConnections: 16
+  maxIdleConnections: 4
+  maxLifetime: 30s
+
 redis:
   address: :36379
   password: ""
@@ -102,6 +109,10 @@ schedulers:
   actualizeGeneratedFilesTask:
     enabled: true
     cron: "0 * * * * *"
+    expiration: "30m"
+  actualizeMetadataCacheTask:
+    enabled: true
+    cron: "0 */5 * * * *"
     expiration: "30m"
 
 response:

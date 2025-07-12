@@ -310,11 +310,6 @@ export default {
                       uploadId: fileToUpload.uploadId
                     });
 
-                    if (fileToUpload.shouldSetFileUuidToMessage) {
-                      bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {
-                        chatId: fileToUpload.chatId,
-                      });
-                    }
                 } catch(thrown) {
                     if (axios.isCancel(thrown)) {
                         console.log('Request canceled', thrown.message);

@@ -82,34 +82,53 @@ type HandleEventResponse struct {
 	fileOwnerId int64
 }
 
-func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse) {
-	if response != nil {
-		// iterate over chat participants
-		for _, participantId := range participantIds {
-			var fileInfo *dto.FileInfoDto
-			var err error
-			if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-				if response.objectInfo != nil {
-					userId := &participantId
-					fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, *response.objectInfo, response.tagging, false)
-					if err != nil {
-						s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
-						continue
-					}
-					fileInfo.Owner = response.users[response.fileOwnerId]
-				} else {
-					s.lgr.WithTracing(ctx).Errorf("Missed objectInfo")
+func (r *HandleEventResponse) GetTags() (*bool, error) {
+	if r == nil {
+		return nil, nil
+	}
+	published, err := DeserializeTags(r.tagging)
+	if err != nil {
+		return nil, err
+	}
+	return &published, nil
+}
+
+func (r *HandleEventResponse) GetObjectInfo() *minio.ObjectInfo {
+	if r == nil {
+		return nil
+	}
+	return r.objectInfo
+}
+
+func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
+	// iterate over chat participants
+	for _, participantId := range participantIds {
+		var fileInfo *dto.FileInfoDto
+		var err error
+		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+			if mce != nil {
+				userId := &participantId
+				fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
+				if err != nil {
+					s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
 					continue
 				}
-			} else if eventType == utils.FILE_DELETED {
-				fileInfo = &dto.FileInfoDto{
-					Id:           normalizedKey,
-					LastModified: time.Now().UTC(),
-				}
+				fileInfo.Owner = response.users[response.fileOwnerId]
+			} else {
+				s.lgr.WithTracing(ctx).Errorf("Missed objectInfo for %v", normalizedKey)
+				continue
 			}
-			s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
-				FileInfoDto: fileInfo,
-			}, eventType)
+		} else if eventType == utils.FILE_DELETED {
+			fileInfo = &dto.FileInfoDto{
+				Id:           normalizedKey,
+				LastModified: time.Now().UTC(),
+			}
+		}
+		err = s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
+			FileInfoDto: fileInfo,
+		}, eventType)
+		if err != nil {
+			s.lgr.WithTracing(ctx).Errorf("Error sending event for %v: %v", normalizedKey, err)
 		}
 	}
 }

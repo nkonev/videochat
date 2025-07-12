@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"net/url"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
@@ -21,6 +22,7 @@ type FilesService struct {
 	minio       *s3.InternalMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
+	dba         *db.DB
 	lgr         *logger.Logger
 }
 
@@ -28,12 +30,14 @@ func NewFilesService(
 	lgr *logger.Logger,
 	minio *s3.InternalMinioClient,
 	chatClient *client.RestClient,
+	dba *db.DB,
 	minioConfig *utils.MinioConfig,
 ) *FilesService {
 	return &FilesService{
 		minio:       minio,
 		restClient:  chatClient,
 		minioConfig: minioConfig,
+		dba:         dba,
 		lgr:         lgr,
 	}
 }
@@ -43,50 +47,39 @@ func (h *FilesService) GetListFilesInFileItem(
 	public bool,
 	overrideChatId, overrideMessageId int64,
 	behalfUserId *int64,
-	bucket, filenameChatPrefix string,
+	bucket string,
 	chatId int64,
-	filter func(*minio.ObjectInfo) bool,
+	fileItemUuid string, // can be empty string
+	filterObj db.Filter,
 	requestOwners bool,
 	size, offset int,
-) ([]*dto.FileInfoDto, int, error) {
+) ([]*dto.FileInfoDto, int64, error) {
 	if !public && behalfUserId == nil {
 		return nil, 0, errors.New("wrong invariant")
 	}
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
+	metadatas, err := db.GetList(c, h.dba, chatId, fileItemUuid, filterObj, size, offset)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Error during getting list, userId = %v, chatId = %v: %v", behalfUserId, chatId, err)
+		return []*dto.FileInfoDto{}, 0, err
+	}
+
+	var count int64
+	count, err = db.GetCount(c, h.dba, chatId, fileItemUuid, filterObj)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Error during getting count %v", err)
+		return []*dto.FileInfoDto{}, 0, err
+	}
 
 	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
-	var offsetCounter = 0
-	var respCounter = 0
 
-	for objInfo := range objects {
-		h.lgr.WithTracing(c).Debugf("Object '%v'", objInfo.Key)
-		if (filter != nil && filter(&objInfo)) || filter == nil {
-			if offsetCounter >= offset {
-
-				if respCounter < size {
-					tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
-					if err != nil {
-						h.lgr.WithTracing(c).Errorf("Error during getting tags %v", err)
-						continue
-					}
-
-					info, err := h.GetFileInfo(c, public, overrideChatId, overrideMessageId, behalfUserId, objInfo, tagging, true)
-					if err != nil {
-						h.lgr.WithTracing(c).Errorf("Error get file info: %v, skipping", err)
-						continue
-					}
-
-					list = append(list, info)
-					respCounter++
-				}
-			}
-			offsetCounter++
+	for _, mce := range metadatas {
+		info, err := h.GetFileInfo(c, public, overrideChatId, overrideMessageId, behalfUserId, &mce)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Error get file info: %v, skipping", err)
+			continue
 		}
+		list = append(list, info)
 	}
 
 	if requestOwners {
@@ -103,90 +96,26 @@ func (h *FilesService) GetListFilesInFileItem(
 		}
 	}
 
-	return list, offsetCounter, nil
-}
-
-type SimpleFileItem struct {
-	Id           string    `json:"id"`
-	Filename     string    `json:"filename"`
-	LastModified time.Time `json:"time"`
-}
-
-type GroupedByFileItemUuid struct {
-	FileItemUuid string           `json:"fileItemUuid"`
-	Files        []SimpleFileItem `json:"files"`
+	return list, count, nil
 }
 
 func (h *FilesService) GetListFilesItemUuids(
 	c context.Context,
-	bucket, filenameChatPrefix string,
+	chatId int64,
 	size, offset int,
-) ([]*GroupedByFileItemUuid, int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
-
-	var list []*GroupedByFileItemUuid = make([]*GroupedByFileItemUuid, 0)
-	var counter = 0
-	var lastItemUuid = ""
-
-	var files = []SimpleFileItem{}
-	for m := range objects {
-		itemUuid, err := utils.ParseFileItemUuid(m.Key)
-		if err != nil {
-			h.lgr.WithTracing(c).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
-			continue
-		}
-
-		itemIdHasChanged := itemUuid != lastItemUuid
-		if itemIdHasChanged {
-			counter++
-		}
-		lastLastItemId := lastItemUuid
-		lastItemUuid = itemUuid
-
-		if counter >= offset {
-			if len(list) < size {
-				if itemIdHasChanged {
-					if len(files) > 0 {
-						list = append(list, &GroupedByFileItemUuid{lastLastItemId, files}) // process from previous iteration
-					}
-
-					// prepare for current iteration
-					files = []SimpleFileItem{}
-				}
-
-				files = append(files, SimpleFileItem{
-					Id:           m.Key,
-					Filename:     ReadFilename(m.Key),
-					LastModified: m.LastModified,
-				})
-			}
-		}
+) ([]db.GroupedByFileItemUuid, int, error) {
+	datas, err := db.GetListFilesItemUuids(c, h.dba, chatId, size, offset)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Unable to get GroupedByFileItemUuid: %v", err)
+		return nil, 0, err
+	}
+	count, err := db.GetCountFilesItemUuids(c, h.dba, chatId)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Unable to get count GroupedByFileItemUuid: %v", err)
+		return nil, 0, err
 	}
 
-	// process leftovers
-	if len(files) > 0 && len(list) < size && lastItemUuid != "" {
-		list = append(list, &GroupedByFileItemUuid{lastItemUuid, files})
-	}
-
-	return list, counter, nil
-}
-
-func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) (int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(ctx, h.minioConfig.Files, minio.ListObjectsOptions{
-		Prefix:    filenameChatPrefix,
-		Recursive: true,
-	})
-
-	var count int = 0
-	for objInfo := range objects {
-		h.lgr.WithTracing(ctx).Debugf("Object '%v'", objInfo.Key)
-		count++
-	}
-	return count, nil
+	return datas, int(count), nil
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
@@ -272,59 +201,49 @@ func (h *FilesService) GetAnonymousPreviewUrl(c context.Context, fileName string
 	return anUrl, nil
 }
 
-func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatId, overrideMessageId int64, behalfUserId *int64, objInfo minio.ObjectInfo, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
+func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatId, overrideMessageId int64, behalfUserId *int64, mce *dto.MetadataCache) (*dto.FileInfoDto, error) {
 	if !public && behalfUserId == nil {
 		return nil, errors.New("wrong invariant")
 	}
 
-	metadata := objInfo.UserMetadata
-
-	_, fileOwnerId, correlationId, err := DeserializeMetadata(metadata, hasAmzPrefix)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error get metadata: %v", err)
-		return nil, err
+	if mce == nil {
+		return nil, errors.New("nil MetadataCache")
 	}
 
-	filename := ReadFilename(objInfo.Key)
+	fileOwnerId := mce.OwnerId
+	theCorrelationId := mce.CorrelationId
 
-	published, err := DeserializeTags(tagging)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error get tags: %v", err)
-		return nil, err
-	}
+	filename := mce.Filename
 
-	publishedUrl, err := h.GetPublishedUrl(published, objInfo.Key)
+	published := mce.Published
+
+	aKey := utils.BuildNormalizedKey(mce)
+
+	publishedUrl, err := h.GetPublishedUrl(published, aKey)
 	if err != nil {
 		h.lgr.WithTracing(c).Errorf("Error get published url: %v", err)
 		return nil, err
 	}
 
-	itemUuid, err := utils.ParseFileItemUuid(objInfo.Key)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Unable for %v to get fileItemUuid '%v'", objInfo.Key, err)
-	}
-	var theCorrelationId *string
-	if len(correlationId) > 0 {
-		theCorrelationId = &correlationId
-	}
+	itemUuid := mce.FileItemUuid
 
 	var downloadUrl string
 	var previewUrl *string
 
 	var canDelete, canEdit, canShare bool
 
-	downloadUrltmp, err := h.GetConstantDownloadUrl(objInfo.Key)
+	downloadUrltmp, err := h.GetConstantDownloadUrl(aKey)
 	if err != nil {
 		h.lgr.WithTracing(c).Errorf("Error during getting downlad url %v", err)
 		return nil, err
 	}
 
-	previewUrltmp := h.GetPreviewUrlSmart(c, objInfo.Key)
+	previewUrltmp := h.GetPreviewUrlSmart(c, aKey)
 
 	if !public {
 		// normal flow
 		canDelete = fileOwnerId == *behalfUserId
-		canEdit = fileOwnerId == *behalfUserId && utils.IsPlainText(objInfo.Key)
+		canEdit = fileOwnerId == *behalfUserId && utils.IsPlainText(aKey)
 		canShare = fileOwnerId == *behalfUserId
 
 		downloadUrl = downloadUrltmp
@@ -348,32 +267,32 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		}
 	}
 
-	var aType = GetType(objInfo.Key)
+	var aType = GetType(aKey)
 
 	info := &dto.FileInfoDto{
-		Id:             objInfo.Key,
+		Id:             aKey,
 		Filename:       filename,
 		Url:            downloadUrl,
-		Size:           objInfo.Size,
+		Size:           mce.FileSize,
 		CanDelete:      canDelete,
 		CanEdit:        canEdit,
 		CanShare:       canShare,
-		LastModified:   objInfo.LastModified,
+		LastModified:   mce.EditDateTime,
 		OwnerId:        fileOwnerId,
 		PublishedUrl:   publishedUrl,
 		PreviewUrl:     previewUrl,
-		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
-		CanShowAsImage: utils.IsImage(objInfo.Key),
-		CanPlayAsAudio: utils.IsAudio(objInfo.Key),
+		CanPlayAsVideo: utils.IsVideo(aKey),
+		CanShowAsImage: utils.IsImage(aKey),
+		CanPlayAsAudio: utils.IsAudio(aKey),
 		FileItemUuid:   itemUuid,
 		CorrelationId:  theCorrelationId,
-		Previewable:    utils.IsPreviewable(objInfo.Key),
+		Previewable:    utils.IsPreviewable(aKey),
 		Type:           aType,
 	}
 	return info, nil
 }
 
-// prepares url to use ib lublic microservice
+// prepares url to use in public microservice
 // in case getting file list
 // see also chat/handlers/blog.go :: makeUrlPublic
 func makeUrlPublic(src string, additionalSegment string, overrideChatId, overrideMessageId int64) (string, error) {
@@ -435,6 +354,26 @@ func GetType(itemUrl string) *string {
 	} else {
 		return nil
 	}
+}
+
+func GetTypeExtensions(requestedMediaType string) []string {
+	switch requestedMediaType {
+	case Media_video:
+		return viper.GetStringSlice("types.video")
+	case Media_image:
+		return viper.GetStringSlice("types.image")
+	case Media_audio:
+		return viper.GetStringSlice("types.audio")
+	default:
+		return []string{}
+	}
+}
+
+func GetPreviewableExtensions() []string {
+	res := []string{}
+	res = append(res, viper.GetStringSlice("types.video")...)
+	res = append(res, viper.GetStringSlice("types.image")...)
+	return res
 }
 
 func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMediaType string, urlBase string, overrideChatId, overrideMessageId *int64) *string {
