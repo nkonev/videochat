@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
@@ -420,11 +421,9 @@ func (h *FilesHandler) listHandler(c echo.Context, public bool) error {
 
 	h.lgr.WithTracing(c.Request().Context()).Debugf("Listing bucket '%v':", bucketName)
 
-	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
+	filterObj := db.NewFilterBySearchString(searchString)
 
-	filter := h.getFilterFunction(searchString)
-
-	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, filenameChatPrefix, chatId, filter, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, chatId, fileItemUuid, filterObj, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -681,17 +680,6 @@ func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) 
 		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 	}
 	return filenameChatPrefix
-}
-
-func (h *FilesHandler) getFilterFunction(searchString string) func(info *minio.ObjectInfo) bool {
-	var filter func(info *minio.ObjectInfo) bool = nil
-	if searchString != "" {
-		filter = func(info *minio.ObjectInfo) bool {
-			normalizedFileName := strings.ToLower(services.ReadFilename(info.Key))
-			return strings.Contains(normalizedFileName, searchString)
-		}
-	}
-	return filter
 }
 
 func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {

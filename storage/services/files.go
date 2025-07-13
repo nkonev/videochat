@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"net/url"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
@@ -21,6 +22,7 @@ type FilesService struct {
 	minio       *s3.InternalMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
+	dba         *db.DB
 	lgr         *logger.Logger
 }
 
@@ -28,12 +30,14 @@ func NewFilesService(
 	lgr *logger.Logger,
 	minio *s3.InternalMinioClient,
 	chatClient *client.RestClient,
+	dba *db.DB,
 	minioConfig *utils.MinioConfig,
 ) *FilesService {
 	return &FilesService{
 		minio:       minio,
 		restClient:  chatClient,
 		minioConfig: minioConfig,
+		dba:         dba,
 		lgr:         lgr,
 	}
 }
@@ -43,9 +47,10 @@ func (h *FilesService) GetListFilesInFileItem(
 	public bool,
 	overrideChatId, overrideMessageId int64,
 	behalfUserId *int64,
-	bucket, filenameChatPrefix string,
+	bucket string,
 	chatId int64,
-	filter func(*minio.ObjectInfo) bool,
+	fileItemUuid string, // can be empty string
+	filterObj db.Filter,
 	requestOwners bool,
 	size, offset int,
 ) ([]*dto.FileInfoDto, int, error) {
@@ -53,18 +58,16 @@ func (h *FilesService) GetListFilesInFileItem(
 		return nil, 0, errors.New("wrong invariant")
 	}
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
+	metadatas, err := db.GetList(c, h.dba, chatId, fileItemUuid, filterObj, size, offset)
+	if err != nil {
+		return []*dto.FileInfoDto{}, 0, err
+	}
 
 	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
 	var offsetCounter = 0
 	var respCounter = 0
 
-	for objInfo := range objects {
-		h.lgr.WithTracing(c).Debugf("Object '%v'", objInfo.Key)
+	for objInfo := range metadatas {
 		if (filter != nil && filter(&objInfo)) || filter == nil {
 			if offsetCounter >= offset {
 
