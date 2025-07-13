@@ -6,11 +6,13 @@ import (
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
+	"time"
 )
 
 type MinioEventsListener func(*amqp.Delivery) error
@@ -23,6 +25,7 @@ func CreateMinioEventsListener(
 	minioConfig *utils.MinioConfig,
 	minioClient *s3.InternalMinioClient,
 	convertingService *services.ConvertingService,
+	dba *db.DB,
 ) MinioEventsListener {
 	tr := otel.Tracer("amqp/listener")
 
@@ -33,6 +36,8 @@ func CreateMinioEventsListener(
 		bytesData := msg.Body
 		strData := string(bytesData)
 		lgr.WithTracing(ctx).Debugf("Received %v", strData)
+
+		eventTimeStr := gjson.Get(strData, "Records.0.eventTime").String()
 
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
@@ -94,6 +99,38 @@ func CreateMinioEventsListener(
 		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
 		if eventForConvertingService {
 			convertingService.HandleEvent(ctx, minioEvent)
+		}
+
+		fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
+		if err != nil {
+			lgr.WithTracing(ctx).Errorf("Error during getting fileItemUuid: %v", err)
+		}
+
+		filename, err := utils.ParseFileName(normalizedKey)
+		if err != nil {
+			lgr.WithTracing(ctx).Errorf("Error during getting filename: %v", err)
+		}
+
+		// todo determine whether we need to set or delete - by using eventType
+		eventTime, err := time.Parse(time.RFC3339Nano, eventTimeStr)
+		if err != nil {
+			lgr.WithTracing(ctx).Errorf("Error during getting event time: %v", err)
+		}
+
+		err = db.Set(ctx, dba, dto.MetadataCache{
+			ChatId:              workingChatId,
+			FileItemUuid:        fileItemUuid,
+			Filename:            filename,
+			OwnerId:             ownerId,
+			CorrelationId:       correlationId,
+			ConferenceRecording: &isConferenceRecording,
+			MessageRecording:    &isMessageRecording,
+			OriginalKey:         nil,   // todo
+			Published:           false, // todo
+			CreateDateTime:      eventTime,
+		})
+		if err != nil {
+			lgr.WithTracing(ctx).Errorf("Error during saving to database: %v", err)
 		}
 
 		return nil

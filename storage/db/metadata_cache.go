@@ -8,8 +8,8 @@ import (
 	"nkonev.name/storage/dto"
 )
 
-func (tx *Tx) Set(ctx context.Context, metadataCache dto.MetadataCache) error {
-	_, err := tx.ExecContext(ctx, `
+func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
+	_, err := co.ExecContext(ctx, `
 		insert into metadata_cache(
 			chat_id,
 			file_item_uuid, 
@@ -65,8 +65,8 @@ func (tx *Tx) Set(ctx context.Context, metadataCache dto.MetadataCache) error {
 	return nil
 }
 
-func (tx *Tx) Get(ctx context.Context, metadataCacheId dto.MetadataCacheId) (*dto.MetadataCache, error) {
-	row := tx.QueryRowContext(ctx, `select 
+func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId) (*dto.MetadataCache, error) {
+	row := co.QueryRowContext(ctx, `select 
 			chat_id,
 		    file_item_uuid,
 			filename,
@@ -101,8 +101,8 @@ func (tx *Tx) Get(ctx context.Context, metadataCacheId dto.MetadataCacheId) (*dt
 	return &ucs, nil
 }
 
-func (tx *Tx) Remove(ctx context.Context, metadataCacheId dto.MetadataCacheId) error {
-	_, err := tx.ExecContext(ctx, `delete from metadata_cache 
+func Remove(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId) error {
+	_, err := co.ExecContext(ctx, `delete from metadata_cache 
 								where (chat_id, file_item_uuid, filename) = ($1, $2, $3)`,
 		metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
 	if err != nil {
