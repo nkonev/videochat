@@ -7,9 +7,6 @@ create unlogged table metadata_cache(
    -- S3 metadata (unchangeable)
    owner_user_id bigint not null,
    correlation_id varchar(36),
-   conference_recording boolean,
-   message_recording boolean,
-   original_key varchar(512), -- for previews of image / video / ...
 
     -- S3 tags (changeable)
    published boolean not null,

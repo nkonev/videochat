@@ -82,6 +82,17 @@ type HandleEventResponse struct {
 	fileOwnerId int64
 }
 
+func (r *HandleEventResponse) GetTags() (*bool, error) {
+	if r == nil {
+		return nil, nil
+	}
+	published, err := DeserializeTags(r.tagging)
+	if err != nil {
+		return nil, err
+	}
+	return &published, nil
+}
+
 func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse) {
 	if response != nil {
 		// iterate over chat participants

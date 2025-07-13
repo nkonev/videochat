@@ -7,11 +7,8 @@ type MetadataCache struct {
 	FileItemUuid string
 	Filename     string
 
-	OwnerId             int64
-	CorrelationId       *string
-	ConferenceRecording *bool
-	MessageRecording    *bool
-	OriginalKey         *string
+	OwnerId       int64
+	CorrelationId *string
 
 	Published bool
 

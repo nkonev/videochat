@@ -17,9 +17,6 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 		    
 			owner_user_id,
 			correlation_id,
-		    conference_recording,                        
-		    message_recording,
-		    original_key,
 		    
 		    published,
 		    
@@ -31,19 +28,12 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 		    $4,
 		    $5,
 		    $6,
-		  	$7,
-			$8,
-			$9,
-		    $10
+		  	$7
 		) on conflict (chat_id, file_item_uuid, filename) 
 		do update set 
-			owner_user_id = $4, 
 			correlation_id = $5,
-			conference_recording = $6, 
-			message_recording = $7, 
-			original_key = $8, 
-			published = $9,
-			create_date_time = $10
+			published = $6,
+			create_date_time = $7
 	`,
 		metadataCache.ChatId,
 		metadataCache.FileItemUuid,
@@ -51,9 +41,6 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 
 		metadataCache.OwnerId,
 		metadataCache.CorrelationId,
-		metadataCache.ConferenceRecording,
-		metadataCache.MessageRecording,
-		metadataCache.OriginalKey,
 		metadataCache.Published,
 		metadataCache.CreateDateTime,
 	)
@@ -73,9 +60,6 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 			
 		    owner_user_id,                        
 		    correlation_id,
-		    conference_recording,
-		    message_recording,
-			original_key,
 			
 			published,
 			
@@ -87,7 +71,7 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 	ucs := dto.MetadataCache{}
-	err := row.Scan(&ucs.ChatId, &ucs.FileItemUuid, &ucs.Filename, &ucs.OwnerId, &ucs.CorrelationId, &ucs.ConferenceRecording, &ucs.MessageRecording, &ucs.OriginalKey, &ucs.Published, &ucs.CreateDateTime)
+	err := row.Scan(&ucs.ChatId, &ucs.FileItemUuid, &ucs.Filename, &ucs.OwnerId, &ucs.CorrelationId, &ucs.Published, &ucs.CreateDateTime)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
