@@ -86,12 +86,13 @@ func CreateMinioEventsListener(
 			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
 		}
 
+		var mce *dto.MetadataCache
 		// store to db before sending events
 		switch eventType {
 		case utils.FILE_CREATED:
 			fallthrough
 		case utils.FILE_UPDATED:
-			mce, err := createdDbEntity(normalizedKey, workingChatId, ownerId, correlationId, eventTimeStr, eventServiceResponse)
+			mce, err = createdDbEntity(normalizedKey, workingChatId, ownerId, correlationId, eventTimeStr, eventServiceResponse)
 			if err != nil {
 				lgr.WithTracing(ctx).Errorf("Error during creating db entity: %v", err)
 				return err
@@ -118,7 +119,7 @@ func CreateMinioEventsListener(
 
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
 			if isEventForEventService(eventType) {
-				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
+				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse, mce)
 			}
 			if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)

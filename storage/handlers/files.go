@@ -423,7 +423,7 @@ func (h *FilesHandler) listHandler(c echo.Context, public bool) error {
 
 	filterObj := db.NewFilterBySearchString(searchString)
 
-	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, chatId, fileItemUuid, filterObj, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, chatId, fileItemUuid, filterObj, true, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -1150,7 +1150,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(requestedMediaType)
 
-	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -1193,7 +1193,7 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 
 	filter := h.getFilterByType(requestedMediaType)
 
-	_, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, 10, 0)
+	_, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, true, 10, 0)
 	if err != nil {
 		return err
 	}

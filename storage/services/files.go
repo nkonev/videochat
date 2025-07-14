@@ -52,8 +52,9 @@ func (h *FilesService) GetListFilesInFileItem(
 	fileItemUuid string, // can be empty string
 	filterObj db.Filter,
 	requestOwners bool,
+	requestCount bool,
 	size, offset int,
-) ([]*dto.FileInfoDto, int, error) {
+) ([]*dto.FileInfoDto, int64, error) {
 	if !public && behalfUserId == nil {
 		return nil, 0, errors.New("wrong invariant")
 	}
@@ -63,33 +64,23 @@ func (h *FilesService) GetListFilesInFileItem(
 		return []*dto.FileInfoDto{}, 0, err
 	}
 
-	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
-	var offsetCounter = 0
-	var respCounter = 0
-
-	for objInfo := range metadatas {
-		if (filter != nil && filter(&objInfo)) || filter == nil {
-			if offsetCounter >= offset {
-
-				if respCounter < size {
-					tagging, err := h.minio.GetObjectTagging(c, bucket, objInfo.Key, minio.GetObjectTaggingOptions{})
-					if err != nil {
-						h.lgr.WithTracing(c).Errorf("Error during getting tags %v", err)
-						continue
-					}
-
-					info, err := h.GetFileInfo(c, public, overrideChatId, overrideMessageId, behalfUserId, objInfo, tagging, true)
-					if err != nil {
-						h.lgr.WithTracing(c).Errorf("Error get file info: %v, skipping", err)
-						continue
-					}
-
-					list = append(list, info)
-					respCounter++
-				}
-			}
-			offsetCounter++
+	var count int64
+	if requestCount {
+		count, err = db.GetCount(c, h.dba, chatId, fileItemUuid, filterObj)
+		if err != nil {
+			return []*dto.FileInfoDto{}, 0, err
 		}
+	}
+
+	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
+
+	for _, mce := range metadatas {
+		info, err := h.GetFileInfo(c, public, overrideChatId, overrideMessageId, behalfUserId, &mce)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Error get file info: %v, skipping", err)
+			continue
+		}
+		list = append(list, info)
 	}
 
 	if requestOwners {
@@ -106,7 +97,7 @@ func (h *FilesService) GetListFilesInFileItem(
 		}
 	}
 
-	return list, offsetCounter, nil
+	return list, count, nil
 }
 
 type SimpleFileItem struct {
@@ -275,59 +266,49 @@ func (h *FilesService) GetAnonymousPreviewUrl(c context.Context, fileName string
 	return anUrl, nil
 }
 
-func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatId, overrideMessageId int64, behalfUserId *int64, objInfo minio.ObjectInfo, tagging *tags.Tags, hasAmzPrefix bool) (*dto.FileInfoDto, error) {
+func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatId, overrideMessageId int64, behalfUserId *int64, mce *dto.MetadataCache) (*dto.FileInfoDto, error) {
 	if !public && behalfUserId == nil {
 		return nil, errors.New("wrong invariant")
 	}
 
-	metadata := objInfo.UserMetadata
-
-	_, fileOwnerId, correlationId, err := DeserializeMetadata(metadata, hasAmzPrefix)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error get metadata: %v", err)
-		return nil, err
+	if mce == nil {
+		return nil, errors.New("nil MetadataCache")
 	}
 
-	filename := ReadFilename(objInfo.Key)
+	fileOwnerId := mce.OwnerId
+	theCorrelationId := mce.CorrelationId
 
-	published, err := DeserializeTags(tagging)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error get tags: %v", err)
-		return nil, err
-	}
+	filename := mce.Filename
 
-	publishedUrl, err := h.GetPublishedUrl(published, objInfo.Key)
+	published := mce.Published
+
+	aKey := utils.BuildNormalizedKey(mce)
+
+	publishedUrl, err := h.GetPublishedUrl(published, aKey)
 	if err != nil {
 		h.lgr.WithTracing(c).Errorf("Error get published url: %v", err)
 		return nil, err
 	}
 
-	itemUuid, err := utils.ParseFileItemUuid(objInfo.Key)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Unable for %v to get fileItemUuid '%v'", objInfo.Key, err)
-	}
-	var theCorrelationId *string
-	if len(correlationId) > 0 {
-		theCorrelationId = &correlationId
-	}
+	itemUuid := mce.FileItemUuid
 
 	var downloadUrl string
 	var previewUrl *string
 
 	var canDelete, canEdit, canShare bool
 
-	downloadUrltmp, err := h.GetConstantDownloadUrl(objInfo.Key)
+	downloadUrltmp, err := h.GetConstantDownloadUrl(aKey)
 	if err != nil {
 		h.lgr.WithTracing(c).Errorf("Error during getting downlad url %v", err)
 		return nil, err
 	}
 
-	previewUrltmp := h.GetPreviewUrlSmart(c, objInfo.Key)
+	previewUrltmp := h.GetPreviewUrlSmart(c, aKey)
 
 	if !public {
 		// normal flow
 		canDelete = fileOwnerId == *behalfUserId
-		canEdit = fileOwnerId == *behalfUserId && utils.IsPlainText(objInfo.Key)
+		canEdit = fileOwnerId == *behalfUserId && utils.IsPlainText(aKey)
 		canShare = fileOwnerId == *behalfUserId
 
 		downloadUrl = downloadUrltmp
@@ -351,10 +332,10 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		}
 	}
 
-	var aType = GetType(objInfo.Key)
+	var aType = GetType(aKey)
 
 	info := &dto.FileInfoDto{
-		Id:             objInfo.Key,
+		Id:             aKey,
 		Filename:       filename,
 		Url:            downloadUrl,
 		Size:           objInfo.Size,
@@ -365,12 +346,12 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		OwnerId:        fileOwnerId,
 		PublishedUrl:   publishedUrl,
 		PreviewUrl:     previewUrl,
-		CanPlayAsVideo: utils.IsVideo(objInfo.Key),
-		CanShowAsImage: utils.IsImage(objInfo.Key),
-		CanPlayAsAudio: utils.IsAudio(objInfo.Key),
+		CanPlayAsVideo: utils.IsVideo(aKey),
+		CanShowAsImage: utils.IsImage(aKey),
+		CanPlayAsAudio: utils.IsAudio(aKey),
 		FileItemUuid:   itemUuid,
 		CorrelationId:  theCorrelationId,
-		Previewable:    utils.IsPreviewable(objInfo.Key),
+		Previewable:    utils.IsPreviewable(aKey),
 		Type:           aType,
 	}
 	return info, nil

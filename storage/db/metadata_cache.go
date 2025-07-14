@@ -122,9 +122,7 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 	}
 }
 
-func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
-
-	sqlString := `select 
+const selectMetadataColumns = `
 			chat_id,
 		    file_item_uuid,
 			filename,
@@ -135,6 +133,54 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 			published,
 			
 			create_date_time
+`
+
+const selectMetadataCount = "count(*) "
+
+func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
+	list := make([]dto.MetadataCache, 0)
+
+	errOuter := getMetadatas(ctx, co, func(rows *sql.Rows) error {
+		ucs := dto.MetadataCache{}
+		if err := rows.Scan(provideScanToMetadataCache(&ucs)[:]...); err != nil {
+			return eris.Wrap(err, "error during scanning")
+		} else {
+			list = append(list, ucs)
+		}
+		return nil
+	}, selectMetadataColumns, chatId, fileItemUuid, filterObj, limit, offset)
+	if errOuter != nil {
+		return nil, errOuter
+	}
+
+	return list, nil
+}
+
+func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter) (int64, error) {
+	list := make([]int64, 0)
+
+	errOuter := getMetadatas(ctx, co, func(rows *sql.Rows) error {
+		var count int64
+		if err := rows.Scan(&count); err != nil {
+			return eris.Wrap(err, "error during scanning")
+		} else {
+			list = append(list, count)
+		}
+		return nil
+	}, selectMetadataCount, chatId, fileItemUuid, filterObj, 1, 0)
+	if errOuter != nil {
+		return 0, errOuter
+	}
+	if len(list) != 1 {
+		return 0, errors.New("Expected 1 row for count")
+	}
+
+	return list[0], nil
+}
+
+func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows *sql.Rows) error, selectWhat string, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) error {
+	sqlString := `select 
+    	%s
 		from metadata_cache
 		where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
 		order by file_item_uuid desc, filename desc
@@ -143,11 +189,11 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 	sqlArgs := []any{chatId, fileItemUuid, limit, offset}
 
 	if filterObj == nil {
-		sqlString = fmt.Sprintf(sqlString, "")
+		sqlString = fmt.Sprintf(sqlString, selectWhat, "")
 	} else {
 		switch v := filterObj.(type) {
 		case *FilterBySearchString:
-			sqlString = fmt.Sprintf(sqlString, "and lower(filename) LIKE '%' || lower($5) || '%'")
+			sqlString = fmt.Sprintf(sqlString, selectWhat, "and lower(filename) LIKE '%' || lower($5) || '%'")
 			sqlArgs = append(sqlArgs, v.searchString)
 		case *FilterByType: // we define extensions, it isn't an user input, so it is safe
 			if len(v.typeExtensions) > 0 {
@@ -161,28 +207,25 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 				}
 				builder += ") "
 
-				sqlString = fmt.Sprintf(sqlString, builder)
+				sqlString = fmt.Sprintf(sqlString, selectWhat, builder)
 			}
 		default:
-			return nil, fmt.Errorf("unknown filter type %T", filterObj)
+			return fmt.Errorf("unknown filter type %T", filterObj)
 		}
 	}
 
 	rows, err := co.QueryContext(ctx, sqlString, sqlArgs...)
 	if err != nil {
-		return nil, eris.Wrap(err, "error during interacting with db")
+		return eris.Wrap(err, "error during interacting with db")
 	}
 	defer rows.Close()
-	list := make([]dto.MetadataCache, 0)
 	for rows.Next() {
-		ucs := dto.MetadataCache{}
-		if err := rows.Scan(provideScanToMetadataCache(&ucs)[:]...); err != nil {
-			return nil, eris.Wrap(err, "error during interacting with db")
-		} else {
-			list = append(list, ucs)
+		err = rowMapper(rows)
+		if err != nil {
+			return eris.Wrap(err, "error during mapping")
 		}
 	}
-	return list, err
+	return nil
 }
 
 func Remove(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId) error {

@@ -93,16 +93,16 @@ func (r *HandleEventResponse) GetTags() (*bool, error) {
 	return &published, nil
 }
 
-func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse) {
-	if response != nil {
+func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
+	if mce != nil {
 		// iterate over chat participants
 		for _, participantId := range participantIds {
 			var fileInfo *dto.FileInfoDto
 			var err error
 			if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-				if response.objectInfo != nil {
+				if mce != nil {
 					userId := &participantId
-					fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, *response.objectInfo, response.tagging, false)
+					fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
 					if err != nil {
 						s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
 						continue
