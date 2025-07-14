@@ -31,6 +31,7 @@ type FilesHandler struct {
 	minioConfig      *utils.MinioConfig
 	filesService     *services.FilesService
 	redisInfoService *services.RedisInfoService
+	dba              *db.DB
 	lgr              *logger.Logger
 }
 
@@ -49,6 +50,7 @@ func NewFilesHandler(
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
 	redisInfoService *services.RedisInfoService,
+	dba *db.DB,
 ) *FilesHandler {
 	return &FilesHandler{
 		lgr:              lgr,
@@ -58,6 +60,7 @@ func NewFilesHandler(
 		minioConfig:      minioConfig,
 		filesService:     filesService,
 		redisInfoService: redisInfoService,
+		dba:              dba,
 	}
 }
 
@@ -881,8 +884,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 }
 
 type CountResponse struct {
-	Count int  `json:"count"`
-	Found bool `json:"found"`
+	Count int64 `json:"count"`
 }
 
 type CountRequest struct {
@@ -902,8 +904,6 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 		h.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
-
-	bucketName := h.minioConfig.Files
 
 	searchString := bindTo.SearchString
 	searchString = strings.TrimSpace(searchString)
@@ -929,27 +929,16 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	}
 	// end check
 
-	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
+	filterObj := db.NewFilterBySearchString(searchString)
 
-	filter := h.getFilterFunction(searchString)
-
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-		WithMetadata: false,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
-
-	var counter = 0
-	var exists bool
-	for objInfo := range objects {
-		if (filter != nil && filter(&objInfo)) || filter == nil {
-			counter++
-		}
+	count, err := db.GetCount(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during get count %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	var countDto = CountResponse{
-		Count: counter,
-		Found: exists,
+		Count: count,
 	}
 
 	return c.JSON(http.StatusOK, countDto)
@@ -1007,8 +996,9 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 
 	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
 
-	filter := h.getFilterFunction(searchString)
+	filterObj := db.NewFilterBySearchString(searchString)
 
+	// TODO remove all the ListObjects
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: false,
 		Prefix:       filenameChatPrefix,

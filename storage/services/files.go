@@ -357,7 +357,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 	return info, nil
 }
 
-// prepares url to use ib lublic microservice
+// prepares url to use in public microservice
 // in case getting file list
 // see also chat/handlers/blog.go :: makeUrlPublic
 func makeUrlPublic(src string, additionalSegment string, overrideChatId, overrideMessageId int64) (string, error) {
