@@ -93,6 +93,13 @@ func (r *HandleEventResponse) GetTags() (*bool, error) {
 	return &published, nil
 }
 
+func (r *HandleEventResponse) GetObjectInfo() *minio.ObjectInfo {
+	if r == nil {
+		return nil
+	}
+	return r.objectInfo
+}
+
 func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
 	if mce != nil {
 		// iterate over chat participants

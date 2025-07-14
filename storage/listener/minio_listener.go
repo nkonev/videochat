@@ -2,6 +2,7 @@ package listener
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
@@ -191,6 +192,11 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		published = *publishedP
 	}
 
+	objInfo := eventServiceResponse.GetObjectInfo()
+	if objInfo == nil {
+		return nil, errors.New("nil ObjectInfo")
+	}
+
 	return &dto.MetadataCache{
 		ChatId:         chatId,
 		FileItemUuid:   fileItemUuid,
@@ -198,6 +204,7 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		OwnerId:        ownerId,
 		CorrelationId:  correlationId,
 		Published:      published,
+		FileSize:       objInfo.Size,
 		CreateDateTime: eventTime,
 		EditDateTime:   eventTime,
 	}, nil
