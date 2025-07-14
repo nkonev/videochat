@@ -11,7 +11,10 @@ create unlogged table metadata_cache(
     -- S3 tags (changeable)
    published boolean not null,
 
+   file_size bigint not null,
+
    create_date_time timestamp not null default utc_now(),
+   edit_date_time timestamp not null default utc_now(),
 
    primary key (chat_id, file_item_uuid, filename)
 );

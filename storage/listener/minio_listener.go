@@ -199,6 +199,7 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		CorrelationId:  correlationId,
 		Published:      published,
 		CreateDateTime: eventTime,
+		EditDateTime:   eventTime,
 	}, nil
 }
 

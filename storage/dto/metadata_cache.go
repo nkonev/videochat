@@ -12,7 +12,10 @@ type MetadataCache struct {
 
 	Published bool
 
+	FileSize int64
+
 	CreateDateTime time.Time
+	EditDateTime   time.Time
 }
 
 type MetadataCacheId struct {

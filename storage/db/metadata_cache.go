@@ -21,8 +21,11 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 			correlation_id,
 		    
 		    published,
+		                           
+		    file_size,
 		    
-		    create_date_time
+		    create_date_time,
+		    edit_date_time
 		) values (
 		    $1,
 		    $2,
@@ -30,12 +33,14 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 		    $4,
 		    $5,
 		    $6,
-		  	$7
+		  	$7,
+		    $8,
+		    $9
 		) on conflict (chat_id, file_item_uuid, filename) 
 		do update set 
-			correlation_id = $5,
 			published = $6,
-			create_date_time = $7
+		    file_size = $7,
+			edit_date_time = $9
 	`,
 		metadataCache.ChatId,
 		metadataCache.FileItemUuid,
@@ -44,7 +49,9 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 		metadataCache.OwnerId,
 		metadataCache.CorrelationId,
 		metadataCache.Published,
+		metadataCache.FileSize,
 		metadataCache.CreateDateTime,
+		metadataCache.EditDateTime,
 	)
 
 	if err != nil {
@@ -62,25 +69,18 @@ func provideScanToMetadataCache(ucs *dto.MetadataCache) []any {
 		&ucs.OwnerId,
 		&ucs.CorrelationId,
 		&ucs.Published,
+		&ucs.FileSize,
 		&ucs.CreateDateTime,
+		&ucs.EditDateTime,
 	}
 }
 
 func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId) (*dto.MetadataCache, error) {
-	row := co.QueryRowContext(ctx, `select 
-			chat_id,
-		    file_item_uuid,
-			filename,
-			
-		    owner_user_id,                        
-		    correlation_id,
-			
-			published,
-			
-			create_date_time
+	row := co.QueryRowContext(ctx, fmt.Sprintf(`select 
+			%s
 		from metadata_cache 
 		where (chat_id, file_item_uuid, filename) = ($1, $2, $3)
-	`, metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
+	`, selectMetadataColumns), metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -131,11 +131,14 @@ const selectMetadataColumns = `
 		    correlation_id,
 			
 			published,
+
+			file_size,
 			
-			create_date_time
+			create_date_time,
+			edit_date_time
 `
 
-const selectMetadataCount = "count(*) "
+const selectMetadataCount = " count(*) "
 
 func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
 	list := make([]dto.MetadataCache, 0)
