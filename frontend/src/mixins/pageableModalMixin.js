@@ -20,6 +20,7 @@ export default () => {
                 loading: false,
                 page: firstPage,
                 dataLoaded: false,
+                pageableAbortController: new AbortController(),
             }
         },
         computed: {
@@ -223,6 +224,7 @@ export default () => {
                     this.closeModal(); // make show false to
                 }).then(()=>{
                     this.reset(); // not to react in watch on page and not to load
+                    this.pageableAbortController.abort(); // abort requests
                 })
             },
         },
@@ -236,7 +238,12 @@ export default () => {
                 if (this.shouldReactOnPageChange()) {
                     console.debug("Setting new page", newValue);
                     this.itemsDto = dtoFactory();
-                    this.updateItems();
+                    if (this.show) {
+                        this.updateItems();
+                    } else {
+                        this.reset();
+                        this.pageableAbortController.abort(); // abort requests
+                    }
                 }
             },
             // needed for case when we switch over chats and probably can occasionally receive wrong data over bus or not to unsubscribe and produce a leak

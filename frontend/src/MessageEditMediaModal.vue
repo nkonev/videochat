@@ -162,6 +162,7 @@
                         size: pageSize,
                         type: this.type
                     },
+                    signal: this.pageableAbortController.signal
                 })
             },
             extractDtoFromEventDto(eventDto) {

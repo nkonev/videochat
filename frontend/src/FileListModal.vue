@@ -243,6 +243,7 @@ export default {
                     fileItemUuid : this.fileItemUuid ? this.fileItemUuid : '',
                     searchString: this.searchString
                 },
+                signal: this.pageableAbortController.signal
             })
         },
         doSearch(){
