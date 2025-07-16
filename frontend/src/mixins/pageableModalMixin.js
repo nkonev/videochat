@@ -240,7 +240,7 @@ export default () => {
                     this.itemsDto = dtoFactory();
                     if (this.show) {
                         this.updateItems();
-                    } else {
+                    } else { // `this.pageableAbortController.abort()` is mostly for the case, surrounding `this.updateItems()` with `if (this.show)` and `this.reset()` in else should be enough
                         this.reset();
                         this.pageableAbortController.abort(); // abort requests
                     }
