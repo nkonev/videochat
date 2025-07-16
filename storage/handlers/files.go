@@ -426,7 +426,7 @@ func (h *FilesHandler) listHandler(c echo.Context, public bool) error {
 
 	filterObj := db.NewFilterBySearchString(searchString)
 
-	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, chatId, fileItemUuid, filterObj, true, true, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), public, overrideChatId, overrideMessageId, userId, bucketName, chatId, fileItemUuid, filterObj, true, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -785,6 +785,10 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// TODO remove all ".minio.ListObjects(" here and in services
+// TODO rewrite checkFileItemBelongsToUser() using SQL
+// TODO rewrite checkFileBelongsToUser() using SQL
+// TODO write a task to renew MetadataCache
 func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
 	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
 		WithMetadata: true,
@@ -967,8 +971,6 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 		return err
 	}
 
-	bucketName := h.minioConfig.Files
-
 	searchString := bindTo.SearchString
 	searchString = strings.TrimSpace(searchString)
 	searchString = strings.ToLower(searchString)
@@ -994,26 +996,29 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 	}
 	// end check
 
-	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
+	filename, err := utils.ParseFileName(fileId)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing filename %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	filterObj := db.NewFilterBySearchString(searchString)
 
-	// TODO remove all the ListObjects
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-		WithMetadata: false,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
+	metadataCache, err := db.Get(c.Request().Context(), h.dba, dto.MetadataCacheId{
+		ChatId:       chatId,
+		FileItemUuid: fileItemUuid,
+		Filename:     filename,
+	}, filterObj)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during metadataCache getting from db %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	var filterResponseItemArray = make([]FilterResponseItem, 0)
-	for objInfo := range objects {
-		if (filter != nil && filter(&objInfo)) || filter == nil {
-			if objInfo.Key == fileId {
-				filterResponseItemArray = append(filterResponseItemArray, FilterResponseItem{
-					Id: objInfo.Key,
-				})
-			}
-		}
+	if metadataCache != nil {
+		filterResponseItemArray = append(filterResponseItemArray, FilterResponseItem{
+			Id: utils.BuildNormalizedKey(metadataCache),
+		})
 	}
 
 	return c.JSON(http.StatusOK, filterResponseItemArray)
@@ -1136,11 +1141,9 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
+	filterObj := db.NewFilterByType(services.GetTypeExtensions(requestedMediaType))
 
-	filter := h.getFilterByType(requestedMediaType)
-
-	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, true, filesSize, filesOffset)
+	items, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, chatId, "", filterObj, false, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -1230,33 +1233,37 @@ func (h *FilesHandler) FilterEmbed(c echo.Context) error {
 	}
 	// end check
 
-	bucketName := h.minioConfig.Files
-
 	var bindTo = new(CandidatesFilterRequest)
 	if err := c.Bind(bindTo); err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Warnf("Error during binding to dto %v", err)
 		return err
 	}
 
-	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
+	fileItemUuid, err := utils.ParseFileItemUuid(bindTo.FileId)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing fileItemUuid %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-	filter := h.getFilterByType(bindTo.Type)
+	filename, err := utils.ParseFileName(bindTo.FileId)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing filename %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-		WithMetadata: false,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
+	filterObj := db.NewFilterByType(services.GetTypeExtensions(bindTo.Type))
+
+	metadataCache, err := db.Get(c.Request().Context(), h.dba, dto.MetadataCacheId{
+		ChatId:       chatId,
+		FileItemUuid: fileItemUuid,
+		Filename:     filename,
+	}, filterObj)
 
 	var filterResponseItemArray = make([]FilterResponseItem, 0)
-	for objInfo := range objects {
-		if (filter != nil && filter(&objInfo)) || filter == nil {
-			if objInfo.Key == bindTo.FileId {
-				filterResponseItemArray = append(filterResponseItemArray, FilterResponseItem{
-					Id: objInfo.Key,
-				})
-			}
-		}
+	if metadataCache != nil {
+		filterResponseItemArray = append(filterResponseItemArray, FilterResponseItem{
+			Id: utils.BuildNormalizedKey(metadataCache),
+		})
 	}
 
 	return c.JSON(http.StatusOK, filterResponseItemArray)

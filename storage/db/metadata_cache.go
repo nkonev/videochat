@@ -10,6 +10,32 @@ import (
 	"strings"
 )
 
+const selectMetadataColumns = `
+	chat_id,
+	file_item_uuid,
+	metadataCacheId.FileItemUuid,
+	
+	owner_user_id,                        
+	correlation_id,
+	
+	published,
+	
+	file_size,
+	
+	create_date_time,
+	edit_date_time
+`
+
+const selectMetadataCount = " count(*) "
+
+const getMetadatasSql = `select 
+	%s
+	from metadata_cache
+	where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
+	order by file_item_uuid desc, filename desc
+	limit $3 offset $4
+`
+
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
 	_, err := co.ExecContext(ctx, `
 		insert into metadata_cache(
@@ -75,12 +101,20 @@ func provideScanToMetadataCache(ucs *dto.MetadataCache) []any {
 	}
 }
 
-func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId) (*dto.MetadataCache, error) {
-	row := co.QueryRowContext(ctx, fmt.Sprintf(`select 
-			%s
-		from metadata_cache 
-		where (chat_id, file_item_uuid, filename) = ($1, $2, $3)
-	`, selectMetadataColumns), metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
+func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId, filterObj Filter) (*dto.MetadataCache, error) {
+	const limit = 1
+	const offset = 0
+	sqlArgs := []any{metadataCacheId.ChatId, metadataCacheId.FileItemUuid, limit, offset, metadataCacheId.Filename}
+	var sqlString string
+
+	if filterObj == nil {
+		sqlString = fmt.Sprintf(getMetadatasSql, selectMetadataColumns, " and filename = $5 ")
+	} else if v, ok := filterObj.(FilterBySearchString); ok {
+		sqlString = fmt.Sprintf(getMetadatasSql, selectMetadataColumns, " and filename = $5 and lower(filename) LIKE '%' || lower($6) || '%'")
+		sqlArgs = append(sqlArgs, v.searchString)
+	}
+
+	row := co.QueryRowContext(ctx, fmt.Sprintf(sqlString, sqlArgs...))
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -121,24 +155,6 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 		typeExtensions: typeExtensions,
 	}
 }
-
-const selectMetadataColumns = `
-			chat_id,
-		    file_item_uuid,
-			filename,
-			
-		    owner_user_id,                        
-		    correlation_id,
-			
-			published,
-
-			file_size,
-			
-			create_date_time,
-			edit_date_time
-`
-
-const selectMetadataCount = " count(*) "
 
 func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
 	list := make([]dto.MetadataCache, 0)
@@ -182,21 +198,15 @@ func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUu
 }
 
 func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows *sql.Rows) error, selectWhat string, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) error {
-	sqlString := `select 
-    	%s
-		from metadata_cache
-		where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
-		order by file_item_uuid desc, filename desc
-		limit $3 offset $4
-	`
 	sqlArgs := []any{chatId, fileItemUuid, limit, offset}
 
+	var sqlString string
 	if filterObj == nil {
-		sqlString = fmt.Sprintf(sqlString, selectWhat, "")
+		sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, "")
 	} else {
 		switch v := filterObj.(type) {
 		case *FilterBySearchString:
-			sqlString = fmt.Sprintf(sqlString, selectWhat, "and lower(filename) LIKE '%' || lower($5) || '%'")
+			sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, "and lower(filename) LIKE '%' || lower($5) || '%'")
 			sqlArgs = append(sqlArgs, v.searchString)
 		case *FilterByType: // we define extensions, it isn't an user input, so it is safe
 			if len(v.typeExtensions) > 0 {
@@ -210,7 +220,7 @@ func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows 
 				}
 				builder += ") "
 
-				sqlString = fmt.Sprintf(sqlString, selectWhat, builder)
+				sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, builder)
 			} else {
 				return nil
 			}

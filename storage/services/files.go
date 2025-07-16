@@ -52,7 +52,6 @@ func (h *FilesService) GetListFilesInFileItem(
 	fileItemUuid string, // can be empty string
 	filterObj db.Filter,
 	requestOwners bool,
-	requestCount bool,
 	size, offset int,
 ) ([]*dto.FileInfoDto, int64, error) {
 	if !public && behalfUserId == nil {
@@ -65,11 +64,9 @@ func (h *FilesService) GetListFilesInFileItem(
 	}
 
 	var count int64
-	if requestCount {
-		count, err = db.GetCount(c, h.dba, chatId, fileItemUuid, filterObj)
-		if err != nil {
-			return []*dto.FileInfoDto{}, 0, err
-		}
+	count, err = db.GetCount(c, h.dba, chatId, fileItemUuid, filterObj)
+	if err != nil {
+		return []*dto.FileInfoDto{}, 0, err
 	}
 
 	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
