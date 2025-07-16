@@ -1163,8 +1163,6 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 
 	requestedMediaType := c.QueryParam("type")
 
-	bucketName := h.minioConfig.Files
-
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
 	if err != nil {
 		return err
@@ -1179,32 +1177,28 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	var filenameChatPrefix string = fmt.Sprintf("chat/%v/", chatId)
+	filterObj := db.NewFilterByType(services.GetTypeExtensions(requestedMediaType))
 
-	filter := h.getFilterByType(requestedMediaType)
-
-	_, count, err := h.filesService.GetListFilesInFileItem(c.Request().Context(), false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, &userPrincipalDto.UserId, bucketName, filenameChatPrefix, chatId, filter, false, true, 10, 0)
-	if err != nil {
-		return err
-	}
+	count, err := db.GetCount(c.Request().Context(), h.dba, chatId, "", filterObj)
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "count": count})
 }
 
-func (h *FilesHandler) getFilterByType(requestedMediaType string) func(info *minio.ObjectInfo) bool {
-	return func(info *minio.ObjectInfo) bool {
-		switch requestedMediaType {
-		case services.Media_image:
-			return utils.IsImage(info.Key)
-		case services.Media_video:
-			return utils.IsVideo(info.Key)
-		case services.Media_audio:
-			return utils.IsAudio(info.Key)
-		default:
-			return false
-		}
-	}
-}
+//
+//func (h *FilesHandler) getFilterByType(requestedMediaType string) func(info *minio.ObjectInfo) bool {
+//	return func(info *minio.ObjectInfo) bool {
+//		switch requestedMediaType {
+//		case services.Media_image:
+//			return utils.IsImage(info.Key)
+//		case services.Media_video:
+//			return utils.IsVideo(info.Key)
+//		case services.Media_audio:
+//			return utils.IsAudio(info.Key)
+//		default:
+//			return false
+//		}
+//	}
+//}
 
 type CandidatesFilterRequest struct {
 	Type   string `json:"type"`

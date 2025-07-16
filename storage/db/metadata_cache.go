@@ -211,6 +211,8 @@ func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows 
 				builder += ") "
 
 				sqlString = fmt.Sprintf(sqlString, selectWhat, builder)
+			} else {
+				return nil
 			}
 		default:
 			return fmt.Errorf("unknown filter type %T", filterObj)

@@ -421,6 +421,19 @@ func GetType(itemUrl string) *string {
 	}
 }
 
+func GetTypeExtensions(requestedMediaType string) []string {
+	switch requestedMediaType {
+	case Media_video:
+		return viper.GetStringSlice("types.video")
+	case Media_image:
+		return viper.GetStringSlice("types.image")
+	case Media_audio:
+		return viper.GetStringSlice("types.audio")
+	default:
+		return []string{}
+	}
+}
+
 func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMediaType string, urlBase string, overrideChatId, overrideMessageId *int64) *string {
 	var previewUrl *string = nil
 
