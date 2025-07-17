@@ -133,6 +133,19 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 	return &ucs, nil
 }
 
+func CheckFileItemBelongsToUser(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, ownerId int64) (bool, error) {
+	row := co.QueryRowContext(ctx, "select not exists(select 1 from metadata_cashe where chat_id = $1 and file_item_uuid = $2 and owner_user_id != $3)", chatId, fileItemUuid, ownerId)
+	if row.Err() != nil {
+		return false, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+	var belongs bool
+	err := row.Scan(&belongs)
+	if err != nil {
+		return false, eris.Wrap(err, "error during scanning from db")
+	}
+	return belongs, nil
+}
+
 type Filter interface {
 }
 

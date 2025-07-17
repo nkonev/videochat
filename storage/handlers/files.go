@@ -131,7 +131,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	// check this fileItem belongs to user
 	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, chatFileItemUuid)
-	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
+	belongs, err := h.checkFileItemBelongsToUser(chatFileItemUuid, c, chatId, bucketName, userPrincipalDto)
 	if err != nil {
 		return err
 	}
@@ -318,8 +318,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	fileItemUuid := getFileItemUuid(bindTo.Id)
 
 	// check this fileItem belongs to user
-	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	belongs, err := h.checkFileItemBelongsToUser(filenameChatPrefix, c, chatId, bucketName, userPrincipalDto)
+	belongs, err := h.checkFileItemBelongsToUser(fileItemUuid, c, chatId, bucketName, userPrincipalDto)
 	if err != nil {
 		return err
 	}
@@ -751,12 +750,28 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	belongs, err := h.checkFileBelongsToUser(c.Request().Context(), objectInfo, chatId, userPrincipalDto, false)
+
+	fileItemUuid, err := utils.ParseFileItemUuid(bindTo.Id)
+	if err != nil {
+		return err
+	}
+
+	filename, err := utils.ParseFileName(bindTo.Id)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing filename %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	metadataCache, err := db.Get(c.Request().Context(), h.dba, dto.MetadataCacheId{
+		ChatId:       chatId,
+		FileItemUuid: fileItemUuid,
+		Filename:     filename,
+	}, nil)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belong object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	if !belongs {
+	if metadataCache.OwnerId != userPrincipalDto.UserId {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
 		return c.NoContent(http.StatusUnauthorized)
 	}
@@ -786,44 +801,9 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 }
 
 // TODO remove all ".minio.ListObjects(" here and in services
-// TODO rewrite checkFileItemBelongsToUser() using SQL
-// TODO rewrite checkFileBelongsToUser() using SQL
 // TODO write a task to renew MetadataCache
-func (h *FilesHandler) checkFileItemBelongsToUser(filenameChatPrefix string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
-	for objInfo := range objects {
-		b, err := h.checkFileBelongsToUser(c.Request().Context(), objInfo, chatId, userPrincipalDto, true)
-		if err != nil {
-			return false, err
-		}
-		if !b {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
-func (h *FilesHandler) checkFileBelongsToUser(ctx context.Context, objInfo minio.ObjectInfo, chatId int64, userPrincipalDto *auth.AuthResult, hasAmzPrefix bool) (bool, error) {
-	gotChatId, gotOwnerId, _, err := services.DeserializeMetadata(objInfo.UserMetadata, hasAmzPrefix)
-	if err != nil {
-		h.lgr.WithTracing(ctx).Errorf("Error deserializeMetadata: %v", err)
-		return false, err
-	}
-
-	if gotChatId != chatId {
-		h.lgr.WithTracing(ctx).Infof("Wrong chatId: expected %v but got %v", chatId, gotChatId)
-		return false, nil
-	}
-
-	if gotOwnerId != userPrincipalDto.UserId {
-		h.lgr.WithTracing(ctx).Infof("Wrong ownerId: expected %v but got %v", userPrincipalDto.UserId, gotOwnerId)
-		return false, nil
-	}
-	return true, nil
+func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
+	return db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
 }
 
 type PublishRequest struct {

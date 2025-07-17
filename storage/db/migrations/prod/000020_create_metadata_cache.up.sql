@@ -20,3 +20,5 @@ create unlogged table metadata_cache(
 );
 
 SELECT create_distributed_table('metadata_cache', 'chat_id');
+
+create index idx_belongs on metadata_cache(chat_id, file_item_uuid, owner_user_id);
