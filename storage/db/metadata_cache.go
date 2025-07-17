@@ -14,7 +14,7 @@ import (
 const selectMetadataColumns = `
 	chat_id,
 	file_item_uuid,
-	metadataCacheId.FileItemUuid,
+	filename,
 	
 	owner_user_id,                        
 	correlation_id,
@@ -27,14 +27,18 @@ const selectMetadataColumns = `
 	edit_date_time
 `
 
-const selectMetadataCount = " count(*) "
-
 const getMetadatasSql = `select 
 	%s
 	from metadata_cache
 	where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
 	order by file_item_uuid asc, filename desc
 	limit $3 offset $4
+`
+
+const getMetadatasCountSql = `select 
+	count(*)
+	from metadata_cache
+	where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
 `
 
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
@@ -173,46 +177,9 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
 	list := make([]dto.MetadataCache, 0)
 
-	errOuter := getMetadatas(ctx, co, func(rows *sql.Rows) error {
-		ucs := dto.MetadataCache{}
-		if err := rows.Scan(provideScanToMetadataCache(&ucs)[:]...); err != nil {
-			return eris.Wrap(err, "error during scanning")
-		} else {
-			list = append(list, ucs)
-		}
-		return nil
-	}, selectMetadataColumns, chatId, fileItemUuid, filterObj, limit, offset)
-	if errOuter != nil {
-		return nil, errOuter
-	}
-
-	return list, nil
-}
-
-func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter) (int64, error) {
-	list := make([]int64, 0)
-
-	errOuter := getMetadatas(ctx, co, func(rows *sql.Rows) error {
-		var count int64
-		if err := rows.Scan(&count); err != nil {
-			return eris.Wrap(err, "error during scanning")
-		} else {
-			list = append(list, count)
-		}
-		return nil
-	}, selectMetadataCount, chatId, fileItemUuid, filterObj, 1, 0)
-	if errOuter != nil {
-		return 0, errOuter
-	}
-	if len(list) != 1 {
-		return 0, errors.New("Expected 1 row for count")
-	}
-
-	return list[0], nil
-}
-
-func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows *sql.Rows) error, selectWhat string, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) error {
 	sqlArgs := []any{chatId, fileItemUuid, limit, offset}
+
+	selectWhat := selectMetadataColumns
 
 	var sqlString string
 	if filterObj == nil {
@@ -236,25 +203,78 @@ func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows 
 
 				sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, builder)
 			} else {
-				return nil
+				return []dto.MetadataCache{}, nil
 			}
 		default:
-			return fmt.Errorf("unknown filter type %T", filterObj)
+			return nil, fmt.Errorf("unknown filter type %T", filterObj)
 		}
 	}
 
 	rows, err := co.QueryContext(ctx, sqlString, sqlArgs...)
 	if err != nil {
-		return eris.Wrap(err, "error during interacting with db")
+		return nil, eris.Wrap(err, "error during interacting with db")
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rowMapper(rows)
+		ucs := dto.MetadataCache{}
+		if err := rows.Scan(provideScanToMetadataCache(&ucs)[:]...); err != nil {
+			return nil, eris.Wrap(err, "error during scanning")
+		} else {
+			list = append(list, ucs)
+		}
 		if err != nil {
-			return eris.Wrap(err, "error during mapping")
+			return nil, eris.Wrap(err, "error during mapping")
 		}
 	}
-	return nil
+
+	return list, nil
+}
+
+func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter) (int64, error) {
+	var count int64
+
+	sqlArgs := []any{chatId, fileItemUuid}
+
+	var sqlString string
+	if filterObj == nil {
+		sqlString = fmt.Sprintf(getMetadatasCountSql, "")
+	} else {
+		switch v := filterObj.(type) {
+		case *FilterBySearchString:
+			sqlString = fmt.Sprintf(getMetadatasCountSql, "and lower(filename) LIKE '%' || lower($3) || '%'")
+			sqlArgs = append(sqlArgs, v.searchString)
+		case *FilterByType: // we define extensions, it isn't an user input, so it is safe
+			if len(v.typeExtensions) > 0 {
+				builder := " and ( "
+				for i, dotExt := range v.typeExtensions {
+					orClause := ""
+					if i != 0 {
+						orClause = "or"
+					}
+					builder += fmt.Sprintf(" %v lower(filename) like '%%%v'", orClause, strings.ToLower(dotExt))
+				}
+				builder += ") "
+
+				sqlString = fmt.Sprintf(getMetadatasCountSql, builder)
+			} else {
+				return 0, nil
+			}
+		default:
+			return 0, fmt.Errorf("unknown filter type %T", filterObj)
+		}
+	}
+
+	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
+	if row.Err() != nil {
+		return 0, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+
+	return count, nil
 }
 
 type SimpleFileItem struct {
