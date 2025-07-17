@@ -778,7 +778,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// TODO write a task to renew MetadataCache
 func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
 	return db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
 }

@@ -409,6 +409,7 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) 
 	}, nil
 }
 
+// TODO write a task to renew MetadataCache
 func runScheduler(
 	lgr *logger.Logger,
 	scheduler *dcron.Cron,
