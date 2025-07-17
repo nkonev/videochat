@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
@@ -41,6 +40,8 @@ type RenameDto struct {
 
 const NotFoundImage = "/images/covers/not_found.png"
 const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
+
+const viewListLimit = 1000
 
 func NewFilesHandler(
 	lgr *logger.Logger,
@@ -130,7 +131,6 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 
 	// check this fileItem belongs to user
-	filenameChatPrefix := fmt.Sprintf("chat/%v/%v/", chatId, chatFileItemUuid)
 	belongs, err := h.checkFileItemBelongsToUser(chatFileItemUuid, c, chatId, bucketName, userPrincipalDto)
 	if err != nil {
 		return err
@@ -207,7 +207,11 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 		presignedUrls = append(presignedUrls, PresignedUrl{stringUrl, i})
 	}
-	existingCount := h.getCountFilesInFileItem(c.Request().Context(), bucketName, filenameChatPrefix)
+
+	existingCount, err := db.GetCount(c.Request().Context(), h.dba, chatId, chatFileItemUuid, nil)
+	if err != nil {
+		return err
+	}
 
 	previewable := utils.IsPreviewable(aKey)
 
@@ -354,20 +358,6 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *FilesHandler) getCountFilesInFileItem(ctx context.Context, bucketName string, filenameChatPrefix string) int {
-	var count = 0
-	var objectsNew <-chan minio.ObjectInfo = h.minio.ListObjects(ctx, bucketName, minio.ListObjectsOptions{
-		Prefix:    filenameChatPrefix,
-		Recursive: true,
-	})
-	count = len(objectsNew)
-	for oi := range objectsNew {
-		h.lgr.WithTracing(ctx).Debugf("Processing %v", oi.Key)
-		count++
-	}
-	return count
-}
-
 func getFileItemUuid(fileId string) string {
 	split := strings.Split(fileId, "/")
 	return split[2]
@@ -506,56 +496,48 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	bucketName := h.minioConfig.Files
+	filterObj := db.NewFilterByType(services.GetPreviewableExtensions())
 
-	filenameChatPrefix := h.getFilenameChatPrefix(chatId, fileItemUuid)
-
-	var filter = func(objInfo *minio.ObjectInfo) bool {
-		return utils.IsPreviewable(objInfo.Key)
+	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, viewListLimit, 0)
+	if err != nil {
+		return err
 	}
 
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
-
-	for objInfo := range objects {
-		if filter(&objInfo) {
-
-			var downloadUrl string
-			var previewUrl *string
-			if !isAnonymous {
-				downloadUrl, err = h.filesService.GetConstantDownloadUrl(objInfo.Key)
-				if err != nil {
-					h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
-					continue
-				}
-				previewUrl = h.filesService.GetPreviewUrlSmart(c.Request().Context(), objInfo.Key)
-			} else {
-				downloadUrl, err = h.filesService.GetAnonymousUrl(objInfo.Key, overrideChatId, overrideMessageId)
-				if err != nil {
-					h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
-					continue
-				}
-
-				previewUrl, err = h.filesService.GetAnonymousPreviewUrl(c.Request().Context(), objInfo.Key, overrideChatId, overrideMessageId)
-				if err != nil {
-					h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
-					continue
-				}
+	for _, metadata := range metadatas {
+		aKey := utils.BuildNormalizedKey(&metadata)
+		var downloadUrl string
+		var previewUrl *string
+		if !isAnonymous {
+			downloadUrl, err = h.filesService.GetConstantDownloadUrl(aKey)
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
+				continue
+			}
+			previewUrl = h.filesService.GetPreviewUrlSmart(c.Request().Context(), aKey)
+		} else {
+			downloadUrl, err = h.filesService.GetAnonymousUrl(aKey, overrideChatId, overrideMessageId)
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
+				continue
 			}
 
-			filename := services.ReadFilename(objInfo.Key)
-			retList = append(retList, ViewItem{
-				Url:            downloadUrl,
-				Filename:       filename,
-				PreviewUrl:     previewUrl,
-				This:           objInfo.Key == fileId,
-				CanPlayAsVideo: utils.IsVideo(objInfo.Key),
-				CanShowAsImage: utils.IsImage(objInfo.Key),
-			})
+			previewUrl, err = h.filesService.GetAnonymousPreviewUrl(c.Request().Context(), aKey, overrideChatId, overrideMessageId)
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting public downlad url %v", err)
+				continue
+			}
 		}
+
+		filename := services.ReadFilename(aKey)
+		retList = append(retList, ViewItem{
+			Url:            downloadUrl,
+			Filename:       filename,
+			PreviewUrl:     previewUrl,
+			This:           aKey == fileId,
+			CanPlayAsVideo: utils.IsVideo(aKey),
+			CanShowAsImage: utils.IsImage(aKey),
+		})
+
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
@@ -800,7 +782,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// TODO remove all ".minio.ListObjects(" here and in services
+// TODO remove all ".minio.ListObjects(" in services
 // TODO write a task to renew MetadataCache
 func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
 	return db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)

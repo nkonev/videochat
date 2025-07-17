@@ -431,6 +431,13 @@ func GetTypeExtensions(requestedMediaType string) []string {
 	}
 }
 
+func GetPreviewableExtensions() []string {
+	res := []string{}
+	res = append(res, viper.GetStringSlice("types.video")...)
+	res = append(res, viper.GetStringSlice("types.image")...)
+	return res
+}
+
 func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMediaType string, urlBase string, overrideChatId, overrideMessageId *int64) *string {
 	var previewUrl *string = nil
 
