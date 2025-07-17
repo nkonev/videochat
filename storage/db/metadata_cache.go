@@ -114,12 +114,14 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 
 	if filterObj == nil {
 		sqlString = fmt.Sprintf(getMetadatasSql, selectMetadataColumns, " and filename = $5 ")
-	} else if v, ok := filterObj.(FilterBySearchString); ok {
+	} else if v, ok := filterObj.(*FilterBySearchString); ok {
 		sqlString = fmt.Sprintf(getMetadatasSql, selectMetadataColumns, " and filename = $5 and lower(filename) LIKE '%' || lower($6) || '%'")
 		sqlArgs = append(sqlArgs, v.searchString)
+	} else {
+		return nil, fmt.Errorf("Unknown filter: %T", filterObj)
 	}
 
-	row := co.QueryRowContext(ctx, fmt.Sprintf(sqlString, sqlArgs...))
+	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -139,7 +141,7 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 }
 
 func CheckFileItemBelongsToUser(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, ownerId int64) (bool, error) {
-	row := co.QueryRowContext(ctx, "select not exists(select 1 from metadata_cashe where chat_id = $1 and file_item_uuid = $2 and owner_user_id != $3)", chatId, fileItemUuid, ownerId)
+	row := co.QueryRowContext(ctx, "select not exists(select 1 from metadata_cache where chat_id = $1 and file_item_uuid = $2 and owner_user_id != $3)", chatId, fileItemUuid, ownerId)
 	if row.Err() != nil {
 		return false, eris.Wrap(row.Err(), "error during interacting with db")
 	}
