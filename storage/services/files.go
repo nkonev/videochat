@@ -97,87 +97,23 @@ func (h *FilesService) GetListFilesInFileItem(
 	return list, count, nil
 }
 
-type SimpleFileItem struct {
-	Id           string    `json:"id"`
-	Filename     string    `json:"filename"`
-	LastModified time.Time `json:"time"`
-}
-
-type GroupedByFileItemUuid struct {
-	FileItemUuid string           `json:"fileItemUuid"`
-	Files        []SimpleFileItem `json:"files"`
-}
-
 func (h *FilesService) GetListFilesItemUuids(
 	c context.Context,
-	bucket, filenameChatPrefix string,
+	chatId int64,
 	size, offset int,
-) ([]*GroupedByFileItemUuid, int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(c, bucket, minio.ListObjectsOptions{
-		WithMetadata: true,
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-	})
-
-	var list []*GroupedByFileItemUuid = make([]*GroupedByFileItemUuid, 0)
-	var counter = 0
-	var lastItemUuid = ""
-
-	var files = []SimpleFileItem{}
-	for m := range objects {
-		itemUuid, err := utils.ParseFileItemUuid(m.Key)
-		if err != nil {
-			h.lgr.WithTracing(c).Errorf("Unable for %v to get fileItemUuid '%v'", m.Key, err)
-			continue
-		}
-
-		itemIdHasChanged := itemUuid != lastItemUuid
-		if itemIdHasChanged {
-			counter++
-		}
-		lastLastItemId := lastItemUuid
-		lastItemUuid = itemUuid
-
-		if counter >= offset {
-			if len(list) < size {
-				if itemIdHasChanged {
-					if len(files) > 0 {
-						list = append(list, &GroupedByFileItemUuid{lastLastItemId, files}) // process from previous iteration
-					}
-
-					// prepare for current iteration
-					files = []SimpleFileItem{}
-				}
-
-				files = append(files, SimpleFileItem{
-					Id:           m.Key,
-					Filename:     ReadFilename(m.Key),
-					LastModified: m.LastModified,
-				})
-			}
-		}
+) ([]db.GroupedByFileItemUuid, int, error) {
+	datas, err := db.GetListFilesItemUuids(c, h.dba, chatId, size, offset)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Unable to get GroupedByFileItemUuid: %v", err)
+		return nil, 0, err
+	}
+	count, err := db.GetCountFilesItemUuids(c, h.dba, chatId)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Unable to get count GroupedByFileItemUuid: %v", err)
+		return nil, 0, err
 	}
 
-	// process leftovers
-	if len(files) > 0 && len(list) < size && lastItemUuid != "" {
-		list = append(list, &GroupedByFileItemUuid{lastItemUuid, files})
-	}
-
-	return list, counter, nil
-}
-
-func (h *FilesService) GetCount(ctx context.Context, filenameChatPrefix string) (int, error) {
-	var objects <-chan minio.ObjectInfo = h.minio.ListObjects(ctx, h.minioConfig.Files, minio.ListObjectsOptions{
-		Prefix:    filenameChatPrefix,
-		Recursive: true,
-	})
-
-	var count int = 0
-	for objInfo := range objects {
-		h.lgr.WithTracing(ctx).Debugf("Object '%v'", objInfo.Key)
-		count++
-	}
-	return count, nil
+	return datas, int(count), nil
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {

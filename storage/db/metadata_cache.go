@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"github.com/rotisserie/eris"
 	"nkonev.name/storage/dto"
 	"strings"
@@ -32,7 +33,7 @@ const getMetadatasSql = `select
 	%s
 	from metadata_cache
 	where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
-	order by file_item_uuid desc, filename desc
+	order by file_item_uuid asc, filename desc
 	limit $3 offset $4
 `
 
@@ -254,6 +255,79 @@ func getMetadatas(ctx context.Context, co CommonOperations, rowMapper func(rows 
 		}
 	}
 	return nil
+}
+
+type SimpleFileItem struct {
+	Filename string `json:"filename"`
+}
+
+type GroupedByFileItemUuid struct {
+	FileItemUuid string           `json:"fileItemUuid"`
+	Files        []SimpleFileItem `json:"files"`
+}
+
+func GetListFilesItemUuids(ctx context.Context, co CommonOperations, chatId int64, limit, offset int) ([]GroupedByFileItemUuid, error) {
+	res := []GroupedByFileItemUuid{}
+
+	rows, err := co.QueryContext(ctx, `
+		select 
+		    t.file_item_uuid,
+		    array_agg(l.filename)
+		from metadata_cache t
+		inner join lateral (
+			select inc.* from metadata_cache inc
+			where inc.chat_id = t.chat_id and 
+			order by inc.filename 
+			limit 10
+		) l on true
+		group by t.file_item_uuid
+		order by t.file_item_uuid asc 
+		where t.chat_id = $1 
+		limit $2 offset $3`, chatId, limit, offset)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during interacting with db")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var item GroupedByFileItemUuid
+		var filenames = pgtype.TextArray{}
+		err = rows.Scan(&item.FileItemUuid, &filenames)
+		if err != nil {
+			return nil, eris.Wrap(err, "error during mapping")
+		}
+
+		for _, fn := range filenames.Elements {
+			item.Files = make([]SimpleFileItem, 0)
+			item.Files = append(item.Files, SimpleFileItem{
+				Filename: fn.String,
+			})
+		}
+
+		res = append(res, item)
+	}
+	return res, nil
+}
+
+func GetCountFilesItemUuids(ctx context.Context, co CommonOperations, chatId int64) (int64, error) {
+	var count int64
+
+	row := co.QueryRowContext(ctx, `
+		select 
+		    count(t.file_item_uuid)
+		from metadata_cache t
+		group by t.file_item_uuid
+		where t.chat_id = $1 
+	`, chatId)
+	if row.Err() != nil {
+		return 0, eris.Wrap(row.Err(), "error during interacting with db")
+	}
+
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, eris.Wrap(err, "error during mapping")
+	}
+
+	return count, nil
 }
 
 func Remove(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId) error {

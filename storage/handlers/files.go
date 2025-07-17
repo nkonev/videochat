@@ -686,11 +686,7 @@ func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 	filesSize := utils.FixSizeString(c.QueryParam("size"))
 	filesOffset := utils.GetOffset(filesPage, filesSize)
 
-	bucketName := h.minioConfig.Files
-
-	filenameChatPrefix := fmt.Sprintf("chat/%v/", chatId)
-
-	list, count, err := h.filesService.GetListFilesItemUuids(c.Request().Context(), bucketName, filenameChatPrefix, filesSize, filesOffset)
+	list, count, err := h.filesService.GetListFilesItemUuids(c.Request().Context(), chatId, filesSize, filesOffset)
 	if err != nil {
 		return err
 	}
@@ -782,7 +778,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// TODO remove all ".minio.ListObjects(" in services
 // TODO write a task to renew MetadataCache
 func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
 	return db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
