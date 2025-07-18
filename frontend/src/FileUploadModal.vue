@@ -310,6 +310,9 @@ export default {
                       uploadId: fileToUpload.uploadId
                     });
 
+                    // TODO somehow await for finish storing into db
+                    //  move the logic to ON_FILE_CREATED
+                    //  TODO think about fileToUpload.finished = true;
                     if (fileToUpload.shouldSetFileUuidToMessage) {
                       bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {
                         chatId: fileToUpload.chatId,

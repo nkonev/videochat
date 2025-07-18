@@ -294,10 +294,14 @@ export default {
                     })
                     .then((response) => {
                         if (this.$data.isOpenedFromMessageEditing) {
+                            // TODO somehow await for finish storing into db
+                            //  add a flag and move the logic bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT), + copy bus.emit(CLOSE_SIMPLE_MODAL); to ON_FILE_DELETED
+                            //  TODO think about that.loading = false;
                             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
+                            bus.emit(CLOSE_SIMPLE_MODAL);
+                        } else {
+                            bus.emit(CLOSE_SIMPLE_MODAL);
                         }
-
-                        bus.emit(CLOSE_SIMPLE_MODAL);
                     }).finally(()=>{
                       that.loading = false;
                     })
