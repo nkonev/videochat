@@ -299,10 +299,8 @@ export default {
                             //  TODO think about that.loading = false;
                             // TODO or maybe in order not to break the existing logic (syncronous after FILE_UPLOAD_MODAL_START_UPLOADING) - just wait by polling OPTIONS /chat/<id>/<fileItemUuid>/filename
                             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
-                            bus.emit(CLOSE_SIMPLE_MODAL);
-                        } else {
-                            bus.emit(CLOSE_SIMPLE_MODAL);
                         }
+                        bus.emit(CLOSE_SIMPLE_MODAL);
                     }).finally(()=>{
                       that.loading = false;
                     })
