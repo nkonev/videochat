@@ -297,6 +297,7 @@ export default {
                             // TODO somehow await for finish storing into db
                             //  add a flag and move the logic bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT), + copy bus.emit(CLOSE_SIMPLE_MODAL); to ON_FILE_DELETED
                             //  TODO think about that.loading = false;
+                            // TODO or maybe in order not to break the existing logic (syncronous after FILE_UPLOAD_MODAL_START_UPLOADING) - just wait by polling OPTIONS /chat/<id>/<fileItemUuid>/filename
                             bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
                             bus.emit(CLOSE_SIMPLE_MODAL);
                         } else {
