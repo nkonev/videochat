@@ -101,33 +101,34 @@ func (r *HandleEventResponse) GetObjectInfo() *minio.ObjectInfo {
 }
 
 func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
-	if mce != nil {
-		// iterate over chat participants
-		for _, participantId := range participantIds {
-			var fileInfo *dto.FileInfoDto
-			var err error
-			if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-				if mce != nil {
-					userId := &participantId
-					fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
-					if err != nil {
-						s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
-						continue
-					}
-					fileInfo.Owner = response.users[response.fileOwnerId]
-				} else {
-					s.lgr.WithTracing(ctx).Errorf("Missed objectInfo")
+	// iterate over chat participants
+	for _, participantId := range participantIds {
+		var fileInfo *dto.FileInfoDto
+		var err error
+		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+			if mce != nil {
+				userId := &participantId
+				fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
+				if err != nil {
+					s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
 					continue
 				}
-			} else if eventType == utils.FILE_DELETED {
-				fileInfo = &dto.FileInfoDto{
-					Id:           normalizedKey,
-					LastModified: time.Now().UTC(),
-				}
+				fileInfo.Owner = response.users[response.fileOwnerId]
+			} else {
+				s.lgr.WithTracing(ctx).Errorf("Missed objectInfo for %v", normalizedKey)
+				continue
 			}
-			s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
-				FileInfoDto: fileInfo,
-			}, eventType)
+		} else if eventType == utils.FILE_DELETED {
+			fileInfo = &dto.FileInfoDto{
+				Id:           normalizedKey,
+				LastModified: time.Now().UTC(),
+			}
+		}
+		err = s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
+			FileInfoDto: fileInfo,
+		}, eventType)
+		if err != nil {
+			s.lgr.WithTracing(ctx).Errorf("Error sending event for %v: %v", normalizedKey, err)
 		}
 	}
 }
