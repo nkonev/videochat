@@ -112,6 +112,8 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 			s.lgr.WithTracing(ctx).Errorf("Error during getting image file %v for %v", err, normalizedKey)
 			return
 		}
+		defer object.Close()
+
 		byteBuffer, err := s.resizeImageToJpg(ctx, object)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)

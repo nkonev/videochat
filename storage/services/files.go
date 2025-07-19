@@ -60,12 +60,14 @@ func (h *FilesService) GetListFilesInFileItem(
 
 	metadatas, err := db.GetList(c, h.dba, chatId, fileItemUuid, filterObj, size, offset)
 	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Error during getting list, userId = %v, chatId = %v: %v", behalfUserId, chatId, err)
 		return []*dto.FileInfoDto{}, 0, err
 	}
 
 	var count int64
 	count, err = db.GetCount(c, h.dba, chatId, fileItemUuid, filterObj)
 	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Error during getting count %v", err)
 		return []*dto.FileInfoDto{}, 0, err
 	}
 

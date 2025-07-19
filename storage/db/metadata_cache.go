@@ -36,6 +36,13 @@ const getMetadatasSql = `select ` +
 	limit $3 offset $4
 `
 
+const getMetadataSql = `select ` +
+	metadataColumns +
+	`
+	from metadata_cache
+	where chat_id = $1 and file_item_uuid = $2 and filename = $3 %s
+`
+
 const getMetadatasCountSql = `select 
 	count(*)
 	from metadata_cache
@@ -96,18 +103,14 @@ func provideScanToMetadataCache(ucs *dto.MetadataCache) []any {
 }
 
 func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId, filterObj Filter) (*dto.MetadataCache, error) {
-	const limit = 1
-	const offset = 0
-	sqlArgs := []any{metadataCacheId.ChatId, metadataCacheId.FileItemUuid, limit, offset, metadataCacheId.Filename}
-	var sqlString string
+	baseSqlArgs := []any{metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename}
 
-	if filterObj == nil {
-		sqlString = fmt.Sprintf(getMetadatasSql, " and filename = $5 ")
-	} else if v, ok := filterObj.(*FilterBySearchString); ok {
-		sqlString = fmt.Sprintf(getMetadatasSql, " and filename = $5 and lower(filename) LIKE '%' || lower($6) || '%'")
-		sqlArgs = append(sqlArgs, v.searchString)
-	} else {
-		return nil, fmt.Errorf("Unknown filter: %T", filterObj)
+	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadataSql, baseSqlArgs)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during building sql")
+	}
+	if noData {
+		return nil, err
 	}
 
 	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
@@ -115,7 +118,7 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 	ucs := dto.MetadataCache{}
-	err := row.Scan(provideScanToMetadataCache(&ucs)...)
+	err = row.Scan(provideScanToMetadataCache(&ucs)...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred

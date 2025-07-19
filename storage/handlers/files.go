@@ -133,7 +133,8 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	// check this fileItem belongs to user
 	belongs, err := h.checkFileItemBelongsToUser(chatFileItemUuid, c, chatId, bucketName, userPrincipalDto)
 	if err != nil {
-		return err
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belongs, userId = %v, chatId = %v: %v", userPrincipalDto.UserId, chatId, err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
 		return c.NoContent(http.StatusUnauthorized)
@@ -210,7 +211,8 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	existingCount, err := db.GetCount(c.Request().Context(), h.dba, chatId, chatFileItemUuid, nil)
 	if err != nil {
-		return err
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting count %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	previewable := utils.IsPreviewable(aKey)
@@ -324,7 +326,8 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	// check this fileItem belongs to user
 	belongs, err := h.checkFileItemBelongsToUser(fileItemUuid, c, chatId, bucketName, userPrincipalDto)
 	if err != nil {
-		return err
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belongs, userId = %v, chatId = %v: %v", userPrincipalDto.UserId, chatId, err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
 		return c.NoContent(http.StatusUnauthorized)
@@ -500,7 +503,8 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, viewListLimit, 0)
 	if err != nil {
-		return err
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userPrincipalDto.UserId, chatId, err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	for _, metadata := range metadatas {
@@ -749,6 +753,10 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belong object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	if metadataCache == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("no data found chatId = %v, fileItemUuid = %v, filename = %v", chatId, fileItemUuid, filename)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 	if metadataCache.OwnerId != userPrincipalDto.UserId {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
 		return c.NoContent(http.StatusUnauthorized)
@@ -893,7 +901,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 
 	count, err := db.GetCount(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj)
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during get count %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting count %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -904,11 +912,8 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, countDto)
 }
 
-// TODO не появляется видео на EmbedMediaModal, если сначала открыть модалку, потом закрыть, залить через файлы справа, затем снова открыть модалку
-
 type FilterRequest struct {
 	SearchString string `json:"searchString"`
-	FileItemUuid string `json:"fileItemUuid"`
 	FileId       string `json:"fileId"`
 }
 
@@ -934,7 +939,6 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 	searchString = strings.ToLower(searchString)
 
 	// check user belongs to chat
-	fileItemUuid := bindTo.FileItemUuid
 	chatIdString := c.Param("chatId")
 	chatId, err := utils.ParseInt64(chatIdString)
 	if err != nil {
@@ -960,6 +964,12 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	fileItemUuid, err := utils.ParseFileItemUuid(bindTo.FileId)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing fileItemUuid %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	filterObj := db.NewFilterBySearchString(searchString)
 
 	metadataCache, err := db.Get(c.Request().Context(), h.dba, dto.MetadataCacheId{
@@ -968,7 +978,7 @@ func (h *FilesHandler) FilterHandler(c echo.Context) error {
 		Filename:     filename,
 	}, filterObj)
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during metadataCache getting from db %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadataCache getting from db: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -1141,25 +1151,13 @@ func (h *FilesHandler) CountEmbed(c echo.Context) error {
 	filterObj := db.NewFilterByType(services.GetTypeExtensions(requestedMediaType))
 
 	count, err := db.GetCount(c.Request().Context(), h.dba, chatId, "", filterObj)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting count %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "count": count})
 }
-
-//
-//func (h *FilesHandler) getFilterByType(requestedMediaType string) func(info *minio.ObjectInfo) bool {
-//	return func(info *minio.ObjectInfo) bool {
-//		switch requestedMediaType {
-//		case services.Media_image:
-//			return utils.IsImage(info.Key)
-//		case services.Media_video:
-//			return utils.IsVideo(info.Key)
-//		case services.Media_audio:
-//			return utils.IsAudio(info.Key)
-//		default:
-//			return false
-//		}
-//	}
-//}
 
 type CandidatesFilterRequest struct {
 	Type   string `json:"type"`
@@ -1216,6 +1214,10 @@ func (h *FilesHandler) FilterEmbed(c echo.Context) error {
 		FileItemUuid: fileItemUuid,
 		Filename:     filename,
 	}, filterObj)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadataCache getting from db: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	var filterResponseItemArray = make([]FilterResponseItem, 0)
 	if metadataCache != nil {
