@@ -23,15 +23,15 @@ export default () => {
                 })
             },
             installOnFocus() {
-                this.doOnFocus = debounce(this.doOnFocus, 300, {leading: false, trailing: true});
-                window.addEventListener("focus", this.doOnFocus);
+                // this.doOnFocus = debounce(this.doOnFocus, 300, {leading: false, trailing: true});
+                // window.addEventListener("focus", this.doOnFocus);
             },
             uninstallOnFocus() {
                 this.requestAbortController.abort(); // abort requests
 
-                this.doOnFocus.cancel(); // cancel the debounced function in order tot to execute it with the disposed resources
-
-                window.removeEventListener("focus", this.doOnFocus);
+                // this.doOnFocus.cancel(); // cancel the debounced function in order tot to execute it with the disposed resources
+                //
+                // window.removeEventListener("focus", this.doOnFocus);
             }
         }
     }
