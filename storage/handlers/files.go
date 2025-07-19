@@ -904,6 +904,8 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, countDto)
 }
 
+// TODO не работает удаление, если открыть FileListModal как из редактирования чата, так и из RightPanel
+
 type FilterRequest struct {
 	SearchString string `json:"searchString"`
 	FileItemUuid string `json:"fileItemUuid"`
