@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const selectMetadataColumns = `
+const metadataColumns = `
 	chat_id,
 	file_item_uuid,
 	filename,
@@ -27,8 +27,9 @@ const selectMetadataColumns = `
 	edit_date_time
 `
 
-const getMetadatasSql = `select 
-	%s
+const getMetadatasSql = `select ` +
+	metadataColumns +
+	`
 	from metadata_cache
 	where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
 	order by file_item_uuid asc, filename desc
@@ -42,21 +43,9 @@ const getMetadatasCountSql = `select
 `
 
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
-	_, err := co.ExecContext(ctx, `
+	_, err := co.ExecContext(ctx, fmt.Sprintf(`
 		insert into metadata_cache(
-			chat_id,
-			file_item_uuid, 
-		    filename,
-		    
-			owner_user_id,
-			correlation_id,
-		    
-		    published,
-		                           
-		    file_size,
-		    
-		    create_date_time,
-		    edit_date_time
+			%s
 		) values (
 		    $1,
 		    $2,
@@ -72,7 +61,7 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 			published = $6,
 		    file_size = $7,
 			edit_date_time = $9
-	`,
+	`, metadataColumns),
 		metadataCache.ChatId,
 		metadataCache.FileItemUuid,
 		metadataCache.Filename,
@@ -113,9 +102,9 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 	var sqlString string
 
 	if filterObj == nil {
-		sqlString = fmt.Sprintf(getMetadatasSql, selectMetadataColumns, " and filename = $5 ")
+		sqlString = fmt.Sprintf(getMetadatasSql, " and filename = $5 ")
 	} else if v, ok := filterObj.(*FilterBySearchString); ok {
-		sqlString = fmt.Sprintf(getMetadatasSql, selectMetadataColumns, " and filename = $5 and lower(filename) LIKE '%' || lower($6) || '%'")
+		sqlString = fmt.Sprintf(getMetadatasSql, " and filename = $5 and lower(filename) LIKE '%' || lower($6) || '%'")
 		sqlArgs = append(sqlArgs, v.searchString)
 	} else {
 		return nil, fmt.Errorf("Unknown filter: %T", filterObj)
@@ -176,20 +165,17 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 	}
 }
 
-func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
-	list := make([]dto.MetadataCache, 0)
+func applyFilter(filterObj Filter, baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
+	sqlArgs := existingArgs
 
-	sqlArgs := []any{chatId, fileItemUuid, limit, offset}
-
-	selectWhat := selectMetadataColumns
-
-	var sqlString string
+	var sqlString = ""
 	if filterObj == nil {
-		sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, "")
+		sqlString = fmt.Sprintf(baseSqlTemplate, "")
 	} else {
 		switch v := filterObj.(type) {
 		case *FilterBySearchString:
-			sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, "and lower(filename) LIKE '%' || lower($5) || '%'")
+			suffix := fmt.Sprintf("and lower(filename) LIKE '%%' || lower($%v) || '%%'", len(sqlArgs)+1)
+			sqlString = fmt.Sprintf(baseSqlTemplate, suffix)
 			sqlArgs = append(sqlArgs, v.searchString)
 		case *FilterByType: // we define extensions, it isn't an user input, so it is safe
 			if len(v.typeExtensions) > 0 {
@@ -203,13 +189,29 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 				}
 				builder += ") "
 
-				sqlString = fmt.Sprintf(getMetadatasSql, selectWhat, builder)
+				sqlString = fmt.Sprintf(baseSqlTemplate, builder)
 			} else {
-				return []dto.MetadataCache{}, nil
+				return sqlString, sqlArgs, true, nil // true means "no data" because of no extension
 			}
 		default:
-			return nil, fmt.Errorf("unknown filter type %T", filterObj)
+			return "", nil, false, fmt.Errorf("unknown filter type %T", filterObj)
 		}
+	}
+
+	return sqlString, sqlArgs, false, nil
+}
+
+func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
+	list := make([]dto.MetadataCache, 0)
+
+	baseSqlArgs := []any{chatId, fileItemUuid, limit, offset}
+
+	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadatasSql, baseSqlArgs)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during building sql")
+	}
+	if noData {
+		return []dto.MetadataCache{}, err
 	}
 
 	rows, err := co.QueryContext(ctx, sqlString, sqlArgs...)
@@ -235,35 +237,14 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter) (int64, error) {
 	var count int64
 
-	sqlArgs := []any{chatId, fileItemUuid}
+	baseSqlArgs := []any{chatId, fileItemUuid}
 
-	var sqlString string
-	if filterObj == nil {
-		sqlString = fmt.Sprintf(getMetadatasCountSql, "")
-	} else {
-		switch v := filterObj.(type) {
-		case *FilterBySearchString:
-			sqlString = fmt.Sprintf(getMetadatasCountSql, "and lower(filename) LIKE '%' || lower($3) || '%'")
-			sqlArgs = append(sqlArgs, v.searchString)
-		case *FilterByType: // we define extensions, it isn't an user input, so it is safe
-			if len(v.typeExtensions) > 0 {
-				builder := " and ( "
-				for i, dotExt := range v.typeExtensions {
-					orClause := ""
-					if i != 0 {
-						orClause = "or"
-					}
-					builder += fmt.Sprintf(" %v lower(filename) like '%%%v'", orClause, strings.ToLower(dotExt))
-				}
-				builder += ") "
-
-				sqlString = fmt.Sprintf(getMetadatasCountSql, builder)
-			} else {
-				return 0, nil
-			}
-		default:
-			return 0, fmt.Errorf("unknown filter type %T", filterObj)
-		}
+	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadatasCountSql, baseSqlArgs)
+	if err != nil {
+		return 0, eris.Wrap(err, "error during building sql")
+	}
+	if noData {
+		return 0, err
 	}
 
 	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
@@ -271,7 +252,7 @@ func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUu
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
 
-	err := row.Scan(&count)
+	err = row.Scan(&count)
 	if err != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
