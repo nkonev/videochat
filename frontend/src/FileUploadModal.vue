@@ -310,15 +310,6 @@ export default {
                       uploadId: fileToUpload.uploadId
                     });
 
-                    // TODO somehow await for finish storing into db
-                    //  move the logic to ON_FILE_CREATED
-                    //  TODO think about fileToUpload.finished = true;
-                    //  TODO or maybe in order not to break the existing logic (syncronous after FILE_UPLOAD_MODAL_START_UPLOADING) - just wait by polling HEAD /chat/<id>/<fileItemUuid>/filename
-                    if (fileToUpload.shouldSetFileUuidToMessage) {
-                      bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {
-                        chatId: fileToUpload.chatId,
-                      });
-                    }
                 } catch(thrown) {
                     if (axios.isCancel(thrown)) {
                         console.log('Request canceled', thrown.message);
