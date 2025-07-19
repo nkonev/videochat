@@ -904,6 +904,7 @@ func (h *FilesHandler) CountHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, countDto)
 }
 
+// TODO не появляется видео на EmbedMediaModal, если сначала открыть модалку, потом закрыть, щалить через файлы справа, затем снова открыть модалку
 // TODO не работает удаление, если открыть FileListModal как из редактирования чата, так и из RightPanel
 
 type FilterRequest struct {
