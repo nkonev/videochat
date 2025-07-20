@@ -3,8 +3,10 @@ package utils
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
+	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"strings"
@@ -109,8 +111,23 @@ func ParseFileItemUuid(minioKey string) (string, error) {
 	return "", errors.New("Unable to parse file id")
 }
 
+func ParseFileName(minioKey string) (string, error) {
+	// "chat/116/0W007Z2P0CRT2G4E1X0DCWB0DK/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
+	split := strings.Split(minioKey, "/")
+	if len(split) == 4 {
+		str := split[3]
+		return str, nil
+	}
+	return "", errors.New("Unable to parse file name")
+}
+
 func StripBucketName(minioKey string, bucketName string) string {
 	// "files/chat/116/0W007Z2P0CRT2G4E1X0DCWB0DK/561ae246-7eff-45a6-a480-2b2be254c768.jpg"
 	toStrip := bucketName + "/"
 	return strings.ReplaceAll(minioKey, toStrip, "")
+}
+
+// normalized means without bucket name
+func BuildNormalizedKey(mce *dto.MetadataCache) string {
+	return fmt.Sprintf("chat/%v/%v/%s", mce.ChatId, mce.FileItemUuid, mce.Filename)
 }

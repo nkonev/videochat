@@ -2,15 +2,19 @@ package listener
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
+	"time"
 )
 
 type MinioEventsListener func(*amqp.Delivery) error
@@ -23,6 +27,7 @@ func CreateMinioEventsListener(
 	minioConfig *utils.MinioConfig,
 	minioClient *s3.InternalMinioClient,
 	convertingService *services.ConvertingService,
+	dba *db.DB,
 ) MinioEventsListener {
 	tr := otel.Tracer("amqp/listener")
 
@@ -33,6 +38,8 @@ func CreateMinioEventsListener(
 		bytesData := msg.Body
 		strData := string(bytesData)
 		lgr.WithTracing(ctx).Debugf("Received %v", strData)
+
+		eventTimeStr := gjson.Get(strData, "Records.0.eventTime").String()
 
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
@@ -79,9 +86,41 @@ func CreateMinioEventsListener(
 		if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
 			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
 		}
+
+		var mce *dto.MetadataCache
+		// store to db before sending events
+		switch eventType {
+		case utils.FILE_CREATED:
+			fallthrough
+		case utils.FILE_UPDATED:
+			mce, err = createdDbEntity(normalizedKey, workingChatId, ownerId, correlationId, eventTimeStr, eventServiceResponse)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during creating db entity: %v", err)
+				return err
+			}
+			err = db.Set(ctx, dba, *mce)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during saving to database: %v", err)
+				return err
+			}
+		case utils.FILE_DELETED:
+			mck, err := createDbKey(normalizedKey, workingChatId)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during creating db key: %v", err)
+				return err
+			}
+			err = db.Remove(ctx, dba, *mck)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during removing from database: %v", err)
+				return err
+			}
+		default:
+			return fmt.Errorf("Unknown case %v", eventType)
+		}
+
 		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
 			if isEventForEventService(eventType) {
-				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse)
+				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse, mce)
 			}
 			if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
 				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
@@ -126,4 +165,65 @@ func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig
 		lgr.WithTracing(ctx).Errorf("Error during checking existence for %v: %v", previewKey, err)
 	}
 	return exists, err
+}
+
+func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId *string, eventTimeStr string, eventServiceResponse *services.HandleEventResponse) (*dto.MetadataCache, error) {
+	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	filename, err := utils.ParseFileName(normalizedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	eventTime, err := time.Parse(time.RFC3339Nano, eventTimeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	publishedP, err := eventServiceResponse.GetTags()
+	if err != nil {
+		return nil, err
+	}
+	var published bool
+	if publishedP != nil {
+		published = *publishedP
+	}
+
+	objInfo := eventServiceResponse.GetObjectInfo()
+	if objInfo == nil {
+		return nil, errors.New("nil ObjectInfo")
+	}
+
+	return &dto.MetadataCache{
+		ChatId:         chatId,
+		FileItemUuid:   fileItemUuid,
+		Filename:       filename,
+		OwnerId:        ownerId,
+		CorrelationId:  correlationId,
+		Published:      published,
+		FileSize:       objInfo.Size,
+		CreateDateTime: eventTime,
+		EditDateTime:   eventTime,
+	}, nil
+}
+
+func createDbKey(normalizedKey string, chatId int64) (*dto.MetadataCacheId, error) {
+	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	filename, err := utils.ParseFileName(normalizedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.MetadataCacheId{
+		ChatId:       chatId,
+		FileItemUuid: fileItemUuid,
+		Filename:     filename,
+	}, nil
 }

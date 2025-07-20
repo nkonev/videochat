@@ -294,10 +294,6 @@ export default {
                         }
                     })
                     .then((response) => {
-                        if (this.$data.isOpenedFromMessageEditing) {
-                            bus.emit(MESSAGE_EDIT_LOAD_FILES_COUNT, {chatId: this.chatId});
-                        }
-
                         bus.emit(CLOSE_SIMPLE_MODAL);
                     }).finally(()=>{
                       that.loading = false;

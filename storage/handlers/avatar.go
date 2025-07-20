@@ -132,10 +132,10 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 	//c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+mongoDto.Filename+"\"")
 
 	object, e := h.minio.GetObject(c.Request().Context(), bucketName, objId, minio.GetObjectOptions{})
-	defer object.Close()
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
+	defer object.Close()
 
 	avatarCacheableResponse(c)
 	return c.Stream(http.StatusOK, info.ContentType, object)

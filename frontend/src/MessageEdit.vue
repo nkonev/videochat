@@ -143,7 +143,7 @@
       OPEN_SETTINGS,
       ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
       OPEN_RECORDING_MODAL,
-      WEBSOCKET_INITIALIZED,
+      WEBSOCKET_INITIALIZED, FILE_CREATED, FILE_REMOVED,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -629,6 +629,16 @@
             onEditorIsReady() {
               this.shouldShowButtons = true;
             },
+            onFileCreatedEvent(dto) {
+                if (dto?.fileInfoDto.fileItemUuid == this.chatStore.editMessageDto.fileItemUuid) {
+                  this.loadFilesCountAndResetFileItemUuidIfNeed({chatId: this.chatId})
+                }
+            },
+            onFileRemovedEvent(dto) {
+              if (dto?.fileInfoDto.fileItemUuid == this.chatStore.editMessageDto.fileItemUuid) {
+                this.loadFilesCountAndResetFileItemUuidIfNeed({chatId: this.chatId})
+              }
+            },
         },
         computed: {
           ...mapStores(useChatStore),
@@ -644,6 +654,8 @@
             this.targetElement = document.getElementById('sendButtonContainer')
             this.setShouldShowSendMessageButtons();
             bus.on(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
+            bus.on(FILE_CREATED, this.onFileCreatedEvent);
+            bus.on(FILE_REMOVED, this.onFileRemovedEvent);
 
             this.resizeObserver = new ResizeObserver(this.setShouldShowSendMessageButtons);
             this.resizeObserver.observe(this.targetElement);
@@ -663,6 +675,8 @@
             bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
             bus.off(MESSAGE_EDIT_LOAD_FILES_COUNT, this.loadFilesCountAndResetFileItemUuidIfNeed);
             bus.off(ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED, this.setShouldShowSendMessageButtons);
+            bus.off(FILE_CREATED, this.onFileCreatedEvent);
+            bus.off(FILE_REMOVED, this.onFileRemovedEvent);
 
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
