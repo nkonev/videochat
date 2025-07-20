@@ -41,8 +41,6 @@ type RenameDto struct {
 const NotFoundImage = "/images/covers/not_found.png"
 const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 
-const viewListLimit = 1000
-
 func NewFilesHandler(
 	lgr *logger.Logger,
 	minio *s3.InternalMinioClient,
@@ -501,6 +499,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	filterObj := db.NewFilterByType(services.GetPreviewableExtensions())
 
+	viewListLimit := viper.GetInt("viewList.maxSize")
 	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, viewListLimit, 0)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userPrincipalDto.UserId, chatId, err)
