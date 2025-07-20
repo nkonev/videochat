@@ -254,7 +254,7 @@ services:
         max-file: "1"
 
   fluentbit:
-    image: fluent/fluent-bit:4.0.3
+    image: fluent/fluent-bit:4.0.4
     restart: unless-stopped
     hostname: fluentbit
     volumes:
