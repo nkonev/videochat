@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/minio/minio-go/v7 v7.0.66
-	github.com/nkonev/dcron v1.7.7
+	github.com/nkonev/dcron v1.7.9
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/common v0.55.0
 	github.com/redis/go-redis/v9 v9.6.1

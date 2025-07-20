@@ -49,10 +49,7 @@ func NewSynchronizeWithLivekitService(
 	}
 }
 
-func (srv *SynchronizeWithLivekitService) DoJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.SynchronizeWithLivekit")
-	defer span.End()
-
+func (srv *SynchronizeWithLivekitService) DoJob(ctx context.Context) {
 	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic SynchronizeWithLivekit")
 
 	srv.cleanOrphans(ctx)
@@ -232,6 +229,14 @@ func (srv *SynchronizeWithLivekitService) Contains(participants []dto.UserCallSt
 	return false
 }
 
+func (srv *SynchronizeWithLivekitService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.SynchronizeWithLivekit")
+}
+
+func (srv *SynchronizeWithLivekitService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
+}
+
 type SynchronizeWithLivekitTask struct {
 	dcron.Job
 }
@@ -245,9 +250,9 @@ func SynchronizeWithLivekitSheduler(
 	lgr.Infof("Created SynchronizeWithLivekitSheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.DoJob()
+		service.DoJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &SynchronizeWithLivekitTask{job}
 }

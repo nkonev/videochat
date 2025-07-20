@@ -28,14 +28,19 @@ func NewRecordingNotifierService(scheduleService *services.StateChangedEventServ
 	}
 }
 
-func (srv *RecordingNotifierService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.RecordingNotifier")
-	defer span.End()
-
+func (srv *RecordingNotifierService) doJob(ctx context.Context) {
 	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic RecordingNotifierService")
 	srv.scheduleService.NotifyAllChatsAboutVideoCallRecording(ctx)
 
 	srv.lgr.WithTracing(ctx).Debugf("End of RecordingNotifierService")
+}
+
+func (srv *RecordingNotifierService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.RecordingNotifier")
+}
+
+func (srv *RecordingNotifierService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 type RecordingNotifierTask struct {
@@ -51,9 +56,9 @@ func RecordingNotifierScheduler(
 	lgr.Infof("Created RecordingNotifierScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &RecordingNotifierTask{job}
 }

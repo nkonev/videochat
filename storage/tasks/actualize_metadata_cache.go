@@ -28,9 +28,9 @@ func ActualizeMetadataCacheScheduler(
 	lgr.Infof("Created ActualizeMetadataCacheScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &ActualizeMetadataCacheTask{job}
 }
@@ -43,9 +43,7 @@ type ActualizeMetadataCacheService struct {
 	lgr                *logger.Logger
 }
 
-func (srv *ActualizeMetadataCacheService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ActualizeMetadataCache")
-	defer span.End()
+func (srv *ActualizeMetadataCacheService) doJob(ctx context.Context) {
 	filenameChatPrefix := "chat/"
 	srv.processFiles(ctx, filenameChatPrefix)
 }
@@ -182,6 +180,14 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 	srv.lgr.WithTracing(c).Infof("Checking for excess metadata cache items finished")
 
 	srv.lgr.WithTracing(c).Infof("End of actualize metadata cache job")
+}
+
+func (srv *ActualizeMetadataCacheService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.ActualizeMetadataCache")
+}
+
+func (srv *ActualizeMetadataCacheService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 func NewActualizeMetadataCacheService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {

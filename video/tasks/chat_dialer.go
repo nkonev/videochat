@@ -50,11 +50,7 @@ func NewChatDialerService(
 	}
 }
 
-func (srv *ChatDialerService) doJob() {
-
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ChatDialer")
-	defer span.End()
-
+func (srv *ChatDialerService) doJob(ctx context.Context) {
 	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic ChatDialer")
 
 	srv.makeDial(ctx)
@@ -174,6 +170,14 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 	}
 }
 
+func (srv *ChatDialerService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.ChatDialer")
+}
+
+func (srv *ChatDialerService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
+}
+
 type ChatDialerTask struct {
 	dcron.Job
 }
@@ -187,9 +191,9 @@ func ChatDialerScheduler(
 	lgr.Infof("Created ChatDialerScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &ChatDialerTask{job}
 }

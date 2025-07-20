@@ -25,9 +25,9 @@ func CleanChatsOfDeletedUserScheduler(
 	lgr.Infof("Created CleanChatsOfDeletedUserScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &CleanChatsOfDeletedUserTask{job}
 }
@@ -39,9 +39,7 @@ type CleanChatsOfDeletedUserService struct {
 	lgr        *logger.Logger
 }
 
-func (srv *CleanChatsOfDeletedUserService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.cleanChatsOfDeletedUser")
-	defer span.End()
+func (srv *CleanChatsOfDeletedUserService) doJob(ctx context.Context) {
 	srv.processChats(ctx)
 }
 
@@ -130,6 +128,14 @@ func (srv *CleanChatsOfDeletedUserService) processChats(c context.Context) {
 	}
 
 	srv.lgr.WithTracing(c).Infof("End of cleaning chats of deleted user job")
+}
+
+func (srv *CleanChatsOfDeletedUserService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.cleanChatsOfDeletedUser")
+}
+
+func (srv *CleanChatsOfDeletedUserService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 func NewCleanChatsOfDeletedUserService(lgr *logger.Logger, chatClient *client.RestClient, dbR *db.DB) *CleanChatsOfDeletedUserService {

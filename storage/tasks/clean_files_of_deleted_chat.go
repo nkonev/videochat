@@ -27,9 +27,9 @@ func CleanFilesOfDeletedChatScheduler(
 	lgr.Infof("Created CleanFilesOfDeletedChatScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &CleanFilesOfDeletedChatTask{job}
 }
@@ -42,9 +42,7 @@ type CleanFilesOfDeletedChatService struct {
 	lgr                *logger.Logger
 }
 
-func (srv *CleanFilesOfDeletedChatService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.cleanFilesOfDeletedChat")
-	defer span.End()
+func (srv *CleanFilesOfDeletedChatService) doJob(ctx context.Context) {
 	srv.processChats(ctx)
 }
 
@@ -120,6 +118,14 @@ func (srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatI
 			}
 		}
 	}
+}
+
+func (srv *CleanFilesOfDeletedChatService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.cleanFilesOfDeletedChat")
+}
+
+func (srv *CleanFilesOfDeletedChatService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {

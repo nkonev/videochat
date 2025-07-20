@@ -28,14 +28,19 @@ func NewVideoCallUsersCountNotifierService(lgr *logger.Logger, scheduleService *
 	}
 }
 
-func (srv *VideoCallUsersCountNotifierService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.VideoCallUsersCountNotifier")
-	defer span.End()
-
+func (srv *VideoCallUsersCountNotifierService) doJob(ctx context.Context) {
 	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic ChatNotifier")
 	srv.scheduleService.NotifyAllChatsAboutVideoCallUsersCount(ctx)
 
 	srv.lgr.WithTracing(ctx).Debugf("End of ChatNotifier")
+}
+
+func (srv *VideoCallUsersCountNotifierService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.VideoCallUsersCountNotifier")
+}
+
+func (srv *VideoCallUsersCountNotifierService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 type VideoCallUsersCountNotifierTask struct {
@@ -51,9 +56,9 @@ func VideoCallUsersCountNotifierScheduler(
 	lgr.Infof("Created VideoCallUsersCountNotifierScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &VideoCallUsersCountNotifierTask{job}
 }

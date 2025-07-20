@@ -27,9 +27,9 @@ func ActualizeGeneratedFilesScheduler(
 	lgr.Infof("Created ActualizeGeneratedFilesScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &ActualizeGeneratedFilesTask{job}
 }
@@ -44,9 +44,7 @@ type ActualizeGeneratedFilesService struct {
 	lgr                *logger.Logger
 }
 
-func (srv *ActualizeGeneratedFilesService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.ActualizeGeneratedFiles")
-	defer span.End()
+func (srv *ActualizeGeneratedFilesService) doJob(ctx context.Context) {
 	filenameChatPrefix := "chat/"
 	srv.processFiles(ctx, filenameChatPrefix)
 }
@@ -158,6 +156,14 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("Checking for excess previews finished")
 
 	srv.lgr.WithTracing(c).Infof("End of generated files job")
+}
+
+func (srv *ActualizeGeneratedFilesService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.ActualizeGeneratedFiles")
+}
+
+func (srv *ActualizeGeneratedFilesService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 func NewActualizeGeneratedFilesService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {

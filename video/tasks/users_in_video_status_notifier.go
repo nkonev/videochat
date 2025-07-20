@@ -31,10 +31,7 @@ func NewUsersInVideoStatusNotifierService(scheduleService *services.StateChanged
 	}
 }
 
-func (srv *UsersInVideoStatusNotifierService) doJob() {
-	ctx, span := srv.tracer.Start(context.Background(), "scheduler.UsersInVideoStatusNotifier")
-	defer span.End()
-
+func (srv *UsersInVideoStatusNotifierService) doJob(ctx context.Context) {
 	srv.lgr.WithTracing(ctx).Debugf("Invoked periodic UsersInVideoStatusNotifier")
 
 	err := db.Transact(ctx, srv.database, func(tx *db.Tx) error {
@@ -46,6 +43,14 @@ func (srv *UsersInVideoStatusNotifierService) doJob() {
 	}
 
 	srv.lgr.WithTracing(ctx).Debugf("End of UsersInVideoStatusNotifier")
+}
+
+func (srv *UsersInVideoStatusNotifierService) spanStarter(ctx context.Context) (context.Context, any) {
+	return srv.tracer.Start(ctx, "scheduler.UsersInVideoStatusNotifier")
+}
+
+func (srv *UsersInVideoStatusNotifierService) spanFinisher(ctx context.Context, span any) {
+	span.(trace.Span).End()
 }
 
 type UsersInVideoStatusNotifierTask struct {
@@ -61,9 +66,9 @@ func UsersInVideoStatusNotifierScheduler(
 	lgr.Infof("Created UsersInVideoStatusNotifierScheduler with cron %v", str)
 
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
-		service.doJob()
+		service.doJob(ctx)
 		return nil
-	})
+	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
 
 	return &UsersInVideoStatusNotifierTask{job}
 }
