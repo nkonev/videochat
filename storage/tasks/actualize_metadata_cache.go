@@ -90,6 +90,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 			srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", mcid.String(), err)
 			continue
 		}
+
 		if metadataCache == nil {
 			srv.lgr.WithTracing(c).Infof("Create metadata cache item for missing %v", fileOjInfo.Key)
 
@@ -132,6 +133,10 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				continue
 			}
 		}
+		// we ignore the case when metadataCache differs from fileOjInfo
+		// because the checking would require get tags of each fileOjInfo
+		// it can be a performance slowdown
+		// tags -> published is the only thing which can differ, it will be synced when user press "[un]publish" button
 	}
 	srv.lgr.WithTracing(c).Infof("Checking for missing metadata cache items finished")
 
