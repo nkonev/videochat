@@ -1437,4 +1437,8 @@ journalctl -f -n 1000 CONTAINER_TAG=chat-opensearch
 journalctl -f -n 1000 CONTAINER_TAG=chat-jaeger
 docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_redis --filter desired-state=running -q)) redis-cli -n 2
 docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_opensearch --filter desired-state=running -q)) bash
+
+docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-coordinator-1 --filter desired-state=running -q)) psql -U postgres -d postgres
+docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-1 --filter desired-state=running -q)) psql -U postgres -d postgres
+docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-2 --filter desired-state=running -q)) psql -U postgres -d postgres
 ```
