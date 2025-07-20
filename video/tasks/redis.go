@@ -54,6 +54,6 @@ func RedisLocker(redisClient *redisV9.Client, lgr *logger.Logger) (*RedisLock, e
 	return &RedisLock{client: redisClient, lgr: lgr}, nil
 }
 
-func Scheduler(locker *RedisLock) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithLock(locker)), nil
+func Scheduler(locker *RedisLock, lgr *logger.Logger) (*dcron.Cron, error) {
+	return dcron.NewCron(dcron.WithLock(locker), dcron.WithLog(lgr)), nil
 }

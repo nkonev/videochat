@@ -873,6 +873,8 @@ github.com/ncw/swift v1.0.47/go.mod h1:23YIA4yWVnGwv2dQlN4bB7egfYX6YLn0Yo/S6zZO/
 github.com/neo4j/neo4j-go-driver v1.8.1-0.20200803113522-b626aa943eba/go.mod h1:ncO5VaFWh0Nrt+4KT4mOZboaczBZcLuHrG+/sUeP8gI=
 github.com/nkonev/dcron v1.7.3 h1:DmK+woZj7bFcwrgLR1PIg+8CeTEHKGsvf+9v3lnW7Ko=
 github.com/nkonev/dcron v1.7.3/go.mod h1:29bAKiUz0Mt8z+7+UqRVW+JSrrTO91mxLhHbBIPfLAc=
+github.com/nkonev/dcron v1.7.6 h1:pti3RwGzNtDHg5hn8LFOVjde13sI/l1w+jU3VuKJxew=
+github.com/nkonev/dcron v1.7.6/go.mod h1:29bAKiUz0Mt8z+7+UqRVW+JSrrTO91mxLhHbBIPfLAc=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=

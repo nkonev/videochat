@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/microcosm-cc/bluemonday v1.0.3
-	github.com/nkonev/dcron v1.7.3
+	github.com/nkonev/dcron v1.7.6
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/rotisserie/eris v0.5.4
