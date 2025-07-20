@@ -42,6 +42,11 @@ func NewFilesService(
 	}
 }
 
+type getListFilesInFileItemResult struct {
+	metadatas []dto.MetadataCache
+	count     int64
+}
+
 func (h *FilesService) GetListFilesInFileItem(
 	c context.Context,
 	public bool,
@@ -58,22 +63,31 @@ func (h *FilesService) GetListFilesInFileItem(
 		return nil, 0, errors.New("wrong invariant")
 	}
 
-	metadatas, err := db.GetList(c, h.dba, chatId, fileItemUuid, filterObj, size, offset)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error during getting list, userId = %v, chatId = %v: %v", behalfUserId, chatId, err)
-		return []*dto.FileInfoDto{}, 0, err
-	}
+	res, errOuter := db.TransactWithResult(c, h.dba, func(tx *db.Tx) (*getListFilesInFileItemResult, error) {
+		metadatas, err := db.GetList(c, tx, chatId, fileItemUuid, filterObj, size, offset)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Error during getting list, userId = %v, chatId = %v: %v", behalfUserId, chatId, err)
+			return nil, err
+		}
 
-	var count int64
-	count, err = db.GetCount(c, h.dba, chatId, fileItemUuid, filterObj)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error during getting count %v", err)
-		return []*dto.FileInfoDto{}, 0, err
+		var count int64
+		count, err = db.GetCount(c, tx, chatId, fileItemUuid, filterObj)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Error during getting count %v", err)
+			return nil, err
+		}
+		return &getListFilesInFileItemResult{
+			metadatas: metadatas,
+			count:     count,
+		}, nil
+	})
+	if errOuter != nil {
+		return nil, 0, errOuter
 	}
 
 	var list []*dto.FileInfoDto = make([]*dto.FileInfoDto, 0)
 
-	for _, mce := range metadatas {
+	for _, mce := range res.metadatas {
 		info, err := h.GetFileInfo(c, public, overrideChatId, overrideMessageId, behalfUserId, &mce)
 		if err != nil {
 			h.lgr.WithTracing(c).Errorf("Error get file info: %v, skipping", err)
@@ -96,7 +110,12 @@ func (h *FilesService) GetListFilesInFileItem(
 		}
 	}
 
-	return list, count, nil
+	return list, res.count, nil
+}
+
+type getListFilesItemUuidsResult struct {
+	fileItemUuids []db.GroupedByFileItemUuid
+	count         int64
 }
 
 func (h *FilesService) GetListFilesItemUuids(
@@ -104,18 +123,27 @@ func (h *FilesService) GetListFilesItemUuids(
 	chatId int64,
 	size, offset int,
 ) ([]db.GroupedByFileItemUuid, int, error) {
-	datas, err := db.GetListFilesItemUuids(c, h.dba, chatId, size, offset)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Unable to get GroupedByFileItemUuid: %v", err)
-		return nil, 0, err
-	}
-	count, err := db.GetCountFilesItemUuids(c, h.dba, chatId)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Unable to get count GroupedByFileItemUuid: %v", err)
-		return nil, 0, err
+	res, errOuter := db.TransactWithResult(c, h.dba, func(tx *db.Tx) (*getListFilesItemUuidsResult, error) {
+		datas, err := db.GetListFilesItemUuids(c, tx, chatId, size, offset)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Unable to get GroupedByFileItemUuid: %v", err)
+			return nil, err
+		}
+		count, err := db.GetCountFilesItemUuids(c, tx, chatId)
+		if err != nil {
+			h.lgr.WithTracing(c).Errorf("Unable to get count GroupedByFileItemUuid: %v", err)
+			return nil, err
+		}
+		return &getListFilesItemUuidsResult{
+			fileItemUuids: datas,
+			count:         count,
+		}, nil
+	})
+	if errOuter != nil {
+		return nil, 0, errOuter
 	}
 
-	return datas, int(count), nil
+	return res.fileItemUuids, int(res.count), nil
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
