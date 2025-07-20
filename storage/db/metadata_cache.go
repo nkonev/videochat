@@ -145,6 +145,7 @@ func CheckFileItemBelongsToUser(ctx context.Context, co CommonOperations, chatId
 }
 
 type Filter interface {
+	apply(baseSqlTemplate string, existingArgs []any) (string, []any, bool, error)
 }
 
 type FilterBySearchString struct {
@@ -167,36 +168,56 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 	}
 }
 
-func applyFilter(filterObj Filter, baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
+func (f *FilterBySearchString) apply(baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
 	sqlArgs := existingArgs
+	sqlString := ""
 
-	var sqlString = ""
+	suffix := fmt.Sprintf("and lower(filename) LIKE '%%' || lower($%v) || '%%'", len(sqlArgs)+1)
+	sqlString = fmt.Sprintf(baseSqlTemplate, suffix)
+	sqlArgs = append(sqlArgs, f.searchString)
+
+	return sqlString, sqlArgs, false, nil
+}
+
+func (f *FilterByType) apply(baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
+	sqlArgs := existingArgs
+	sqlString := ""
+
+	if len(f.typeExtensions) > 0 {
+		builder := " and ( "
+		for i, dotExt := range f.typeExtensions {
+			orClause := ""
+			if i != 0 {
+				orClause = "or"
+			}
+			builder += fmt.Sprintf(" %v lower(filename) like '%%%v'", orClause, strings.ToLower(dotExt))
+		}
+		builder += ") "
+
+		sqlString = fmt.Sprintf(baseSqlTemplate, builder)
+	} else {
+		return sqlString, sqlArgs, true, nil // true means "no data" because of no extension
+	}
+
+	return sqlString, sqlArgs, false, nil
+}
+
+func applyFilter(filterObj Filter, baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
+	var sqlArgs []any
+	sqlString := ""
+	noData := false
+	var err error
+
 	if filterObj == nil {
 		sqlString = fmt.Sprintf(baseSqlTemplate, "")
+		sqlArgs = existingArgs
 	} else {
-		switch v := filterObj.(type) {
-		case *FilterBySearchString:
-			suffix := fmt.Sprintf("and lower(filename) LIKE '%%' || lower($%v) || '%%'", len(sqlArgs)+1)
-			sqlString = fmt.Sprintf(baseSqlTemplate, suffix)
-			sqlArgs = append(sqlArgs, v.searchString)
-		case *FilterByType: // we define extensions, it isn't an user input, so it is safe
-			if len(v.typeExtensions) > 0 {
-				builder := " and ( "
-				for i, dotExt := range v.typeExtensions {
-					orClause := ""
-					if i != 0 {
-						orClause = "or"
-					}
-					builder += fmt.Sprintf(" %v lower(filename) like '%%%v'", orClause, strings.ToLower(dotExt))
-				}
-				builder += ") "
-
-				sqlString = fmt.Sprintf(baseSqlTemplate, builder)
-			} else {
-				return sqlString, sqlArgs, true, nil // true means "no data" because of no extension
-			}
-		default:
-			return "", nil, false, fmt.Errorf("unknown filter type %T", filterObj)
+		sqlString, sqlArgs, noData, err = filterObj.apply(baseSqlTemplate, existingArgs)
+		if err != nil {
+			return sqlString, sqlArgs, false, err
+		}
+		if noData {
+			return sqlString, sqlArgs, true, nil // true means "no data" because of no extension
 		}
 	}
 
