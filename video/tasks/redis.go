@@ -55,5 +55,17 @@ func RedisLocker(redisClient *redisV9.Client, lgr *logger.Logger) (*RedisLock, e
 }
 
 func Scheduler(locker *RedisLock, lgr *logger.Logger) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithLock(locker), dcron.WithLog(lgr)), nil
+	return dcron.NewCron(dcron.WithLock(locker), dcron.WithSLog(&TracingLoggerAdapter{lgr})), nil
+}
+
+type TracingLoggerAdapter struct {
+	lgr *logger.Logger
+}
+
+func (la *TracingLoggerAdapter) ErrorContext(ctx context.Context, msg string, args ...any) {
+	la.lgr.WithTracing(ctx).With(args...).Error(msg)
+}
+
+func (la *TracingLoggerAdapter) InfoContext(ctx context.Context, msg string, args ...any) {
+	la.lgr.WithTracing(ctx).With(args...).Info(msg)
 }
