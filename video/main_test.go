@@ -386,7 +386,7 @@ func TestLivekitSynchronizeTaskIsGoingToCreateTheMissedEntries(t *testing.T) {
 		assert.Equal(t, 0, numOfEntriesBefore)
 
 		// run the periodic task
-		task.DoJob()
+		task.DoJob(context.Background())
 
 		var numOfEntriesAfter int
 		rowAfter := database.QueryRow("select count (*) from user_call_state")
