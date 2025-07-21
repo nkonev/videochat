@@ -27,7 +27,7 @@ const metadataColumns = `
 	edit_date_time
 `
 
-// ” <=> dto.NoFileItemUuid
+// "" <=> dto.NoFileItemUuid
 // -1 <=> dto.NoChatId
 const getMetadatasSql = `select ` +
 	metadataColumns +
@@ -37,18 +37,17 @@ const getMetadatasSql = `select ` +
 	order by chat_id, file_item_uuid asc, filename desc
 	limit $3 offset $4
 `
+const getMetadatasCountSql = `select 
+	count(*)
+	from metadata_cache
+	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s
+`
 
 const getMetadataSql = `select ` +
 	metadataColumns +
 	`
 	from metadata_cache
 	where chat_id = $1 and file_item_uuid = $2 and filename = $3 %s
-`
-
-const getMetadatasCountSql = `select 
-	count(*)
-	from metadata_cache
-	where chat_id = $1 and ($2 = '' or file_item_uuid = $2) %s
 `
 
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
