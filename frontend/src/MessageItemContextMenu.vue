@@ -71,17 +71,7 @@ export default {
                         }
                     });
                 }
-                ret.push({
-                  title: this.isMobile() ? this.$vuetify.locale.t('$vuetify.copy_text') : this.$vuetify.locale.t('$vuetify.copy'),
-                  icon: 'mdi-content-copy',
-                  action: this.copy
-                });
                 if (hasLength(this.selection)) {
-                    ret.push({
-                        title: this.$vuetify.locale.t('$vuetify.copy_selected'),
-                        icon: 'mdi-content-copy',
-                        action: this.copySelected
-                    });
                     ret.push({
                         title: this.$vuetify.locale.t('$vuetify.search_by_selected'),
                         icon: 'mdi-clipboard-search-outline',
@@ -97,6 +87,25 @@ export default {
                 if (this.menuableItem.canEdit) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editMessage', this.menuableItem) });
                 }
+                if (hasLength(this.selection)) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.copy_selected'),
+                    icon: 'mdi-content-copy',
+                    action: this.copySelected
+                  });
+                }
+                if (!this.isMobile()) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.copy'),
+                    icon: 'mdi-content-copy',
+                    action: this.copy
+                  });
+                }
+                ret.push({
+                  title: this.$vuetify.locale.t('$vuetify.copy_text'),
+                  icon: 'mdi-content-copy',
+                  action: this.copyText
+                });
                 ret.push({title: this.$vuetify.locale.t('$vuetify.users_read'), icon: 'mdi-account-supervisor', action: () => this.$emit('showReadUsers', this.menuableItem) });
                 if (this.menuableItem.canPin) {
                     if (this.menuableItem.pinned) {
@@ -175,16 +184,12 @@ export default {
                 el
               } = checkUpByTreeObj(this.targetEl, 10, (el) => el?.classList?.contains("message-item-wrapper"));
               if (found) {
-                if (this.isMobile()) {
-                  navigator.clipboard.writeText(el.textContent);
-                } else {
-                  const type = "text/html";
-                  const blob = new Blob([el.innerHTML], {type: type});
-                  const clipboardItem = new ClipboardItem({
-                    [blob.type]: blob,
-                  });
-                  await navigator.clipboard.write([clipboardItem]);
-                }
+                const type = "text/html";
+                const blob = new Blob([el.innerHTML], {type: type});
+                const clipboardItem = new ClipboardItem({
+                  [blob.type]: blob,
+                });
+                await navigator.clipboard.write([clipboardItem]);
 
                 this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
               } else {
@@ -195,10 +200,32 @@ export default {
             this.setError(e, "unable to copy")
           }
         },
+        copyText() {
+          try {
+            if (this.targetEl) {
+              const {
+                found,
+                el
+              } = checkUpByTreeObj(this.targetEl, 10, (el) => el?.classList?.contains("message-item-wrapper"));
+              if (found) {
+                navigator.clipboard.writeText(el.textContent);
+                this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
+              } else {
+                this.setWarning("element is not found")
+              }
+            }
+          } catch (e) {
+            this.setError(e, "unable to copy")
+          }
+        },
         copySelected() {
+          try {
             const selectedText = this.selection;
             navigator.clipboard.writeText(selectedText);
             this.setTempNotification(this.$vuetify.locale.t('$vuetify.message_copied'));
+          } catch (e) {
+            this.setError(e, "unable to copy")
+          }
         },
         searchBySelected() {
             const selectedText = this.selection;
