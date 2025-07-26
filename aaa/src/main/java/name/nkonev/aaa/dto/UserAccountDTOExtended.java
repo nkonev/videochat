@@ -16,7 +16,11 @@ public record UserAccountDTOExtended (
     boolean canConfirm,
     boolean awaitingForConfirmEmailChange,
     boolean canRemoveSessions,
-    boolean canSetPassword
+    boolean canSetPassword, // set somebody's password
+
+    boolean canChangeSelfLogin,
+    boolean canChangeSelfEmail,
+    boolean canChangeSelfPassword
 ) {
 
 }

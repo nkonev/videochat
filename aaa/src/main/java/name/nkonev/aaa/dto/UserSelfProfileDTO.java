@@ -18,7 +18,11 @@ public record UserSelfProfileDTO(
 
         // session expires at
         Long expiresAt,
-        boolean canShowAdminsCorner
+        boolean canShowAdminsCorner,
+
+        boolean canChangeSelfLogin,
+        boolean canChangeSelfEmail,
+        boolean canChangeSelfPassword
 ) {
     public UserSelfProfileDTO(
             Long id,
@@ -35,7 +39,11 @@ public record UserSelfProfileDTO(
             String loginColor,
             boolean ldap,
             boolean canShowAdminsCorner,
-            AdditionalDataDTO additionalDataDTO
+            AdditionalDataDTO additionalDataDTO,
+
+            boolean canChangeSelfLogin,
+            boolean canChangeSelfEmail,
+            boolean canChangeSelfPassword
     ) {
         this(new UserAccountDTO(
                 id,
@@ -48,7 +56,16 @@ public record UserSelfProfileDTO(
                 loginColor,
                 ldap,
                 additionalDataDTO
-        ), email, awaitingForConfirmEmailChange, roles, expiresAt, canShowAdminsCorner);
+            ),
+                email,
+                awaitingForConfirmEmailChange,
+                roles,
+                expiresAt,
+                canShowAdminsCorner,
+                canChangeSelfLogin,
+                canChangeSelfEmail,
+                canChangeSelfPassword
+        );
     }
 
     public String login() {

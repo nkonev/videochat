@@ -302,6 +302,9 @@ type UserAccountExtendedDto struct {
 	CanRemoveSessions             bool               `json:"canRemoveSessions"`
 	Ldap                          bool               `json:"ldap"`
 	CanSetPassword                bool               `json:"canSetPassword"`
+	CanChangeSelfLogin            bool               `json:"canChangeSelfLogin"`
+	CanChangeSelfEmail            bool               `json:"canChangeSelfEmail"`
+	CanChangeSelfPassword         bool               `json:"canChangeSelfPassword"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

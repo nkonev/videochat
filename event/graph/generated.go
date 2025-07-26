@@ -332,6 +332,9 @@ type ComplexityRoot struct {
 		AvatarBig                     func(childComplexity int) int
 		AwaitingForConfirmEmailChange func(childComplexity int) int
 		CanChangeRole                 func(childComplexity int) int
+		CanChangeSelfEmail            func(childComplexity int) int
+		CanChangeSelfLogin            func(childComplexity int) int
+		CanChangeSelfPassword         func(childComplexity int) int
 		CanConfirm                    func(childComplexity int) int
 		CanDelete                     func(childComplexity int) int
 		CanEnable                     func(childComplexity int) int
@@ -1816,6 +1819,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserAccountExtendedDto.CanChangeRole(childComplexity), true
+
+	case "UserAccountExtendedDto.canChangeSelfEmail":
+		if e.complexity.UserAccountExtendedDto.CanChangeSelfEmail == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanChangeSelfEmail(childComplexity), true
+
+	case "UserAccountExtendedDto.canChangeSelfLogin":
+		if e.complexity.UserAccountExtendedDto.CanChangeSelfLogin == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanChangeSelfLogin(childComplexity), true
+
+	case "UserAccountExtendedDto.canChangeSelfPassword":
+		if e.complexity.UserAccountExtendedDto.CanChangeSelfPassword == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanChangeSelfPassword(childComplexity), true
 
 	case "UserAccountExtendedDto.canConfirm":
 		if e.complexity.UserAccountExtendedDto.CanConfirm == nil {
@@ -12161,6 +12185,138 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_canSetPassword(_
 	return fc, nil
 }
 
+func (ec *executionContext) _UserAccountExtendedDto_canChangeSelfLogin(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canChangeSelfLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanChangeSelfLogin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canChangeSelfLogin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_canChangeSelfEmail(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canChangeSelfEmail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanChangeSelfEmail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canChangeSelfEmail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_canChangeSelfPassword(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canChangeSelfPassword(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanChangeSelfPassword, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canChangeSelfPassword(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserDeletedDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserDeletedDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserDeletedDto_id(ctx, field)
 	if err != nil {
@@ -17147,6 +17303,21 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			}
 		case "canSetPassword":
 			out.Values[i] = ec._UserAccountExtendedDto_canSetPassword(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canChangeSelfLogin":
+			out.Values[i] = ec._UserAccountExtendedDto_canChangeSelfLogin(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canChangeSelfEmail":
+			out.Values[i] = ec._UserAccountExtendedDto_canChangeSelfEmail(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canChangeSelfPassword":
+			out.Values[i] = ec._UserAccountExtendedDto_canChangeSelfPassword(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

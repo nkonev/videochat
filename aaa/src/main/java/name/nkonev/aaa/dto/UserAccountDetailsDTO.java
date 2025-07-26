@@ -1,6 +1,7 @@
 package name.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import name.nkonev.aaa.entity.jdbc.CreationType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -35,7 +36,8 @@ public record UserAccountDetailsDTO (
     Collection<GrantedAuthority> roles,
     String email,
     boolean awaitingForConfirmEmailChange,
-    String ldapId
+    String ldapId,
+    CreationType creationType
 ) implements UserDetails, OAuth2User, OidcUser {
 
     public UserAccountDetailsDTO(
@@ -56,7 +58,8 @@ public record UserAccountDetailsDTO (
             OAuth2IdentifiersDTO oauthIdentifiers,
             String loginColor,
             String ldapId,
-            AdditionalDataDTO additionalDataDTO
+            AdditionalDataDTO additionalDataDTO,
+            CreationType creationType
     ) {
         this(
                 new UserAccountDTO(
@@ -71,7 +74,19 @@ public record UserAccountDetailsDTO (
                     ldapId != null,
                     additionalDataDTO
                 ),
-                new HashMap<>(), null, null, password, expired, locked, enabled, confirmed, roles, email, awaitingForConfirmEmailChange, ldapId
+                new HashMap<>(),
+                null,
+                null,
+                password,
+                expired,
+                locked,
+                enabled,
+                confirmed,
+                roles,
+                email,
+                awaitingForConfirmEmailChange,
+                ldapId,
+                creationType
         );
     }
 
@@ -191,7 +206,8 @@ public record UserAccountDetailsDTO (
                 roles,
                 email,
                 awaitingForConfirmEmailChange,
-                ldapId
+                ldapId,
+                creationType
         );
     }
 
@@ -209,7 +225,8 @@ public record UserAccountDetailsDTO (
                 roles,
                 email,
                 awaitingForConfirmEmailChange,
-                ldapId
+                ldapId,
+                creationType
         );
     }
 

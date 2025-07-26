@@ -5,6 +5,7 @@ public record LdapProperties(
     LdapAttributes attributeNames,
     LdapPasswordEncodingProperties password,
     ConflictResolveStrategy resolveConflictsStrategy,
-    LdapGroup group
+    LdapGroup group,
+    boolean forbidUserAccountChange
 ) {
 }

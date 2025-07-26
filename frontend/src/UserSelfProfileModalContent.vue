@@ -18,7 +18,7 @@
             <v-container class="ma-0 pa-0 mt-2 d-flex flex-row">
               <template v-if="!showLoginInput">
                 <span class="align-self-center text-h3" :style="getLoginColoredStyle(chatStore.currentUser)">{{ chatStore.currentUser.login }}</span>
-                <v-btn color="primary" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_login')" @click="onStartLoginEditing()">
+                <v-btn v-if="chatStore.currentUser.canChangeSelfLogin" color="primary" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_login')" @click="onStartLoginEditing()">
                   <v-icon dark size="x-large">mdi-lead-pencil</v-icon>
                 </v-btn>
               </template>
@@ -54,7 +54,7 @@
             <v-container class="ma-0 pa-0 d-flex flex-row">
               <template v-if="!showEmailInput">
                 <span v-if="chatStore.currentUser.email" class="align-self-center text-h6">{{ chatStore.currentUser.email }}</span>
-                <v-btn color="primary" size="x-small" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_email')" @click="onStartEmailEditing()">
+                <v-btn v-if="chatStore.currentUser.canChangeSelfEmail" color="primary" size="x-small" rounded="0" variant="plain" icon :title="$vuetify.locale.t('$vuetify.change_email')" @click="onStartEmailEditing()">
                   <v-icon dark>mdi-lead-pencil</v-icon>
                 </v-btn>
               </template>
@@ -201,45 +201,46 @@
 
         </v-card-actions>
 
-
-        <v-divider class="mx-4"></v-divider>
-        <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.password') }}</v-card-title>
-        <template v-if="!showPasswordInput">
-          <v-btn class="mx-4 mb-4" color="primary" dark @click="onStartPasswordEditing()">
-              <template v-slot:default>
-                {{ $vuetify.locale.t('$vuetify.change_password') }}
-              </template>
-              <template v-slot:append>
-                <v-icon dark>mdi-lock</v-icon>
-              </template>
-          </v-btn>
-        </template>
-        <template v-else>
-          <v-container class="ma-0 py-0 d-flex flex-row user-self-settings-container">
-            <v-text-field
-              @input="hidePasswordAlert()"
-              v-model="password"
-              :type="showInputablePassword ? 'text' : 'password'"
-              :rules="[rules.required, rules.min]"
-              :label="$vuetify.locale.t('$vuetify.password')"
-              @keyup.native.enter="sendPassword()"
-              variant="outlined"
-              density="compact"
-            >
-              <template v-slot:append>
-                <v-icon @click="doShowInputablePassword()" class="mx-1 ml-3">{{showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'}}</v-icon>
-                <v-icon @click="sendPassword()" color="primary" class="mx-1">mdi-check-bold</v-icon>
-                <v-icon @click="onCancelPasswordEditing()" class="mx-1">mdi-cancel</v-icon>
-              </template>
-            </v-text-field>
-          </v-container>
-          <v-alert
-              class="mx-4"
-              v-if="showPasswordError"
-              density="compact"
-              type="error"
-              :text="passwordError"
-          ></v-alert>
+        <template v-if="chatStore.currentUser.canChangeSelfPassword">
+          <v-divider class="mx-4"></v-divider>
+          <v-card-title class="title pb-0 pt-1">{{ $vuetify.locale.t('$vuetify.password') }}</v-card-title>
+          <template v-if="!showPasswordInput">
+            <v-btn class="mx-4 mb-4" color="primary" dark @click="onStartPasswordEditing()">
+                <template v-slot:default>
+                  {{ $vuetify.locale.t('$vuetify.change_password') }}
+                </template>
+                <template v-slot:append>
+                  <v-icon dark>mdi-lock</v-icon>
+                </template>
+            </v-btn>
+          </template>
+          <template v-else>
+            <v-container class="ma-0 py-0 d-flex flex-row user-self-settings-container">
+              <v-text-field
+                @input="hidePasswordAlert()"
+                v-model="password"
+                :type="showInputablePassword ? 'text' : 'password'"
+                :rules="[rules.required, rules.min]"
+                :label="$vuetify.locale.t('$vuetify.password')"
+                @keyup.native.enter="sendPassword()"
+                variant="outlined"
+                density="compact"
+              >
+                <template v-slot:append>
+                  <v-icon @click="doShowInputablePassword()" class="mx-1 ml-3">{{showInputablePassword ? 'mdi-eye' : 'mdi-eye-off'}}</v-icon>
+                  <v-icon @click="sendPassword()" color="primary" class="mx-1">mdi-check-bold</v-icon>
+                  <v-icon @click="onCancelPasswordEditing()" class="mx-1">mdi-cancel</v-icon>
+                </template>
+              </v-text-field>
+            </v-container>
+            <v-alert
+                class="mx-4"
+                v-if="showPasswordError"
+                density="compact"
+                type="error"
+                :text="passwordError"
+            ></v-alert>
+          </template>
         </template>
 
         <v-divider class="mx-4"></v-divider>

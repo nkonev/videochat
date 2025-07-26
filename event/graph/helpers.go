@@ -54,7 +54,11 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		LoginColor:        aDto.LoginColor,
 		CanRemoveSessions: aDto.CanRemoveSessions,
 		Ldap:              aDto.Ldap,
-		CanSetPassword:    aDto.CanSetPassword,
+		CanSetPassword:    aDto.CanSetPassword, // can forcibly set somebody's password
+
+		CanChangeSelfLogin:    aDto.CanChangeSelfLogin,
+		CanChangeSelfEmail:    aDto.CanChangeSelfEmail,
+		CanChangeSelfPassword: aDto.CanChangeSelfPassword,
 	}
 	if myUserId == aDto.Id {
 		userAccountEvent.Email = user.Email

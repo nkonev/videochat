@@ -5,6 +5,7 @@ import java.time.Duration;
 public record KeycloakProperties(
     ConflictResolveStrategy resolveConflictsStrategy,
     Duration tokenDelta,
-    boolean allowUnbind
+    boolean allowUnbind,
+    boolean forbidUserAccountChange
 ) {
 }

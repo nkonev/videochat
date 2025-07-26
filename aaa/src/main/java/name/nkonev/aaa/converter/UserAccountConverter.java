@@ -115,7 +115,8 @@ public class UserAccountConverter {
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 userAccount.ldapId(),
-                dataDTO
+                dataDTO,
+                userAccount.creationType()
         );
     }
 
@@ -127,7 +128,7 @@ public class UserAccountConverter {
         return userAccount.ldapId() != null;
     }
 
-    public static name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastSeenDateTime, Long expiresAt) {
+    public name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastSeenDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
         var roles = convertRoles2Enum(userAccount.getRoles());
         var canShowAdminsCorner = canAccessToAdminsCorner(roles);
@@ -147,7 +148,11 @@ public class UserAccountConverter {
                 userAccount.getLoginColor(),
                 isLdapSet(userAccount),
                 canShowAdminsCorner,
-                dataDTO
+                dataDTO,
+
+                aaaSecurityService.canChangeSelfLogin(userAccount),
+                aaaSecurityService.canChangeSelfEmail(userAccount),
+                aaaSecurityService.canChangeSelfPassword(userAccount)
         );
     }
 
@@ -231,7 +236,11 @@ public class UserAccountConverter {
                 aaaSecurityService.canConfirm(currentUser, userAccount),
                 awaitingForConfirmEmailChange,
                 aaaSecurityService.canRemoveSessions(currentUser, userAccount.id()),
-                aaaSecurityService.canSetPassword(currentUser, userAccount.id())
+                aaaSecurityService.canSetPassword(currentUser, userAccount.id()),
+
+                aaaSecurityService.canChangeSelfLogin(currentUser, userAccount),
+                aaaSecurityService.canChangeSelfEmail(currentUser, userAccount),
+                aaaSecurityService.canChangeSelfPassword(currentUser, userAccount)
         );
     }
 

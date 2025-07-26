@@ -96,7 +96,7 @@ public class UserProfileService {
      * @return current logged in profile
      */
     public UserSelfProfileDTO getProfile(UserAccountDetailsDTO userAccount, HttpSession session) {
-        return UserAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastSeenDateTime(), getExpiresAt(session));
+        return userAccountConverter.getUserSelfProfile(userAccount, userAccount.getLastSeenDateTime(), getExpiresAt(session));
     }
 
     @Transactional
@@ -341,19 +341,37 @@ public class UserProfileService {
 
             UserAccount exists = userAccountRepository.findById(userAccount.getId()).orElseThrow(() -> new RuntimeException("Authenticated user account not found in database"));
 
-            // check email already present
-            if (userAccountDTO.email() != null && exists.email() != null && !exists.email().equals(userAccountDTO.email()) && !checkService.checkEmailIsFree(userAccountDTO.email())) {
-                LOGGER.info("User {} tries to take an email {} which is already busy", userAccount.getId(), userAccountDTO.email());
-                // we care for email leak...
-                return new Pair<>(
-                    (UserAccount)null,
-                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastSeenDateTime(), getExpiresAt(httpSession))
-                );
+            // email checks
+            if (userAccountDTO.email() != null && !userAccountDTO.email().equals(exists.email())) {
+                if (!checkService.checkEmailIsFree(userAccountDTO.email())){
+                    LOGGER.info("User {} tries to take an email {} which is already taken", userAccount.getId(), userAccountDTO.email());
+                    // we care for email leak...
+                    return new Pair<>(
+                            (UserAccount) null,
+                            userAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastSeenDateTime(), getExpiresAt(httpSession))
+                    );
+                }
+
+                if (!aaaPermissionService.canChangeSelfEmail(userAccount)) {
+                    throw new ForbiddenActionException("changing email is prohibited");
+                }
             }
 
-            // check login already present
+            // login checks
             if (userAccountDTO.login() != null && !exists.login().equals(userAccountDTO.login())) {
                 checkService.checkLoginIsFreeOrThrow(userAccountDTO.login());
+
+                if (!aaaPermissionService.canChangeSelfLogin(userAccount)) {
+                    throw new ForbiddenActionException("changing login is prohibited");
+                }
+            }
+
+
+            // password checks
+            if (userAccountDTO.password() != null) {
+                if (!aaaPermissionService.canChangeSelfPassword(userAccount)) {
+                    throw new ForbiddenActionException("changing password is prohibited");
+                }
             }
 
             var resp = userAccountConverter.updateUserAccountEntityNotEmpty(userAccountDTO, exists);
@@ -371,7 +389,7 @@ public class UserProfileService {
             SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, exists);
             return new Pair<>(
                 exists,
-                UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastSeenDateTime(), getExpiresAt(httpSession))
+                userAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(exists), userAccount.getLastSeenDateTime(), getExpiresAt(httpSession))
             );
         });
 
@@ -587,7 +605,7 @@ public class UserProfileService {
             SecurityUtils.convertAndSetToContext(userAccountConverter, httpSession, userAccount);
             return
                 new Pair<>(
-                    UserAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastSeenDateTime(), getExpiresAt(httpSession)),
+                    userAccountConverter.getUserSelfProfile(userAccountConverter.convertToUserAccountDetailsDTO(userAccount), userAccountDetailsDTO.getLastSeenDateTime(), getExpiresAt(httpSession)),
                     userAccount
                 );
         });

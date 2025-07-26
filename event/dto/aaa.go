@@ -41,7 +41,11 @@ type UserAccountExtended struct {
 	CanChangeRole     bool     `json:"canChangeRole"`
 	CanConfirm        bool     `json:"canConfirm"`
 	CanRemoveSessions bool     `json:"canRemoveSessions"`
-	CanSetPassword    bool     `json:"canSetPassword"`
+	CanSetPassword    bool     `json:"canSetPassword"` // can forcibly set somebody's password
+
+	CanChangeSelfLogin    bool `json:"canChangeSelfLogin"`
+	CanChangeSelfEmail    bool `json:"canChangeSelfEmail"`
+	CanChangeSelfPassword bool `json:"canChangeSelfPassword"`
 }
 
 type UserAccountEventChanged struct {

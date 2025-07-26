@@ -513,7 +513,11 @@ awaitingForConfirmEmailChange,
   loginColor,
   canRemoveSessions,
   ldap,
-  canSetPassword
+  canSetPassword,
+  
+  canChangeSelfLogin,
+  canChangeSelfEmail,
+  canChangeSelfPassword,
 }
 `
 }

@@ -4,6 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.ConfirmDTO;
 import name.nkonev.aaa.dto.EnabledDTO;
 import name.nkonev.aaa.dto.UserRole;
+import name.nkonev.aaa.entity.jdbc.CreationType;
 import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
 import name.nkonev.aaa.dto.LockDTO;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -80,6 +80,30 @@ public class AaaPermissionService {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), enableDTO.userId());
     }
 
+    public boolean canChangeSelfLogin(UserAccountDetailsDTO userAccount) {
+        if (userAccount == null) {
+            return false;
+        }
+
+        return doesItFitsToManageableSelfChangingConstraints(true, userAccount.creationType());
+    }
+
+    public boolean canChangeSelfEmail(UserAccountDetailsDTO userAccount) {
+        if (userAccount == null) {
+            return false;
+        }
+
+        return doesItFitsToManageableSelfChangingConstraints(true, userAccount.creationType());
+    }
+
+    public boolean canChangeSelfPassword(UserAccountDetailsDTO userAccount) {
+        if (userAccount == null) {
+            return false;
+        }
+
+        return doesItFitsToManageableSelfChangingConstraints(true, userAccount.creationType());
+    }
+
     public boolean canDelete(UserAccountDetailsDTO userAccount, long userIdToDelete) {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(userAccount, userRoleService), userIdToDelete);
     }
@@ -111,6 +135,36 @@ public class AaaPermissionService {
             return false;
         }
         return lockAndDelete(currentUser, userAccount.id());
+    }
+
+    public boolean canChangeSelfLogin(PrincipalToCheck currentUser, UserAccount userAccount) {
+        if (currentUser == null) {
+            return false;
+        }
+
+        boolean isMyselfAccount = currentUser.getId() != null && currentUser.getId().equals(userAccount.id());
+
+        return doesItFitsToManageableSelfChangingConstraints(isMyselfAccount, userAccount.creationType());
+    }
+
+    public boolean canChangeSelfEmail(PrincipalToCheck currentUser, UserAccount userAccount) {
+        if (currentUser == null) {
+            return false;
+        }
+
+        boolean isMyselfAccount = currentUser.getId() != null && currentUser.getId().equals(userAccount.id());
+
+        return doesItFitsToManageableSelfChangingConstraints(isMyselfAccount, userAccount.creationType());
+    }
+
+    public boolean canChangeSelfPassword(PrincipalToCheck currentUser, UserAccount userAccount) {
+        if (currentUser == null) {
+            return false;
+        }
+
+        boolean isMyselfAccount = currentUser.getId() != null && currentUser.getId().equals(userAccount.id());
+
+        return doesItFitsToManageableSelfChangingConstraints(isMyselfAccount, userAccount.creationType());
     }
 
     public boolean canDelete(PrincipalToCheck currentUser, UserAccount userAccount) {
@@ -209,4 +263,13 @@ public class AaaPermissionService {
         return true;
     }
 
+    private boolean doesItFitsToManageableSelfChangingConstraints(boolean isMyselfAccount, CreationType creationType) {
+        if (creationType == CreationType.KEYCLOAK) {
+            return isMyselfAccount && !aaaProperties.keycloak().forbidUserAccountChange();
+        } else if (creationType == CreationType.LDAP) {
+            return isMyselfAccount && !aaaProperties.ldap().forbidUserAccountChange();
+        }
+        // non keycloak, non ldap
+        return isMyselfAccount;
+    }
 }
