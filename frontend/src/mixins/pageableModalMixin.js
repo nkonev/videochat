@@ -20,7 +20,6 @@ export default () => {
                 loading: false,
                 page: firstPage,
                 dataLoaded: false,
-                pageableAbortController: new AbortController(),
             }
         },
         computed: {
@@ -224,7 +223,6 @@ export default () => {
                     this.closeModal(); // make show false to
                 }).then(()=>{
                     this.reset(); // not to react in watch on page and not to load
-                    this.pageableAbortController.abort(); // abort requests
                 })
             },
         },
@@ -240,9 +238,8 @@ export default () => {
                     this.itemsDto = dtoFactory();
                     if (this.show) {
                         this.updateItems();
-                    } else { // `this.pageableAbortController.abort()` is mostly for the case, surrounding `this.updateItems()` with `if (this.show)` and `this.reset()` in else should be enough
+                    } else {
                         this.reset();
-                        this.pageableAbortController.abort(); // abort requests
                     }
                 }
             },

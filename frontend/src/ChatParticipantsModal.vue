@@ -221,7 +221,6 @@
                         size: pageSize,
                         searchString: this.userSearchString
                     },
-                    signal: this.pageableAbortController.signal
                 })
             },
             afterFirstDrawItems() {

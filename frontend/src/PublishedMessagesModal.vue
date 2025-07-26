@@ -135,7 +135,6 @@ export default {
                     page: this.translatePage(),
                     size: pageSize,
                 },
-                signal: this.pageableAbortController.signal
             })
         },
         extractDtoFromEventDto(dto) {
