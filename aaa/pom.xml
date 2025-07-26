@@ -12,13 +12,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
-        <spring.boot.version>3.4.2</spring.boot.version>
+        <spring.boot.version>3.5.4</spring.boot.version>
         <greenmail.version>2.1.0-rc-1</greenmail.version>
         <mockserver.version>5.15.0</mockserver.version>
         <skipTests>false</skipTests>
         <owasp.encoder.version>1.2.3</owasp.encoder.version>
         <liquibase.session.lock.version>1.6.9</liquibase.session.lock.version>
-        <jackson.version>2.19.0</jackson.version>
     </properties>
 
     <repositories>
@@ -113,13 +112,6 @@
                         <artifactId>junit</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson</groupId>
-                <artifactId>jackson-bom</artifactId>
-                <version>${jackson.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
             <!-- to override versions put them before spring-boot-dependencies -->
             <!-- https://docs.spring.io/spring-boot/docs/2.0.0.M7/reference/htmlsingle/#using-boot-maven-without-a-parent -->

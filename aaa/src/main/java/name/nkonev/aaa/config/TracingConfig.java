@@ -8,6 +8,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
+import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import jakarta.annotation.PreDestroy;
 import org.springframework.amqp.AmqpException;
@@ -28,6 +29,9 @@ public class TracingConfig {
 
     @Autowired
     private BatchSpanProcessor batchSpanProcessor;
+
+    @Autowired
+    private BatchLogRecordProcessor batchLogRecordProcessor;
 
     @Bean
     public JaegerPropagator jaegerPropagator() {
@@ -53,6 +57,10 @@ public class TracingConfig {
     public void pd() {
         batchSpanProcessor.forceFlush().join(1, TimeUnit.MILLISECONDS).succeed().whenComplete(() -> {
                 batchSpanProcessor.shutdown().join(1, TimeUnit.MILLISECONDS);
+        }).succeed();
+
+        batchLogRecordProcessor.forceFlush().join(1, TimeUnit.MILLISECONDS).succeed().whenComplete(() -> {
+            batchLogRecordProcessor.shutdown().join(1, TimeUnit.MILLISECONDS);
         }).succeed();
     }
 

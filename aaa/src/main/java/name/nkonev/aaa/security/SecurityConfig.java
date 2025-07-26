@@ -7,7 +7,6 @@ import name.nkonev.aaa.security.checks.AaaPreAuthenticationChecks;
 import name.nkonev.aaa.security.converter.BearerOAuth2AccessTokenResponseConverter;
 import name.nkonev.aaa.services.RefererService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
@@ -15,10 +14,11 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
@@ -28,7 +28,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.Arrays;
 
@@ -145,12 +145,9 @@ public class SecurityConfig {
         .authenticationProvider(ldapAuthenticationProvider)
         .authenticationProvider(dbAuthenticationProvider())
         .headers(c -> {
-            c.frameOptions(fc -> {
-                fc.deny();
-            });
-            c.cacheControl(cc -> {
-                cc.disable(); // see also AbstractImageUploadController#shouldReturnLikeCache
-            });
+            c.frameOptions(HeadersConfigurer.FrameOptionsConfig::deny);
+            // see also AbstractImageUploadController#shouldReturnLikeCache
+            c.cacheControl(HeadersConfigurer.CacheControlConfig::disable);
         })
         .build();
     }
@@ -159,18 +156,20 @@ public class SecurityConfig {
         OAuth2AccessTokenResponseHttpMessageConverter oAuth2AccessTokenResponseHttpMessageConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
         oAuth2AccessTokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new BearerOAuth2AccessTokenResponseConverter());
 
-        RestTemplate restTemplate = new RestTemplateBuilder()
-                .connectTimeout(aaaProperties.httpClient().connectTimeout())
-                .readTimeout(aaaProperties.httpClient().readTimeout())
-                .requestFactory(JdkClientHttpRequestFactory.class)
-                .messageConverters(Arrays.asList(
-                        new FormHttpMessageConverter(),
-                        oAuth2AccessTokenResponseHttpMessageConverter
-                ))
-                .errorHandler(new OAuth2ErrorResponseErrorHandler())
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory();
+        requestFactory.setReadTimeout(aaaProperties.httpClient().readTimeout());
+        RestClient restClient = RestClient.builder()
+                .requestFactory(requestFactory)
+                .messageConverters((messageConverters) -> {
+                    messageConverters.clear();
+                    messageConverters.add(new FormHttpMessageConverter());
+                    messageConverters.add(oAuth2AccessTokenResponseHttpMessageConverter);
+                })
+                .defaultStatusHandler(new OAuth2ErrorResponseErrorHandler())
                 .build();
-        DefaultAuthorizationCodeTokenResponseClient defaultAuthorizationCodeTokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
-        defaultAuthorizationCodeTokenResponseClient.setRestOperations(restTemplate);
+
+        RestClientAuthorizationCodeTokenResponseClient defaultAuthorizationCodeTokenResponseClient = new RestClientAuthorizationCodeTokenResponseClient();
+        defaultAuthorizationCodeTokenResponseClient.setRestClient(restClient);
         return defaultAuthorizationCodeTokenResponseClient;
     }
 
@@ -182,8 +181,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider dbAuthenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(aaaUserDetailsService);
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(aaaUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder);
         authenticationProvider.setPreAuthenticationChecks(aaaPreAuthenticationChecks);
         authenticationProvider.setPostAuthenticationChecks(aaaPostAuthenticationChecks);

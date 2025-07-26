@@ -142,6 +142,7 @@ spring.datasource:
 spring.liquibase:
   change-log: classpath:/db/changelog-test.yml
   drop-first: true
+  analytics-enabled: false
   parameters:
     # bcrypt('admin', 10)
     admin.password: "$2a$10$HsyFGy9IO//nJZxYc2xjDeV/kF7koiPrgIDzPOfgmngKVe9cOyOS2"
@@ -158,6 +159,7 @@ spring.rabbitmq:
       retry:
         enabled: true
         max-attempts: 3
+        multiplier: 1.1
 
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
