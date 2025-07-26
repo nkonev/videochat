@@ -55,6 +55,7 @@ public class TracingConfig {
 
     @PreDestroy
     public void pd() {
+        // stop dangling threads (visible in tests)
         batchSpanProcessor.forceFlush().join(1, TimeUnit.MILLISECONDS).succeed().whenComplete(() -> {
                 batchSpanProcessor.shutdown().join(1, TimeUnit.MILLISECONDS);
         }).succeed();

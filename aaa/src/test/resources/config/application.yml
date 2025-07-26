@@ -163,6 +163,8 @@ spring.rabbitmq:
 
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
+management.tracing.sampling.probability: 1.0
+management.otlp.tracing.endpoint: http://localhost:34318/v1/traces
 management:
   health:
     mail:
