@@ -96,6 +96,7 @@ export const useChatStore = defineStore('chat', {
       this.currentUser = null
     },
     fetchUserProfile() {
+        this.incrementProgressCount();
         return axios.get(`/api/aaa/profile`).then(( {data} ) => {
             console.debug("fetched profile =", data);
             this.currentUser = data;
@@ -105,6 +106,8 @@ export const useChatStore = defineStore('chat', {
                 const lang = data.language;
                 setStoredLanguage(lang);
             })
+        }).finally(()=>{
+            this.decrementProgressCount();
         });
     },
     fetchAaaConfig() {

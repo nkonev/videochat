@@ -2,7 +2,7 @@ import { createClient } from 'graphql-ws';
 import {getWebsocketUrlPrefix} from "@/utils";
 import bus, {
     LOGGED_OUT,
-    WEBSOCKET_CONNECTED,
+    WEBSOCKET_CONNECTED, WEBSOCKET_CONNECTING,
     WEBSOCKET_INITIALIZED,
     WEBSOCKET_LOST,
     WEBSOCKET_RESTORED, WEBSOCKET_UNINITIALIZED
@@ -78,13 +78,16 @@ export const createGraphQlClient = () => {
         initialized = true;
         bus.emit(WEBSOCKET_CONNECTED);
     });
+    graphQlClient.on('connecting', (err) => {
+        console.info("Connecting to websocket graphql");
+        bus.emit(WEBSOCKET_CONNECTING);
+    });
     graphQlClient.on('error', (err) => {
         console.info("Error in GraphQL client", err);
         bus.emit(WEBSOCKET_LOST);
     });
     graphQlClient.on('closed', (ev) => {
         console.info("Close GraphQL", ev);
-        // bus.emit(WEBSOCKET_LOST);
     });
     bus.on(LOGGED_OUT, () => {
         bus.emit(WEBSOCKET_UNINITIALIZED);

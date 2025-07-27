@@ -205,7 +205,7 @@ import bus, {
   WEBSOCKET_CONNECTED,
   NOTIFICATION_COUNT_CHANGED,
   USER_TYPING,
-  PROFILE_SET, WEBSOCKET_INITIALIZED,
+  PROFILE_SET, WEBSOCKET_CONNECTING, WEBSOCKET_INITIALIZED,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -356,6 +356,10 @@ export default {
         },
 
         async onProfileSet(){
+            this.chatStore.incrementProgressCount(); // the counterpart for this call is in onWsInitialized()
+
+            this.chatStore.incrementProgressCount();
+
             await Promise.all([
               this.chatStore.fetchNotificationsCount(),
               this.chatStore.fetchHasNewMessages()
@@ -367,6 +371,8 @@ export default {
 
             this.globalEventsSubscription.graphQlSubscribe();
             this.selfProfileEventsSubscription.graphQlSubscribe();
+
+            this.chatStore.decrementProgressCount();
         },
         onLoggedOut() {
             this.resetVariables();
@@ -696,6 +702,11 @@ export default {
         onWsConnected() {
           this.chatStore.moreImportantSubtitleInfo = null;
         },
+        onWsInitialized() {
+          this.chatStore.decrementProgressCount(); // the counterpart for this call is in onProfileSet()
+        },
+        onWsConnecting() {
+        },
         onWsRestored() {
           console.info("REFRESH_ON_WEBSOCKET_RESTORED auto");
           bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
@@ -945,6 +956,8 @@ export default {
         bus.on(PROFILE_SET, this.onProfileSet);
         bus.on(LOGGED_OUT, this.onLoggedOut);
         bus.on(WEBSOCKET_CONNECTED, this.onWsConnected);
+        bus.on(WEBSOCKET_CONNECTING, this.onWsConnecting);
+        bus.on(WEBSOCKET_INITIALIZED, this.onWsInitialized);
         bus.on(WEBSOCKET_LOST, this.onWsLost);
         bus.on(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
@@ -972,6 +985,8 @@ export default {
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
         bus.off(WEBSOCKET_CONNECTED, this.onWsConnected);
+        bus.off(WEBSOCKET_CONNECTING, this.onWsConnecting);
+        bus.off(WEBSOCKET_INITIALIZED, this.onWsInitialized);
         bus.off(WEBSOCKET_LOST, this.onWsLost);
         bus.off(WEBSOCKET_RESTORED, this.onWsRestored);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);

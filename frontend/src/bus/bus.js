@@ -66,6 +66,7 @@ export const NOTIFICATION_CLEAR_ALL = "notificationClearAll";
 export const WEBSOCKET_CONNECTED = "wsConnected";
 export const WEBSOCKET_LOST = "wsLost";
 export const WEBSOCKET_RESTORED = "wsRestored";
+export const WEBSOCKET_CONNECTING = "wsConnecting";
 
 export const WEBSOCKET_INITIALIZED = "wsInitialized"; // phase 2
 export const WEBSOCKET_UNINITIALIZED = "wsUnInitialized"; // phase 2
