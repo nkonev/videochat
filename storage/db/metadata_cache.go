@@ -34,7 +34,7 @@ const getMetadatasSql = `select ` +
 	`
 	from metadata_cache
 	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s
-	order by chat_id, file_item_uuid asc, filename desc
+	order by chat_id, file_item_uuid asc, create_date_time %s
 	limit $3 offset $4
 `
 const getMetadatasCountSql = `select 
@@ -223,12 +223,20 @@ func applyFilter(filterObj Filter, baseSqlTemplate string, existingArgs []any) (
 	return sqlString, sqlArgs, false, nil
 }
 
-func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, limit, offset int) ([]dto.MetadataCache, error) {
+func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, reverse bool, limit, offset int) ([]dto.MetadataCache, error) {
 	list := make([]dto.MetadataCache, 0)
 
 	baseSqlArgs := []any{chatId, fileItemUuid, limit, offset}
 
-	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadatasSql, baseSqlArgs)
+	var order string
+	if reverse {
+		order = "asc"
+	} else {
+		order = "desc"
+	}
+	tmpSql := fmt.Sprintf(getMetadatasSql, "%s", order)
+
+	sqlString, sqlArgs, noData, err := applyFilter(filterObj, tmpSql, baseSqlArgs)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during building sql")
 	}
@@ -243,7 +251,7 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 	defer rows.Close()
 	for rows.Next() {
 		ucs := dto.MetadataCache{}
-		if err := rows.Scan(provideScanToMetadataCache(&ucs)[:]...); err != nil {
+		if err = rows.Scan(provideScanToMetadataCache(&ucs)[:]...); err != nil {
 			return nil, eris.Wrap(err, "error during scanning")
 		} else {
 			list = append(list, ucs)
