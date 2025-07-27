@@ -343,6 +343,7 @@ export default {
     set_password_for: "Задать пароль для '{0}'",
     smiley_stay_unclosed: "Оставить",
     can_react: "Разрешить реакции",
-    "expand": "развернуть",
-    "collapse": "свернуть"
+    expand: "развернуть",
+    collapse: "свернуть",
+    switch_search_by: "Переключить поиск по"
 }

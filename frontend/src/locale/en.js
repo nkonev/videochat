@@ -343,6 +343,7 @@ export default {
     set_password_for: "Set password for '{0}'",
     smiley_stay_unclosed: "Stay",
     can_react: "Allow reactions",
-    "expand": "expand",
-    "collapse": "collapse"
+    expand: "expand",
+    collapse: "collapse",
+    switch_search_by: "Switch search by"
 }
