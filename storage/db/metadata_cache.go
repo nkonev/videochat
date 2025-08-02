@@ -304,19 +304,21 @@ func GetListFilesItemUuids(ctx context.Context, co CommonOperations, chatId int6
 
 	rows, err := co.QueryContext(ctx, `
 		select 
-		    t.file_item_uuid,
-		    array_agg(lat.filename)
-		from metadata_cache t
-		inner join lateral (
-			select inc.* from metadata_cache inc
-			where inc.chat_id = t.chat_id and inc.file_item_uuid = t.file_item_uuid
-			order by inc.filename 
-			limit 5
-		) lat on true
-		where t.chat_id = $1
-		group by t.file_item_uuid
-		order by t.file_item_uuid asc 
-		limit $2 offset $3`, chatId, limit, offset)
+		    outp.file_item_uuid,
+		    array_agg(outp.filename)
+		from (
+		    select 
+		        inn.file_item_uuid,
+		        inn.filename,
+		        row_number() over (partition by inn.file_item_uuid order by inn.filename) as seqnum
+			from metadata_cache inn 
+			where inn.chat_id = $1
+		) outp
+		where outp.seqnum <= 5
+		group by outp.file_item_uuid
+		order by outp.file_item_uuid
+		limit $2 offset $3
+`, chatId, limit, offset)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -329,8 +331,8 @@ func GetListFilesItemUuids(ctx context.Context, co CommonOperations, chatId int6
 			return nil, eris.Wrap(err, "error during mapping")
 		}
 
+		item.Files = make([]SimpleFileItem, 0)
 		for _, fn := range filenames.Elements {
-			item.Files = make([]SimpleFileItem, 0)
 			item.Files = append(item.Files, SimpleFileItem{
 				Filename: fn.String,
 			})
