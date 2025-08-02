@@ -61,6 +61,12 @@ export const getStoredAudioDevicePresents = () => {
     return v;
 }
 
+export const isNoLocalTracks = () => {
+    const audioIsPresents = getStoredAudioDevicePresents();
+    const videoIsPresents = getStoredVideoDevicePresents();
+    return !audioIsPresents && !videoIsPresents
+}
+
 export const setStoredAudioPresents = (v) => {
     localStorage.setItem(KEY_AUDIO_PRESENTS, JSON.stringify(v));
 }

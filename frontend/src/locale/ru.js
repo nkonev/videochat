@@ -345,5 +345,7 @@ export default {
     can_react: "Разрешить реакции",
     expand: "развернуть",
     collapse: "свернуть",
-    switch_search_by: "Переключить поиск по"
+    switch_search_by: "Переключить поиск по",
+    user_video_local_viewer_no_media: "Только просмотр",
+    user_video_loading: "Загрузка..."
 }

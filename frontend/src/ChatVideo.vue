@@ -41,14 +41,13 @@ import {
   hasLength,
   isFullscreen,
   isMobileBrowser,
-  loadingMessage,
   PURPOSE_CALL,
   goToPreservingQuery,
   setSplitter
 } from "@/utils";
 import {
   getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
-  getStoredVideoDevicePresents, getStoredVideoMessages, getStoredVideoMiniatures,
+  getStoredVideoDevicePresents, getStoredVideoMiniatures, isNoLocalTracks,
   NULL_CODEC,
   NULL_SCREEN_RESOLUTION,
   setStoredCallAudioDeviceId,
@@ -135,6 +134,7 @@ export default {
       const app = createApp(UserVideo, {
         id: videoTagId,
         localVideoProperties: localVideoProperties,
+        loadingName: this.$vuetify.locale.t('$vuetify.user_video_loading'),
       });
       app.config.globalProperties.isMobile = () => {
         return isMobileBrowser()
@@ -248,7 +248,7 @@ export default {
     },
     updateInitializingVideoCall() {
       // because of possibly 2 local tracks (audio + video) we wait for localTrackCreatedAndPublished too
-      this.chatStore.initializingVideoCall = !(this.localTrackDrawn && this.localTrackCreatedAndPublished && this.finishedConnectingToRoom);
+      this.chatStore.initializingVideoCall = !(((this.localTrackDrawn && this.localTrackCreatedAndPublished) || isNoLocalTracks()) && this.finishedConnectingToRoom);
     },
     getPresenterPriority(pub, isSpeaking) {
       if (!pub) {
@@ -690,10 +690,9 @@ export default {
         const audioIsPresents = getStoredAudioDevicePresents();
         const videoIsPresents = getStoredVideoDevicePresents();
 
-        if (!audioIsPresents && !videoIsPresents) {
-          console.warn("Not able to build local media stream, returning a successful promise");
-          bus.emit(VIDEO_PARAMETERS_CHANGED, {error: 'No media configured'});
-          return Promise.reject('No media configured');
+        if (isNoLocalTracks()) {
+          console.info("Not able to build local media stream, returning a successful promise");
+          return Promise.resolve('No media configured');
         }
 
         console.info(
@@ -857,7 +856,11 @@ export default {
       }
     },
     getLoadingMessage () {
-         return loadingMessage
+        if (isNoLocalTracks()) {
+          return this.$vuetify.locale.t('$vuetify.user_video_local_viewer_no_media')
+        } else {
+          return this.$vuetify.locale.t('$vuetify.user_video_loading')
+        }
     },
     onClick() {
       this.showControls =! this.showControls

@@ -526,8 +526,6 @@ export const isFullscreen = () => {
     return !!(document.fullscreenElement)
 }
 
-export const loadingMessage = 'Loading...';
-
 export const goToPreservingQuery = (route, router, to) => {
     const prev = deepCopy(route.query);
     return router.push({ ...to, query: prev })

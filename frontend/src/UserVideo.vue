@@ -23,7 +23,7 @@
 
 <script>
 
-import {hasLength, loadingMessage} from "@/utils";
+import {hasLength} from "@/utils";
 import axios from "axios";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
@@ -46,7 +46,7 @@ export default {
 
     data()  {
 	    return {
-            userName: loadingMessage,
+            userName: this.loadingName,
             audioMute: true,
             errorDescription: null,
             avatar: "",
@@ -63,6 +63,9 @@ export default {
         },
         localVideoProperties: {
             type: Object
+        },
+        loadingName: {
+          type: String
         },
     },
 

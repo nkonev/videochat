@@ -345,5 +345,7 @@ export default {
     can_react: "Allow reactions",
     expand: "expand",
     collapse: "collapse",
-    switch_search_by: "Switch search by"
+    switch_search_by: "Switch search by",
+    user_video_local_viewer_no_media: "View only",
+    user_video_loading: "Loading..."
 }
