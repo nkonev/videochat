@@ -347,5 +347,6 @@ export default {
     collapse: "collapse",
     switch_search_by: "Switch search by",
     user_video_local_viewer_no_media: "View only",
-    user_video_loading: "Loading..."
+    user_video_loading: "Loading...",
+    version: "Version"
 }

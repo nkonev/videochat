@@ -74,30 +74,43 @@ http:
       service: public-service
       middlewares:
         - "retry-middleware"
-
     public-router-robots:
       rule: "Path(`/robots.txt`)"
       service: public-service
       middlewares:
         - "retry-middleware"
-
     public-router-sitemap:
       rule: "Path(`/sitemap.xml`)"
       service: public-service
       middlewares:
         - "retry-middleware"
+    public-version-router:
+      rule: "Path(`/public/git.json`)"
+      service: public-service
+      middlewares:
+        - "public-stripprefix-middleware"
 
     aaa-router:
       rule: "PathPrefix(`/api/aaa`)"
       service: aaa-service
       middlewares:
         - "retry-middleware"
+    aaa-version-router:
+      rule: "Path(`/aaa/git.json`)"
+      service: aaa-service
+      middlewares:
+        - "aaa-stripprefix-middleware"
     chat-router:
       rule: "PathPrefix(`/api/chat`)"
       service: chat-service
       middlewares:
         - "auth-middleware"
         - "retry-middleware"
+    chat-version-router:
+      rule: "Path(`/chat/git.json`)"
+      service: chat-service
+      middlewares:
+        - "chat-stripprefix-middleware"
     blog-router:
       rule: "PathPrefix(`/api/blog`)"
       service: chat-service
@@ -109,18 +122,32 @@ http:
       middlewares:
         - "auth-middleware"
         - "retry-middleware"
+    storage-version-router:
+      rule: "Path(`/storage/git.json`)"
+      service: storage-service
+      middlewares:
+        - "storage-stripprefix-middleware"
     video-router:
       rule: "PathPrefix(`/api/video`)"
       service: video-service
       middlewares:
         - "auth-middleware"
+    video-version-router:
+      rule: "Path(`/video/git.json`)"
+      service: video-service
+      middlewares:
+        - "video-stripprefix-middleware"
     notification-router:
       rule: "PathPrefix(`/api/notification`)"
       service: notification-service
       middlewares:
         - "auth-middleware"
         - "retry-middleware"
-
+    notification-version-router:
+      rule: "Path(`/notification/git.json`)"
+      service: notification-service
+      middlewares:
+        - "notification-stripprefix-middleware"
     chat-public-router:
       rule: "PathPrefix(`/api/chat/public`)"
       service: chat-service
@@ -143,6 +170,11 @@ http:
       middlewares:
         - "auth-middleware"
         - "retry-middleware"
+    event-version-router:
+      rule: "Path(`/event/git.json`)"
+      service: event-service
+      middlewares:
+        - "event-stripprefix-middleware"
     event-public-router:
       rule: "PathPrefix(`/api/event/public`)"
       service: event-service
@@ -209,6 +241,34 @@ http:
       stripPrefix:
         prefixes:
           - "/minio"
+    aaa-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/aaa"
+    chat-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/chat"
+    storage-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/storage"
+    video-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/video"
+    notification-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/notification"
+    event-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/event"
+    public-stripprefix-middleware:
+      stripPrefix:
+        prefixes:
+          - "/public"
     retry-middleware:
       retry:
         attempts: 4

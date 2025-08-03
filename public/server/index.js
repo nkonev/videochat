@@ -93,6 +93,16 @@ const tracer = opentelemetry.trace.getTracer(
     '0.0.0',
 );
 
+let server;
+
+function shutdowner() {
+    console.log('Shutting down...');
+    server?.close();
+}
+
+process.on('SIGTERM', shutdowner);
+process.on('SIGINT', shutdowner);
+
 startServer()
 
 const pathPrefixAndBlog = path_prefix + blog;
@@ -236,7 +246,7 @@ Sitemap: ${sitemapUrl}`);
 
   })
 
-  const port = getPort()
-  app.listen(port)
+  const port = getPort();
+  server = app.listen(port);
   logger.info(`Server running at :${port}`)
 }
