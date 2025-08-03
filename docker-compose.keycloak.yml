@@ -1,7 +1,5 @@
 # This file used for both developer and demo purposes.
 # It contains environment
-version: '3.7'
-
 services:
   # https://habr.com/en/amp/post/552346/
   # https://keycloak.discourse.group/t/issue-on-userinfo-endpoint-at-keycloak-20/18461/4

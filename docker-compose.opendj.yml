@@ -1,7 +1,5 @@
 # This file used for both developer and demo purposes.
 # It contains environment
-version: '3.7'
-
 services:
   opendj:
     image: openidentityplatform/opendj:4.8.0

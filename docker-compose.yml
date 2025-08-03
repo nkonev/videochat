@@ -1,7 +1,5 @@
 # This file used for both developer and demo purposes.
 # It contains environment
-version: '3.7'
-
 services:
   traefik:
     image: traefik:v3.4.1
