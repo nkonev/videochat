@@ -206,16 +206,22 @@ export default {
                 // This 3-step algorithm is made to bypass 2GB file issue in Firefox
                 // (it seems there is a timeout inside, because on local machine it works fine)
 
-                // [1/3] init s3's multipart upload
-                const response = await axios.put(`/api/storage/${chatId}/upload/init`, {
-                    fileItemUuid: this.fileItemUuid, // nullable
-                    fileSize: file.size,
-                    fileName: file.name,
-                    correlationId: this.correlationId, // nullable
-                    shouldAddDateToTheFilename: this.shouldAddDateToTheFilename, // nullable
-                    isMessageRecording: this.isMessageRecording, // nullable
-                })
-                console.log("For", file.name, "got init response: ", response.data)
+                let response;
+                try {
+                    // [1/3] init s3's multipart upload
+                    response = await axios.put(`/api/storage/${chatId}/upload/init`, {
+                        fileItemUuid: this.fileItemUuid, // nullable
+                        fileSize: file.size,
+                        fileName: file.name,
+                        correlationId: this.correlationId, // nullable
+                        shouldAddDateToTheFilename: this.shouldAddDateToTheFilename, // nullable
+                        isMessageRecording: this.isMessageRecording, // nullable
+                    })
+                    console.log("For", file.name, "got init response: ", response.data)
+                } catch(thrown) {
+                    this.cleanOnError(thrown);
+                    continue
+                }
 
                 this.chatStore.appendToFileUploadingQueue({
                     id: uuidv4(),
@@ -318,20 +324,7 @@ export default {
                     });
 
                 } catch(thrown) {
-                    if (axios.isCancel(thrown)) {
-                        console.log('Request canceled', thrown.message);
-                    } else {
-                        console.warn('Request failed', thrown);
-                    }
-
-                    // partial cleanup
-                    this.inputFiles = [];
-                    this.chatStore.cleanFileUploadingQueue();
-
-                    this.limitError = null;
-                    this.showFileInput = true;
-                    this.$data.isLoadingPresignedLinks = false;
-                    this.checkingLimitsStep = false;
+                    this.cleanOnError(thrown)
                 } finally {
                     fileToUpload.finished = true;
                 }
@@ -367,6 +360,22 @@ export default {
         },
         formattedFilename(progressReceiver) {
             return progressReceiver.file.name
+        },
+        cleanOnError(thrown) {
+          if (axios.isCancel(thrown)) {
+            console.log('Request canceled', thrown.message);
+          } else {
+            console.warn('Request failed', thrown);
+          }
+
+          // partial cleanup
+          this.inputFiles = [];
+          this.chatStore.cleanFileUploadingQueue();
+
+          this.limitError = null;
+          this.showFileInput = true;
+          this.$data.isLoadingPresignedLinks = false;
+          this.checkingLimitsStep = false;
         },
     },
     computed: {
