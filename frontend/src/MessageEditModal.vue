@@ -10,21 +10,25 @@
                 color="indigo"
                 height="56"
             >
+                <span v-if="shouldShowFileUpload" class="d-flex mx-4">
+                  <v-btn icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
+                    {{ chatStore.fileUploadOverallProgress + "%" }}
+                  </v-btn>
+                </span>
+
+                <span class="d-flex flex-grow-1" :class="shouldShowFileUpload ? 'mr-2' : 'mx-8'">
+                  <v-toolbar-title>{{ !chatStore.isMessageEditing() ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
+                </span>
+
+                <v-spacer/>
                 <span class="d-flex mx-2">
                     <v-btn
-                      icon
-                      dark
-                      @click="closeModal()"
+                        icon
+                        dark
+                        @click="closeModal()"
                     >
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
-                </span>
-                <v-btn class="mr-2" v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
-                  {{ chatStore.fileUploadOverallProgress + "%" }}
-                </v-btn>
-
-                <span class="d-flex flex-grow-1">
-                  <v-toolbar-title>{{ !chatStore.isMessageEditing() ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
                 </span>
             </v-toolbar>
             <!-- We cannot use it in style tag because it is loading too late and doesn't have an effect -->
