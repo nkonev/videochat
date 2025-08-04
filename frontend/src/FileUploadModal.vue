@@ -368,10 +368,6 @@ export default {
             console.warn('Request failed', thrown);
           }
 
-          // partial cleanup
-          this.inputFiles = [];
-          this.chatStore.cleanFileUploadingQueue();
-
           this.limitError = null;
           this.showFileInput = true;
           this.$data.isLoadingPresignedLinks = false;
