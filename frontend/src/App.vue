@@ -304,7 +304,7 @@ export default {
             return this.chatStore.notificationsCount
         },
         shouldShowFileUpload() {
-            return !!this.chatStore.fileUploadingQueue.length
+            return this.chatStore.fileUploadingQueueHasElements()
         },
         showTetATetBadge() {
             return this.chatStore.oppositeUserOnline && !!(this.chatStore.chatDto?.tetATet) && hasLength(this.chatStore.chatDto?.avatar) && !this.isMobile()

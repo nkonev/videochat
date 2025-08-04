@@ -19,6 +19,10 @@
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                 </span>
+                <v-btn class="mr-2" v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
+                  {{ chatStore.fileUploadOverallProgress + "%" }}
+                </v-btn>
+
                 <span class="d-flex flex-grow-1">
                   <v-toolbar-title>{{ !chatStore.isMessageEditing() ? $vuetify.locale.t('$vuetify.message_creating') : $vuetify.locale.t('$vuetify.message_editing')}}</v-toolbar-title>
                 </span>
@@ -32,11 +36,11 @@
 </template>
 
 <script>
-    import bus, {
-      CLOSE_EDIT_MESSAGE,
-      OPEN_EDIT_MESSAGE,
-      SET_EDIT_MESSAGE_MODAL,
-    } from "./bus/bus";
+import bus, {
+  CLOSE_EDIT_MESSAGE,
+  OPEN_EDIT_MESSAGE, OPEN_FILE_UPLOAD_MODAL,
+  SET_EDIT_MESSAGE_MODAL,
+} from "./bus/bus";
     import MessageEdit from "@/MessageEdit.vue";
     import heightMixin from "@/mixins/heightMixin";
     import {useChatStore} from "@/store/chatStore";
@@ -64,6 +68,9 @@
             reactOnMobileKeyboardChange(event) {
               this.$refs.messageEdit?.$refs.tipTapRef?.scrollToCursor()
             },
+            onShowFileUploadClicked() {
+              bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
+            },
         },
         watch: {
             show(newValue) {
@@ -80,6 +87,9 @@
                 return this.$route.params.id
             },
             ...mapStores(useChatStore),
+            shouldShowFileUpload() {
+              return this.chatStore.fileUploadingQueueHasElements()
+            },
         },
         mounted() {
             bus.on(OPEN_EDIT_MESSAGE, this.showModal);

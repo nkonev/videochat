@@ -119,7 +119,7 @@ export default {
             this.messageIdToAttachFiles = messageIdToAttachFiles;
             this.correlationId = correlationId;
             this.shouldAddDateToTheFilename = shouldAddDateToTheFilename;
-            if (!this.chatStore.fileUploadingQueue.length) { // there is no prev active uploading
+            if (!this.chatStore.fileUploadingQueueHasElements()) { // there is no prev active uploading
                 this.chatStore.setFileUploadingSessionType(fileUploadingSessionType)
             }
             this.isMessageRecording = isMessageRecording;
@@ -338,8 +338,7 @@ export default {
             }
 
             if (this.chatStore.fileUploadingQueue.length == this.chatStore.fileUploadingQueue.filter((item) => item.finished).length) {
-                this.chatStore.fileUploadingQueue = [];
-                this.chatStore.fileUploadOverallProgress = 0;
+                this.chatStore.cleanFileUploadingQueue();
             }
             this.hideModal();
             return Promise.resolve();
@@ -376,7 +375,7 @@ export default {
             return this.$route.params.id
         },
         fileUploadingQueueHasElements() {
-            return !!this.chatStore.fileUploadingQueue.length
+            return this.chatStore.fileUploadingQueueHasElements()
         },
         fileInputQueueHasElements() {
             return !!this.inputFiles.length
