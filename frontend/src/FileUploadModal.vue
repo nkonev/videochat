@@ -1,12 +1,19 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="480" :persistent="isLoadingPresignedLinks || fileInputQueueHasElements || fileUploadingQueueHasElements" scrollable>
+        <v-dialog v-model="show" max-width="480" :persistent="checkingLimitsStep || isLoadingPresignedLinks || fileInputQueueHasElements || fileUploadingQueueHasElements" scrollable>
             <v-card :title="$vuetify.locale.t('$vuetify.upload_files')">
+                <v-progress-linear
+                    :active="checkingLimitsStep || isLoadingPresignedLinks"
+                    indeterminate
+                    absolute
+                    bottom
+                    color="primary"
+                ></v-progress-linear>
 
                 <v-card-text>
                     <v-file-input
                         v-if="showFileInput"
-                        :disabled="fileUploadingQueueHasElements"
+                        :disabled="checkingLimitsStep || isLoadingPresignedLinks || fileUploadingQueueHasElements"
                         :model-value="inputFiles"
                         counter
                         multiple
@@ -71,7 +78,6 @@ import bus, {
     MESSAGE_EDIT_SET_FILE_ITEM_UUID,
     FILE_UPLOAD_MODAL_START_UPLOADING,
     ATTACH_FILES_TO_MESSAGE_MODAL,
-    MESSAGE_EDIT_LOAD_FILES_COUNT
 } from "./bus/bus";
 import axios from "axios";
 import throttle from "lodash/throttle";
@@ -125,6 +131,7 @@ export default {
             this.limitError = null;
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
+            this.checkingLimitsStep = false;
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
             this.correlationId = null;
@@ -316,6 +323,15 @@ export default {
                     } else {
                         console.warn('Request failed', thrown);
                     }
+
+                    // partial cleanup
+                    this.inputFiles = [];
+                    this.chatStore.cleanFileUploadingQueue();
+
+                    this.limitError = null;
+                    this.showFileInput = true;
+                    this.$data.isLoadingPresignedLinks = false;
+                    this.checkingLimitsStep = false;
                 } finally {
                     fileToUpload.finished = true;
                 }

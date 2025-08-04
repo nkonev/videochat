@@ -177,6 +177,9 @@ export const useChatStore = defineStore('chat', {
             return item.id != id;
         });
     },
+    cleanFileUploadingQueue() {
+      this.fileUploadingQueue = [];
+    },
     isInCall() {
       return this.callState == callStateInCall
     },
