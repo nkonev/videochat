@@ -90,7 +90,7 @@
               </v-btn>
               <template v-if="this.chatStore.editMessageDto.fileItemUuid">
                   <v-badge
-                      :value="fileCount"
+                      :dot="!fileCount"
                       :content="fileCount"
                       color="green"
                       overlap
