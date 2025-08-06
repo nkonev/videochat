@@ -408,11 +408,16 @@
         },
 
         onScrollCallback() {
-          this.chatStore.showScrollDown = !this.isScrolledToBottom();
+          this.chatStore.showScrollDown = !this.isScrolledToBottom(true);
         },
-        isScrolledToBottom() {
+        isScrolledToBottom(ignoreExpandedThreshholdForMobile) {
           if (this.scrollerDiv) {
-            const threshold = this.isMobile() ? SCROLLING_THRESHOLD_MOBILE : SCROLLING_THRESHOLD_DESKTOP;
+            let threshold;
+            if (ignoreExpandedThreshholdForMobile) {
+              threshold = SCROLLING_THRESHOLD_DESKTOP;
+            } else {
+              threshold = this.isMobile() ? SCROLLING_THRESHOLD_MOBILE : SCROLLING_THRESHOLD_DESKTOP;
+            }
             return Math.abs(this.scrollerDiv.scrollTop) < threshold;
           } else {
             return false
