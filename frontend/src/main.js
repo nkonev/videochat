@@ -108,6 +108,15 @@ app.config.globalProperties.setTempNotification = (txt) => {
     chatStore.alertTimeout = 3000;
 }
 
+app.config.globalProperties.setTempGoTo = (txt, actionText, action) => {
+    console.info(txt);
+    chatStore.showTempGoTo = txt;
+    chatStore.showAlert = true;
+    chatStore.showAlertDebounced = true;
+    chatStore.errorColor = "black";
+    chatStore.alertTimeout = 5000;
+}
+
 // fixes https://stackoverflow.com/questions/49627750/vuetify-closing-snackbar-without-closing-dialog
 // testcase
 // user 1 enters creates a video call

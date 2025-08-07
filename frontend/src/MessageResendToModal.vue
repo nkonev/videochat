@@ -72,6 +72,8 @@ import axios from "axios";
 import debounce from "lodash/debounce";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import Mark from "mark.js";
+import {mapStores} from "pinia";
+import {useChatStore} from "@/store/chatStore.js";
 
 const PAGE_SIZE = 40;
 
@@ -143,7 +145,11 @@ export default {
                 }
             };
             axios.post(`/api/chat/`+chatId+'/message', messageDto).then(()=> {
-                this.closeModal()
+                this.closeModal();
+
+                this.chatStore.tempGoToChatId = chatId;
+                this.chatStore.tempGoToText = this.$vuetify.locale.t('$vuetify.message_was_resent');
+                this.chatStore.showTempGoTo = true;
             })
         },
         getModelValue() {
@@ -236,6 +242,7 @@ export default {
         chatId() {
             return this.$route.params.id
         },
+        ...mapStores(useChatStore),
     },
     components: {
         CollapsedSearch

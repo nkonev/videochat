@@ -89,6 +89,9 @@ export const useChatStore = defineStore('chat', {
         minPasswordLength: 0,
 
         canShowPinnedLink: true,
+        showTempGoTo: false,
+        tempGoToChatId: null,
+        tempGoToText: null,
     }
   },
   actions: {

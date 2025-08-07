@@ -103,14 +103,14 @@
                 v-if="chatStore.errorColor == 'error'"
                 @click="refreshPage()"
               >
-                Refresh
+                {{ $vuetify.locale.t('$vuetify.refresh') }}
               </v-btn>
 
               <v-btn
                 text
                 @click="closeError()"
               >
-                Close
+                {{ $vuetify.locale.t('$vuetify.close') }}
               </v-btn>
             </template>
           </v-snackbar>
@@ -126,6 +126,25 @@
             </template>
           </v-snackbar>
 
+          <v-snackbar v-model="chatStore.showTempGoTo" color="black" timeout="5000" :multi-line="true" :transition="false" @update:model-value="onGoToTempUpdate">
+            {{ chatStore.tempGoToText }}
+
+            <template v-slot:actions>
+              <v-btn
+                  text
+                  @click="tempGoToChat"
+              >
+                {{ $vuetify.locale.t('$vuetify.go_to_chat') }}
+              </v-btn>
+
+              <v-btn
+                  text
+                  @click="onGoToTempClose"
+              >
+                {{ $vuetify.locale.t('$vuetify.close') }}
+              </v-btn>
+            </template>
+          </v-snackbar>
           <router-view />
         </v-container>
 
@@ -897,6 +916,21 @@ export default {
         },
         afterCollapsedSearchCloseCallback() {
           this.showOverlay = false;
+        },
+        tempGoToChat() {
+          const routeName = this.isVideoRoute() ? videochat_name : chat_name;
+          this.$router.push({name: routeName, params: {id: this.chatStore.tempGoToChatId}});
+          this.onGoToTempClose()
+        },
+        onGoToTempUpdate(v) {
+          if (!v) {
+            this.onGoToTempClose()
+          }
+        },
+        onGoToTempClose() {
+          this.chatStore.showTempGoTo = false;
+          this.chatStore.tempGoToChatId = null;
+          this.chatStore.tempGoToText = null;
         },
     },
     components: {

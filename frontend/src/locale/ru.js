@@ -348,5 +348,9 @@ export default {
     switch_search_by: "Переключить поиск по",
     user_video_local_viewer_no_media: "Только просмотр",
     user_video_loading: "Загрузка...",
-    version: "Версия"
+    version: "Версия",
+    close: "Закрыть",
+    refresh: "Обновить",
+    go_to_chat: "Перейти в чат",
+    message_was_resent: "Сообщение было переслано"
 }

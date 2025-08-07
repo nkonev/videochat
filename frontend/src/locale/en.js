@@ -348,5 +348,9 @@ export default {
     switch_search_by: "Switch search by",
     user_video_local_viewer_no_media: "View only",
     user_video_loading: "Loading...",
-    version: "Version"
+    version: "Version",
+    close: "Close",
+    refresh: "Refresh",
+    go_to_chat: "Go to chat",
+    message_was_resent: "The message was resent"
 }
