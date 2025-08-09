@@ -28,9 +28,6 @@
             <v-tab value="message_edit_settings" v-if="this.chatStore.currentUser">
               {{ $vuetify.locale.t('$vuetify.message_edit_settings_tab') }}
             </v-tab>
-            <v-tab value="version">
-              {{ $vuetify.locale.t('$vuetify.version') }}
-            </v-tab>
           </v-tabs>
         </v-sheet>
 
@@ -50,9 +47,6 @@
             </v-window-item>
             <v-window-item value="message_edit_settings" v-if="this.chatStore.currentUser">
                 <MessageEditSettingsModalContent/>
-            </v-window-item>
-            <v-window-item value="version">
-                <VersionModalContent/>
             </v-window-item>
         </v-window>
       </v-card-text>
@@ -90,7 +84,6 @@ import VideoGlobalSettingsModalContent from "@/VideoGlobalSettingsModalContent.v
 import NotificationSettingsModalContent from "@/NotificationSettingsModalContent.vue";
 import UserSelfProfileModalContent from "@/UserSelfProfileModalContent.vue";
 import MessageEditSettingsModalContent from "@/MessageEditSettingsModalContent.vue";
-import VersionModalContent from "@/VersionModalContent.vue";
 import {hasLength} from "@/utils";
 import axios from "axios";
 import {mapStores} from "pinia";
@@ -114,7 +107,6 @@ export default {
       NotificationSettingsModalContent,
       UserSelfProfileModalContent,
       MessageEditSettingsModalContent,
-      VersionModalContent,
   },
   methods: {
     showSettingsModal(tab) {
