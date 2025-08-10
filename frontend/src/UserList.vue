@@ -333,9 +333,10 @@ export default {
 
         this.updateTopAndBottomIds();
 
-        if (!this.isFirstLoad) {
-          await this.clearRouteHash()
-        }
+        // don't need clearRouteHash() because enableHashInRoute() returns false
+        // if (!this.isFirstLoad) {
+        //   await this.clearRouteHash()
+        // }
 
         this.graphQlUserStatusSubscribe();
         this.performMarking();
