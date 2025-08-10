@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/rotisserie/eris"
+	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
 	"strings"
 )
@@ -302,6 +303,8 @@ type GroupedByFileItemUuid struct {
 func GetListFilesItemUuids(ctx context.Context, co CommonOperations, chatId int64, limit, offset int) ([]GroupedByFileItemUuid, error) {
 	res := []GroupedByFileItemUuid{}
 
+	maxFiles := viper.GetInt32("fileItemUuid.maxFiles")
+
 	rows, err := co.QueryContext(ctx, `
 		select 
 		    outp.file_item_uuid,
@@ -314,11 +317,11 @@ func GetListFilesItemUuids(ctx context.Context, co CommonOperations, chatId int6
 			from metadata_cache inn 
 			where inn.chat_id = $1
 		) outp
-		where outp.seqnum <= 5
+		where outp.seqnum <= $4
 		group by outp.file_item_uuid
 		order by outp.file_item_uuid
 		limit $2 offset $3
-`, chatId, limit, offset)
+`, chatId, limit, offset, maxFiles)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
