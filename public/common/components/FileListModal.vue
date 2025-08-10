@@ -71,7 +71,7 @@
                                             <v-spacer></v-spacer>
                                             <a :href="item.url" download class="colored-link mx-2"><v-icon title="Download the file">mdi-download</v-icon></a>
 
-                                            <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" title="View"><v-icon size="large">mdi-image</v-icon></v-btn>
+                                            <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" title="View"><v-icon size="large">mdi-eye</v-icon></v-btn>
 
                                             <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" title="Play"><v-icon size="large">mdi-play</v-icon></v-btn>
 

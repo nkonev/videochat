@@ -76,7 +76,7 @@
 
                                             <v-btn size="medium" :disabled="item.hasNoMessage" :loading="item.loadingHasNoMessage" @click="fireSearchMessage(item)" :title="$vuetify.locale.t('$vuetify.search_related_message')"><v-icon size="large">mdi-note-search-outline</v-icon></v-btn>
 
-                                            <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-image</v-icon></v-btn>
+                                            <v-btn size="medium" v-if="item.canShowAsImage" @click="fireShowImage(item)" :title="$vuetify.locale.t('$vuetify.view')"><v-icon size="large">mdi-eye</v-icon></v-btn>
 
                                             <v-btn size="medium" v-if="item.canPlayAsVideo" @click="fireVideoPlay(item)" :title="$vuetify.locale.t('$vuetify.play')"><v-icon size="large">mdi-play</v-icon></v-btn>
 
