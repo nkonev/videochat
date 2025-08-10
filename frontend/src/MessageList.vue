@@ -270,6 +270,8 @@
             return Promise.resolve()
           }
 
+          // console.log("Loading messages", new Error("boom"));
+
           this.chatStore.incrementProgressCount();
           this.isLoading = true;
 

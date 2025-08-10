@@ -311,6 +311,8 @@ export default {
         return Promise.resolve()
       }
 
+      // console.log("Loading users", new Error("boom"));
+
       this.chatStore.incrementProgressCount();
       this.isLoading = true;
 

@@ -273,6 +273,8 @@ export default {
         return Promise.resolve()
       }
 
+      // console.log("Loading chats", new Error("boom"));
+
       const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
 
       this.chatStore.incrementProgressCount();

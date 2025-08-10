@@ -82,7 +82,7 @@ export default () => {
                 }
             },
             async clearRouteHash() {
-                // console.log("Cleaning hash");
+                // console.log("Cleaning hash", new Error("boom"));
                 return this.$router.push({ hash: null, query: this.$route.query })
             },
             async initializeHashVariablesAndReloadItems() {

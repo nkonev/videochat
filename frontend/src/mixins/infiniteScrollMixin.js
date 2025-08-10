@@ -30,6 +30,9 @@ export default (name) => {
         scrollerProbePrevious: 0,
 
         preservedScroll: 0,
+
+        callbackEnablePromise: null,
+        callbackEnabled: false,
       }
     },
     methods: {
@@ -171,6 +174,9 @@ export default (name) => {
             threshold: 0.0,
         };
         const observerCallback0 = async (entries, observer) => {
+          if (!this.callbackEnabled) {
+            return
+          }
           const mappedEntries = entries.map((entry) => {
             return {
               entry,
@@ -204,8 +210,18 @@ export default (name) => {
         this.observer = new IntersectionObserver(observerCallback, options);
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.bottomElementSelector()));
         this.observer.observe(document.querySelector(this.scrollerSelector() + " " + this.topElementSelector()));
+
+        // to fix parasite (stale) events
+        this.callbackEnablePromise = setTimeout(()=>{
+            this.callbackEnabled = true;
+        }, 1000);
       },
       async destroyScroller() {
+          if (this.callbackEnablePromise) {
+              clearTimeout(this.callbackEnablePromise);
+              this.callbackEnablePromise = null;
+          }
+          this.callbackEnabled = false;
           return this.$nextTick(()=>{
               this.observer?.disconnect();
               this.observer = null;
