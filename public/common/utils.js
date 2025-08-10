@@ -1,7 +1,19 @@
-import {chat, messageIdHashPrefix} from "./router/routes.js";
+import {
+    userP,
+    chatP,
+    chat,
+    messageIdHashPrefix,
+    profile,
+    publicP,
+    blogP,
+    postP,
+    path_prefix,
+    blog_post
+} from "./router/routes.js";
 import bus, {PLAYER_MODAL} from "./bus.js";
 import axios from "axios";
 import he from "he";
+import { navigate } from 'vike/client/router';
 
 export const hasLength = (str) => {
     if (!str) {
@@ -125,6 +137,7 @@ export const onClickTrap = (e) => {
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
+        checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a"), // 1 is to handle struck links
     ].filter(r => r.found);
     if (foundElements.length) {
         e.preventDefault();
@@ -223,7 +236,138 @@ export const onClickTrap = (e) => {
                 }
                 break;
             }
+            case "a": {
+                const href = found.getAttribute("href");
+                if (found.classList?.contains("mention")) {
+                    const userId = found.getAttribute('data-id');
+                    if (hasLength(userId)) {
+                        navigate(profile + "/" + userId);
+                    }
+                    break;
+                } else if (href.startsWith("/")) {
+                    // try to parse message link and go to it - only "/chat/1000#message-1", regardless in video call we are or not
+                    console.info("examining internal link", href);
+
+                    const messageObj = parseMessageLink(href);
+                    if (messageObj) {
+                        console.info("href", href, "is recognized as message", messageObj);
+                        navigate(chat + "/" + messageObj.chatId + messageIdHashPrefix + messageObj.id);
+                        break;
+                    }
+
+                    const chatObj = parseChatLink(href);
+                    if (chatObj) {
+                        console.info("href", href, "is recognized as chat", chatObj);
+                        navigate(chat + "/" + chatObj.chatId);
+                        break;
+                    }
+
+                    const userObj = parseUserLink(href);
+                    if (userObj) {
+                        console.info("href", href, "is recognized as user", userObj);
+                        navigate(profile + "/" + userObj.userId);
+                        break;
+                    }
+
+                    const blogObj = parseBlogLink(href);
+                    if (blogObj) {
+                        console.info("href", href, "is recognized as blog", blogObj);
+                        navigate(path_prefix + blog_post + "/" + blogObj.postId);
+                        break;
+                    }
+                }
+                window.open(href, '_blank').focus();
+            }
         }
+    }
+}
+
+export const getIdFromRouteHash = (hash) => {
+    if (!hash) {
+        return null;
+    }
+    const str = hash.replace(/\D/g, '');
+    return hasLength(str) ? str : null;
+};
+
+// "/chat/1000#message-1"
+export const parseMessageLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length) {
+            if (pathArray[1] == chatP) {
+                const chatId = parseInt(pathArray[2]);
+                const maybeMessageId = getIdFromRouteHash(url.hash);
+                if (maybeMessageId) {
+                    const messageId = parseInt(maybeMessageId);
+                    return {
+                        chatId: chatId,
+                        id: messageId
+                    }
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
+    }
+}
+
+// /public/blog/post/2
+export const parseBlogLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length > 4) {
+            if (pathArray[1] == publicP && pathArray[2] == blogP && pathArray[3] == postP) {
+                const postId = parseInt(pathArray[4]);
+                return {
+                    postId: postId,
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
+    }
+}
+
+// /chat/1
+export const parseChatLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length) {
+            if (pathArray[1] == chatP) {
+                const chatId = parseInt(pathArray[2]);
+                return {
+                    chatId: chatId,
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
+    }
+}
+
+// /user/1
+export const parseUserLink = (href) => {
+    try {
+        const url = new URL(getUrlPrefix() + href);
+        const pathArray = url.pathname.split('/');
+        if (pathArray.length) {
+            if (pathArray[1] == userP) {
+                const userId = parseInt(pathArray[2]);
+                return {
+                    userId: userId,
+                }
+            }
+        }
+        return null
+    } catch (ignore) {
+        return null
     }
 }
 

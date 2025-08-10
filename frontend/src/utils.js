@@ -1,10 +1,10 @@
 import {
     blog_post,
     chat,
-    chat_name, chatIdHashPrefix,
+    chat_name, chatIdHashPrefix, chatP,
     messageIdHashPrefix,
     prefix, profile,
-    public_prefix, userIdHashPrefix,
+    public_prefix, userIdHashPrefix, userP,
     video_suffix,
     videochat_name
 } from "@/router/routes";
@@ -323,7 +323,7 @@ export const parseMessageLink = (href) => {
         const url = new URL(getUrlPrefix() + href);
         const pathArray = url.pathname.split('/');
         if (pathArray.length) {
-            if (pathArray[1] == "chat") {
+            if (pathArray[1] == chatP) {
                 const chatId = parseInt(pathArray[2]);
                 const maybeMessageId = getIdFromRouteHash(url.hash);
                 if (maybeMessageId) {
@@ -347,7 +347,7 @@ export const parseChatLink = (href) => {
         const url = new URL(getUrlPrefix() + href);
         const pathArray = url.pathname.split('/');
         if (pathArray.length) {
-            if (pathArray[1] == "chat") {
+            if (pathArray[1] == chatP) {
                 const chatId = parseInt(pathArray[2]);
                 return {
                     chatId: chatId,
@@ -366,7 +366,7 @@ export const parseUserLink = (href) => {
         const url = new URL(getUrlPrefix() + href);
         const pathArray = url.pathname.split('/');
         if (pathArray.length) {
-            if (pathArray[1] == "user") {
+            if (pathArray[1] == userP) {
                 const userId = parseInt(pathArray[2]);
                 return {
                     userId: userId,

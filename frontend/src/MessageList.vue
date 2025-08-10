@@ -770,6 +770,7 @@
 
                 }
                 window.open(href, '_blank').focus();
+                break;
               }
             }
           }
