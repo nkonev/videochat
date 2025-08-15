@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
@@ -161,6 +162,13 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 	if !ok {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+	}
+
+	if reqDto.CorrelationId != nil {
+		_, err = uuid.Parse(*reqDto.CorrelationId)
+		if err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
 	}
 
 	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording)
