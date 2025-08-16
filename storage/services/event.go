@@ -119,8 +119,15 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 				continue
 			}
 		} else if eventType == utils.FILE_DELETED {
+			fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
+			if err != nil {
+				s.lgr.WithTracing(ctx).Errorf("Error parsing fileItemUuid for %v: %v", normalizedKey, err)
+				return
+			}
+
 			fileInfo = &dto.FileInfoDto{
 				Id:           normalizedKey,
+				FileItemUuid: fileItemUuid,
 				LastModified: time.Now().UTC(),
 			}
 		}
@@ -129,6 +136,7 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 		}, eventType)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error sending event for %v: %v", normalizedKey, err)
+			return
 		}
 	}
 }
