@@ -352,5 +352,6 @@ export default {
     close: "Закрыть",
     refresh: "Обновить",
     go_to_chat: "Перейти в чат",
-    message_was_resent: "Сообщение было переслано"
+    message_was_resent: "Сообщение было переслано",
+    create_message: "Написать сообщение"
 }

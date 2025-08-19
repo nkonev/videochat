@@ -1,6 +1,6 @@
 <template>
 
-  <v-container :style="heightWithoutAppBar" fluid class="ma-0 pa-0">
+  <v-container :style="heightWithoutAppBar" fluid class="ma-0 pa-0 position-relative">
       <v-list id="chat-list-items" class="my-chat-scroller" @scroll.passive="onScroll">
             <div class="chat-first-element" style="min-height: 1px; background: white"></div>
             <v-list-item
@@ -71,7 +71,7 @@
         @markAsRead="markAsRead"
         @markAsReadAll="markAsReadAll"
       />
-
+      <v-btn v-if="canShowNewChat()" variant="elevated" color="primary" icon="mdi-plus-thick" class="new-fab-chat" @click="createChat()" :title="$vuetify.locale.t('$vuetify.create_chat')"></v-btn>
   </v-container>
 
 </template>
@@ -797,6 +797,15 @@ export default {
         return item.lastMessagePreview
       }
     },
+    createChat() {
+      bus.emit(OPEN_CHAT_EDIT, null);
+    },
+    isVideoRoute() {
+      return this.$route.name == videochat_name
+    },
+    canShowNewChat() {
+      return this.chatStore.currentUser && !this.isVideoRoute()
+    },
   },
   components: {
     MessageItemContextMenu,
@@ -927,4 +936,12 @@ export default {
 .subtitle-thin {
   font-weight 300
 }
+
+.new-fab-chat {
+  position: absolute
+  bottom: 20px
+  right: 20px
+  z-index: 1000
+}
+
 </style>

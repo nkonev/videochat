@@ -14,15 +14,20 @@
           ></v-progress-linear>
 
           <v-container fluid class="ma-0 pa-0 d-flex">
-            <v-badge
-                :content="notificationsCount"
-                :model-value="showNotificationBadge"
-                color="red"
-                overlap
-                offset-y="10"
-            >
-                <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
-            </v-badge>
+            <template v-if="isMobile()">
+              <v-badge
+                  :content="notificationsCount"
+                  :model-value="showNotificationBadgeWoDrawer"
+                  color="red"
+                  overlap
+                  offset-y="10"
+              >
+                  <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+              </v-badge>
+            </template>
+            <template v-else>
+              <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+            </template>
 
             <template v-if="chatStore.showCallManagement">
               <template v-if="showSearchButton || !isMobile()">
@@ -70,7 +75,21 @@
               </div>
             </div>
           </template>
-
+          <v-btn v-if="shouldDisplayFiles()" icon :title="$vuetify.locale.t('$vuetify.files')" @click.prevent="onFilesClicked()" class="notifications-badge">
+            <v-icon class="notification-icon">mdi-file-download</v-icon>
+          </v-btn>
+          <v-btn v-if="shouldDisplayNotifications()" icon :title="$vuetify.locale.t('$vuetify.notifications')" @click.prevent="onNotificationsClicked()">
+            <v-badge
+                :content="notificationsCount"
+                :model-value="showNotificationBadge"
+                color="red"
+                offset-y="-2"
+                offset-x="-6"
+                class="notifications-badge"
+            >
+              <v-icon class="notification-icon">mdi-bell</v-icon>
+            </v-badge>
+          </v-btn>
           <template v-if="shouldShowSearch">
             <CollapsedSearch :provider="{
                 getModelValue: this.getModelValue,
@@ -174,8 +193,8 @@
         <MessageEditMediaModal/>
       </v-main>
 
-    <v-navigation-drawer :location="isMobile() ? 'left' : 'right'" v-model="chatStore.showDrawer">
-        <RightPanelActions/>
+    <v-navigation-drawer :location="'left'" v-model="chatStore.showDrawer">
+        <SidePanelActions/>
     </v-navigation-drawer>
   </v-app>
 </template>
@@ -224,7 +243,7 @@ import bus, {
   WEBSOCKET_CONNECTED,
   NOTIFICATION_COUNT_CHANGED,
   USER_TYPING,
-  PROFILE_SET, WEBSOCKET_CONNECTING, WEBSOCKET_INITIALIZED,
+  PROFILE_SET, WEBSOCKET_CONNECTING, WEBSOCKET_INITIALIZED, OPEN_NOTIFICATIONS_DIALOG, OPEN_VIEW_FILES_DIALOG,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -235,7 +254,7 @@ import {
   SEARCH_MODE_MESSAGES,
   SEARCH_MODE_USERS,
 } from "@/mixins/searchString";
-import RightPanelActions from "@/RightPanelActions.vue";
+import SidePanelActions from "@/SidePanelActions.vue";
 import SettingsModal from "@/SettingsModal.vue";
 import SimpleModal from "@/SimpleModal.vue";
 import FileListModal from "@/FileListModal.vue";
@@ -260,10 +279,11 @@ import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
 import {
-    getStoredLanguage, NOTIFICATION_TYPE_ANSWERS,
-    NOTIFICATION_TYPE_CALL,
-    NOTIFICATION_TYPE_MENTIONS, NOTIFICATION_TYPE_MISSED_CALLS,
-    NOTIFICATION_TYPE_NEW_MESSAGES, NOTIFICATION_TYPE_REACTIONS
+  getMainDrawer,
+  getStoredLanguage, NOTIFICATION_TYPE_ANSWERS,
+  NOTIFICATION_TYPE_CALL,
+  NOTIFICATION_TYPE_MENTIONS, NOTIFICATION_TYPE_MISSED_CALLS,
+  NOTIFICATION_TYPE_NEW_MESSAGES, NOTIFICATION_TYPE_REACTIONS, setMainDrawer
 } from "@/store/localStore";
 import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
@@ -296,7 +316,7 @@ export default {
 
             globalEventsSubscription: null,
             selfProfileEventsSubscription: null,
-            showNotificationBadge: false,
+            showNotificationBadgeWoDrawer: false,
             showVideoBadge: false,
 
             showOverlay: false,
@@ -330,6 +350,9 @@ export default {
         },
         shouldShowSearch() {
             return this.chatStore.isShowSearch && !(this.isVideoRoute() && !this.chatStore.videoMessagesEnabled)
+        },
+        showNotificationBadge() {
+          return this.notificationsCount != 0
         },
     },
     methods: {
@@ -880,8 +903,8 @@ export default {
         onEditUser(u) {
           this.chatStore.currentUser = u;
         },
-        updateNotificationBadge() {
-          this.showNotificationBadge = this.chatStore.notificationsCount != 0 && !this.chatStore.showDrawer
+        updateNotificationBadgeWoDrawer() {
+          this.showNotificationBadgeWoDrawer = this.chatStore.notificationsCount != 0 && !this.chatStore.showDrawer
         },
         updateVideoBadge() {
           this.showVideoBadge = !!parseInt(this.chatStore.videoChatUsersCount)
@@ -897,7 +920,7 @@ export default {
           }
         },
         onNotificationCountChanged() {
-          this.updateNotificationBadge();
+          this.updateNotificationBadgeWoDrawer();
         },
         pingSession() {
           if (this.chatStore.currentUser) {
@@ -932,12 +955,27 @@ export default {
           this.chatStore.tempGoToChatId = null;
           this.chatStore.tempGoToText = null;
         },
+        onNotificationsClicked() {
+          bus.emit(OPEN_NOTIFICATIONS_DIALOG);
+        },
+        shouldDisplayNotifications() {
+          return !this.isMobile() && this.chatStore.currentUser
+        },
+        isChatable() {
+          return this.$route.name == chat_name || this.$route.name == videochat_name
+        },
+        shouldDisplayFiles() {
+          return !this.isMobile() && this.chatStore.currentUser && this.isChatable();
+        },
+        onFilesClicked() {
+          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.$route.params.id});
+        },
     },
     components: {
         ChooseColorModal,
         MessageEdit,
         ChatEditModal,
-        RightPanelActions,
+        SidePanelActions,
         LoginModal,
         SettingsModal,
         SimpleModal,
@@ -963,12 +1001,13 @@ export default {
     watch: {
       'chatStore.notificationsCount': {
         handler: function (newValue, oldValue) {
-            this.updateNotificationBadge()
+            this.updateNotificationBadgeWoDrawer()
         }
       },
       'chatStore.showDrawer': {
         handler: function (newValue, oldValue) {
-          this.updateNotificationBadge()
+          this.updateNotificationBadgeWoDrawer();
+          setMainDrawer(newValue);
         }
       },
       'chatStore.videoChatUsersCount': {
@@ -1007,6 +1046,8 @@ export default {
             this.fetchProfileIfNeed();
           })
         });
+
+        this.chatStore.showDrawer = getMainDrawer();
 
         this.installOnFocus();
     },
@@ -1101,6 +1142,13 @@ html {
 // reverts some changes from ~3.7.0 (from F12)
 .my-actions .v-btn ~ .v-btn:not(.v-btn-toggle .v-btn) {
   margin-inline-start: .5rem;
+}
+
+.notifications-badge {
+
+  .notification-icon {
+    opacity: settings.$list-item-icon-opacity;
+  }
 }
 
 </style>

@@ -473,3 +473,19 @@ export const getChooseSmileyStayUnclosed = () => {
     }
     return v;
 }
+
+export const KEY_MAIN_DRAWER = 'mainDrawer';
+
+export const getMainDrawer = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_MAIN_DRAWER));
+    if (v == null) {
+        const defaultVal = !isMobileBrowser();
+        setMainDrawer(defaultVal);
+        v = JSON.parse(localStorage.getItem(KEY_MAIN_DRAWER));
+    }
+    return v;
+}
+
+export const setMainDrawer = (v) => {
+    localStorage.setItem(KEY_MAIN_DRAWER, JSON.stringify(v));
+}
