@@ -246,7 +246,7 @@ public class UserProfileService {
     public Map<String, Boolean> filter(FilterUserRequest filterUserRequest) {
         var searchString = filterUserRequest.searchString() != null ? filterUserRequest.searchString().trim() : "";
         var searchStringWithPercents = "%" + searchString + "%";
-        var found = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdIn(1, 0, searchStringWithPercents, List.of(filterUserRequest.userId()));
+        var found = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdIn(1, 0, searchStringWithPercents, List.of(filterUserRequest.userId()), false);
         return Map.of("found", !found.isEmpty());
     }
 
@@ -259,14 +259,14 @@ public class UserProfileService {
         List<UserAccount> resultPage;
         long count = 0;
         if (request.userIds() == null || request.userIds().isEmpty()) {
-            resultPage = userListViewRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch);
+            resultPage = userListViewRepository.findByUsernameContainsIgnoreCase(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.reverse());
             count = userListViewRepository.findByUsernameContainsIgnoreCaseCount(forDbSearch);
         } else {
             if (request.including()) {
-                resultPage = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds());
+                resultPage = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds(), request.reverse());
                 count = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdInCount(forDbSearch, request.userIds());
             } else {
-                resultPage = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds());
+                resultPage = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdNotIn(springDataPage.getPageSize(), springDataPage.getOffset(), forDbSearch, request.userIds(), request.reverse());
                 count = userListViewRepository.findByUsernameContainsIgnoreCaseAndIdNotInCount(forDbSearch, request.userIds());
             }
         }
