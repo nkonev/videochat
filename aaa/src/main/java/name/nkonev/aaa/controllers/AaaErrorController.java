@@ -105,7 +105,7 @@ public class AaaErrorController extends AbstractErrorController {
                         .filter(e -> !"exception".equals(e.getKey()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
             }
-            var traceId = getTraceId(response);
+            var traceId = getTraceId();
             if (traceId != null) {
                 m.put("traceId", traceId);
             }
@@ -122,7 +122,7 @@ public class AaaErrorController extends AbstractErrorController {
         return getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.STACK_TRACE));
     }
 
-    private String getTraceId(HttpServletResponse response) {
+    private String getTraceId() {
         var currentSpan = this.tracer.currentSpan();
         if (currentSpan == null) {
             return null;
