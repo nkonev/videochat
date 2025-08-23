@@ -119,17 +119,11 @@ public class UserListViewRepository {
 
     private static final String PREFIX = "select u.* from user_account u where u.id > 0 ";
 
-    private static String getPaginationSuffix (boolean reverse) {
-        String d = "";
-        if (reverse) {
-            d = "desc";
-        }
-        return " order by u.id %s limit :limit offset :offset".formatted(d);
-    }
+    private static final String PAGINATION_SUFFIX = " order by u.id limit :limit offset :offset";
 
     public List<UserAccount> findPage(int pageSize, int offset) {
         return jdbcTemplate.query(
-            PREFIX + getPaginationSuffix(false),
+            PREFIX + PAGINATION_SUFFIX,
             Map.of(
                 "limit", pageSize,
                 "offset", offset
@@ -139,9 +133,9 @@ public class UserListViewRepository {
 
     private static final String AND_USERNAME_ILIKE = " and " + USERNAME_SEARCH;
 
-    public List<UserAccount> findByUsernameContainsIgnoreCase(int pageSize, long offset, String searchString, boolean reverse) {
+    public List<UserAccount> findByUsernameContainsIgnoreCase(int pageSize, long offset, String searchString) {
         return jdbcTemplate.query(
-            PREFIX + AND_USERNAME_ILIKE + getPaginationSuffix(reverse),
+            PREFIX + AND_USERNAME_ILIKE + PAGINATION_SUFFIX,
             Map.of(
                 "searchStringPercents", searchString,
                 "limit", pageSize,
@@ -161,9 +155,9 @@ public class UserListViewRepository {
 
     private static final String AND_USERNAME_ILIKE_AND_ID_IN = " and " + USERNAME_SEARCH + " and u.id in (:userIds) ";
 
-    public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdIn(int pageSize, long offset, String searchString, List<Long> includingUserIds, boolean reverse) {
+    public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdIn(int pageSize, long offset, String searchString, List<Long> includingUserIds) {
         return jdbcTemplate.query(
-            PREFIX + AND_USERNAME_ILIKE_AND_ID_IN + getPaginationSuffix(reverse),
+            PREFIX + AND_USERNAME_ILIKE_AND_ID_IN + PAGINATION_SUFFIX,
             Map.of(
                 "searchStringPercents", searchString,
                 "userIds", includingUserIds,
@@ -185,9 +179,9 @@ public class UserListViewRepository {
 
     private static final String AND_USERNAME_ILIKE_AND_ID_NOT_IN = " and " + USERNAME_SEARCH + " and u.id not in (:userIds) ";
 
-    public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(int pageSize, long offset, String searchString, List<Long> excludingUserIds, boolean reverse) {
+    public List<UserAccount> findByUsernameContainsIgnoreCaseAndIdNotIn(int pageSize, long offset, String searchString, List<Long> excludingUserIds) {
         return jdbcTemplate.query(
-            PREFIX + AND_USERNAME_ILIKE_AND_ID_NOT_IN + getPaginationSuffix(reverse),
+            PREFIX + AND_USERNAME_ILIKE_AND_ID_NOT_IN + PAGINATION_SUFFIX,
             Map.of(
                 "searchStringPercents", searchString,
                 "userIds", excludingUserIds,

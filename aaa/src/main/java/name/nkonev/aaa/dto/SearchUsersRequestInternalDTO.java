@@ -7,7 +7,6 @@ public record SearchUsersRequestInternalDTO(
     int size,
     List<Long> userIds,
     String searchString,
-    boolean including,
-    boolean reverse
+    boolean including
 ) {
 }
