@@ -33,75 +33,75 @@
         <v-card>
           <v-list>
             <v-list-item>
-              <v-list-item-title>aaa</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>aaa</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ aaaVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>chat</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>chat</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ chatVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>storage</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>storage</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ storageVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>video</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>video</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ videoVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>notification</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>notification</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ notificationVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>event</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>event</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ eventVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>frontend</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>frontend</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ frontendVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-title>public</v-list-item-title>
-              <template v-slot:append>
-                <v-list-item-action class="align-end">
+              <span>public</span>
+              <div class="ellipsis-wrapper">
+                <div class="ellipsis-text">
                   {{ publicVersion }}
-                </v-list-item-action>
-              </template>
+                </div>
+              </div>
             </v-list-item>
 
           </v-list>
@@ -216,3 +216,14 @@
         }
     }
 </script>
+
+<style scoped lang="stylus">
+.ellipsis-wrapper {
+  display: block
+}
+.ellipsis-text {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+</style>
