@@ -33,7 +33,7 @@
         <v-card>
           <v-list>
             <v-list-item>
-              <span>aaa</span>
+              <span class="font-weight-bold">aaa</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ aaaVersion }}
@@ -42,7 +42,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>chat</span>
+              <span class="font-weight-bold">chat</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ chatVersion }}
@@ -51,7 +51,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>storage</span>
+              <span class="font-weight-bold">storage</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ storageVersion }}
@@ -60,7 +60,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>video</span>
+              <span class="font-weight-bold">video</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ videoVersion }}
@@ -69,7 +69,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>notification</span>
+              <span class="font-weight-bold">notification</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ notificationVersion }}
@@ -78,7 +78,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>event</span>
+              <span class="font-weight-bold">event</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ eventVersion }}
@@ -87,7 +87,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>frontend</span>
+              <span class="font-weight-bold">frontend</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ frontendVersion }}
@@ -96,7 +96,7 @@
             </v-list-item>
 
             <v-list-item>
-              <span>public</span>
+              <span class="font-weight-bold">public</span>
               <div class="ellipsis-wrapper">
                 <div class="ellipsis-text">
                   {{ publicVersion }}
