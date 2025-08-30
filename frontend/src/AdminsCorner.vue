@@ -93,23 +93,21 @@
             this.loading = true;
 
             const tasks = this.serviceVersions.map(sv => {
-              return async () => {
-                try {
-                  const {data} = await axios.get(`/${sv.name}/git.json`);
-                  sv.version = data.commit;
-                } catch (e) {
-                  sv.version = "error: " + e
-                }
+              return () => {
+                  return axios.get(`/${sv.name}/git.json`).then(({data})=>{
+                    sv.version = data.commit;
+                  }).catch((e)=>{
+                    sv.version = "error: " + e
+                  })
               }
             })
 
-            await Promise.all(tasks.map(t => new Promise(async (resolve, reject) => {
-              try {
-                await t();
-                resolve();
-              } catch (e) {
+            await Promise.all(tasks.map(task => new Promise((resolve, reject) => {
+              task().then(()=>{
+                resolve()
+              }).catch(e=>{
                 reject();
-              }
+              });
             })));
 
             this.loading = false;
