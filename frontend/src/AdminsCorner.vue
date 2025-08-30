@@ -31,80 +31,53 @@
             color="primary"
         ></v-progress-linear>
         <v-card>
-          <v-list>
-            <v-list-item>
-              <span class="font-weight-bold">aaa</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ aaaVersion }}
-                </div>
-              </div>
-            </v-list-item>
+          <v-table fixed-header>
+            <thead>
+              <tr>
+                <th class="text-left">
+                  Name
+                </th>
+                <th class="text-left">
+                  Commit Hash
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>aaa</td>
+                <td>{{ aaaVersion }}</td>
+              </tr>
+              <tr>
+                <td>chat</td>
+                <td>{{ chatVersion }}</td>
+              </tr>
+              <tr>
+                <td>storage</td>
+                <td>{{ storageVersion }}</td>
+              </tr>
+              <tr>
+                <td>video</td>
+                <td>{{ videoVersion }}</td>
+              </tr>
+              <tr>
+                <td>notification</td>
+                <td>{{ notificationVersion }}</td>
+              </tr>
+              <tr>
+                <td>event</td>
+                <td>{{ eventVersion }}</td>
+              </tr>
+              <tr>
+                <td>frontend</td>
+                <td>{{ frontendVersion }}</td>
+              </tr>
+              <tr>
+                <td>public</td>
+                <td>{{ publicVersion }}</td>
+              </tr>
+            </tbody>
+          </v-table>
 
-            <v-list-item>
-              <span class="font-weight-bold">chat</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ chatVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-            <v-list-item>
-              <span class="font-weight-bold">storage</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ storageVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-            <v-list-item>
-              <span class="font-weight-bold">video</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ videoVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-            <v-list-item>
-              <span class="font-weight-bold">notification</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ notificationVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-            <v-list-item>
-              <span class="font-weight-bold">event</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ eventVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-            <v-list-item>
-              <span class="font-weight-bold">frontend</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ frontendVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-            <v-list-item>
-              <span class="font-weight-bold">public</span>
-              <div class="ellipsis-wrapper">
-                <div class="ellipsis-text">
-                  {{ publicVersion }}
-                </div>
-              </div>
-            </v-list-item>
-
-          </v-list>
         </v-card>
       </v-dialog>
     </v-container>
