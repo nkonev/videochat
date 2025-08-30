@@ -144,10 +144,11 @@ export default {
                     embedType: "resend"
                 }
             };
-            axios.post(`/api/chat/`+chatId+'/message', messageDto).then(()=> {
+            axios.post(`/api/chat/${chatId}/message`, messageDto).then(({data})=> {
                 this.closeModal();
 
                 this.chatStore.tempGoToChatId = chatId;
+                this.chatStore.tempGoToMessageId = data.id;
                 this.chatStore.tempGoToText = this.$vuetify.locale.t('$vuetify.message_was_resent');
                 this.chatStore.showTempGoTo = true;
             })

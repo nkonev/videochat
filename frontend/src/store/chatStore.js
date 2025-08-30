@@ -92,6 +92,7 @@ export const useChatStore = defineStore('chat', {
         showTempGoTo: false,
         tempGoToChatId: null,
         tempGoToText: null,
+        tempGoToMessageId: null,
     }
   },
   actions: {

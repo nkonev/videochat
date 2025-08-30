@@ -213,7 +213,7 @@ import {
   confirmation_pending_name,
   forgot_password_name, check_email_name, password_restore_enter_new_name,
   registration_name,
-  videochat_name, registration_resend_email_name, chat_name
+  videochat_name, registration_resend_email_name, chat_name, messageIdHashPrefix
 } from "@/router/routes";
 import axios from "axios";
 import bus, {
@@ -942,7 +942,7 @@ export default {
         },
         tempGoToChat() {
           const routeName = this.isVideoRoute() ? videochat_name : chat_name;
-          this.$router.push({name: routeName, params: {id: this.chatStore.tempGoToChatId}});
+          this.$router.push({name: routeName, params: {id: this.chatStore.tempGoToChatId}, hash: messageIdHashPrefix + this.chatStore.tempGoToMessageId});
           this.onGoToTempClose()
         },
         onGoToTempUpdate(v) {
@@ -953,6 +953,7 @@ export default {
         onGoToTempClose() {
           this.chatStore.showTempGoTo = false;
           this.chatStore.tempGoToChatId = null;
+          this.chatStore.tempGoToMessageId = null;
           this.chatStore.tempGoToText = null;
         },
         onNotificationsClicked() {
