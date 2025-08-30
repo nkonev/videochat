@@ -43,37 +43,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>aaa</td>
-                <td>{{ aaaVersion }}</td>
-              </tr>
-              <tr>
-                <td>chat</td>
-                <td>{{ chatVersion }}</td>
-              </tr>
-              <tr>
-                <td>storage</td>
-                <td>{{ storageVersion }}</td>
-              </tr>
-              <tr>
-                <td>video</td>
-                <td>{{ videoVersion }}</td>
-              </tr>
-              <tr>
-                <td>notification</td>
-                <td>{{ notificationVersion }}</td>
-              </tr>
-              <tr>
-                <td>event</td>
-                <td>{{ eventVersion }}</td>
-              </tr>
-              <tr>
-                <td>frontend</td>
-                <td>{{ frontendVersion }}</td>
-              </tr>
-              <tr>
-                <td>public</td>
-                <td>{{ publicVersion }}</td>
+              <tr
+                  v-for="item in serviceVersions"
+                  :key="item.name"
+              >
+                <td>{{ item.name }}</td>
+                <td>{{ item.version }}</td>
               </tr>
             </tbody>
           </v-table>
@@ -94,14 +69,17 @@
           return {
             showVersion: false,
             loading: false,
-            aaaVersion: null,
-            chatVersion: null,
-            storageVersion: null,
-            videoVersion: null,
-            notificationVersion: null,
-            eventVersion: null,
-            frontendVersion: null,
-            publicVersion: null,
+
+            serviceVersions: [
+              {name: 'aaa', version: null},
+              {name: 'chat', version: null},
+              {name: 'frontend', version: null},
+              {name: 'storage', version: null},
+              {name: 'video', version: null},
+              {name: 'event', version: null},
+              {name: 'notification', version: null},
+              {name: 'public', version: null},
+            ],
           }
         },
         computed: {
@@ -114,59 +92,26 @@
           async loadVersions() {
             this.loading = true;
 
-            const aaaPromise = axios.get(`/aaa/git.json`).then(( {data} ) => {
-              this.aaaVersion = data.commit;
-            }).catch((e)=>{
-              this.aaaVersion = "error: " + e
-            })
-            const chatPromise = axios.get(`/chat/git.json`).then(( {data} ) => {
-              this.chatVersion = data.commit;
-            }).catch((e)=>{
-              this.chatVersion = "error: " + e
-            })
-            const storagePromise = axios.get(`/storage/git.json`).then(( {data} ) => {
-              this.storageVersion = data.commit;
-            }).catch((e)=>{
-              this.storageVersion = "error: " + e
-            })
-            const videoPromise = axios.get(`/video/git.json`).then(( {data} ) => {
-              this.videoVersion = data.commit;
-            }).catch((e)=>{
-              this.videoVersion = "error: " + e
-            })
-            const notificationPromise = axios.get(`/notification/git.json`).then(( {data} ) => {
-              this.notificationVersion = data.commit;
-            }).catch((e)=>{
-              this.notificationVersion = "error: " + e
-            })
-            const eventPromise = axios.get(`/event/git.json`).then(( {data} ) => {
-              this.eventVersion = data.commit;
-            }).catch((e)=>{
-              this.eventVersion = "error: " + e
-            })
-            const frontendPromise = axios.get(`/frontend/git.json`).then(( {data} ) => {
-              this.frontendVersion = data.commit;
-            }).catch((e)=>{
-              this.frontendVersion = "error: " + e
-            })
-            const publicPromise = axios.get(`/public/git.json`).then(( {data} ) => {
-              this.publicVersion = data.commit;
-            }).catch((e)=>{
-              this.publicVersion = "error: " + e
+            const tasks = this.serviceVersions.map(sv => {
+              return async () => {
+                try {
+                  const {data} = await axios.get(`/${sv.name}/git.json`);
+                  sv.version = data.commit;
+                } catch (e) {
+                  sv.version = "error: " + e
+                }
+              }
             })
 
-            const allPromises = [
-              aaaPromise,
-              chatPromise,
-              storagePromise,
-              videoPromise,
-              notificationPromise,
-              eventPromise,
-              frontendPromise,
-              publicPromise,
-            ];
+            await Promise.all(tasks.map(t => new Promise(async (resolve, reject) => {
+              try {
+                await t();
+                resolve();
+              } catch (e) {
+                reject();
+              }
+            })));
 
-            await Promise.all(allPromises);
             this.loading = false;
           },
         },
