@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 100
       - name: Decide should we build it
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
-      - name: Set up JDK 21
+      - name: Set up JDK
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-java@v4
         with:
@@ -319,7 +319,7 @@ jobs:
       - name: Decide should we build it
         run: ./scripts/should-run.sh HEAD 'frontend|aaa|chat|event|e2e-test' ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-java@v4
         with:
