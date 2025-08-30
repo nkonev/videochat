@@ -35,10 +35,10 @@
             <thead>
               <tr>
                 <th class="text-left">
-                  Name
+                  Service
                 </th>
                 <th class="text-left">
-                  Commit Hash
+                  Commit
                 </th>
               </tr>
             </thead>
