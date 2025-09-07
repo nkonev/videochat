@@ -16,7 +16,7 @@
 
       <v-btn variant="plain" tile icon @click.stop.prevent="onEnterFullscreen" :title="$vuetify.locale.t('$vuetify.fullscreen')"><v-icon size="x-large">mdi-arrow-expand-all</v-icon></v-btn>
 
-      <v-btn tile icon @click.stop.prevent="toggleMessages()" :variant="messagesValue() ? 'tonal' : 'plain'" :title="messagesValue() ? $vuetify.locale.t('$vuetify.video_messages_disable') : $vuetify.locale.t('$vuetify.video_messages_enable')"><v-icon size="x-large">mdi-message-text-outline</v-icon></v-btn>
+      <v-btn tile icon @click.stop.prevent="toggleMessages()" :variant="messagesValue() ? 'tonal' : 'plain'" :title="messagesValue() ? $vuetify.locale.t('$vuetify.video_messages_disable') : $vuetify.locale.t('$vuetify.video_messages_enable')"><v-icon size="x-large">mdi-chat</v-icon></v-btn>
 
       <v-btn :disabled="!enableToggleMiniatures" tile icon @click.stop.prevent="toggleMiniatures()" :variant="miniaturesValue() ? 'tonal' : 'plain'" :title="miniaturesValue() ? $vuetify.locale.t('$vuetify.video_miniatures_disable') : $vuetify.locale.t('$vuetify.video_miniatures_enable')"><v-icon size="x-large">mdi-table-row</v-icon></v-btn>
 
