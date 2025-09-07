@@ -1,39 +1,14 @@
 <template>
     <splitpanes ref="splVideo" id="video-splitpanes" class="default-theme" :dbl-click-splitter="false" :horizontal="splitpanesIsHorizontal" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
 
-        <!-- this pane is duplicated below, don't forget to make changes there ! -->
-        <pane v-if="!shouldUseReverseOrder() && shouldShowPresenter" :size="presenterPaneSize()" :class="presenterPaneClass">
-          <div class="video-presenter-container-element" @contextmenu.stop="onShowContextMenu($event, this)">
-            <video v-show="!presenterVideoMute || !presenterAvatarIsSet" @click.self="onClick()" class="video-presenter-element" ref="presenterRef"/>
-            <img v-show="presenterAvatarIsSet && presenterVideoMute" @click.self="onClick()" class="video-presenter-element" :src="presenterData?.avatar"/>
-            <p v-bind:class="[speaking ? 'presenter-element-caption-speaking' : '', 'presenter-element-caption', 'inline-caption-base']">{{ presenterData?.userName ? presenterData?.userName : getLoadingMessage() }} <v-icon v-if="presenterAudioMute">mdi-microphone-off</v-icon></p>
-
-            <VideoButtons v-if="!isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
-
-            <PresenterContextMenu ref="contextMenuRef" :userName="presenterUserName"/>
-
-            <v-btn v-if="chatStore.pinnedTrackSid" class="presenter-unpin-button" @click="doUnpinVideo()" icon="mdi-pin-off-outline" rounded="0" :title="$vuetify.locale.t('$vuetify.unpin_video')"></v-btn>
-          </div>
-        </pane>
+        <ChatVideoPresenter v-if="!shouldUseReverseOrder() && shouldShowPresenter" :provider="this" ref="presenterRef"/>
 
         <pane :class="paneVideoContainerClass"  :size="miniaturesPaneSize()">
           <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoContainerClass"  @click="onClickFromVideos()"></v-col>
           <VideoButtons v-if="!isMobile() && !shouldShowPresenter" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
         </pane>
 
-        <pane v-if="shouldUseReverseOrder() && shouldShowPresenter" :size="presenterPaneSize()" :class="presenterPaneClass">
-            <div class="video-presenter-container-element" @contextmenu.stop="onShowContextMenu($event, this)">
-                <video v-show="!presenterVideoMute || !presenterAvatarIsSet" @click.self="onClick()" class="video-presenter-element" ref="presenterRef"/>
-                <img v-show="presenterAvatarIsSet && presenterVideoMute" @click.self="onClick()" class="video-presenter-element" :src="presenterData?.avatar"/>
-                <p v-bind:class="[speaking ? 'presenter-element-caption-speaking' : '', 'presenter-element-caption', 'inline-caption-base']">{{ presenterData?.userName ? presenterData?.userName : getLoadingMessage() }} <v-icon v-if="presenterAudioMute">mdi-microphone-off</v-icon></p>
-
-                <VideoButtons v-if="!isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
-
-                <PresenterContextMenu ref="contextMenuRef" :userName="presenterUserName"/>
-
-                <v-btn v-if="chatStore.pinnedTrackSid" class="presenter-unpin-button" @click="doUnpinVideo()" icon="mdi-pin-off-outline" rounded="0" :title="$vuetify.locale.t('$vuetify.unpin_video')"></v-btn>
-            </div>
-        </pane>
+        <ChatVideoPresenter v-if="shouldUseReverseOrder() && shouldShowPresenter" :provider="this" ref="presenterRef"/>
     </splitpanes>
     <VideoButtons v-if="isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
 </template>
@@ -87,9 +62,9 @@ import {largestRect} from "rect-scaler";
 import debounce from "lodash/debounce";
 import VideoButtons from "./VideoButtons.vue"
 import speakingMixin from "@/mixins/speakingMixin.js";
-import PresenterContextMenu from "@/PresenterContextMenu.vue";
 import UserVideoContextMenu from "@/UserVideoContextMenu.vue";
 import {SEARCH_MODE_MESSAGES} from "@/mixins/searchString.js";
+import ChatVideoPresenter from "@/ChatVideoPresenter.vue";
 
 const first = 'first';
 const second = 'second';
@@ -303,14 +278,14 @@ export default {
     // TODO think how to reuse the presenter mode with egress
     detachPresenter() {
       if (this.presenterData) {
-        this.presenterData.videoStream?.videoTrack?.detach(this.$refs.presenterRef);
+        this.presenterData.videoStream?.videoTrack?.detach(this.$refs.presenterRef.$refs.presenterVideoRef);
         this.presenterData = null;
       }
     },
     updatePresenter(data) {
       if (data?.videoStream) {
         this.detachPresenter();
-        data.videoStream.videoTrack?.attach(this.$refs.presenterRef);
+        data.videoStream.videoTrack?.attach(this.$refs.presenterRef.$refs.presenterVideoRef);
         this.presenterData = data;
         this.updatePresenterVideoMute();
       }
@@ -960,12 +935,6 @@ export default {
         this.$refs.splVideo.panes[this.shouldUseReverseOrder() ? this.$refs.splVideo.panes.length - 1 : 0].size = 100;
       }
     },
-    onShowContextMenu(e, menuableItem) {
-      this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
-    },
-    getPresenterVideoStreamId() {
-      return this.presenterData?.videoStream.trackSid
-    },
   },
   computed: {
     ...mapStores(useChatStore),
@@ -1012,11 +981,11 @@ export default {
     }
   },
   components: {
-    UserVideoContextMenu,
+      UserVideoContextMenu,
       Splitpanes,
       Pane,
       VideoButtons,
-      PresenterContextMenu,
+      ChatVideoPresenter,
   },
   watch: {
     'chatStore.videoPosition': {
@@ -1237,26 +1206,6 @@ export default {
   background-color: black;
 }
 
-
-.video-presenter-container-element {
-    position relative
-    display flex
-    flex-direction column
-    align-items: center;
-
-    width 100%
-    height 100%
-}
-
-
-.video-presenter-element {
-    //box-sizing: border-box;
-    width: 100% !important
-    height: 100% !important
-    object-fit: contain;
-    background black
-}
-
 // need to center the nested video buttons
 .pane-videos-horizontal {
   display: flex;
@@ -1269,14 +1218,6 @@ export default {
   align-items center
   justify-content center
   position relative // for mobile
-}
-
-.presenter-element-caption {
-  max-width: calc(100% - 1em) // still needed for thin (vertical) video on mobile - it prevents bulging
-}
-
-.presenter-element-caption-speaking {
-  text-shadow: -2px 0 #9cffa1, 0 2px #9cffa1, 2px 0 #9cffa1, 0 -2px #9cffa1;
 }
 
 </style>
@@ -1292,22 +1233,5 @@ export default {
   display: var(--splitter-h-display);
 }
 
-.presenter-unpin-button {
-  position absolute
-  top 0
-  right 0
-}
-
-.pane-presenter-vertical {
-  .presenter-unpin-button {
-    right 2px
-  }
-}
-
-.pane-presenter-vertical-mobile {
-  .presenter-unpin-button {
-    right 30px
-  }
-}
 
 </style>
