@@ -35,7 +35,7 @@
     "date-fns": "^4.1.0",
     "graphql-ws": "6.0.4",
     "he": "^1.2.0",
-    "livekit-client": "2.15.4",
+    "livekit-client": "2.15.6",
     "lodash": "^4.17.21",
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
