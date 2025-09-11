@@ -52,9 +52,9 @@ services:
       - spring.security.oauth2.client.registration.vkontakte.redirect-uri=https://{{ domain }}/api/aaa/login/oauth2/code/vkontakte
       - spring.security.oauth2.client.registration.vkontakte.authorization-grant-type=authorization_code
       - spring.security.oauth2.client.registration.vkontakte.client-authentication-method=client_secret_post
-      - spring.security.oauth2.client.provider.vkontakte.authorization-uri=https://oauth.vk.com/authorize
-      - spring.security.oauth2.client.provider.vkontakte.token-uri=https://oauth.vk.com/access_token
-      - spring.security.oauth2.client.provider.vkontakte.user-info-uri=https://api.vk.com/method/users.get?v=5.92
+      - spring.security.oauth2.client.provider.vkontakte.authorization-uri=https://oauth.vk.ru/authorize
+      - spring.security.oauth2.client.provider.vkontakte.token-uri=https://oauth.vk.ru/access_token
+      - spring.security.oauth2.client.provider.vkontakte.user-info-uri=https://api.vk.ru/method/users.get?v=5.92
       - spring.security.oauth2.client.provider.vkontakte.user-info-authentication-method=form
       - spring.security.oauth2.client.provider.vkontakte.user-name-attribute=response
 {% endif %}
