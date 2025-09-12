@@ -84,7 +84,7 @@ public class Constants {
 
     public static final int MIN_PASSWORD_LENGTH = 6;
     public static final int MAX_PASSWORD_LENGTH = 100;
-    public static final int MAX_USERS_RESPONSE_LENGTH = 100;
+    public static final int MAX_USERS_RESPONSE_LENGTH = 1000;
 
     public static final int MAX_SMILEYS_LENGTH = 2048;
 
