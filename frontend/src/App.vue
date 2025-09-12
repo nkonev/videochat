@@ -714,6 +714,8 @@ export default {
               return this.chatStore.usersWritingSubtitleInfo
             } else if (this.chatStore.oppositeUserLastSeenDateTime) {
                 return this.$vuetify.locale.t('$vuetify.last_seen_at', getHumanReadableDate(this.chatStore.oppositeUserLastSeenDateTime));
+            } else if (this.chatStore.chatDto.tetATet) {
+                return this.$vuetify.locale.t('$vuetify.tet_a_tet');
             } else {
                 return this.chatStore.chatUsersCount + " " + this.$vuetify.locale.t('$vuetify.participants')
             }
