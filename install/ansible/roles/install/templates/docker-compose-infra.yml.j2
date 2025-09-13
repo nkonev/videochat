@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   traefik:
-    image: traefik:v3.4.1
+    image: traefik:v3.5.2
     hostname: traefik
     environment:
       - OTEL_PROPAGATORS=jaeger
@@ -153,7 +153,7 @@ services:
         tag: chat-minio
 
   rabbitmq:
-    image: rabbitmq:4.0.9-management-alpine
+    image: rabbitmq:4.1.4-management-alpine
     hostname: rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=videoChat

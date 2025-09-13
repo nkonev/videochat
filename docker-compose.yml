@@ -2,7 +2,7 @@
 # It contains environment
 services:
   traefik:
-    image: traefik:v3.4.1
+    image: traefik:v3.5.2
     hostname: traefik
     restart: unless-stopped
     environment:
@@ -155,7 +155,7 @@ services:
         max-file: "1"
 
   rabbitmq:
-    image: rabbitmq:4.0.9-management-alpine
+    image: rabbitmq:4.1.4-management-alpine
     hostname: rabbitmq
     restart: unless-stopped
     ports:
