@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/livekit/protocol v1.41.0
 	github.com/livekit/server-sdk-go/v2 v2.11.2
-	github.com/nkonev/dcron v1.7.9
+	github.com/nkonev/dcron v1.7.10
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.13.0
