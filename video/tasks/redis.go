@@ -67,5 +67,5 @@ func (la *TracingLoggerAdapter) ErrorContext(ctx context.Context, msg string, ar
 }
 
 func (la *TracingLoggerAdapter) InfoContext(ctx context.Context, msg string, args ...any) {
-	la.lgr.WithTracing(ctx).With(args...).Info(msg)
+	la.lgr.WithTracing(ctx).With(args...).Debug(msg)
 }
