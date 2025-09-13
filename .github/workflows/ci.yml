@@ -137,7 +137,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.4
+          go-version: 1.25.1
           cache-dependency-path: 'chat/go.sum'
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
@@ -179,7 +179,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.4
+          go-version: 1.25.1
           cache-dependency-path: 'event/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
@@ -213,7 +213,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.4
+          go-version: 1.25.1
           cache-dependency-path: 'notification/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
@@ -247,7 +247,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.4
+          go-version: 1.25.1
           cache-dependency-path: 'storage/go.sum'
       - name: Build and test with make
         if: env.SHOULD_RUN == 'true'
@@ -281,7 +281,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.4
+          go-version: 1.25.1
           cache-dependency-path: 'video/go.sum'
       - name: Start & wait docker-compose environment
         if: env.SHOULD_RUN == 'true'
@@ -351,7 +351,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.4
+          go-version: 1.25.1
           cache-dependency-path: |
             chat/go.sum
             event/go.sum
