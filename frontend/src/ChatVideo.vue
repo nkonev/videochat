@@ -456,7 +456,8 @@ export default {
       const videoPublication = component.getVideoStream();
       const audioPublication = component.getAudioStream();
       const avatar = component.getAvatar();
-      return {videoStream: videoPublication, audioStream: audioPublication, avatar: avatar, userId: id, userName: userName}
+      const isScreenShare = videoPublication?.source == "screen_share";
+      return {videoStream: videoPublication, audioStream: audioPublication, avatar: avatar, userId: id, userName: userName, isScreenShare: isScreenShare}
     },
 
     handleDisconnect() {
