@@ -147,8 +147,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 			srv.lgr.WithTracing(c).Errorf("Error during paginate: %v", err)
 			return
 		}
-		offset += utils.DefaultSize
 
+		wasDeletions := false
 		for _, metadata := range metadatas {
 			aKey := utils.BuildNormalizedKey(&metadata)
 			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", aKey)
@@ -170,9 +170,13 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 					srv.lgr.WithTracing(c).Errorf("Error during removing metadata cache for %v: %v", mcid.String(), err)
 					continue
 				}
+				wasDeletions = true
 			}
 		}
 
+		if !wasDeletions {
+			offset += utils.DefaultSize
+		}
 		if len(metadatas) < utils.DefaultSize {
 			break
 		}
