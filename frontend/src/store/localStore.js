@@ -218,6 +218,22 @@ export const setStoredPresenter = (v) => {
     localStorage.setItem(KEY_PRESENTER, JSON.stringify(v));
 }
 
+export const KEY_USE_COVER_PRESENTER = 'useCoverPresenter';
+
+export const getStoredUseCoverPresenter = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_USE_COVER_PRESENTER));
+    if (v === null) {
+        console.log("Resetting use cover presenter to default");
+        setStoredUseCoverPresenter(true);
+        v = JSON.parse(localStorage.getItem(KEY_USE_COVER_PRESENTER));
+    }
+    return v;
+}
+
+export const setStoredUseCoverPresenter = (v) => {
+    localStorage.setItem(KEY_USE_COVER_PRESENTER, JSON.stringify(v));
+}
+
 export const KEY_VIDEO_MINIATURES = 'videoMiniatures';
 
 export const getStoredVideoMiniatures = () => {

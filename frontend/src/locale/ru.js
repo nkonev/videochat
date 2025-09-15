@@ -353,5 +353,6 @@ export default {
     refresh: "Обновить",
     go_to_chat: "Перейти в чат",
     message_was_resent: "Сообщение было переслано",
-    create_message: "Написать сообщение"
+    create_message: "Написать сообщение",
+    video_use_presenter_cover_view: "Использовать object-fit: cover"
 }

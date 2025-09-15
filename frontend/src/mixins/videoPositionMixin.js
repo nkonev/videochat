@@ -1,5 +1,5 @@
 import {
-    getStoredPresenter,
+    getStoredPresenter, getStoredUseCoverPresenter,
     getStoredVideoPosition,
     VIDEO_POSITION_GALLERY,
     VIDEO_POSITION_HORIZONTAL,
@@ -43,6 +43,7 @@ export default () => {
             initPositionAndPresenter() {
                 this.chatStore.videoPosition = getStoredVideoPosition();
                 this.chatStore.presenterEnabled = getStoredPresenter();
+                this.chatStore.presenterUseCover = getStoredUseCoverPresenter();
             },
 
             pinningIsAvailable() {

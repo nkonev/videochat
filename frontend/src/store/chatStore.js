@@ -93,6 +93,8 @@ export const useChatStore = defineStore('chat', {
         tempGoToChatId: null,
         tempGoToText: null,
         tempGoToMessageId: null,
+
+        presenterUseCover: false,
     }
   },
   actions: {

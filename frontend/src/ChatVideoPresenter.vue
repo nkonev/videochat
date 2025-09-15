@@ -1,7 +1,7 @@
 <template>
   <pane :size="provider.presenterPaneSize()" :class="provider.presenterPaneClass">
     <div class="video-presenter-container-element" @contextmenu.stop="onShowContextMenu($event, this)">
-      <video v-show="!provider.presenterVideoMute || !provider.presenterAvatarIsSet" @click.self="provider.onClick()" class="video-presenter-element" :class="(!provider.presenterData?.isScreenShare) ? 'video-presenter-element-cover': ''" ref="presenterVideoRef"/>
+      <video v-show="!provider.presenterVideoMute || !provider.presenterAvatarIsSet" @click.self="provider.onClick()" :class="presenterVideoClass" ref="presenterVideoRef"/>
       <img v-show="provider.presenterAvatarIsSet && provider.presenterVideoMute" @click.self="provider.onClick()" class="video-presenter-element" :src="provider.presenterData?.avatar"/>
       <p v-bind:class="[provider.speaking ? 'presenter-element-caption-speaking' : '', 'presenter-element-caption', 'inline-caption-base']">{{ provider.presenterData?.userName ? provider.presenterData?.userName : provider.getLoadingMessage() }} <v-icon v-if="provider.presenterAudioMute">mdi-microphone-off</v-icon></p>
 
@@ -31,6 +31,14 @@ export default {
   },
   computed: {
     ...mapStores(useChatStore),
+    presenterVideoClass() {
+      const arr = ["video-presenter-element"];
+      if (!this.provider.presenterData?.isScreenShare && this.chatStore.presenterUseCover) {
+        arr.push("video-presenter-element-cover");
+      }
+
+      return arr;
+    },
   },
   methods: {
     onShowContextMenu(e, menuableItem) {

@@ -51,6 +51,18 @@
                                 :label="$vuetify.locale.t('$vuetify.video_presenter_enable')"
                             ></v-checkbox>
                         </v-col>
+
+                        <v-col>
+                          <v-checkbox
+                              :disabled="!isPresenterEnabled()"
+                              density="comfortable"
+                              color="primary"
+                              hide-details
+                              v-model="chatStore.presenterUseCover"
+                              @update:modelValue="changeUsePresenterCoverEnabled"
+                              :label="$vuetify.locale.t('$vuetify.video_use_presenter_cover_view')"
+                          ></v-checkbox>
+                        </v-col>
                     </v-row>
 
                     <v-select
@@ -165,7 +177,7 @@
       setStoredCallVideoDeviceId,
       setStoredCallAudioDeviceId,
       setStoredPresenter,
-      positionItems
+      positionItems, setStoredUseCoverPresenter
     } from "./store/localStore";
     import {videochat_name} from "./router/routes";
     import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
@@ -217,6 +229,9 @@
             },
             changePresenterEnabled(v) {
               setStoredPresenter(v);
+            },
+            changeUsePresenterCoverEnabled(v) {
+              setStoredUseCoverPresenter(v)
             },
             changeVideoSimulcast(v) {
                 setStoredVideoSimulcast(v);

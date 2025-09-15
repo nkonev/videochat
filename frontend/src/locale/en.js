@@ -353,5 +353,6 @@ export default {
     refresh: "Refresh",
     go_to_chat: "Go to chat",
     message_was_resent: "The message was resent",
-    create_message: "Create a message"
+    create_message: "Create a message",
+    video_use_presenter_cover_view: "Use object-fit: cover"
 }
