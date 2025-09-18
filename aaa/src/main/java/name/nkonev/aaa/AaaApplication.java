@@ -10,10 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 )
 public class AaaApplication {
 
-    public static void main(String[] args) throws Exception {
-        Class<?> cl = Class.forName("org.springframework.security.web.ObservationFilterChainDecorator", true, AaaApplication.class.getClassLoader());
-        System.out.println(cl);
-
+    public static void main(String[] args) {
         SpringApplication.run(AaaApplication.class, args);
     }
 }
