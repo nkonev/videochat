@@ -124,7 +124,7 @@ services:
         max-file: "1"
 
   minio:
-    image: bitnami/minio:2025.7.23-debian-12-r5
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
     hostname: minio
     restart: unless-stopped
     ports:
@@ -146,8 +146,15 @@ services:
       - MINIO_NOTIFY_AMQP_DELIVERY_MODE_primary=2
       - MINIO_PROMETHEUS_AUTH_TYPE=public
       - MINIO_BROWSER_REDIRECT_URL=http://localhost:8081/minio
+      - MC_CONFIG_DIR=/root/.mc
+    command:
+      - server
+      - /data
+      - --console-address
+      - :9001
     volumes:
-      - minio_data:/bitnami/minio/data:z
+      - minio_data:/data:z
+      - ./docker/minio/config.json:/root/.mc/config.json:z
     logging:
       driver: "json-file"
       options:
