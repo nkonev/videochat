@@ -7,7 +7,7 @@
 
       <VideoButtons v-if="!isMobile()" @requestFullScreen="provider.onButtonsFullscreen" v-show="provider.showControls"/>
 
-      <PresenterContextMenu ref="contextMenuRef" :userName="provider.presenterUserName"/>
+      <ChatVideoPresenterContextMenu ref="contextMenuRef" :userName="provider.presenterUserName"/>
 
       <v-btn v-if="chatStore.pinnedTrackSid" class="presenter-unpin-button" @click="provider.doUnpinVideo()" icon="mdi-pin-off-outline" rounded="0" :title="$vuetify.locale.t('$vuetify.unpin_video')"></v-btn>
     </div>
@@ -15,7 +15,7 @@
 </template>
 <script>
 import VideoButtons from "@/VideoButtons.vue";
-import PresenterContextMenu from "@/PresenterContextMenu.vue";
+import ChatVideoPresenterContextMenu from "@/ChatVideoPresenterContextMenu.vue";
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import { Pane } from 'splitpanes';
@@ -26,7 +26,7 @@ export default {
   ],
   components: {
     VideoButtons,
-    PresenterContextMenu,
+    ChatVideoPresenterContextMenu,
     Pane,
   },
   computed: {
