@@ -13,7 +13,7 @@ export default () => {
       setPosition() {
         const element = document.querySelector("." + this.className() + " .v-overlay__content");
         if (element) {
-          element.style.position = "absolute";
+          element.style.position = "fixed";
           element.style.top = this.contextMenuY + "px";
           element.style.left = this.contextMenuX + "px";
 
