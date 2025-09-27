@@ -354,5 +354,6 @@ export default {
     go_to_chat: "Go to chat",
     message_was_resent: "The message was resent",
     create_message: "Create a message",
-    video_use_presenter_cover_view: "Use object-fit: cover"
+    video_use_presenter_cover_view: "Use object-fit: cover",
+    message_delete_with_attached_files: "Delete with files"
 }

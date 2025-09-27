@@ -56,10 +56,7 @@
                 this.$data.loading = false;
             },
             hideModal() {
-                this.$data.show = false;
-                this.$data.actionFunction = ()=>{};
-                this.$data.cancelFunction = null;
-                this.$data.loading = false;
+                this.lightClose();
 
                 this.$data.title = "";
                 this.$data.text = "";
