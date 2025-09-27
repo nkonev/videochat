@@ -99,7 +99,7 @@ export default {
     leave_chat_text: "Are you sure to leave from the chat '{0}' ?",
     leave_chat: "Leave the chat",
     delete_message_title: "Delete message #{0}",
-    delete_message_text: "Are you sure to delete this message ?",
+    delete_message_text: "Are you sure to delete this message ?\n",
     files_by: "by",
     files_published_url: "Published url",
     delete_from_chat: "Delete from chat",
@@ -354,5 +354,7 @@ export default {
     go_to_chat: "Go to chat",
     message_was_resent: "The message was resent",
     create_message: "Create a message",
-    video_use_presenter_cover_view: "Use object-fit: cover"
+    video_use_presenter_cover_view: "Use object-fit: cover",
+    message_delete_with_attached_files: "With files",
+    message_delete_with_attached_files_full: "Delete the message with its files"
 }

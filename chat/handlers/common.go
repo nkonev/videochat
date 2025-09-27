@@ -357,7 +357,12 @@ func ValidateAndRespondError(c echo.Context, lgr *logger.Logger, v validation.Va
 }
 
 func createMessagePreview(cleanTagsPolicy *services.StripTagsPolicy, text, login string) string {
-	input := loginPrefix(login) + text
+	var input string
+	if len(login) > 0 {
+		input = loginPrefix(login) + text
+	} else {
+		input = text
+	}
 	return createMessagePreviewWithoutLogin(cleanTagsPolicy, input)
 }
 

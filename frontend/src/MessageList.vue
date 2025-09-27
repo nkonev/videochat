@@ -50,15 +50,12 @@
     import infiniteScrollMixin, {directionTop} from "@/mixins/infiniteScrollMixin";
     import {searchString, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
     import bus, {
-      CLOSE_SIMPLE_MODAL,
-      LOGGED_OUT,
       MESSAGE_ADD,
       MESSAGE_DELETED,
       MESSAGE_EDITED,
       OPEN_EDIT_MESSAGE,
       OPEN_MESSAGE_READ_USERS_DIALOG,
       OPEN_RESEND_TO_MODAL,
-      OPEN_SIMPLE_MODAL,
       OPEN_VIEW_FILES_DIALOG,
       REFRESH_ON_WEBSOCKET_RESTORED,
       SCROLL_DOWN,
@@ -70,7 +67,7 @@
       MESSAGES_RELOAD,
       PLAYER_MODAL,
       FILE_CREATED,
-      WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
+      WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED, OPEN_MESSAGE_DELETE_MODAL,
     } from "@/bus/bus";
     import {
       checkUpByTree, checkUpByTreeObj,
@@ -451,23 +448,7 @@
         },
 
         deleteMessage(dto) {
-          bus.emit(OPEN_SIMPLE_MODAL, {
-            buttonName: this.$vuetify.locale.t('$vuetify.delete_btn'),
-            title: this.$vuetify.locale.t('$vuetify.delete_message_title', dto.id),
-            text: this.$vuetify.locale.t('$vuetify.delete_message_text'),
-            actionFunction: (that) => {
-              that.loading = true;
-              axios.delete(`/api/chat/${this.chatId}/message/${dto.id}`, {
-                signal: this.requestAbortController.signal
-              })
-                  .then(() => {
-                    bus.emit(CLOSE_SIMPLE_MODAL);
-                  })
-                  .finally(() => {
-                    that.loading = false;
-                  })
-            }
-          });
+          bus.emit(OPEN_MESSAGE_DELETE_MODAL, { messageId: dto.id, fileItemUuid: dto.fileItemUuid, messageText: dto.text} );
         },
         editMessage(dto) {
           const editMessageDto = deepCopy(dto);

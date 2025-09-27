@@ -354,5 +354,7 @@ export default {
     go_to_chat: "Перейти в чат",
     message_was_resent: "Сообщение было переслано",
     create_message: "Написать сообщение",
-    video_use_presenter_cover_view: "Использовать object-fit: cover"
+    video_use_presenter_cover_view: "Использовать object-fit: cover",
+    message_delete_with_attached_files: "С файл.",
+    message_delete_with_attached_files_full: "Удалить сообщение вместе с файлами"
 }

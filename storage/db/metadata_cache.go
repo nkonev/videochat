@@ -377,3 +377,13 @@ func Remove(ctx context.Context, co CommonOperations, metadataCacheId dto.Metada
 	}
 	return nil
 }
+
+func RemoveFileItem(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string) error {
+	_, err := co.ExecContext(ctx, `delete from metadata_cache 
+								where (chat_id, file_item_uuid) = ($1, $2)`,
+		chatId, fileItemUuid)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	return nil
+}

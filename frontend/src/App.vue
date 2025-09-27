@@ -189,6 +189,7 @@
         <PublishedMessagesModal/>
         <SetPasswordModal/>
         <MessageEditModal/>
+        <MessageDeleteModal/>
         <!-- we store MessageEditMediaModal here in order to make its cache working -->
         <MessageEditMediaModal/>
       </v-main>
@@ -278,6 +279,7 @@ import MessageEdit from "@/MessageEdit.vue";
 import MessageEditModal from "@/MessageEditModal.vue";
 import CollapsedSearch from "@/CollapsedSearch.vue";
 import ChooseSmileyModal from "@/ChooseSmileyModal.vue";
+import MessageDeleteModal from "@/MessageDeleteModal.vue";
 import {
   getMainDrawer,
   getStoredLanguage, NOTIFICATION_TYPE_ANSWERS,
@@ -1002,6 +1004,7 @@ export default {
         PublishedMessagesModal,
         SetPasswordModal,
         MessageEditMediaModal,
+        MessageDeleteModal,
     },
     watch: {
       'chatStore.notificationsCount': {

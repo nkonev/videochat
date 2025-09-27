@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
@@ -16,6 +17,7 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
+	"nkonev.name/storage/producer"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
@@ -33,6 +35,7 @@ type FilesHandler struct {
 	redisInfoService *services.RedisInfoService
 	dba              *db.DB
 	lgr              *logger.Logger
+	publisher        *producer.RabbitFileUploadedPublisher
 }
 
 type RenameDto struct {
@@ -51,6 +54,7 @@ func NewFilesHandler(
 	filesService *services.FilesService,
 	redisInfoService *services.RedisInfoService,
 	dba *db.DB,
+	publisher *producer.RabbitFileUploadedPublisher,
 ) *FilesHandler {
 	return &FilesHandler{
 		lgr:              lgr,
@@ -61,6 +65,7 @@ func NewFilesHandler(
 		filesService:     filesService,
 		redisInfoService: redisInfoService,
 		dba:              dba,
+		publisher:        publisher,
 	}
 }
 
@@ -706,7 +711,8 @@ func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 }
 
 type DeleteObjectDto struct {
-	Id string `json:"id"` // file id
+	FileId       *string `json:"id"`           // file id
+	FileItemUuid *string `json:"fileItemUuid"` // file item uuid
 }
 
 func (h *FilesHandler) DeleteHandler(c echo.Context) error {
@@ -733,64 +739,124 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	// check this fileItem belongs to user
-	objectInfo, err := h.minio.StatObject(c.Request().Context(), bucketName, bindTo.Id, minio.StatObjectOptions{})
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	if bindTo.FileId != nil {
+		fileId := *bindTo.FileId
+		// check this fileItem belongs to user
+		fileItemUuid, err := utils.ParseFileItemUuid(fileId)
+		if err != nil {
+			return err
+		}
+		belongs, err := db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belong object %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		if !belongs {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+		// end check
 
-	fileItemUuid, err := utils.ParseFileItemUuid(bindTo.Id)
-	if err != nil {
-		return err
-	}
-
-	filename, err := utils.ParseFileName(bindTo.Id)
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing filename %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	metadataCache, err := db.Get(c.Request().Context(), h.dba, dto.MetadataCacheId{
-		ChatId:       chatId,
-		FileItemUuid: fileItemUuid,
-		Filename:     filename,
-	}, nil)
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belong object %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	if metadataCache == nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("no data found chatId = %v, fileItemUuid = %v, filename = %v", chatId, fileItemUuid, filename)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	if metadataCache.OwnerId != userPrincipalDto.UserId {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Object '%v' is not belongs to user %v", objectInfo.Key, userPrincipalDto.UserId)
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	// end check
-
-	err = h.minio.RemoveObject(c.Request().Context(), bucketName, objectInfo.Key, minio.RemoveObjectOptions{})
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	if utils.IsVideo(objectInfo.Key) {
-		previewToCheck := utils.SetVideoPreviewExtension(objectInfo.Key)
-		err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+		err = h.minio.RemoveObject(c.Request().Context(), bucketName, fileId, minio.RemoveObjectOptions{})
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
-	} else if utils.IsImage(objectInfo.Key) {
-		previewToCheck := utils.SetImagePreviewExtension(objectInfo.Key)
-		err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+
+		if utils.IsVideo(fileId) {
+			previewToCheck := utils.SetVideoPreviewExtension(fileId)
+			err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+			}
+		} else if utils.IsImage(fileId) {
+			previewToCheck := utils.SetImagePreviewExtension(fileId)
+			err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+			}
+		}
+	} else if bindTo.FileItemUuid != nil {
+		fileItemUuid := *bindTo.FileItemUuid
+		// check this fileItem belongs to user
+		belongs, err := db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during checking belong object %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		if !belongs {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+		// end check
+
+		prefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
+
+		// send events (they won't be sent via minio subscription, so we send them manually)
+		var fileObjects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
+			Prefix:       prefix,
+			Recursive:    true,
+			WithMetadata: true,
+		})
+
+		batch := []minio.ObjectInfo{}
+		for fileOjInfo := range fileObjects {
+			batch = append(batch, fileOjInfo)
+			if len(batch) == utils.DefaultSize {
+				h.sendFileDeletedToUsers(c.Request().Context(), chatId, fileItemUuid, batch)
+				batch = []minio.ObjectInfo{}
+			}
+		}
+		if len(batch) > 0 {
+			h.sendFileDeletedToUsers(c.Request().Context(), chatId, fileItemUuid, batch)
+		}
+
+		err = db.RemoveFileItem(c.Request().Context(), h.dba, chatId, fileItemUuid)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object metadata %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		err = h.minio.RemoveObject(c.Request().Context(), bucketName, prefix, minio.RemoveObjectOptions{ForceDelete: true})
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
+	} else {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Unknown invariant")
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, fileItemUuid string, batch []minio.ObjectInfo) {
+	bucketName := h.minioConfig.Files
+
+	eventType := utils.FILE_DELETED
+
+	err := h.restClient.GetChatParticipantIds(c, chatId, func(participantIds []int64) error {
+		for _, fileOjInfo := range batch {
+			normalizedKey := utils.StripBucketName(fileOjInfo.Key, bucketName)
+
+			fileInfo := &dto.FileInfoDto{
+				Id:           normalizedKey,
+				FileItemUuid: fileItemUuid,
+				LastModified: time.Now().UTC(),
+			}
+
+			for _, participantId := range participantIds {
+				err := h.publisher.PublishFileEvent(c, participantId, chatId, &dto.WrappedFileInfoDto{
+					FileInfoDto: fileInfo,
+				}, eventType)
+				if err != nil {
+					h.lgr.WithTracing(c).Errorf("Error during sending object %v", err)
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		h.lgr.WithTracing(c).Errorf("Error during GetChatParticipantIds %v", err)
+	}
 }
 
 func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
