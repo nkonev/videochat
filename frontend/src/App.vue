@@ -455,6 +455,7 @@ export default {
                   subscription {
                     globalEvents {
                       eventType
+                      correlationId
                       chatEvent {
                         id
                         name
@@ -599,67 +600,82 @@ export default {
               `
         },
         onNextGlobalSubscriptionElement(e) {
-          if (getGlobalEventsData(e).eventType === 'chat_created') {
-            const d = getGlobalEventsData(e).chatEvent;
+          const gle = getGlobalEventsData(e);
+          if (gle.eventType === 'chat_created') {
+            const d = gle.chatEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(CHAT_ADD, d);
-          } else if (getGlobalEventsData(e).eventType === 'chat_edited') {
-            const d = getGlobalEventsData(e).chatEvent;
+          } else if (gle.eventType === 'chat_edited') {
+            const d = gle.chatEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(CHAT_EDITED, d);
-          } else if (getGlobalEventsData(e).eventType === 'chat_redraw') {
-            const d = getGlobalEventsData(e).chatEvent;
+          } else if (gle.eventType === 'chat_redraw') {
+            const d = gle.chatEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(CHAT_REDRAW, d);
-          } else if (getGlobalEventsData(e).eventType === 'chat_deleted') {
-            const d = getGlobalEventsData(e).chatDeletedEvent;
+          } else if (gle.eventType === 'chat_deleted') {
+            const d = gle.chatDeletedEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(CHAT_DELETED, d);
-          } else if (getGlobalEventsData(e).eventType === 'participant_changed') {
-            const d = getGlobalEventsData(e).coChattedParticipantEvent;
+          } else if (gle.eventType === 'participant_changed') {
+            const d = gle.coChattedParticipantEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(CO_CHATTED_PARTICIPANT_CHANGED, d);
-          } else if (getGlobalEventsData(e).eventType === "video_user_count_changed") {
-            const d = getGlobalEventsData(e).videoUserCountChangedEvent;
+          } else if (gle.eventType === "video_user_count_changed") {
+            const d = gle.videoUserCountChangedEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(VIDEO_CALL_USER_COUNT_CHANGED, d);
-          } else if (getGlobalEventsData(e).eventType === "video_screenshare_changed") {
-            const d = getGlobalEventsData(e).videoCallScreenShareChangedDto;
+          } else if (gle.eventType === "video_screenshare_changed") {
+            const d = gle.videoCallScreenShareChangedDto;
+            d.correlationId = gle.correlationId;
             bus.emit(VIDEO_CALL_SCREEN_SHARE_CHANGED, d);
-          } else if (getGlobalEventsData(e).eventType === "video_recording_changed") {
-            const d = getGlobalEventsData(e).videoRecordingChangedEvent;
+          } else if (gle.eventType === "video_recording_changed") {
+            const d = gle.videoRecordingChangedEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(VIDEO_RECORDING_CHANGED, d);
-          } else if (getGlobalEventsData(e).eventType === 'video_call_invitation') {
-            const d = getGlobalEventsData(e).videoCallInvitation;
+          } else if (gle.eventType === 'video_call_invitation') {
+            const d = gle.videoCallInvitation;
+            d.correlationId = gle.correlationId;
             bus.emit(VIDEO_CALL_INVITED, d);
-          } else if (getGlobalEventsData(e).eventType === "video_dial_status_changed") {
-            const d = getGlobalEventsData(e).videoParticipantDialEvent;
+          } else if (gle.eventType === "video_dial_status_changed") {
+            const d = gle.videoParticipantDialEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(VIDEO_DIAL_STATUS_CHANGED, d);
-          } else if (getGlobalEventsData(e).eventType === 'chat_unread_messages_changed') {
-            const d = getGlobalEventsData(e).unreadMessagesNotification;
+          } else if (gle.eventType === 'chat_unread_messages_changed') {
+            const d = gle.unreadMessagesNotification;
+            d.correlationId = gle.correlationId;
             bus.emit(UNREAD_MESSAGES_CHANGED, d);
-          } else if (getGlobalEventsData(e).eventType === 'notification_add') {
-            const d = getGlobalEventsData(e).notificationEvent;
+          } else if (gle.eventType === 'notification_add') {
+            const d = gle.notificationEvent;
+            d.correlationId = gle.correlationId;
             bus.emit(NOTIFICATION_ADD, d);
             this.processNotificationAsInBrowser(d.notificationDto, true);
-          } else if (getGlobalEventsData(e).eventType === 'notification_delete') {
-              const d = getGlobalEventsData(e).notificationEvent;
-              bus.emit(NOTIFICATION_DELETE, d);
-              this.processNotificationAsInBrowser(d.notificationDto, false);
-          } else if (getGlobalEventsData(e).eventType === 'notification_clear_all') {
-              const d = getGlobalEventsData(e).notificationEvent;
-              bus.emit(NOTIFICATION_CLEAR_ALL, d);
-              this.processClearAllNotificationsInBrowser(d);
-          } else if (getGlobalEventsData(e).eventType === 'has_unread_messages_changed') {
-              const d = getGlobalEventsData(e).hasUnreadMessagesChanged;
-              this.chatStore.setHasNewMessages(d.hasUnreadMessages);
-          } else if (getGlobalEventsData(e).eventType === 'browser_notification_add_message') {
-              const d = getGlobalEventsData(e).browserNotification;
-              createBrowserNotificationIfPermitted(this.$router, d.chatId, d.chatName, d.chatAvatar, d.messageId, d.messageText, NOTIFICATION_TYPE_NEW_MESSAGES);
-          } else if (getGlobalEventsData(e).eventType === 'browser_notification_remove_message') {
-              removeBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
-          } else if (getGlobalEventsData(e).eventType === 'user_sessions_killed') {
-              const d = getGlobalEventsData(e).forceLogout;
-              console.log("Killed sessions, reason:", d.reasonType)
-              this.chatStore.unsetUser();
-              bus.emit(LOGGED_OUT);
-          } else if (getGlobalEventsData(e).eventType === "user_typing") {
-              const d = getGlobalEventsData(e).userTypingEvent;
-              bus.emit(USER_TYPING, d);
+          } else if (gle.eventType === 'notification_delete') {
+            const d = gle.notificationEvent;
+            d.correlationId = gle.correlationId;
+            bus.emit(NOTIFICATION_DELETE, d);
+            this.processNotificationAsInBrowser(d.notificationDto, false);
+          } else if (gle.eventType === 'notification_clear_all') {
+            const d = gle.notificationEvent;
+            d.correlationId = gle.correlationId;
+            bus.emit(NOTIFICATION_CLEAR_ALL, d);
+            this.processClearAllNotificationsInBrowser(d);
+          } else if (gle.eventType === 'has_unread_messages_changed') {
+            const d = gle.hasUnreadMessagesChanged;
+            this.chatStore.setHasNewMessages(d.hasUnreadMessages);
+          } else if (gle.eventType === 'browser_notification_add_message') {
+            const d = gle.browserNotification;
+            createBrowserNotificationIfPermitted(this.$router, d.chatId, d.chatName, d.chatAvatar, d.messageId, d.messageText, NOTIFICATION_TYPE_NEW_MESSAGES);
+          } else if (gle.eventType === 'browser_notification_remove_message') {
+            removeBrowserNotification(NOTIFICATION_TYPE_NEW_MESSAGES);
+          } else if (gle.eventType === 'user_sessions_killed') {
+            const d = gle.forceLogout;
+            console.log("Killed sessions, reason:", d.reasonType)
+            this.chatStore.unsetUser();
+            bus.emit(LOGGED_OUT);
+          } else if (gle.eventType === "user_typing") {
+            const d = gle.userTypingEvent;
+            bus.emit(USER_TYPING, d);
           }
         },
         onChatAvatarClick() {
