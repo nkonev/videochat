@@ -226,9 +226,6 @@ export const useChatStore = defineStore('chat', {
       this.resetFileUploadingSessionType();
       this.sendMessageAfterUploadFileItemUuid = null;
     },
-    canDeleteParticipant(userId) {
-        return this.chatDto.canEdit && userId != this.currentUser.id
-    },
     canVideoKickParticipant(userId) {
         return this.chatDto.canVideoKick && userId != this.currentUser.id
     },

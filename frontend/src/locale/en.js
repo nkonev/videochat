@@ -363,5 +363,10 @@ export default {
     auto_microphone_enable: "Auto microphone enable (when possible)",
     overridden_permissions: "Permissions",
     override_permissions: "Override permissions",
-    override_permissions_for: "Override permissions for '{0}'"
+    override_permissions_for: "Override permissions for '{0}'",
+    sync_embed: "Sync embed",
+    remove_contributing_to_unread: "Unread mute",
+    start_contributing_to_unread: "Unread unmute",
+    regular_participant_can_add_participant: "Regular participant can add participants",
+    add_participants: "Add participants"
 }

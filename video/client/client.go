@@ -7,17 +7,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/video/config"
 	"nkonev.name/video/dto"
 	"nkonev.name/video/logger"
 	"nkonev.name/video/utils"
-	"strings"
 )
 
 type RestClient struct {
@@ -49,20 +50,19 @@ func NewRestClient(config *config.ExtendedConfig, lgr *logger.Logger) *RestClien
 	trcr := otel.Tracer("rest/client")
 
 	return &RestClient{
-		client:                          client,
-		chatBaseUrl:                     config.ChatConfig.ChatUrlConfig.Base,
-		accessPath:                      config.ChatConfig.ChatUrlConfig.Access,
-		isAdminPath:                     config.ChatConfig.ChatUrlConfig.IsChatAdmin,
-		doesParticipantBelongToChatPath: config.ChatConfig.ChatUrlConfig.DoesParticipantBelongToChat,
-		chatParticipantIdsPath:          config.ChatConfig.ChatUrlConfig.ChatParticipantIds,
-		chatInviteNamePath:              config.ChatConfig.ChatUrlConfig.ChatInviteName,
-		chatBasicInfoPath:               config.ChatConfig.ChatUrlConfig.ChatBasicInfoPath,
-		aaaBaseUrl:                      config.AaaConfig.AaaUrlConfig.Base,
-		aaaGetUsersUrl:                  config.AaaConfig.AaaUrlConfig.GetUsers,
-		storageBaseUrl:                  config.StorageConfig.StorageUrlConfig.Base,
-		storageS3Path:                   config.StorageConfig.StorageUrlConfig.S3,
-		tracer:                          trcr,
-		lgr:                             lgr,
+		client:                 client,
+		chatBaseUrl:            config.ChatConfig.ChatUrlConfig.Base,
+		accessPath:             config.ChatConfig.ChatUrlConfig.Access,
+		isAdminPath:            config.ChatConfig.ChatUrlConfig.IsChatAdmin,
+		chatParticipantIdsPath: config.ChatConfig.ChatUrlConfig.ChatParticipantIds,
+		chatInviteNamePath:     config.ChatConfig.ChatUrlConfig.ChatInviteName,
+		chatBasicInfoPath:      config.ChatConfig.ChatUrlConfig.ChatBasicInfoPath,
+		aaaBaseUrl:             config.AaaConfig.AaaUrlConfig.Base,
+		aaaGetUsersUrl:         config.AaaConfig.AaaUrlConfig.GetUsers,
+		storageBaseUrl:         config.StorageConfig.StorageUrlConfig.Base,
+		storageS3Path:          config.StorageConfig.StorageUrlConfig.S3,
+		tracer:                 trcr,
+		lgr:                    lgr,
 	}
 }
 
@@ -181,68 +181,6 @@ func (h *RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 		return nil, err
 	}
 	return *users, nil
-}
-
-func (h *RestClient) DoesParticipantBelongToChat(c context.Context, chatId int64, userIds []int64) ([]*dto.ParticipantBelongsToChat, error) {
-
-	if len(userIds) == 0 {
-		return make([]*dto.ParticipantBelongsToChat, 0), nil
-	}
-
-	contentType := "application/json;charset=UTF-8"
-	fullUrl := h.chatBaseUrl + h.doesParticipantBelongToChatPath
-
-	var userIdsString []string
-	for _, userIdInt := range userIds {
-		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
-	}
-
-	join := strings.Join(userIdsString, ",")
-
-	requestHeaders := map[string][]string{
-		"Accept-Encoding": {"gzip, deflate"},
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
-	}
-
-	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join + "&chatId=" + fmt.Sprintf("%v", chatId))
-	if err != nil {
-		h.lgr.WithTracing(c).Errorln("Failed during parse chat url:", err)
-		return nil, err
-	}
-	request := &http.Request{
-		Method: "GET",
-		Header: requestHeaders,
-		URL:    parsedUrl,
-	}
-
-	ctx, span := h.tracer.Start(c, "chat.DoesParticipantBelongToChat")
-	defer span.End()
-	request = request.WithContext(ctx)
-
-	resp, err := h.client.Do(request)
-	if err != nil {
-		h.lgr.WithTracing(c).Warnln("Failed to request DoesParticipantBelongToChat response:", err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-	code := resp.StatusCode
-	if code != 200 {
-		h.lgr.WithTracing(c).Warnln("DoesParticipantBelongToChat response responded non-200 code: ", code)
-		return nil, err
-	}
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		h.lgr.WithTracing(c).Errorln("Failed to decode DoesParticipantBelongToChat response:", err)
-		return nil, err
-	}
-
-	users := &dto.ParticipantsBelongToChat{}
-	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		h.lgr.WithTracing(c).Errorln("Failed to parse DoesParticipantBelongToChat:", err)
-		return nil, err
-	}
-	return users.Users, nil
 }
 
 func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64, page, size int) ([]int64, error) {
@@ -482,7 +420,7 @@ func (h *RestClient) GetBasicChatInfo(c context.Context, chatId int64, userId in
 	code := resp.StatusCode
 	if code != 200 {
 		h.lgr.WithTracing(c).Warnln("Chat BasicChatInfo for invite response responded non-200 code: ", code)
-		return nil, err
+		return nil, fmt.Errorf("Chat BasicChatInfo for invite response responded non-200 code: %v", code)
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
