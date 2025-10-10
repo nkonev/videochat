@@ -1008,7 +1008,9 @@ npx playwright test --headed --project=chromium --debug
 
 npx playwright test --headed --project=chromium test/login.spec.mjs
 
-npx playwright test --headed --project=chromium -g "login vkontakte and"
+npx playwright test --headed --project=chromium -g "login vkontakte and google then create chat then write a message"
+
+npx playwright test --headed --project=chromium -g "login vkontakte and google then create chat then join"
 
 # https://habr.com/en/companies/otus/articles/757630/
 npx playwright test --ui --project=chromium

@@ -13,6 +13,5 @@ type PreviewCreatedEvent struct {
 	Url           string  `json:"url"`
 	PreviewUrl    *string `json:"previewUrl"`
 	Type          *string `json:"aType"`
-	CorrelationId *string `json:"correlationId"`
 	FileItemUuid  string  `json:"fileItemUuid"`
 }

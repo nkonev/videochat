@@ -93,7 +93,7 @@ func (s *PreviewService) SendToParticipants(ctx context.Context, data *dto.Minio
 	if response != nil {
 		if pu, err := s.getFileUploadedEvent(ctx, response.normalizedKey, data.ChatId, data.CorrelationId); err == nil {
 			for _, participantId := range participantIds {
-				err = s.rabbitFileUploadedPublisher.Publish(ctx, participantId, data.ChatId, pu)
+				err = s.rabbitFileUploadedPublisher.Publish(ctx, participantId, data.ChatId, pu, data.CorrelationId)
 				if err != nil {
 					s.lgr.WithTracing(ctx).Errorf("Error during ending: %v", err)
 					continue
@@ -225,11 +225,10 @@ func (s *PreviewService) getFileUploadedEvent(ctx context.Context, normalizedKey
 	}
 
 	return &dto.PreviewCreatedEvent{
-		Id:            normalizedKey,
-		Url:           downloadUrl,
-		PreviewUrl:    previewUrl,
-		Type:          aType,
-		CorrelationId: correlationId,
+		Id:         normalizedKey,
+		Url:        downloadUrl,
+		PreviewUrl: previewUrl,
+		Type:       aType,
 		FileItemUuid:  fuid,
 	}, nil
 }

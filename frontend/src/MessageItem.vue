@@ -26,7 +26,7 @@
                     </template>
                     <template v-else>
                         <div class="caption-small">
-                            {{getEmbedHeadLite(item)}}
+                          {{getEmbedHead(item)}}
                         </div>
                     </template>
                     <div :class="embedClass()">
@@ -167,16 +167,11 @@
                 return false
             },
             getEmbedHead(item){
-                if (item.embedMessage.embedType == embed_message_reply) {
-                    return this.getOwner(item.embedMessage.owner)
-                } else if (item.embedMessage.embedType == embed_message_resend) {
-                    return this.getOwner(item.embedMessage.owner) + this.$vuetify.locale.t('$vuetify.in') + item.embedMessage.chatName;
-                }
-            },
-            getEmbedHeadLite(item){
-                if (item.embedMessage.embedType == embed_message_resend) {
-                    return this.getOwner(item.embedMessage.owner)
-                }
+              let bldr = this.getOwner(item.embedMessage.owner);
+              if (hasLength(item.embedMessage?.chatName)) {
+                bldr += (this.$vuetify.locale.t('$vuetify.in') + item.embedMessage.chatName)
+              }
+              return bldr;
             },
             shouldShowReactions(item) {
               return item?.reactions?.length

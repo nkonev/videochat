@@ -265,7 +265,7 @@ export default {
     },
     onFileCreatedEvent(dto) {
       // it's for embedded audio. for embedded (image, video, record) - see onPreviewCreated()
-      if (hasLength(this.fileCorrelationId) && this.fileCorrelationId == dto?.fileInfoDto?.correlationId) {
+      if (hasLength(this.fileCorrelationId) && this.fileCorrelationId == dto?.correlationId) {
         if (dto?.fileInfoDto != null && !dto.fileInfoDto.previewable && dto.fileInfoDto.aType == media_audio) {
           this.setAudio(dto?.fileInfoDto.url)
         }
