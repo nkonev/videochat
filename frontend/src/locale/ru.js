@@ -364,5 +364,10 @@ export default {
     overridden_permissions: "Разрешения",
     override_permissions: "Задать разрешения",
     override_permissions_for: "Задать разрешения для '{0}'",
-    quote_selected: "Цитировать выделенное"
+    quote_selected: "Цитировать выделенное",
+    sync_embed: "Синхронизировать",
+    remove_contributing_to_unread: "Непрочит. вкл",
+    start_contributing_to_unread: "Непрочит. выкл",
+    regular_participant_can_add_participant: "Участники могут добавлять участников",
+    add_participants: "Добавить участников"
 }

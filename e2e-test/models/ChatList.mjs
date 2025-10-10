@@ -1,4 +1,4 @@
-import {webUiChatsUrl, webUiUrl} from "../constants.mjs";
+import {webUiChatsUrl, webUiChatsUrlPublic} from "../constants.mjs";
 import {expect} from "@playwright/test";
 
 // https://playwright.dev/docs/pom
@@ -6,8 +6,12 @@ export default class ChatList {
     constructor(page) {
         this.page = page;
     }
-    async navigate() {
-        await this.page.goto(webUiChatsUrl);
+    async navigate(isPublic) {
+        if (isPublic) {
+            await this.page.goto(webUiChatsUrlPublic);
+        } else {
+            await this.page.goto(webUiChatsUrl);
+        }
     }
     async openNewChatDialog() {
         const dialog = this.page.locator('#test-new-chat-dialog-button');
@@ -16,7 +20,7 @@ export default class ChatList {
         await expect(form).toBeVisible();
     }
 
-    async createAndSubmit(chatName, participants) {
+    async createAndSubmit(chatName, participants, isPublic) {
         await this.page.fill('.v-dialog .v-form #test-chat-text', chatName);
 
         for (const participantName of participants) {
@@ -33,6 +37,11 @@ export default class ChatList {
 
             // close suggestion list
             await this.page.locator('.v-dialog .v-card-title').click()
+        }
+
+        if (isPublic) {
+            const availableToSearch = this.page.locator('div.chb-available-to-search .v-selection-control__wrapper');
+            await availableToSearch.click();
         }
 
         const submit = this.page.locator('.v-dialog #test-chat-save-btn');

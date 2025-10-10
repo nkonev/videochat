@@ -139,7 +139,7 @@ public class UserProfileController {
 
     @ResponseBody
     @GetMapping(value = Constants.Urls.INTERNAL_API+Constants.Urls.USER+Constants.Urls.LIST)
-    public List<UserAccountDTO> getUsersInternal(
+    public List<UserAccountInternalDTO> getUsersInternal(
         @RequestParam(value = "userId") List<Long> userIds
     ) {
         LOGGER.info("Getting users internal");
