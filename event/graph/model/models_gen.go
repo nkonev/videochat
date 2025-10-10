@@ -74,11 +74,12 @@ type ChatDto struct {
 
 type ChatEvent struct {
 	EventType             string                        `json:"eventType"`
+	CorrelationID         *string                       `json:"correlationId"`
 	MessageEvent          *DisplayMessageDto            `json:"messageEvent"`
 	MessageDeletedEvent   *MessageDeletedDto            `json:"messageDeletedEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
 	PreviewCreatedEvent   *PreviewCreatedEvent          `json:"previewCreatedEvent"`
-	ParticipantsEvent     []*ParticipantWithAdmin       `json:"participantsEvent"`
+	ParticipantsEvent     []*UserViewEnrichedDto        `json:"participantsEvent"`
 	PromoteMessageEvent   *PinnedMessageEvent           `json:"promoteMessageEvent"`
 	FileEvent             *WrappedFileInfoDto           `json:"fileEvent"`
 	PublishedMessageEvent *PublishedMessageEvent        `json:"publishedMessageEvent"`
@@ -92,24 +93,26 @@ type ChatUnreadMessageChanged struct {
 }
 
 type DisplayMessageDto struct {
-	ID             int64                 `json:"id"`
-	Text           string                `json:"text"`
-	ChatID         int64                 `json:"chatId"`
-	OwnerID        int64                 `json:"ownerId"`
-	CreateDateTime time.Time             `json:"createDateTime"`
-	EditDateTime   *time.Time            `json:"editDateTime"`
-	Owner          *Participant          `json:"owner"`
-	CanEdit        bool                  `json:"canEdit"`
-	CanDelete      bool                  `json:"canDelete"`
-	FileItemUUID   *string               `json:"fileItemUuid"`
-	EmbedMessage   *EmbedMessageResponse `json:"embedMessage"`
-	Pinned         bool                  `json:"pinned"`
-	BlogPost       bool                  `json:"blogPost"`
-	PinnedPromoted *bool                 `json:"pinnedPromoted"`
-	Reactions      []*Reaction           `json:"reactions"`
-	Published      bool                  `json:"published"`
-	CanPublish     bool                  `json:"canPublish"`
-	CanPin         bool                  `json:"canPin"`
+	ID              int64                 `json:"id"`
+	Text            string                `json:"text"`
+	ChatID          int64                 `json:"chatId"`
+	OwnerID         int64                 `json:"ownerId"`
+	CreateDateTime  time.Time             `json:"createDateTime"`
+	EditDateTime    *time.Time            `json:"editDateTime"`
+	Owner           *Participant          `json:"owner"`
+	CanEdit         bool                  `json:"canEdit"`
+	CanSyncEmbed    bool                  `json:"canSyncEmbed"`
+	CanDelete       bool                  `json:"canDelete"`
+	FileItemUUID    *string               `json:"fileItemUuid"`
+	EmbedMessage    *EmbedMessageResponse `json:"embedMessage"`
+	Pinned          bool                  `json:"pinned"`
+	BlogPost        bool                  `json:"blogPost"`
+	PinnedPromoted  *bool                 `json:"pinnedPromoted"`
+	Reactions       []*Reaction           `json:"reactions"`
+	Published       bool                  `json:"published"`
+	CanPublish      bool                  `json:"canPublish"`
+	CanPin          bool                  `json:"canPin"`
+	CanMakeBlogPost bool                  `json:"canMakeBlogPost"`
 }
 
 type EmbedMessageResponse struct {
@@ -139,7 +142,6 @@ type FileInfoDto struct {
 	CanShowAsImage bool         `json:"canShowAsImage"`
 	CanPlayAsAudio bool         `json:"canPlayAsAudio"`
 	FileItemUUID   string       `json:"fileItemUuid"`
-	CorrelationID  *string      `json:"correlationId"`
 	Previewable    bool         `json:"previewable"`
 	AType          *string      `json:"aType"`
 }
@@ -150,6 +152,7 @@ type ForceLogoutEvent struct {
 
 type GlobalEvent struct {
 	EventType                      string                          `json:"eventType"`
+	CorrelationID                  *string                         `json:"correlationId"`
 	ChatEvent                      *ChatDto                        `json:"chatEvent"`
 	ChatDeletedEvent               *ChatDeletedDto                 `json:"chatDeletedEvent"`
 	CoChattedParticipantEvent      *Participant                    `json:"coChattedParticipantEvent"`
@@ -211,16 +214,6 @@ type Participant struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
-type ParticipantWithAdmin struct {
-	ID             int64           `json:"id"`
-	Login          string          `json:"login"`
-	Avatar         *string         `json:"avatar"`
-	Admin          bool            `json:"admin"`
-	ShortInfo      *string         `json:"shortInfo"`
-	LoginColor     *string         `json:"loginColor"`
-	AdditionalData *AdditionalData `json:"additionalData"`
-}
-
 type PinnedMessageDto struct {
 	ID             int64        `json:"id"`
 	Text           string       `json:"text"`
@@ -238,12 +231,11 @@ type PinnedMessageEvent struct {
 }
 
 type PreviewCreatedEvent struct {
-	ID            string  `json:"id"`
-	URL           string  `json:"url"`
-	PreviewURL    *string `json:"previewUrl"`
-	AType         *string `json:"aType"`
-	CorrelationID *string `json:"correlationId"`
-	FileItemUUID  string  `json:"fileItemUuid"`
+	ID           string  `json:"id"`
+	URL          string  `json:"url"`
+	PreviewURL   *string `json:"previewUrl"`
+	AType        *string `json:"aType"`
+	FileItemUUID string  `json:"fileItemUuid"`
 }
 
 type PublishedMessageDto struct {
@@ -328,6 +320,18 @@ type UserTypingDto struct {
 	Login         string `json:"login"`
 	ParticipantID int64  `json:"participantId"`
 	ChatID        int64  `json:"chatId"`
+}
+
+type UserViewEnrichedDto struct {
+	ID             int64           `json:"id"`
+	Login          string          `json:"login"`
+	Avatar         *string         `json:"avatar"`
+	Admin          bool            `json:"admin"`
+	ShortInfo      *string         `json:"shortInfo"`
+	LoginColor     *string         `json:"loginColor"`
+	AdditionalData *AdditionalData `json:"additionalData"`
+	CanChange      bool            `json:"canChange"`
+	CanDelete      bool            `json:"canDelete"`
 }
 
 type VideoCallInvitationDto struct {

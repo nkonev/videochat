@@ -38,6 +38,7 @@ type ReactionChangedEvent struct {
 
 type ChatEvent struct {
 	TraceString                  string                        `json:"-"`
+	CorrelationId                *string                       `json:"-"`
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
 	UserId                       int64                         `json:"userId"`
@@ -45,7 +46,7 @@ type ChatEvent struct {
 	MessageDeletedNotification   *MessageDeletedDto            `json:"messageDeletedNotification"`
 	MessageBroadcastNotification *MessageBroadcastNotification `json:"messageBroadcastNotification"`
 	PreviewCreatedEvent          *PreviewCreatedEvent          `json:"previewCreatedEvent"`
-	Participants                 *[]*UserWithAdmin             `json:"participants"`
+	Participants                 *[]*UserViewEnrichedDto       `json:"participants"`
 	PromoteMessageNotification   *PinnedMessageEvent           `json:"promoteMessageNotification"`
 	FileEvent                    *WrappedFileInfoDto           `json:"fileEvent"`
 	PublishedMessageNotification *PublishedMessageEvent        `json:"publishedMessageEvent"`
@@ -90,6 +91,7 @@ type BrowserNotification struct {
 
 type GlobalUserEvent struct {
 	TraceString                      string                          `json:"-"`
+	CorrelationId                    *string                         `json:"-"`
 	EventType                        string                          `json:"eventType"`
 	UserId                           int64                           `json:"userId"`
 	ChatNotification                 *ChatDto                        `json:"chatNotification"`
@@ -113,12 +115,11 @@ func (GlobalUserEvent) Name() eventbus.EventName {
 }
 
 type PreviewCreatedEvent struct {
-	Id            string  `json:"id"`
-	Url           string  `json:"url"`
-	PreviewUrl    *string `json:"previewUrl"`
-	Type          *string `json:"aType"`
-	CorrelationId string  `json:"correlationId"`
-	FileItemUuid  string  `json:"fileItemUuid"`
+	Id           string  `json:"id"`
+	Url          string  `json:"url"`
+	PreviewUrl   *string `json:"previewUrl"`
+	Type         *string `json:"aType"`
+	FileItemUuid string  `json:"fileItemUuid"`
 }
 
 type UserOnline struct {
@@ -153,7 +154,6 @@ type FileInfoDto struct {
 	CanShowAsImage bool      `json:"canShowAsImage"`
 	CanPlayAsAudio bool      `json:"canPlayAsAudio"`
 	FileItemUuid   string    `json:"fileItemUuid"`
-	CorrelationId  *string   `json:"correlationId"`
 	Previewable    bool      `json:"previewable"`
 	Type           *string   `json:"aType"`
 }

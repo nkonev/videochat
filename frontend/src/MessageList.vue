@@ -29,6 +29,7 @@
             :isBlog="chatStore.chatDto.blog"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
+            @syncEmbedMessage="this.syncEmbedMessage"
             @replyOnMessage="this.replyOnMessage"
             @onFilesClicked="onFilesClicked"
             @showReadUsers="this.showReadUsers"
@@ -460,6 +461,11 @@
           } else {
             bus.emit(OPEN_EDIT_MESSAGE, {dto: editMessageDto, actionType: edit_message});
           }
+        },
+        syncEmbedMessage(dto) {
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/sync-embed`, null, {
+            signal: this.requestAbortController.signal
+          })
         },
         replyOnMessage(dto) {
           const replyMessage = {
