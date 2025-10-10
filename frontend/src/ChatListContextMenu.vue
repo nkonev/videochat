@@ -65,7 +65,7 @@ export default {
                         window.open(getChatLink(this.menuableItem.id), '_blank');
                     }
                 });
-                if (!this.menuableItem.isResultFromSearch) {
+                if (this.menuableItem.canPin) {
                     if (this.menuableItem.pinned) {
                         ret.push({
                             title: this.$vuetify.locale.t('$vuetify.remove_from_pinned'),
@@ -92,12 +92,28 @@ export default {
                 if (this.menuableItem.blog) {
                   ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.goToBlog(this.menuableItem) });
                 }
+                if (this.menuableItem.canAddParticipant) {
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.add_participants'), icon: 'mdi-account-multiple-plus', action: () => this.$emit('addParticipants', this.menuableItem) });
+                }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_video_call_link'), icon: 'mdi-content-copy', action: () => this.copyCallLink(this.menuableItem) });
                 if (!this.menuableItem.isResultFromSearch && this.menuableItem.unreadMessages != 0) {
                   ret.push({title: this.$vuetify.locale.t('$vuetify.mark_as_read'), icon: 'mdi-read', action: () => this.$emit('markAsRead', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.mark_as_read_all'), icon: 'mdi-check-all', action: () => this.$emit('markAsReadAll', this.menuableItem) });
+                if (this.menuableItem.considerMessagesAsUnread) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.remove_contributing_to_unread'),
+                    icon: 'mdi-message-badge-outline',
+                    action: () => this.$emit('removeFromContributingToUnread', this.menuableItem)
+                  });
+                } else {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.start_contributing_to_unread'),
+                    icon: 'mdi-message-badge',
+                    action: () => this.$emit('startFromContributingToUnread', this.menuableItem)
+                  });
+                }
             }
             return ret;
         },
