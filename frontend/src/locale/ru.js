@@ -360,5 +360,10 @@ export default {
     message_edit_quote: "Цитата",
     strip_div_span: "Вырезать <div><span>",
     replace_img_with_alt: "Заменить <img> на alt",
-    auto_microphone_enable: "Авто вкл. микрофон (когда возможно)"
+    auto_microphone_enable: "Авто вкл. микрофон (когда возможно)",
+    sync_embed: "Синхронизировать",
+    remove_contributing_to_unread: "Непрочит. вкл",
+    start_contributing_to_unread: "Непрочит. выкл",
+    regular_participant_can_add_participant: "Участники могут добавлять участников",
+    add_participants: "Добавить участников"
 }

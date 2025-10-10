@@ -168,12 +168,14 @@ import bus, {
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL,
   OPEN_SIMPLE_MODAL, REFRESH_ON_WEBSOCKET_RESTORED,
   WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
+  CHAT_TET_A_TET_UPSERTED
 } from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
+import {v4 as uuidv4} from "uuid";
 
 export default {
   components: {
@@ -191,6 +193,7 @@ export default {
       isInVideo: false,
       userProfileEventsSubscription: null,
       initialized: false,
+      chatCorrelationId: null,
     }
   },
   computed: {
@@ -293,13 +296,24 @@ export default {
       this.tetATet(user.id)
     },
     tetATet(withUserId) {
-      axios.put(`/api/chat/tet-a-tet/${withUserId}`, {
-        signal: this.requestAbortController.signal
-      }).then(response => {
-        this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
+      this.chatCorrelationId = uuidv4();
+      this.chatStore.incrementProgressCount();
+      axios.put(`/api/chat/tet-a-tet/${withUserId}`, null, {
+        signal: this.requestAbortController.signal,
+        headers: {
+          "X-CorrelationId": this.chatCorrelationId,
+        }
       })
     },
-
+    onChatAdded(data) {
+      if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == data.correlationId) {
+        const routeDto = {name: chat_name, params: {id: data.chatId}};
+        this.$router.push(routeDto).finally(() => {
+          this.chatStore.decrementProgressCount();
+          this.chatCorrelationId = null;
+        });
+      }
+    },
     onUserStatusChanged(dtos) {
       if (dtos) {
         dtos?.forEach(dtoItem => {
@@ -436,6 +450,7 @@ export default {
     bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.on(CHAT_TET_A_TET_UPSERTED, this.onChatAdded);
 
     this.setMainTitle();
 
@@ -453,6 +468,7 @@ export default {
     bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.off(CHAT_TET_A_TET_UPSERTED, this.onChatAdded);
 
     this.unsetMainTitle();
 
@@ -461,6 +477,8 @@ export default {
     this.isInVideo = false;
 
     this.userProfileEventsSubscription = null;
+
+    this.chatCorrelationId = null;
   },
   watch: {
     '$vuetify.locale.current': {

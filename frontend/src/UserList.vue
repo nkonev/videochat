@@ -172,6 +172,7 @@ import bus, {
   REFRESH_ON_WEBSOCKET_RESTORED,
   SEARCH_STRING_CHANGED,
   WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
+  CHAT_TET_A_TET_UPSERTED
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_USERS} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -194,6 +195,7 @@ import {
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
+import {v4 as uuidv4} from "uuid";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -219,6 +221,7 @@ export default {
         userEventsSubscription: null,
         isLoading: false,
         initialized: false,
+        chatCorrelationId: null,
     }
   },
   computed: {
@@ -521,7 +524,9 @@ export default {
     addItem(dto) {
       console.log("Adding item", dto);
       this.transformItem(dto);
-      this.items.unshift(dto);
+
+      replaceOrPrepend(this.items, [dto]);
+
       this.reduceListAfterAdd(false);
       this.updateTopAndBottomIds();
     },
@@ -601,11 +606,23 @@ export default {
       bus.emit(OPEN_SET_PASSWORD_MODAL, {userId: user.id, userName: user.login})
     },
     tetATet(user) {
+        this.chatCorrelationId = uuidv4();
+        this.chatStore.incrementProgressCount();
         axios.put(`/api/chat/tet-a-tet/${user.id}`, null, {
-          signal: this.requestAbortController.signal
-        }).then(response => {
-            this.$router.push(({ name: chat_name, params: { id: response.data.id}}));
+          signal: this.requestAbortController.signal,
+          headers: {
+            "X-CorrelationId": this.chatCorrelationId,
+          }
         })
+    },
+    onChatAdded(data) {
+      if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == data.correlationId) {
+        const routeDto = {name: chat_name, params: {id: data.chatId}};
+        this.$router.push(routeDto).finally(() => {
+          this.chatStore.decrementProgressCount();
+          this.chatCorrelationId = null;
+        });
+      }
     },
     unconfirmUser(user) {
         axios.post('/api/aaa/user/confirm', {userId: user.id, confirm: false}, {
@@ -740,6 +757,7 @@ export default {
     bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
     bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.on(CHAT_TET_A_TET_UPSERTED, this.onChatAdded);
 
     if (this.canDrawUsers()) {
       await this.doInitialize();
@@ -767,12 +785,15 @@ export default {
     bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
     bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+    bus.off(CHAT_TET_A_TET_UPSERTED, this.onChatAdded);
 
     setTitle(null);
     this.chatStore.title = null;
     this.chatStore.isShowSearch = false;
 
     this.userEventsSubscription = null;
+
+    this.chatCorrelationId = null;
   }
 }
 </script>

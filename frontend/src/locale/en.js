@@ -360,5 +360,10 @@ export default {
     message_edit_quote: "Quote",
     strip_div_span: "Strip <div><span>",
     replace_img_with_alt: "Replace <img> with alt",
-    auto_microphone_enable: "Auto microphone enable (when possible)"
+    auto_microphone_enable: "Auto microphone enable (when possible)",
+    sync_embed: "Sync embed",
+    remove_contributing_to_unread: "Unread mute",
+    start_contributing_to_unread: "Unread unmute",
+    regular_participant_can_add_participant: "Regular participant can add participants",
+    add_participants: "Add participants"
 }
