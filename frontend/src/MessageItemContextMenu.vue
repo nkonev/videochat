@@ -87,6 +87,9 @@ export default {
                 if (this.menuableItem.canEdit) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.edit'), icon: 'mdi-lead-pencil', iconColor: 'primary', action: () => this.$emit('editMessage', this.menuableItem) });
                 }
+                if (this.menuableItem.canSyncEmbed) {
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.sync_embed'), icon: 'mdi-sync', action: () => this.$emit('syncEmbedMessage', this.menuableItem) });
+                }
                 if (hasLength(this.selection)) {
                   ret.push({
                     title: this.$vuetify.locale.t('$vuetify.copy_selected'),
@@ -127,7 +130,7 @@ export default {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.resend'), icon: 'mdi-share', action: () => this.$emit('shareMessage', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_message'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
-                if (!this.menuableItem.blogPost && this.isBlog && this.menuableItem.owner?.id == this.chatStore.currentUser.id) {
+                if (this.menuableItem.canMakeBlogPost) {
                     ret.push({title: this.$vuetify.locale.t('$vuetify.make_blog_post'), icon: 'mdi-postage-stamp', action: () => this.$emit('makeBlogPost', this.menuableItem)});
                 }
                 if (this.isBlog) {
