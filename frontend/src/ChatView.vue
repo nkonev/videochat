@@ -458,6 +458,7 @@ export default {
                                 subscription{
                                   chatEvents(chatId: ${this.chatId}) {
                                     eventType
+                                    correlationId
                                     messageEvent {
                                       ...DisplayMessageDtoFragment
                                     }
@@ -605,65 +606,85 @@ export default {
                 `
     },
     onNextSubscriptionElement(e) {
-      if (getChatEventsData(e).eventType === 'message_created') {
-        const d = getChatEventsData(e).messageEvent;
+      const che = getChatEventsData(e);
+      if (che.eventType === 'message_created') {
+        const d = che.messageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_ADD, d);
-      } else if (getChatEventsData(e).eventType === 'message_deleted') {
-        const d = getChatEventsData(e).messageDeletedEvent;
+      } else if (che.eventType === 'message_deleted') {
+        const d = che.messageDeletedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_DELETED, d);
-      } else if (getChatEventsData(e).eventType === 'message_edited') {
-        const d = getChatEventsData(e).messageEvent;
+      } else if (che.eventType === 'message_edited') {
+        const d = che.messageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "user_broadcast") {
-        const d = getChatEventsData(e).messageBroadcastEvent;
+      } else if (che.eventType === "user_broadcast") {
+        const d = che.messageBroadcastEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_BROADCAST, d);
-      } else if (getChatEventsData(e).eventType === "preview_created") {
-        const d = getChatEventsData(e).previewCreatedEvent;
+      } else if (che.eventType === "preview_created") {
+        const d = che.previewCreatedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PREVIEW_CREATED, d);
-      } else if (getChatEventsData(e).eventType === "participant_added") {
-        const d = getChatEventsData(e).participantsEvent;
+      } else if (che.eventType === "participant_added") {
+        const d = che.participantsEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PARTICIPANT_ADDED, d);
-      } else if (getChatEventsData(e).eventType === "participant_deleted") {
-        const d = getChatEventsData(e).participantsEvent;
+      } else if (che.eventType === "participant_deleted") {
+        const d = che.participantsEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PARTICIPANT_DELETED, d);
-      } else if (getChatEventsData(e).eventType === "participant_edited") {
-        const d = getChatEventsData(e).participantsEvent;
+      } else if (che.eventType === "participant_edited") {
+        const d = che.participantsEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PARTICIPANT_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "pinned_message_promote") {
-        const d = getChatEventsData(e).promoteMessageEvent;
+      } else if (che.eventType === "pinned_message_promote") {
+        const d = che.promoteMessageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PINNED_MESSAGE_PROMOTED, d);
-      } else if (getChatEventsData(e).eventType === "pinned_message_unpromote") {
-        const d = getChatEventsData(e).promoteMessageEvent;
+      } else if (che.eventType === "pinned_message_unpromote") {
+        const d = che.promoteMessageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PINNED_MESSAGE_UNPROMOTED, d);
-      } else if (getChatEventsData(e).eventType === "pinned_message_edit") {
-        const d = getChatEventsData(e).promoteMessageEvent;
+      } else if (che.eventType === "pinned_message_edit") {
+        const d = che.promoteMessageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PINNED_MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "published_message_add") {
-          const d = getChatEventsData(e).publishedMessageEvent;
-          bus.emit(PUBLISHED_MESSAGE_ADD, d);
-      } else if (getChatEventsData(e).eventType === "published_message_remove") {
-          const d = getChatEventsData(e).publishedMessageEvent;
-          bus.emit(PUBLISHED_MESSAGE_REMOVE, d);
-      } else if (getChatEventsData(e).eventType === "published_message_edit") {
-          const d = getChatEventsData(e).publishedMessageEvent;
-          bus.emit(PUBLISHED_MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "file_created") {
-        const d = getChatEventsData(e).fileEvent;
+      } else if (che.eventType === "published_message_add") {
+        const d = che.publishedMessageEvent;
+        d.correlationId = che.correlationId;
+        bus.emit(PUBLISHED_MESSAGE_ADD, d);
+      } else if (che.eventType === "published_message_remove") {
+        const d = che.publishedMessageEvent;
+        d.correlationId = che.correlationId;
+        bus.emit(PUBLISHED_MESSAGE_REMOVE, d);
+      } else if (che.eventType === "published_message_edit") {
+        const d = che.publishedMessageEvent;
+        d.correlationId = che.correlationId;
+        bus.emit(PUBLISHED_MESSAGE_EDITED, d);
+      } else if (che.eventType === "file_created") {
+        const d = che.fileEvent;
+        d.correlationId = che.correlationId;
         bus.emit(FILE_CREATED, d);
-      } else if (getChatEventsData(e).eventType === "file_removed") {
-        const d = getChatEventsData(e).fileEvent;
+      } else if (che.eventType === "file_removed") {
+        const d = che.fileEvent;
+        d.correlationId = che.correlationId;
         bus.emit(FILE_REMOVED, d);
-      } else if (getChatEventsData(e).eventType === "file_updated") {
-        const d = getChatEventsData(e).fileEvent;
+      } else if (che.eventType === "file_updated") {
+        const d = che.fileEvent;
+        d.correlationId = che.correlationId;
         bus.emit(FILE_UPDATED, d);
-      } else if (getChatEventsData(e).eventType === "reaction_changed") {
-        const d = getChatEventsData(e).reactionChangedEvent;
+      } else if (che.eventType === "reaction_changed") {
+        const d = che.reactionChangedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(REACTION_CHANGED, d);
-      } else if (getChatEventsData(e).eventType === "reaction_removed") {
-        const d = getChatEventsData(e).reactionChangedEvent;
+      } else if (che.eventType === "reaction_removed") {
+        const d = che.reactionChangedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(REACTION_REMOVED, d);
-      } else if (getChatEventsData(e).eventType === "messages_reload") {
-          bus.emit(MESSAGES_RELOAD);
+      } else if (che.eventType === "messages_reload") {
+        bus.emit(MESSAGES_RELOAD);
       }
     },
     getPinnedPromotedRoute(item) {

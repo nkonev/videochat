@@ -99,7 +99,8 @@ func convertToUserOnline(userOnline dto.UserOnline) *model.UserStatusEvent {
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	var result = &model.ChatEvent{
-		EventType: e.EventType,
+		EventType:     e.EventType,
+		CorrelationID: e.CorrelationId,
 	}
 	messageDto := e.MessageNotification
 	if messageDto != nil {
@@ -276,7 +277,8 @@ func convertPinnedMessageDto(e *dto.PinnedMessageDto) *model.PinnedMessageDto {
 func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
 	var ret = &model.GlobalEvent{
-		EventType: e.EventType,
+		EventType:     e.EventType,
+		CorrelationID: e.CorrelationId,
 	}
 	chatEvent := e.ChatNotification
 	if chatEvent != nil {

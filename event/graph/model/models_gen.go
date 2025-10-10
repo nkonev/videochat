@@ -74,6 +74,7 @@ type ChatDto struct {
 
 type ChatEvent struct {
 	EventType             string                        `json:"eventType"`
+	CorrelationID         *string                       `json:"correlationId"`
 	MessageEvent          *DisplayMessageDto            `json:"messageEvent"`
 	MessageDeletedEvent   *MessageDeletedDto            `json:"messageDeletedEvent"`
 	MessageBroadcastEvent *MessageBroadcastNotification `json:"messageBroadcastEvent"`
@@ -150,6 +151,7 @@ type ForceLogoutEvent struct {
 
 type GlobalEvent struct {
 	EventType                      string                          `json:"eventType"`
+	CorrelationID                  *string                         `json:"correlationId"`
 	ChatEvent                      *ChatDto                        `json:"chatEvent"`
 	ChatDeletedEvent               *ChatDeletedDto                 `json:"chatDeletedEvent"`
 	CoChattedParticipantEvent      *Participant                    `json:"coChattedParticipantEvent"`

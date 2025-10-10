@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 	}
 
 	ChatEvent struct {
+		CorrelationID         func(childComplexity int) int
 		EventType             func(childComplexity int) int
 		FileEvent             func(childComplexity int) int
 		MessageBroadcastEvent func(childComplexity int) int
@@ -193,6 +194,7 @@ type ComplexityRoot struct {
 		ChatDeletedEvent               func(childComplexity int) int
 		ChatEvent                      func(childComplexity int) int
 		CoChattedParticipantEvent      func(childComplexity int) int
+		CorrelationID                  func(childComplexity int) int
 		EventType                      func(childComplexity int) int
 		ForceLogout                    func(childComplexity int) int
 		HasUnreadMessagesChanged       func(childComplexity int) int
@@ -769,6 +771,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ChatDto.UnreadMessages(childComplexity), true
 
+	case "ChatEvent.correlationId":
+		if e.complexity.ChatEvent.CorrelationID == nil {
+			break
+		}
+
+		return e.complexity.ChatEvent.CorrelationID(childComplexity), true
+
 	case "ChatEvent.eventType":
 		if e.complexity.ChatEvent.EventType == nil {
 			break
@@ -1209,6 +1218,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.GlobalEvent.CoChattedParticipantEvent(childComplexity), true
+
+	case "GlobalEvent.correlationId":
+		if e.complexity.GlobalEvent.CorrelationID == nil {
+			break
+		}
+
+		return e.complexity.GlobalEvent.CorrelationID(childComplexity), true
 
 	case "GlobalEvent.eventType":
 		if e.complexity.GlobalEvent.EventType == nil {
@@ -4540,6 +4556,47 @@ func (ec *executionContext) fieldContext_ChatEvent_eventType(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _ChatEvent_correlationId(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatEvent_correlationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CorrelationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatEvent_correlationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChatEvent_messageEvent(ctx context.Context, field graphql.CollectedField, obj *model.ChatEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChatEvent_messageEvent(ctx, field)
 	if err != nil {
@@ -7182,6 +7239,47 @@ func (ec *executionContext) _GlobalEvent_eventType(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_GlobalEvent_eventType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalEvent_correlationId(ctx context.Context, field graphql.CollectedField, obj *model.GlobalEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalEvent_correlationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CorrelationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalEvent_correlationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalEvent",
 		Field:      field,
@@ -10985,6 +11083,8 @@ func (ec *executionContext) fieldContext_Subscription_chatEvents(ctx context.Con
 			switch field.Name {
 			case "eventType":
 				return ec.fieldContext_ChatEvent_eventType(ctx, field)
+			case "correlationId":
+				return ec.fieldContext_ChatEvent_correlationId(ctx, field)
 			case "messageEvent":
 				return ec.fieldContext_ChatEvent_messageEvent(ctx, field)
 			case "messageDeletedEvent":
@@ -11076,6 +11176,8 @@ func (ec *executionContext) fieldContext_Subscription_globalEvents(_ context.Con
 			switch field.Name {
 			case "eventType":
 				return ec.fieldContext_GlobalEvent_eventType(ctx, field)
+			case "correlationId":
+				return ec.fieldContext_GlobalEvent_correlationId(ctx, field)
 			case "chatEvent":
 				return ec.fieldContext_GlobalEvent_chatEvent(ctx, field)
 			case "chatDeletedEvent":
@@ -15881,6 +15983,8 @@ func (ec *executionContext) _ChatEvent(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "correlationId":
+			out.Values[i] = ec._ChatEvent_correlationId(ctx, field, obj)
 		case "messageEvent":
 			out.Values[i] = ec._ChatEvent_messageEvent(ctx, field, obj)
 		case "messageDeletedEvent":
@@ -16309,6 +16413,8 @@ func (ec *executionContext) _GlobalEvent(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "correlationId":
+			out.Values[i] = ec._GlobalEvent_correlationId(ctx, field, obj)
 		case "chatEvent":
 			out.Values[i] = ec._GlobalEvent_chatEvent(ctx, field, obj)
 		case "chatDeletedEvent":

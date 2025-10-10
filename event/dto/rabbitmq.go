@@ -38,6 +38,7 @@ type ReactionChangedEvent struct {
 
 type ChatEvent struct {
 	TraceString                  string                        `json:"-"`
+	CorrelationId                *string                       `json:"-"`
 	EventType                    string                        `json:"eventType"`
 	ChatId                       int64                         `json:"chatId"`
 	UserId                       int64                         `json:"userId"`
@@ -90,6 +91,7 @@ type BrowserNotification struct {
 
 type GlobalUserEvent struct {
 	TraceString                      string                          `json:"-"`
+	CorrelationId                    *string                         `json:"-"`
 	EventType                        string                          `json:"eventType"`
 	UserId                           int64                           `json:"userId"`
 	ChatNotification                 *ChatDto                        `json:"chatNotification"`
