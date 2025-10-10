@@ -294,6 +294,16 @@
   tags:
     - videochat
 
+- name: Create kafka-1 data directory if it does not exist
+  ansible.builtin.file:
+    path: /mnt/chat-kafka-1
+    state: directory
+    mode: u=rwx,g-rwx,o-rwx
+    owner: 1000
+    group: 1000
+  tags:
+    - videochat
+
 - name: Create PostgreSQL data directory if it does not exist
   ansible.builtin.file:
     path: /mnt/chat-postgresql

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
-	"nkonev.name/chat/db"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/rabbitmq"
@@ -17,7 +17,7 @@ import (
 
 type AaaUserProfileUpdateListener func(*amqp.Delivery) error
 
-func CreateAaaUserProfileUpdateListener(lgr *logger.Logger, not *services.Events, typeRegistry *type_registry.TypeRegistryInstance, db *db.DB) AaaUserProfileUpdateListener {
+func CreateRabbitAaaUserProfileUpdateListener(lgr *logger.LoggerWrapper, cfg *config.AppConfig, not *services.InputEventHandler, typeRegistry *type_registry.TypeRegistryInstance) AaaUserProfileUpdateListener {
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
@@ -26,13 +26,22 @@ func CreateAaaUserProfileUpdateListener(lgr *logger.Logger, not *services.Events
 		defer span.End()
 
 		bytesData := msg.Body
-		strData := string(bytesData)
 		aType := msg.Type
-		lgr.WithTracing(ctx).Debugf("Received %v with type %v", strData, aType)
+
+		listenerName := "aaa"
+
+		if cfg.RabbitMQ.Dump {
+			strData := string(bytesData)
+
+			if cfg.RabbitMQ.PrettyLog && !cfg.Logger.Json {
+				fmt.Printf("[rabbitmq listener] Received message: listener=%s, trace_id=%s, headers=%v, type=%v, body: %v\n", listenerName, logger.GetTraceId(ctx), msg.Headers, aType, strData)
+			} else {
+				lgr.InfoContext(ctx, fmt.Sprintf("[rabbitmq listener] Received message: listener=%s, trace_id=%s, headers=%v, type=%v, body: %v\n", listenerName, logger.GetTraceId(ctx), msg.Headers, aType, strData))
+			}
+		}
 
 		if !typeRegistry.HasType(aType) {
-			errStr := fmt.Sprintf("Unexpected type in rabbit fanout notifications: %v", aType)
-			lgr.WithTracing(ctx).Debugf(errStr)
+			lgr.InfoContext(ctx, "Unexpected type in rabbit aaa_listener", "type", aType)
 			return nil
 		}
 
@@ -42,15 +51,15 @@ func CreateAaaUserProfileUpdateListener(lgr *logger.Logger, not *services.Events
 		case dto.UserAccountEventChanged:
 			err := json.Unmarshal(bytesData, &bindTo)
 			if err != nil {
-				lgr.WithTracing(ctx).Errorf("Error during deserialize notification %v", err)
+				lgr.ErrorContext(ctx, "Error during deserialize notification", logger.AttributeError, err)
 				return err
 			}
-			if bindTo.EventType == "user_account_changed" {
-				not.NotifyAboutProfileChanged(ctx, bindTo.User, db)
+			if bindTo.EventType == dto.EventTypeUserAccountChanged {
+				not.NotifyAboutProfileChanged(ctx, bindTo.User)
 			}
 
 		default:
-			lgr.WithTracing(ctx).Errorf("Unexpected type : %v", anInstance)
+			lgr.ErrorContext(ctx, "Unexpected type:", "instance", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))
 		}
 

@@ -39,8 +39,8 @@ services:
         - "traefik.http.routers.chat-version-router.middlewares=chat-stripprefix-middleware"
 
     environment:
-      - CHAT_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/chat_old?sslmode=disable&application_name=chat-app
-      - CHAT_SERVER.BODY.LIMIT=2M
+      - CHAT_KAFKA.BOOTSTRAPSERVERS=kafka-1:9092
+      - CHAT_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/chat?sslmode=disable&application_name=chat-app
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - CHAT_REDIS.ADDRESS=redis:6379
@@ -49,11 +49,15 @@ services:
       - CHAT_FRONTENDURL=https://{{ domain }}
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=
       - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com,https://coub.com,https://vk.com,https://rutube.ru,https://player.vimeo.com,https://player.smotrim.ru,https://vkvideo.ru
-      - CHAT_RESTRICTCREATEBLOG={{ chat_restrict_create_blog }}
+      - CHAT_BLOG.RESTRICTCREATEBLOG={{ chat_restrict_create_blog }}
       # disable logging to filename because of capturing from stdout
       - CHAT_LOGGER.WRITETOFILE=false
-      - CHAT_SCHEDULERS.CLEANCHATSOFDELETEDUSERTASK.ENABLED=true
+      - CHAT_SCHEDULERS.CLEANABANDONEDCHATSTASK.ENABLED=true
+      - CHAT_SCHEDULERS.CLEANDELETEDUSERSDATATASK.ENABLED=true
       - CHAT_LOGGER.LEVEL=info
+
+    command:
+      - serve
 
     logging:
       driver: "fluentd"

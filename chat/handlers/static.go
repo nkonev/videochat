@@ -2,35 +2,34 @@ package handlers
 
 import (
 	"embed"
-	"github.com/labstack/echo/v4"
+	"errors"
 	"io/fs"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
-	"strings"
 )
+
+type StaticHandler struct {
+	lgr       *logger.LoggerWrapper
+	cfg       *config.AppConfig
+	staticDir http.FileSystem
+}
 
 //go:embed static
 var embeddedFiles embed.FS
 
-type StaticMiddleware echo.MiddlewareFunc
-
-func ConfigureStaticMiddleware(lgr *logger.Logger) StaticMiddleware {
+func NewStaticHandler(lgr *logger.LoggerWrapper, cfg *config.AppConfig) (*StaticHandler, error) {
 	fsys, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
-		lgr.Panicf("Cannot open static embedded dir")
+		return nil, errors.New("Cannot open static embedded dir")
 	}
 	staticDir := http.FS(fsys)
 
-	h := http.FileServer(staticDir)
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/assets") || reqUrl == "/git.json" {
-				h.ServeHTTP(c.Response().Writer, c.Request())
-				return nil
-			} else {
-				return next(c)
-			}
-		}
-	}
+	return &StaticHandler{lgr: lgr, cfg: cfg, staticDir: staticDir}, nil
+}
+
+func (mc *StaticHandler) StaticGitJson(g *gin.Context) {
+	g.FileFromFS("/"+gitJson, mc.staticDir)
 }

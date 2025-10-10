@@ -3,18 +3,18 @@ package rabbitmq
 import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
-	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/fx"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
 )
 
-func CreateRabbitMqConnection(lgr *logger.Logger, lc fx.Lifecycle) *rabbitmq.Connection {
-	rabbitmq.Debug = true
+func CreateRabbitMqConnection(lgr *logger.LoggerWrapper, cfg *config.AppConfig, lc fx.Lifecycle) (*rabbitmq.Connection, error) {
+	rabbitmq.Debug = cfg.RabbitMQ.Debug
 
-	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
+	conn, err := rabbitmq.Dial(cfg.RabbitMQ.Url)
 	if err != nil {
-		lgr.Panic(err)
+		return nil, err
 	}
 
 	lc.Append(fx.Hook{
@@ -24,23 +24,23 @@ func CreateRabbitMqConnection(lgr *logger.Logger, lc fx.Lifecycle) *rabbitmq.Con
 		},
 	})
 
-	return conn
+	return conn, nil
 }
 
-func CreateRabbitMqChannel(lgr *logger.Logger, connection *rabbitmq.Connection) *rabbitmq.Channel {
+func CreateRabbitMqChannel(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection) (*rabbitmq.Channel, error) {
 	consumeCh, err := connection.Channel(nil)
 	if err != nil {
-		lgr.Panic(err)
+		return nil, err
 	}
-	return consumeCh
+	return consumeCh, nil
 }
 
-func CreateRabbitMqChannelWithCallback(lgr *logger.Logger, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) *rabbitmq.Channel {
+func CreateRabbitMqChannelWithCallback(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, clbFunc rabbitmq.ChannelCallbackFunc) (*rabbitmq.Channel, error) {
 	consumeCh, err := connection.Channel(clbFunc)
 	if err != nil {
-		lgr.Panic(err)
+		return nil, err
 	}
-	return consumeCh
+	return consumeCh, nil
 }
 
 type AmqpHeadersCarrier map[string]interface{}

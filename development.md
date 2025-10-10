@@ -310,6 +310,21 @@ curl -i -X POST 'http://localhost:9080/recreate-oauth2-mocks'
 
 To interact with emulator, you need to use `http://localhost:8081`, not `http://127.0.0.1:8081` because od host checks in OAuth
 
+# Chat
+## Exporting
+```bash
+
+docker exec -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_chat --filter desired-state=running -q)) chat export --cqrs.export.file=/tmp/chat.jsonl
+docker cp $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_chat --filter desired-state=running -q)):/tmp/chat.jsonl /tmp/chat.jsonl
+docker exec -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_chat --filter desired-state=running -q)) rm -rf /tmp/chat.jsonl
+```
+
+
+# Public
+## Sitemap
+```bash
+curl -Ss --url 'http://localhost:8081/public/blog/sitemap.xml'
+```
 
 # Go
 
@@ -1010,6 +1025,12 @@ curl 'http://127.0.0.1:28200/chat/_mapping' | jq '.'
 curl 'http://127.0.0.1:28200/chat/_doc/3' | jq '.'
 ```
 
+# Kafka
+```bash
+# Show offsets
+docker exec -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_kafka-1 --filter desired-state=running -q)) /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka-1:29092 --group ChatProjection --describe
+```
+
 # Tracing
 ```
 curl -i 'http://localhost:3100/sitemap.xml'
@@ -1025,7 +1046,9 @@ npx playwright test --headed --project=chromium --debug
 
 npx playwright test --headed --project=chromium test/login.spec.mjs
 
-npx playwright test --headed --project=chromium -g "login vkontakte and"
+npx playwright test --headed --project=chromium -g "login vkontakte and google then create chat then write a message"
+
+npx playwright test --headed --project=chromium -g "login vkontakte and google then create chat then join"
 
 # https://habr.com/en/companies/otus/articles/757630/
 npx playwright test --ui --project=chromium
@@ -1468,5 +1491,7 @@ SELECT * FROM citus_shards;
 SELECT * from pg_dist_shard;
 SELECT * from citus_get_active_worker_nodes();
 SELECT * FROM citus_check_cluster_node_health();
+
+docker service logs -f --tail 100 VIDEOCHATSTACK_chat
 
 ```

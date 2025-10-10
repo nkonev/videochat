@@ -1,3 +1,3 @@
 package app
 
-const APP_NAME = "chat"
+const TRACE_RESOURCE = "chat"

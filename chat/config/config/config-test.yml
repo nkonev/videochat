@@ -1,0 +1,136 @@
+kafka:
+  bootstrapServers:
+    - 127.0.0.1:39092
+  topicChat:
+    topic: event-chat
+    numPartitions: 3
+    replicationFactor: 1
+    retention: "-1" # infinity
+  topicUser:
+    topic: event-user
+    numPartitions: 3
+    replicationFactor: 1
+    retention: "86400000" # 1 day
+  consumerGroupChat: ChatProjection
+  consumerGroupUser: UserProjection
+  producer:
+    retryMax: 10
+    returnSuccess: true
+    retryBackoff: 2s
+    clientId: "chat-producer"
+  consumer:
+    returnErrors: true
+    clientId: "chat-consumer"
+    batchSize: 1024
+    fetchMaxWait: 500ms
+
+otlp:
+  endpoint: localhost:34317
+postgresql:
+  url: "postgres://postgres:postgresqlPassword@localhost:45401/chat?sslmode=disable&application_name=cqrs-app"
+  maxOpenConnections: 16
+  maxIdleConnections: 4
+  maxLifetime: 30s
+  dump: true
+  logLevel: "debug"
+  migration:
+    migrationTable: "go_migrate"
+    statementDuration: 15m
+
+server:
+  address: ":8235"
+  readTimeout: "10s"
+  writeTimeout: "10s"
+  maxHeaderBytes: 20000000
+  dump: true
+  prettyLog: true
+cqrs:
+  # sleepBeforeEvent: 500ms
+  sleepBeforeEvent: 0
+  # default 2s
+  checkAreEventsProcessedInterval: 100ms
+  dump: true
+  prettyLog: true
+  import:
+    file: ./export.jsonl
+  export:
+    file: ./export.jsonl
+  projections:
+    chatUserView:
+      maxViewableParticipants: 10
+      lastMessageMaxTextDbPreviewSize: 512
+    blogView:
+      maxTextPreviewSize: 512
+  commands:
+    maxParticipantsPerSingleCommand: 20
+  testHelperMethods: false
+  sleepBeforePolling: 250ms
+  pollingMaxTimes: 1000
+
+# Rest client
+http:
+  maxIdleConns: 2
+  idleConnTimeout: '10s'
+  disableCompression: false
+  prettyLog: true
+  dump: true
+
+logger:
+  level: info
+  json: false
+  writeToFile: false
+
+aaa:
+  url:
+    base: "http://localhost:8060"
+    getUsers: "/internal/user/list"
+    searchUsers: "/internal/user/search"
+    getUserOnlines: "/internal/user/online"
+    getUserExists: "/internal/user/exist"
+
+frontendUrl: "http://localhost:8081"
+
+message:
+  # The list of allowed url prefixes which can be used in insertable image, video, ..., separated by , (comma)
+  # Let's consider an example: "http://api.site.local:8080"
+  # the element allows regular urls from this site, such as "http://api.site.local:8080/api/storage/download?file=chat%2F34%2Fbd92b094-35aa-43ee-9dae-a8aeb5912843%2Fpicture.jpg"
+  allowedMediaUrls: ""
+  allowedIframeUrls: ""
+  # should be aligned with viewList.maxSize in storage
+  maxMedias: 100 # image, video, audio, iframe
+  maxDisplayableReactionUsers: 10
+  previewMaxTextSize: 256
+
+chat:
+  tetatet:
+    canResend: true
+    canReact: true
+
+blog:
+  restrictCreateBlog: false
+
+rabbitmq:
+  url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
+  checkAreEventsProcessedInterval: 250ms
+  maxWaitForEvents: 1m
+  dumpTestAccumulator: true
+  prettyLog: true
+  dump: true
+  skipPublishOutputEventsOnRewind: false
+  skipPublishNotificationEventsOnRewind: false
+
+redis:
+  address: :36379
+  password: ""
+  db: 5
+  maxRetries: 10000
+
+schedulers:
+  cleanAbandonedChatsTask:
+    enabled: true
+    cron: "0 * * * * *"
+    expiration: "30m"
+  cleanDeletedUsersDataTask:
+    enabled: true
+    cron: "30 * * * * *"
+    expiration: "30m"

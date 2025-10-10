@@ -1,0 +1,1 @@
+create index chat_participant_last_read_message_date_time_idx on chat_participant(chat_id, cp_last_read_message_id, cp_last_read_message_date_time desc);

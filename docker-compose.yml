@@ -50,8 +50,9 @@ services:
         max-file: "1"
 
   postgresql-citus-coordinator-1:
-    image: citusdata/citus:13.2.0-alpine
+    image: citusdata/citus:14.0.0-alpine
     hostname: postgresql-citus-coordinator-1
+    container_name: postgresql-citus-coordinator-1
     restart: unless-stopped
     ports:
       - 45401:5432
@@ -70,8 +71,9 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql-citus-worker-1:
-    image: citusdata/citus:13.2.0-alpine
+    image: citusdata/citus:14.0.0-alpine
     hostname: postgresql-citus-worker-1
+    container_name: postgresql-citus-worker-1
     restart: unless-stopped
     ports:
       - 45501:5432
@@ -88,8 +90,9 @@ services:
         max-size: "50m"
         max-file: "1"
   postgresql-citus-worker-2:
-    image: citusdata/citus:13.2.0-alpine
+    image: citusdata/citus:14.0.0-alpine
     hostname: postgresql-citus-worker-2
+    container_name: postgresql-citus-worker-2
     restart: unless-stopped
     ports:
       - 45502:5432
@@ -106,6 +109,35 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  kafka:
+    image: apache/kafka:4.2.0
+    # image: huecker.io/apache/kafka:3.7.0
+    restart: unless-stopped
+    hostname: kafka
+    ports:
+      - "39092:39092"
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,PLAINTEXT_HOST://127.0.0.1:39092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'INTERNAL://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://:39092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    networks:
+      backend:
+
+    volumes:
+      - kafka_data:/var/lib/kafka:z
 
   redis:
     image: valkey/valkey:8.1.0-alpine3.21
@@ -348,6 +380,7 @@ volumes:
   rabbitmq_data_dir:
   egress_tmp:
   opensearch_data_dir:
+  kafka_data:
 
 networks:
   backend:

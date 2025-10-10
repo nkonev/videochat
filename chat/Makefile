@@ -2,7 +2,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run run-bin infra infra-test
+.PHONY: check-env download package-docker test test-verbose push-docker-image-to-registry clean install-mockery push-docker-image-to-server deploy-docker-image run run-bin run-test infra infra-test
 
 BUILDDIR := ./build
 EXECUTABLE := chat
@@ -15,9 +15,13 @@ SERVER_TO_COPY_DIR := /tmp/to-deploy/$(SERVICE_NAME)
 SSH_OPTIONS := -o BatchMode=yes -o StrictHostKeyChecking=no
 SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
+TEST_TIMEOUT := 360s
+SERVE_COMMAND := serve
 
-download:
-	echo "Nothing to download"
+download: install-mockery
+
+install-mockery:
+	go install github.com/vektra/mockery/v3@v3.5.4
 
 check-env:
 	docker version && go env
@@ -30,8 +34,24 @@ STATIC_JSON := ./handlers/static/git.json
 generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"service\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
+test-verbose:
+	# here is timeout for all the tests
+	go test ./... -count=1 -test.v -test.timeout=$(TEST_TIMEOUT) -p 1
+
 test:
-	go test ./... -count=1 -test.v -test.timeout=60s -p 1
+test: export CHAT_LOGGER.LEVEL = warn
+test: export CHAT_POSTGRESQL.DUMP = false
+test: export CHAT_CQRS.PRETTYLOG = false
+test: export CHAT_CQRS.DUMP = false
+test: export CHAT_HTTP.PRETTYLOG = false
+test: export CHAT_HTTP.DUMP = false
+test: export CHAT_SERVER.PRETTYLOG = false
+test: export CHAT_SERVER.DUMP = false
+test: export CHAT_RABBITMQ.DUMPTESTACCUMULATOR = false
+test: export CHAT_RABBITMQ.PRETTYLOG = false
+test: export CHAT_RABBITMQ.DUMP = false
+test:
+	go test ./... -count=1 -test.v -test.timeout=$(TEST_TIMEOUT) -p 1
 
 package-go:
 	CGO_ENABLED=0 go build -trimpath -ldflags '-w -extldflags "-static"'
@@ -64,14 +84,18 @@ clean:
 	rm -rf $(STATIC_JSON) $(EXECUTABLE) $(BUILDDIR)
 
 run-bin:
-	./$(EXECUTABLE)
+	./$(EXECUTABLE) $(SERVE_COMMAND)
 
-run: check-env download generate package-go infra
-	./$(EXECUTABLE)
+run-test:
+	./$(EXECUTABLE) $(SERVE_COMMAND) --cqrs.testhelpermethods=true
+
+run: infra check-env download generate package-go
+	./$(EXECUTABLE) $(SERVE_COMMAND)
 
 infra:
-	docker compose -f ../docker-compose.yml up -d postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq opensearch jaeger
+	docker compose -f ../docker-compose.yml up -d postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq opensearch jaeger kafka
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
+	../scripts/wait-for-postgresql.sh postgres chat 60
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
 	../scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available

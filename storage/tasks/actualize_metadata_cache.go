@@ -106,7 +106,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				correlationIdPtr = &correlationId
 			}
 
-			eventTime := utils.GetEventTimeFromTimestamp(timestamp, fileItemUuid)
+			eventTime := utils.GetEventTimeFromTimestamp(timestamp)
 
 			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
 			published := srv.tryGetTags(c, fileOjInfo)

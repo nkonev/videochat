@@ -1,0 +1,16 @@
+!.gitignore
+.project
+.idea
+*.iml
+node_modules
+vendor
+.vendor-new
+target
+build
+test-results/
+playwright-report/
+__debug_bin
+.vscode/
+*.log
+export.jsonl
+chat

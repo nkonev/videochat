@@ -77,6 +77,7 @@ export const CHAT_ADD = "chatAdd";
 export const CHAT_EDITED = "chatEdited";
 export const CHAT_REDRAW = "chatRedraw";
 export const CHAT_DELETED = "chatDeleted";
+export const CHAT_TET_A_TET_UPSERTED = "chatTetATetUpserted";
 
 export const MESSAGE_ADD = "messageAdd";
 export const MESSAGE_DELETED = "messageDeleted";
@@ -135,7 +136,10 @@ export const ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED = "onMessageEditSendButto
 export const OPEN_RECORDING_MODAL = "openRecordingModal";
 
 export const MESSAGES_RELOAD = "messagesReload";
+export const PARTICIPANTS_RELOAD = "participantsReload";
 export const PIN_VIDEO = "pinVideo";
 export const UN_PIN_VIDEO = "unPinVideo";
+
+export const CHAT_NOTIFICATION_SETTINGS_CHANGED = "chatNotificationSettingsChanged";
 
 export const QUOTE_SELECTED = "quoteSelected";

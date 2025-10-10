@@ -4,144 +4,180 @@ import (
 	"time"
 )
 
-type BaseChatDto struct {
-	Id                                  int64           `json:"id"`
-	Name                                string          `json:"name"`
-	Avatar                              *string         `json:"avatar"`
-	AvatarBig                           *string         `json:"avatarBig"`
-	ShortInfo                           *string         `json:"shortInfo"`
-	LastUpdateDateTime                  time.Time       `json:"lastUpdateDateTime"`
-	ParticipantIds                      []int64         `json:"participantIds"`
-	CanEdit                             *bool           `json:"canEdit"`
-	CanDelete                           *bool           `json:"canDelete"`
-	CanLeave                            *bool           `json:"canLeave"`
-	UnreadMessages                      int64           `json:"unreadMessages"`
-	CanBroadcast                        bool            `json:"canBroadcast"`
-	CanVideoKick                        bool            `json:"canVideoKick"`
-	CanChangeChatAdmins                 bool            `json:"canChangeChatAdmins"`
-	IsTetATet                           bool            `json:"tetATet"`
-	CanAudioMute                        bool            `json:"canAudioMute"`
-	ParticipantsCount                   int             `json:"participantsCount"`
-	CanResend                           bool            `json:"canResend"`
-	AvailableToSearch                   bool            `json:"availableToSearch"`
-	IsResultFromSearch                  *bool           `json:"isResultFromSearch"`
-	Pinned                              bool            `json:"pinned"`
-	Blog                                bool            `json:"blog"`
-	LoginColor                          *string         `json:"loginColor"`
-	RegularParticipantCanPublishMessage bool            `json:"regularParticipantCanPublishMessage"`
-	LastSeenDateTime                    *time.Time      `json:"lastSeenDateTime"`
-	RegularParticipantCanPinMessage     bool            `json:"regularParticipantCanPinMessage"`
-	BlogAbout                           bool            `json:"blogAbout"`
-	RegularParticipantCanWriteMessage   bool            `json:"regularParticipantCanWriteMessage"`
-	CanWriteMessage                     bool            `json:"canWriteMessage"`
-	CanReact                            bool            `json:"canReact"`
-	AdditionalData                      *AdditionalData `json:"additionalData"`
+const NoChatTitle = ""
+const NoSearchString = ""
+const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
+const DefaultCanReact = true
+const DefaultCanResend = false
+const DefaultAvailableToSearch = false
+const DefaultRegularParticipantCanWriteMessage = true
+const DefaultRegularParticipantCanPublishMessage = false
+const DefaultRegularParticipantCanPinMessage = false
+const DefaultRegularParticipantCanAddParticipant = true
+
+type ChatViewDto struct {
+	Id                                  int64      `json:"id"`
+	BehalfUserId                        int64      `json:"-"` // behalf user id
+	Title                               string     `json:"name"`
+	Pinned                              bool       `json:"pinned"`
+	UnreadMessages                      int64      `json:"unreadMessages"`
+	LastMessageId                       *int64     `json:"lastMessageId"`
+	LastMessageOwnerId                  *int64     `json:"lastMessageOwnerId"`
+	LastMessageContent                  *string    `json:"lastMessageContent"`
+	ParticipantsCount                   int64      `json:"participantsCount"`
+	ParticipantIds                      []int64    `json:"participantIds"` // ids of last N participants
+	Blog                                bool       `json:"blog"`
+	BlogAbout                           bool       `json:"blogAbout"`
+	UpdateDateTime                      *time.Time `json:"lastUpdateDateTime"` // for sake compatibility
+	TetATet                             bool       `json:"tetATet"`
+	Avatar                              *string    `json:"avatar"`
+	AvatarBig                           *string    `json:"avatarBig"`
+	ConsiderMessagesAsUnread            bool       `json:"considerMessagesAsUnread"`
+	CanResend                           bool       `json:"canResend"`
+	CanReact                            bool       `json:"canReact"`
+	CanPin                              bool       `json:"canPin"`
+	RegularParticipantCanPublishMessage bool       `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool       `json:"regularParticipantCanPinMessage"`
+	RegularParticipantCanWriteMessage   bool       `json:"regularParticipantCanWriteMessage"`
+	AvailableToSearch                   bool       `json:"availableToSearch"`
+	IsParticipant                       bool       `json:"-"`
+	RegularParticipantCanAddParticipant bool       `json:"regularParticipantCanAddParticipant"`
 }
 
-func (copied *BaseChatDto) SetPersonalizedFields(admin bool, unreadMessages int64, participant bool, pinned bool) {
-	canEdit := admin && !copied.IsTetATet
-	copied.CanEdit = &canEdit
-	canDelete := admin
-	copied.CanDelete = &canDelete
-	canLeave := !admin && !copied.IsTetATet && participant
-	copied.CanLeave = &canLeave
-	copied.UnreadMessages = unreadMessages
-	copied.CanVideoKick = admin
-	copied.CanAudioMute = admin
-	copied.CanChangeChatAdmins = admin && !copied.IsTetATet
-	copied.CanBroadcast = admin
+type ChatId struct {
+	Pinned             bool
+	LastUpdateDateTime time.Time
+	Id                 int64
+}
 
-	if !participant {
-		isResultFromSearch := true
-		copied.IsResultFromSearch = &isResultFromSearch
-	}
+type ChatBaseCreateDto struct {
+	Title                               string  `json:"name"`
+	ParticipantIds                      []int64 `json:"participantIds"`
+	Blog                                bool    `json:"blog"`
+	BlogAbout                           bool    `json:"blogAbout"`
+	Avatar                              *string `json:"avatar"`
+	AvatarBig                           *string `json:"avatarBig"`
+	CanReact                            *bool   `json:"canReact"`
+	RegularParticipantCanWriteMessage   *bool   `json:"regularParticipantCanWriteMessage"`
+	CanResend                           *bool   `json:"canResend"`
+	AvailableToSearch                   *bool   `json:"availableToSearch"`
+	RegularParticipantCanPublishMessage *bool   `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     *bool   `json:"regularParticipantCanPinMessage"`
+	RegularParticipantCanAddParticipant *bool   `json:"regularParticipantCanAddParticipant"`
+}
 
-	copied.CanWriteMessage = true
-	// see also handlers PostMessage, EditMessage, DeleteMessage
-	if !copied.RegularParticipantCanWriteMessage && !admin {
-		copied.CanWriteMessage = false
-	}
+type ChatCreateDto struct {
+	ChatBaseCreateDto
+}
 
-	copied.Pinned = pinned
+type ChatEditDto struct {
+	Id int64 `json:"id"`
+	ChatBaseCreateDto
 }
 
 type ChatDeletedDto struct {
 	Id int64 `json:"id"`
 }
 
-type ChatDto struct {
-	BaseChatDto
-	Participants       []*User `json:"participants"`
-	LastMessagePreview *string `json:"lastMessagePreview"`
+type ChatTetATetUpsertedDto struct {
+	ChatId int64 `json:"chatId"`
 }
 
-type ChatDtoWithTetATet interface {
-	GetId() int64
-	GetName() string
-	GetAvatar() *string
-	GetIsTetATet() bool
-	SetName(s string)
-	SetAvatar(s *string)
-	SetShortInfo(s *string)
-	SetLoginColor(s *string)
-	SetLastSeenDateTime(t *time.Time)
-	SetAdditionalData(ad *AdditionalData)
+type ChatViewEnrichedDto struct {
+	ChatViewDto
+	LastMessagePreview  *string `json:"lastMessagePreview"`
+	Participants        []User  `json:"participants"`
+	CanEdit             *bool   `json:"canEdit"`
+	CanDelete           *bool   `json:"canDelete"`
+	CanLeave            *bool   `json:"canLeave"`
+	CanBroadcast        bool    `json:"canBroadcast"`
+	CanVideoKick        bool    `json:"canVideoKick"`
+	CanAudioMute        bool    `json:"canAudioMute"`
+	CanChangeChatAdmins bool    `json:"canChangeChatAdmins"`
+	IsResultFromSearch  bool    `json:"isResultFromSearch"` // is result os "search publically available to join"
+	CanWriteMessage     bool    `json:"canWriteMessage"`
+	CanAddParticipant   bool    `json:"canAddParticipant"`
+
+	LastSeenDateTime *time.Time      `json:"lastSeenDateTime"`
+	ShortInfo        *string         `json:"shortInfo"`
+	LoginColor       *string         `json:"loginColor"`
+	AdditionalData   *AdditionalData `json:"additionalData"`
 }
 
-func (r *ChatDto) GetId() int64 {
-	return r.Id
+type GetChatsResponseDto struct {
+	Items   []ChatViewEnrichedDto `json:"items"`
+	HasNext bool                  `json:"hasNext"`
 }
 
-func (r *ChatDto) GetName() string {
-	return r.Name
+type ChatBasic struct {
+	Id                                  int64   `db:"id"`
+	Title                               string  `db:"title"`
+	Avatar                              *string `db:"avatar"`
+	CanResend                           bool    `db:"can_resend"`
+	TetATet                             bool    `db:"tet_a_tet"`
+	IsBlog                              bool    `db:"blog"`
+	AvailableToSearch                   bool    `db:"available_to_search"`
+	RegularParticipantCanPublishMessage bool    `db:"regular_participant_can_publish_message"`
+	RegularParticipantCanPinMessage     bool    `db:"regular_participant_can_pin_message"`
+	RegularParticipantCanWriteMessage   bool    `db:"regular_participant_can_write_message"`
 }
 
-func (r *ChatDto) SetName(s string) {
-	r.Name = s
+type BasicChatDtoExtended struct {
+	ChatBasic
+	BehalfUserId            int64 `db:"user_id"`
+	BehalfUserIsParticipant bool  `db:"behalf_user_is_participant"`
 }
 
-func (r *ChatDto) GetIsTetATet() bool {
-	return r.IsTetATet
+type UserChatNotificationSettings struct {
+	ConsiderMessagesOfThisChatAsUnread bool `json:"considerMessagesOfThisChatAsUnread" db:"consider_messages_as_unread"`
 }
 
-func (r *BaseChatDto) GetId() int64 {
-	return r.Id
+type ChatUserViewBasic struct {
+	ChatId         int64     `db:"id"`
+	UpdateDateTime time.Time `db:"update_date_time"`
+	UnreadMessages int64     `db:"unread_messages"`
 }
 
-func (r *BaseChatDto) GetName() string {
-	return r.Name
+type ChatExists struct {
+	Exists bool  `json:"exists"`
+	ChatId int64 `json:"chatId"`
+}
+type ChatFilterDto struct {
+	SearchString string `json:"searchString"`
+	ChatId       int64  `json:"chatId"` // id of probe element
 }
 
-func (r *BaseChatDto) SetName(s string) {
-	r.Name = s
+type ChatAuthorizationData struct {
+	IsChatFound                          bool `db:"is_chat_found"`
+	IsParticipant                        bool `db:"is_chat_participant"`
+	IsChatAdmin                          bool `db:"is_chat_admin"`
+	ChatCanWriteMessage                  bool `db:"chat_can_write_message"`
+	ChatCanResendMessage                 bool `db:"chat_can_resend_message"`
+	ChatCanReactOnMessage                bool `db:"chat_can_react_on_message"`
+	ChatIsTetATet                        bool `db:"chat_is_tet_a_tet"`
+	AvailableToSearch                    bool `db:"chat_is_available_to_search"`
+	IsBlog                               bool `db:"chat_is_blog"`
+	RegularParticipantCanAddParticipants bool `db:"regular_participant_can_add_participant"`
 }
 
-func (r *BaseChatDto) GetAvatar() *string {
-	return r.Avatar
+type ChatNotificationSettingsChanged struct {
+	ChatId                   int64 `json:"chatId"`
+	ConsiderMessagesAsUnread bool  `json:"considerMessagesAsUnread"`
 }
 
-func (r *BaseChatDto) SetAvatar(s *string) {
-	r.Avatar = s
+type ChatInfoForNotification struct {
+	ChatName   string  `db:"title"`
+	ChatAvatar *string `db:"avatar"`
 }
 
-func (r *BaseChatDto) SetShortInfo(s *string) {
-	r.ShortInfo = s
+type ChatParticipant struct {
+	ChatId int64 `db:"chat_id"`
+	UserId int64 `db:"user_id"`
 }
 
-func (r *BaseChatDto) SetLoginColor(s *string) {
-	r.LoginColor = s
-}
-
-func (r *BaseChatDto) GetIsTetATet() bool {
-	return r.IsTetATet
-}
-
-func (r *BaseChatDto) SetLastSeenDateTime(t *time.Time) {
-	r.LastSeenDateTime = t
-}
-
-func (r *BaseChatDto) SetAdditionalData(ad *AdditionalData) {
-	r.AdditionalData = ad
+type BasicChatDto struct {
+	TetATet        bool    `json:"tetATet"`
+	ParticipantIds []int64 `json:"participantIds"`
 }
 
 type ChatName struct {
@@ -150,13 +186,11 @@ type ChatName struct {
 	UserId int64   `json:"userId"` // userId chatName for
 }
 
-type ChatUnreadMessageChanged struct {
-	ChatId             int64     `json:"chatId"`
-	UnreadMessages     int64     `json:"unreadMessages"`
-	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
+type ParticipantBelongsToChat struct {
+	UserId  int64 `json:"userId"`
+	Belongs bool  `json:"belongs"`
 }
 
-type BasicChatDto struct {
-	TetATet        bool    `json:"tetATet"`
-	ParticipantIds []int64 `json:"participantIds"`
+type ParticipantsBelongToChat struct {
+	Users []ParticipantBelongsToChat `json:"users"`
 }

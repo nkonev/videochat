@@ -2,11 +2,14 @@ package db
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func TestMain(m *testing.M) {
@@ -23,18 +26,28 @@ func shutdown() {
 }
 
 var dbInstance *DB
-var lgr = logger.NewLogger()
+var lgr *logger.LoggerWrapper
+var tp *sdktrace.TracerProvider
+var cfg *config.AppConfig
 
 func setup() {
-	config.InitViper()
+	var err error
+	cfg, err = config.CreateTestTypedConfig()
+	if err != nil {
+		panic(err)
+	}
+	lgr := logger.NewLogger(os.Stdout, cfg)
+	defer lgr.CloseLogger()
 
-	d, err := ConfigureDb(lgr, nil)
+	tp = sdktrace.NewTracerProvider()
+
+	d, err := ConfigureDatabase(lgr, cfg, tp, nil)
 	dbInstance = d
 
 	if err != nil {
-		lgr.Panicf("Error during getting db connection for test: %v", err)
+		panic(fmt.Errorf("Error during getting db connection for test: %v", err))
 	} else {
-		d.RecreateDb()
+		d.Reset(cfg.PostgreSQL.Migration, true)
 	}
 }
 
@@ -88,7 +101,7 @@ func TestTransactionWithResultPositive(t *testing.T) {
 		res := tx.QueryRow(`INSERT INTO tr1(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
-			lgr.Errorf("Error during getting chat id %v", err)
+			lgr.Error("Error during getting chat id", logger.AttributeError, err)
 			return 0, err
 		}
 
@@ -113,7 +126,7 @@ func TestTransactionWithResultNegative(t *testing.T) {
 		res := tx.QueryRow(`INSERT INTO tr2(a) VALUES ('lorem') RETURNING id`)
 		var id int64
 		if err := res.Scan(&id); err != nil {
-			lgr.Errorf("Error during getting chat id %v", err)
+			lgr.Error("Error during getting chat id", logger.AttributeError, err)
 			return 0, err
 		}
 		if _, err := tx.Exec("insert into tr2(a) VALUES ('lorem')"); err != nil {

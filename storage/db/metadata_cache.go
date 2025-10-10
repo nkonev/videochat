@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/jackc/pgtype"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
-	"strings"
 )
 
 const metadataColumns = `
@@ -35,7 +36,7 @@ const getMetadatasSql = `select ` +
 	`
 	from metadata_cache
 	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s
-	order by chat_id, file_item_uuid asc, create_date_time %s
+	order by chat_id, file_item_uuid desc, create_date_time %s
 	limit $3 offset $4
 `
 const getMetadatasCountSql = `select 
@@ -316,7 +317,7 @@ func GetListFilesItemUuids(ctx context.Context, co CommonOperations, chatId int6
 		) outp
 		where outp.seqnum <= $4
 		group by outp.file_item_uuid
-		order by outp.file_item_uuid
+		order by outp.file_item_uuid desc
 		limit $2 offset $3
 `, chatId, limit, offset, maxFiles)
 	if err != nil {

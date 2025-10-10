@@ -45,8 +45,38 @@ services:
       options:
         tag: chat-postgresql
 
+  kafka-1:
+    image: apache/kafka:4.2.0
+    # image: huecker.io/apache/kafka:3.7.0
+    hostname: kafka-1
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka-1:29092,PLAINTEXT_HOST://kafka-1:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:29093'
+      KAFKA_LISTENERS: 'INTERNAL://kafka-1:29092,CONTROLLER://kafka-1:29093,PLAINTEXT_HOST://kafka-1:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    networks:
+      backend:
+    volumes:
+      - /mnt/chat-kafka-1:/var/lib/kafka:z
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-kafka-1
+
   postgresql-citus-coordinator-1:
-    image: citusdata/citus:13.2.0-alpine
+    image: citusdata/citus:14.0.0-alpine
     hostname: postgresql-citus-coordinator-1
     volumes:
       - ./postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
@@ -62,7 +92,7 @@ services:
       options:
         tag: chat-postgresql-citus-coordinator-1
   postgresql-citus-worker-1:
-    image: citusdata/citus:13.2.0-alpine
+    image: citusdata/citus:14.0.0-alpine
     hostname: postgresql-citus-worker-1
     volumes:
       - ./postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z
@@ -76,7 +106,7 @@ services:
       options:
         tag: chat-postgresql-citus-worker-1
   postgresql-citus-worker-2:
-    image: citusdata/citus:13.2.0-alpine
+    image: citusdata/citus:14.0.0-alpine
     hostname: postgresql-citus-worker-2
     volumes:
       - ./postgresql-citus/common/docker-entrypoint-initdb.d/002-common-init.sql:/docker-entrypoint-initdb.d/002-common-init.sql:z

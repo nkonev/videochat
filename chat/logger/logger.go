@@ -2,109 +2,119 @@ package logger
 
 import (
 	"context"
-	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"io"
+	"log/slog"
 	"nkonev.name/chat/app"
+	"nkonev.name/chat/config"
 	"os"
+	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
-type Logger struct {
-	*zap.SugaredLogger
-	ZapLogger *zap.Logger
-	file      *os.File
+func GetTraceId(ctx context.Context) string {
+	sc := trace.SpanFromContext(ctx).SpanContext()
+	tr := sc.TraceID()
+	return tr.String()
 }
 
-func Iso3339CleanTime(t time.Time) string {
-	return t.UTC().Format("2006-01-02T15:04:05.000000000Z")
+type TracingContextHandler struct {
+	slog.Handler
 }
 
-func Iso3339CleanTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(Iso3339CleanTime(t))
-}
-
-// should be after viper
-func NewLogger() *Logger {
-	ec := zapcore.EncoderConfig{
-		TimeKey:        "@timestamp",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "message",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     Iso3339CleanTimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
+func (h *TracingContextHandler) Handle(ctx context.Context, r slog.Record) error {
+	traceId := GetTraceId(ctx)
+	if traceId != "" {
+		r.AddAttrs(slog.String(AttributeTraceId, traceId))
 	}
 
-	enc := zapcore.NewJSONEncoder(ec)
+	return h.Handler.Handle(ctx, r)
+}
 
-	sl := viper.GetString("logger.level")
-	lvl, err := zapcore.ParseLevel(sl)
-	if err != nil {
-		panic(err)
+type LoggerWrapper struct {
+	*slog.Logger
+	file *os.File
+}
+
+func NewLogger(consoleWriter io.Writer, cfg *config.AppConfig) *LoggerWrapper {
+	var baseLogger *slog.Logger
+
+	replaceFunc := func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == "msg" {
+			return slog.Attr{
+				Key:   "message",
+				Value: a.Value,
+			}
+		} else if a.Key == "time" {
+			utcTime := time.Now().UTC()
+			utcFormattedTime := utcTime.Format("2006-01-02T15:04:05.000000000Z")
+			return slog.Attr{
+				Key:   "@timestamp",
+				Value: slog.AnyValue(utcFormattedTime),
+			}
+		} else if a.Key == "level" {
+			return slog.Attr{
+				Key:   "level",
+				Value: slog.StringValue(strings.ToLower(a.Value.String())),
+			}
+		} else if a.Key == "err" {
+			return slog.Attr{
+				Key:   AttributeError,
+				Value: a.Value,
+			}
+		} else {
+			return a
+		}
 	}
 
-	var ws zapcore.WriteSyncer
+	bh := &slog.HandlerOptions{
+		Level:       cfg.Logger.GetLevel(),
+		ReplaceAttr: replaceFunc,
+		AddSource:   true,
+	}
+	commonAttrs := []slog.Attr{slog.String("service", app.TRACE_RESOURCE)}
+
+	w := consoleWriter
 	var fileVar *os.File
+	if cfg.Logger.WriteToFile {
+		logDir := cfg.Logger.Dir
 
-	logWriteToFile := viper.GetBool("logger.writeToFile")
-	if logWriteToFile {
-		logDir := viper.GetString("logger.dir")
-
-		err = os.MkdirAll(logDir, os.ModePerm)
+		err := os.MkdirAll(logDir, os.ModePerm)
 		if err != nil {
 			panic(err)
 		}
 
-		logFilename := viper.GetString("logger.filename")
+		logFilename := cfg.Logger.Filename
 		fileVar, err = os.Create(logDir + string(os.PathSeparator) + logFilename)
 		if err != nil {
 			panic(err)
 		}
-		ws = zap.CombineWriteSyncers(fileVar, os.Stdout)
+
+		w = io.MultiWriter(consoleWriter, fileVar)
+	}
+
+	if cfg.Logger.Json {
+		h := &TracingContextHandler{slog.NewJSONHandler(w, bh).WithAttrs(commonAttrs)}
+		baseLogger = slog.New(h)
 	} else {
-		ws = os.Stdout
+		h := &TracingContextHandler{slog.NewTextHandler(w, bh).WithAttrs(commonAttrs)}
+		baseLogger = slog.New(h)
 	}
 
-	co := zapcore.NewCore(enc, ws, lvl)
-
-	zl := zap.New(co,
-		zap.WithCaller(true),
-		zap.Fields(zap.String("service", app.APP_NAME)),
-	)
-
-	le := zl.Sugar()
-
-	return &Logger{
-		SugaredLogger: le,
-		file:          fileVar,
-		ZapLogger:     zl,
+	return &LoggerWrapper{
+		Logger: baseLogger,
+		file:   fileVar,
 	}
 }
 
-func (l *Logger) CloseLogger() {
-	l.Sync()
-	if l.file != nil {
-		l.file.Close()
+func (lw *LoggerWrapper) CloseLogger() {
+	if lw.file != nil {
+		lw.file.Close()
 	}
 }
 
-func (l *Logger) WithTracing(context context.Context) *zap.SugaredLogger {
-	if p := trace.SpanFromContext(context); p != nil {
-		return l.With(
-			zap.String("trace_id", p.SpanContext().TraceID().String()),
-			zap.String("span_id", p.SpanContext().SpanID().String()),
-		)
-	} else {
-		return l.SugaredLogger
-	}
-}
-
-func (l *Logger) Write(p []byte) (int, error) {
-	l.Infof(string(p))
-	return len(p), nil
+// Do not use
+func (lw *LoggerWrapper) WithTrace0(ctx context.Context) *slog.Logger {
+	return lw.Logger.With(AttributeTraceId, GetTraceId(ctx))
 }

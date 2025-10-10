@@ -130,9 +130,6 @@ viewList:
 fileItemUuid:
   maxFiles: 5
 
-ulid:
-  topYear: 3000
-
 converting:
   ffmpegPath: "ffmpeg"
   tempDir: "/tmp/video"

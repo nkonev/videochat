@@ -2,24 +2,24 @@ package tasks
 
 import (
 	"context"
-
 	"github.com/nkonev/dcron"
 	redisV9 "github.com/redis/go-redis/v9"
-	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
+	"time"
 )
 
-func RedisV9(lc fx.Lifecycle, lgr *logger.Logger) *redisV9.Client {
+func RedisV9(lc fx.Lifecycle, lgr *logger.LoggerWrapper, cfg *config.AppConfig) *redisV9.Client {
 	rv8 := redisV9.NewClient(&redisV9.Options{
-		Addr:       viper.GetString("redis.address"),
-		Password:   viper.GetString("redis.password"),
-		DB:         viper.GetInt("redis.db"),
-		MaxRetries: viper.GetInt("redis.maxRetries"),
+		Addr:       cfg.Redis.Address,
+		Password:   cfg.Redis.Password,
+		DB:         cfg.Redis.Db,
+		MaxRetries: cfg.Redis.MaxRetries,
 	})
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			lgr.Infof("Stopping redis scheduling connection")
+			lgr.Info("Stopping redis scheduling connection")
 			return rv8.Close()
 		},
 	})
@@ -28,45 +28,34 @@ func RedisV9(lc fx.Lifecycle, lgr *logger.Logger) *redisV9.Client {
 
 type RedisLock struct {
 	client *redisV9.Client
-	lgr    *logger.Logger
+	lgr    *logger.LoggerWrapper
+	cfg    *config.TaskConfig
 }
 
-func (m *RedisLock) Lock(ctx context.Context, _ any, key, value string) bool {
-	exp := viper.GetDuration("schedulers." + key + ".expiration")
+func (m *RedisLock) Lock(ctx context.Context, jobSettings any, key, value string) bool {
+	exp := jobSettings.(time.Duration)
 	if exp == 0 {
-		m.lgr.WithTracing(ctx).Errorf("not set expiring duration")
+		m.lgr.ErrorContext(ctx, "bad zero expiration", dcron.SlogKeyTaskName, key)
 		return false
 	}
 
 	locked, err := m.client.SetNX(ctx, key, value, exp).Result()
 	if err != nil {
-		m.lgr.WithTracing(ctx).Errorf("unable to invoke redis: %v", err)
+		m.lgr.ErrorContext(ctx, "unable to invoke redis", logger.AttributeError, err)
 		return false
 	}
 
 	return locked
 }
 
-func (m *RedisLock) Unlock(ctx context.Context, _ any, key, value string) {
+func (m *RedisLock) Unlock(ctx context.Context, jobSetting any, key, value string) {
 	m.client.Del(ctx, key)
 }
 
-func RedisLocker(redisClient *redisV9.Client, lgr *logger.Logger) (*RedisLock, error) {
-	return &RedisLock{client: redisClient, lgr: lgr}, nil
+func RedisLocker(redisClient *redisV9.Client, lgr *logger.LoggerWrapper, cfg *config.AppConfig) (*RedisLock, error) {
+	return &RedisLock{client: redisClient, lgr: lgr, cfg: &cfg.Schedulers}, nil
 }
 
-func Scheduler(locker *RedisLock, lgr *logger.Logger) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithLock(locker), dcron.WithSLog(&TracingLoggerAdapter{lgr})), nil
-}
-
-type TracingLoggerAdapter struct {
-	lgr *logger.Logger
-}
-
-func (la *TracingLoggerAdapter) ErrorContext(ctx context.Context, msg string, args ...any) {
-	la.lgr.WithTracing(ctx).With(args...).Error(msg)
-}
-
-func (la *TracingLoggerAdapter) InfoContext(ctx context.Context, msg string, args ...any) {
-	la.lgr.WithTracing(ctx).With(args...).Info(msg)
+func Scheduler(locker *RedisLock, lgr *logger.LoggerWrapper) (*dcron.Cron, error) {
+	return dcron.NewCron(dcron.WithLock(locker), dcron.WithSLog(lgr)), nil
 }

@@ -373,7 +373,7 @@ jobs:
         if: env.SHOULD_RUN == 'true'
         run: |
           (cd aaa; make run-with-oauth2 &)
-          (cd chat; make run &)
+          (cd chat; make run-test &)
           (cd event; make run &)
           (cd notification; make run &)
           (cd video; make run &)

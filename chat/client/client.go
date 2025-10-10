@@ -3,56 +3,36 @@ package client
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"strings"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
-type RestClient struct {
+type restClient struct {
 	*http.Client
-	tracer trace.Tracer
-	lgr    *logger.Logger
+	protocolHostPort string
+	tracer           trace.Tracer
+	cfg              *config.AppConfig
+	lgr              *logger.LoggerWrapper
+	clientName       string
 }
 
-func NewRestClient(lgr *logger.Logger) *RestClient {
-	tr := &http.Transport{
-		MaxIdleConns:       viper.GetInt("http.maxIdleConns"),
-		IdleConnTimeout:    viper.GetDuration("http.idleConnTimeout"),
-		DisableCompression: viper.GetBool("http.disableCompression"),
-	}
-	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	trR := otelhttp.NewTransport(tr)
-	client := &http.Client{Transport: trR}
-	trcr := otel.Tracer("rest/client")
-
-	return &RestClient{client, trcr, lgr}
-}
-
-func (rc RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, error) {
+// You should call defer httpResp.Body.Close()
+func queryRawResponse[ReqDto any](ctx context.Context, rc *restClient, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) (*http.Response, error) {
 	contentType := "application/json;charset=UTF-8"
-	url0 := viper.GetString("aaa.url.base")
-	url1 := viper.GetString("aaa.url.getUsers")
-	fullUrl := url0 + url1
-
-	var userIdsString []string
-	for _, userIdInt := range userIds {
-		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
+	fullUrl := utils.StringToUrl(rc.protocolHostPort + url)
+	if queryParams != nil {
+		fullUrl.RawQuery = queryParams.Encode()
 	}
-
-	join := strings.Join(userIdsString, ",")
 
 	requestHeaders := map[string][]string{
 		"Accept-Encoding": {"gzip, deflate"},
@@ -60,244 +40,103 @@ func (rc RestClient) GetUsers(c context.Context, userIds []int64) ([]*dto.User, 
 		"Content-Type":    {contentType},
 	}
 
-	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
-		return nil, err
+	if behalfUserId != dto.NonExistentUser {
+		requestHeaders[utils.HeaderUserId] = []string{utils.ToString(behalfUserId)}
 	}
-	request := &http.Request{
-		Method: "GET",
+
+	httpReq := &http.Request{
+		Method: method,
 		Header: requestHeaders,
-		URL:    parsedUrl,
+		URL:    fullUrl,
 	}
 
-	ctx, span := rc.tracer.Start(c, "users.Get")
+	if req != nil {
+		bytesData, err := json.Marshal(req)
+		if err != nil {
+			rc.lgr.ErrorContext(ctx, fmt.Sprintf("Failed during marshalling request body for %v:", opName), logger.AttributeError, err)
+			return nil, err
+		}
+		reader := bytes.NewReader(bytesData)
+
+		httpReq.Body = io.NopCloser(reader)
+	}
+
+	ctx, span := rc.tracer.Start(ctx, opName)
 	defer span.End()
-	request = request.WithContext(ctx)
-	resp, err := rc.Do(request)
-	if err != nil {
-		rc.lgr.WithTracing(c).Warnln("Failed to request get users response:", err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-	code := resp.StatusCode
-	if code != 200 {
-		rc.lgr.WithTracing(c).Warnln("Users response responded non-200 code: ", code)
-		return nil, errors.New("Users response responded non-200 code")
-	}
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to decode get users response:", err)
-		return nil, err
+	httpReq = httpReq.WithContext(ctx)
+
+	if rc.cfg.Http.Dump {
+		dumpReq, err := httputil.DumpRequestOut(httpReq, true)
+		if err != nil {
+			return nil, err
+		}
+		if rc.cfg.Http.PrettyLog && !rc.cfg.Logger.Json {
+			fmt.Printf("%s >>>\n", rc.clientName)
+			fmt.Printf("%s\n", string(dumpReq))
+		} else {
+			rc.lgr.InfoContext(ctx, fmt.Sprintf("%s >>>", rc.clientName))
+			rc.lgr.InfoContext(ctx, string(dumpReq))
+		}
 	}
 
-	users := &[]*dto.User{}
-	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to parse users:", err)
+	httpResp, err := rc.Do(httpReq)
+	if err != nil {
+		rc.lgr.WarnContext(ctx, fmt.Sprintf("Failed to request %v response:", opName), logger.AttributeError, err)
 		return nil, err
 	}
-	return *users, nil
+	code := httpResp.StatusCode
+	if !(code >= 200 && code < 300) {
+		rc.lgr.WarnContext(ctx, fmt.Sprintf("%v response responded non-2xx code: ", opName), "code", code)
+		return nil, fmt.Errorf("%v response responded non-2xx code: %v", opName, code)
+	}
+
+	if rc.cfg.Http.Dump {
+		dumpResp, err := httputil.DumpResponse(httpResp, true)
+		if err != nil {
+			return nil, err
+		}
+		if rc.cfg.Http.PrettyLog && !rc.cfg.Logger.Json {
+			fmt.Printf("%s <<<\n", rc.clientName)
+			fmt.Printf("%s\n", string(dumpResp))
+		} else {
+			rc.lgr.InfoContext(ctx, fmt.Sprintf("%s <<<", rc.clientName))
+			rc.lgr.InfoContext(ctx, string(dumpResp))
+		}
+	}
+	return httpResp, err
 }
 
-func (rc RestClient) GetOnlines(c context.Context, userIds []int64) ([]*dto.UserOnline, error) {
-	contentType := "application/json;charset=UTF-8"
-	url0 := viper.GetString("aaa.url.base")
-	url1 := viper.GetString("aaa.url.getOnlines")
-	fullUrl := url0 + url1
-
-	var userIdsString []string
-	for _, userIdInt := range userIds {
-		userIdsString = append(userIdsString, utils.Int64ToString(userIdInt))
-	}
-
-	join := strings.Join(userIdsString, ",")
-
-	requestHeaders := map[string][]string{
-		"Accept-Encoding": {"gzip, deflate"},
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
-	}
-
-	parsedUrl, err := url.Parse(fullUrl + "?userId=" + join)
+func query[ReqDto any, ResDto any](ctx context.Context, rc *restClient, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) (ResDto, error) {
+	var resp ResDto
+	var err error
+	httpResp, err := queryRawResponse(ctx, rc, behalfUserId, method, url, opName, req, queryParams)
 	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
-		return nil, err
+		return resp, err
 	}
-	request := &http.Request{
-		Method: "GET",
-		Header: requestHeaders,
-		URL:    parsedUrl,
+	defer httpResp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		rc.lgr.WarnContext(ctx, fmt.Sprintf("Failed to decode %v response:", opName), logger.AttributeError, err)
+		return resp, err
 	}
 
-	ctx, span := rc.tracer.Start(c, "users.Onlines")
-	defer span.End()
-	request = request.WithContext(ctx)
-	resp, err := rc.Do(request)
-	if err != nil {
-		rc.lgr.WithTracing(c).Warnln("Failed to request get users response:", err)
-		return nil, err
+	if len(bodyBytes) > 0 { // to handle 204 no content
+		if err = json.Unmarshal(bodyBytes, &resp); err != nil {
+			rc.lgr.ErrorContext(ctx, fmt.Sprintf("Failed to parse %v response:", opName), logger.AttributeError, err)
+			return resp, err
+		}
 	}
-	defer resp.Body.Close()
-	code := resp.StatusCode
-	if code != 200 {
-		rc.lgr.WithTracing(c).Warnln("Users response responded non-200 code: ", code)
-		return nil, errors.New("Users response responded non-200 code")
-	}
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to decode get users response:", err)
-		return nil, err
-	}
-
-	users := &[]*dto.UserOnline{}
-	if err := json.Unmarshal(bodyBytes, users); err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to parse users:", err)
-		return nil, err
-	}
-	return *users, nil
+	return resp, nil
 }
 
-type searchUsersRequestDto struct {
-	Page         int     `json:"page"`
-	Size         int     `json:"size"`
-	UserIds      []int64 `json:"userIds"`
-	SearchString string  `json:"searchString"`
-	Including    bool    `json:"including"`
-}
-
-type searchUsersResponseDto struct {
-	Users []*dto.User `json:"users"`
-	Count int         `json:"count"`
-}
-
-func (rc RestClient) SearchGetUsers(c context.Context, searchString string, including bool, ids []int64, page, size int) ([]*dto.User, int, error) {
-	contentType := "application/json;charset=UTF-8"
-	url0 := viper.GetString("aaa.url.base")
-	url1 := viper.GetString("aaa.url.searchUsers")
-	fullUrl := url0 + url1
-
-	requestHeaders := map[string][]string{
-		"Accept-Encoding": {"gzip, deflate"},
-		"Accept":          {contentType},
-		"Content-Type":    {contentType},
-	}
-
-	parsedUrl, err := url.Parse(fullUrl)
+func queryNoResponse[ReqDto any](ctx context.Context, rc *restClient, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) error {
+	var err error
+	httpResp, err := queryRawResponse(ctx, rc, behalfUserId, method, url, opName, req, queryParams)
 	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
-		return nil, 0, err
+		return err
 	}
+	defer httpResp.Body.Close()
 
-	req := searchUsersRequestDto{
-		UserIds:      ids,
-		SearchString: searchString,
-		Including:    including,
-		Page:         page,
-		Size:         size,
-	}
-
-	bytesData, err := json.Marshal(req)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed during marshalling:", err)
-		return nil, 0, err
-	}
-	reader := bytes.NewReader(bytesData)
-
-	nopCloser := ioutil.NopCloser(reader)
-
-	request := &http.Request{
-		Method: "POST",
-		Header: requestHeaders,
-		URL:    parsedUrl,
-		Body:   nopCloser,
-	}
-
-	ctx, span := rc.tracer.Start(c, "users.Search")
-	defer span.End()
-	request = request.WithContext(ctx)
-	resp, err := rc.Do(request)
-	if err != nil {
-		rc.lgr.WithTracing(c).Warnln("Failed to request get users response:", err)
-		return nil, 0, err
-	}
-	defer resp.Body.Close()
-	code := resp.StatusCode
-	if code != 200 {
-		rc.lgr.WithTracing(c).Warnln("Users response responded non-200 code: ", code)
-		return nil, 0, errors.New("Users response responded non-200 code")
-	}
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to decode get users response:", err)
-		return nil, 0, err
-	}
-
-	respDto := &searchUsersResponseDto{}
-	if err := json.Unmarshal(bodyBytes, respDto); err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to parse users:", err)
-		return nil, 0, err
-	}
-	return respDto.Users, respDto.Count, nil
-}
-
-type UserExists struct {
-	Exists bool  `json:"exists"`
-	UserId int64 `json:"userId"`
-}
-
-func (rc RestClient) CheckAreUsersExists(c context.Context, userIds []int64) (*[]UserExists, error) {
-
-	var chatIdsString []string
-	for _, chatIdInt := range userIds {
-		chatIdsString = append(chatIdsString, utils.Int64ToString(chatIdInt))
-	}
-
-	join := strings.Join(chatIdsString, ",")
-
-	url0 := viper.GetString("aaa.url.base")
-	url1 := viper.GetString("aaa.url.checkUsersExistsPath")
-
-	fullUrl := fmt.Sprintf("%v?userId=%v", url0+url1, join)
-
-	parsedUrl, err := url.Parse(fullUrl)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed during parse aaa url:", err)
-		return nil, err
-	}
-
-	request := &http.Request{
-		Method: "GET",
-		URL:    parsedUrl,
-		Header: map[string][]string{
-			echo.HeaderContentType: {"application/json"},
-		},
-	}
-
-	ctx, span := rc.tracer.Start(c, "users.CheckExists")
-	defer span.End()
-	request = request.WithContext(ctx)
-
-	response, err := rc.Do(request)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorw("Transport error during checking user presence", err)
-		return nil, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		err = errors.New(fmt.Sprintf("Unexpected status checking user presence %v", response.StatusCode))
-		return nil, err
-	}
-
-	bodyBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		rc.lgr.WithTracing(c).Errorw("Failed to decode get user presence response", err)
-		return nil, err
-	}
-
-	resultMap := new([]UserExists)
-	if err := json.Unmarshal(bodyBytes, resultMap); err != nil {
-		rc.lgr.WithTracing(c).Errorln("Failed to parse result", err)
-		return nil, err
-	}
-	return resultMap, nil
+	return nil
 }
