@@ -34,7 +34,7 @@
                 <template v-slot:default>
                     <v-list-item-title>
                         <span class="chat-name" :style="getStyle(item)" :class="getItemClass(item)" v-html="getChatName(item)"></span>
-                        <v-badge v-if="item.unreadMessages" color="primary" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
+                        <v-badge v-if="item.unreadMessages" :color="getUnreadColor(item)" :text-color="getUnreadTextColor(item)" inline :content="item.unreadMessages" class="mt-0" :title="$vuetify.locale.t('$vuetify.unread_messages')"></v-badge>
                         <v-badge v-if="item.videoChatUsersCount" color="success" icon="mdi-phone" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.call_in_process')"/>
                         <v-badge v-if="item.hasScreenShares" color="primary" icon="mdi-monitor-share" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.screen_share_in_process')"/>
                         <v-badge v-if="item.blog" color="grey" icon="mdi-postage-stamp" inline  class="mt-0" :title="$vuetify.locale.t('$vuetify.blog')"/>
@@ -46,7 +46,7 @@
 
                 <template v-slot:append v-if="!isMobile() && !embedded">
                     <v-list-item-action>
-                            <template v-if="!item.isResultFromSearch">
+                            <template v-if="item.canPin">
                                 <v-btn variant="flat" icon v-if="item.pinned" @click.stop.prevent="removedFromPinned(item)" :title="$vuetify.locale.t('$vuetify.remove_from_pinned')"><v-icon size="large">mdi-pin-off-outline</v-icon></v-btn>
                                 <v-btn variant="flat" icon v-else @click.stop.prevent="pinChat(item)" :title="$vuetify.locale.t('$vuetify.pin_chat')"><v-icon size="large">mdi-pin</v-icon></v-btn>
                             </template>
@@ -70,6 +70,9 @@
         @removedFromPinned="this.removedFromPinned"
         @markAsRead="markAsRead"
         @markAsReadAll="markAsReadAll"
+        @removeFromContributingToUnread="removeFromContributingToUnread"
+        @startFromContributingToUnread="startFromContributingToUnread"
+        @addParticipants="onMenuAddParticipants"
       />
       <v-btn v-if="canShowNewChat()" variant="elevated" color="primary" icon="mdi-plus-thick" class="new-fab-chat" @click="createChat()" :title="$vuetify.locale.t('$vuetify.create_chat')"></v-btn>
   </v-container>
@@ -96,7 +99,6 @@ import bus, {
   CHAT_DELETED,
   CHAT_EDITED, CHAT_REDRAW,
   CLOSE_SIMPLE_MODAL,
-  LOGGED_OUT,
   OPEN_CHAT_EDIT,
   OPEN_SIMPLE_MODAL,
   REFRESH_ON_WEBSOCKET_RESTORED,
@@ -106,7 +108,7 @@ import bus, {
   VIDEO_CALL_SCREEN_SHARE_CHANGED,
   VIDEO_CALL_USER_COUNT_CHANGED,
   USER_TYPING,
-  WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
+  WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED, CHAT_NOTIFICATION_SETTINGS_CHANGED,
 } from "@/bus/bus";
 import {searchString, SEARCH_MODE_CHATS, SEARCH_MODE_MESSAGES} from "@/mixins/searchString";
 import debounce from "lodash/debounce";
@@ -432,6 +434,20 @@ export default {
           return 'chat-normal'
         }
     },
+    getUnreadColor(item) {
+      if (item.considerMessagesAsUnread) {
+        return "primary"
+      } else {
+        return "grey-lighten-1"
+      }
+    },
+    getUnreadTextColor(item) {
+      if (item.considerMessagesAsUnread) {
+        return undefined
+      } else {
+        return "white"
+      }
+    },
     getParticipantsClass(item) {
       let res = ['subtitle-thin'];
       if (item.lastMessagePreview) {
@@ -511,7 +527,7 @@ export default {
     },
     editChat(chat) {
           // console.log("Will add participants to chat", chatId);
-          bus.emit(OPEN_CHAT_EDIT, chat);
+          bus.emit(OPEN_CHAT_EDIT, {chatAction: 'editProvidedChat', chat: chat} );
     },
     deleteChat(chat) {
           bus.emit(OPEN_SIMPLE_MODAL, {
@@ -634,7 +650,13 @@ export default {
     addItem(dto) {
       console.log("Adding item", dto);
       this.transformItemOverride(dto);
-      this.items.unshift(dto);
+
+      // test:
+      // user opens http://localhost:8081/chats?qc=__AVAILABLE_FOR_SEARCH
+      // chat admin add the user
+      // the user should not see the duplicated chat items
+      replaceOrPrepend(this.items, [dto]);
+
       this.sort(this.items);
       this.reduceListAfterAdd(false);
       this.updateTopAndBottomIds();
@@ -691,6 +713,11 @@ export default {
       return s;
     },
     redrawItem(dto) {
+
+      // test:
+      // user opens http://localhost:8081/chats?qc=__AVAILABLE_FOR_SEARCH
+      // chat admin removes the user
+      // the user should not see "Leave chat button", should not see unread messages, should see "This is search result"
       if (this.searchString == publicallyAvailableForSearchChatsQuery) {
           this.onEditChat(dto)
       } else {
@@ -782,6 +809,9 @@ export default {
         signal: this.requestAbortController.signal
       })
     },
+    onMenuAddParticipants(item) {
+      bus.emit(OPEN_CHAT_EDIT, {chatAction: 'addParticipants', chatId: item.id} );
+    },
     async doDefaultScroll() {
       await this.scrollTop(); // we need it to prevent browser's scrolling
     },
@@ -823,13 +853,25 @@ export default {
       }
     },
     createChat() {
-      bus.emit(OPEN_CHAT_EDIT, null);
+      bus.emit(OPEN_CHAT_EDIT, {chatAction: 'create_chat'});
     },
     isVideoRoute() {
       return this.$route.name == videochat_name
     },
     canShowNewChat() {
       return this.chatStore.currentUser && !this.isVideoRoute()
+    },
+    removeFromContributingToUnread(item) {
+      axios.put(`/api/chat/${item.id}/notification`, {considerMessagesOfThisChatAsUnread: false})
+    },
+    startFromContributingToUnread(item) {
+      axios.put(`/api/chat/${item.id}/notification`, {considerMessagesOfThisChatAsUnread: true})
+    },
+    onChatNotificationSettingsChanged(dto) {
+      const found = this.$data.items.find(it => it.id == dto.chatId);
+      if (found) {
+        found.considerMessagesAsUnread = dto.considerMessagesAsUnread
+      }
     },
   },
   components: {
@@ -875,6 +917,7 @@ export default {
     bus.on(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.on(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
     bus.on(USER_TYPING, this.onUserTyping);
+    bus.on(CHAT_NOTIFICATION_SETTINGS_CHANGED, this.onChatNotificationSettingsChanged);
 
     if (this.routeName == chat_list_name) {
       this.setTopTitle();
@@ -923,6 +966,7 @@ export default {
     bus.off(VIDEO_CALL_USER_COUNT_CHANGED, this.onVideoCallChanged);
     bus.off(VIDEO_CALL_SCREEN_SHARE_CHANGED, this.onVideoScreenShareChanged);
     bus.off(USER_TYPING, this.onUserTyping);
+    bus.off(CHAT_NOTIFICATION_SETTINGS_CHANGED, this.onChatNotificationSettingsChanged);
 
     clearInterval(writingUsersTimerId);
 

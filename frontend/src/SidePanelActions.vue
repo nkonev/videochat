@@ -148,10 +148,10 @@ export default {
     },
 
     createChat() {
-      bus.emit(OPEN_CHAT_EDIT, null);
+      bus.emit(OPEN_CHAT_EDIT, {chatAction: 'create_chat'});
     },
     editChat() {
-      bus.emit(OPEN_CHAT_EDIT, this.chatId);
+      bus.emit(OPEN_CHAT_EDIT, {chatAction: 'editCurrentChat', chatId: this.chatId} );
     },
     shouldDisplayCopyCallLink() {
       return (this.chatStore.showCallManagement) && this.isMobile()

@@ -223,9 +223,12 @@ export default {
                         fileItemUuid: this.fileItemUuid, // nullable
                         fileSize: file.size,
                         fileName: file.name,
-                        correlationId: this.correlationId, // nullable
                         shouldAddDateToTheFilename: this.shouldAddDateToTheFilename, // nullable
                         isMessageRecording: this.isMessageRecording, // nullable
+                    }, {
+                      headers: {
+                        "X-CorrelationId": this.correlationId,
+                      }
                     })
                     console.log("For", file.name, "got init response: ", response.data)
                 } catch(thrown) {
