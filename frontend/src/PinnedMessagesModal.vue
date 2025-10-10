@@ -184,7 +184,7 @@ export default {
             return getHumanReadableDate(item.createDateTime)
         },
         getOwner(owner) {
-            return owner.login
+            return owner?.login
         },
         onPinnedMessageUnpromoted(dto) {
             this.onItemRemovedEvent(dto);

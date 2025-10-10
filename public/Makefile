@@ -46,7 +46,7 @@ package-docker:
 	echo "Will build docker $(SERVICE_NAME) image" && \
  	docker build -t $(IMAGE) $(BUILDDIR)
 
-package: package-node generate package-docker
+package: clean-builddir package-node generate package-docker
 
 push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
@@ -77,10 +77,10 @@ clean-cache:
 run-dev:
 	npm run dev
 
-run-docker-image:
+run-docker-image: package
 	docker run --rm --network=host --name chat-public $(IMAGE)
 
-run: check-env download generate run-dev infra
+run: infra check-env download generate run-docker-image
 
 infra:
 	docker compose -f ../docker-compose.yml up -d traefik opensearch jaeger

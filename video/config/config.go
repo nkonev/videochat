@@ -65,13 +65,12 @@ type StorageConfig struct {
 }
 
 type ChatUrlConfig struct {
-	Base                        string `mapstructure:"base"`
-	Access                      string `mapstructure:"access"`
-	IsChatAdmin                 string `mapstructure:"isChatAdmin"`
-	DoesParticipantBelongToChat string `mapstructure:"doesParticipantBelongToChat"`
-	ChatParticipantIds          string `mapstructure:"chatParticipants"`
-	ChatInviteName              string `mapstructure:"chatInviteName"`
-	ChatBasicInfoPath           string `mapstructure:"chatBasicInfoPath"`
+	Base               string `mapstructure:"base"`
+	Access             string `mapstructure:"access"`
+	IsChatAdmin        string `mapstructure:"isChatAdmin"`
+	ChatParticipantIds string `mapstructure:"chatParticipants"`
+	ChatInviteName     string `mapstructure:"chatInviteName"`
+	ChatBasicInfoPath  string `mapstructure:"chatBasicInfoPath"`
 }
 
 type AaaUrlConfig struct {

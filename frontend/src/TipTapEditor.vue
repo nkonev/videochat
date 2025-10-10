@@ -271,7 +271,7 @@ export default {
     },
     onFileCreatedEvent(dto) {
       // it's for embedded audio. for embedded (image, video, record) - see onPreviewCreated()
-      if (hasLength(this.fileCorrelationId) && this.fileCorrelationId == dto?.fileInfoDto?.correlationId) {
+      if (hasLength(this.fileCorrelationId) && this.fileCorrelationId == dto?.correlationId) {
         if (dto?.fileInfoDto != null && !dto.fileInfoDto.previewable && dto.fileInfoDto.aType == media_audio) {
           this.setAudio(dto?.fileInfoDto.url)
         }
@@ -527,19 +527,19 @@ export default {
                   class: 'mention',
               },
               suggestion: suggestion(this),
-              renderHTML({ options, node }) {
+              renderHTML({ options, node, suggestion }) {
                   if (node.attrs.id > 0) { // real users have id > 0, all and here have < 0
                       return [
                           "a",
-                          mergeAttributes({ href: `${profile}/${node.attrs.id}` }, options.HTMLAttributes),
-                          `@${node.attrs.label}`,
+                          mergeAttributes(this.HTMLAttributes, { href: `${profile}/${node.attrs.id}` }, options.HTMLAttributes),
+                          `${suggestion?.char ?? '@'}${node.attrs.label ?? node.attrs.id}`,
                       ];
                   } else {
                       return [
                           "span",
-                          options.HTMLAttributes,
-                          `@${node.attrs.label}`,
-                      ];
+                          mergeAttributes(this.HTMLAttributes, options.HTMLAttributes),
+                          `${suggestion?.char ?? '@'}${node.attrs.label}`,
+                      ]
                   }
               },
           }),

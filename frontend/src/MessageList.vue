@@ -29,6 +29,7 @@
             :isBlog="chatStore.chatDto.blog"
             @deleteMessage="this.deleteMessage"
             @editMessage="this.editMessage"
+            @syncEmbedMessage="this.syncEmbedMessage"
             @replyOnMessage="this.replyOnMessage"
             @onFilesClicked="onFilesClicked"
             @showReadUsers="this.showReadUsers"
@@ -149,7 +150,9 @@
         addItem(dto) {
           console.log("Adding item", dto);
           this.transformItem(dto);
-          this.items.unshift(dto);
+
+          replaceOrPrepend(this.items, [dto]);
+
           this.reduceListAfterAdd(true);
           this.updateTopAndBottomIds();
         },
@@ -264,7 +267,7 @@
             signal: this.requestAbortController.signal
           });
 
-          if (res.status == 204) {
+          if (res.status == 204) { // to handle still-not-participant situation in case joining
             // do nothing because we 're going to exit from ChatView.MessageList to ChatList inside ChatView itself
             return []
           }
@@ -480,6 +483,11 @@
           } else {
             bus.emit(OPEN_EDIT_MESSAGE, {dto: editMessageDto, actionType: edit_message});
           }
+        },
+        syncEmbedMessage(dto) {
+          axios.put(`/api/chat/${this.chatId}/message/${dto.id}/sync-embed`, null, {
+            signal: this.requestAbortController.signal
+          })
         },
         replyOnMessage(dto) {
           const replyMessage = {

@@ -44,6 +44,12 @@ public class UserAccountConverter {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AaaExternalPermissionService aaaExternalPermissionService;
+
+    @Autowired
+    private UserRoleService userRoleService;
+
     static final UserRole[] newUserRoles = new UserRole[]{DEFAULT_ROLE};
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserAccountConverter.class);
@@ -190,6 +196,17 @@ public class UserAccountConverter {
                 dataDTO,
                 PermissionsUtils.areOverriddenPermissions(userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions())
         );
+    }
+
+    public name.nkonev.aaa.dto.UserAccountInternalDTO convertToUserAccountInternalDTO(UserAccount userAccount) {
+        if (userAccount == null) { return null; }
+        var u = convertToUserAccountDTO(userAccount);
+
+        var a = userRoleService.isAdmin(u.additionalData().roles().stream().map(UserAccountConverter::convertRole).collect(Collectors.toSet()));
+
+        var p = aaaExternalPermissionService.evaluatePermissions(a, userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions());
+
+        return new UserAccountInternalDTO(u, p);
     }
 
     public name.nkonev.aaa.dto.UserAccountEventDTO convertToUserAccountEventDTO(UserAccount userAccount) {

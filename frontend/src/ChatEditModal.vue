@@ -13,6 +13,7 @@
                         @keydown.native.enter.prevent="saveChat"
                     >
                         <v-text-field
+                            v-if="!onlyAddParticipants"
                             class="mx-1 mt-1"
                             id="test-chat-text"
                             :label="$vuetify.locale.t('$vuetify.chat_name')"
@@ -56,88 +57,99 @@
                             </template>
                         </v-autocomplete>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-model="editDto.canResend"
-                            :label="$vuetify.locale.t('$vuetify.can_resend')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                        <template v-if="!onlyAddParticipants">
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.canResend"
+                              :label="$vuetify.locale.t('$vuetify.can_resend')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-model="editDto.availableToSearch"
-                            :label="$vuetify.locale.t('$vuetify.available_to_search')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="availableToSearchClass()"
+                              v-model="editDto.availableToSearch"
+                              :label="$vuetify.locale.t('$vuetify.available_to_search')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-model="editDto.regularParticipantCanPublishMessage"
-                            :label="$vuetify.locale.t('$vuetify.regular_participant_can_publish')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.regularParticipantCanPublishMessage"
+                              :label="$vuetify.locale.t('$vuetify.regular_participant_can_publish')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-model="editDto.regularParticipantCanPinMessage"
-                            :label="$vuetify.locale.t('$vuetify.regular_participant_can_pin')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.regularParticipantCanPinMessage"
+                              :label="$vuetify.locale.t('$vuetify.regular_participant_can_pin')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-model="editDto.regularParticipantCanWriteMessage"
-                            :label="$vuetify.locale.t('$vuetify.regular_participant_can_write_message')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.regularParticipantCanWriteMessage"
+                              :label="$vuetify.locale.t('$vuetify.regular_participant_can_write_message')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-if="canCreateBlog"
-                            v-model="editDto.blog"
-                            :label="$vuetify.locale.t('$vuetify.blog')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.regularParticipantCanAddParticipant"
+                              :label="$vuetify.locale.t('$vuetify.regular_participant_can_add_participant')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-if="canCreateBlog"
-                            v-model="editDto.blogAbout"
-                            :label="$vuetify.locale.t('$vuetify.blog_about')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-if="canCreateBlog"
+                              v-model="editDto.blog"
+                              :label="$vuetify.locale.t('$vuetify.blog')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <v-checkbox
-                            :class="isMobile() ? 'mt-2': ''"
-                            v-model="editDto.canReact"
-                            :label="$vuetify.locale.t('$vuetify.can_react')"
-                            hide-details
-                            density="compact"
-                            color="primary"
-                        ></v-checkbox>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-if="canCreateBlog"
+                              v-model="editDto.blogAbout"
+                              :label="$vuetify.locale.t('$vuetify.blog_about')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
 
-                        <template v-if="!isNew">
-                            <v-container class="pa-0 ma-0 mt-2">
-                                <img v-if="hasAva"
-                                       class="pa-0 ma-0 chat-avatar"
-                                       :src="ava"
-                                >
-                                </img>
-                            </v-container>
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.canReact"
+                              :label="$vuetify.locale.t('$vuetify.can_react')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
+
+                          <template v-if="!isNew">
+                              <v-container class="pa-0 ma-0 mt-2">
+                                  <img v-if="hasAva"
+                                         class="pa-0 ma-0 chat-avatar"
+                                         :src="ava"
+                                  >
+                                  </img>
+                              </v-container>
+                          </template>
                         </template>
                     </v-form>
 
@@ -150,7 +162,7 @@
                 </v-card-text>
 
                 <v-card-actions class="my-actions d-flex flex-wrap flex-row">
-                    <template v-if="!isNew && !loading">
+                    <template v-if="!onlyAddParticipants && !isNew && !loading">
                       <v-btn v-if="hasAva" variant="outlined" @click="removeAvatarFromChat()">
                         <template v-slot:prepend>
                           <v-icon>mdi-image-remove</v-icon>
@@ -182,12 +194,13 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {OPEN_CHAT_EDIT} from "./bus/bus";
+    import bus, {CHAT_ADD, OPEN_CHAT_EDIT} from "./bus/bus";
     import {chat_name} from "@/router/routes";
     import {hasLength, unescapeHtml} from "@/utils";
     import {isNumber, isObject, isString} from "lodash";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore.js";
+    import {v4 as uuidv4} from "uuid";
 
     const dtoFactory = ()=>{
         return {
@@ -198,6 +211,7 @@
             availableToSearch: false, // it's default for all the new chats, excluding tet-a-tet
             regularParticipantCanWriteMessage: true,
             canReact: true,
+            regularParticipantCanAddParticipant: true,
         }
     };
 
@@ -214,6 +228,8 @@
                 fileInput: null,
                 canCreateBlog: false,
                 loading: false,
+                chatCorrelationId: null,
+                onlyAddParticipants: false,
             }
         },
         computed: {
@@ -241,18 +257,22 @@
         },
         methods: {
             showModal(input) {
-                this.$data.show = true;
 
-                if (isNumber(input) || isString(input)) {
-                  if (input != this.chatStore.chatDto.id) {
-                      throw "Unexpected case"
+                if (input.chatAction == 'create_chat') {
+                  this.editDto = dtoFactory()
+                } else if (input.chatAction == 'editCurrentChat') {
+                  if (input.chatId != this.chatStore.chatDto.id) {
+                    throw "Unexpected case"
                   }
                   this.editDto = this.extractNecessaryFields(this.chatStore.chatDto)
-                } else if (isObject(input)) {
-                  this.editDto = this.extractNecessaryFields(input);
-                } else {
-                  this.editDto = dtoFactory()
+                } else if (input.chatAction == 'editProvidedChat') {
+                  this.editDto = this.extractNecessaryFields(input.chat);
+                } else if (input.chatAction == 'addParticipants') {
+                  this.editDto.id = input.chatId;
+                  this.onlyAddParticipants = true;
                 }
+                this.$data.show = true;
+
                 this.editDto.name = unescapeHtml(this.editDto.name);
 
                 this.loadCanCreateBlog();
@@ -271,6 +291,7 @@
                 regularParticipantCanPinMessage: chatDto.regularParticipantCanPinMessage,
                 regularParticipantCanWriteMessage: chatDto.regularParticipantCanWriteMessage,
                 canReact: chatDto.canReact,
+                regularParticipantCanAddParticipant: chatDto.regularParticipantCanAddParticipant,
               }
             },
             loadCanCreateBlog() {
@@ -321,34 +342,53 @@
                 }
             },
             saveChat() {
-                const valid = this.validate();
-                if (valid) {
-                    const dtoToPost = this.extractNecessaryFields(this.editDto);
-                    dtoToPost.participantIds = this.isNew ? this.editDto.participantIds : null
+              if (!this.onlyAddParticipants) {
+                this.editSaveChat()
+              } else {
+                this.addParticipants()
+              }
+            },
+            editSaveChat() {
+              this.validate().then((res)=>{
+                if (res.valid) {
+                  const dtoToPost = this.extractNecessaryFields(this.editDto);
+                  dtoToPost.participantIds = this.isNew ? this.editDto.participantIds : null
 
-                    this.loading = true;
-                    if (this.isNew) {
-                        axios.post(`/api/chat`, dtoToPost).then(({data}) => {
-                            const routeDto = { name: chat_name, params: { id: data.id }};
-                            this.$router.push(routeDto);
-                        }).then(()=>this.closeModal()).finally(()=>{
-                          this.loading = false;
-                        });
-                    } else {
-                        axios.put(`/api/chat`, dtoToPost).then(()=>{
-                            if (this.editDto.participantIds && this.editDto.participantIds.length) {
-                                // we firstly add users...
-                                return axios.put(`/api/chat/${this.editDto.id}/participant`, {
-                                    addParticipantIds: this.editDto.participantIds
-                                })
-                            } else {
-                                return Promise.resolve()
-                            }
-                        }).then(()=>this.closeModal()).finally(()=>{
-                          this.loading = false;
-                        });
-                    }
+                  this.loading = true;
+                  if (this.isNew) {
+                      this.chatCorrelationId = uuidv4();
+                      axios.post(`/api/chat`, dtoToPost, {
+                        headers: {
+                          "X-CorrelationId": this.chatCorrelationId,
+                        }
+                      });
+                  } else {
+                      axios.put(`/api/chat`, dtoToPost).then(()=>{
+                          if (this.editDto.participantIds?.length) {
+                              // we firstly add users...
+                              return axios.put(`/api/chat/${this.editDto.id}/participant`, {
+                                  addParticipantIds: this.editDto.participantIds
+                              })
+                          } else {
+                              return Promise.resolve()
+                          }
+                      }).then(()=>this.closeModal()).finally(()=>{
+                        this.loading = false;
+                      });
+                  }
                 }
+              })
+            },
+            addParticipants() {
+              this.loading = true;
+              if (this.editDto.participantIds?.length) {
+                // we firstly add users...
+                return axios.put(`/api/chat/${this.editDto.id}/participant`, {
+                  addParticipantIds: this.editDto.participantIds
+                }).then(()=>this.closeModal()).finally(()=>{
+                  this.loading = false;
+                });
+              }
             },
             validate () {
                 return this.$refs.form.validate()
@@ -363,6 +403,8 @@
                 this.valid = true;
                 this.canCreateBlog = false;
                 this.loading = false;
+                this.chatCorrelationId = null;
+                this.onlyAddParticipants = false;
             },
             openAvatarDialog() {
                 this.fileInput.click();
@@ -399,6 +441,23 @@
                   this.loading = false;
                 });
             },
+            onChatAdded(data) {
+              if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == data.correlationId) {
+                const routeDto = {name: chat_name, params: {id: data.id}};
+                this.$router.push(routeDto).then(() => this.closeModal()).finally(() => {
+                  this.loading = false;
+                  this.chatCorrelationId = null;
+                });
+              }
+            },
+            availableToSearchClass() {
+              const ret = [];
+              if (this.isMobile()) {
+                ret.push('mt-2')
+              }
+              ret.push('chb-available-to-search')
+              return ret
+            }
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
@@ -410,9 +469,11 @@
             }
             this.fileInput = null;
             bus.off(OPEN_CHAT_EDIT, this.showModal);
+            bus.off(CHAT_ADD, this.onChatAdded);
         },
         mounted() {
           bus.on(OPEN_CHAT_EDIT, this.showModal);
+          bus.on(CHAT_ADD, this.onChatAdded);
           this.fileInput = document.getElementById('image-input-chat-avatar');
           this.fileInput.onchange = (e) => {
             if (e.target.files.length) {

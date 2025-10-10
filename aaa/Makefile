@@ -20,7 +20,7 @@ SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
 
 download:
-	./mvnw dependency:resolve
+	echo skipping
 
 check-env:
 	docker version && ${JAVA_HOME}/bin/java -version
@@ -73,20 +73,20 @@ run-oauth2-emu:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	./mvnw -Poauth2_emulator spring-boot:run
 
-run-with-oauth2:
+run-with-oauth2: infra check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	# You need to start EmulatorServersController firstly
 	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/user-test-controller.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/login-additional-allowed-characters.yml || true
 
-run-with-keycloak:
+run-with-keycloak: infra check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/oauth2-keycloak.yml --custom.schedulers.sync-keycloak.enabled=true --custom.schedulers.sync-keycloak.cron="*/5 * * * * *" || true
 
-run-with-ldap: check-env download generate package-java
+run-with-ldap: infra check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/demo-ldap-opendj.yml || true
 
-run: check-env download generate package-java infra
+run: infra check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar || true
 

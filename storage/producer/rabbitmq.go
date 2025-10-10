@@ -14,9 +14,14 @@ import (
 )
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
+const correlationIdName = "correlationId"
 
-func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chatId int64, previewCreatedEvent *dto.PreviewCreatedEvent) error {
+func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chatId int64, previewCreatedEvent *dto.PreviewCreatedEvent, correlationId *string) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+
+	if correlationId != nil && *correlationId != "" {
+		headers[correlationIdName] = *correlationId
+	}
 
 	event := dto.ChatEvent{
 		EventType:           "preview_created",
@@ -48,8 +53,11 @@ func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chat
 	return nil
 }
 
-func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType utils.EventType) error {
+func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType utils.EventType, correlationId *string) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
+	if correlationId != nil && *correlationId != "" {
+		headers[correlationIdName] = *correlationId
+	}
 
 	var outputEventType string
 	switch eventType {

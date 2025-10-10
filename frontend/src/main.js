@@ -79,6 +79,7 @@ app.config.globalProperties.setError = (e, txt, traceId) => {
     chatStore.errorColor = "error";
 }
 
+// Not to show error on websocket connection interruptions
 app.config.globalProperties.setErrorSilent = (e, traceId) => {
     console.error(e, "traceId=", traceId);
 }

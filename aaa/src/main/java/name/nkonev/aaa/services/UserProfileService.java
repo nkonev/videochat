@@ -321,7 +321,7 @@ public class UserProfileService {
     }
 
     @Transactional
-    public List<UserAccountDTO> getUsersInternal(
+    public List<UserAccountInternalDTO> getUsersInternal(
         List<Long> userIds
     ) {
         if (userIds == null) {
@@ -330,7 +330,7 @@ public class UserProfileService {
         if (userIds.size() > MAX_USERS_RESPONSE_LENGTH) {
             throw new BadRequestException("Cannot be greater than " + MAX_USERS_RESPONSE_LENGTH);
         }
-        var result = userAccountRepository.findByIdInOrderById(userIds).stream().map(UserAccountConverter::convertToUserAccountDTO).toList();
+        var result = userAccountRepository.findByIdInOrderById(userIds).stream().map(v -> userAccountConverter.convertToUserAccountInternalDTO(v)).toList();
         return result;
     }
 

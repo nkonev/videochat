@@ -19,36 +19,39 @@ public class AaaExternalPermissionService {
 
     public Set<ExternalPermission> evaluatePermissions(UserAccountDetailsDTO userAccount) {
         var isAdmin = userRoleService.isAdmin(userAccount);
+        return evaluatePermissions(isAdmin, userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions());
+    }
 
+    public Set<ExternalPermission> evaluatePermissions(boolean isAdmin, ExternalPermission[] overrideAddPermissions, ExternalPermission[] overrideRemovePermissions) {
         var canCreateBlog = isAdmin;
         var canUnlimitedUpload = isAdmin;
         var canRecordCall = isAdmin;
 
-        if (userAccount.overrideAddPermissions() != null) {
+        if (overrideAddPermissions != null) {
             if (!canCreateBlog) {
-                canCreateBlog = has(userAccount.overrideAddPermissions(), ExternalPermission.CAN_CREATE_BLOG);
+                canCreateBlog = has(overrideAddPermissions, ExternalPermission.CAN_CREATE_BLOG);
             }
 
             if (!canUnlimitedUpload) {
-                canUnlimitedUpload = has(userAccount.overrideAddPermissions(), ExternalPermission.CAN_UNLIMITED_UPLOAD);
+                canUnlimitedUpload = has(overrideAddPermissions, ExternalPermission.CAN_UNLIMITED_UPLOAD);
             }
 
             if (!canRecordCall) {
-                canRecordCall = has(userAccount.overrideAddPermissions(), ExternalPermission.CAN_RECORD_CALL);
+                canRecordCall = has(overrideAddPermissions, ExternalPermission.CAN_RECORD_CALL);
             }
         }
 
-        if (userAccount.overrideRemovePermissions() != null) {
+        if (overrideRemovePermissions != null) {
             if (canCreateBlog) {
-                canCreateBlog = !has(userAccount.overrideRemovePermissions(), ExternalPermission.CAN_CREATE_BLOG);
+                canCreateBlog = !has(overrideRemovePermissions, ExternalPermission.CAN_CREATE_BLOG);
             }
 
             if (canUnlimitedUpload) {
-                canUnlimitedUpload = !has(userAccount.overrideRemovePermissions(), ExternalPermission.CAN_UNLIMITED_UPLOAD);
+                canUnlimitedUpload = !has(overrideRemovePermissions, ExternalPermission.CAN_UNLIMITED_UPLOAD);
             }
 
             if (canRecordCall) {
-                canRecordCall = !has(userAccount.overrideRemovePermissions(), ExternalPermission.CAN_RECORD_CALL);
+                canRecordCall = !has(overrideRemovePermissions, ExternalPermission.CAN_RECORD_CALL);
             }
         }
 

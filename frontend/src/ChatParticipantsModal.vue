@@ -60,26 +60,24 @@
                                     </v-row>
 
                                     <template v-slot:append>
-                                        <template v-if="item.admin || chatStore.chatDto.canChangeChatAdmins">
-                                            <template v-if="chatStore.chatDto.canChangeChatAdmins && item.id != chatStore.currentUser.id && !isMobile()">
-                                                <v-btn
-                                                    variant="flat"
-                                                    :loading="item.adminLoading ? true : false"
-                                                    @click="changeChatAdmin(item)"
-                                                    icon
-                                                    :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_chat_admin') : $vuetify.locale.t('$vuetify.grant_chat_admin')"
-                                                >
-                                                    <v-icon :color="item.admin ? 'primary' : 'disabled'">mdi-crown</v-icon>
-                                                </v-btn>
-                                            </template>
-                                            <template v-else-if="item.admin">
-                                                  <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.chat_admin')">
-                                                      <v-icon color="primary">mdi-crown</v-icon>
-                                                  </span>
-                                            </template>
+                                        <template v-if="item.canChange && !isMobile()">
+                                            <v-btn
+                                                variant="flat"
+                                                :loading="item.adminLoading ? true : false"
+                                                @click="changeChatAdmin(item)"
+                                                icon
+                                                :title="item.admin ? $vuetify.locale.t('$vuetify.revoke_chat_admin') : $vuetify.locale.t('$vuetify.grant_chat_admin')"
+                                            >
+                                                <v-icon :color="item.admin ? 'primary' : 'disabled'">mdi-crown</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <template v-else-if="item.admin">
+                                              <span class="pl-1 pr-1" :title="$vuetify.locale.t('$vuetify.chat_admin')">
+                                                  <v-icon color="primary">mdi-crown</v-icon>
+                                              </span>
                                         </template>
                                         <template v-if="!isMobile()">
-                                            <template v-if="chatStore.canDeleteParticipant(item.id)">
+                                            <template v-if="item.canDelete">
                                                 <v-btn variant="flat" icon @click="deleteParticipant(item)" :title="$vuetify.locale.t('$vuetify.delete_from_chat')"><v-icon color="red">mdi-delete</v-icon></v-btn>
                                             </template>
                                             <template v-if="chatStore.canVideoKickParticipant(item.id) && isVideo()">
@@ -136,10 +134,13 @@
                             <v-divider v-if="shouldShowPagination && isMobile()" class="mt-2"/>
                         </v-col>
                         <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
-                            <v-btn v-if="chatStore.chatDto.canEdit" color="primary" variant="flat" @click="addParticipants()">
+                            <v-btn v-if="chatStore.chatDto.canEdit" color="primary" variant="flat" @click="editChat()">
                                 {{ $vuetify.locale.t('$vuetify.add') }}
                             </v-btn>
-                            <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                            <v-btn v-else-if="chatStore.chatDto.canAddParticipant" color="primary" variant="flat" @click="addParticipants()">
+                              {{ $vuetify.locale.t('$vuetify.add') }}
+                            </v-btn>
+                          <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                         </v-col>
                     </v-row>
                 </v-card-actions>
@@ -162,7 +163,7 @@
       PARTICIPANT_DELETED,
       PARTICIPANT_EDITED,
       CO_CHATTED_PARTICIPANT_CHANGED,
-      VIDEO_DIAL_STATUS_CHANGED, LOGGED_OUT, REFRESH_ON_WEBSOCKET_RESTORED,
+      VIDEO_DIAL_STATUS_CHANGED, LOGGED_OUT, REFRESH_ON_WEBSOCKET_RESTORED, PARTICIPANTS_RELOAD,
     } from "./bus/bus";
     import {profile, profile_name, videochat_name} from "./router/routes";
     import userStatusMixin from "@/mixins/userStatusMixin";
@@ -293,8 +294,11 @@
                     }
                 });
             },
+            editChat() {
+              bus.emit(OPEN_CHAT_EDIT, {chatAction: 'editCurrentChat', chatId: this.chatId} );
+            },
             addParticipants() {
-                bus.emit(OPEN_CHAT_EDIT, this.chatStore.chatDto);
+              bus.emit(OPEN_CHAT_EDIT, {chatAction: 'addParticipants', chatId: this.chatId} );
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {
@@ -479,7 +483,9 @@
                 this.debouncedUpdate();
               }
             },
-
+            onParticipantsReload() {
+              this.updateItems();
+            },
         },
         watch: {
             userSearchString (searchString) {
@@ -515,6 +521,7 @@
           bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
           bus.on(LOGGED_OUT, this.onLogout);
           bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+          bus.on(PARTICIPANTS_RELOAD, this.onParticipantsReload);
 
           this.markInstance = new Mark(".participants-list");
         },
@@ -528,6 +535,7 @@
             bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
             bus.off(LOGGED_OUT, this.onLogout);
             bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+            bus.off(PARTICIPANTS_RELOAD, this.onParticipantsReload);
 
             this.markInstance.unmark();
             this.markInstance = null;

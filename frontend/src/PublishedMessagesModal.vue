@@ -182,7 +182,7 @@ export default {
             return getHumanReadableDate(item.createDateTime)
         },
         getOwner(owner) {
-            return owner.login
+            return owner?.login
         },
         isVideoRoute() {
             return this.$route.name == videochat_name
