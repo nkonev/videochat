@@ -69,7 +69,7 @@ import {getLoginColoredStyle, publicallyAvailableForSearchChatsQuery, setTitle} 
     methods: {
       getLoginColoredStyle,
       createChat() {
-        bus.emit(OPEN_CHAT_EDIT, null);
+        bus.emit(OPEN_CHAT_EDIT, {chatAction: 'create_chat'});
       },
       findUser() {
         this.$router.push({name: profile_list_name});

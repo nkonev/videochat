@@ -35,11 +35,19 @@ type BaseChatDto struct {
 	RegularParticipantCanWriteMessage   bool            `json:"regularParticipantCanWriteMessage"`
 	CanWriteMessage                     bool            `json:"canWriteMessage"`
 	CanReact                            bool            `json:"canReact"`
+	CanPin                              bool            `json:"canPin"`
+	ConsiderMessagesAsUnread            bool            `json:"considerMessagesAsUnread"`
 	AdditionalData                      *AdditionalData `json:"additionalData"`
+	RegularParticipantCanAddParticipant bool            `json:"regularParticipantCanAddParticipant"`
+	CanAddParticipant                   bool            `json:"canAddParticipant"`
 }
 
 type ChatDeletedDto struct {
 	Id int64 `json:"id"`
+}
+
+type ChatTetATetUpsertedDto struct {
+	ChatId int64 `json:"chatId"`
 }
 
 type ChatDto struct {
@@ -52,4 +60,9 @@ type ChatUnreadMessageChanged struct {
 	ChatId             int64     `json:"chatId"`
 	UnreadMessages     int64     `json:"unreadMessages"`
 	LastUpdateDateTime time.Time `json:"lastUpdateDateTime"`
+}
+
+type ChatNotificationSettingsChanged struct {
+	ChatId                   int64 `json:"chatId"`
+	ConsiderMessagesAsUnread bool  `json:"considerMessagesAsUnread"`
 }
