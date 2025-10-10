@@ -307,11 +307,13 @@
               this.setContentToEditorAndLoad();
             },
             notifyAboutBroadcast(clear, val) {
+              if (this.chatStore.chatDto?.canBroadcast) {
                 if (clear) {
-                    axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: null});
+                  axios.put(`/api/chat/` + this.chatId + '/broadcast', {text: null});
                 } else if (this.messageTextIsPresent(val)) {
-                    axios.put(`/api/chat/`+this.chatId+'/broadcast', {text: val});
+                  axios.put(`/api/chat/` + this.chatId + '/broadcast', {text: val});
                 }
+              }
             },
             notifyAboutTyping(val) {
                 if (this.messageTextIsPresent(val)) {
