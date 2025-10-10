@@ -65,7 +65,7 @@ export default {
                         window.open(getChatLink(this.menuableItem.id), '_blank');
                     }
                 });
-                if (!this.menuableItem.isResultFromSearch) {
+                if (this.menuableItem.canPin) {
                     if (this.menuableItem.pinned) {
                         ret.push({
                             title: this.$vuetify.locale.t('$vuetify.remove_from_pinned'),
@@ -98,6 +98,19 @@ export default {
                   ret.push({title: this.$vuetify.locale.t('$vuetify.mark_as_read'), icon: 'mdi-read', action: () => this.$emit('markAsRead', this.menuableItem) });
                 }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.mark_as_read_all'), icon: 'mdi-check-all', action: () => this.$emit('markAsReadAll', this.menuableItem) });
+                if (this.menuableItem.considerMessagesAsUnread) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.remove_contributing_to_unread'),
+                    icon: 'mdi-message-badge-outline',
+                    action: () => this.$emit('removeFromContributingToUnread', this.menuableItem)
+                  });
+                } else {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.start_contributing_to_unread'),
+                    icon: 'mdi-message-badge',
+                    action: () => this.$emit('startFromContributingToUnread', this.menuableItem)
+                  });
+                }
             }
             return ret;
         },

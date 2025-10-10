@@ -199,7 +199,6 @@
                          v-model="considerMessagesOfThisChatAsUnread"
                          @update:modelValue="putConsiderMessagesOfThisChatAsUnread()"
           >
-              <v-radio :label="$vuetify.locale.t('$vuetify.option_not_set')" :value="null"></v-radio>
               <v-radio :label="$vuetify.locale.t('$vuetify.option_on')" :value="true"></v-radio>
               <v-radio :label="$vuetify.locale.t('$vuetify.option_off')" :value="false"></v-radio>
           </v-radio-group>
@@ -252,6 +251,9 @@
         setBrowserNotification,
         setGlobalBrowserNotification
     } from "@/store/localStore.js";
+    import {v4 as uuidv4} from "uuid";
+    import {hasLength} from "@/utils.js";
+    import bus, {CHAT_NOTIFICATION_SETTINGS_CHANGED} from "@/bus/bus.js";
 
     export default {
         data () {
@@ -262,6 +264,7 @@
                 considerMessagesOfThisChatAsUnread: null,
                 browserNotificationSettings: {},
                 browserNotificationChatSettings: {},
+                chatNotificationSettingsCorrelationId: null,
             }
         },
         computed: {
@@ -289,12 +292,23 @@
             },
             putConsiderMessagesOfThisChatAsUnread() {
                 this.loading = true;
-                axios.put(`/api/chat/${this.chatId}/notification`, {considerMessagesOfThisChatAsUnread: this.considerMessagesOfThisChatAsUnread}).then(({data}) => {
-                    this.considerMessagesOfThisChatAsUnread = data.considerMessagesOfThisChatAsUnread;
-                }).finally(()=>{
-                    this.loading = false;
+                this.chatNotificationSettingsCorrelationId = uuidv4();
+                axios.put(`/api/chat/${this.chatId}/notification`, {considerMessagesOfThisChatAsUnread: this.considerMessagesOfThisChatAsUnread}, {
+                  headers: {
+                    "X-CorrelationId": this.chatNotificationSettingsCorrelationId,
+                  }
                 })
             },
+            onChatNotificationSettingsChanged(data) {
+              if (this.chatId == data.chatId) { // we don't take into account chatNotificationSettingsCorrelationId because we need to react on the my event from the different browser / device
+                this.considerMessagesOfThisChatAsUnread = data.considerMessagesAsUnread
+              }
+              if (hasLength(this.chatNotificationSettingsCorrelationId) && this.chatNotificationSettingsCorrelationId == data.correlationId) {
+                this.chatNotificationSettingsCorrelationId = null;
+                this.loading = false;
+              }
+            },
+
             isInChat() {
                 return this.$route.name == chat_name || this.$route.name == videochat_name
             },
@@ -359,6 +373,8 @@
             },
         },
         mounted() {
+            bus.on(CHAT_NOTIFICATION_SETTINGS_CHANGED, this.onChatNotificationSettingsChanged);
+
             console.debug("Initially set loading true")
             this.loading = true;
             axios.get(`/api/notification/settings/global`).then(( {data} ) => {
@@ -401,6 +417,10 @@
                 console.debug("Finally set loading false")
                 this.loading = false;
             })
+        },
+        beforeUnmount() {
+          this.chatNotificationSettingsCorrelationId = null;
+          bus.off(CHAT_NOTIFICATION_SETTINGS_CHANGED, this.onChatNotificationSettingsChanged);
         }
     }
 </script>

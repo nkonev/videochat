@@ -40,9 +40,19 @@
               </v-alert>
             </div>
 
-            <MessageList :isCompact="isVideoRoute()"/>
+            <MessageList :isCompact="isVideoRoute()" ref="messageList"/>
 
-            <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
+            <v-badge
+                v-if="chatStore.showScrollDown"
+                :content="chatStore.chatDto.unreadMessages"
+                :model-value="chatStore.chatDto.unreadMessages > 0"
+                color="success"
+                overlap
+                offset-y="10"
+                :class="scrollDownClass()"
+            >
+              <v-btn variant="elevated" color="primary" icon="mdi-arrow-down-thick" @click="scrollDown()"></v-btn>
+            </v-badge>
             <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" icon color="primary" class="new-fab-b" @click="openNewMessageDialog()" :title="$vuetify.locale.t('$vuetify.create_message')">
               <v-badge
                   color="red"
@@ -95,6 +105,7 @@ import {
   filterOutOldWritingUsers, isStrippedUserLogin
 } from "@/utils";
 import bus, {
+  CHAT_ADD,
   CHAT_DELETED,
   CHAT_EDITED, CO_CHATTED_PARTICIPANT_CHANGED,
   FILE_CREATED,
@@ -108,7 +119,7 @@ import bus, {
   OPEN_EDIT_MESSAGE, OPEN_PINNED_MESSAGES_MODAL,
   PARTICIPANT_ADDED,
   PARTICIPANT_DELETED,
-  PARTICIPANT_EDITED, PINNED_MESSAGE_EDITED,
+  PARTICIPANT_EDITED, PARTICIPANTS_RELOAD, PINNED_MESSAGE_EDITED,
   PINNED_MESSAGE_PROMOTED,
   PINNED_MESSAGE_UNPROMOTED,
   PREVIEW_CREATED, PROFILE_SET,
@@ -117,7 +128,7 @@ import bus, {
   REACTION_CHANGED,
   REACTION_REMOVED,
   REFRESH_ON_WEBSOCKET_RESTORED,
-  SCROLL_DOWN,
+  SCROLL_DOWN, UNREAD_MESSAGES_CHANGED,
   USER_TYPING,
   VIDEO_CALL_USER_COUNT_CHANGED,
   VIDEO_DIAL_STATUS_CHANGED, WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
@@ -130,6 +141,7 @@ import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
 import onFocusMixin from "@/mixins/onFocusMixin.js";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
 import {getStoredVideoMessages} from "@/store/localStore.js";
+import {v4 as uuidv4} from "uuid";
 
 const getChatEventsData = (message) => {
   return message.data?.chatEvents
@@ -141,6 +153,8 @@ const panelSizesKey = "panelSizes";
 
 const messagesSplitpanesSelector = isMobileBrowser() ? '#central-splitpanes' : "#root-splitpanes";
 const messagesSplitterDisplayVarName = "--splitter-v-display";
+
+const NEED_WAIT_FOR_JOIN = "needWaitForJoin";
 
 const emptyStoredPanes = () => {
   return {
@@ -174,6 +188,7 @@ export default {
       canWriteMessage: true, // for sake prevent disappearing TipTap on switching in the left pane
       initialized: false,
       chatEventsSubscribed: false,
+      joinCorrelationId: null,
     }
   },
   components: {
@@ -195,12 +210,21 @@ export default {
   },
   methods: {
     onProfileSet() {
+      this.chatStore.incrementProgressCount();
       return this.getInfo(this.chatId).then(()=>{
         this.chatStore.showCallManagement = true;
         if (!this.chatEventsSubscribed) {
           this.chatEventsSubscribed = true;
           this.chatEventsSubscription.graphQlSubscribe();
         }
+      }).catch(e => {
+        if (e == NEED_WAIT_FOR_JOIN) {
+          console.log("Waiting for an event to load the chat")
+        } else {
+          throw e
+        }
+      }).finally(()=>{
+        this.chatStore.decrementProgressCount();
       })
     },
     async doInitialize() {
@@ -225,14 +249,15 @@ export default {
         signal: this.requestAbortController.signal
       }).then((response) => {
         if (response.status == 205) {
+          this.joinCorrelationId = uuidv4();
+          this.chatStore.incrementProgressCount(); // the counterpart in in onChatAdd() -> handle joined
           return axios.put(`/api/chat/${chatId}/join`, null, {
-            signal: this.requestAbortController.signal
-          }).then((response)=>{
-              return axios.get(`/api/chat/${chatId}`, {
-                signal: this.requestAbortController.signal
-              }).then((response)=>{
-                  return this.processNormalInfoResponse(response)
-              })
+            signal: this.requestAbortController.signal,
+            headers: {
+              "X-CorrelationId": this.joinCorrelationId,
+            }
+          }).then(()=>{
+            return Promise.reject(NEED_WAIT_FOR_JOIN);
           })
         } else if (response.status == 204) {
           this.goToChatList();
@@ -405,7 +430,9 @@ export default {
                                     }
                                   }
                                   canEdit
+                                  canSyncEmbed
                                   canDelete
+                                  canMakeBlogPost
                                   fileItemUuid
                                   embedMessage {
                                     id
@@ -458,6 +485,7 @@ export default {
                                 subscription{
                                   chatEvents(chatId: ${this.chatId}) {
                                     eventType
+                                    correlationId
                                     messageEvent {
                                       ...DisplayMessageDtoFragment
                                     }
@@ -475,7 +503,6 @@ export default {
                                       url
                                       previewUrl
                                       aType
-                                      correlationId
                                       fileItemUuid
                                     }
                                     participantsEvent {
@@ -492,6 +519,8 @@ export default {
                                         confirmed,
                                         roles,
                                       }
+                                      canChange
+                                      canDelete
                                     }
                                     promoteMessageEvent {
                                       count
@@ -575,7 +604,6 @@ export default {
                                         canShowAsImage
                                         canPlayAsAudio
                                         fileItemUuid
-                                        correlationId
                                         previewable
                                         aType
                                       }
@@ -606,65 +634,87 @@ export default {
                 `
     },
     onNextSubscriptionElement(e) {
-      if (getChatEventsData(e).eventType === 'message_created') {
-        const d = getChatEventsData(e).messageEvent;
+      const che = getChatEventsData(e);
+      if (che.eventType === 'message_created') {
+        const d = che.messageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_ADD, d);
-      } else if (getChatEventsData(e).eventType === 'message_deleted') {
-        const d = getChatEventsData(e).messageDeletedEvent;
+      } else if (che.eventType === 'message_deleted') {
+        const d = che.messageDeletedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_DELETED, d);
-      } else if (getChatEventsData(e).eventType === 'message_edited') {
-        const d = getChatEventsData(e).messageEvent;
+      } else if (che.eventType === 'message_edited') {
+        const d = che.messageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "user_broadcast") {
-        const d = getChatEventsData(e).messageBroadcastEvent;
+      } else if (che.eventType === "user_broadcast") {
+        const d = che.messageBroadcastEvent;
+        d.correlationId = che.correlationId;
         bus.emit(MESSAGE_BROADCAST, d);
-      } else if (getChatEventsData(e).eventType === "preview_created") {
-        const d = getChatEventsData(e).previewCreatedEvent;
+      } else if (che.eventType === "preview_created") {
+        const d = che.previewCreatedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PREVIEW_CREATED, d);
-      } else if (getChatEventsData(e).eventType === "participant_added") {
-        const d = getChatEventsData(e).participantsEvent;
+      } else if (che.eventType === "participant_added") {
+        const d = che.participantsEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PARTICIPANT_ADDED, d);
-      } else if (getChatEventsData(e).eventType === "participant_deleted") {
-        const d = getChatEventsData(e).participantsEvent;
+      } else if (che.eventType === "participant_deleted") {
+        const d = che.participantsEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PARTICIPANT_DELETED, d);
-      } else if (getChatEventsData(e).eventType === "participant_edited") {
-        const d = getChatEventsData(e).participantsEvent;
+      } else if (che.eventType === "participant_edited") {
+        const d = che.participantsEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PARTICIPANT_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "pinned_message_promote") {
-        const d = getChatEventsData(e).promoteMessageEvent;
+      } else if (che.eventType === "pinned_message_promote") {
+        const d = che.promoteMessageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PINNED_MESSAGE_PROMOTED, d);
-      } else if (getChatEventsData(e).eventType === "pinned_message_unpromote") {
-        const d = getChatEventsData(e).promoteMessageEvent;
+      } else if (che.eventType === "pinned_message_unpromote") {
+        const d = che.promoteMessageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PINNED_MESSAGE_UNPROMOTED, d);
-      } else if (getChatEventsData(e).eventType === "pinned_message_edit") {
-        const d = getChatEventsData(e).promoteMessageEvent;
+      } else if (che.eventType === "pinned_message_edit") {
+        const d = che.promoteMessageEvent;
+        d.correlationId = che.correlationId;
         bus.emit(PINNED_MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "published_message_add") {
-          const d = getChatEventsData(e).publishedMessageEvent;
-          bus.emit(PUBLISHED_MESSAGE_ADD, d);
-      } else if (getChatEventsData(e).eventType === "published_message_remove") {
-          const d = getChatEventsData(e).publishedMessageEvent;
-          bus.emit(PUBLISHED_MESSAGE_REMOVE, d);
-      } else if (getChatEventsData(e).eventType === "published_message_edit") {
-          const d = getChatEventsData(e).publishedMessageEvent;
-          bus.emit(PUBLISHED_MESSAGE_EDITED, d);
-      } else if (getChatEventsData(e).eventType === "file_created") {
-        const d = getChatEventsData(e).fileEvent;
+      } else if (che.eventType === "published_message_add") {
+        const d = che.publishedMessageEvent;
+        d.correlationId = che.correlationId;
+        bus.emit(PUBLISHED_MESSAGE_ADD, d);
+      } else if (che.eventType === "published_message_remove") {
+        const d = che.publishedMessageEvent;
+        d.correlationId = che.correlationId;
+        bus.emit(PUBLISHED_MESSAGE_REMOVE, d);
+      } else if (che.eventType === "published_message_edit") {
+        const d = che.publishedMessageEvent;
+        d.correlationId = che.correlationId;
+        bus.emit(PUBLISHED_MESSAGE_EDITED, d);
+      } else if (che.eventType === "file_created") {
+        const d = che.fileEvent;
+        d.correlationId = che.correlationId;
         bus.emit(FILE_CREATED, d);
-      } else if (getChatEventsData(e).eventType === "file_removed") {
-        const d = getChatEventsData(e).fileEvent;
+      } else if (che.eventType === "file_removed") {
+        const d = che.fileEvent;
+        d.correlationId = che.correlationId;
         bus.emit(FILE_REMOVED, d);
-      } else if (getChatEventsData(e).eventType === "file_updated") {
-        const d = getChatEventsData(e).fileEvent;
+      } else if (che.eventType === "file_updated") {
+        const d = che.fileEvent;
+        d.correlationId = che.correlationId;
         bus.emit(FILE_UPDATED, d);
-      } else if (getChatEventsData(e).eventType === "reaction_changed") {
-        const d = getChatEventsData(e).reactionChangedEvent;
+      } else if (che.eventType === "reaction_changed") {
+        const d = che.reactionChangedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(REACTION_CHANGED, d);
-      } else if (getChatEventsData(e).eventType === "reaction_removed") {
-        const d = getChatEventsData(e).reactionChangedEvent;
+      } else if (che.eventType === "reaction_removed") {
+        const d = che.reactionChangedEvent;
+        d.correlationId = che.correlationId;
         bus.emit(REACTION_REMOVED, d);
-      } else if (getChatEventsData(e).eventType === "messages_reload") {
-          bus.emit(MESSAGES_RELOAD);
+      } else if (che.eventType === "messages_reload") {
+        bus.emit(MESSAGES_RELOAD);
+      } else if (che.eventType === "participants_reload") {
+        bus.emit(PARTICIPANTS_RELOAD);
       }
     },
     getPinnedPromotedRoute(item) {
@@ -710,6 +760,20 @@ export default {
         this.broadcastMessage = null;
       }
     },
+    onChatAdd(data) {
+      if (data.id == this.chatId && hasLength(this.joinCorrelationId) && this.joinCorrelationId == data.correlationId) {
+        this.joinCorrelationId = null;
+
+        this.onProfileSet().then(()=>{
+          // reload messages in case joining (MessageList will stumble on 204 in case still no participant)
+          if (!this.$refs.messageList?.$data?.items?.len) {
+            bus.emit(MESSAGES_RELOAD);
+          }
+        }).finally(()=>{
+          this.chatStore.decrementProgressCount(); // the counterpart is in onProfileSet() -> fetchAndSetChat() -> joining
+        })
+      }
+    },
     onChatChange(data) {
         if (data.id == this.chatId) {
             this.commonChatEdit(data);
@@ -718,7 +782,8 @@ export default {
     },
     onChatDelete(dto) {
       if (dto.id == this.chatId) {
-          this.$router.push(({name: chat_list_name}))
+          const routerNewState = { name: chat_list_name};
+          goToPreservingQuery(this.$route, this.$router, routerNewState);
       }
     },
     onParticipantDeleted(dtos) { // also there is redraw/delete logic in ChatList::redrawItem
@@ -773,6 +838,8 @@ export default {
         console.info("Unsubscribing from tet-a-tet online")
         this.graphQlUserStatusUnsubscribe();
       }
+
+      this.joinCorrelationId = null;
     },
     onChatDialStatusChange(dto) {
       if (this.chatStore.chatDto?.tetATet && dto.chatId == this.chatId) { // if tet-a-tet
@@ -1011,6 +1078,13 @@ export default {
     openPinnedMessages() {
       bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.chatId});
     },
+    onChangeUnreadMessages(dto) {
+      // just set into chatStore.chatDto.unreadMessages
+      // and use chatStore.chatDto.unreadMessages in content of badge
+      if (dto.chatId == this.chatStore.chatDto.id) {
+        this.chatStore.chatDto.unreadMessages = dto.unreadMessages
+      }
+    },
   },
   watch: {
     '$route': {
@@ -1019,15 +1093,11 @@ export default {
           if (newValue.params.id != oldValue.params.id) {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {
-              this.chatStore.incrementProgressCount();
-
               // used for
               // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
               // 2. to prevent rendering MessageList and get 401
               this.partialReset(); // also unsets "this.chatEventsSubscribed"
-              this.onProfileSet().then(()=>{
-                this.chatStore.decrementProgressCount();
-              })
+              this.onProfileSet();
             }
           }
         }
@@ -1076,6 +1146,8 @@ export default {
     bus.on(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.on(PARTICIPANT_DELETED, this.onParticipantDeleted);
     bus.on(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
+    bus.on(CHAT_ADD, this.onChatAdd);
+    bus.on(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
 
     if (this.chatStore.currentUser) {
       await this.doInitialize();
@@ -1110,6 +1182,8 @@ export default {
     bus.off(VIDEO_DIAL_STATUS_CHANGED, this.onChatDialStatusChange);
     bus.off(PARTICIPANT_DELETED, this.onParticipantDeleted);
     bus.off(CO_CHATTED_PARTICIPANT_CHANGED, this.onCoChattedParticipantChanged);
+    bus.off(CHAT_ADD, this.onChatAdd);
+    bus.off(UNREAD_MESSAGES_CHANGED, this.onChangeUnreadMessages);
 
     this.chatStore.isShowSearch = false;
 

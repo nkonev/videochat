@@ -131,9 +131,13 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 				LastModified: time.Now().UTC(),
 			}
 		}
+		var correlationId *string
+		if mce != nil && mce.CorrelationId != nil {
+			correlationId = mce.CorrelationId
+		}
 		err = s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,
-		}, eventType)
+		}, eventType, correlationId)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error sending event for %v: %v", normalizedKey, err)
 			return

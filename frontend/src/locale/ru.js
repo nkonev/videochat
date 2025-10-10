@@ -357,5 +357,8 @@ export default {
     video_use_presenter_cover_view: "Использовать object-fit: cover",
     message_delete_with_attached_files: "С файл.",
     message_delete_with_attached_files_full: "Удалить сообщение вместе с файлами",
-    message_edit_quote: "Цитата"
+    sync_embed: "Синхронизировать",
+    message_edit_quote: "Цитата",
+    remove_contributing_to_unread: "Непрочит. вкл",
+    start_contributing_to_unread: "Непрочит. выкл"
 }

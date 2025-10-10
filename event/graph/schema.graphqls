@@ -44,6 +44,7 @@ type DisplayMessageDto {
     editDateTime:   Time
     owner:          Participant
     canEdit:        Boolean!
+    canSyncEmbed:   Boolean!
     canDelete:      Boolean!
     fileItemUuid:   String
     embedMessage:   EmbedMessageResponse
@@ -54,6 +55,7 @@ type DisplayMessageDto {
     published:      Boolean!
     canPublish:     Boolean!
     canPin:         Boolean!
+    canMakeBlogPost: Boolean!
 }
 
 type MessageDeletedDto {
@@ -61,7 +63,7 @@ type MessageDeletedDto {
     chatId:             Int64!
 }
 
-type ParticipantWithAdmin {
+type UserViewEnrichedDto {
     id:     Int64!
     login:  String!
     avatar: String
@@ -69,6 +71,8 @@ type ParticipantWithAdmin {
     shortInfo:           String
     loginColor: String
     additionalData: AdditionalData
+    canChange:           Boolean!
+    canDelete:           Boolean!
 }
 
 type ChatDto {
@@ -104,6 +108,8 @@ type ChatDto {
     canWriteMessage: Boolean!
     lastMessagePreview: String
     canReact: Boolean!
+    canPin: Boolean!
+    considerMessagesAsUnread: Boolean!
     additionalData: AdditionalData
 }
 
@@ -128,7 +134,6 @@ type PreviewCreatedEvent {
     url: String!
     previewUrl: String
     aType: String
-    correlationId: String
     fileItemUuid: String!
 }
 
@@ -180,7 +185,6 @@ type FileInfoDto {
     canShowAsImage:  Boolean!
     canPlayAsAudio:  Boolean!
     fileItemUuid: String!
-    correlationId: String
     previewable: Boolean!
     aType: String
 }
@@ -196,11 +200,12 @@ type ReactionChangedEvent {
 
 type ChatEvent {
     eventType:                String!
+    correlationId: String
     messageEvent: DisplayMessageDto
     messageDeletedEvent: MessageDeletedDto
     messageBroadcastEvent: MessageBroadcastNotification
     previewCreatedEvent: PreviewCreatedEvent
-    participantsEvent: [ParticipantWithAdmin!]
+    participantsEvent: [UserViewEnrichedDto!]
     promoteMessageEvent: PinnedMessageEvent
     fileEvent: WrappedFileInfoDto
     publishedMessageEvent: PublishedMessageEvent
@@ -285,8 +290,14 @@ type BrowserNotification {
     ownerLogin: String!
 }
 
+type ChatNotificationSettingsChanged {
+    chatId: Int64!
+    considerMessagesAsUnread: Boolean!
+}
+
 type GlobalEvent {
     eventType:                String!
+    correlationId: String
     chatEvent: ChatDto
     chatDeletedEvent: ChatDeletedDto
     coChattedParticipantEvent: Participant
@@ -302,6 +313,7 @@ type GlobalEvent {
     hasUnreadMessagesChanged: HasUnreadMessagesChangedEvent
     browserNotification: BrowserNotification
     userTypingEvent: UserTypingDto
+    chatNotificationSettingsChanged: ChatNotificationSettingsChanged
 }
 
 type UserStatusEvent {

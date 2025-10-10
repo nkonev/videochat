@@ -137,7 +137,6 @@ export default {
         },
         resendMessageTo(chatId) {
             const messageDto = {
-                text: this.messageDto.text, // yes, we copy text as is, along with embedded images and video
                 embedMessage: {
                     id: this.messageDto.id,
                     chatId: parseInt(this.chatId),

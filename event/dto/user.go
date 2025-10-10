@@ -32,3 +32,9 @@ type UserWithAdmin struct {
 	User
 	Admin bool `json:"admin"`
 }
+
+type UserViewEnrichedDto struct {
+	UserWithAdmin
+	CanChange bool `json:"canChange"`
+	CanDelete bool `json:"canDelete"`
+}
