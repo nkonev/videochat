@@ -14,6 +14,8 @@ import (
 	"nkonev.name/event/type_registry"
 )
 
+const correlationIdName = "correlationId"
+
 type EventsListener func(*amqp.Delivery) error
 
 func CreateEventsListener(lgr *logger.Logger, bus *eventbus.Bus, typeRegistry *type_registry.TypeRegistryInstance) EventsListener {
@@ -23,6 +25,13 @@ func CreateEventsListener(lgr *logger.Logger, bus *eventbus.Bus, typeRegistry *t
 		ctx := rabbitmq.ExtractAMQPHeaders(context.Background(), msg.Headers)
 		ctx, span := tr.Start(ctx, "event.listener")
 		defer span.End()
+
+		var correlationId *string
+		correlationIdVar, ok := msg.Headers[correlationIdName]
+		if ok {
+			correlationIdV := fmt.Sprintf("%v", correlationIdVar)
+			correlationId = &correlationIdV
+		}
 
 		traceString := rabbitmq.SerializeValues(ctx, lgr)
 
@@ -47,6 +56,7 @@ func CreateEventsListener(lgr *logger.Logger, bus *eventbus.Bus, typeRegistry *t
 				return err
 			}
 			bindTo.TraceString = traceString
+			bindTo.CorrelationId = correlationId
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {
@@ -61,6 +71,7 @@ func CreateEventsListener(lgr *logger.Logger, bus *eventbus.Bus, typeRegistry *t
 				return err
 			}
 			bindTo.TraceString = traceString
+			bindTo.CorrelationId = correlationId
 
 			err = bus.PublishAsync(bindTo)
 			if err != nil {

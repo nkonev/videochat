@@ -182,12 +182,13 @@
 <script>
     import axios from "axios";
     import debounce from "lodash/debounce";
-    import bus, {OPEN_CHAT_EDIT} from "./bus/bus";
+    import bus, {CHAT_ADD, OPEN_CHAT_EDIT} from "./bus/bus";
     import {chat_name} from "@/router/routes";
     import {hasLength, unescapeHtml} from "@/utils";
     import {isNumber, isObject, isString} from "lodash";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore.js";
+    import {v4 as uuidv4} from "uuid";
 
     const dtoFactory = ()=>{
         return {
@@ -214,6 +215,7 @@
                 fileInput: null,
                 canCreateBlog: false,
                 loading: false,
+                chatCorrelationId: null,
             }
         },
         computed: {
@@ -328,11 +330,11 @@
 
                     this.loading = true;
                     if (this.isNew) {
-                        axios.post(`/api/chat`, dtoToPost).then(({data}) => {
-                            const routeDto = { name: chat_name, params: { id: data.id }};
-                            this.$router.push(routeDto);
-                        }).then(()=>this.closeModal()).finally(()=>{
-                          this.loading = false;
+                        this.chatCorrelationId = uuidv4();
+                        axios.post(`/api/chat`, dtoToPost, {
+                          headers: {
+                            "X-CorrelationId": this.chatCorrelationId,
+                          }
                         });
                     } else {
                         axios.put(`/api/chat`, dtoToPost).then(()=>{
@@ -363,6 +365,7 @@
                 this.valid = true;
                 this.canCreateBlog = false;
                 this.loading = false;
+                this.chatCorrelationId = null;
             },
             openAvatarDialog() {
                 this.fileInput.click();
@@ -399,6 +402,15 @@
                   this.loading = false;
                 });
             },
+            onChatAdded(data) {
+              if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == data.correlationId) {
+                const routeDto = {name: chat_name, params: {id: data.id}};
+                this.$router.push(routeDto).then(() => this.closeModal()).finally(() => {
+                  this.loading = false;
+                  this.chatCorrelationId = null;
+                });
+              }
+            },
         },
         created() {
             // https://forum-archive.vuejs.org/topic/5174/debounce-replacement-in-vue-2-0
@@ -410,9 +422,11 @@
             }
             this.fileInput = null;
             bus.off(OPEN_CHAT_EDIT, this.showModal);
+            bus.off(CHAT_ADD, this.onChatAdded);
         },
         mounted() {
           bus.on(OPEN_CHAT_EDIT, this.showModal);
+          bus.on(CHAT_ADD, this.onChatAdded);
           this.fileInput = document.getElementById('image-input-chat-avatar');
           this.fileInput.onchange = (e) => {
             if (e.target.files.length) {
