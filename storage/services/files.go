@@ -239,7 +239,6 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 	}
 
 	fileOwnerId := mce.OwnerId
-	theCorrelationId := mce.CorrelationId
 
 	filename := mce.Filename
 
@@ -313,7 +312,6 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		CanShowAsImage: utils.IsImage(aKey),
 		CanPlayAsAudio: utils.IsAudio(aKey),
 		FileItemUuid:   itemUuid,
-		CorrelationId:  theCorrelationId,
 		Previewable:    utils.IsPreviewable(aKey),
 		Type:           aType,
 	}

@@ -99,7 +99,8 @@ func convertToUserOnline(userOnline dto.UserOnline) *model.UserStatusEvent {
 }
 func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	var result = &model.ChatEvent{
-		EventType: e.EventType,
+		EventType:     e.EventType,
+		CorrelationID: e.CorrelationId,
 	}
 	messageDto := e.MessageNotification
 	if messageDto != nil {
@@ -126,18 +127,17 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 	fileUploadedEvent := e.PreviewCreatedEvent
 	if fileUploadedEvent != nil {
 		result.PreviewCreatedEvent = &model.PreviewCreatedEvent{
-			ID:            fileUploadedEvent.Id,
-			URL:           fileUploadedEvent.Url,
-			PreviewURL:    fileUploadedEvent.PreviewUrl,
-			AType:         fileUploadedEvent.Type,
-			CorrelationID: &fileUploadedEvent.CorrelationId,
-			FileItemUUID:  fileUploadedEvent.FileItemUuid,
+			ID:           fileUploadedEvent.Id,
+			URL:          fileUploadedEvent.Url,
+			PreviewURL:   fileUploadedEvent.PreviewUrl,
+			AType:        fileUploadedEvent.Type,
+			FileItemUUID: fileUploadedEvent.FileItemUuid,
 		}
 	}
 
 	participants := e.Participants
 	if participants != nil {
-		result.ParticipantsEvent = convertParticipantsWithAdmin(*participants)
+		result.ParticipantsEvent = convertUsersViewEnriched(*participants)
 	}
 
 	promotePinnedMessageEvent := e.PromoteMessageNotification
@@ -170,7 +170,6 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanShowAsImage: fileEvent.FileInfoDto.CanShowAsImage,
 				CanPlayAsAudio: fileEvent.FileInfoDto.CanPlayAsAudio,
 				FileItemUUID:   fileEvent.FileInfoDto.FileItemUuid,
-				CorrelationID:  fileEvent.FileInfoDto.CorrelationId,
 				Previewable:    fileEvent.FileInfoDto.Previewable,
 				AType:          fileEvent.FileInfoDto.Type,
 			},
@@ -189,22 +188,24 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 }
 func convertDisplayMessageDto(messageDto *dto.DisplayMessageDto) *model.DisplayMessageDto {
 	var result = &model.DisplayMessageDto{ // dto.DisplayMessageDto
-		ID:             messageDto.Id,
-		Text:           messageDto.Text,
-		ChatID:         messageDto.ChatId,
-		OwnerID:        messageDto.OwnerId,
-		CreateDateTime: messageDto.CreateDateTime,
-		EditDateTime:   messageDto.EditDateTime,
-		Owner:          convertParticipant(messageDto.Owner),
-		CanEdit:        messageDto.CanEdit,
-		CanDelete:      messageDto.CanDelete,
-		FileItemUUID:   messageDto.FileItemUuid,
-		Pinned:         messageDto.Pinned,
-		BlogPost:       messageDto.BlogPost,
-		PinnedPromoted: messageDto.PinnedPromoted,
-		Published:      messageDto.Published,
-		CanPublish:     messageDto.CanPublish,
-		CanPin:         messageDto.CanPin,
+		ID:              messageDto.Id,
+		Text:            messageDto.Text,
+		ChatID:          messageDto.ChatId,
+		OwnerID:         messageDto.OwnerId,
+		CreateDateTime:  messageDto.CreateDateTime,
+		EditDateTime:    messageDto.EditDateTime,
+		Owner:           convertParticipant(messageDto.Owner),
+		CanEdit:         messageDto.CanEdit,
+		CanSyncEmbed:    messageDto.CanSyncEmbed,
+		CanDelete:       messageDto.CanDelete,
+		FileItemUUID:    messageDto.FileItemUuid,
+		Pinned:          messageDto.Pinned,
+		BlogPost:        messageDto.BlogPost,
+		PinnedPromoted:  messageDto.PinnedPromoted,
+		Published:       messageDto.Published,
+		CanPublish:      messageDto.CanPublish,
+		CanPin:          messageDto.CanPin,
+		CanMakeBlogPost: messageDto.CanMakeBlogPost,
 	}
 	embedMessageDto := messageDto.EmbedMessage
 	if embedMessageDto != nil {
@@ -277,7 +278,8 @@ func convertPinnedMessageDto(e *dto.PinnedMessageDto) *model.PinnedMessageDto {
 func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 	//eventType string, chatDtoWithAdmin *dto.ChatDtoWithAdmin
 	var ret = &model.GlobalEvent{
-		EventType: e.EventType,
+		EventType:     e.EventType,
+		CorrelationID: e.CorrelationId,
 	}
 	chatEvent := e.ChatNotification
 	if chatEvent != nil {
@@ -314,6 +316,8 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			CanWriteMessage:                     chatEvent.CanWriteMessage,
 			LastMessagePreview:                  chatEvent.LastMessagePreview,
 			CanReact:                            chatEvent.CanReact,
+			CanPin:                              chatEvent.CanPin,
+			ConsiderMessagesAsUnread:            chatEvent.ConsiderMessagesAsUnread,
 		}
 
 		if chatEvent.AdditionalData != nil {
@@ -439,6 +443,14 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 		}
 	}
 
+	chatNotificationSettingsChanged := e.ChatNotificationSettingsChanged
+	if chatNotificationSettingsChanged != nil {
+		ret.ChatNotificationSettingsChanged = &model.ChatNotificationSettingsChanged{
+			ChatID:                   chatNotificationSettingsChanged.ChatId,
+			ConsiderMessagesAsUnread: chatNotificationSettingsChanged.ConsiderMessagesAsUnread,
+		}
+	}
+
 	return ret
 }
 func convertToUserSessionsKilledEvent(aDto *dto.UserSessionsKilledEvent) *model.GlobalEvent {
@@ -477,17 +489,19 @@ func convertParticipants(participants []*dto.User) []*model.Participant {
 	}
 	return usrs
 }
-func convertParticipantWithAdmin(owner *dto.UserWithAdmin) *model.ParticipantWithAdmin {
+func convertUserViewEnriched(owner *dto.UserViewEnrichedDto) *model.UserViewEnrichedDto {
 	if owner == nil {
 		return nil
 	}
-	p := model.ParticipantWithAdmin{
+	p := model.UserViewEnrichedDto{
 		ID:         owner.Id,
 		Login:      owner.Login,
 		Avatar:     owner.Avatar,
 		Admin:      owner.Admin,
 		ShortInfo:  owner.ShortInfo,
 		LoginColor: owner.LoginColor,
+		CanDelete:  owner.CanDelete,
+		CanChange:  owner.CanChange,
 	}
 
 	if owner.AdditionalData != nil {
@@ -508,13 +522,13 @@ func convertAdditionalData(ad *dto.AdditionalData) *model.AdditionalData {
 		Roles:     ad.Roles,
 	}
 }
-func convertParticipantsWithAdmin(participants []*dto.UserWithAdmin) []*model.ParticipantWithAdmin {
+func convertUsersViewEnriched(participants []*dto.UserViewEnrichedDto) []*model.UserViewEnrichedDto {
 	if participants == nil {
 		return nil
 	}
-	usrs := []*model.ParticipantWithAdmin{}
+	usrs := []*model.UserViewEnrichedDto{}
 	for _, user := range participants {
-		usrs = append(usrs, convertParticipantWithAdmin(user))
+		usrs = append(usrs, convertUserViewEnriched(user))
 	}
 	return usrs
 }

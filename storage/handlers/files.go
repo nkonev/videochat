@@ -26,6 +26,8 @@ import (
 	"time"
 )
 
+const headerCorrelationId = "X-CorrelationId"
+
 type FilesHandler struct {
 	minio            *s3.InternalMinioClient
 	awsS3            *awsS3.S3
@@ -75,7 +77,6 @@ type EmbedDto struct {
 }
 
 type UploadRequest struct {
-	CorrelationId              *string `json:"correlationId"`
 	FileItemUuid               *string `json:"fileItemUuid"`
 	FileSize                   int64   `json:"fileSize"`
 	FileName                   string  `json:"fileName"`
@@ -169,14 +170,19 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
 	}
 
-	if reqDto.CorrelationId != nil {
-		_, err = uuid.Parse(*reqDto.CorrelationId)
+	correlationId := c.Request().Header.Get(headerCorrelationId)
+	var correlationIdP *string
+
+	if correlationId != "" {
+		_, err = uuid.Parse(correlationId)
 		if err != nil {
 			return c.NoContent(http.StatusBadRequest)
 		}
+
+		correlationIdP = &correlationId
 	}
 
-	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
+	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, correlationIdP, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().UTC().Add(expire)
@@ -846,7 +852,7 @@ func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, f
 			for _, participantId := range participantIds {
 				err := h.publisher.PublishFileEvent(c, participantId, chatId, &dto.WrappedFileInfoDto{
 					FileInfoDto: fileInfo,
-				}, eventType)
+				}, eventType, nil)
 				if err != nil {
 					h.lgr.WithTracing(c).Errorf("Error during sending object %v", err)
 				}
