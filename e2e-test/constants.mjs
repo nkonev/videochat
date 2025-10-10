@@ -20,6 +20,8 @@ export const webUiUrl = "http://localhost:8081/";
 
 export const webUiChatsUrl = "http://localhost:8081/chats";
 
+export const webUiChatsUrlPublic = "http://localhost:8081/chats?qc=__AVAILABLE_FOR_SEARCH";
+
 export const recreateAaaOauth2MocksUrl = "http://localhost:9080/recreate-oauth2-mocks"
 
-export const removeChatParticipantsUrl = "http://localhost:1235/internal/delete-all-participants"
+export const truncateChatUrl = "http://localhost:1235/internal/truncate"

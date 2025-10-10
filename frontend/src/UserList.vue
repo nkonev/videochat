@@ -521,7 +521,9 @@ export default {
     addItem(dto) {
       console.log("Adding item", dto);
       this.transformItem(dto);
-      this.items.unshift(dto);
+
+      replaceOrPrepend(this.items, [dto]);
+
       this.reduceListAfterAdd(false);
       this.updateTopAndBottomIds();
     },
