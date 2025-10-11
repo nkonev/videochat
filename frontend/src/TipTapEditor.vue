@@ -13,7 +13,8 @@
         <bubble-menu
             :should-show="shouldShowBubbleMenu"
             class="bubble-menu"
-            :tippy-options="{ duration: 0 }"
+            :updateDelay="0"
+            :resizeDelay="0"
             :editor="editor"
         >
             <button @click="boldClick" :class="{ 'is-active': boldValue() }">
@@ -30,7 +31,6 @@
         <floating-menu
             :editor="editor"
             class="floating-menu"
-            :tippy-options="{ duration: 0, zIndex: 200, interactive: true, appendTo: documentBody }"
             :should-show="shouldShowFloatingMenu"
         >
             <button @click="bulletListClick" :class="{ 'is-active': bulletListValue() }">
@@ -60,7 +60,10 @@
 <script>
 import "prosemirror-view/style/prosemirror.css";
 import "./messageBody.styl";
-import {Editor, EditorContent, BubbleMenu, FloatingMenu, isTextSelection} from "@tiptap/vue-3";
+// https://github.com/ueberdosis/tiptap/pull/5398/files
+// https://github.com/ueberdosis/tiptap/blob/next/demos/src/Examples/Menus/Vue/index.vue
+import {Editor, EditorContent, isTextSelection} from "@tiptap/vue-3";
+import { BubbleMenu, FloatingMenu } from '@tiptap/vue-3/menus'
 import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -72,8 +75,7 @@ import Link from '@tiptap/extension-link'
 import Text from "@tiptap/extension-text";
 import History from '@tiptap/extension-history';
 import Placeholder from '@tiptap/extension-placeholder';
-import TextStyle from "@tiptap/extension-text-style";
-import Color from '@tiptap/extension-color';
+import { TextStyle, Color } from '@tiptap/extension-text-style';
 import Highlight from "@tiptap/extension-highlight";
 import Mention from '@tiptap/extension-mention';
 import Code from '@tiptap/extension-code';
@@ -503,13 +505,13 @@ export default {
                       return [
                           "a",
                           mergeAttributes({ href: `${profile}/${node.attrs.id}` }, options.HTMLAttributes),
-                          `${options.suggestion.char}${node.attrs.label}`,
+                          `@${node.attrs.label}`,
                       ];
                   } else {
                       return [
                           "span",
                           options.HTMLAttributes,
-                          `${options.suggestion.char}${node.attrs.label}`,
+                          `@${node.attrs.label}`,
                       ];
                   }
               },
