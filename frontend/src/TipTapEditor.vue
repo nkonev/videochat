@@ -89,7 +89,7 @@ import {
   defaultAudioPreviewUrl, defaultIframePreviewUrl,
   defaultVideoPreviewUrl,
   embed,
-  hasLength,
+  hasLength, isMobileBrowser,
   link_dialog_type_add_media_embed,
   media_audio,
   media_image,
@@ -490,7 +490,8 @@ export default {
           Underline,
           Link.configure({
               openOnClick: false,
-              linkOnPaste: true
+              linkOnPaste: true,
+              autolink: !isMobileBrowser(), // dummy fix disappearing link on mobile. reproducer: add an image, then add a link on newlune then add newline
           }),
           TextStyle,
           Color,
