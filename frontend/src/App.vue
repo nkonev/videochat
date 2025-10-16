@@ -728,6 +728,8 @@ export default {
               const i = this.chatStore.aaaSessionPingInterval;
               console.debug("Setting aaa ping interval", i);
               sessionPingedTimer = setInterval(this.pingSession, i)
+            }).then(()=>{
+              this.fetchProfileIfNeed();
             })
         },
         fetchProfileIfNeed() {
@@ -1045,9 +1047,7 @@ export default {
         // To trigger fetching profile that 's going to trigger starting subscriptions
         // It's placed after each route in order not to have a race-condition
         this.$router.afterEach((to, from) => {
-          this.afterRouteInitializedOnce().then(()=>{
-            this.fetchProfileIfNeed();
-          })
+          this.afterRouteInitializedOnce()
         });
 
         this.chatStore.showDrawer = getMainDrawer();
