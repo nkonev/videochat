@@ -22,11 +22,11 @@
                   overlap
                   offset-y="10"
               >
-                  <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+                  <v-app-bar-nav-icon tile @click="toggleLeftNavigation"></v-app-bar-nav-icon>
               </v-badge>
             </template>
             <template v-else>
-              <v-app-bar-nav-icon @click="toggleLeftNavigation"></v-app-bar-nav-icon>
+              <v-app-bar-nav-icon tile @click="toggleLeftNavigation"></v-app-bar-nav-icon>
             </template>
 
             <template v-if="chatStore.showCallManagement">
@@ -39,17 +39,17 @@
                            overlap
                            offset-y="1.8em"
                   >
-                      <v-btn v-if="chatStore.isReady()" icon :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
+                      <v-btn v-if="chatStore.isReady()" icon tile :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
                           <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                       </v-btn>
-                      <v-btn v-else-if="chatStore.isInCall()" icon :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+                      <v-btn v-else-if="chatStore.isInCall()" icon tile :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
                           <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
                       </v-btn>
                   </v-badge>
               </template>
             </template>
 
-            <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
+            <v-btn v-if="chatStore.showGoToBlogButton && !isMobile()" icon tile :href="goToBlogLink()" :title="$vuetify.locale.t('$vuetify.go_to_blog_post')">
               <v-icon>mdi-postage-stamp</v-icon>
             </v-btn>
 
