@@ -53,10 +53,6 @@
               <v-icon>mdi-postage-stamp</v-icon>
             </v-btn>
 
-            <v-btn v-if="shouldShowFileUpload" icon @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
-                {{ chatStore.fileUploadOverallProgress + "%" }}
-            </v-btn>
-
           <template v-if="showSearchButton">
             <v-badge :class="isMobile() ? ['align-self-center', 'ml-2'] : ['align-self-center']"
                 :color="getTetATetBadgeColor()"
@@ -75,10 +71,14 @@
               </div>
             </div>
           </template>
-          <v-btn v-if="shouldDisplayFiles()" icon :title="$vuetify.locale.t('$vuetify.files')" @click.prevent="onFilesClicked()" class="notifications-badge">
+
+          <v-btn v-if="shouldShowFileUpload" icon tile @click="onShowFileUploadClicked()" :title="$vuetify.locale.t('$vuetify.show_upload_files')">
+            {{ chatStore.fileUploadOverallProgress + "%" }}
+          </v-btn>
+          <v-btn v-if="shouldDisplayFiles()" icon tile :title="$vuetify.locale.t('$vuetify.files')" @click.prevent="onFilesClicked()" class="notifications-badge">
             <v-icon class="notification-icon">mdi-file-download</v-icon>
           </v-btn>
-          <v-btn v-if="shouldDisplayNotifications()" icon :title="$vuetify.locale.t('$vuetify.notifications')" @click.prevent="onNotificationsClicked()">
+          <v-btn v-if="shouldDisplayNotifications()" icon tile :title="$vuetify.locale.t('$vuetify.notifications')" @click.prevent="onNotificationsClicked()">
             <v-badge
                 :content="notificationsCount"
                 :model-value="showNotificationBadge"
