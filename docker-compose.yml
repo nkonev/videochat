@@ -182,7 +182,7 @@ services:
         max-size: "50m"
 
   livekit:
-    image: livekit/livekit-server:v1.9.1
+    image: livekit/livekit-server:v1.9.2
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     network_mode: "host"
