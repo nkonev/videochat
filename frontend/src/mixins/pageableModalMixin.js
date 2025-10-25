@@ -71,16 +71,18 @@ export default () => {
                         }
                         this.itemsDto = dto;
                     })
-                    .finally(() => {
-                        if (!silent) {
-                            this.loading = false;
-                        }
+                    .then(()=>{
                         this.dataLoaded = true;
                         if (this.performMarking) {
                             this.performMarking();
                         }
                         if (this.afterFirstDrawItems){
                             this.afterFirstDrawItems()
+                        }
+                    })
+                    .finally(() => {
+                        if (!silent) {
+                            this.loading = false;
                         }
                     })
             },
