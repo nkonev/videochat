@@ -431,10 +431,12 @@ export default {
             this.chatStore.unsetNotificationsAndHasNewMessages();
         },
         canSwitchSearchType() {
-            return this.$route.name == chat_name // not to allow in video, because there is no chats
+            return !this.isMobile() && this.$route.name == chat_name // not to allow in video, because there is no chats
         },
         switchSearchType() {
-          this.chatStore.switchSearchType()
+          if (!this.isMobile()) {
+            this.chatStore.switchSearchType()
+          }
         },
         goToBlogLink() {
           return getBlogLink(this.chatId)
