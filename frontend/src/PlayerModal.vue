@@ -29,6 +29,7 @@ import bus, {
     PLAYER_MODAL,
 } from "./bus/bus";
 import axios from "axios";
+import {pageSize} from "@/mixins/pageableModalMixin.js";
 
 export default {
     data () {
@@ -97,6 +98,11 @@ export default {
         fetchMediaListView() {
             axios.post(`/api/storage/view/list`, {
                 url: this.$data.dto.url
+            }, {
+              params: {
+                page: this.translatePage(), // TODO think on api design
+                size: pageSize,
+              },
             }).then((res) => {
                 this.viewList = res.data.items;
                 for (let i = 0; i < this.viewList.length; ++i) {

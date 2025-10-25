@@ -450,6 +450,12 @@ type ListViewRequest struct {
 	Url string `json:"url"`
 }
 
+type ListViewResponse struct {
+	Status  string     `json:"status"`
+	Items   []ViewItem `json:"items"`
+	HasNext bool       `json:"hasNext"`
+}
+
 func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	var userPrincipalDto, _ = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 
@@ -469,12 +475,12 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	var retList = []ViewItem{}
 
 	if !utils.ContainsUrl(h.lgr, selfUrls, reqDto.Url) {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+		return c.JSON(http.StatusOK, &ListViewResponse{Status: "ok", Items: retList})
 	}
 
 	fileId := anUrl.Query().Get(utils.FileParam)
 	if fileId == "" {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+		return c.JSON(http.StatusOK, &ListViewResponse{Status: "ok", Items: retList})
 	}
 
 	fileItemUuid, err := utils.ParseFileItemUuid(fileId)
@@ -497,6 +503,11 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 		return err
 	}
 
+	page := utils.FixPageString(c.QueryParam("page")) // TODO think on api design - кажется не нужна страница, а просто запрашивать следующий, типа как в infinityMixin, при этом сделать интерфейс пагинатор, по аналогии с фильтром - и 2 реализации - LimitOffsetPaginator и KeySetPaginatorf
+	size := utils.FixSizeString(c.QueryParam("size"))
+	offset := utils.GetOffset(page, size)
+	reverse := utils.GetBoolean(c.QueryParam("reverse"))
+
 	var userId *int64 = nil
 	var isAnonymous = false // public message or blog
 	if userPrincipalDto != nil {
@@ -512,8 +523,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	filterObj := db.NewFilterByType(services.GetPreviewableExtensions())
 
-	viewListLimit := viper.GetInt("viewList.maxSize")
-	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, true, viewListLimit, 0)
+	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, true, size, offset)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userId, chatId, err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -556,7 +566,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "items": retList})
+	return c.JSON(http.StatusOK, &ListViewResponse{Status: "ok", Items: retList, HasNext: len(retList) == size})
 }
 
 type StatusViewRequest struct {
