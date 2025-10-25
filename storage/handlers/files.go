@@ -515,7 +515,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	viewListLimit := viper.GetInt("viewList.maxSize")
 	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, true, viewListLimit, 0)
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userPrincipalDto.UserId, chatId, err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userId, chatId, err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
