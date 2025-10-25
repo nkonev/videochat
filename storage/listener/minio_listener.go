@@ -14,7 +14,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
-	"time"
 )
 
 type MinioEventsListener func(*amqp.Delivery) error
@@ -39,8 +38,6 @@ func CreateMinioEventsListener(
 		strData := string(bytesData)
 		lgr.WithTracing(ctx).Debugf("Received %v", strData)
 
-		eventTimeStr := gjson.Get(strData, "Records.0.eventTime").String()
-
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
 		userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
@@ -53,6 +50,8 @@ func CreateMinioEventsListener(
 		if correlationIdStr != "" {
 			correlationId = &correlationIdStr
 		}
+		timestamp := userMetadata.Get(services.TimestampKey(true)).Int() // unix milli in UTC
+
 		var minioEvent = &dto.MinioEvent{
 			EventName:     eventName,
 			Key:           key,
@@ -93,7 +92,7 @@ func CreateMinioEventsListener(
 		case utils.FILE_CREATED:
 			fallthrough
 		case utils.FILE_UPDATED:
-			mce, err = createdDbEntity(normalizedKey, workingChatId, ownerId, correlationId, eventTimeStr, eventServiceResponse)
+			mce, err = createdDbEntity(normalizedKey, workingChatId, ownerId, correlationId, timestamp, eventServiceResponse)
 			if err != nil {
 				lgr.WithTracing(ctx).Errorf("Error during creating db entity: %v", err)
 				return err
@@ -167,7 +166,7 @@ func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig
 	return exists, err
 }
 
-func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId *string, eventTimeStr string, eventServiceResponse *services.HandleEventResponse) (*dto.MetadataCache, error) {
+func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId *string, timestamp int64, eventServiceResponse *services.HandleEventResponse) (*dto.MetadataCache, error) {
 	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
 	if err != nil {
 		return nil, err
@@ -178,10 +177,7 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		return nil, err
 	}
 
-	eventTime, err := time.Parse(time.RFC3339Nano, eventTimeStr)
-	if err != nil {
-		return nil, err
-	}
+	eventTime := utils.GetEventTimeFromTimestamp(timestamp)
 
 	publishedP, err := eventServiceResponse.GetTags()
 	if err != nil {

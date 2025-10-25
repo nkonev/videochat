@@ -92,7 +92,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 		if metadataCache == nil {
 			srv.lgr.WithTracing(c).Infof("Create metadata cache item for missing %v", fileOjInfo.Key)
 
-			_, ownerId, correlationId, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
+			_, ownerId, correlationId, timestamp, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
 			if err != nil {
 				srv.lgr.WithTracing(c).Errorf("Unable to get metadata for %v: %v", fileOjInfo.Key, err)
 				continue
@@ -102,6 +102,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 			if len(correlationId) > 0 {
 				correlationIdPtr = &correlationId
 			}
+
+			eventTime := utils.GetEventTimeFromTimestamp(timestamp)
 
 			tags, err := srv.minioClient.GetObjectTagging(c, srv.minioBucketsConfig.Files, fileOjInfo.Key, minio.GetObjectTaggingOptions{})
 			if err != nil {
@@ -123,8 +125,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				CorrelationId:  correlationIdPtr,
 				Published:      published,
 				FileSize:       fileOjInfo.Size,
-				CreateDateTime: fileOjInfo.LastModified,
-				EditDateTime:   fileOjInfo.LastModified,
+				CreateDateTime: eventTime,
+				EditDateTime:   eventTime,
 			})
 			if err != nil {
 				srv.lgr.WithTracing(c).Errorf("Unable to create metadata cache for %v: %v", mcid.String(), err)

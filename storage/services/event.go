@@ -57,7 +57,7 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		_, fileOwnerId, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
+		_, fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error get metadata: %v", err)
 			return nil

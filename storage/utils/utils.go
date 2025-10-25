@@ -418,3 +418,18 @@ func NullableToBoolean(v *bool) bool {
 		return *v
 	}
 }
+
+func GetUnixMilliUtc() int64 {
+	return time.Now().UTC().UnixMilli()
+}
+
+func GetEventTimeFromTimestamp(timestamp int64) time.Time {
+	var eventTime time.Time
+	if timestamp != 0 {
+		eventTime = time.UnixMilli(timestamp).UTC()
+	} else {
+		// fallback
+		eventTime = time.Now().UTC()
+	}
+	return eventTime
+}

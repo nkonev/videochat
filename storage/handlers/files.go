@@ -176,7 +176,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		}
 	}
 
-	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording)
+	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().UTC().Add(expire)
@@ -245,9 +245,9 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 func convertMetadata(urlValues *map[string]string) map[string]*string {
 	res := map[string]*string{}
 	for k, v := range *urlValues {
-		k := k
-		v := v
-		res[k] = &v
+		kk := k
+		vv := v
+		res[kk] = &vv
 	}
 	return res
 }
@@ -362,7 +362,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	aKey := services.GetKey(bindTo.Filename, fileItemUuid, chatId)
 
-	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil, nil)
+	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil, nil, utils.GetUnixMilliUtc())
 
 	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -890,7 +890,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	_, ownerId, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	_, ownerId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1127,7 +1127,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
 	isConferenceRecording := true
-	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isConferenceRecording, nil)
+	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isConferenceRecording, nil, utils.GetUnixMilliUtc())
 
 	chatFileItemUuid := utils.GetFileItemId()
 
@@ -1438,7 +1438,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	if !exists {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
-	chatId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+	chatId, _, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
 		return c.NoContent(http.StatusInternalServerError)
