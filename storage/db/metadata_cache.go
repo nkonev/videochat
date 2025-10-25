@@ -112,7 +112,7 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 		return nil, eris.Wrap(err, "error during building sql")
 	}
 	if noData {
-		return nil, err // see also below "sql.ErrNoRows"
+		return nil, nil // see also below "sql.ErrNoRows"
 	}
 
 	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
@@ -172,7 +172,7 @@ func (f *FilterBySearchString) apply(baseSqlTemplate string, existingArgs []any)
 	sqlArgs := existingArgs
 	sqlString := ""
 
-	suffix := fmt.Sprintf("and lower(filename) LIKE '%%' || lower($%v) || '%%'", len(sqlArgs)+1)
+	suffix := fmt.Sprintf("and filename ILIKE '%%' || $%v || '%%'", len(sqlArgs)+1)
 	sqlString = fmt.Sprintf(baseSqlTemplate, suffix)
 	sqlArgs = append(sqlArgs, f.searchString)
 
@@ -242,7 +242,7 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 		return nil, eris.Wrap(err, "error during building sql")
 	}
 	if noData {
-		return []dto.MetadataCache{}, err
+		return []dto.MetadataCache{}, nil
 	}
 
 	rows, err := co.QueryContext(ctx, sqlString, sqlArgs...)
@@ -256,9 +256,6 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 			return nil, eris.Wrap(err, "error during scanning")
 		} else {
 			list = append(list, ucs)
-		}
-		if err != nil {
-			return nil, eris.Wrap(err, "error during mapping")
 		}
 	}
 
@@ -275,7 +272,7 @@ func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUu
 		return 0, eris.Wrap(err, "error during building sql")
 	}
 	if noData {
-		return 0, err
+		return 0, nil
 	}
 
 	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
