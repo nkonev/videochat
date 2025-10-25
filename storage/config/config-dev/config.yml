@@ -121,10 +121,6 @@ response:
     avatar: 48h
     delta: 30m
 
-# should be aligned with message.maxMedias in chat
-viewList:
-  maxSize: 100
-
 fileItemUuid:
   maxFiles: 5
 
