@@ -46,6 +46,7 @@ const GRAPHQL_PLAYGROUND = "/event/playground"
 func main() {
 	config.InitViper()
 	lgr := logger.NewLogger()
+	defer lgr.CloseLogger()
 
 	appFx := fx.New(
 		fx.Supply(lgr),
@@ -74,7 +75,6 @@ func main() {
 	appFx.Run()
 
 	lgr.Infof("Exit program")
-	lgr.CloseLogger()
 }
 
 func configureWriteHeaderMiddleware() echo.MiddlewareFunc {
