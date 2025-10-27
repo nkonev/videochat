@@ -1,0 +1,13 @@
+chat 1
+  message 1
+ 
+chat 2
+  message 1
+  message 2 // then delete to break
+  message 3
+
+to fix
+update message set embed_chat_id = 1, embed_owner_id = 2, embed_message_id = 1 where chat_id=2 and id = 3;
+
+to break
+update message set embed_chat_id = 1, embed_owner_id = 2, embed_message_id = 2 where chat_id=2 and id = 3;
