@@ -4,13 +4,14 @@ import (
 	"context"
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"go.opentelemetry.io/otel"
+	"go.uber.org/fx"
 	"nkonev.name/video/config"
 	"nkonev.name/video/logger"
 )
 
 type VideoListenerFunction func(data []byte) error
 
-func CreateRabbitMqConnection(lgr *logger.Logger, conf *config.ExtendedConfig) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *logger.Logger, conf *config.ExtendedConfig, lc fx.Lifecycle) *rabbitmq.Connection {
 	rabbitmq.Debug = conf.RabbitMqConfig.Debug
 
 	conn, err := rabbitmq.Dial(conf.RabbitMqConfig.Url)
@@ -18,6 +19,13 @@ func CreateRabbitMqConnection(lgr *logger.Logger, conf *config.ExtendedConfig) *
 		lgr.Error(err, "Unable to connect to rabbitmq")
 		panic(err)
 	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			lgr.Info("Closing rabbitmq connection")
+			return conn.Close()
+		},
+	})
 
 	return conn
 }

@@ -7,16 +7,25 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"go.uber.org/fx"
 	"nkonev.name/event/logger"
 )
 
-func CreateRabbitMqConnection(lgr *logger.Logger) *rabbitmq.Connection {
+func CreateRabbitMqConnection(lgr *logger.Logger, lc fx.Lifecycle) *rabbitmq.Connection {
 	rabbitmq.Debug = true
 
 	conn, err := rabbitmq.Dial(viper.GetString("rabbitmq.url"))
 	if err != nil {
 		lgr.Panic(err)
 	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			lgr.Info("Closing rabbitmq connection")
+			return conn.Close()
+		},
+	})
+
 	return conn
 }
 
