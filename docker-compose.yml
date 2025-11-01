@@ -162,7 +162,7 @@ services:
         max-file: "1"
 
   rabbitmq:
-    image: rabbitmq:4.1.4-management-alpine
+    image: rabbitmq:4.2.0-management-alpine
     hostname: rabbitmq
     restart: unless-stopped
     ports:
