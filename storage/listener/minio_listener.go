@@ -177,7 +177,7 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		return nil, err
 	}
 
-	eventTime := utils.GetEventTimeFromTimestamp(timestamp)
+	eventTime := utils.GetEventTimeFromTimestamp(timestamp, fileItemUuid)
 
 	publishedP, err := eventServiceResponse.GetTags()
 	if err != nil {

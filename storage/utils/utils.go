@@ -301,16 +301,37 @@ const UrlBasePreview = "/api/storage/embed/preview"
 const UrlStorageEmbedPreview = "/embed/preview"
 const UrlBasePublicPreview = "/api/storage/public/download/embed/preview"
 
+func getUlidInitTime() time.Time {
+	location := time.UTC
+	return time.Date(viper.GetInt("ulid.topYear"), time.January, 1, 0, 0, 0, 0, location)
+}
+
 // returns monotonically decreasing lexically sequence to use S3's lexical sorting
 func GetFileItemId() string {
-	location := time.UTC
-	dt0 := time.Date(viper.GetInt("ulid.topYear"), time.January, 1, 0, 0, 0, 0, location)
+	dt0 := getUlidInitTime()
 	dt1 := time.Now().UTC()
 	delta := dt0.UnixMilli() - dt1.UnixMilli()
 	initializingReverseTime := time.UnixMilli(delta)
 	ms := ulid.Timestamp(initializingReverseTime)
 	id, _ := ulid.New(ms, ulid.DefaultEntropy())
 	return id.String()
+}
+
+func ParseUlid(ul string) *time.Time {
+	t, err := ulid.Parse(ul)
+	if err != nil {
+		return nil
+	}
+
+	tt := t.Time()
+	uildsTime := time.UnixMilli(int64(tt)).UTC().UnixMilli()
+
+	dt0 := getUlidInitTime().UnixMilli()
+
+	res := dt0 - uildsTime
+
+	r := time.UnixMilli(res).UTC()
+	return &r
 }
 
 func ContainsUrl(lgr *logger.Logger, elems []string, elem string) bool {
@@ -423,13 +444,16 @@ func GetUnixMilliUtc() int64 {
 	return time.Now().UTC().UnixMilli()
 }
 
-func GetEventTimeFromTimestamp(timestamp int64) time.Time {
-	var eventTime time.Time
+func GetEventTimeFromTimestamp(timestamp int64, ulid string) time.Time {
 	if timestamp != 0 {
-		eventTime = time.UnixMilli(timestamp).UTC()
-	} else {
-		// fallback
-		eventTime = time.Now().UTC()
+		return time.UnixMilli(timestamp).UTC()
 	}
-	return eventTime
+
+	ult := ParseUlid(ulid)
+	if ult != nil {
+		return *ult
+	}
+
+	// fallback
+	return time.Now().UTC()
 }

@@ -103,7 +103,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				correlationIdPtr = &correlationId
 			}
 
-			eventTime := utils.GetEventTimeFromTimestamp(timestamp)
+			eventTime := utils.GetEventTimeFromTimestamp(timestamp, fileItemUuid)
 
 			tags, err := srv.minioClient.GetObjectTagging(c, srv.minioBucketsConfig.Files, fileOjInfo.Key, minio.GetObjectTaggingOptions{})
 			if err != nil {
