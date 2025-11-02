@@ -420,6 +420,9 @@ export default {
       if (isChatRoute(this.$route)) {
         delete prev[SEARCH_MODE_MESSAGES]
       }
+      if (prev[SEARCH_MODE_CHATS] == publicallyAvailableForSearchChatsQuery) {
+        delete prev[SEARCH_MODE_CHATS]
+      }
 
       this.$router.push({ name: chat_name, params: {id: item.id}, query: prev }).finally(()=>{
         this.chatStore.decrementProgressCount();
