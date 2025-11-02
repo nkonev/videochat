@@ -925,9 +925,9 @@ func (ch *ChatHandler) JoinChat(c echo.Context) error {
 			ch.notificator.NotifyAboutChangeChat(c.Request().Context(), chatDto, participantIds, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
 
 			// update chats at left for the new user who joined
-			if utils.Contains(participantIds, userPrincipalDto.UserId) {
-				ch.notificator.NotifyAboutNewChat(c.Request().Context(), chatDto, []int64{userPrincipalDto.UserId}, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
-			}
+			//if utils.Contains(participantIds, userPrincipalDto.UserId) {
+			//	ch.notificator.NotifyAboutNewChat(c.Request().Context(), chatDto, []int64{userPrincipalDto.UserId}, len(chatDto.ParticipantIds) == 1, true, tx, areAdmins)
+			//}
 
 			return nil
 		})
