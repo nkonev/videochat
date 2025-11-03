@@ -491,7 +491,7 @@ export default {
           Link.configure({
               openOnClick: false,
               linkOnPaste: true,
-              autolink: !isMobileBrowser(), // dummy fix disappearing link on mobile. reproducer: add an image, then add a link on newlune then add newline
+              autolink: true,
           }),
           TextStyle,
           Color,
