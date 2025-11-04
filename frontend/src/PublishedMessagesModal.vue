@@ -126,6 +126,9 @@ export default {
         isCachedRelevantToArguments({chatId}) {
             return this.chatId == chatId
         },
+        isCachedRelevantToEvent(event) {
+          return true
+        },
         initializeWithArguments({chatId}) {
             this.chatId = chatId;
         },

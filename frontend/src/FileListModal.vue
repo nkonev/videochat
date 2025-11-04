@@ -225,6 +225,13 @@ export default {
         isCachedRelevantToArguments({fileItemUuid, chatId}) {
             return this.fileItemUuid == fileItemUuid && this.chatId == chatId
         },
+        isCachedRelevantToEvent(eventDto) {
+          if (hasLength(this.fileItemUuid)) { // only in case viewing message's files
+            return this.fileItemUuid == eventDto.fileInfoDto.fileItemUuid // event has no chatId
+          } else {
+            return true
+          }
+        },
         initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles, chatId, fileUploadingSessionType, correlationId}) {
             this.messageIdToDetachFiles = messageIdToDetachFiles;
             this.isOpenedFromMessageEditing = messageEditing;

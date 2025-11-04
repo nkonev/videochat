@@ -101,6 +101,9 @@ export default {
         isCachedRelevantToArguments() {
             return true
         },
+        isCachedRelevantToEvent(event) {
+          return true
+        },
         initializeWithArguments() {
             // empty
         },

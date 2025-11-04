@@ -5,7 +5,7 @@ export const pageSize = 20;
 
 export const dtoFactory = () => {return {items: [], count: 0} };
 
-// requires extractDtoFromEventDto(), isCachedRelevantToArguments(), initializeWithArguments(),
+// requires extractDtoFromEventDto(), isCachedRelevantToArguments(), isCachedRelevantToEvent(), initializeWithArguments(),
 // resetOnRouteIdChange(), initiateRequest(), initiateFilteredCountRequest(), initiateCountRequest(),
 // clearOnClose(), clearOnReset(), shouldReactOnPageChange(), canUpdateItems()
 
@@ -35,6 +35,7 @@ export default () => {
             showModal(data) {
                 console.debug("Opening modal, data=", data);
                 if (!this.isCachedRelevantToArguments(data)) {
+                    console.info("resetting due to data");
                     this.reset();
                 }
 
@@ -124,6 +125,11 @@ export default () => {
                     return
                 }
                 console.debug("onItemCreatedEvent", dto);
+                if (!this.isCachedRelevantToEvent(dto)) {
+                    console.info("resetting due to event");
+                    this.reset();
+                    return;
+                }
 
                 // filter and load items count
                 this.initiateCountRequest(dto).then((response) => {
@@ -166,6 +172,12 @@ export default () => {
                     return
                 }
                 console.debug("onItemUpdatedEvent", dto);
+                if (!this.isCachedRelevantToEvent(dto)) {
+                    console.info("resetting due to event");
+                    this.reset();
+                    return;
+                }
+
                 const tmp = deepCopy(this.extractDtoFromEventDto(dto));
                 if (this.transformItems) {
                     this.transformItems(tmp);
@@ -183,6 +195,12 @@ export default () => {
                     return
                 }
                 console.debug("onItemRemovedEvent", dto);
+                if (!this.isCachedRelevantToEvent(dto)) {
+                    console.info("resetting due to event");
+                    this.reset();
+                    return;
+                }
+
                 this.removeItems(this.extractDtoFromEventDto(dto));
                 // load items count
                 this.initiateCountRequest(dto).then((response) => {

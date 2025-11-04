@@ -123,6 +123,9 @@
             isCachedRelevantToArguments({chatId, type}) {
                 return this.chatId == chatId && this.type == type
             },
+            isCachedRelevantToEvent(event) {
+              return true
+            },
             initializeWithArguments({chatId, type, fromDiskCallback, setExistingMediaCallback}) {
                 this.chatId = chatId;
                 this.type = type;
