@@ -18,7 +18,7 @@
     "@opentelemetry/semantic-conventions": "^1.28.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/server-renderer": "^3.5.13",
-    "axios": "^1.7.9",
+    "axios": "1.13.1",
     "compression": "^1.7.5",
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",

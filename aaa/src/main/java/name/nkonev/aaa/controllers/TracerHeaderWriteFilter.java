@@ -17,7 +17,7 @@ import java.io.IOException;
 public class TracerHeaderWriteFilter extends HttpFilter {
     private final Tracer tracer;
 
-    public static final String EXTERNAL_TRACE_ID_HEADER = "trace-id";
+    public static final String EXTERNAL_TRACE_ID_HEADER = "X-Traceid";
 
     public TracerHeaderWriteFilter(Tracer tracer) {
         this.tracer = tracer;

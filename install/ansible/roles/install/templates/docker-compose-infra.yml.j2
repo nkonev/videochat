@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   traefik:
-    image: traefik:v3.5.2
+    image: traefik:v3.5.4
     hostname: traefik
     environment:
       - OTEL_PROPAGATORS=jaeger
@@ -186,7 +186,7 @@ services:
         tag: chat-rabbitmq
 
   livekit:
-    image: livekit/livekit-server:v1.9.2
+    image: livekit/livekit-server:v1.9.3
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml

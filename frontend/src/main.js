@@ -167,12 +167,18 @@ axios.interceptors.response.use((response) => {
     } else {
         const consoleErrorMessage  = "Request: " + JSON.stringify(error.config) + ", Response: " + JSON.stringify(error.response);
         console.error(consoleErrorMessage);
-        const maybeBusinessMessage = error.response?.data?.message;
-        const errorMessage = hasLength(maybeBusinessMessage) ? "Business error" : "Http error. Check the console";
+        let maybeBusinessMessage = error.response?.data?.message;
+        let errorMessage;
+        if (hasLength(maybeBusinessMessage)) {
+            errorMessage = "Business error";
+        } else {
+            errorMessage = "Http error. Check the console";
+            maybeBusinessMessage = "";
+        }
         const respHeaders = error.response?.headers;
         let traceId;
         if (respHeaders) {
-          traceId = respHeaders['trace-id']
+          traceId = respHeaders['x-traceid']
         }
         const methodUrl = "" + error.config?.method + " " + error.config?.url;
         if (error.response) {

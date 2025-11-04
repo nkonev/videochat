@@ -36,7 +36,7 @@ import (
 	"nkonev.name/video/type_registry"
 )
 
-const EXTERNAL_TRACE_ID_HEADER = "trace-id"
+const EXTERNAL_TRACE_ID_HEADER = "X-Traceid"
 const TRACE_RESOURCE = app.APP_NAME
 
 func main() {

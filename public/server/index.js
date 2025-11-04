@@ -121,7 +121,7 @@ async function startServer() {
         if (span) {
             const traceId = span.spanContext().traceId;
             // console.log("processing traceId", traceId);
-            res.header('trace-id', traceId);
+            res.header('X-Traceid', traceId);
         }
         next()
   }
