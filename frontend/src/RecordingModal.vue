@@ -59,10 +59,10 @@ import {
     setStoreRecordingTab
 } from "@/store/localStore.js";
 import bus, {
-    OPEN_RECORDING_MODAL,
-    FILE_UPLOAD_MODAL_START_UPLOADING,
-    OPEN_FILE_UPLOAD_MODAL,
-    MESSAGE_EDIT_SET_FILE_ITEM_UUID, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG
+  OPEN_RECORDING_MODAL,
+  FILE_UPLOAD_MODAL_START_UPLOADING,
+  OPEN_FILE_UPLOAD_MODAL,
+  MESSAGE_EDIT_SET_FILE_ITEM_UUID, CHANGE_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE_DIALOG, SET_FILE_CORRELATION_ID
 } from "@/bus/bus";
 import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, useChatStore} from "@/store/chatStore";
@@ -248,9 +248,19 @@ export default {
       }
     },
     onAddToMessage() {
-      this.chatStore.correlationId = uuidv4();
+      const correlationId = uuidv4();
+      bus.emit(SET_FILE_CORRELATION_ID, correlationId);
       const files = this.makeFiles();
-      bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, shouldSetFileUuidToMessage: true, fileItemUuid: this.fileItemUuid, predefinedFiles: files, correlationId: this.chatStore.correlationId, shouldAddDateToTheFilename: true, fileUploadingSessionType: fileUploadingSessionTypeMedia, isMessageRecording: true});
+      bus.emit(OPEN_FILE_UPLOAD_MODAL, {
+        showFileInput: true,
+        shouldSetFileUuidToMessage: true,
+        fileItemUuid: this.fileItemUuid,
+        predefinedFiles: files,
+        shouldAddDateToTheFilename: true,
+        fileUploadingSessionType: fileUploadingSessionTypeMedia,
+        isMessageRecording: true,
+        correlationId: correlationId,
+      });
       bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 
       this.closeModal();

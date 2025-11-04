@@ -977,7 +977,8 @@ export default {
           return !this.isMobile() && this.chatStore.currentUser && this.isChatable();
         },
         onFilesClicked() {
-          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.$route.params.id});
+          const chatId = this.$route.params.id;
+          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: {}});
         },
     },
     components: {

@@ -118,6 +118,7 @@ type PreviewCreatedEvent struct {
 	PreviewUrl    *string `json:"previewUrl"`
 	Type          *string `json:"aType"`
 	CorrelationId string  `json:"correlationId"`
+	FileItemUuid  string  `json:"fileItemUuid"`
 }
 
 type UserOnline struct {

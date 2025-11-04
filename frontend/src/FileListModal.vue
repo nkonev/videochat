@@ -185,14 +185,12 @@ export default {
         return {
             messageIdToDetachFiles: null,
             fileItemUuid: null,
-            isOpenedFromMessageEditing: false, // is opened from message editing
             searchString: null,
             showSearchButton: true,
             markInstance: null,
             chatId: null,
-            fileUploadingSessionType: null,
-            correlationId: null,
             fileListMode: false,
+            fileUploadTask: null,
         }
     },
     computed: {
@@ -232,15 +230,12 @@ export default {
             return true
           }
         },
-        initializeWithArguments({fileItemUuid, messageEditing, messageIdToDetachFiles, chatId, fileUploadingSessionType, correlationId}) {
+        initializeWithArguments({fileItemUuid, messageIdToDetachFiles, chatId, fileUploadTask}) {
             this.messageIdToDetachFiles = messageIdToDetachFiles;
-            this.isOpenedFromMessageEditing = messageEditing;
             this.fileItemUuid = fileItemUuid;
             this.chatId = chatId;
 
-            // just pass them to FileUploadModal
-            this.fileUploadingSessionType = fileUploadingSessionType;
-            this.correlationId = correlationId;
+            this.fileUploadTask = fileUploadTask;
         },
         initiateRequest() {
             return axios.get(`/api/storage/${this.chatId}`, {
@@ -272,7 +267,7 @@ export default {
             item.loadingHasNoMessage = false;
         },
         openUploadModal() {
-            bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: this.fileItemUuid, shouldSetFileUuidToMessage: this.isOpenedFromMessageEditing, fileUploadingSessionType: this.fileUploadingSessionType, correlationId: this.correlationId});
+            bus.emit(OPEN_FILE_UPLOAD_MODAL, this.fileUploadTask);
         },
         onDetachFilesFromMessage () {
           axios.put(`/api/chat/`+this.chatId+'/message/file-item-uuid', {
@@ -418,10 +413,8 @@ export default {
         },
         clearOnClose() {
             this.messageIdToDetachFiles = null;
-            this.isOpenedFromMessageEditing = false;
+            this.fileUploadTask = null;
             this.showSearchButton = true;
-            this.fileUploadingSessionType = null;
-            this.correlationId = null;
         },
         clearOnReset() {
             this.chatId = null;

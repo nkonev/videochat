@@ -143,7 +143,7 @@
       OPEN_SETTINGS,
       ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED,
       OPEN_RECORDING_MODAL,
-      WEBSOCKET_INITIALIZED, FILE_CREATED, FILE_REMOVED,
+      WEBSOCKET_INITIALIZED, FILE_CREATED, FILE_REMOVED, SET_FILE_CORRELATION_ID,
     } from "./bus/bus";
     import debounce from "lodash/debounce";
     import Tiptap from './TipTapEditor.vue'
@@ -363,12 +363,34 @@
             },
             openFileUploadForAddingFiles() {
                 const fileItemUuid = this.chatStore.editMessageDto.fileItemUuid;
-                this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemUuid, shouldSetFileUuidToMessage: true, messageIdToAttachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                const correlationId = uuidv4();
+                bus.emit(SET_FILE_CORRELATION_ID, correlationId);
+                bus.emit(OPEN_FILE_UPLOAD_MODAL, {
+                  showFileInput: true,
+                  fileItemUuid: fileItemUuid,
+                  shouldSetFileUuidToMessage: true,
+                  messageIdToAttachFiles: this.chatStore.editMessageDto.id,
+                  fileUploadingSessionType: fileUploadingSessionTypeMessageEdit,
+                  correlationId: correlationId,
+                });
             },
             onFilesClicked() {
-                this.chatStore.correlationId = uuidv4();
-                bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.chatId, fileItemUuid: this.chatStore.editMessageDto.fileItemUuid, messageEditing: true, messageIdToDetachFiles: this.chatStore.editMessageDto.id, fileUploadingSessionType: fileUploadingSessionTypeMessageEdit, correlationId: this.chatStore.correlationId});
+                const correlationId = uuidv4();
+                bus.emit(SET_FILE_CORRELATION_ID, correlationId);
+                bus.emit(OPEN_VIEW_FILES_DIALOG, {
+                  chatId: this.chatId,
+                  fileItemUuid: this.chatStore.editMessageDto.fileItemUuid,
+                  messageIdToDetachFiles: this.chatStore.editMessageDto.id,
+
+                  fileUploadTask: {
+                    showFileInput: true,
+                    chatId: this.chatId,
+                    fileItemUuid: this.chatStore.editMessageDto.fileItemUuid,
+                    isOpenedFromMessageEditing: true,
+                    fileUploadingSessionType: fileUploadingSessionTypeMessageEdit,
+                    correlationId: correlationId,
+                  },
+                });
             },
             onFileItemUuid({fileItemUuid, chatId}) {
               if (chatId == this.chatId) {

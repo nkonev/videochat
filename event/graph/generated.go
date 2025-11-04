@@ -279,6 +279,7 @@ type ComplexityRoot struct {
 	PreviewCreatedEvent struct {
 		AType         func(childComplexity int) int
 		CorrelationID func(childComplexity int) int
+		FileItemUUID  func(childComplexity int) int
 		ID            func(childComplexity int) int
 		PreviewURL    func(childComplexity int) int
 		URL           func(childComplexity int) int
@@ -1601,6 +1602,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PreviewCreatedEvent.CorrelationID(childComplexity), true
+
+	case "PreviewCreatedEvent.fileItemUuid":
+		if e.complexity.PreviewCreatedEvent.FileItemUUID == nil {
+			break
+		}
+
+		return e.complexity.PreviewCreatedEvent.FileItemUUID(childComplexity), true
 
 	case "PreviewCreatedEvent.id":
 		if e.complexity.PreviewCreatedEvent.ID == nil {
@@ -4761,6 +4769,8 @@ func (ec *executionContext) fieldContext_ChatEvent_previewCreatedEvent(_ context
 				return ec.fieldContext_PreviewCreatedEvent_aType(ctx, field)
 			case "correlationId":
 				return ec.fieldContext_PreviewCreatedEvent_correlationId(ctx, field)
+			case "fileItemUuid":
+				return ec.fieldContext_PreviewCreatedEvent_fileItemUuid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PreviewCreatedEvent", field.Name)
 		},
@@ -10081,6 +10091,50 @@ func (ec *executionContext) _PreviewCreatedEvent_correlationId(ctx context.Conte
 }
 
 func (ec *executionContext) fieldContext_PreviewCreatedEvent_correlationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PreviewCreatedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PreviewCreatedEvent_fileItemUuid(ctx context.Context, field graphql.CollectedField, obj *model.PreviewCreatedEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PreviewCreatedEvent_fileItemUuid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileItemUUID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PreviewCreatedEvent_fileItemUuid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PreviewCreatedEvent",
 		Field:      field,
@@ -16865,6 +16919,11 @@ func (ec *executionContext) _PreviewCreatedEvent(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._PreviewCreatedEvent_aType(ctx, field, obj)
 		case "correlationId":
 			out.Values[i] = ec._PreviewCreatedEvent_correlationId(ctx, field, obj)
+		case "fileItemUuid":
+			out.Values[i] = ec._PreviewCreatedEvent_fileItemUuid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

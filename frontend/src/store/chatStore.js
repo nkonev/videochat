@@ -73,8 +73,8 @@ export const useChatStore = defineStore('chat', {
         sendMessageAfterUploadsUploaded: false,
         sendMessageAfterMediaNumFiles: 0,
         sendMessageAfterNumFiles: 0,
+        sendMessageAfterUploadFileItemUuid: null,
         oppositeUserLastSeenDateTime: null,
-        correlationId: null,
         videoTokenId: null,
         compactMessages: false,
         videoPosition: null,
@@ -218,11 +218,13 @@ export const useChatStore = defineStore('chat', {
       this.sendMessageAfterUploadsUploaded = false;
       this.sendMessageAfterMediaNumFiles = 0;
       this.resetFileUploadingSessionType();
+      this.sendMessageAfterUploadFileItemUuid = null;
     },
     resetSendMessageAfterFileInsertRoutine() {
       this.sendMessageAfterUploadsUploaded = false;
       this.sendMessageAfterNumFiles = 0;
       this.resetFileUploadingSessionType();
+      this.sendMessageAfterUploadFileItemUuid = null;
     },
     canDeleteParticipant(userId) {
         return this.chatDto.canEdit && userId != this.currentUser.id

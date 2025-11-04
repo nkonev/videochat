@@ -243,6 +243,7 @@ type PreviewCreatedEvent struct {
 	PreviewURL    *string `json:"previewUrl"`
 	AType         *string `json:"aType"`
 	CorrelationID *string `json:"correlationId"`
+	FileItemUUID  string  `json:"fileItemUuid"`
 }
 
 type PublishedMessageDto struct {

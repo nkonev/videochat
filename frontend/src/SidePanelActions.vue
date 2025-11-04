@@ -231,7 +231,8 @@ export default {
       bus.emit(OPEN_NOTIFICATIONS_DIALOG);
     },
     openFiles() {
-      bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: this.$route.params.id});
+      const chatId = this.$route.params.id;
+      bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: {}});
     },
     openPinnedMessages() {
       bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.$route.params.id});

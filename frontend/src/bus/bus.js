@@ -35,7 +35,7 @@ export const MEDIA_LINK_SET = "mediaLinkSet";
 export const EMBED_LINK_SET = "embedLinkSet";
 export const PREVIEW_CREATED = "previewCreated";
 export const FILE_UPLOAD_MODAL_START_UPLOADING = "FileUploadModalStartUpload";
-
+export const SET_FILE_CORRELATION_ID = "setFileCorrelationId";
 export const OPEN_SETTINGS = "openSettings";
 
 export const REQUEST_CHANGE_VIDEO_PARAMETERS = "requestChangeVideoParameters";

@@ -476,6 +476,7 @@ export default {
                                       previewUrl
                                       aType
                                       correlationId
+                                      fileItemUuid
                                     }
                                     participantsEvent {
                                       id

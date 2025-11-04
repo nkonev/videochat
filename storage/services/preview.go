@@ -218,6 +218,11 @@ func (s *PreviewService) getFileUploadedEvent(ctx context.Context, normalizedKey
 	}
 	var previewUrl *string = s.filesService.GetPreviewUrlSmart(ctx, normalizedKey)
 	var aType = GetType(normalizedKey)
+	fuid, err := utils.ParseFileItemUuid(normalizedKey)
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during parsing fileItemUuid: %v", err)
+		return nil, err
+	}
 
 	return &dto.PreviewCreatedEvent{
 		Id:            normalizedKey,
@@ -225,5 +230,6 @@ func (s *PreviewService) getFileUploadedEvent(ctx context.Context, normalizedKey
 		PreviewUrl:    previewUrl,
 		Type:          aType,
 		CorrelationId: correlationId,
+		FileItemUuid:  fuid,
 	}, nil
 }

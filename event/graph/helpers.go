@@ -131,6 +131,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 			PreviewURL:    fileUploadedEvent.PreviewUrl,
 			AType:         fileUploadedEvent.Type,
 			CorrelationID: &fileUploadedEvent.CorrelationId,
+			FileItemUUID:  fileUploadedEvent.FileItemUuid,
 		}
 	}
 

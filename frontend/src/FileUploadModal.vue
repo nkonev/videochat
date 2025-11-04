@@ -100,15 +100,25 @@ export default {
             showFileInput: false,
             isLoadingPresignedLinks: false,
             shouldSetFileUuidToMessage: false,
-            correlationId: null,
             messageIdToAttachFiles: null,
             shouldAddDateToTheFilename: null,
             checkingLimitsStep: false,
             isMessageRecording: null,
+            correlationId: null,
         }
     },
     methods: {
-        showModal({showFileInput, fileItemUuid, shouldSetFileUuidToMessage, predefinedFiles, correlationId, messageIdToAttachFiles, shouldAddDateToTheFilename, fileUploadingSessionType, isMessageRecording}) {
+        showModal({
+              showFileInput,
+              fileItemUuid,
+              shouldSetFileUuidToMessage,
+              predefinedFiles,
+              messageIdToAttachFiles,
+              shouldAddDateToTheFilename,
+              fileUploadingSessionType,
+              isMessageRecording,
+              correlationId,
+            }) {
             this.$data.show = true;
             this.$data.fileItemUuid = fileItemUuid;
             this.$data.showFileInput = showFileInput;
@@ -117,13 +127,13 @@ export default {
                 this.$data.inputFiles = predefinedFiles;
             }
             this.messageIdToAttachFiles = messageIdToAttachFiles;
-            this.correlationId = correlationId;
             this.shouldAddDateToTheFilename = shouldAddDateToTheFilename;
             if (!this.chatStore.fileUploadingQueueHasElements()) { // there is no prev active uploading
                 this.chatStore.setFileUploadingSessionType(fileUploadingSessionType)
             }
             this.isMessageRecording = isMessageRecording;
-            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, ", correlationId=", correlationId, ", shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
+            this.correlationId = correlationId;
+            console.log("Opened FileUploadModal with fileItemUuid=", fileItemUuid, ", correlationId=", correlationId, ", shouldSetFileUuidToMessage=", shouldSetFileUuidToMessage, ", predefinedFiles=", predefinedFiles, "shouldAddDateToTheFilename=", shouldAddDateToTheFilename, ", fileUploadingSessionType=", fileUploadingSessionType, ", isMessageRecording=", isMessageRecording);
         },
         hideModal() {
             this.$data.show = false;
@@ -134,10 +144,10 @@ export default {
             this.checkingLimitsStep = false;
             this.$data.fileItemUuid = null;
             this.$data.shouldSetFileUuidToMessage = false;
-            this.correlationId = null;
             this.messageIdToAttachFiles = null;
             this.shouldAddDateToTheFilename = null;
             this.isMessageRecording = null;
+            this.correlationId = null;
         },
         onAttachFilesToMessage() {
           bus.emit(ATTACH_FILES_TO_MESSAGE_MODAL, {messageId: this.messageIdToAttachFiles})
@@ -244,6 +254,7 @@ export default {
                 this.$data.fileItemUuid = response.data.fileItemUuid;
             }
             this.$data.fileItemUuid = null;
+            this.correlationId = null;
             this.showFileInput = false;
             this.$data.isLoadingPresignedLinks = false;
             this.chatStore.sendMessageAfterMediaNumFiles = this.chatStore.fileUploadingQueue.filter(f => f.previewable).length
@@ -276,6 +287,8 @@ export default {
                       const end = partNumber * chunkSize;
                       console.log("Will send part", presignedUrlObj, start, end, chunkSize);
 
+                      this.setSendMessageAfterUploadFileItemUuidInNeed(fileToUpload.fileItemUuid);
+
                       const childConfig = {
                         ...config,
                         onUploadProgress: this.onProgressFunction(start, fileToUpload.file.size, fileToUpload),
@@ -304,6 +317,8 @@ export default {
                             throw e
                         })
                       }, retryOptions);
+
+                      this.setSendMessageAfterUploadFileItemUuidInNeed(fileToUpload.fileItemUuid);
 
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
@@ -342,6 +357,7 @@ export default {
         cancel(item) {
             item.cancelSource.cancel();
             this.chatStore.sendMessageAfterUploadsUploaded = false;
+            this.chatStore.sendMessageAfterUploadFileItemUuid = null;
         },
         updateChosenFiles(files) {
             console.log("updateChosenFiles", files);
@@ -372,6 +388,12 @@ export default {
           this.showFileInput = true;
           this.$data.isLoadingPresignedLinks = false;
           this.checkingLimitsStep = false;
+        },
+
+        setSendMessageAfterUploadFileItemUuidInNeed(f) {
+          if (this.chatStore.sendMessageAfterUploadsUploaded) {
+            this.chatStore.sendMessageAfterUploadFileItemUuid = f;
+          }
         },
     },
     computed: {

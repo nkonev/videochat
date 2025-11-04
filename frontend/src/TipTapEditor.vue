@@ -100,7 +100,7 @@ import bus, {
   PREVIEW_CREATED,
   OPEN_FILE_UPLOAD_MODAL,
   MEDIA_LINK_SET,
-  EMBED_LINK_SET, OPEN_MESSAGE_EDIT_MEDIA, OPEN_MESSAGE_EDIT_LINK, FILE_CREATED,
+  EMBED_LINK_SET, OPEN_MESSAGE_EDIT_MEDIA, OPEN_MESSAGE_EDIT_LINK, FILE_CREATED, SET_FILE_CORRELATION_ID,
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
@@ -115,7 +115,15 @@ import {profile} from "@/router/routes.js";
 const empty = "";
 
 const embedUploadFunction = (chatId, files, correlationId, fileItemId, shouldAddDateToTheFilename) => {
-    bus.emit(OPEN_FILE_UPLOAD_MODAL, {showFileInput: true, fileItemUuid: fileItemId, shouldSetFileUuidToMessage: true, predefinedFiles: files, correlationId: correlationId, shouldAddDateToTheFilename: shouldAddDateToTheFilename, fileUploadingSessionType: fileUploadingSessionTypeMedia});
+    bus.emit(OPEN_FILE_UPLOAD_MODAL, {
+      showFileInput: true,
+      fileItemUuid: fileItemId,
+      shouldSetFileUuidToMessage: true,
+      predefinedFiles: files,
+      correlationId: correlationId,
+      shouldAddDateToTheFilename: shouldAddDateToTheFilename,
+      fileUploadingSessionType: fileUploadingSessionTypeMedia,
+    });
     bus.emit(FILE_UPLOAD_MODAL_START_UPLOADING);
 }
 
@@ -135,6 +143,7 @@ export default {
       fileItemUuid: null,
       receivedPreviews: 0,
       receivedFiles: 0,
+      fileCorrelationId: null,
     };
   },
 
@@ -155,6 +164,7 @@ export default {
         this.editor.commands.setContent(empty, false);
         this.receivedPreviews = 0;
         this.receivedFiles = 0;
+        this.resetFileCorrelationId();
     },
     getContent() {
       const value = this.editor.getHTML();
@@ -195,6 +205,12 @@ export default {
     scrollToCursor() {
        this.editor.commands.scrollIntoView() // fix an issue related to long text and mobile virtual keyboard
     },
+    resetFileCorrelationId() {
+      this.setFileCorrelationId(null);
+    },
+    setFileCorrelationId(c) {
+      this.fileCorrelationId = c;
+    },
     addImage() {
         this.fileInput.click();
     },
@@ -226,50 +242,43 @@ export default {
           this.editor.chain().focus().setIframe(obj).run()
       }
     },
-    resetFileItemUuid() {
-        this.fileItemUuid = null;
-    },
-    // it's correlationId, not fileItemUuid
-    setCorrelationId(newCorrelationId) {
-      this.chatStore.correlationId = newCorrelationId;
-    },
     onPreviewCreated(dto) {
-        if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto.correlationId) {
+        if (hasLength(this.fileCorrelationId) && this.fileCorrelationId == dto.correlationId) {
             if (dto.aType == media_video) {
                 this.setVideo(dto.url, dto.previewUrl)
             } else if (dto.aType == media_image) {
                 this.setImage(dto.url, dto.previewUrl)
-            } else if (dto.aType == media_audio) {
-                this.setAudio(dto.url)
             }
-            if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia) {
-                this.receivedPreviews++;
-                console.log("Got previews ", this.receivedPreviews, "expected", this.chatStore.sendMessageAfterMediaNumFiles)
+        }
 
-                if (this.chatStore.sendMessageAfterMediaNumFiles <= this.receivedPreviews) {
-                  this.$emit("sendMessage");
-                  this.chatStore.resetSendMessageAfterMediaInsertRoutine();
-                  this.receivedPreviews = 0;
-                }
-            }
+        if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMedia && this.chatStore.sendMessageAfterUploadFileItemUuid == dto?.fileItemUuid) {
+          this.receivedPreviews++;
+          console.log("Got previews ", this.receivedPreviews, "expected", this.chatStore.sendMessageAfterMediaNumFiles)
+
+          if (this.chatStore.sendMessageAfterMediaNumFiles <= this.receivedPreviews) {
+            this.$emit("sendMessage"); // TODO introduce sendMessageTask in chatStore, before sending the message we delete the task, if the message in the same chat as tick was clicked we send the message, otherwise we just delete the task
+            this.chatStore.resetSendMessageAfterMediaInsertRoutine();
+            this.receivedPreviews = 0;
+          }
         }
     },
     onFileCreatedEvent(dto) {
-      // for any files loaded via MessageEdit. for embedded (image, video, record) - see onPreviewCreated()
-      if (hasLength(this.chatStore.correlationId) && this.chatStore.correlationId == dto?.fileInfoDto?.correlationId) {
+      // it's for embedded audio. for embedded (image, video, record) - see onPreviewCreated()
+      if (hasLength(this.fileCorrelationId) && this.fileCorrelationId == dto?.fileInfoDto?.correlationId) {
         if (dto?.fileInfoDto != null && !dto.fileInfoDto.previewable && dto.fileInfoDto.aType == media_audio) {
           this.setAudio(dto?.fileInfoDto.url)
         }
+      }
 
-        if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit) {
-          this.receivedFiles++;
-          console.log("Got files ", this.receivedFiles, "expected", this.chatStore.sendMessageAfterNumFiles)
+      // for any files loaded via MessageEdit.
+      if (this.chatStore.sendMessageAfterUploadsUploaded && this.chatStore.fileUploadingSessionType == fileUploadingSessionTypeMessageEdit && this.chatStore.sendMessageAfterUploadFileItemUuid == dto?.fileInfoDto?.fileItemUuid) {
+        this.receivedFiles++;
+        console.log("Got files ", this.receivedFiles, "expected", this.chatStore.sendMessageAfterNumFiles)
 
-          if (this.chatStore.sendMessageAfterNumFiles <= this.receivedFiles) {
-            this.$emit("sendMessage");
-            this.chatStore.resetSendMessageAfterFileInsertRoutine();
-            this.receivedFiles = 0;
-          }
+        if (this.chatStore.sendMessageAfterNumFiles <= this.receivedFiles) {
+          this.$emit("sendMessage");
+          this.chatStore.resetSendMessageAfterFileInsertRoutine();
+          this.receivedFiles = 0;
         }
       }
     },
@@ -301,6 +310,9 @@ export default {
     },
     setFileItemUuid(fileItemUuid) {
         this.fileItemUuid = fileItemUuid;
+    },
+    resetFileItemUuid() {
+      this.setFileItemUuid(null);
     },
     editorContainer() {
       const ret = ["richText__content"];
@@ -437,11 +449,13 @@ export default {
     bus.on(FILE_CREATED, this.onFileCreatedEvent);
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.on(SET_FILE_CORRELATION_ID, this.setFileCorrelationId)
 
     const imagePluginInstance = buildImageHandler(
     (image, shouldAddDateToTheFilename) => {
-        this.setCorrelationId(uuidv4());
-        embedUploadFunction(this.chatId, [image], this.chatStore.correlationId, this.fileItemUuid, shouldAddDateToTheFilename);
+        const correlationId = uuidv4();
+        this.setFileCorrelationId(correlationId);
+        embedUploadFunction(this.chatId, [image], correlationId, this.fileItemUuid, shouldAddDateToTheFilename);
     })
         .configure({
             inline: true,
@@ -562,10 +576,11 @@ export default {
         this.fileInput = document.getElementById('file-input');
         // triggered when we upload image or video after this.fileInput.click()
         this.fileInput.onchange = e => {
-          this.setCorrelationId(uuidv4());
           if (e.target.files.length) {
               const files = Array.from(e.target.files);
-              embedUploadFunction(this.chatId, files, this.chatStore.correlationId, this.fileItemUuid)
+              const correlationId = uuidv4();
+              this.setFileCorrelationId(correlationId);
+              embedUploadFunction(this.chatId, files, correlationId, this.fileItemUuid)
           }
         }
     })
@@ -578,7 +593,9 @@ export default {
     bus.off(FILE_CREATED, this.onFileCreatedEvent);
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
+    bus.off(SET_FILE_CORRELATION_ID, this.setFileCorrelationId)
     this.resetFileItemUuid();
+    this.resetFileCorrelationId();
 
     this.editor.destroy();
     if (this.fileInput) {

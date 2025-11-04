@@ -476,7 +476,13 @@
           }
         },
         onFilesClicked(item) {
-          const obj = {chatId: this.chatId, fileItemUuid: item.fileItemUuid};
+          const obj = {
+            chatId: this.chatId,
+            fileItemUuid: item.fileItemUuid,
+            fileUploadTask: {
+              fileItemUuid: item.fileItemUuid,
+            }
+          };
           if (this.meIsOwnerOfMessage(item)) {
             obj.messageIdToDetachFiles = item.id;
           }

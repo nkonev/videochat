@@ -129,6 +129,7 @@ type PreviewCreatedEvent {
     previewUrl: String
     aType: String
     correlationId: String
+    fileItemUuid: String!
 }
 
 type PublishedMessageEvent {
