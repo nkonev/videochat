@@ -356,5 +356,6 @@ export default {
     create_message: "Написать сообщение",
     video_use_presenter_cover_view: "Использовать object-fit: cover",
     message_delete_with_attached_files: "С файл.",
-    message_delete_with_attached_files_full: "Удалить сообщение вместе с файлами"
+    message_delete_with_attached_files_full: "Удалить сообщение вместе с файлами",
+    message_edit_quote: "Цитата"
 }

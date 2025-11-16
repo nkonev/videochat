@@ -83,6 +83,7 @@ import CodeBlock from '@tiptap/extension-code-block';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
+import Blockquote from '@tiptap/extension-blockquote';
 import {buildImageHandler} from '@/TipTapImage';
 import suggestion from './suggestion';
 import {
@@ -494,6 +495,7 @@ export default {
               },
           }),
           Text,
+          Blockquote,
           Iframe,
           Audio,
           Video,
@@ -634,6 +636,12 @@ export default {
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
+
+  blockquote {
+    border-left: 3px solid gray;
+    margin: 0.6rem 0;
+    padding-left: 1rem;
+  }
 }
 
 .richText__content__mobile {

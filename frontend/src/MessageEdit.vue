@@ -34,6 +34,10 @@
                   <v-icon :size="getIconSize()">mdi-format-strikethrough-variant</v-icon>
               </v-btn>
 
+              <v-btn icon rounded="0" :size="getBtnSize()" :variant="quoteValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="quoteValue()" @click="quoteClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_quote')">
+                <v-icon :size="getIconSize()">mdi-format-quote-open-outline</v-icon>
+              </v-btn>
+
               <v-btn icon rounded="0" :size="getBtnSize()" :variant="linkValue() ? 'tonal' : 'plain'" density="comfortable" :input-value="linkValue()" :disabled="linkButtonDisabled()" @click="linkClick" :width="getBtnWidth()" :height="getBtnHeight()" :title="$vuetify.locale.t('$vuetify.message_edit_link')">
                 <v-icon :size="getIconSize()">mdi-link-variant</v-icon>
               </v-btn>
@@ -420,6 +424,9 @@
             strikeValue() {
                 return this.$refs.tipTapRef?.$data.editor.isActive('strike')
             },
+            quoteValue() {
+              return this.$refs.tipTapRef?.$data.editor.isActive('blockquote')
+            },
             codeValue() {
                 return this.$refs.tipTapRef?.$data.editor.isActive('code')
             },
@@ -428,6 +435,9 @@
             },
             strikeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleStrike().run()
+            },
+            quoteClick() {
+              this.$refs.tipTapRef.$data.editor.chain().focus().toggleBlockquote().run()
             },
             codeClick() {
                 this.$refs.tipTapRef.$data.editor.chain().focus().toggleCode().run()

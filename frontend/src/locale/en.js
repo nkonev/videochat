@@ -356,5 +356,6 @@ export default {
     create_message: "Create a message",
     video_use_presenter_cover_view: "Use object-fit: cover",
     message_delete_with_attached_files: "With files",
-    message_delete_with_attached_files_full: "Delete the message with its files"
+    message_delete_with_attached_files_full: "Delete the message with its files",
+    message_edit_quote: "Quote"
 }
