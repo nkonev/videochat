@@ -4,7 +4,7 @@ import name.nkonev.aaa.dto.ExternalPermission;
 import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.postgresql.jdbc.PgArray;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;

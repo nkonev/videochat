@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import name.nkonev.aaa.dto.UserAccountDetailsDTO;
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,7 +20,7 @@ import java.time.temporal.ChronoField;
 @Configuration
 public class JacksonConfig {
     @Bean
-    public Jackson2ObjectMapperBuilderCustomizer jc() {
+    public JsonMapperBuilderCustomizer jc() {
         return
                 builder -> {
                     // formatter configuration to make working parsing variable fraction milliseconds such as .1, .12, .123
@@ -45,7 +45,7 @@ public class JacksonConfig {
                         }
                     });
 
-                    builder.modules(javaTimeModule, rejectUserAccountDetailsDTOModule);
+                    builder.addModules(javaTimeModule, rejectUserAccountDetailsDTOModule);
                 };
     }
 
