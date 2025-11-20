@@ -402,8 +402,9 @@
                   this.loading = false;
                 });
             },
-            onChatAdded(data) {
-              if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == data.correlationId) {
+            onChatAdded(e) {
+              const data = e.chatEvent;
+              if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == e.correlationId) {
                 const routeDto = {name: chat_name, params: {id: data.id}};
                 this.$router.push(routeDto).then(() => this.closeModal()).finally(() => {
                   this.loading = false;

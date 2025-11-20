@@ -746,7 +746,8 @@ export default {
         this.broadcastMessage = null;
       }
     },
-    onChatChange(data) {
+    onChatChange(e) {
+        const data = e.chatEvent;
         if (hasLength(this.joinCorrelationId) && this.joinCorrelationId == data.correlationId)  {
           this.getInfo(this.chatId);
           this.joinCorrelationId = null;

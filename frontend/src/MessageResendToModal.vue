@@ -176,7 +176,8 @@ export default {
             })
         },
 
-        addItem(dto) {
+        addItem(e) {
+            const dto = e.chatEvent;
             if (!this.dataLoaded) {
                 return
             }
@@ -195,7 +196,8 @@ export default {
                 }
             })
         },
-        changeItem(dto) {
+        changeItem(e) {
+            const dto = e.chatEvent;
             this.addItem(dto)
         },
         removeItem(dto) {

@@ -602,13 +602,9 @@ export default {
         onNextGlobalSubscriptionElement(e) {
           const gle = getGlobalEventsData(e);
           if (gle.eventType === 'chat_created') {
-            const d = gle.chatEvent;
-            d.correlationId = gle.correlationId;
-            bus.emit(CHAT_ADD, d);
+            bus.emit(CHAT_ADD, gle);
           } else if (gle.eventType === 'chat_edited') {
-            const d = gle.chatEvent;
-            d.correlationId = gle.correlationId;
-            bus.emit(CHAT_EDITED, d);
+            bus.emit(CHAT_EDITED, gle);
           } else if (gle.eventType === 'chat_redraw') {
             const d = gle.chatEvent;
             d.correlationId = gle.correlationId;

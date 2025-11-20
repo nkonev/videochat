@@ -613,7 +613,8 @@ export default {
       this.items.splice(idxToRemove, 1);
       this.updateTopAndBottomIds();
     },
-    onNewChat(dto) {
+    onNewChat(e) {
+        const dto = e.chatEvent;
         axios.post(`/api/chat/filter`, {
           searchString: this.searchString,
           pageSize: PAGE_SIZE,
@@ -629,7 +630,8 @@ export default {
           }
         })
     },
-    onEditChat(dto) {
+    onEditChat(e) {
+      const dto = e.chatEvent;
       // chat can change the position after chat_edited so we reflect it here
       let idxOf = findIndex(this.items, dto);
       if (idxOf !== -1) { // hasItem()
