@@ -6,7 +6,7 @@
 
     <artifactId>aaa</artifactId>
     <groupId>name.nkonev.aaa</groupId>
-    <version>${revision}</version>
+    <version>0.0.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
