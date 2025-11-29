@@ -112,6 +112,7 @@ import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore.js";
 import {mergeAttributes} from "@tiptap/core";
 import {profile} from "@/router/routes.js";
+import CleanPasteExtension, {cleanPastedHTML} from "@/TipTapPaste.js"
 
 const empty = "";
 
@@ -539,36 +540,20 @@ export default {
           BulletList,
           OrderedList,
           DisableCtrlEnter,
+          CleanPasteExtension,
       ],
       editorProps: {
-          // Preserves newline on text paste.
-          // Combined from
-          //  https://github.com/ueberdosis/tiptap/issues/775#issuecomment-762971612
-          //  and https://discuss.prosemirror.net/t/how-to-preserve-hard-breaks-when-pasting-html-into-a-plain-text-schema/4202/5
-          //  and prosemirror-view/src/clipboard.ts parseFromClipboard()
-          transformPastedHTML(html) {
-            const normalize = (input) => {
-                return domParser.parseFromString(input, 'text/html').documentElement.getElementsByTagName('body')[0].innerHTML
-            }
+        transformPastedHTML(html) {
+          if (!getStoredMessageEditNormalizeText()) {
+            return html
+          }
 
-            if (!getStoredMessageEditNormalizeText()) {
-                return html
-            }
-
-            let str;
-            if (getTreatNewlinesAsInHtml()) {
-              str = html.replace(/(\r\n\r\n|\r\r|\n\n)/g, "<p>");
-              str = str.replace(/(\r\n|\r|\n)/g, " ");
-            } else {
-              str = html.replace(/(\r\n|\r|\n)/g, "<p>");
-            }
-            const fixedSpaces = str.replace(/&#32;/g, "&nbsp;");
-            const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
-            const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-            const normalized = normalize(rmDuplicatedP)
-            console.debug("html=", html, ", str=", str, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
-            return normalized;
-          },
+          return cleanPastedHTML(html);
+        },
+        transformPastedText(text) {
+          // Handle plain text paste
+          return text.replace(/\n{3,}/g, '\n\n');
+        }
       },
       content: empty,
       onUpdate: () => this.onUpdateContent(),
