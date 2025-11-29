@@ -358,6 +358,22 @@ export const setTreatNewlinesAsInHtml = (v) => {
     localStorage.setItem(KEY_TREAT_NEWLINES_AS_IN_HTML, JSON.stringify(v));
 }
 
+export const KEY_STRIP_DIV_SPAN = 'stripDivSpan';
+
+export const getStripDivSpan = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_STRIP_DIV_SPAN));
+    if (v === null) {
+        console.log("Resetting stripDivSpan to default");
+        setStripDivSpan(false);
+        v = JSON.parse(localStorage.getItem(KEY_STRIP_DIV_SPAN));
+    }
+    return v;
+}
+
+export const setStripDivSpan = (v) => {
+    localStorage.setItem(KEY_STRIP_DIV_SPAN, JSON.stringify(v));
+}
+
 export const KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE = 'messageEditSendButtonsType';
 
 export const getStoredMessageEditSendButtonsType = (defaultValue) => {

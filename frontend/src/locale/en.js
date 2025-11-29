@@ -357,5 +357,6 @@ export default {
     video_use_presenter_cover_view: "Use object-fit: cover",
     message_delete_with_attached_files: "With files",
     message_delete_with_attached_files_full: "Delete the message with its files",
-    message_edit_quote: "Quote"
+    message_edit_quote: "Quote",
+    strip_div_span: "Strip <div><span>"
 }
