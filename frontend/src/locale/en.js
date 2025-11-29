@@ -360,5 +360,6 @@ export default {
     sync_embed: "Sync embed",
     message_edit_quote: "Quote",
     remove_contributing_to_unread: "Unread mute",
-    start_contributing_to_unread: "Unread unmute"
+    start_contributing_to_unread: "Unread unmute",
+    strip_div_span: "Strip <div><span>"
 }

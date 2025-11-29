@@ -107,7 +107,7 @@ import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
-import {getStoredMessageEditNormalizeText, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
+import {getStoredMessageEditNormalizeText, getStripDivSpan, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
 import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore.js";
 import {mergeAttributes} from "@tiptap/core";
@@ -565,8 +565,12 @@ export default {
             const fixedSpaces = str.replace(/&#32;/g, "&nbsp;");
             const withP = fixedSpaces.replace(/<br[^>]*>/g, "<p>");
             const rmDuplicatedP = withP.replace(/<p[^>]*><\/p>/gi, '');
-            const normalized = normalize(rmDuplicatedP)
-            console.debug("html=", html, ", str=", str, "fixedSpaces=", fixedSpaces, ", withP=", withP, ", rmDuplicatedP=", rmDuplicatedP, "normalized=", normalized)
+            let strippedDivSpan = rmDuplicatedP;
+            if (getStripDivSpan()) {
+              strippedDivSpan = strippedDivSpan.replace(/<div[^>]*><span[^>]*>/gi, '').replace(/<\/span><\/div>/gi, '')
+            }
+            const normalized = normalize(strippedDivSpan);
+            console.debug("html=", html, "normalized=", normalized)
             return normalized;
           },
       },

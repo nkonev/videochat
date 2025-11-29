@@ -22,6 +22,16 @@
           @update:modelValue="changeTreatNewlinesAsInHtml"
       ></v-switch>
 
+      <v-switch
+          :label="$vuetify.locale.t('$vuetify.strip_div_span')"
+          density="comfortable"
+          color="primary"
+          hide-details
+          class="ma-0 pt-0 ml-4 mr-4 mb-2"
+          v-model="stripDivSpan"
+          @update:modelValue="changeStripDivSpan"
+      ></v-switch>
+
       <v-divider/>
 
       <v-radio-group class="mt-4"
@@ -46,9 +56,9 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import {
-        getStoredMessageEditNormalizeText,
-        getStoredMessageEditSendButtonsType, getTreatNewlinesAsInHtml,
-        setStoredMessageEditNormalizeText, setStoredMessageEditSendButtonsType, setTreatNewlinesAsInHtml
+      getStoredMessageEditNormalizeText,
+      getStoredMessageEditSendButtonsType, getStripDivSpan, getTreatNewlinesAsInHtml,
+      setStoredMessageEditNormalizeText, setStoredMessageEditSendButtonsType, setStripDivSpan, setTreatNewlinesAsInHtml
     } from "@/store/localStore.js";
     import bus, {ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED} from "@/bus/bus.js";
 
@@ -57,6 +67,7 @@
             return {
                 normalizeText: null,
                 treatNewlinesAsInHtml: null,
+                stripDivSpan: null,
                 sendButtonsType: null,
             }
         },
@@ -67,6 +78,7 @@
             showModal() {
                 this.normalizeText = getStoredMessageEditNormalizeText();
                 this.treatNewlinesAsInHtml = getTreatNewlinesAsInHtml();
+                this.stripDivSpan = getStripDivSpan();
                 this.sendButtonsType = getStoredMessageEditSendButtonsType('auto');
             },
             changeNormalizeText(v) {
@@ -74,6 +86,9 @@
             },
             changeTreatNewlinesAsInHtml(v) {
                 setTreatNewlinesAsInHtml(v)
+            },
+            changeStripDivSpan(v) {
+              setStripDivSpan(v)
             },
             changeSendButtonsType(v) {
                 setStoredMessageEditSendButtonsType(v);

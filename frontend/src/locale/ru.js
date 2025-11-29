@@ -360,5 +360,6 @@ export default {
     sync_embed: "Синхронизировать",
     message_edit_quote: "Цитата",
     remove_contributing_to_unread: "Непрочит. вкл",
-    start_contributing_to_unread: "Непрочит. выкл"
+    start_contributing_to_unread: "Непрочит. выкл",
+    strip_div_span: "Вырезать <div><span>"
 }
