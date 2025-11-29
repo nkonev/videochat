@@ -374,6 +374,22 @@ export const setStripDivSpan = (v) => {
     localStorage.setItem(KEY_STRIP_DIV_SPAN, JSON.stringify(v));
 }
 
+export const KEY_REPLACE_IMG_WITH_ALT = 'replaceImgWithAlt';
+
+export const getReplaceImgWithAlt = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_REPLACE_IMG_WITH_ALT));
+    if (v === null) {
+        console.log("Resetting replaceImgWithAlt to default");
+        setReplaceImgWithAlt(false);
+        v = JSON.parse(localStorage.getItem(KEY_REPLACE_IMG_WITH_ALT));
+    }
+    return v;
+}
+
+export const setReplaceImgWithAlt = (v) => {
+    localStorage.setItem(KEY_REPLACE_IMG_WITH_ALT, JSON.stringify(v));
+}
+
 export const KEY_MESSAGE_EDIT_SEND_BUTTONS_TYPE = 'messageEditSendButtonsType';
 
 export const getStoredMessageEditSendButtonsType = (defaultValue) => {

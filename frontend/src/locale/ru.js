@@ -358,5 +358,6 @@ export default {
     message_delete_with_attached_files: "С файл.",
     message_delete_with_attached_files_full: "Удалить сообщение вместе с файлами",
     message_edit_quote: "Цитата",
-    strip_div_span: "Вырезать <div><span>"
+    strip_div_span: "Вырезать <div><span>",
+    replace_img_with_alt: "Заменить <img> на alt"
 }

@@ -107,7 +107,12 @@ import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
 import Iframe from '@/TipTapIframe';
 import { v4 as uuidv4 } from 'uuid';
-import {getStoredMessageEditNormalizeText, getStripDivSpan, getTreatNewlinesAsInHtml} from "@/store/localStore.js";
+import {
+  getReplaceImgWithAlt,
+  getStoredMessageEditNormalizeText,
+  getStripDivSpan,
+  getTreatNewlinesAsInHtml
+} from "@/store/localStore.js";
 import {mapStores} from "pinia";
 import {fileUploadingSessionTypeMedia, fileUploadingSessionTypeMessageEdit, useChatStore} from "@/store/chatStore.js";
 import {mergeAttributes} from "@tiptap/core";
@@ -569,7 +574,11 @@ export default {
             if (getStripDivSpan()) {
               strippedDivSpan = strippedDivSpan.replace(/<div[^>]*><span[^>]*>/gi, '').replace(/<\/span><\/div>/gi, '')
             }
-            const normalized = normalize(strippedDivSpan);
+            let replacedImg = strippedDivSpan;
+            if (getReplaceImgWithAlt()) {
+              replacedImg = replacedImg.replaceAll(/(<img\s)(alt=["|'](.*?)["|'])?[^>]*(\/?>)/gm, "$3")
+            }
+            const normalized = normalize(replacedImg);
             console.debug("html=", html, "normalized=", normalized)
             return normalized;
           },

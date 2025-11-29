@@ -32,6 +32,16 @@
           @update:modelValue="changeStripDivSpan"
       ></v-switch>
 
+      <v-switch
+          :label="$vuetify.locale.t('$vuetify.replace_img_with_alt')"
+          density="comfortable"
+          color="primary"
+          hide-details
+          class="ma-0 pt-0 ml-4 mr-4 mb-2"
+          v-model="replaceImgWithAlt"
+          @update:modelValue="changeReplaceImgWithAlt"
+      ></v-switch>
+
       <v-divider/>
 
       <v-radio-group class="mt-4"
@@ -56,8 +66,9 @@
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore";
     import {
+      getReplaceImgWithAlt,
       getStoredMessageEditNormalizeText,
-      getStoredMessageEditSendButtonsType, getStripDivSpan, getTreatNewlinesAsInHtml,
+      getStoredMessageEditSendButtonsType, getStripDivSpan, getTreatNewlinesAsInHtml, setReplaceImgWithAlt,
       setStoredMessageEditNormalizeText, setStoredMessageEditSendButtonsType, setStripDivSpan, setTreatNewlinesAsInHtml
     } from "@/store/localStore.js";
     import bus, {ON_MESSAGE_EDIT_SEND_BUTTONS_TYPE_CHANGED} from "@/bus/bus.js";
@@ -68,6 +79,7 @@
                 normalizeText: null,
                 treatNewlinesAsInHtml: null,
                 stripDivSpan: null,
+                replaceImgWithAlt: null,
                 sendButtonsType: null,
             }
         },
@@ -79,6 +91,7 @@
                 this.normalizeText = getStoredMessageEditNormalizeText();
                 this.treatNewlinesAsInHtml = getTreatNewlinesAsInHtml();
                 this.stripDivSpan = getStripDivSpan();
+                this.replaceImgWithAlt = getReplaceImgWithAlt();
                 this.sendButtonsType = getStoredMessageEditSendButtonsType('auto');
             },
             changeNormalizeText(v) {
@@ -89,6 +102,9 @@
             },
             changeStripDivSpan(v) {
               setStripDivSpan(v)
+            },
+            changeReplaceImgWithAlt(v) {
+              setReplaceImgWithAlt(v)
             },
             changeSendButtonsType(v) {
                 setStoredMessageEditSendButtonsType(v);
