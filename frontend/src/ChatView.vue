@@ -1025,7 +1025,7 @@ export default {
               // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
               // 2. to prevent rendering MessageList and get 401
               this.partialReset(); // also unsets "this.chatEventsSubscribed"
-              this.onProfileSet().then(()=>{
+              this.onProfileSet().finally(()=>{
                 this.chatStore.decrementProgressCount();
               })
             }
