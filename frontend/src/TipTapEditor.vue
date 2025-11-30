@@ -650,11 +650,7 @@ export default {
   overflow-x: hidden;
   overflow-y: auto;
 
-  blockquote {
-    border-left: 3px solid gray;
-    margin: 0.6rem 0;
-    padding-left: 1rem;
-  }
+  @import "messageBodyCommon.styl"
 }
 
 .richText__content__mobile {
