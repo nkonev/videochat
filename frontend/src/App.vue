@@ -404,19 +404,21 @@ export default {
 
             this.chatStore.incrementProgressCount();
 
-            await Promise.all([
-              this.chatStore.fetchNotificationsCount(),
-              this.chatStore.fetchHasNewMessages()
-            ])
-            this.refreshInvitationCall();
+            try {
+              await Promise.all([
+                this.chatStore.fetchNotificationsCount(),
+                this.chatStore.fetchHasNewMessages()
+              ])
+              this.refreshInvitationCall();
 
-            this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
-            this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
+              this.globalEventsSubscription = graphqlSubscriptionMixin('globalEvents', this.getGlobalGraphQlSubscriptionQuery, this.setErrorSilent, this.onNextGlobalSubscriptionElement);
+              this.selfProfileEventsSubscription = graphqlSubscriptionMixin('userSelfProfileEvents', this.getSelfGraphQlSubscriptionQuery, this.setErrorSilent, this.onSelfNextSubscriptionElement);
 
-            this.globalEventsSubscription.graphQlSubscribe();
-            this.selfProfileEventsSubscription.graphQlSubscribe();
-
-            this.chatStore.decrementProgressCount();
+              this.globalEventsSubscription.graphQlSubscribe();
+              this.selfProfileEventsSubscription.graphQlSubscribe();
+            } finally {
+              this.chatStore.decrementProgressCount();
+            }
         },
         onLoggedOut() {
             this.resetVariables();
