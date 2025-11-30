@@ -753,9 +753,11 @@ export default {
         },
         onWsConnected() {
           this.chatStore.moreImportantSubtitleInfo = null;
+          if (this.chatStore.progressCount > 0) {
+            this.chatStore.decrementProgressCount(); // the counterpart for this call is in onProfileSet()
+          }
         },
         onWsInitialized() {
-          this.chatStore.decrementProgressCount(); // the counterpart for this call is in onProfileSet()
         },
         onWsConnecting() {
         },
