@@ -114,6 +114,7 @@
           storedChatId: null,
           isLoading: false,
           initialized: false,
+          freshAbortController: new AbortController(),
         }
       },
 
@@ -404,10 +405,6 @@
 
         onMessagesReload() {
           this.reloadItems();
-        },
-
-        onScrollCallback() {
-          this.chatStore.showScrollDown = !this.isScrolledToBottom(true);
         },
         isScrolledToBottom(ignoreExpandedThreshholdForMobile) {
           if (this.scrollerDiv) {
@@ -830,7 +827,7 @@
                 size: PAGE_SIZE,
                 searchString: this.searchString,
               },
-              signal: this.requestAbortController.signal
+              signal: this.freshAbortController.signal
             }).then((res) => {
               if (!res.data.ok) {
                 console.log("Need to update messages");
@@ -843,9 +840,17 @@
             })
           }
         },
+        onScrollCallback() {
+          this.chatStore.showScrollDown = !this.isScrolledToBottom(true);
+          this.cancelFreshDebounced();
+        },
+        cancelFreshDebounced() {
+          this.freshAbortController.abort();
+        },
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true});
+        this.cancelFreshDebounced = debounce(this.cancelFreshDebounced, 700, {leading:true, trailing:false})
       },
 
       watch: {

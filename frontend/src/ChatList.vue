@@ -165,6 +165,7 @@ export default {
         startingFromItemIdBottom: null,
         isLoading: false,
         initialized: false,
+        freshAbortController: new AbortController(),
     }
   },
   computed: {
@@ -735,7 +736,7 @@ export default {
               size: PAGE_SIZE,
               searchString: this.searchString,
             },
-            signal: this.requestAbortController.signal
+            signal: this.freshAbortController.signal
           }).then((res)=>{
             if (!res.data.ok) {
               console.log("Need to update chats");
@@ -746,6 +747,12 @@ export default {
           })
         }
       }
+    },
+    onScrollCallback() {
+      this.cancelFreshDebounced();
+    },
+    cancelFreshDebounced() {
+      this.freshAbortController.abort();
     },
     hasItems() {
         return !!this.items?.length
@@ -817,6 +824,7 @@ export default {
   created() {
     this.routeName = this.$route.name;
     this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true})
+    this.cancelFreshDebounced = debounce(this.cancelFreshDebounced, 700, {leading:true, trailing:false})
   },
   watch: {
       '$vuetify.locale.current': {

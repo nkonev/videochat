@@ -219,6 +219,7 @@ export default {
         userEventsSubscription: null,
         isLoading: false,
         initialized: false,
+        freshAbortController: new AbortController(),
     }
   },
   computed: {
@@ -651,7 +652,7 @@ export default {
               size: PAGE_SIZE,
               searchString: this.searchString,
             },
-            signal: this.requestAbortController.signal
+            signal: this.freshAbortController.signal
           }).then((res)=>{
             if (!res.data.ok) {
               console.log("Need to update users");
@@ -662,6 +663,12 @@ export default {
           })
         }
       }
+    },
+    onScrollCallback() {
+      this.cancelFreshDebounced();
+    },
+    cancelFreshDebounced() {
+      this.freshAbortController.abort();
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
@@ -688,6 +695,7 @@ export default {
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});
     this.onWsRestoredRefresh = debounce(this.onWsRestoredRefresh, 300, {leading:false, trailing:true});
+    this.cancelFreshDebounced = debounce(this.cancelFreshDebounced, 700, {leading:true, trailing:false})
   },
   watch: {
       '$vuetify.locale.current': {
