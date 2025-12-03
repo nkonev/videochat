@@ -42,8 +42,9 @@
 
             <MessageList :isCompact="isVideoRoute()"/>
 
+            <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-arrow-left-thick" :class="backToChatsClass()" @click="backToChats()"></v-btn>
             <v-btn v-if="chatStore.showScrollDown" variant="elevated" color="primary" icon="mdi-arrow-down-thick" :class="scrollDownClass()" @click="scrollDown()"></v-btn>
-            <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" icon color="primary" class="new-fab-b" @click="openNewMessageDialog()" :title="$vuetify.locale.t('$vuetify.create_message')">
+            <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" icon color="primary" :class="createMessageClass()" @click="openNewMessageDialog()" :title="$vuetify.locale.t('$vuetify.create_message')">
               <v-badge
                   color="red"
                   dot
@@ -976,18 +977,33 @@ export default {
     scrollDown () {
       bus.emit(SCROLL_DOWN)
     },
+    backToChats() {
+      this.$router.push({name: chat_list_name})
+    },
+
+    backToChatsClass() {
+      if (this.canWriteMessage && this.chatStore.showScrollDown) {
+        return "new-fab-c"
+      } else if (this.canWriteMessage) {
+        return "new-fab-b"
+      } else {
+        return "new-fab-a"
+      }
+    },
+    createMessageClass() {
+      return "new-fab-a"
+    },
     scrollDownClass() {
       if (this.isMobile()) {
         if (!this.canWriteMessage) {
-          return "new-fab-b"
+          return "new-fab-a"
         } else {
-          return "new-fab-t"
+          return "new-fab-b"
         }
       } else {
-        return "new-fab-b"
+        return "new-fab-a"
       }
     },
-
     onUserTyping(data) {
       if (data.chatId == this.chatId) {
         upsertToWritingUsers(this.writingUsers, data);
@@ -1143,16 +1159,23 @@ export default {
     align-items: unset;
 }
 
-.new-fab-b {
+.new-fab-c {
   position: absolute
-  bottom: 20px
+  bottom: 160px
   right: 20px
   z-index: 1000
 }
 
-.new-fab-t {
+.new-fab-b {
   position: absolute
   bottom: 90px
+  right: 20px
+  z-index: 1000
+}
+
+.new-fab-a {
+  position: absolute
+  bottom: 20px
   right: 20px
   z-index: 1000
 }
