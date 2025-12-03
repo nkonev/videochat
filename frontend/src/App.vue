@@ -1038,7 +1038,7 @@ export default {
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
 
-        createGraphQlClient();
+        createGraphQlClient(this);
 
         // place onProfileSet() before fetchProfileIfNeed() to start subscription in onProfileSet()
         bus.on(PROFILE_SET, this.onProfileSet);

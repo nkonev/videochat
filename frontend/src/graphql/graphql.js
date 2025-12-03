@@ -26,7 +26,7 @@ const retryDelay = 1000;
 const maxAttempts = Number.MAX_SAFE_INTEGER;
 
 let graphQlClient;
-export const createGraphQlClient = () => {
+export const createGraphQlClient = (instance) => {
     let initialized = false;
 
     graphQlClient = createClient({
@@ -83,7 +83,10 @@ export const createGraphQlClient = () => {
         bus.emit(WEBSOCKET_CONNECTING);
     });
     graphQlClient.on('error', (err) => {
-        console.info("Error in GraphQL client", err);
+        console.error("Error in GraphQL client", err);
+        if (!err?.target?.url) {
+            instance.setError(err, "Error in GraphQL subscription");
+        }
         bus.emit(WEBSOCKET_LOST);
     });
     graphQlClient.on('closed', (ev) => {
