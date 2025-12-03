@@ -114,7 +114,6 @@
           storedChatId: null,
           isLoading: false,
           initialized: false,
-          freshAbortController: new AbortController(),
         }
       },
 
@@ -835,6 +834,12 @@
               } else {
                 console.log("No need to update messages");
               }
+            }).catch((error)=>{
+              if (axios.isCancel(error)) {
+                console.log("Cancelled freshness check");
+              } else {
+                throw error
+              }
             }).finally(()=>{
               this.chatStore.canShowPinnedLink = true;
             })
@@ -844,13 +849,9 @@
           this.chatStore.showScrollDown = !this.isScrolledToBottom(true);
           this.cancelFreshDebounced();
         },
-        cancelFreshDebounced() {
-          this.freshAbortController.abort();
-        },
       },
       created() {
         this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true});
-        this.cancelFreshDebounced = debounce(this.cancelFreshDebounced, 700, {leading:true, trailing:false})
       },
 
       watch: {

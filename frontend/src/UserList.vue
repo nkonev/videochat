@@ -219,7 +219,6 @@ export default {
         userEventsSubscription: null,
         isLoading: false,
         initialized: false,
-        freshAbortController: new AbortController(),
     }
   },
   computed: {
@@ -660,15 +659,18 @@ export default {
             } else {
               console.log("No need to update users");
             }
+          }).catch((error)=>{
+            if (axios.isCancel(error)) {
+              console.log("Cancelled freshness check");
+            } else {
+              throw error
+            }
           })
         }
       }
     },
     onScrollCallback() {
       this.cancelFreshDebounced();
-    },
-    cancelFreshDebounced() {
-      this.freshAbortController.abort();
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
@@ -695,7 +697,6 @@ export default {
   created() {
     this.onSearchStringChanged = debounce(this.onSearchStringChanged, 700, {leading:false, trailing:true});
     this.onWsRestoredRefresh = debounce(this.onWsRestoredRefresh, 300, {leading:false, trailing:true});
-    this.cancelFreshDebounced = debounce(this.cancelFreshDebounced, 700, {leading:true, trailing:false})
   },
   watch: {
       '$vuetify.locale.current': {

@@ -165,7 +165,6 @@ export default {
         startingFromItemIdBottom: null,
         isLoading: false,
         initialized: false,
-        freshAbortController: new AbortController(),
     }
   },
   computed: {
@@ -744,15 +743,18 @@ export default {
             } else {
               console.log("No need to update chats");
             }
+          }).catch((error)=>{
+            if (axios.isCancel(error)) {
+              console.log("Cancelled freshness check");
+            } else {
+              throw error
+            }
           })
         }
       }
     },
     onScrollCallback() {
       this.cancelFreshDebounced();
-    },
-    cancelFreshDebounced() {
-      this.freshAbortController.abort();
     },
     hasItems() {
         return !!this.items?.length
@@ -824,7 +826,6 @@ export default {
   created() {
     this.routeName = this.$route.name;
     this.onSearchStringChangedDebounced = debounce(this.onSearchStringChangedDebounced, 700, {leading:false, trailing:true})
-    this.cancelFreshDebounced = debounce(this.cancelFreshDebounced, 700, {leading:true, trailing:false})
   },
   watch: {
       '$vuetify.locale.current': {
