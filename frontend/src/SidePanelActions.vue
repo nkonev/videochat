@@ -80,12 +80,12 @@ import bus, {
   OPEN_NOTIFICATIONS_DIALOG,
   OPEN_PINNED_MESSAGES_MODAL, OPEN_PUBLISHED_MESSAGES_MODAL,
   OPEN_SETTINGS,
-  OPEN_VIEW_FILES_DIALOG,
+  OPEN_VIEW_FILES_DIALOG, REFRESH_ON_WEBSOCKET_RESTORED,
   WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {copyCallLink, getBlogLink, getLoginColoredStyle, hasLength, isChatRoute} from "@/utils";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
-import onFocusMixin from "@/mixins/onFocusMixin.js";
+import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 
 const userStateFactory = () => {
     return {
@@ -97,7 +97,7 @@ const userStateFactory = () => {
 export default {
   mixins: [
       userStatusMixin('userStatusInUserList'), // subscription
-      onFocusMixin(),
+      cancelRequestsMixin(),
   ],
   data() {
       return {
@@ -315,8 +315,7 @@ export default {
         }
       })
     },
-    onFocus() {
-      this.updateLastUpdateDateTime();
+    onWsRestoredRefresh() {
       this.requestStatuses();
     }
   },
@@ -327,14 +326,17 @@ export default {
 
       bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
       bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
-      this.installOnFocus();
+      bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
+      this.installCancelRequests();
   },
   beforeUnmount() {
       this.doUninitialize();
 
-      this.uninstallOnFocus();
+      this.uninstallCancelRequests();
       bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
       bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
+      bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
   },
 

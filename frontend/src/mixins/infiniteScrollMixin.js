@@ -10,7 +10,6 @@ export const directionBottom = 'bottom';
 // reduceTop(), reduceBottom()
 // onScrollCallback(), afterScrollRestored()
 // onScroll() should be called from template
-// updateLastUpdateDateTime() (optionally)
 
 // stop-scrolling class (in App.vue)
 export default (name) => {
@@ -246,9 +245,6 @@ export default (name) => {
       async reloadItems() {
         await this.uninstallScroller();
         await this.$nextTick();
-        if (this.updateLastUpdateDateTime) {
-              this.updateLastUpdateDateTime();
-        }
         await this.initialLoad();
         await this.$nextTick(async () => {
           await this.installScroller();

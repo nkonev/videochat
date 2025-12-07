@@ -166,14 +166,14 @@ import bus, {
   CHANGE_ROLE_DIALOG,
   CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL,
-  OPEN_SIMPLE_MODAL,
+  OPEN_SIMPLE_MODAL, REFRESH_ON_WEBSOCKET_RESTORED,
   WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED,
 } from "@/bus/bus";
 import {getHumanReadableDate} from "@/date.js";
 import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
-import onFocusMixin from "@/mixins/onFocusMixin.js";
+import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 
 export default {
   components: {
@@ -182,7 +182,7 @@ export default {
   },
   mixins: [
       userStatusMixin('userStatusInUserProfile'), // another subscription
-      onFocusMixin(),
+      cancelRequestsMixin(),
   ],
   data() {
     return {
@@ -400,8 +400,7 @@ export default {
     onEditUser(u) {
         this.viewableUser = u;
     },
-    onFocus() {
-      this.updateLastUpdateDateTime();
+    onWsRestoredRefresh() {
       if (this.chatStore.currentUser) {
           this.requestStatuses();
       }
@@ -436,21 +435,24 @@ export default {
 
     bus.on(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.on(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
+
     this.setMainTitle();
 
     if (this.canDrawUsers()) {
       this.doInitialize();
     }
 
-    this.installOnFocus();
+    this.installCancelRequests();
   },
   beforeUnmount() {
-    this.uninstallOnFocus();
+    this.uninstallCancelRequests();
 
     this.doUninitialize();
 
     bus.off(WEBSOCKET_UNINITIALIZED, this.doUninitialize);
     bus.off(WEBSOCKET_INITIALIZED, this.doInitialize);
+    bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
 
     this.unsetMainTitle();
 

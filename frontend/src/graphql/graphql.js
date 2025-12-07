@@ -1,7 +1,7 @@
 import { createClient } from 'graphql-ws';
 import {getWebsocketUrlPrefix} from "@/utils";
 import bus, {
-    LOGGED_OUT,
+    LOGGED_OUT, REFRESH_ON_WEBSOCKET_RESTORED,
     WEBSOCKET_CONNECTED, WEBSOCKET_CONNECTING,
     WEBSOCKET_INITIALIZED,
     WEBSOCKET_LOST,
@@ -28,6 +28,7 @@ const maxAttempts = Number.MAX_SAFE_INTEGER;
 let graphQlClient;
 export const createGraphQlClient = (instance) => {
     let initialized = false;
+    let lastPongOrRefreshTs = +new Date();
 
     graphQlClient = createClient({
         url: getWebsocketUrlPrefix() + '/api/event/graphql',
@@ -62,6 +63,13 @@ export const createGraphQlClient = (instance) => {
             pong: (received) => {
                 if (received) {
                     clearTimeout(pingTimedOut); // pong is received, clear connection close timeout
+
+                    // case "freezing successfully connected state" in browser - we want to trigger refresh action in case long non-receiving the pong event
+                    // if last pong > 40 sec
+                    if (((+new Date()) - lastPongOrRefreshTs)/1000 > 40) {
+                        bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+                    }
+                    lastPongOrRefreshTs = +new Date();
                 }
             },
         },
@@ -71,6 +79,9 @@ export const createGraphQlClient = (instance) => {
         if (initialized) {
             console.log("ReConnected to websocket graphql");
             bus.emit(WEBSOCKET_RESTORED);
+
+            bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+            lastPongOrRefreshTs = +new Date();
         } else {
             console.info("Connected to websocket graphql");
             bus.emit(WEBSOCKET_INITIALIZED);

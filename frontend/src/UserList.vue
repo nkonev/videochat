@@ -193,7 +193,7 @@ import {
 } from "@/store/localStore";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
-import onFocusMixin from "@/mixins/onFocusMixin.js";
+import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -211,7 +211,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_USERS),
     userStatusMixin('userStatusInUserList'), // another subscription
-    onFocusMixin(),
+    cancelRequestsMixin(),
   ],
   data() {
     return {
@@ -640,41 +640,44 @@ export default {
             signal: this.requestAbortController.signal
         });
     },
-    onFocus() {
-      if (this.chatStore.currentUser && this.items) {
-        this.requestStatuses();
-
-        if (this.isScrolledToTop()) {
-          const topNElements = this.items.slice(0, PAGE_SIZE);
-          axios.post(`/api/aaa/user/fresh`, topNElements, {
-            params: {
-              size: PAGE_SIZE,
-              searchString: this.searchString,
-            },
-            signal: this.freshAbortController.signal
-          }).then((res)=>{
-            if (!res.data.ok) {
-              console.log("Need to update users");
-              this.reloadItems();
-            } else {
-              console.log("No need to update users");
-            }
-          }).catch((error)=>{
-            if (axios.isCancel(error)) {
-              console.log("Cancelled freshness check");
-            } else {
-              throw error
-            }
-          })
-        }
-      }
-    },
     onScrollCallback() {
-      this.cancelFreshDebounced();
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
-      this.doOnFocus();
+      this.$nextTick(() => {
+        if (this.chatStore.currentUser && this.items) {
+          this.requestStatuses();
+
+          if (this.isScrolledToTop()) {
+            const topNElements = this.items.slice(0, PAGE_SIZE);
+            axios.post(`/api/aaa/user/fresh`, topNElements, {
+              params: {
+                size: PAGE_SIZE,
+                searchString: this.searchString,
+              },
+              signal: this.requestAbortController.signal
+            }).then((res)=>{
+              if (!this.isScrolledToTop()) {
+                console.log("Cancelled applying freshness check because isn't scrolled to top");
+                return
+              }
+
+              if (!res.data.ok) {
+                console.log("Need to update users");
+                this.reloadItems();
+              } else {
+                console.log("No need to update users");
+              }
+            }).catch((error)=>{
+              if (axios.isCancel(error)) {
+                console.log("Cancelled freshness check");
+              } else {
+                throw error
+              }
+            })
+          }
+        }
+      })
     },
     requestStatuses() {
       this.$nextTick(()=>{
@@ -734,7 +737,7 @@ export default {
       await this.doInitialize();
     }
 
-    this.installOnFocus();
+    this.installCancelRequests();
   },
 
   beforeUnmount() {
@@ -744,7 +747,7 @@ export default {
 
     this.doUninitialize();
 
-    this.uninstallOnFocus();
+    this.uninstallCancelRequests();
 
     this.markInstance.unmark();
     this.markInstance = null;

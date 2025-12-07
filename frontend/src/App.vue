@@ -291,7 +291,7 @@ import ChooseColorModal from "@/ChooseColorModal.vue";
 import PublishedMessagesModal from "@/PublishedMessagesModal.vue";
 import {createBrowserNotificationIfPermitted, removeBrowserNotification} from "@/browserNotifications.js";
 import {getHumanReadableDate} from "@/date.js";
-import onFocusMixin from "@/mixins/onFocusMixin.js";
+import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 import SetPasswordModal from "@/SetPasswordModal.vue";
 import MessageEditMediaModal from "@/MessageEditMediaModal.vue";
 
@@ -306,7 +306,7 @@ let sessionPingedTimer;
 export default {
     mixins: [
         searchStringFacade(),
-        onFocusMixin(),
+        cancelRequestsMixin(),
     ],
     data() {
         return {
@@ -678,14 +678,6 @@ export default {
         onShowFileUploadClicked() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, { });
         },
-        onFocus() {
-          this.updateLastUpdateDateTime();
-          if (this.chatStore.currentUser) {
-            this.chatStore.fetchNotificationsCount();
-            this.chatStore.fetchHasNewMessages();
-            this.refreshInvitationCall();
-          }
-        },
         refreshInvitationCall() {
           return axios.get(`/api/video/user/being-invited-status`, {
               params: {
@@ -757,16 +749,21 @@ export default {
             this.chatStore.decrementProgressCount(); // the counterpart for this call is in onProfileSet()
           }
         },
+        onWsRestored() {
+        },
         onWsInitialized() {
         },
         onWsConnecting() {
-        },
-        onWsRestored() {
-          console.info("REFRESH_ON_WEBSOCKET_RESTORED auto");
-          bus.emit(REFRESH_ON_WEBSOCKET_RESTORED);
+          this.chatStore.moreImportantSubtitleInfo = this.$vuetify.locale.t('$vuetify.connecting');
         },
         onWsRestoredRefresh() {
-          this.doOnFocus();
+          this.$nextTick(() => {
+            if (this.chatStore.currentUser) {
+              this.chatStore.fetchNotificationsCount();
+              this.chatStore.fetchHasNewMessages();
+              this.refreshInvitationCall();
+            }
+          })
         },
         resetVideoInvitation() {
             this.invitedVideoChatState = false;
@@ -1062,12 +1059,12 @@ export default {
 
         this.chatStore.showDrawer = getMainDrawer();
 
-        this.installOnFocus();
+        this.installCancelRequests();
     },
     beforeUnmount() {
         this.onLoggedOut();
 
-        this.uninstallOnFocus();
+        this.uninstallCancelRequests();
         window.removeEventListener("resize", this.onWindowResized);
 
         bus.off(PROFILE_SET, this.onProfileSet);

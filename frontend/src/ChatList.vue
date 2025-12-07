@@ -138,7 +138,7 @@ import {
   removeTopChatPosition,
   setTopChatPosition
 } from "@/store/localStore.js";
-import onFocusMixin from "@/mixins/onFocusMixin.js";
+import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -154,7 +154,7 @@ export default {
     heightMixin(),
     searchString(SEARCH_MODE_CHATS),
     userStatusMixin('tetATetInChatList'),
-    onFocusMixin(),
+    cancelRequestsMixin(),
   ],
   props:['embedded'],
   data() {
@@ -358,7 +358,39 @@ export default {
     },
     onWsRestoredRefresh() {
       this.saveLastVisibleElement();
-      this.doOnFocus();
+      this.$nextTick(() => {
+        if (this.chatStore.currentUser && this.items) {
+          this.requestStatuses();
+
+          if (this.isScrolledToTop()) {
+            const topNElements = this.items.slice(0, PAGE_SIZE);
+            axios.post(`/api/chat/fresh`, topNElements, {
+              params: {
+                size: PAGE_SIZE,
+                searchString: this.searchString,
+              },
+              signal: this.requestAbortController.signal
+            }).then((res)=>{
+              if (!this.isScrolledToTop()) {
+                console.log("Cancelled applying freshness check because isn't scrolled to top");
+                return
+              }
+              if (!res.data.ok) {
+                console.log("Need to update chats");
+                this.reloadItems();
+              } else {
+                console.log("No need to update chats");
+              }
+            }).catch((error)=>{
+              if (axios.isCancel(error)) {
+                console.log("Cancelled freshness check");
+              } else {
+                throw error
+              }
+            })
+          }
+        }
+      })
     },
     async onProfileSet() {
       await this.initializeHashVariablesAndReloadItems();
@@ -724,37 +756,7 @@ export default {
         this.triggerUsesStatusesEvents(joined, this.requestAbortController.signal);
       })
     },
-    onFocus() {
-      if (this.chatStore.currentUser && this.items) {
-        this.requestStatuses();
-
-        if (this.isScrolledToTop()) {
-          const topNElements = this.items.slice(0, PAGE_SIZE);
-          axios.post(`/api/chat/fresh`, topNElements, {
-            params: {
-              size: PAGE_SIZE,
-              searchString: this.searchString,
-            },
-            signal: this.freshAbortController.signal
-          }).then((res)=>{
-            if (!res.data.ok) {
-              console.log("Need to update chats");
-              this.reloadItems();
-            } else {
-              console.log("No need to update chats");
-            }
-          }).catch((error)=>{
-            if (axios.isCancel(error)) {
-              console.log("Cancelled freshness check");
-            } else {
-              throw error
-            }
-          })
-        }
-      }
-    },
     onScrollCallback() {
-      this.cancelFreshDebounced();
     },
     hasItems() {
         return !!this.items?.length
@@ -885,7 +887,7 @@ export default {
       }
     }, 500);
 
-    this.installOnFocus();
+    this.installCancelRequests();
   },
 
   beforeUnmount() {
@@ -893,7 +895,7 @@ export default {
 
     removeEventListener("beforeunload", this.beforeUnload);
 
-    this.uninstallOnFocus();
+    this.uninstallCancelRequests();
 
     this.doUninitialize();
     this.uninstallScroller();

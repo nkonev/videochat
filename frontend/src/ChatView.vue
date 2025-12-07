@@ -128,7 +128,7 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin";
 import ChatVideo from "@/ChatVideo.vue";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 import {SEARCH_MODE_CHATS, searchString} from "@/mixins/searchString.js";
-import onFocusMixin from "@/mixins/onFocusMixin.js";
+import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 import userStatusMixin from "@/mixins/userStatusMixin.js";
 import {getStoredVideoMessages} from "@/store/localStore.js";
 
@@ -158,7 +158,7 @@ export default {
     heightMixin(),
     videoPositionMixin(),
     searchString(SEARCH_MODE_CHATS),
-    onFocusMixin(),
+    cancelRequestsMixin(),
     userStatusMixin('userStatusInChatViewTetATet'), // subscription
   ],
   data() {
@@ -297,7 +297,6 @@ export default {
       return !!this.subscriptionElements.length
     },
     getInfo(chatId) {
-      this.updateLastUpdateDateTime();
       return this.fetchAndSetChat(chatId).then((data) => {
         if (this.isRealTetATet(data)) {
             if (!this.hasTetATetUserStatusSubscriptions()) {
@@ -696,11 +695,6 @@ export default {
             this.onPinnedMessagePromoted(item);
         }
     },
-    onFocus() {
-        if (this.chatStore.currentUser && this.chatId) {
-            this.getInfo(this.chatId);
-        }
-    },
     onUserBroadcast(dto) {
       console.log("onUserBroadcast", dto);
       const stripped = dto.text;
@@ -740,7 +734,9 @@ export default {
         return this.chatStore.currentUser && this.initialLoaded
     },
     onWsRestoredRefresh() {
-      this.getInfo(this.chatId)
+      if (this.chatStore.currentUser && this.chatId) {
+        this.getInfo(this.chatId);
+      }
     },
     partialReset(keepTitle) {
       this.chatEventsSubscribed = false;
@@ -1106,10 +1102,10 @@ export default {
       }
     }, 500);
 
-    this.installOnFocus();
+    this.installCancelRequests();
   },
   beforeUnmount() {
-    this.uninstallOnFocus();
+    this.uninstallCancelRequests();
 
     this.doUninitialize();
 
