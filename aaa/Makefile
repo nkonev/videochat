@@ -8,6 +8,9 @@
 
 .PHONY: check-env download package-docker test push-docker-image-to-registry clean push-docker-image-to-server deploy-docker-image run-oauth2-emu run-with-oauth2 run-with-keycloak run run-with-ldap infra infra-test
 
+# for run-* goals
+SHELL:=/bin/bash -O globstar
+
 BUILDDIR := ./build
 IMAGE := nkonev/chat-aaa:changing
 IMAGE_TO_PUBLISH := nkonev/chat-aaa:latest
@@ -76,19 +79,19 @@ run-oauth2-emu:
 run-with-oauth2:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
 	# You need to start EmulatorServersController firstly
-	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/user-test-controller.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/login-additional-allowed-characters.yml || true
+	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/oauth2-basic.yml,file:src/test/resources/config/user-test-controller.yml,file:src/test/resources/config/demo-migration.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/login-additional-allowed-characters.yml || true
 
 run-with-keycloak:
 	# export JAVA_HOME=/usr/lib/jvm/java-21
-	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/oauth2-keycloak.yml --custom.schedulers.sync-keycloak.enabled=true --custom.schedulers.sync-keycloak.cron="*/5 * * * * *" || true
+	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/log-email.yml,file:src/test/resources/config/oauth2-keycloak.yml --custom.schedulers.sync-keycloak.enabled=true --custom.schedulers.sync-keycloak.cron="*/5 * * * * *" || true
 
 run-with-ldap: check-env download generate package-java
 	# export JAVA_HOME=/usr/lib/jvm/java-21
-	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/demo-ldap-opendj.yml || true
+	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar --spring.config.location=file:src/main/resources/config/application.yml,file:src/test/resources/config/demo-ldap-opendj.yml || true
 
 run: check-env download generate package-java infra
 	# export JAVA_HOME=/usr/lib/jvm/java-21
-	${JAVA_HOME}/bin/java -jar target/aaa-0.0.0-exec.jar || true
+	${JAVA_HOME}/bin/java -jar target/aaa-*-exec.jar || true
 
 infra:
 	docker compose -f ../docker-compose.yml up -d postgresql redis rabbitmq opensearch jaeger
