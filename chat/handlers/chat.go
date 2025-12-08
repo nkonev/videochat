@@ -449,15 +449,19 @@ func (ch *ChatHandler) IsFreshChatsPage(c echo.Context) error {
 				edge = false
 				break
 			}
-			if !utils.CompareStringPointers(currentChat.LastMessagePreview, gottenChat.LastMessagePreview) {
+			if currentChat.LastUpdateDateTime != gottenChat.LastUpdateDateTime {
 				edge = false
 				break
 			}
-			if !utils.CompareStringPointers(currentChat.Avatar, gottenChat.Avatar) {
+			if !utils.ComparePointers(currentChat.LastMessagePreview, gottenChat.LastMessagePreview) {
 				edge = false
 				break
 			}
-			if !utils.CompareStringPointers(currentChat.LoginColor, gottenChat.LoginColor) {
+			if !utils.ComparePointers(currentChat.Avatar, gottenChat.Avatar) {
+				edge = false
+				break
+			}
+			if !utils.ComparePointers(currentChat.LoginColor, gottenChat.LoginColor) {
 				edge = false
 				break
 			}

@@ -17,6 +17,7 @@ import (
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
+	"slices"
 	"strings"
 	"time"
 )
@@ -491,11 +492,17 @@ func (mc *MessageHandler) IsFreshMessagesPage(c echo.Context) error {
 				edge = false
 				break
 			}
-			if len(currentMessage.Reactions) != len(gottenMessage.Reactions) {
+			if !slices.EqualFunc(currentMessage.Reactions, gottenMessage.Reactions, func(reaction1 dto.Reaction, reaction2 dto.Reaction) bool {
+				return reaction1.Reaction == reaction2.Reaction && reaction1.Count == reaction2.Count
+			}) {
 				edge = false
 				break
 			}
 			if currentMessage.BlogPost != gottenMessage.BlogPost {
+				edge = false
+				break
+			}
+			if !utils.ComparePointers(currentMessage.EditDateTime, gottenMessage.EditDateTime) {
 				edge = false
 				break
 			}
