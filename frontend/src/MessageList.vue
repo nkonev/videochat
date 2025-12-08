@@ -70,13 +70,28 @@
       WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED, OPEN_MESSAGE_DELETE_MODAL,
     } from "@/bus/bus";
     import {
-      checkUpByTree, checkUpByTreeObj,
-      deepCopy, edit_message, embed_message_reply,
-      findIndex, findIndexNonStrictly, getBlogLink, getPublicMessageLink, goToPreservingQuery,
-      hasLength, haveEmbed, isChatRoute, isConverted, isMessageHash, parseChatLink, parseMessageLink, parseUserLink,
+      checkUpByTree,
+      checkUpByTreeObj,
+      deepCopy,
+      edit_message,
+      embed_message_reply,
+      findIndex,
+      findIndexNonStrictly,
+      getBlogLink,
+      getPublicMessageLink,
+      goToPreservingQuery,
+      hasLength,
+      haveEmbed,
+      isChatRoute,
+      isConverted,
+      isMessageHash,
+      parseChatLink,
+      parseMessageLink,
+      parseUserLink,
       replaceInArray,
       replaceOrAppend,
-      replaceOrPrepend, reply_message,
+      replaceOrPrepend,
+      reply_message,
       setAnswerPreviewFields,
       shouldMessageBeCollapsed,
     } from "@/utils";
@@ -262,17 +277,19 @@
 
           return items
         },
-        async load() {
+        async load(silent) {
           if (!this.canDrawMessages()) {
             return Promise.resolve()
           }
 
           // console.log("Loading messages", new Error("boom"));
 
-          this.chatStore.incrementProgressCount();
-          this.isLoading = true;
+          if (!silent) {
+            this.chatStore.incrementProgressCount();
+            this.isLoading = true;
+          }
 
-          const {startingFromItemId, hasHash} = this.prepareHashesForRequest();
+          const {startingFromItemId, hasHash} = this.prepareHashesForRequest(silent);
 
           try {
             let items = await this.fetchItems(this.searchString, startingFromItemId, this.isTopDirection());
@@ -293,10 +310,14 @@
               }
             }
 
-            if (this.isTopDirection()) {
-              replaceOrAppend(this.items, items);
+            if (silent) {
+              this.items = items
             } else {
-              replaceOrPrepend(this.items, items);
+              if (this.isTopDirection()) {
+                replaceOrAppend(this.items, items);
+              } else {
+                replaceOrPrepend(this.items, items);
+              }
             }
 
             this.updateTopAndBottomIds();
@@ -313,8 +334,10 @@
             this.performMarking();
             return Promise.resolve(true)
           } finally {
-            this.chatStore.decrementProgressCount();
-            this.isLoading = false;
+            if (!silent) {
+              this.chatStore.decrementProgressCount();
+              this.isLoading = false;
+            }
           }
         },
         transformItem(item) {
@@ -583,7 +606,7 @@
 
                 if (!res.data.ok) {
                   console.log("Need to update messages");
-                  this.reloadItems();
+                  this.load(true);
                 } else {
                   console.log("No need to update messages");
                 }

@@ -306,17 +306,19 @@ export default {
 
       return items
     },
-    async load() {
+    async load(silent) {
       if (!this.canDrawUsers()) {
         return Promise.resolve()
       }
 
       // console.log("Loading users", new Error("boom"));
 
-      this.chatStore.incrementProgressCount();
-      this.isLoading = true;
+      if (!silent) {
+        this.chatStore.incrementProgressCount();
+        this.isLoading = true;
+      }
 
-      const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
+      const { startingFromItemId, hasHash } = this.prepareHashesForRequest(silent);
 
       try {
         let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
@@ -325,10 +327,14 @@ export default {
           items = portion.reverse().concat(items);
         }
 
-        if (this.isTopDirection()) {
-          replaceOrPrepend(this.items, items);
+        if (silent) {
+          this.items = items
         } else {
-          replaceOrAppend(this.items, items);
+          if (this.isTopDirection()) {
+            replaceOrPrepend(this.items, items);
+          } else {
+            replaceOrAppend(this.items, items);
+          }
         }
 
         this.updateTopAndBottomIds();
@@ -343,8 +349,10 @@ export default {
         this.requestStatuses();
         return Promise.resolve(true)
       } finally {
-        this.chatStore.decrementProgressCount();
-        this.isLoading = false;
+        if (!silent) {
+          this.chatStore.decrementProgressCount();
+          this.isLoading = false;
+        }
       }
     },
     afterScrollRestored(el) {
@@ -664,7 +672,7 @@ export default {
 
               if (!res.data.ok) {
                 console.log("Need to update users");
-                this.reloadItems();
+                this.load(true);
               } else {
                 console.log("No need to update users");
               }

@@ -33,9 +33,12 @@ export default () => {
                 }
                 this.loadedFromStoreHash = this.getPositionFromStore();
             },
-            prepareHashesForRequest() {
+            prepareHashesForRequest(silent) {
                 let startingFromItemId;
                 let hasHash;
+                if (silent) {
+                    return {startingFromItemId, hasHash}
+                }
                 if (this.enableHashInRoute() && this.hasHashFromRoute) { // we need it here - it shouldn't be computable in order to be reset. The resetted value is need when we press "arrow down" after reload
                     // how to check:
                     // 1. click on hash

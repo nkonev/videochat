@@ -268,17 +268,19 @@ export default {
 
       return items
     },
-    async load() {
+    async load(silent) {
       if (!this.canDrawChats()) {
         return Promise.resolve()
       }
 
       // console.log("Loading chats", new Error("boom"));
 
-      const { startingFromItemId, hasHash } = this.prepareHashesForRequest();
+      const { startingFromItemId, hasHash } = this.prepareHashesForRequest(silent);
 
-      this.chatStore.incrementProgressCount();
-      this.isLoading = true;
+      if (!silent) {
+        this.chatStore.incrementProgressCount();
+        this.isLoading = true;
+      }
 
       try {
         let items = await this.fetchItems(startingFromItemId, this.isTopDirection());
@@ -287,12 +289,16 @@ export default {
           items = portion.reverse().concat(items);
         }
 
-        // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
-        // e.g. some chat has been popped up on sever due to somebody updated it
-        if (this.isTopDirection()) {
-          replaceOrPrepend(this.items, items);
+        if (silent) {
+          this.items = items
         } else {
-          replaceOrAppend(this.items, items);
+          // replaceOrPrepend() and replaceOrAppend() for the situation when order has been changed on server,
+          // e.g. some chat has been popped up on sever due to somebody updated it
+          if (this.isTopDirection()) {
+            replaceOrPrepend(this.items, items);
+          } else {
+            replaceOrAppend(this.items, items);
+          }
         }
         // sorts possibly wrong order after loading items, appeared on server while user was scrolling
         // it makes sense only when user scrolls to top - in order to have more or less "fresh" view
@@ -311,8 +317,10 @@ export default {
 
         return Promise.resolve(true)
       } finally {
-        this.chatStore.decrementProgressCount();
-        this.isLoading = false;
+        if (!silent) {
+          this.chatStore.decrementProgressCount();
+          this.isLoading = false;
+        }
       }
     },
     afterScrollRestored(el) {
@@ -377,7 +385,7 @@ export default {
               }
               if (!res.data.ok) {
                 console.log("Need to update chats");
-                this.reloadItems();
+                this.load(true);
               } else {
                 console.log("No need to update chats");
               }
