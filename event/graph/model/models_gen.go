@@ -73,6 +73,7 @@ type ChatDto struct {
 	ConsiderMessagesAsUnread            bool            `json:"considerMessagesAsUnread"`
 	AdditionalData                      *AdditionalData `json:"additionalData"`
 	RegularParticipantCanAddParticipant bool            `json:"regularParticipantCanAddParticipant"`
+	CanAddParticipant                   bool            `json:"canAddParticipant"`
 }
 
 type ChatEvent struct {

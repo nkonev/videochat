@@ -519,6 +519,7 @@ export default {
                         canPin
                         considerMessagesAsUnread
                         regularParticipantCanAddParticipant
+                        canAddParticipant
                       }
                       chatDeletedEvent {
                         id

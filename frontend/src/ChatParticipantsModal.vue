@@ -134,10 +134,13 @@
                             <v-divider v-if="shouldShowPagination && isMobile()" class="mt-2"/>
                         </v-col>
                         <v-col class="ma-0 pa-0 d-flex flex-row flex-grow-1 flex-shrink-0 align-self-end justify-end">
-                            <v-btn v-if="chatStore.chatDto.canEdit" color="primary" variant="flat" @click="addParticipants()">
+                            <v-btn v-if="chatStore.chatDto.canEdit" color="primary" variant="flat" @click="editChat()">
                                 {{ $vuetify.locale.t('$vuetify.add') }}
                             </v-btn>
-                            <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
+                            <v-btn v-else-if="chatStore.chatDto.canAddParticipant" color="primary" variant="flat" @click="addParticipants()">
+                              {{ $vuetify.locale.t('$vuetify.add') }}
+                            </v-btn>
+                          <v-btn color="red" variant="flat" @click="closeModal()">{{ $vuetify.locale.t('$vuetify.close') }}</v-btn>
                         </v-col>
                     </v-row>
                 </v-card-actions>
@@ -291,8 +294,11 @@
                     }
                 });
             },
+            editChat() {
+              bus.emit(OPEN_CHAT_EDIT, {chatAction: 'editCurrentChat', chatId: this.chatId} );
+            },
             addParticipants() {
-                bus.emit(OPEN_CHAT_EDIT, this.chatStore.chatDto);
+              bus.emit(OPEN_CHAT_EDIT, {chatAction: 'addParticipants', chatId: this.chatId} );
             },
             onChatDelete(dto) {
                 if (this.show && dto.id == this.chatId) {

@@ -112,6 +112,7 @@ type ChatDto {
     considerMessagesAsUnread: Boolean!
     additionalData: AdditionalData
     regularParticipantCanAddParticipant: Boolean!
+    canAddParticipant: Boolean!
 }
 
 type ChatDeletedDto {

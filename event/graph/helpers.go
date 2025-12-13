@@ -319,6 +319,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			CanPin:                              chatEvent.CanPin,
 			ConsiderMessagesAsUnread:            chatEvent.ConsiderMessagesAsUnread,
 			RegularParticipantCanAddParticipant: chatEvent.RegularParticipantCanAddParticipant,
+			CanAddParticipant:                   chatEvent.CanAddParticipant,
 		}
 
 		if chatEvent.AdditionalData != nil {

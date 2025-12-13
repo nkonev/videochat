@@ -72,6 +72,7 @@
         @markAsReadAll="markAsReadAll"
         @removeFromContributingToUnread="removeFromContributingToUnread"
         @startFromContributingToUnread="startFromContributingToUnread"
+        @addParticipants="onMenuAddParticipants"
       />
       <v-btn v-if="canShowNewChat()" variant="elevated" color="primary" icon="mdi-plus-thick" class="new-fab-chat" @click="createChat()" :title="$vuetify.locale.t('$vuetify.create_chat')"></v-btn>
   </v-container>
@@ -527,7 +528,7 @@ export default {
     },
     editChat(chat) {
           // console.log("Will add participants to chat", chatId);
-          bus.emit(OPEN_CHAT_EDIT, chat);
+          bus.emit(OPEN_CHAT_EDIT, {chatAction: 'editProvidedChat', chat: chat} );
     },
     deleteChat(chat) {
           bus.emit(OPEN_SIMPLE_MODAL, {
@@ -805,6 +806,9 @@ export default {
         signal: this.requestAbortController.signal
       })
     },
+    onMenuAddParticipants(item) {
+      bus.emit(OPEN_CHAT_EDIT, {chatAction: 'addParticipants', chatId: item.id} );
+    },
     async doDefaultScroll() {
       await this.scrollTop(); // we need it to prevent browser's scrolling
     },
@@ -846,7 +850,7 @@ export default {
       }
     },
     createChat() {
-      bus.emit(OPEN_CHAT_EDIT, null);
+      bus.emit(OPEN_CHAT_EDIT, {chatAction: 'create_chat'});
     },
     isVideoRoute() {
       return this.$route.name == videochat_name
