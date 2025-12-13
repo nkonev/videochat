@@ -39,6 +39,7 @@ type BaseChatDto struct {
 	ConsiderMessagesAsUnread            bool            `json:"considerMessagesAsUnread"`
 	AdditionalData                      *AdditionalData `json:"additionalData"`
 	RegularParticipantCanAddParticipant bool            `json:"regularParticipantCanAddParticipant"`
+	CanAddParticipant                   bool            `json:"canAddParticipant"`
 }
 
 type ChatDeletedDto struct {

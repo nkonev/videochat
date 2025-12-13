@@ -363,5 +363,6 @@ export default {
     sync_embed: "Sync embed",
     remove_contributing_to_unread: "Unread mute",
     start_contributing_to_unread: "Unread unmute",
-    regular_participant_can_add_participant: "Regular participant can add participants"
+    regular_participant_can_add_participant: "Regular participant can add participants",
+    add_participants: "Add participants"
 }

@@ -92,6 +92,9 @@ export default {
                 if (this.menuableItem.blog) {
                   ret.push({title: this.$vuetify.locale.t('$vuetify.go_to_blog_post'), icon: 'mdi-postage-stamp', action: () => this.goToBlog(this.menuableItem) });
                 }
+                if (this.menuableItem.canAddParticipant) {
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.add_participants'), icon: 'mdi-account-multiple-plus', action: () => this.$emit('addParticipants', this.menuableItem) });
+                }
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_link_to_chat'), icon: 'mdi-link', action: () => this.copyLink(this.menuableItem) });
                 ret.push({title: this.$vuetify.locale.t('$vuetify.copy_video_call_link'), icon: 'mdi-content-copy', action: () => this.copyCallLink(this.menuableItem) });
                 if (!this.menuableItem.isResultFromSearch && this.menuableItem.unreadMessages != 0) {
