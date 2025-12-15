@@ -186,7 +186,7 @@ services:
         tag: chat-rabbitmq
 
   livekit:
-    image: livekit/livekit-server:v1.9.7
+    image: livekit/livekit-server:v1.9.8
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
@@ -391,3 +391,7 @@ volumes:
 networks:
   backend:
     driver: overlay
+    ipam:
+      driver: default
+      config:
+        - subnet: {{ docker_inter_container_network_subnet }}

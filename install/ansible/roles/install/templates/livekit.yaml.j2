@@ -1,17 +1,21 @@
 # https://github.com/livekit/livekit/blob/master/config-sample.yaml
 port: 7880
 rtc:
-    #node_ip: {{ ansible_default_ipv4.address }}
+    # public IP
+    node_ip: {{ ansible_default_ipv4.address }}
     udp_port: 7882
     #tcp_port: 7881
     tcp_port: 0
-    use_external_ip: true
-    #use_ice_lite: true
+    use_external_ip: false
     use_ice_lite: false
     #port_range_start: 35200
     #port_range_end: 35400
     #force_tcp: true
     allow_tcp_fallback: false
+    ips:
+        # exclude docker inter-cointainer network as it yields bad local IPs
+        excludes:
+            - "{{ docker_inter_container_network_subnet }}"
     congestion_control:
         enabled: true
         # in the unlikely event of highly congested networks, SFU may choose to pause some tracks

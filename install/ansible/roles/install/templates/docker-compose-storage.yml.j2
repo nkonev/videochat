@@ -68,3 +68,7 @@ services:
 networks:
   backend:
     driver: overlay
+    ipam:
+      driver: default
+      config:
+        - subnet: {{ docker_inter_container_network_subnet }}
