@@ -2,7 +2,7 @@
 # It contains environment
 services:
   traefik:
-    image: traefik:v3.5.4
+    image: traefik:v3.6.2
     hostname: traefik
     restart: unless-stopped
     environment:
