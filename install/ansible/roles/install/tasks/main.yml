@@ -25,6 +25,15 @@
   tags:
     - services
 
+- name: Set GitHub Actions runner authorized key
+  ansible.posix.authorized_key:
+    user: "{{ ansible_ssh_user }}"
+    state: present
+    # this is public key for the private one in .secret_keys/id_rsa.enc
+    key: |
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDdImJ5IUi48HQ94xxL760nCGhcSMgltbz8y38stK30OQ0p7ESf5qCqHU47hrv/GkfMzsYBkkzw0cUMuI2xZZi6Xy0sofMV3MsjlRFxmMsS2K4sP8j/DfIyvMgTUw3ASHOKl5NwpgniWbFA9+r5EAHGNNoE/4UOhn9Fuj4Gb3adXGxU4ms7SWZ8Sljf8g3XaXfJXQSJTCrKPzcvJb7SjEU1coTDX7xZrUB8FGrVDAder67x+kEtIMGV2I7hW4Q4WFzqIfvXu9SUkKc6mAjhB31yXvd4zBpgqM9l5tYaeUuAOnIk0O+bZaq6aIR2iwz77qtG1q7DZweZc3GbW8cqx0ghMXuOtBKlrHCHtxmCeaS71S+3BSEdx2a7zWP5jmS/rxKL/aBtw1YKMDRsabBobaxDB+aJzC0QhccFEbbdHWDg2SXaXPqADj3ste59lWd+s6KiTR7bxwrzQjidcvQJ7nDvpfgz+pwT1a2krCQ6473UFehP352MRGFkdD1HTjdgFvWc08yk84dEWIdaOapeox3+1azmozeHXTIkFY0OCRuZ/pcQDR1rUDaEqWMrWmuTHlAAk4dSVIszB+FzqSdDZ8gPrli2OLagT0flFD/d75K1Bjphk5w7kUb6jwHZ+9vtCFLnXq+wr1a2NpdaVipEiz3xgn7or8AXLcYbvKwx8fH0Ww== githubActions
+  tags:
+    - github_actions
 
 # https://www.digitalocean.com/community/tutorial-series/how-to-write-ansible-playbooks
 - name: Docker repo
