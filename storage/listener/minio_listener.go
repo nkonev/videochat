@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
@@ -41,7 +42,6 @@ func CreateMinioEventsListener(
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
 		userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
-		maybeChatId := userMetadata.Get(services.ChatIdKey(true)).Int()
 		ownerId := userMetadata.Get(services.OwnerIdKey(true)).Int()
 		correlationIdStr := userMetadata.Get(services.CorrelationIdKey(true)).String()
 		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey(true)).Bool()
@@ -52,20 +52,21 @@ func CreateMinioEventsListener(
 		}
 		timestamp := userMetadata.Get(services.TimestampKey(true)).Int() // unix milli in UTC
 
-		var minioEvent = &dto.MinioEvent{
-			EventName:     eventName,
-			Key:           key,
-			ChatId:        maybeChatId,
-			OwnerId:       ownerId,
-			CorrelationId: correlationId,
-		}
-
 		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
 		workingChatId, err := utils.ParseChatId(normalizedKey)
 		if err != nil {
 			lgr.WithTracing(ctx).Errorf("Error during parsing chatId: %v", err)
 			return err
 		}
+
+		var minioEvent = &dto.MinioEvent{
+			EventName:     eventName,
+			Key:           key,
+			ChatId:        workingChatId,
+			OwnerId:       ownerId,
+			CorrelationId: correlationId,
+		}
+
 		eventType, err := utils.GetEventType(eventName, isConferenceRecording || isMessageRecording)
 		if err != nil {
 			lgr.WithTracing(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
@@ -103,7 +104,7 @@ func CreateMinioEventsListener(
 				return err
 			}
 		case utils.FILE_DELETED:
-			mck, err := createDbKey(normalizedKey, workingChatId)
+			mck, err := utils.BuildMetadataCacheId(normalizedKey)
 			if err != nil {
 				lgr.WithTracing(ctx).Errorf("Error during creating db key: %v", err)
 				return err
@@ -203,23 +204,5 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		FileSize:       objInfo.Size,
 		CreateDateTime: eventTime,
 		EditDateTime:   eventTime,
-	}, nil
-}
-
-func createDbKey(normalizedKey string, chatId int64) (*dto.MetadataCacheId, error) {
-	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
-	if err != nil {
-		return nil, err
-	}
-
-	filename, err := utils.ParseFileName(normalizedKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dto.MetadataCacheId{
-		ChatId:       chatId,
-		FileItemUuid: fileItemUuid,
-		Filename:     filename,
 	}, nil
 }

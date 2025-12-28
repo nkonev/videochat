@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"time"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"nkonev.name/storage/client"
@@ -10,7 +12,6 @@ import (
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"time"
 )
 
 func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
@@ -57,7 +58,7 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		_, fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
+		fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error get metadata: %v", err)
 			return nil

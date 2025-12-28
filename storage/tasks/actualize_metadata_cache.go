@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
@@ -92,9 +93,11 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 		if metadataCache == nil {
 			srv.lgr.WithTracing(c).Infof("Create metadata cache item for missing %v", fileOjInfo.Key)
 
-			_, ownerId, correlationId, timestamp, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
+			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
+			ownerId, correlationId, timestamp, err := srv.tryGetMetadata(c, fileOjInfo)
 			if err != nil {
 				srv.lgr.WithTracing(c).Errorf("Unable to get metadata for %v: %v", fileOjInfo.Key, err)
+
 				continue
 			}
 
@@ -105,17 +108,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 
 			eventTime := utils.GetEventTimeFromTimestamp(timestamp, fileItemUuid)
 
-			tags, err := srv.minioClient.GetObjectTagging(c, srv.minioBucketsConfig.Files, fileOjInfo.Key, minio.GetObjectTaggingOptions{})
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to get tags for %v: %v", fileOjInfo.Key, err)
-				continue
-			}
-
-			published, err := services.DeserializeTags(tags)
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to deserialize tags for %v: %v", fileOjInfo.Key, err)
-				continue
-			}
+			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
+			published := srv.tryGetTags(c, fileOjInfo)
 
 			err = db.Set(c, srv.dba, dto.MetadataCache{
 				ChatId:         chatId,
@@ -186,6 +180,41 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 	srv.lgr.WithTracing(c).Infof("Checking for excess metadata cache items finished")
 
 	srv.lgr.WithTracing(c).Infof("End of actualize metadata cache job")
+}
+
+func (srv *ActualizeMetadataCacheService) tryGetTags(ctx context.Context, fileOjInfo minio.ObjectInfo) bool {
+	tags, err := srv.minioClient.GetObjectTagging(ctx, srv.minioBucketsConfig.Files, fileOjInfo.Key, minio.GetObjectTaggingOptions{})
+	if err != nil {
+		srv.lgr.WithTracing(ctx).Debugf("Unable to get tags for %v: %v", fileOjInfo.Key, err)
+		return false
+	}
+
+	published, err := services.DeserializeTags(tags)
+	if err != nil {
+		srv.lgr.WithTracing(ctx).Errorf("Unable to deserialize tags for %v: %v", fileOjInfo.Key, err)
+		return false
+	}
+
+	return published
+}
+
+func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fileOjInfo minio.ObjectInfo) (int64, string, int64, error) {
+	// metadata can be absent because of poor backup
+	ownerId, correlationId, timestamp, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
+	if err != nil {
+		fallbackUserId := viper.GetInt64("schedulers.actualizeMetadataCacheTask.fallbackOwnerId")
+
+		if fallbackUserId > 0 {
+			srv.lgr.WithTracing(ctx).Debugf("Unable to get metadata for %v: %v, going to fallback to user %v", fileOjInfo.Key, err, fallbackUserId)
+			ownerId = fallbackUserId
+		} else {
+			srv.lgr.WithTracing(ctx).Debugf("The fallbackOwnerId isn't configured, returning error")
+
+			return 0, "", 0, err
+		}
+	}
+
+	return ownerId, correlationId, timestamp, nil
 }
 
 func (srv *ActualizeMetadataCacheService) spanStarter(ctx context.Context) (context.Context, any) {

@@ -4,18 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
-	"net/url"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"strings"
-	"time"
 )
 
 type FilesService struct {
@@ -446,7 +447,6 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 const publishedKey = "published"
 
 const ownerIdKey = "ownerid"
-const chatIdKey = "chatid"
 const correlationIdKey = "correlationid"
 
 const conferenceRecordingKey = "confrecording"
@@ -456,10 +456,9 @@ const originalKey = "originalkey"
 
 const timestampKey = "timestamp"
 
-func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, isConferenceRecording *bool, isUserMessageRecording *bool, timestamp int64) map[string]string {
+func SerializeMetadataSimple(userId int64, correlationId *string, isConferenceRecording *bool, isUserMessageRecording *bool, timestamp int64) map[string]string {
 	var userMetadata = map[string]string{}
 	userMetadata[ownerIdKey] = utils.Int64ToString(userId)
-	userMetadata[chatIdKey] = utils.Int64ToString(chatId)
 	if correlationId != nil {
 		userMetadata[correlationIdKey] = *correlationId
 	}
@@ -475,7 +474,9 @@ func SerializeMetadataSimple(userId int64, chatId int64, correlationId *string, 
 
 const xAmzMetaPrefix = "X-Amz-Meta-"
 
-func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, int64, string, int64, error) {
+// intended to use only in events processing and restoring,
+// not to use in the regular code - metadata can be absent because of poor backup
+func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, string, int64, error) {
 	var prefix = ""
 	if hasAmzPrefix {
 		prefix = xAmzMetaPrefix
@@ -483,21 +484,13 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 
 	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
 	if !ok {
-		return 0, 0, "", 0, errors.New("Unable to get owner id")
+		return 0, "", 0, errors.New("Unable to get owner id")
 	}
 	ownerId, err := utils.ParseInt64(ownerIdString)
 	if err != nil {
-		return 0, 0, "", 0, err
+		return 0, "", 0, err
 	}
 
-	chatIdString, ok := userMetadata[prefix+strings.Title(chatIdKey)]
-	if !ok {
-		return 0, 0, "", 0, errors.New("Unable to get chat id")
-	}
-	chatId, err := utils.ParseInt64(chatIdString)
-	if err != nil {
-		return 0, 0, "", 0, err
-	}
 	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
 
 	var timestamp int64
@@ -506,7 +499,7 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 		timestamp, _ = utils.ParseInt64(timestampString)
 	}
 
-	return chatId, ownerId, correlationId, timestamp, nil
+	return ownerId, correlationId, timestamp, nil
 }
 
 func GetKey(filename string, chatFileItemUuid string, chatId int64) string {
@@ -535,14 +528,6 @@ func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool)
 		return "", errors.New("Unable to get originalKey")
 	}
 	return originalKeyParam, nil
-}
-
-func ChatIdKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(chatIdKey)
 }
 
 func OwnerIdKey(hasAmzPrefix bool) string {

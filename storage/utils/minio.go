@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
-	"strings"
 )
 
 func ensureBucket(lgr *logger.Logger, minioClient *s3.InternalMinioClient, bucketName, location string) error {
@@ -130,4 +131,27 @@ func StripBucketName(minioKey string, bucketName string) string {
 // normalized means without bucket name
 func BuildNormalizedKey(mce *dto.MetadataCache) string {
 	return fmt.Sprintf("chat/%v/%v/%s", mce.ChatId, mce.FileItemUuid, mce.Filename)
+}
+
+func BuildMetadataCacheId(key string) (*dto.MetadataCacheId, error) {
+	chatId, err := ParseChatId(key)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse chatId for %v: %v", key, err)
+	}
+	fileItemUuid, err := ParseFileItemUuid(key)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse fileItemUuid for %v: %v", key, err)
+	}
+	filename, err := ParseFileName(key)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse filename for %v: %v", key, err)
+	}
+
+	mcid := dto.MetadataCacheId{
+		ChatId:       chatId,
+		FileItemUuid: fileItemUuid,
+		Filename:     filename,
+	}
+
+	return &mcid, nil
 }

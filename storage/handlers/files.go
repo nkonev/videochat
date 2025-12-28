@@ -4,14 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
+
 	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
-	"net/http"
-	"net/url"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/db"
@@ -21,9 +25,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type FilesHandler struct {
@@ -176,7 +177,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		}
 	}
 
-	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
+	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, reqDto.CorrelationId, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().UTC().Add(expire)
@@ -362,7 +363,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	aKey := services.GetKey(bindTo.Filename, fileItemUuid, chatId)
 
-	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, chatId, nil, nil, nil, utils.GetUnixMilliUtc())
+	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, nil, nil, nil, utils.GetUnixMilliUtc())
 
 	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during upload object: %v", err)
@@ -885,16 +886,25 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 
 	// check user is owner
 	fileId := bindTo.Id
-	objectInfo, err := h.minio.StatObject(c.Request().Context(), bucketName, fileId, minio.StatObjectOptions{})
+
+	mcid, err := utils.BuildMetadataCacheId(fileId)
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache id %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	_, ownerId, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+
+	mce, err := db.Get(c.Request().Context(), h.dba, *mcid, nil)
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+
+	if mce == nil {
+		h.lgr.WithTracing(c.Request().Context()).Info("not found metadata cache")
+		return c.NoContent(http.StatusNotFound)
+	}
+
+	ownerId := mce.OwnerId
 
 	if ownerId != userPrincipalDto.UserId {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("User %v is not owner of file %v", userPrincipalDto.UserId, fileId)
@@ -915,7 +925,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	publishedUrl, err := h.filesService.GetPublishedUrl(bindTo.Public, objectInfo.Key)
+	publishedUrl, err := h.filesService.GetPublishedUrl(bindTo.Public, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error get public url: %v", err)
 		return err
@@ -1127,7 +1137,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 
 	isConferenceRecording := true
-	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, bindTo.ChatId, nil, &isConferenceRecording, nil, utils.GetUnixMilliUtc())
+	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, nil, &isConferenceRecording, nil, utils.GetUnixMilliUtc())
 
 	chatFileItemUuid := utils.GetFileItemId()
 
@@ -1430,7 +1440,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
 
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1438,11 +1448,25 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	if !exists {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
-	chatId, _, _, _, err := services.DeserializeMetadata(objectInfo.UserMetadata, false)
+
+	mcid, err := utils.BuildMetadataCacheId(fileId)
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object metadata %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache id %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+
+	mce, err := db.Get(c.Request().Context(), h.dba, *mcid, nil)
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if mce == nil {
+		h.lgr.WithTracing(c.Request().Context()).Info("not found metadata cache")
+		return c.NoContent(http.StatusNotFound)
+	}
+
+	chatId := mce.ChatId
 
 	belongs, err := h.restClient.CheckAccess(c.Request().Context(), &userPrincipalDto.UserId, chatId)
 	if err != nil {
@@ -1456,7 +1480,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), fileId)
 	if err != nil {
 		return err
 	}
