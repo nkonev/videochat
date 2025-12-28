@@ -2,6 +2,8 @@ package tasks
 
 import (
 	"context"
+	"time"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
@@ -11,7 +13,6 @@ import (
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
-	"time"
 )
 
 type ActualizeGeneratedFilesTask struct {
@@ -128,7 +129,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 		srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", previewOjInfo.Key)
 		originalKey, err := services.GetOriginalKeyFromMetadata(previewOjInfo.UserMetadata, true)
 		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Error during getting original key %v", err)
+			srv.lgr.WithTracing(c).Debugf("There is no original key, it's an old entry, skipping")
 			continue
 		}
 		exists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.Files, originalKey)
