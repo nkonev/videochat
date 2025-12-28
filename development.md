@@ -169,17 +169,27 @@ docker service scale VIDEOCHATSTACK_aaa=0
 docker service scale VIDEOCHATSTACK_chat=0
 docker service scale VIDEOCHATSTACK_storage=0
 
-scp ~/videochat/backup-2024-12-10_00-02-36/chat-aaa.sql THEUSER@nkonev.name:/tmp/chat-aaa.sql
-scp ~/videochat/backup-2024-12-10_00-02-36/chat.sql THEUSER@nkonev.name:/tmp/chat.sql
+scp ~/videochat/backup-2025-12-27_02-49-09/chat-aaa.sql THEUSER@nkonev.name:/tmp/chat-aaa.sql
+scp ~/videochat/backup-2025-12-27_02-49-09/chat_c_1.sql THEUSER@nkonev.name:/tmp/chat_c_1.sql
+scp ~/videochat/backup-2025-12-27_02-49-09/chat_w_1.sql THEUSER@nkonev.name:/tmp/chat_w_1.sql
+scp ~/videochat/backup-2025-12-27_02-49-09/chat_w_2.sql THEUSER@nkonev.name:/tmp/chat_w_2.sql
 
+# Drop empty dbs
 echo 'drop database aaa;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
-echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+# echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-coordinator-1 --filter desired-state=running -q)) psql -U postgres
+# echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-1 --filter desired-state=running -q)) psql -U postgres
+# echo 'drop database chat;' | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-2 --filter desired-state=running -q)) psql -U postgres
 
+# Import db from backup
 cat /tmp/chat-aaa.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
-cat /tmp/chat.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql --filter desired-state=running -q)) psql -U postgres
+cat /tmp/chat_c_1.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-coordinator-1 --filter desired-state=running -q)) psql -U postgres
+cat /tmp/chat_w_1.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-1 --filter desired-state=running -q)) psql -U postgres
+cat /tmp/chat_w_2.sql | docker exec -i $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-2 --filter desired-state=running -q)) psql -U postgres
 
 rm -rf /tmp/chat-aaa.sql
-rm -rf /tmp/chat.sql
+rm -rf /tmp/chat_c_1.sql
+rm -rf /tmp/chat_w_1.sql
+rm -rf /tmp/chat_w_2.sql
 
 docker service scale VIDEOCHATSTACK_aaa=1
 docker service scale VIDEOCHATSTACK_chat=1
@@ -198,7 +208,7 @@ docker stack deploy --compose-file /opt/videochat/docker-compose-infra.yml VIDEO
 # on the old minio (source)
 docker exec -u root -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_minio --filter desired-state=running -q)) bash
 apt update && apt install vim
-vim ~/.mc/config.json
+vim ~/.mcli/config.json
 # add (by copying from local)
 
 		"new": {
@@ -210,13 +220,20 @@ vim ~/.mc/config.json
 		},
 
 # test
-mc ls new/
+mcli ls new/
+
+# create buckets
+docker exec -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_minio --filter desired-state=running -q)) bash
+mc mb --debug --region europe-east local/chat-avatar
+mc mb --debug --region europe-east local/user-avatar
+mc mb --debug --region europe-east local/files-preview
+mc mb --debug --region europe-east local/files
 
 # copy
-mc cp --recursive local/chat-avatar/ new/chat-avatar
-mc cp --recursive local/user-avatar/ new/user-avatar
-mc cp --recursive local/files-preview/ new/files-preview
-mc cp --recursive local/files/ new/files
+mcli cp --recursive local/chat-avatar/ new/chat-avatar
+mcli cp --recursive local/user-avatar/ new/user-avatar
+mcli cp --recursive local/files-preview/ new/files-preview
+mcli cp --recursive local/files/ new/files
 
 # on the new minio (target) remove temporarily published minio
 vim /opt/videochat/docker-compose-infra.yml
@@ -1441,4 +1458,15 @@ docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID
 docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-coordinator-1 --filter desired-state=running -q)) psql -U postgres -d postgres
 docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-1 --filter desired-state=running -q)) psql -U postgres -d postgres
 docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-worker-2 --filter desired-state=running -q)) psql -U postgres -d postgres
+
+
+docker exec -ti $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_postgresql-citus-coordinator-1 --filter desired-state=running -q)) psql -U postgres -d chat
+
+select citus_version();
+SELECT * FROM citus_nodes;
+SELECT * FROM citus_shards;
+SELECT * from pg_dist_shard;
+SELECT * from citus_get_active_worker_nodes();
+SELECT * FROM citus_check_cluster_node_health();
+
 ```
