@@ -114,6 +114,8 @@ schedulers:
     enabled: true
     cron: "0 */5 * * * *"
     expiration: "30m"
+    # admin
+    fallbackOwnerId: 1
 
 response:
   cache:
