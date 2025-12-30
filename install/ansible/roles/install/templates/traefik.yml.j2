@@ -12,6 +12,9 @@ entryPoints:
       respondingTimeouts:
         readTimeout: 240s
       keepAliveMaxTime: 240s
+    http:
+      encodedCharacters:
+        allowEncodedSlash: true
   traefik:
     address: :8080
 providers:

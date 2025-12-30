@@ -5,6 +5,9 @@ global:
 entryPoints:
   http:
     address: :8081
+    http:
+      encodedCharacters:
+        allowEncodedSlash: true
   traefik:
     address: :8080
 providers:
