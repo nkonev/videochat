@@ -734,18 +734,22 @@ export default {
       to.additionalData = from.additionalData;
     },
     onVideoCallChanged(dto) {
+      this.$nextTick(()=> {
           this.items.forEach(item => {
               if (item.id == dto.chatId) {
                   item.videoChatUsersCount = dto.usersCount;
               }
           });
+      })
     },
     onVideoScreenShareChanged(dto) {
+      this.$nextTick(()=> {
           this.items.forEach(item => {
               if (item.id == dto.chatId) {
                   item.hasScreenShares = dto.hasScreenShares;
               }
           });
+      })
     },
     getStyle(item) {
         let obj = {};
