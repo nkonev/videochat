@@ -278,7 +278,15 @@ export default {
     // TODO think how to reuse the presenter mode with egress
     detachPresenter() {
       if (this.presenterData) {
-        this.presenterData.videoStream?.videoTrack?.detach(this.$refs.presenterRef.$refs.presenterVideoRef);
+
+        // we use "this.$refs.presenterRef?"
+        // in order to give time to finish detachPresenter() while ChatVideoPresenter is still on screen
+        // else there is a bug, its reproduction:
+        // 1. In prod, open video call
+        // 2. Open "Messages", enable presenter, switch gallery -> vertical, vertical -> gallery
+        // 3. Exit from the video call
+        // 4. In the Console the message detachPresenter -> "this.$refs.presenterRef is null" is going to appear
+        this.presenterData.videoStream?.videoTrack?.detach(this.$refs.presenterRef?.$refs.presenterVideoRef);
         this.presenterData = null;
       }
     },
@@ -1115,7 +1123,7 @@ export default {
 
     this.startRoom(enterResponse.data.token);
   },
-  async beforeUnmount() {
+  beforeUnmount() {
     axios.put(`/api/video/${this.chatId}/dial/exit`, null, {
         params: {
             tokenId: this.chatStore.videoTokenId
@@ -1124,8 +1132,10 @@ export default {
 
     this.detachPresenter();
 
-    await this.stopLocalTracks();
-    await this.stopRoom();
+    this.stopLocalTracks().finally(()=>{
+      this.stopRoom();
+    })
+
     console.log("Cleaning videoContainerDiv");
     this.videoContainerDiv = null;
     this.inRestarting = false;
