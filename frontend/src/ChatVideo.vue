@@ -239,8 +239,12 @@ export default {
       }
     },
     updateInitializingVideoCall() {
+      // kinda set "initializing is complete" when all the stages are successful
       // because of possibly 2 local tracks (audio + video) we wait for localTrackCreatedAndPublished too
       this.chatStore.initializingVideoCall = !(((this.localTrackDrawn && this.localTrackCreatedAndPublished) || isNoLocalTracks()) && this.finishedConnectingToRoom);
+    },
+    setStopInitializingVideoCallOnError() {
+      this.chatStore.initializingVideoCall = false;
     },
     getPresenterPriority(pub, isSpeaking) {
       if (!pub) {
@@ -629,8 +633,7 @@ export default {
         // string `ATTEMPT_TIMEOUT`.
         this.setError(e, "Error during connecting to room");
 
-        this.finishedConnectingToRoom = true; // stop the spinner
-        this.updateInitializingVideoCall();
+        this.setStopInitializingVideoCallOnError(); // stop the spinner
       }
     },
     getOnScreenPosition(publication) {
@@ -721,7 +724,7 @@ export default {
         }
       } catch (e) {
         this.setError(e, "Error during creating local tracks");
-        this.chatStore.initializingVideoCall = false;
+        this.setStopInitializingVideoCallOnError();
         return Promise.reject("Error during creating local tracks");
       }
 
@@ -747,7 +750,7 @@ export default {
         return Promise.resolve(true);
       } catch (e) {
         this.setError(e, "Error during publishing local tracks");
-        this.chatStore.initializingVideoCall = false;
+        this.setStopInitializingVideoCallOnError();
         return Promise.reject("Error during publishing local tracks");
       }
     },
@@ -1145,6 +1148,7 @@ export default {
     this.localTrackDrawn = false;
     this.localTrackCreatedAndPublished = false;
     this.finishedConnectingToRoom = false;
+    this.chatStore.initializingVideoCall = false; // reset
 
     if (!this.isMobile()) {
       this.chatStore.showDrawer = this.chatStore.showDrawerPrevious;
