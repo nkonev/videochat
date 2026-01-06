@@ -65,6 +65,19 @@
                         </v-col>
                     </v-row>
 
+                    <v-row no-gutters class="my-4">
+                        <v-col>
+                            <v-checkbox
+                                density="comfortable"
+                                color="primary"
+                                hide-details
+                                v-model="autoMicrophoneEnabled"
+                                @update:modelValue="changeAutoMicrophoneEnabled"
+                                :label="$vuetify.locale.t('$vuetify.auto_microphone_enable')"
+                            ></v-checkbox>
+                        </v-col>
+                    </v-row>
+
                     <v-select
                         :disabled="serverPreferredCodec"
                         :label="$vuetify.locale.t('$vuetify.codec')"
@@ -177,7 +190,8 @@
       setStoredCallVideoDeviceId,
       setStoredCallAudioDeviceId,
       setStoredPresenter,
-      positionItems, setStoredUseCoverPresenter
+      positionItems, setStoredUseCoverPresenter,
+      getStoredAutoMicrophoneEnabled, setStoredAutoMicrophoneEnabled,
     } from "./store/localStore";
     import {videochat_name} from "./router/routes";
     import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
@@ -196,6 +210,8 @@
                 audioPresents: null,
                 videoPresents: null,
 
+                autoMicrophoneEnabled: false,
+
                 tempStream: null,
             }
         },
@@ -203,6 +219,7 @@
             showModal() {
                 this.audioPresents = getStoredAudioDevicePresents();
                 this.videoPresents = getStoredVideoDevicePresents();
+                this.autoMicrophoneEnabled = getStoredAutoMicrophoneEnabled();
 
                 this.initPositionAndPresenter();
 
@@ -232,6 +249,9 @@
             },
             changeUsePresenterCoverEnabled(v) {
               setStoredUseCoverPresenter(v)
+            },
+            changeAutoMicrophoneEnabled(v) {
+              setStoredAutoMicrophoneEnabled(v)
             },
             changeVideoSimulcast(v) {
                 setStoredVideoSimulcast(v);

@@ -28,18 +28,18 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
 import {
-  defaultAudioMute,
   getWebsocketUrlPrefix,
   hasLength,
   isFullscreen,
   isMobileBrowser,
   PURPOSE_CALL,
   goToPreservingQuery,
-  setSplitter
+  setSplitter,
+  isMicrophoneEnabled
 } from "@/utils";
 import {
   getStoredAudioDevicePresents, getStoredCallAudioDeviceId, getStoredCallVideoDeviceId,
-  getStoredVideoDevicePresents, getStoredVideoMiniatures, isNoLocalTracks,
+  getStoredVideoDevicePresents, getStoredVideoMiniatures, isNoLocalTracks, getStoredAutoMicrophoneEnabled,
   NULL_CODEC,
   NULL_SCREEN_RESOLUTION,
   setStoredCallAudioDeviceId,
@@ -740,8 +740,17 @@ export default {
             simulcast: simulcast,
             videoCodec: normalizedCodec,
           });
-          if (track.kind == 'audio' && defaultAudioMute) {
-            await publication.mute();
+
+          if (track.kind == 'audio') {
+            const isMicroEnabledPermission = await isMicrophoneEnabled();
+            const autoMicrophoneEnabled = getStoredAutoMicrophoneEnabled();
+            const isMicroEnabled = isMicroEnabledPermission && autoMicrophoneEnabled;
+
+            if (!isMicroEnabled) {
+              await publication.mute();
+            } else {
+              this.chatStore.localMicrophoneEnabled = true;
+            }
           }
           console.info("Published track sid=", track.sid, " kind=", track.kind);
         }

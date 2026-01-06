@@ -379,8 +379,6 @@ export const parseUserLink = (href) => {
     }
 }
 
-export const defaultAudioMute = true;
-
 export const renameFilePart = (file, newFileName) => {
   const formData = new FormData();
   const partName = "File";
@@ -604,3 +602,19 @@ export const tryExtractMeaningfulError = (e) => {
         return e?.message
     }
 }
+
+export const isMicrophoneEnabled = () => {
+  return new Promise(resolve => {
+      try {
+        navigator.permissions.query(
+            { name: 'microphone' }
+        ).then(function(permissionStatus){
+            resolve(permissionStatus.state == "granted")
+        }).catch(()=>{
+            resolve(false);
+        })
+      } catch (err) {
+        resolve(false);
+      }
+  });
+};

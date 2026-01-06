@@ -522,6 +522,25 @@ export const getChooseSmileyStayUnclosed = () => {
     return v;
 }
 
+
+
+export const KEY_AUTO_MICROPHONE_ENABLED = 'autoMicrophoneEnabled';
+
+export const getStoredAutoMicrophoneEnabled = () => {
+    let v = JSON.parse(localStorage.getItem(KEY_AUTO_MICROPHONE_ENABLED));
+    if (v === null) {
+        console.log("Resetting autoMicrophoneEnabled to default");
+        setStoredAutoMicrophoneEnabled(true);
+        v = JSON.parse(localStorage.getItem(KEY_AUTO_MICROPHONE_ENABLED));
+    }
+    return v;
+}
+
+export const setStoredAutoMicrophoneEnabled = (v) => {
+    localStorage.setItem(KEY_AUTO_MICROPHONE_ENABLED, JSON.stringify(v));
+}
+
+
 export const KEY_MAIN_DRAWER = 'mainDrawer';
 
 export const getMainDrawer = () => {
