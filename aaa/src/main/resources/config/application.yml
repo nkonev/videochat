@@ -91,6 +91,8 @@ custom:
     await-for-termination: "5m"
     pool-size: 5
   debug-response: false
+  security:
+    fail-login-with-secret-exposing: false
 
 server.tomcat.accesslog.enabled: false
 server.tomcat.accesslog.pattern: '%t %a "%r" %s (%D ms)'

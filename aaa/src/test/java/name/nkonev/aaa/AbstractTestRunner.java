@@ -3,6 +3,7 @@ package name.nkonev.aaa;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.SuccessfulLoginDTO;
+import name.nkonev.aaa.dto.AaaError;
 import name.nkonev.aaa.repository.redis.ChangeEmailConfirmationTokenRepository;
 import name.nkonev.aaa.repository.redis.UserConfirmationTokenRepository;
 import name.nkonev.aaa.util.ContextPathHelper;
@@ -236,7 +237,12 @@ public abstract class AbstractTestRunner {
         XsrfCookiesHolder xsrfHolder
     ) {}
 
-    protected RawLoginResponse rawLogin(String login, String password) throws URISyntaxException {
+    public record RawLoginErrorResponse(
+        ResponseEntity<AaaError> dto,
+        XsrfCookiesHolder xsrfHolder
+    ) {}
+
+    protected RawLoginResponse rawLogin(String login, String password) {
         var xsrfHolder = getXsrf();
         String xsrfCookieHeaderValue = xsrfHolder.xsrfCookieHeaderValue;
         String xsrf = xsrfHolder.newXsrf;
@@ -246,7 +252,7 @@ public abstract class AbstractTestRunner {
         params.add(PASSWORD_PARAMETER, password);
 
         RequestEntity loginRequest = RequestEntity
-            .post(new URI(urlWithContextPath()+API_LOGIN_URL))
+            .post(URI.create(urlWithContextPath()+API_LOGIN_URL))
             .header(HEADER_XSRF_TOKEN, xsrf)
             .header(COOKIE, xsrfCookieHeaderValue)
             .header(ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -257,6 +263,26 @@ public abstract class AbstractTestRunner {
         return new RawLoginResponse(loginResponseEntity, xsrfHolder);
     }
 
+    protected RawLoginErrorResponse rawLoginDecodeError(String login, String password) {
+        var xsrfHolder = getXsrf();
+        String xsrfCookieHeaderValue = xsrfHolder.xsrfCookieHeaderValue;
+        String xsrf = xsrfHolder.newXsrf;
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(USERNAME_PARAMETER, login);
+        params.add(PASSWORD_PARAMETER, password);
+
+        RequestEntity loginRequest = RequestEntity
+            .post(URI.create(urlWithContextPath()+API_LOGIN_URL))
+            .header(HEADER_XSRF_TOKEN, xsrf)
+            .header(COOKIE, xsrfCookieHeaderValue)
+            .header(ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE)
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .body(params);
+
+        ResponseEntity<AaaError> loginResponseEntity = testRestTemplate.exchange(loginRequest, AaaError.class);
+        return new RawLoginErrorResponse(loginResponseEntity, xsrfHolder);
+    }
 
     protected String getAuthCookieName() {
         return serverProperties.getServlet().getSession().getCookie().getName();

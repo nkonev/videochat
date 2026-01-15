@@ -1,14 +1,11 @@
 package name.nkonev.aaa.security;
 
-import name.nkonev.aaa.config.properties.AaaProperties;
-import name.nkonev.aaa.converter.UserAccountConverter;
-import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
-import name.nkonev.aaa.dto.UserOnlineResponse;
-import name.nkonev.aaa.exception.DataNotFoundInternalException;
-import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
-import name.nkonev.aaa.dto.UserAccountDetailsDTO;
-import name.nkonev.aaa.entity.jdbc.UserAccount;
-import name.nkonev.aaa.services.EventService;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.StreamSupport;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +16,15 @@ import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.StreamSupport;
+import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.converter.UserAccountConverter;
+import name.nkonev.aaa.dto.ForceKillSessionsReasonType;
+import name.nkonev.aaa.dto.UserAccountDetailsDTO;
+import name.nkonev.aaa.dto.UserOnlineResponse;
+import name.nkonev.aaa.entity.jdbc.UserAccount;
+import name.nkonev.aaa.exception.DataNotFoundInternalException;
+import name.nkonev.aaa.repository.jdbc.UserAccountRepository;
+import name.nkonev.aaa.services.EventService;
 
 /**
  * Provides Spring Security compatible UserAccountDetailsDTO.
@@ -48,6 +49,8 @@ public class AaaUserDetailsService implements UserDetailsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AaaUserDetailsService.class);
 
+    public static final String MESSAGE_WITH_EXPOSED_SECRET = "A message with exposed db connection url";
+
     /**
      * load UserAccountDetailsDTO from database, or throws UsernameNotFoundException
      * @param username
@@ -56,6 +59,11 @@ public class AaaUserDetailsService implements UserDetailsService {
      */
     @Override
     public UserAccountDetailsDTO loadUserByUsername(String username) throws UsernameNotFoundException {
+        if (aaaProperties.security().failLoginWithSecretExposing()) {
+            // for tests only
+            throw new RuntimeException(MESSAGE_WITH_EXPOSED_SECRET);
+        }
+
         return userAccountRepository
                 .findByLogin(username)
                 .map(userAccountConverter::convertToUserAccountDetailsDTO)

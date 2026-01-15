@@ -20,6 +20,8 @@ import static name.nkonev.aaa.TestConstants.HEADER_XSRF_TOKEN;
 import static name.nkonev.aaa.controllers.TracerHeaderWriteFilter.EXTERNAL_TRACE_ID_HEADER;
 import static name.nkonev.aaa.security.SecurityConfig.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.COOKIE;
 
@@ -33,7 +35,7 @@ public class TraceTest extends AbstractTestRunner {
                 .header(ACCEPT, MediaType.TEXT_HTML.toString(), MediaType.ALL.toString())
                 .build();
         ResponseEntity<String> myPostsResponse1 = testRestTemplate.exchange(myPostsRequest1, String.class);
-        Assertions.assertEquals(401, myPostsResponse1.getStatusCodeValue());
+        assertEquals(401, myPostsResponse1.getStatusCodeValue());
 
         var traceId = myPostsResponse1.getHeaders().getFirst(EXTERNAL_TRACE_ID_HEADER);
         Assertions.assertFalse(traceId.isEmpty());
@@ -62,6 +64,8 @@ public class TraceTest extends AbstractTestRunner {
                 .body(params);
 
         ResponseEntity<SuccessfulLoginDTO> loginResponseEntity = testRestTemplate.exchange(loginRequest, SuccessfulLoginDTO.class);
+
+        assertTrue(loginResponseEntity.getStatusCode().is2xxSuccessful());
 
         var traceId = loginResponseEntity.getHeaders().getFirst(EXTERNAL_TRACE_ID_HEADER);
         Assertions.assertFalse(traceId.isEmpty());

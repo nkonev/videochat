@@ -21,6 +21,14 @@ public abstract class NullUtils {
         }
     }
 
+    public static <T> String getToStringSafe(Supplier<T> supplier) {
+        try {
+            return supplier.get().toString();
+        } catch (NullPointerException e) {
+            return "null";
+        }
+    }
+
     public static String trimToNull(String input) {
         if (input == null) {
             return null;

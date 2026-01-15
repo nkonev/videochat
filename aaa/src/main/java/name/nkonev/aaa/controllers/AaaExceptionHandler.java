@@ -1,9 +1,10 @@
 package name.nkonev.aaa.controllers;
 
-import name.nkonev.aaa.dto.AaaError;
-import name.nkonev.aaa.dto.ValidationError;
-import name.nkonev.aaa.exception.*;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,10 +17,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
+import jakarta.servlet.http.HttpServletResponse;
+import name.nkonev.aaa.dto.AaaError;
+import name.nkonev.aaa.dto.ValidationError;
+import name.nkonev.aaa.exception.BadRequestException;
+import name.nkonev.aaa.exception.DataNotFoundException;
+import name.nkonev.aaa.exception.DataNotFoundInternalException;
+import name.nkonev.aaa.exception.ForbiddenActionException;
+import name.nkonev.aaa.exception.PasswordResetTokenNotFoundException;
+import name.nkonev.aaa.exception.PayloadTooLargeException;
+import name.nkonev.aaa.exception.UnsupportedMessageTypeException;
+import name.nkonev.aaa.exception.UserAlreadyPresentException;
 
 @RestControllerAdvice
 public class AaaExceptionHandler {
@@ -122,7 +130,9 @@ public class AaaExceptionHandler {
         if (
                 e instanceof AccessDeniedException ||
                 e instanceof AuthenticationException
-        ) {throw e;} // Spring Security has own exception handling
+        ) {
+            throw e;
+        } // Spring Security has own exception handling
 
         if (e.getCause() instanceof IOException){
             LOGGER.info("IOException: {}", e.getMessage());

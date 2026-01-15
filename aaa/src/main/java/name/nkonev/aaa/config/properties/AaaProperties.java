@@ -30,6 +30,7 @@ public record AaaProperties(
     CsrfProperties csrf,
 
     boolean debugResponse,
+    SecurityProperties security,
 
     String allowedAvatarUrls,
     RoleMappings roleMappings,

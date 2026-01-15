@@ -1,12 +1,14 @@
 package name.nkonev.aaa.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.tracing.Tracer;
-import name.nkonev.aaa.config.properties.AaaProperties;
-import name.nkonev.aaa.dto.AaaError;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +23,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.tracing.Tracer;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import name.nkonev.aaa.config.properties.AaaProperties;
+import name.nkonev.aaa.dto.AaaError;
+import static name.nkonev.aaa.security.RESTAuthenticationFailureHandler.AAA_AUTH_FAILURE_KEY;
+import static name.nkonev.aaa.security.RESTAuthenticationFailureHandler.AAA_AUTH_FAILURE_MESSAGE;
 import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
+import static name.nkonev.aaa.utils.NullUtils.getToStringSafe;
 
 /**
  * @see org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController, it describes how to use both REST And ModelAndView handling depends on Accept header
@@ -60,14 +69,21 @@ public class AaaErrorController extends AbstractErrorController {
 
         Map<String, Object> errorAttributes = getCustomErrorAttributes(request);
 
+        final var isAuthFailure = Boolean.TRUE.equals(request.getAttribute(AAA_AUTH_FAILURE_KEY));
+        String message = getToStringSafe(()->errorAttributes.get("message"));
+        if (isAuthFailure) {
+            message = getToStringSafe(()->request.getAttribute(AAA_AUTH_FAILURE_MESSAGE));
+        }
+
         if (noErrorExceptions.stream()
                 .map(Class::getCanonicalName)
                 .filter(Objects::nonNull)
                 .anyMatch(se -> se.equals(errorAttributes.get("exception")))
+            || isAuthFailure
         ) {
-            LOGGER.debug("Message: {}, error: {}, exception: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"));
+            LOGGER.debug("Message: {}, error: {}, exception: {}", message, errorAttributes.get("error"), errorAttributes.get("exception"));
         } else {
-            LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", errorAttributes.get("message"), errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
+            LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", message, errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
         }
 
         if (acceptValues.contains(MediaType.APPLICATION_JSON_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE)) {
@@ -77,7 +93,7 @@ public class AaaErrorController extends AbstractErrorController {
                     objectMapper.writeValue(response.getWriter(), new AaaError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
-                            (String) errorAttributes.get("message"),
+                            message,
                             errorAttributes.get("timestamp").toString(),
                             (String) errorAttributes.get("exception"),
                             (String) errorAttributes.get("trace"))
@@ -86,7 +102,7 @@ public class AaaErrorController extends AbstractErrorController {
                     objectMapper.writeValue(response.getWriter(), new AaaError(
                             response.getStatus(),
                             (String) errorAttributes.get("error"),
-                            (String) errorAttributes.get("message"),
+                            message,
                             errorAttributes.get("timestamp").toString()
                     ));
                 }

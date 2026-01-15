@@ -1,26 +1,31 @@
 package name.nkonev.aaa.nomockmvc;
 
-import name.nkonev.aaa.TestConstants;
-import name.nkonev.aaa.Constants;
-import name.nkonev.aaa.dto.LockDTO;
-import name.nkonev.aaa.util.ContextPathHelper;
+import java.net.URI;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
+import static org.springframework.http.HttpHeaders.COOKIE;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 
-import java.net.URI;
-
-import static name.nkonev.aaa.TestConstants.*;
+import name.nkonev.aaa.Constants;
 import static name.nkonev.aaa.Constants.Urls.EXTERNAL_API;
 import static name.nkonev.aaa.Constants.Urls.LOCK;
-import static org.springframework.http.HttpHeaders.COOKIE;
+import name.nkonev.aaa.TestConstants;
+import static name.nkonev.aaa.TestConstants.HEADER_XSRF_TOKEN;
+import name.nkonev.aaa.dto.LockDTO;
+import name.nkonev.aaa.util.ContextPathHelper;
 
 @DisplayName("Sessions")
+@ExtendWith(OutputCaptureExtension.class)
 public class SessionTest extends OAuth2EmulatorTests {
 
 
@@ -35,7 +40,7 @@ public class SessionTest extends OAuth2EmulatorTests {
     // This test won't works if you call .with(csrf()) before.
     @DisplayName("user cannot request their profile after being locked")
     @Test
-    public void userCannotRequestProfileAfterLock() throws Exception {
+    public void userCannotRequestProfileAfterLock(CapturedOutput output) throws Exception {
         SessionHolder userAliceSession = login(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
         RequestEntity aliceProfileRequest1 = RequestEntity
                 .get(new URI(urlWithContextPath()+ EXTERNAL_API + Constants.Urls.PROFILE))
@@ -67,8 +72,11 @@ public class SessionTest extends OAuth2EmulatorTests {
         ResponseEntity<String> myPostsResponse3 = testRestTemplate.exchange(aliceProfileRequest3, String.class);
         Assertions.assertEquals(401, myPostsResponse3.getStatusCodeValue());
 
-        var newAliceLogin = rawLogin(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
+        var newAliceLogin = rawLoginDecodeError(TestConstants.USER_LOCKED, TestConstants.COMMON_PASSWORD);
         Assertions.assertEquals(401, newAliceLogin.dto().getStatusCodeValue());
+        Assertions.assertEquals("User account is locked", newAliceLogin.dto().getBody().message());
+        assertThat(output).doesNotContain("error");
+        assertThat(output).doesNotContain("exception");
     }
 
 }
