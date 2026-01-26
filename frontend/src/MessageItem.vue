@@ -22,7 +22,7 @@
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }" @click="onMessageClick($event, item)" @mousemove="onMessageMouseMove(item)" @contextmenu="onShowContextMenu($event, item)">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
-                        <router-link class="caption-small" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
+                        <router-link class="caption-small embedded-link" :to="getEmbedLinkTo(item)">{{getEmbedHead(item)}}</router-link>
                     </template>
                     <template v-else>
                         <div class="caption-small">

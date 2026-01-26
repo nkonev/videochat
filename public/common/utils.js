@@ -137,7 +137,7 @@ export const onClickTrap = (e) => {
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "img" && !el?.parentElement.classList?.contains("media-in-message-wrapper")),
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-open")),
         checkUpByTreeObj(e?.target, 0, (el) => el?.tagName?.toLowerCase() == "span" && el?.classList?.contains("media-in-message-button-replace")),
-        checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a"), // 1 is to handle struck links
+        checkUpByTreeObj(e?.target, 1, (el) => el?.tagName?.toLowerCase() == "a" && !el?.classList?.contains("embedded-link")), // lvl 1 is to handle struck links, exclude embed link because of router
     ].filter(r => r.found);
     if (foundElements.length) {
         e.preventDefault();

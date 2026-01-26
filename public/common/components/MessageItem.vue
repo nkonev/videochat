@@ -17,7 +17,7 @@
             <div class="pa-0 ma-0 mt-1 message-item-wrapper" :class="{ my: my, highlight: highlight }">
                 <div v-if="item.embedMessage" class="embedded-message">
                     <template v-if="canRenderLinkToSource(item)">
-                        <a class="caption-small">{{getEmbedHead(item)}}</a>
+                        <a class="caption-small embedded-link">{{getEmbedHead(item)}}</a>
                     </template>
                     <template v-else>
                         <div class="caption-small">
