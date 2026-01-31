@@ -43,7 +43,9 @@ public record UserSelfProfileDTO(
 
             boolean canChangeSelfLogin,
             boolean canChangeSelfEmail,
-            boolean canChangeSelfPassword
+            boolean canChangeSelfPassword,
+
+            boolean overriddenPermissions
     ) {
         this(new UserAccountDTO(
                 id,
@@ -55,7 +57,8 @@ public record UserSelfProfileDTO(
                 oauth2Identifiers,
                 loginColor,
                 ldap,
-                additionalDataDTO
+                additionalDataDTO,
+                overriddenPermissions
             ),
                 email,
                 awaitingForConfirmEmailChange,

@@ -27,13 +27,13 @@ import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAMES;
 import static name.nkonev.aaa.Constants.FORBIDDEN_USERNAME_PREFIXES;
 import static name.nkonev.aaa.utils.NullUtils.trimToNull;
 import static name.nkonev.aaa.utils.RoleUtils.DEFAULT_ROLE;
-import static name.nkonev.aaa.security.AaaPermissionService.canAccessToAdminsCorner;
+import static name.nkonev.aaa.security.AaaInternalPermissionService.canAccessToAdminsCorner;
 
 @Component
 public class UserAccountConverter {
 
     @Autowired
-    private AaaPermissionService aaaSecurityService;
+    private AaaInternalPermissionService aaaSecurityService;
 
     @Autowired
     private AaaProperties aaaProperties;
@@ -83,6 +83,10 @@ public class UserAccountConverter {
         return Optional.ofNullable(roles).map(rs -> rs.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList())).orElse(Collections.emptyList());
     }
 
+    public static List<String> convertPermissionsToStringList(Set<ExternalPermission> overriddenPermissions) {
+        return Optional.ofNullable(overriddenPermissions).map(rs -> rs.stream().map(ExternalPermission::name).collect(Collectors.toList())).orElse(Collections.emptyList());
+    }
+
     private static OAuth2IdentifiersDTO convertOAuth2(UserAccount.OAuth2Identifiers oAuth2Identifiers){
         if (oAuth2Identifiers ==null) return null;
         return new OAuth2IdentifiersDTO(oAuth2Identifiers.facebookId(), oAuth2Identifiers.vkontakteId(), oAuth2Identifiers.googleId(), oAuth2Identifiers.keycloakId());
@@ -116,16 +120,10 @@ public class UserAccountConverter {
                 userAccount.loginColor(),
                 userAccount.ldapId(),
                 dataDTO,
-                userAccount.creationType()
+                userAccount.creationType(),
+                userAccount.overrideAddPermissions(),
+                userAccount.overrideRemovePermissions()
         );
-    }
-
-    private static boolean isLdapSet(UserAccountDetailsDTO userAccount) {
-        return userAccount.ldapId() != null;
-    }
-
-    private static boolean isLdapSet(UserAccount userAccount) {
-        return userAccount.ldapId() != null;
     }
 
     public name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastSeenDateTime, Long expiresAt) {
@@ -146,13 +144,15 @@ public class UserAccountConverter {
                 roles,
                 expiresAt,
                 userAccount.getLoginColor(),
-                isLdapSet(userAccount),
+                LdapUtils.isLdapSet(userAccount.ldapId()),
                 canShowAdminsCorner,
                 dataDTO,
 
                 aaaSecurityService.canChangeSelfLogin(userAccount),
                 aaaSecurityService.canChangeSelfEmail(userAccount),
-                aaaSecurityService.canChangeSelfPassword(userAccount)
+                aaaSecurityService.canChangeSelfPassword(userAccount),
+
+                userAccount.userAccountDTO().overriddenPermissions()
         );
     }
 
@@ -186,8 +186,9 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                isLdapSet(userAccount),
-                dataDTO
+                LdapUtils.isLdapSet(userAccount.ldapId()),
+                dataDTO,
+                PermissionsUtils.areOverriddenPermissions(userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions())
         );
     }
 
@@ -207,8 +208,9 @@ public class UserAccountConverter {
                 userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
-                isLdapSet(userAccount),
-                dataDTO
+                LdapUtils.isLdapSet(userAccount.ldapId()),
+                dataDTO,
+                PermissionsUtils.areOverriddenPermissions(userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions())
         );
     }
 
@@ -226,8 +228,9 @@ public class UserAccountConverter {
                     userAccount.lastSeenDateTime(),
                     convertOAuth2(userAccount.oauth2Identifiers()),
                     userAccount.loginColor(),
-                    isLdapSet(userAccount),
-                    dataDTO
+                    LdapUtils.isLdapSet(userAccount.ldapId()),
+                    dataDTO,
+                    PermissionsUtils.areOverriddenPermissions(userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions())
                 ),
                 aaaSecurityService.canLock(currentUser, userAccount),
                 aaaSecurityService.canEnable(currentUser, userAccount),
@@ -240,7 +243,8 @@ public class UserAccountConverter {
 
                 aaaSecurityService.canChangeSelfLogin(currentUser, userAccount),
                 aaaSecurityService.canChangeSelfEmail(currentUser, userAccount),
-                aaaSecurityService.canChangeSelfPassword(currentUser, userAccount)
+                aaaSecurityService.canChangeSelfPassword(currentUser, userAccount),
+                aaaSecurityService.canChangePermissions(currentUser, userAccount)
         );
     }
 
@@ -287,6 +291,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 userAccountDTO.loginColor(),
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -367,6 +373,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
@@ -394,6 +402,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 vkontakteId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -435,6 +445,8 @@ public class UserAccountConverter {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
@@ -467,6 +479,8 @@ public class UserAccountConverter {
                 null,
                 syncKeycloakTime,
                 syncKeycloakTime,
+                null,
+                null,
                 null
         );
     }
@@ -499,7 +513,9 @@ public class UserAccountConverter {
                 syncLdapTime,
                 null,
                 null,
-                syncLdapTime
+                syncLdapTime,
+                null,
+                null
         );
     }
 

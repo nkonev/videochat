@@ -20,7 +20,9 @@ public record UserAccountDTOExtended (
 
     boolean canChangeSelfLogin,
     boolean canChangeSelfEmail,
-    boolean canChangeSelfPassword
+    boolean canChangeSelfPassword,
+
+    boolean canChangeOverriddenPermissions
 ) {
 
 }

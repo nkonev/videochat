@@ -360,5 +360,8 @@ export default {
     message_edit_quote: "Цитата",
     strip_div_span: "Вырезать <div><span>",
     replace_img_with_alt: "Заменить <img> на alt",
-    auto_microphone_enable: "Авто вкл. микрофон (когда возможно)"
+    auto_microphone_enable: "Авто вкл. микрофон (когда возможно)",
+    overridden_permissions: "Разрешения",
+    override_permissions: "Задать разрешения",
+    override_permissions_for: "Задать разрешения для '{0}'"
 }

@@ -154,3 +154,10 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: db/migration/V22__change_default_smileys.sql
+
+  - changeSet:
+      id: 23
+      author: nkonev
+      changes:
+        - sqlFile:
+            path: db/migration/V23__permissions.sql

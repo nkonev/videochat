@@ -75,7 +75,10 @@ public class UserProfileService {
     private TransactionTemplate transactionTemplate;
 
     @Autowired
-    private AaaPermissionService aaaPermissionService;
+    private AaaInternalPermissionService aaaInternalPermissionService;
+
+    @Autowired
+    private AaaExternalPermissionService aaaExternalPermissionService;
 
     @Autowired
     private EventService eventService;
@@ -122,6 +125,11 @@ public class UserProfileService {
         responseHeaders.set(X_AUTH_AVATAR, userAccount.getAvatar());
         convertRolesToStringList(userAccount.getRoles()).forEach(s -> {
             responseHeaders.add(X_AUTH_ROLE, s);
+        });
+
+        var permissions = aaaExternalPermissionService.evaluatePermissions(userAccount);
+        convertPermissionsToStringList(permissions).forEach(s -> {
+            responseHeaders.add(X_AUTH_PERMISSION, s);
         });
 
         return responseHeaders;
@@ -352,7 +360,7 @@ public class UserProfileService {
                     );
                 }
 
-                if (!aaaPermissionService.canChangeSelfEmail(userAccount)) {
+                if (!aaaInternalPermissionService.canChangeSelfEmail(userAccount)) {
                     throw new ForbiddenActionException("changing email is prohibited");
                 }
             }
@@ -361,7 +369,7 @@ public class UserProfileService {
             if (userAccountDTO.login() != null && !exists.login().equals(userAccountDTO.login())) {
                 checkService.checkLoginIsFreeOrThrow(userAccountDTO.login());
 
-                if (!aaaPermissionService.canChangeSelfLogin(userAccount)) {
+                if (!aaaInternalPermissionService.canChangeSelfLogin(userAccount)) {
                     throw new ForbiddenActionException("changing login is prohibited");
                 }
             }
@@ -369,7 +377,7 @@ public class UserProfileService {
 
             // password checks
             if (userAccountDTO.password() != null) {
-                if (!aaaPermissionService.canChangeSelfPassword(userAccount)) {
+                if (!aaaInternalPermissionService.canChangeSelfPassword(userAccount)) {
                     throw new ForbiddenActionException("changing password is prohibited");
                 }
             }
@@ -553,10 +561,34 @@ public class UserProfileService {
             if (!userAccountDetailsDTO.getId().equals(userId)) {
                 aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.user_roles_changed);
             }
+            // no else is ok, because
+            // lockAndDelete() doesn't allow to change myself roles
+
             return new Pair<>(
                     userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount),
                     userAccount
                 );
+        });
+        notifier.notifyProfileUpdated(ret.b());
+        return ret.a();
+    }
+
+    public UserAccountDTOExtended setPermissions(UserAccountDetailsDTO userAccountDetailsDTO, long userId, Set<ExternalPermission> addPermissions, Set<ExternalPermission> removePermissions){
+        var ret = transactionTemplate.execute(status -> {
+            UserAccount userAccount = userAccountRepository.findById(userId).orElseThrow();
+            userAccount = userAccount.withOverrideAddPermissions(addPermissions.toArray(ExternalPermission[]::new));
+            userAccount = userAccount.withOverrideRemovePermissions(removePermissions.toArray(ExternalPermission[]::new));
+            userAccount = userAccountRepository.save(userAccount);
+            if (!userAccountDetailsDTO.getId().equals(userId)) {
+                aaaUserDetailsService.killSessions(userId, ForceKillSessionsReasonType.override_permissions_changed);
+            }
+            // no else is ok, because
+            // lockAndDelete() doesn't allow to change myself roles
+
+            return new Pair<>(
+                    userAccountConverter.convertToUserAccountDTOExtended(PrincipalToCheck.ofUserAccount(userAccountDetailsDTO, userRoleService), userAccount),
+                    userAccount
+            );
         });
         notifier.notifyProfileUpdated(ret.b());
         return ret.a();
@@ -635,4 +667,16 @@ public class UserProfileService {
         return result;
     }
 
+    public OverriddenPermissionsDTO getUserOverriddenPermissions(long userId) {
+        var userAccount = userAccountRepository.findById(userId).orElseThrow();
+
+        return new OverriddenPermissionsDTO(
+            Optional.ofNullable(userAccount.overrideAddPermissions())
+                    .map(ps -> Arrays.stream(ps).collect(Collectors.toSet()))
+                    .orElse(Set.of()),
+            Optional.ofNullable(userAccount.overrideRemovePermissions())
+                    .map(ps -> Arrays.stream(ps).collect(Collectors.toSet()))
+                    .orElse(Set.of())
+        );
+    }
 }

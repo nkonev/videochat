@@ -323,6 +323,7 @@ type UserDeletedDto {
     id:         Int64!
 }
 
+# An event to update UserList.vue
 type UserAccountExtendedDto {
     id:         Int64!
     login:      String!
@@ -347,6 +348,9 @@ type UserAccountExtendedDto {
     canChangeSelfLogin: Boolean!
     canChangeSelfEmail: Boolean!
     canChangeSelfPassword: Boolean!
+
+    overriddenPermissions: Boolean!
+    canChangeOverriddenPermissions: Boolean!
 }
 
 union UserAccountEventDto = UserAccountExtendedDto | UserDeletedDto

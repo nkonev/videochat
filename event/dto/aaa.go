@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"github.com/montag451/go-eventbus"
 	"time"
+
+	"github.com/montag451/go-eventbus"
 )
 
 type Oauth2Identifiers struct {
@@ -13,15 +14,16 @@ type Oauth2Identifiers struct {
 }
 
 type UserAccount struct {
-	Id                int64              `json:"id"`
-	Login             string             `json:"login"`
-	Avatar            *string            `json:"avatar"`
-	AvatarBig         *string            `json:"avatarBig"`
-	ShortInfo         *string            `json:"shortInfo"`
-	LastSeenDateTime  *time.Time         `json:"lastSeenDateTime"`
-	Oauth2Identifiers *Oauth2Identifiers `json:"oauth2Identifiers"`
-	LoginColor        *string            `json:"loginColor"`
-	Ldap              bool               `json:"ldap"`
+	Id                    int64              `json:"id"`
+	Login                 string             `json:"login"`
+	Avatar                *string            `json:"avatar"`
+	AvatarBig             *string            `json:"avatarBig"`
+	ShortInfo             *string            `json:"shortInfo"`
+	LastSeenDateTime      *time.Time         `json:"lastSeenDateTime"`
+	Oauth2Identifiers     *Oauth2Identifiers `json:"oauth2Identifiers"`
+	LoginColor            *string            `json:"loginColor"`
+	Ldap                  bool               `json:"ldap"`
+	OverriddenPermissions bool               `json:"overriddenPermissions"`
 }
 
 type DataDTO struct {
@@ -32,6 +34,7 @@ type DataDTO struct {
 	Roles     []string `json:"roles"`
 }
 
+// matches UserAccountDTOExtended.java
 type UserAccountExtended struct {
 	UserAccount
 	AdditionalData    *DataDTO `json:"additionalData"`
@@ -46,6 +49,8 @@ type UserAccountExtended struct {
 	CanChangeSelfLogin    bool `json:"canChangeSelfLogin"`
 	CanChangeSelfEmail    bool `json:"canChangeSelfEmail"`
 	CanChangeSelfPassword bool `json:"canChangeSelfPassword"`
+
+	CanChangeOverriddenPermissions bool `json:"canChangeOverriddenPermissions"`
 }
 
 type UserAccountEventChanged struct {

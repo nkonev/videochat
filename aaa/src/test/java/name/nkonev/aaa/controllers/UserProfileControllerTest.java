@@ -483,7 +483,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 login, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, login+"@example.com", null, null, null, null, null, null, null, null, null, null, null);
+                new UserRole[]{UserRole.ROLE_USER}, login+"@example.com", null, null, null, null, null, null, null, null, null, null, null, null, null);
         userAccount = userAccountRepository.save(userAccount);
 
         return userAccount.id();

@@ -26,7 +26,7 @@ import static name.nkonev.aaa.utils.NullUtils.trimToNull;
  * Central entrypoint for access decisions
  */
 @Service
-public class AaaPermissionService {
+public class AaaInternalPermissionService {
 
     @Autowired
     private UserRoleService userRoleService;
@@ -37,7 +37,7 @@ public class AaaPermissionService {
     @Autowired
     private AaaProperties aaaProperties;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AaaPermissionService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AaaInternalPermissionService.class);
 
     public boolean hasSessionManagementPermission(PrincipalToCheck userAccount) {
         if (userAccount==null){
@@ -116,6 +116,10 @@ public class AaaPermissionService {
         return lockAndDelete(PrincipalToCheck.ofUserAccount(currentUser, userRoleService), userAccountId);
     }
 
+    public boolean canChangePermissions(UserAccountDetailsDTO currentUser, long userAccountId) {
+        return lockAndDelete(PrincipalToCheck.ofUserAccount(currentUser, userRoleService), userAccountId);
+    }
+
     public boolean canLock(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) {
             return false;
@@ -175,6 +179,13 @@ public class AaaPermissionService {
     }
 
     public boolean canChangeRole(PrincipalToCheck currentUser, UserAccount userAccount) {
+        if (userAccount == null) {
+            return false;
+        }
+        return lockAndDelete(currentUser, userAccount.id());
+    }
+
+    public boolean canChangePermissions(PrincipalToCheck currentUser, UserAccount userAccount) {
         if (userAccount == null) {
             return false;
         }

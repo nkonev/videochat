@@ -45,7 +45,8 @@ public class JacksonConfigTest extends AbstractMockMvcTestRunner {
                 new OAuth2IdentifiersDTO(),
                 null,
                 false,
-                new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER))
+                new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER)),
+                false
         ));
         LOGGER.info(s);
         Assertions.assertTrue(s.contains("2024-04-29T19:55:56.000Z"));
@@ -63,7 +64,8 @@ public class JacksonConfigTest extends AbstractMockMvcTestRunner {
                 new OAuth2IdentifiersDTO(),
                 null,
                 false,
-                new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER))
+                new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER)),
+                false
         ));
         LOGGER.info(s);
         Assertions.assertTrue(s.contains("2024-04-29T19:55:56.123Z"));
@@ -81,7 +83,8 @@ public class JacksonConfigTest extends AbstractMockMvcTestRunner {
                 new OAuth2IdentifiersDTO(),
                 null,
                 false,
-                new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER))
+                new AdditionalDataDTO(true , false, false, true, Set.of(UserRole.ROLE_USER)),
+                false
         ));
         LOGGER.info(s);
         Assertions.assertTrue(s.contains("2024-04-29T19:55:56.120Z"));

@@ -4,19 +4,20 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"math/big"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/common/expfmt"
 	"github.com/spf13/viper"
-	"math/big"
-	"net/http"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
-	"strings"
-	"time"
 )
 
 type AuthMiddleware echo.MiddlewareFunc
@@ -43,11 +44,14 @@ func ExtractAuth(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, e
 
 	roles := request.Header.Values("X-Auth-Role")
 
+	permissions := request.Header.Values("X-Auth-Permission")
+
 	return &auth.AuthResult{
-		UserId:    i,
-		UserLogin: string(decodedString),
-		ExpiresAt: t.Unix(),
-		Roles:     roles,
+		UserId:      i,
+		UserLogin:   string(decodedString),
+		ExpiresAt:   t.Unix(),
+		Roles:       roles,
+		Permissions: permissions,
 	}, nil
 }
 
@@ -188,7 +192,7 @@ func checkUserLimit(ctx context.Context, lgr *logger.Logger, minioClient *s3.Int
 		return false, 0, 0, err
 	}
 
-	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN")) || !limitsEnabled
+	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasPermission("CAN_UNLIMITED_UPLOAD")) || !limitsEnabled
 
 	maxAllowed, err := getMaxAllowedConsumption(ctx, lgr, restClient, isUnlimited)
 	if err != nil {

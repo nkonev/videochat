@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"encoding/base64"
+	"net/http"
+	"time"
+
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
-	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/config"
 	"nkonev.name/video/logger"
 	"nkonev.name/video/utils"
-	"time"
 )
 
 type AuthMiddleware echo.MiddlewareFunc
@@ -35,14 +36,18 @@ func ExtractAuth(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, e
 	}
 
 	roles := request.Header.Values("X-Auth-Role")
+	
+	permissions := request.Header.Values("X-Auth-Permission")
+
 	avatar := request.Header.Get("X-Auth-Avatar")
 
 	return &auth.AuthResult{
-		UserId:    i,
-		UserLogin: string(decodedString),
-		Avatar:    avatar,
-		ExpiresAt: t.Unix(),
-		Roles:     roles,
+		UserId:      i,
+		UserLogin:   string(decodedString),
+		Avatar:      avatar,
+		ExpiresAt:   t.Unix(),
+		Roles:       roles,
+		Permissions: permissions,
 	}, nil
 }
 

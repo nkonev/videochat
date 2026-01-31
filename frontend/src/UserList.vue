@@ -103,7 +103,7 @@
                         </template>
                         <template v-slot:default>
                           <span class="ml-1">
-                            Ldap
+                            LDAP
                           </span>
                         </template>
                       </v-chip>
@@ -121,6 +121,22 @@
                         </template>
                       </v-chip>
                       </template>
+
+                      <v-chip
+                          density="comfortable"
+                          v-if="item.overriddenPermissions"
+                          class="mr-1 c-btn-database"
+                          text-color="white"
+                      >
+                        <template v-slot:prepend>
+                          <font-awesome-icon :icon="{ prefix: 'fas', iconName: 'object-group'}"></font-awesome-icon>
+                        </template>
+                        <template v-slot:default>
+                          <span class="ml-1">
+                            {{ $vuetify.locale.t('$vuetify.overridden_permissions') }}
+                          </span>
+                        </template>
+                      </v-chip>
 
                     </v-list-item-subtitle>
                 </template>
@@ -149,9 +165,11 @@
           @enableUser="this.enableUser"
           @disableUser="this.disableUser"
           @setPassword="this.setPassword"
+          @overridePermissions="this.overridePermissions"
       >
       </UserListContextMenu>
       <UserRoleModal/>
+      <UserPermissionsModal/>
   </v-container>
 
 </template>
@@ -166,6 +184,7 @@ import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
 import heightMixin from "@/mixins/heightMixin";
 import bus, {
+  CHANGE_PERMISSIONS_DIALOG,
   CHANGE_ROLE_DIALOG,
   CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL, OPEN_SIMPLE_MODAL,
@@ -194,6 +213,7 @@ import {
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
+import UserPermissionsModal from "@/UserPermissionsModal.vue";
 
 const PAGE_SIZE = 40;
 const SCROLLING_THRESHHOLD = 200; // px
@@ -204,6 +224,7 @@ export default {
   components: {
       UserListContextMenu,
       UserRoleModal,
+      UserPermissionsModal,
   },
   mixins: [
     infiniteScrollMixin(scrollerName),
@@ -639,6 +660,9 @@ export default {
     },
     changeRole(user) {
         bus.emit(CHANGE_ROLE_DIALOG, user)
+    },
+    overridePermissions(user) {
+      bus.emit(CHANGE_PERMISSIONS_DIALOG, user)
     },
     removeSessions(user) {
         axios.delete('/api/aaa/sessions', {

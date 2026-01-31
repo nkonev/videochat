@@ -45,6 +45,7 @@ public class Constants {
         public static final String PASSWORD_RESET_SET_NEW = "/password-reset-set-new";
         public static final String SESSIONS = "/sessions";
         public static final String ROLE = "/role";
+        public static final String PERMISSION = "/permission";
         public static final String REQUEST_FOR_ONLINE = "/request-for-online";
         public static final String PING = "/ping";
         public static final String CONFIG = "/config";
@@ -56,6 +57,7 @@ public class Constants {
         public static final String X_AUTH_EXPIRESIN = "X-Auth-ExpiresIn";
         public static final String X_AUTH_ROLE = "X-Auth-Role";
         public static final String X_AUTH_SESSION_ID = "X-Auth-SessionId";
+        public static final String X_AUTH_PERMISSION = "X-Auth-Permission";
 
         public static final String X_AUTH_AVATAR = "X-Auth-Avatar";
     }

@@ -100,6 +100,9 @@ export default {
                 if (this.menuableItem.canSetPassword){
                   ret.push({title: this.$vuetify.locale.t('$vuetify.set_password'), icon: 'mdi-lock-reset', action: () => this.$emit('setPassword', this.menuableItem) });
                 }
+                if (this.menuableItem.canChangeOverriddenPermissions){
+                  ret.push({title: this.$vuetify.locale.t('$vuetify.override_permissions'), icon: 'mdi-account-wrench', action: () => this.$emit('overridePermissions', this.menuableItem) });
+                }
             }
             return ret;
         },

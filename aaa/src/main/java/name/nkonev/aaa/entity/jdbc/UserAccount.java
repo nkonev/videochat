@@ -1,40 +1,44 @@
 package name.nkonev.aaa.entity.jdbc;
 
+import name.nkonev.aaa.dto.ExternalPermission;
 import name.nkonev.aaa.dto.UserRole;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 
 @Table("user_account")
 public record UserAccount(
 
-    @Id Long id,
-    @NotNull CreationType creationType,
-    String login,
-    String password, // hash
-    String avatar, // avatar url
-    String avatarBig, // avatar url
+        @Id Long id,
+        @NotNull CreationType creationType,
+        String login,
+        String password, // hash
+        String avatar, // avatar url
+        String avatarBig, // avatar url
 
-    String shortInfo, // job title, short bio, ...
+        String shortInfo, // job title, short bio, ...
 
-    boolean expired,
-    boolean locked,
-    boolean enabled,
-    boolean confirmed,
-    UserRole[] roles, // synonym to "authority"
-    String email,
-    LocalDateTime lastSeenDateTime,
-    String facebookId,
-    String vkontakteId,
-    String googleId,
-    String keycloakId,
-    String ldapId,
-    String loginColor,
-    LocalDateTime syncLdapDateTime,
-    LocalDateTime syncKeycloakDateTime,
-    LocalDateTime syncKeycloakRolesDateTime, // actually, it's only for ADMIN role, because already we have USER role
-    LocalDateTime syncLdapRolesDateTime // actually, it's only for ADMIN role, because already we have USER role
+        boolean expired,
+        boolean locked,
+        boolean enabled,
+        boolean confirmed,
+        UserRole[] roles, // synonym to "authority"
+        String email,
+        LocalDateTime lastSeenDateTime,
+        String facebookId,
+        String vkontakteId,
+        String googleId,
+        String keycloakId,
+        String ldapId,
+        String loginColor,
+        LocalDateTime syncLdapDateTime,
+        LocalDateTime syncKeycloakDateTime,
+        LocalDateTime syncKeycloakRolesDateTime,// actually, it's only for ADMIN role, because already we have USER role
+        LocalDateTime syncLdapRolesDateTime, // actually, it's only for ADMIN role, because already we have USER role
+        ExternalPermission[] overrideAddPermissions,
+        ExternalPermission[] overrideRemovePermissions
 ) {
 
     public UserAccount withPassword(String newPassword) {
@@ -62,7 +66,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -91,7 +97,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -120,7 +128,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -149,7 +159,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -178,7 +190,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -207,7 +221,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -236,7 +252,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -265,7 +283,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -294,7 +314,9 @@ public record UserAccount(
             syncLdapDateTime,
             syncKeycloakDateTime,
             syncKeycloakRolesDateTime,
-            syncLdapRolesDateTime
+            syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -323,7 +345,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -352,7 +376,9 @@ public record UserAccount(
             syncLdapDateTime,
             syncKeycloakDateTime,
             syncKeycloakRolesDateTime,
-            syncLdapRolesDateTime
+            syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -381,7 +407,9 @@ public record UserAccount(
             newSyncLdapDateTime,
             syncKeycloakDateTime,
             syncKeycloakRolesDateTime,
-            syncLdapRolesDateTime
+            syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -410,7 +438,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 newSyncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -439,7 +469,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 newSyncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -468,7 +500,9 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                newSyncLdapRolesDateTime
+                newSyncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -497,7 +531,71 @@ public record UserAccount(
                 syncLdapDateTime,
                 syncKeycloakDateTime,
                 syncKeycloakRolesDateTime,
-                syncLdapRolesDateTime
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                overrideRemovePermissions
+        );
+    }
+
+    public UserAccount withOverrideAddPermissions(ExternalPermission[] newOverrideAddPermissions) {
+        return new UserAccount(
+                id,
+                creationType,
+                login,
+                password,
+                avatar,
+                avatarBig,
+                shortInfo,
+                expired,
+                locked,
+                enabled,
+                confirmed,
+                roles,
+                email,
+                lastSeenDateTime,
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId,
+                ldapId,
+                loginColor,
+                syncLdapDateTime,
+                syncKeycloakDateTime,
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime,
+                newOverrideAddPermissions,
+                overrideRemovePermissions
+        );
+    }
+
+    public UserAccount withOverrideRemovePermissions(ExternalPermission[] newOverrideRemovePermissions) {
+        return new UserAccount(
+                id,
+                creationType,
+                login,
+                password,
+                avatar,
+                avatarBig,
+                shortInfo,
+                expired,
+                locked,
+                enabled,
+                confirmed,
+                roles,
+                email,
+                lastSeenDateTime,
+                facebookId,
+                vkontakteId,
+                googleId,
+                keycloakId,
+                ldapId,
+                loginColor,
+                syncLdapDateTime,
+                syncKeycloakDateTime,
+                syncKeycloakRolesDateTime,
+                syncLdapRolesDateTime,
+                overrideAddPermissions,
+                newOverrideRemovePermissions
         );
     }
 

@@ -360,5 +360,8 @@ export default {
     message_edit_quote: "Quote",
     strip_div_span: "Strip <div><span>",
     replace_img_with_alt: "Replace <img> with alt",
-    auto_microphone_enable: "Auto microphone enable (when possible)"
+    auto_microphone_enable: "Auto microphone enable (when possible)",
+    overridden_permissions: "Permissions",
+    override_permissions: "Override permissions",
+    override_permissions_for: "Override permissions for '{0}'"
 }

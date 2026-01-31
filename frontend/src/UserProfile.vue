@@ -141,9 +141,11 @@
           @enableUser="this.enableUser"
           @disableUser="this.disableUser"
           @setPassword="this.setPassword"
+          @overridePermissions="this.overridePermissions"
     >
     </UserListContextMenu>
     <UserRoleModal/>
+    <UserPermissionsModal/>
   </v-container>
 </template>
 
@@ -163,6 +165,7 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import userStatusMixin from "@/mixins/userStatusMixin";
 import bus, {
+  CHANGE_PERMISSIONS_DIALOG,
   CHANGE_ROLE_DIALOG,
   CLOSE_SIMPLE_MODAL,
   LOGGED_OUT, OPEN_SET_PASSWORD_MODAL,
@@ -174,11 +177,13 @@ import graphqlSubscriptionMixin from "@/mixins/graphqlSubscriptionMixin.js";
 import UserListContextMenu from "@/UserListContextMenu.vue";
 import UserRoleModal from "@/UserRoleModal.vue";
 import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
+import UserPermissionsModal from "@/UserPermissionsModal.vue";
 
 export default {
   components: {
       UserRoleModal,
       UserListContextMenu,
+      UserPermissionsModal,
   },
   mixins: [
       userStatusMixin('userStatusInUserProfile'), // another subscription
@@ -280,6 +285,9 @@ export default {
     },
     changeRole(user) {
       bus.emit(CHANGE_ROLE_DIALOG, user)
+    },
+    overridePermissions(user) {
+      bus.emit(CHANGE_PERMISSIONS_DIALOG, user)
     },
     removeSessions(user) {
       axios.delete('/api/aaa/sessions', {

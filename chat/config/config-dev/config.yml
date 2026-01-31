@@ -63,7 +63,7 @@ message:
 chat:
   allowedAvatarUrls: ""
 
-onlyAdminCanCreateBlog: false
+restrictCreateBlog: false
 
 redis:
   address: :36379

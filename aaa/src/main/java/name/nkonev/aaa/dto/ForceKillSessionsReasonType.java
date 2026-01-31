@@ -7,5 +7,6 @@ public enum ForceKillSessionsReasonType {
     user_unconfirmed,
     force_logged_out,
     user_roles_changed,
+    override_permissions_changed,
     password_forcibly_set
 }

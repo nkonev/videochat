@@ -5,21 +5,22 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/araddon/dateparse"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"net/http"
-	"net/url"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
-	"strings"
-	"time"
 )
 
 func getUsersRemotely(ctx context.Context, lgr *logger.Logger, userIdSet map[int64]bool, restClient *client.RestClient) (map[int64]*dto.User, error) {
@@ -108,6 +109,8 @@ func ExtractAuth(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, e
 
 	roles := request.Header.Values("X-Auth-Role")
 
+	permissions := request.Header.Values("X-Auth-Permission")
+
 	anAvatar := request.Header.Get("X-Auth-Avatar")
 	var theAvatar *string = nil
 	if len(anAvatar) > 0 {
@@ -115,11 +118,12 @@ func ExtractAuth(request *http.Request, lgr *logger.Logger) (*auth.AuthResult, e
 	}
 
 	return &auth.AuthResult{
-		UserId:    i,
-		UserLogin: string(decodedString),
-		ExpiresAt: t.Unix(),
-		Roles:     roles,
-		Avatar:    theAvatar,
+		UserId:      i,
+		UserLogin:   string(decodedString),
+		ExpiresAt:   t.Unix(),
+		Roles:       roles,
+		Permissions: permissions,
+		Avatar:      theAvatar,
 	}, nil
 }
 

@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go/v2"
-	"net/http"
 	"nkonev.name/video/auth"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/logger"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
-	"time"
 )
 
 type RecordHandler struct {
@@ -54,7 +55,7 @@ func NewRecordHandler(egressClient *lksdk.EgressClient, restClient *client.RestC
 }
 
 func (rh *RecordHandler) canRecord(ctx context.Context, chatId int64, userPrincipalDto *auth.AuthResult) (bool, error) {
-	if rh.conf.OnlyRoleAdminRecording && !userPrincipalDto.HasRole("ROLE_ADMIN") {
+	if rh.conf.RestrictRecording && !userPrincipalDto.HasPermission("CAN_RECORD_CALL") {
 		return false, nil
 	}
 	if ok, err := rh.restClient.IsAdmin(ctx, userPrincipalDto.UserId, chatId); err != nil {

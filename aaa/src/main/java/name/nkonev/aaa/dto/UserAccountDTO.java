@@ -26,7 +26,8 @@ public record UserAccountDTO (
     OAuth2IdentifiersDTO oauth2Identifiers,
     String loginColor,
     boolean ldap, // has ldap
-    AdditionalDataDTO additionalData
+    AdditionalDataDTO additionalData,
+    boolean overriddenPermissions
 ) {
     public UserAccountDTO(
             Long id,
@@ -38,7 +39,8 @@ public record UserAccountDTO (
             OAuth2IdentifiersDTO oauth2Identifiers,
             String loginColor,
             boolean ldap,
-            AdditionalDataDTO additionalData
+            AdditionalDataDTO additionalData,
+            boolean overriddenPermissions
     ) {
         this.id = id;
         this.login = login;
@@ -50,6 +52,7 @@ public record UserAccountDTO (
         this.loginColor = loginColor;
         this.ldap = ldap;
         this.additionalData = additionalData;
+        this.overriddenPermissions = overriddenPermissions;
     }
 
     @JsonIgnore // to use in Freemarker template header.ftlh
@@ -74,7 +77,26 @@ public record UserAccountDTO (
                 oauth2Identifiers,
                 loginColor,
                 ldap,
-                additionalData
+                additionalData,
+                overriddenPermissions
         );
     }
+
+    @JsonIgnore
+    public UserAccountDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
+        return new UserAccountDTO(
+                id,
+                login,
+                avatar,
+                avatarBig,
+                shortInfo,
+                lastSeenDateTime,
+                newOauth2Identifiers,
+                loginColor,
+                ldap,
+                additionalData,
+                overriddenPermissions
+        );
+    }
+
 }

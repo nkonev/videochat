@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+
 	"nkonev.name/event/auth"
 	"nkonev.name/event/dto"
 	"nkonev.name/event/graph/model"
@@ -59,6 +60,9 @@ func convertUserAccountExtended(myUserId int64, user *dto.UserAccountEvent, aDto
 		CanChangeSelfLogin:    aDto.CanChangeSelfLogin,
 		CanChangeSelfEmail:    aDto.CanChangeSelfEmail,
 		CanChangeSelfPassword: aDto.CanChangeSelfPassword,
+
+		OverriddenPermissions:          aDto.OverriddenPermissions,
+		CanChangeOverriddenPermissions: aDto.CanChangeOverriddenPermissions,
 	}
 	if myUserId == aDto.Id {
 		userAccountEvent.Email = user.Email

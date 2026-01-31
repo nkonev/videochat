@@ -49,7 +49,7 @@ services:
       - CHAT_FRONTENDURL=https://{{ domain }}
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=
       - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com,https://coub.com,https://vk.com,https://rutube.ru,https://player.vimeo.com,https://player.smotrim.ru,https://vkvideo.ru
-      - CHAT_ONLYADMINCANCREATEBLOG={{ chat_only_role_admin_can_create_blog }}
+      - CHAT_RESTRICTCREATEBLOG={{ chat_restrict_create_blog }}
       # disable logging to filename because of capturing from stdout
       - CHAT_LOGGER.WRITETOFILE=false
       - CHAT_SCHEDULERS.CLEANCHATSOFDELETEDUSERTASK.ENABLED=true

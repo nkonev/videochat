@@ -1,5 +1,6 @@
 package name.nkonev.aaa.config;
 
+import name.nkonev.aaa.dto.ExternalPermission;
 import name.nkonev.aaa.dto.UserRole;
 import name.nkonev.aaa.entity.jdbc.UserAccount;
 import org.postgresql.jdbc.PgArray;
@@ -27,7 +28,10 @@ public class DbConfig {
     // sent to JdbcConverter jdbcConverter in AbstractJdbcConfiguration what creates MappingJdbcConverter
     @Bean
     public JdbcCustomConversions jdbcCustomConversions() {
-        return new JdbcCustomConversions(List.of(new UserRoleArrayReadingConverter()));
+        return new JdbcCustomConversions(List.of(
+            new UserRoleArrayReadingConverter(),
+            new UserPermissionArrayReadingConverter()
+        ));
     }
 
     @Bean
@@ -44,6 +48,18 @@ class UserRoleArrayReadingConverter implements Converter<PgArray, UserRole[]> {
         try {
             String[] source = (String[]) pgObject.getArray();
             return Arrays.stream(source).map(UserRole::valueOf).toArray(UserRole[]::new);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+class UserPermissionArrayReadingConverter implements Converter<PgArray, ExternalPermission[]> {
+    @Override
+    public ExternalPermission[] convert(PgArray pgObject) {
+        try {
+            String[] source = (String[]) pgObject.getArray();
+            return Arrays.stream(source).map(ExternalPermission::valueOf).toArray(ExternalPermission[]::new);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

@@ -2,6 +2,7 @@ package name.nkonev.aaa.dto;
 
 import java.time.LocalDateTime;
 
+// an internal version of UserAccountDTO
 public record UserAccountEventDTO(
         Long id,
 
@@ -22,6 +23,7 @@ public record UserAccountEventDTO(
         OAuth2IdentifiersDTO oauth2Identifiers,
         String loginColor,
         boolean ldap,
-        AdditionalDataDTO additionalData
+        AdditionalDataDTO additionalData,
+        boolean overriddenPermissions
 ) {
 }

@@ -72,7 +72,7 @@ rabbitmq:
 
 
 # used to forbid records by guests on demo server
-onlyRoleAdminRecording: false
+restrictRecording: false
 recordPreset: H264_1080P_30
 
 videoTokenValidTime: 1h

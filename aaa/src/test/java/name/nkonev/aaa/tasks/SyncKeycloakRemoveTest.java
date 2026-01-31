@@ -28,7 +28,7 @@ public class SyncKeycloakRemoveTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.KEYCLOAK,
                 login, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, email, null, null, null, null, "20-123", null, null, null, getNowUTC().minusSeconds(1), null, null);
+                new UserRole[]{UserRole.ROLE_USER}, email, null, null, null, null, "20-123", null, null, null, getNowUTC().minusSeconds(1), null, null, null, null);
         userAccountRepository.save(userAccount);
         var before = userAccountRepository.findByLogin(login).get();
         Assertions.assertEquals(email, before.email());

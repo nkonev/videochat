@@ -32,7 +32,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 conflictingLogin, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
+                new UserRole[]{UserRole.ROLE_USER}, nonConflictingEmail, null, null, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(userAccount);
         var before = userAccountRepository.findByLogin(conflictingLogin).get();
         Assertions.assertEquals(nonConflictingEmail, before.email());
@@ -62,7 +62,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.LDAP,
                 ldapLogin, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, oldLdapEmail, null, null, null, null, null, USER_BEN_LDAP_ID, null, ldt, null, null, ldt);
+                new UserRole[]{UserRole.ROLE_USER}, oldLdapEmail, null, null, null, null, null, USER_BEN_LDAP_ID, null, ldt, null, null, ldt, null, null);
         userAccountRepository.save(ldapUserAccount);
 
         var ldapUsersBefore = userAccountRepository.countLdap();
@@ -75,7 +75,7 @@ public class SyncLdapConflictRemoveUserTest extends AbstractMockMvcTestRunner {
                 null,
                 CreationType.REGISTRATION,
                 nonConflictingLogin, null, null, null, null,false, false, true, true,
-                new UserRole[]{UserRole.ROLE_USER}, conflictingEmail, null, null, null, null, null, null, null, null, null, null, null);
+                new UserRole[]{UserRole.ROLE_USER}, conflictingEmail, null, null, null, null, null, null, null, null, null, null, null, null, null);
         userAccountRepository.save(conflictingUserAccount);
 
         syncLdapTask.doWork();

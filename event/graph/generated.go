@@ -328,28 +328,30 @@ type ComplexityRoot struct {
 	}
 
 	UserAccountExtendedDto struct {
-		AdditionalData                func(childComplexity int) int
-		Avatar                        func(childComplexity int) int
-		AvatarBig                     func(childComplexity int) int
-		AwaitingForConfirmEmailChange func(childComplexity int) int
-		CanChangeRole                 func(childComplexity int) int
-		CanChangeSelfEmail            func(childComplexity int) int
-		CanChangeSelfLogin            func(childComplexity int) int
-		CanChangeSelfPassword         func(childComplexity int) int
-		CanConfirm                    func(childComplexity int) int
-		CanDelete                     func(childComplexity int) int
-		CanEnable                     func(childComplexity int) int
-		CanLock                       func(childComplexity int) int
-		CanRemoveSessions             func(childComplexity int) int
-		CanSetPassword                func(childComplexity int) int
-		Email                         func(childComplexity int) int
-		ID                            func(childComplexity int) int
-		LastSeenDateTime              func(childComplexity int) int
-		Ldap                          func(childComplexity int) int
-		Login                         func(childComplexity int) int
-		LoginColor                    func(childComplexity int) int
-		Oauth2Identifiers             func(childComplexity int) int
-		ShortInfo                     func(childComplexity int) int
+		AdditionalData                 func(childComplexity int) int
+		Avatar                         func(childComplexity int) int
+		AvatarBig                      func(childComplexity int) int
+		AwaitingForConfirmEmailChange  func(childComplexity int) int
+		CanChangeOverriddenPermissions func(childComplexity int) int
+		CanChangeRole                  func(childComplexity int) int
+		CanChangeSelfEmail             func(childComplexity int) int
+		CanChangeSelfLogin             func(childComplexity int) int
+		CanChangeSelfPassword          func(childComplexity int) int
+		CanConfirm                     func(childComplexity int) int
+		CanDelete                      func(childComplexity int) int
+		CanEnable                      func(childComplexity int) int
+		CanLock                        func(childComplexity int) int
+		CanRemoveSessions              func(childComplexity int) int
+		CanSetPassword                 func(childComplexity int) int
+		Email                          func(childComplexity int) int
+		ID                             func(childComplexity int) int
+		LastSeenDateTime               func(childComplexity int) int
+		Ldap                           func(childComplexity int) int
+		Login                          func(childComplexity int) int
+		LoginColor                     func(childComplexity int) int
+		Oauth2Identifiers              func(childComplexity int) int
+		OverriddenPermissions          func(childComplexity int) int
+		ShortInfo                      func(childComplexity int) int
 	}
 
 	UserDeletedDto struct {
@@ -1821,6 +1823,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.UserAccountExtendedDto.AwaitingForConfirmEmailChange(childComplexity), true
 
+	case "UserAccountExtendedDto.canChangeOverriddenPermissions":
+		if e.complexity.UserAccountExtendedDto.CanChangeOverriddenPermissions == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.CanChangeOverriddenPermissions(childComplexity), true
+
 	case "UserAccountExtendedDto.canChangeRole":
 		if e.complexity.UserAccountExtendedDto.CanChangeRole == nil {
 			break
@@ -1939,6 +1948,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserAccountExtendedDto.Oauth2Identifiers(childComplexity), true
+
+	case "UserAccountExtendedDto.overriddenPermissions":
+		if e.complexity.UserAccountExtendedDto.OverriddenPermissions == nil {
+			break
+		}
+
+		return e.complexity.UserAccountExtendedDto.OverriddenPermissions(childComplexity), true
 
 	case "UserAccountExtendedDto.shortInfo":
 		if e.complexity.UserAccountExtendedDto.ShortInfo == nil {
@@ -12371,6 +12387,94 @@ func (ec *executionContext) fieldContext_UserAccountExtendedDto_canChangeSelfPas
 	return fc, nil
 }
 
+func (ec *executionContext) _UserAccountExtendedDto_overriddenPermissions(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_overriddenPermissions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OverriddenPermissions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_overriddenPermissions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccountExtendedDto_canChangeOverriddenPermissions(ctx context.Context, field graphql.CollectedField, obj *model.UserAccountExtendedDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccountExtendedDto_canChangeOverriddenPermissions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanChangeOverriddenPermissions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccountExtendedDto_canChangeOverriddenPermissions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccountExtendedDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserDeletedDto_id(ctx context.Context, field graphql.CollectedField, obj *model.UserDeletedDto) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserDeletedDto_id(ctx, field)
 	if err != nil {
@@ -17377,6 +17481,16 @@ func (ec *executionContext) _UserAccountExtendedDto(ctx context.Context, sel ast
 			}
 		case "canChangeSelfPassword":
 			out.Values[i] = ec._UserAccountExtendedDto_canChangeSelfPassword(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "overriddenPermissions":
+			out.Values[i] = ec._UserAccountExtendedDto_overriddenPermissions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canChangeOverriddenPermissions":
+			out.Values[i] = ec._UserAccountExtendedDto_canChangeOverriddenPermissions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

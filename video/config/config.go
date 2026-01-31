@@ -6,11 +6,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/spf13/viper"
 	"log"
-	"nkonev.name/video/app"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
+	"nkonev.name/video/app"
 )
 
 //go:embed config-dev
@@ -141,19 +142,19 @@ type OtlpConfig struct {
 }
 
 type ExtendedConfig struct {
-	FrontendConfig         FrontendConfig   `mapstructure:"frontend"`
-	RestClientConfig       RestClientConfig `mapstructure:"http"`
-	ChatConfig             ChatConfig       `mapstructure:"chat"`
-	AaaConfig              AaaConfig        `mapstructure:"aaa"`
-	StorageConfig          StorageConfig    `mapstructure:"storage"`
-	AuthConfig             AuthConfig       `mapstructure:"auth"`
-	LivekitConfig          LivekitConfig    `mapstructure:"livekit"`
-	JaegerConfig           JaegerConfig     `mapstructure:"jaeger"`
-	HttpServerConfig       HttpServerConfig `mapstructure:"server"`
-	RabbitMqConfig         RabbitMqConfig   `mapstructure:"rabbitmq"`
-	OnlyRoleAdminRecording bool             `mapstructure:"onlyRoleAdminRecording"`
-	RecordPreset           string           `mapstructure:"recordPreset"`
-	VideoTokenValidTime    time.Duration    `mapstructure:"videoTokenValidTime"`
-	RedisConfig            RedisConfig      `mapstructure:"redis"`
-	OtlpConfig             OtlpConfig       `mapstructure:"otlp"`
+	FrontendConfig      FrontendConfig   `mapstructure:"frontend"`
+	RestClientConfig    RestClientConfig `mapstructure:"http"`
+	ChatConfig          ChatConfig       `mapstructure:"chat"`
+	AaaConfig           AaaConfig        `mapstructure:"aaa"`
+	StorageConfig       StorageConfig    `mapstructure:"storage"`
+	AuthConfig          AuthConfig       `mapstructure:"auth"`
+	LivekitConfig       LivekitConfig    `mapstructure:"livekit"`
+	JaegerConfig        JaegerConfig     `mapstructure:"jaeger"`
+	HttpServerConfig    HttpServerConfig `mapstructure:"server"`
+	RabbitMqConfig      RabbitMqConfig   `mapstructure:"rabbitmq"`
+	RestrictRecording   bool             `mapstructure:"restrictRecording"`
+	RecordPreset        string           `mapstructure:"recordPreset"`
+	VideoTokenValidTime time.Duration    `mapstructure:"videoTokenValidTime"`
+	RedisConfig         RedisConfig      `mapstructure:"redis"`
+	OtlpConfig          OtlpConfig       `mapstructure:"otlp"`
 }

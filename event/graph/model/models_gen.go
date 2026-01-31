@@ -284,28 +284,30 @@ type UserAccountEvent struct {
 }
 
 type UserAccountExtendedDto struct {
-	ID                            int64              `json:"id"`
-	Login                         string             `json:"login"`
-	Email                         *string            `json:"email"`
-	AwaitingForConfirmEmailChange *bool              `json:"awaitingForConfirmEmailChange"`
-	Avatar                        *string            `json:"avatar"`
-	AvatarBig                     *string            `json:"avatarBig"`
-	ShortInfo                     *string            `json:"shortInfo"`
-	LastSeenDateTime              *time.Time         `json:"lastSeenDateTime"`
-	Oauth2Identifiers             *OAuth2Identifiers `json:"oauth2Identifiers"`
-	AdditionalData                *AdditionalData    `json:"additionalData"`
-	CanLock                       bool               `json:"canLock"`
-	CanEnable                     bool               `json:"canEnable"`
-	CanDelete                     bool               `json:"canDelete"`
-	CanChangeRole                 bool               `json:"canChangeRole"`
-	CanConfirm                    bool               `json:"canConfirm"`
-	LoginColor                    *string            `json:"loginColor"`
-	CanRemoveSessions             bool               `json:"canRemoveSessions"`
-	Ldap                          bool               `json:"ldap"`
-	CanSetPassword                bool               `json:"canSetPassword"`
-	CanChangeSelfLogin            bool               `json:"canChangeSelfLogin"`
-	CanChangeSelfEmail            bool               `json:"canChangeSelfEmail"`
-	CanChangeSelfPassword         bool               `json:"canChangeSelfPassword"`
+	ID                             int64              `json:"id"`
+	Login                          string             `json:"login"`
+	Email                          *string            `json:"email"`
+	AwaitingForConfirmEmailChange  *bool              `json:"awaitingForConfirmEmailChange"`
+	Avatar                         *string            `json:"avatar"`
+	AvatarBig                      *string            `json:"avatarBig"`
+	ShortInfo                      *string            `json:"shortInfo"`
+	LastSeenDateTime               *time.Time         `json:"lastSeenDateTime"`
+	Oauth2Identifiers              *OAuth2Identifiers `json:"oauth2Identifiers"`
+	AdditionalData                 *AdditionalData    `json:"additionalData"`
+	CanLock                        bool               `json:"canLock"`
+	CanEnable                      bool               `json:"canEnable"`
+	CanDelete                      bool               `json:"canDelete"`
+	CanChangeRole                  bool               `json:"canChangeRole"`
+	CanConfirm                     bool               `json:"canConfirm"`
+	LoginColor                     *string            `json:"loginColor"`
+	CanRemoveSessions              bool               `json:"canRemoveSessions"`
+	Ldap                           bool               `json:"ldap"`
+	CanSetPassword                 bool               `json:"canSetPassword"`
+	CanChangeSelfLogin             bool               `json:"canChangeSelfLogin"`
+	CanChangeSelfEmail             bool               `json:"canChangeSelfEmail"`
+	CanChangeSelfPassword          bool               `json:"canChangeSelfPassword"`
+	OverriddenPermissions          bool               `json:"overriddenPermissions"`
+	CanChangeOverriddenPermissions bool               `json:"canChangeOverriddenPermissions"`
 }
 
 func (UserAccountExtendedDto) IsUserAccountEventDto() {}

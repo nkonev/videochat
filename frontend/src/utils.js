@@ -516,6 +516,9 @@ awaitingForConfirmEmailChange,
   canChangeSelfLogin,
   canChangeSelfEmail,
   canChangeSelfPassword,
+  
+  overriddenPermissions,
+  canChangeOverriddenPermissions,
 }
 `
 }

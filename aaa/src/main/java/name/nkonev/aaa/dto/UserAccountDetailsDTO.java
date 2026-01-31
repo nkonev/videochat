@@ -2,6 +2,8 @@ package name.nkonev.aaa.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import name.nkonev.aaa.entity.jdbc.CreationType;
+import name.nkonev.aaa.utils.LdapUtils;
+import name.nkonev.aaa.utils.PermissionsUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -37,7 +39,9 @@ public record UserAccountDetailsDTO (
     String email,
     boolean awaitingForConfirmEmailChange,
     String ldapId,
-    CreationType creationType
+    CreationType creationType,
+    ExternalPermission[] overrideAddPermissions,
+    ExternalPermission[] overrideRemovePermissions
 ) implements UserDetails, OAuth2User, OidcUser {
 
     public UserAccountDetailsDTO(
@@ -59,7 +63,9 @@ public record UserAccountDetailsDTO (
             String loginColor,
             String ldapId,
             AdditionalDataDTO additionalDataDTO,
-            CreationType creationType
+            CreationType creationType,
+            ExternalPermission[] overrideAddPermissions,
+            ExternalPermission[] overrideRemovePermissions
     ) {
         this(
                 new UserAccountDTO(
@@ -71,8 +77,9 @@ public record UserAccountDetailsDTO (
                     lastSeenDateTime,
                     oauthIdentifiers,
                     loginColor,
-                    ldapId != null,
-                    additionalDataDTO
+                    LdapUtils.isLdapSet(ldapId),
+                    additionalDataDTO,
+                    PermissionsUtils.areOverriddenPermissions(overrideAddPermissions, overrideRemovePermissions)
                 ),
                 new HashMap<>(),
                 null,
@@ -86,7 +93,9 @@ public record UserAccountDetailsDTO (
                 email,
                 awaitingForConfirmEmailChange,
                 ldapId,
-                creationType
+                creationType,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
@@ -184,17 +193,7 @@ public record UserAccountDetailsDTO (
 
     public UserAccountDetailsDTO withOauth2Identifiers(OAuth2IdentifiersDTO newOauth2Identifiers) {
         return new UserAccountDetailsDTO(
-                new UserAccountDTO(
-                    userAccountDTO.id(),
-                    userAccountDTO.login(),
-                    userAccountDTO.avatar(),
-                    userAccountDTO.avatarBig(),
-                    userAccountDTO.shortInfo(),
-                    userAccountDTO.lastSeenDateTime(),
-                    newOauth2Identifiers, userAccountDTO.loginColor(),
-                    ldapId != null,
-                    userAccountDTO.additionalData()
-                ),
+                this.userAccountDTO.withOauth2Identifiers(newOauth2Identifiers),
                 oauth2Attributes,
                 idToken,
                 userInfo,
@@ -207,13 +206,15 @@ public record UserAccountDetailsDTO (
                 email,
                 awaitingForConfirmEmailChange,
                 ldapId,
-                creationType
+                creationType,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 
-    public UserAccountDetailsDTO withUserAccountDTO(UserAccountDTO userAccountDTO) {
+    public UserAccountDetailsDTO withUserAccountDTO(UserAccountDTO newUserAccountDTO) {
         return new UserAccountDetailsDTO(
-                userAccountDTO,
+                newUserAccountDTO,
                 oauth2Attributes,
                 idToken,
                 userInfo,
@@ -226,7 +227,9 @@ public record UserAccountDetailsDTO (
                 email,
                 awaitingForConfirmEmailChange,
                 ldapId,
-                creationType
+                creationType,
+                overrideAddPermissions,
+                overrideRemovePermissions
         );
     }
 

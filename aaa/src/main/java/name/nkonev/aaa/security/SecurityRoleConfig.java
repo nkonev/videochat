@@ -23,7 +23,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class SecurityPermissionsConfig {
+public class SecurityRoleConfig {
 
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(){

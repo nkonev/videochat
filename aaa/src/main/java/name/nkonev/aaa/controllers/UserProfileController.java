@@ -54,7 +54,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.checkAuthenticatedInternal(#userAccount, #requestHeaders)")
+    @PreAuthorize("@aaaInternalPermissionService.checkAuthenticatedInternal(#userAccount, #requestHeaders)")
     @GetMapping(value = {Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH}, produces = MediaType.APPLICATION_JSON_VALUE)
     public HttpHeaders checkAuthenticatedInternal(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, HttpSession session, @RequestHeader HttpHeaders requestHeaders) {
         LOGGER.info("Requesting internal user profile");
@@ -192,52 +192,59 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.hasSessionManagementPermission(#userAccount)")
+    @PreAuthorize("@aaaInternalPermissionService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
         return userProfileService.sessions(userAccount, userId);
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canRemoveSessions(#userAccount, #userId)")
+    @PreAuthorize("@aaaInternalPermissionService.canRemoveSessions(#userAccount, #userId)")
     @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.SESSIONS)
     public void killSessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId, HttpSession httpSession){
         userProfileService.killSessions(userAccount, userId, httpSession);
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
+    @PreAuthorize("@aaaInternalPermissionService.canLock(#userAccountDetailsDTO, #lockDTO)")
     @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.LOCK)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setLocked(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.LockDTO lockDTO){
         return userProfileService.setLocked(userAccountDetailsDTO, lockDTO);
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
+    @PreAuthorize("@aaaInternalPermissionService.canConfirm(#userAccountDetailsDTO, #confirmDTO)")
     @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.CONFIRM)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setConfirmed(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.ConfirmDTO confirmDTO){
         return userProfileService.setConfirmed(userAccountDetailsDTO, confirmDTO);
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canEnable(#userAccountDetailsDTO, #enableDTO)")
+    @PreAuthorize("@aaaInternalPermissionService.canEnable(#userAccountDetailsDTO, #enableDTO)")
     @PostMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.ENABLE)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setEnabled(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody name.nkonev.aaa.dto.EnabledDTO enableDTO){
         return userProfileService.setEnabled(userAccountDetailsDTO, enableDTO);
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
+    @PreAuthorize("@aaaInternalPermissionService.canDelete(#userAccountDetailsDTO, #userId)")
     @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER)
     public void deleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestParam("userId") long userId){
         userProfileService.deleteUser(userAccountDetailsDTO, userId);
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canChangeRole(#userAccountDetailsDTO, #setRolesDTO.userId)")
+    @PreAuthorize("@aaaInternalPermissionService.canChangeRole(#userAccountDetailsDTO, #setRolesDTO.userId)")
     @PutMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.ROLE)
     public name.nkonev.aaa.dto.UserAccountDTOExtended setRoles(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody SetRolesDTO setRolesDTO){
         return userProfileService.setRoles(userAccountDetailsDTO, setRolesDTO.userId(), setRolesDTO.roles());
+    }
+
+    @ResponseBody
+    @PreAuthorize("@aaaInternalPermissionService.canChangePermissions(#userAccountDetailsDTO, #setOverriddenPermissionsDTO.userId)")
+    @PutMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.PERMISSION)
+    public name.nkonev.aaa.dto.UserAccountDTOExtended setPermissions(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO, @RequestBody SetOverriddenPermissionsDTO setOverriddenPermissionsDTO){
+        return userProfileService.setPermissions(userAccountDetailsDTO, setOverriddenPermissionsDTO.userId(), setOverriddenPermissionsDTO.addPermissions(), setOverriddenPermissionsDTO.removePermissions());
     }
 
     @ResponseBody
@@ -247,7 +254,22 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canSelfDelete(#userAccountDetailsDTO)")
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.PERMISSION)
+    public List<ExternalPermission> getAllPermissions() {
+        return Arrays.stream(ExternalPermission.values()).toList();
+    }
+
+    @ResponseBody
+    @PreAuthorize("@aaaInternalPermissionService.canChangePermissions(#userAccountDetailsDTO, #userId)")
+    @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.USER + Constants.Urls.PERMISSION + Constants.Urls.USER_ID)
+    public OverriddenPermissionsDTO getUserOverriddenPermissions(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO,
+         @PathVariable(value = Constants.PathVariables.USER_ID) Long userId
+    ) {
+        return userProfileService.getUserOverriddenPermissions(userId);
+    }
+
+    @ResponseBody
+    @PreAuthorize("@aaaInternalPermissionService.canSelfDelete(#userAccountDetailsDTO)")
     @DeleteMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.PROFILE)
     public void selfDeleteUser(@AuthenticationPrincipal UserAccountDetailsDTO userAccountDetailsDTO){
         userProfileService.selfDeleteUser(userAccountDetailsDTO);
@@ -281,7 +303,7 @@ public class UserProfileController {
     }
 
     @ResponseBody
-    @PreAuthorize("@aaaPermissionService.canSetPassword(#userAccount, #userId)")
+    @PreAuthorize("@aaaInternalPermissionService.canSetPassword(#userAccount, #userId)")
     @PutMapping(Constants.Urls.EXTERNAL_API + Constants.Urls.USER+Constants.Urls.USER_ID + Constants.Urls.PASSWORD)
     public void setPassword(@AuthenticationPrincipal UserAccountDetailsDTO userAccount,
                             @PathVariable(value = Constants.PathVariables.USER_ID) Long userId,

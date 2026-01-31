@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"net/http"
 	"nkonev.name/chat/auth"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/db"
@@ -15,8 +18,6 @@ import (
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
-	"strings"
-	"time"
 )
 
 const minChatNameLen = 1
@@ -50,24 +51,24 @@ type CreateChatDto struct {
 }
 
 type ChatHandler struct {
-	db                     *db.DB
-	notificator            *services.Events
-	restClient             *client.RestClient
-	policy                 *services.SanitizerPolicy
-	stripTagsPolicy        *services.StripTagsPolicy
-	onlyAdminCanCreateBlog bool
-	lgr                    *logger.Logger
+	db                 *db.DB
+	notificator        *services.Events
+	restClient         *client.RestClient
+	policy             *services.SanitizerPolicy
+	stripTagsPolicy    *services.StripTagsPolicy
+	restrictCreateBlog bool
+	lgr                *logger.Logger
 }
 
 func NewChatHandler(dbR *db.DB, notificator *services.Events, restClient *client.RestClient, policy *services.SanitizerPolicy, cleanTagsPolicy *services.StripTagsPolicy, lgr *logger.Logger) *ChatHandler {
 	return &ChatHandler{
-		db:                     dbR,
-		notificator:            notificator,
-		restClient:             restClient,
-		policy:                 policy,
-		stripTagsPolicy:        cleanTagsPolicy,
-		onlyAdminCanCreateBlog: viper.GetBool("onlyAdminCanCreateBlog"),
-		lgr:                    lgr,
+		db:                 dbR,
+		notificator:        notificator,
+		restClient:         restClient,
+		policy:             policy,
+		stripTagsPolicy:    cleanTagsPolicy,
+		restrictCreateBlog: viper.GetBool("restrictCreateBlog"),
+		lgr:                lgr,
 	}
 }
 
@@ -2080,10 +2081,10 @@ func (ch *ChatHandler) DoesParticipantBelongToChat(c echo.Context) error {
 }
 
 func (ch *ChatHandler) checkCanCreateBlog(userPrincipalDto *auth.AuthResult, blog *bool) bool {
-	if !ch.onlyAdminCanCreateBlog {
+	if !ch.restrictCreateBlog {
 		return true
 	}
-	if blog != nil && userPrincipalDto != nil && userPrincipalDto.HasRole("ROLE_ADMIN") {
+	if blog != nil && userPrincipalDto != nil && userPrincipalDto.HasPermission("CAN_CREATE_BLOG") {
 		return true
 	} else {
 		return false

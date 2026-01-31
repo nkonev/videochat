@@ -35,7 +35,7 @@ services:
       - VIDEO_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - VIDEO_REDIS.ADDRESS=redis:6379
       - VIDEO_REDIS.DB=4
-      - VIDEO_ONLYROLEADMINRECORDING={{ video_only_role_admin_can_record }}
+      - VIDEO_RESTRICTRECORDING={{ video_restrict_recording }}
       - VIDEO_OTLP.ENDPOINT=jaeger:4317
       - VIDEO_LIVEKIT.API.KEY={{ livekit_api_key }}
       - VIDEO_LIVEKIT.API.SECRET={{ livekit_api_secret }}

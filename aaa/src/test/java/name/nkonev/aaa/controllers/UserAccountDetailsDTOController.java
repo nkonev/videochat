@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserAccountDetailsDTOController {
     @GetMapping(Constants.Urls.EXTERNAL_API + TestConstants.USER_DETAILS)
     public UserAccountDetailsDTO getUserDetails() {
-        return new UserAccountDetailsDTO(null, null, null, null, null, false, false, true, true, null, null, false, null, CreationType.REGISTRATION);
+        return new UserAccountDetailsDTO(null, null, null, null, null, false, false, true, true, null, null, false, null, CreationType.REGISTRATION, null, null);
     }
 
 }
