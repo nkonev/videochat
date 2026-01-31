@@ -423,7 +423,7 @@ export default {
             try {
               console.log("Removing component=", component.getId());
               app.unmount();
-              this.videoContainerDiv.removeChild(containerEl);
+              this.videoContainerDiv?.removeChild(containerEl);
               this.removeComponentForUser(userIdentity, componentWrapper);
 
               console.log("Successfully removed component=", component.getId());
