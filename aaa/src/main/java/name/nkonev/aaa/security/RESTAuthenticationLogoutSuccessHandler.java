@@ -73,7 +73,7 @@ public class RESTAuthenticationLogoutSuccessHandler implements LogoutSuccessHand
         var usersOnline = aaaUserDetailsService.getUsersOnline(List.of(userDetails.getId()));
         eventService.notifyOnlineChanged(usersOnline);
 
-        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getWriter(), Collections.singletonMap("message", "you successfully logged out"));
     }
 }

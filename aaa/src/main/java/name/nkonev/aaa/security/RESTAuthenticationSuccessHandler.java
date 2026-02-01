@@ -16,6 +16,7 @@ import java.io.IOException;
 @Component
 public class RESTAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
+    // TODO Migrate to Jackson 3
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -24,7 +25,7 @@ public class RESTAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuc
                                         Authentication authentication) throws IOException, ServletException {
 
         clearAuthenticationAttributes(request);
-        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         Long id = ((UserAccountDetailsDTO)authentication.getPrincipal()).getId();
 

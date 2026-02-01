@@ -42,10 +42,10 @@ public class AaaExceptionHandler {
     }
 
     @ResponseBody
-    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    @ResponseStatus(HttpStatus.CONTENT_TOO_LARGE)
     @org.springframework.web.bind.annotation.ExceptionHandler({PayloadTooLargeException.class})
     public AaaError payloadTooLargeImage(PayloadTooLargeException e)  {
-        return new AaaError(HttpStatus.PAYLOAD_TOO_LARGE.value(), "payload too large", e.getMessage(), new Date().toString());
+        return new AaaError(HttpStatus.CONTENT_TOO_LARGE.value(), "payload too large", e.getMessage(), new Date().toString());
     }
 
     @ResponseBody

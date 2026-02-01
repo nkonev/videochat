@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorController;
-import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
-import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.boot.webmvc.autoconfigure.error.AbstractErrorController;
+import org.springframework.boot.webmvc.autoconfigure.error.ErrorViewResolver;
+import org.springframework.boot.webmvc.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -37,7 +37,7 @@ import static name.nkonev.aaa.utils.ServletUtils.getAcceptHeaderValues;
 import static name.nkonev.aaa.utils.NullUtils.getToStringSafe;
 
 /**
- * @see org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController, it describes how to use both REST And ModelAndView handling depends on Accept header
+ * @see org.springframework.boot.webmvc.autoconfigure.error.BasicErrorController, it describes how to use both REST And ModelAndView handling depends on Accept header
  * @see "https://gist.github.com/jonikarppinen/662c38fb57a23de61c8b"
  */
 @Controller
@@ -86,7 +86,7 @@ public class AaaErrorController extends AbstractErrorController {
             LOGGER.error("Message: {}, error: {}, exception: {}, trace: {}", message, errorAttributes.get("error"), errorAttributes.get("exception"), errorAttributes.get("trace"));
         }
 
-        if (acceptValues.contains(MediaType.APPLICATION_JSON_VALUE) || acceptValues.contains(MediaType.APPLICATION_JSON_UTF8_VALUE)) {
+        if (acceptValues.contains(MediaType.APPLICATION_JSON_VALUE)) {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             try {
                 if (aaaProperties.debugResponse()) {

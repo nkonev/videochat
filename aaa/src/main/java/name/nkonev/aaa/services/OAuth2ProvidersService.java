@@ -4,7 +4,7 @@ import name.nkonev.aaa.config.properties.AaaProperties;
 import name.nkonev.aaa.dto.OAuth2ProvidersDTO;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
