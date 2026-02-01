@@ -96,8 +96,12 @@ const tracer = opentelemetry.trace.getTracer(
 let server;
 
 function shutdowner() {
-    console.log('Shutting down...');
-    server?.close();
+    logger.info('Start shutting down...');
+    server?.close(function () {
+        logger.info('All requests stopped, shutting down');
+        // once the server is not accepting connections, exit
+        process.exit();
+    });
 }
 
 process.on('SIGTERM', shutdowner);
