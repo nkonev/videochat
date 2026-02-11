@@ -1,5 +1,5 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
     ATTR_SERVICE_NAME,
     ATTR_SERVICE_VERSION,
@@ -32,7 +32,7 @@ const processor = new BatchSpanProcessor(exporter);
 // https://www.freecodecamp.org/news/how-to-use-opentelementry-to-trace-node-js-applications/
 // https://opentelemetry.io/docs/languages/js/instrumentation/
 const sdk = new NodeSDK({
-    resource: new Resource({
+    resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: 'public',
         [ATTR_SERVICE_VERSION]: '0.0.0',
     }),
