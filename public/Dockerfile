@@ -1,4 +1,4 @@
-FROM node:22.1.0-alpine
+FROM node:22.12.0-alpine
 ARG DEST=/opt/public
 RUN mkdir -p $DEST
 WORKDIR $DEST
