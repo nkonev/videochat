@@ -14,7 +14,8 @@ import "./instrumentation.js";
 
 import express from 'express'
 import compression from 'compression'
-import { renderPage } from 'vike/server'
+// https://vike.dev/migration/cli#api
+import { renderPage, createDevMiddleware } from 'vike/server'
 import { root } from './root.js'
 import {blog, blog_post, path_prefix} from "../common/router/routes.js"
 import { SitemapStream } from 'sitemap'
@@ -151,14 +152,8 @@ async function startServer() {
     // We instantiate Vite's development server and integrate its middleware to our server.
     // ⚠️ We instantiate it only in development. (It isn't needed in production and it
     // would unnecessarily bloat our production server.)
-    const vite = await import('vite')
-    const viteDevMiddleware = (
-      await vite.createServer({
-        root,
-        server: { middlewareMode: true }
-      })
-    ).middlewares
-    app.use(viteDevMiddleware)
+    const { devMiddleware } = await createDevMiddleware({ root })
+    app.use(devMiddleware)
   }
 
   const sitemapHandler = async function(req, res) {
