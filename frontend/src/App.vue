@@ -1027,6 +1027,18 @@ export default {
           this.updateVideoBadge()
         }
       },
+      '$route': {
+        handler: function (newValue, oldValue) {
+          if (isChatRoute(newValue)) {
+            if (newValue.params.id != oldValue.params.id) {
+              console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
+              if (hasLength(newValue.params.id) && this.chatStore.tempGoToChatId == newValue.params.id) {
+                this.onGoToTempClose()
+              }
+            }
+          }
+        }
+      },
     },
 
     created() {
