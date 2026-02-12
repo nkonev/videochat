@@ -40,6 +40,7 @@
             @addReaction="addReaction"
             @publishMessage="publishMessage"
             @removePublic="removePublic"
+            @quoteSelected="quoteSelected"
           />
         </div>
 
@@ -67,7 +68,7 @@
       MESSAGES_RELOAD,
       PLAYER_MODAL,
       FILE_CREATED,
-      WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED, OPEN_MESSAGE_DELETE_MODAL,
+      WEBSOCKET_INITIALIZED, WEBSOCKET_UNINITIALIZED, OPEN_MESSAGE_DELETE_MODAL, QUOTE_SELECTED,
     } from "@/bus/bus";
     import {
       checkUpByTree,
@@ -659,6 +660,9 @@
             },
             signal: this.requestAbortController.signal
           });
+        },
+        quoteSelected(selectedText) {
+          bus.emit(QUOTE_SELECTED, selectedText);
         },
         onClickTrap(e) {
           const foundElements = [

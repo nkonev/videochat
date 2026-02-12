@@ -106,6 +106,15 @@ export default {
                   icon: 'mdi-content-copy',
                   action: this.copyText
                 });
+
+                if (hasLength(this.selection)) {
+                  ret.push({
+                    title: this.$vuetify.locale.t('$vuetify.quote_selected'),
+                    icon: 'mdi-format-quote-open-outline',
+                    action: () => this.$emit('quoteSelected', this.selection)
+                  });
+                }
+
                 ret.push({title: this.$vuetify.locale.t('$vuetify.users_read'), icon: 'mdi-account-supervisor', action: () => this.$emit('showReadUsers', this.menuableItem) });
                 if (this.menuableItem.canPin) {
                     if (this.menuableItem.pinned) {

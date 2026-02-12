@@ -363,5 +363,6 @@ export default {
     auto_microphone_enable: "Авто вкл. микрофон (когда возможно)",
     overridden_permissions: "Разрешения",
     override_permissions: "Задать разрешения",
-    override_permissions_for: "Задать разрешения для '{0}'"
+    override_permissions_for: "Задать разрешения для '{0}'",
+    quote_selected: "Цитировать выделенное"
 }

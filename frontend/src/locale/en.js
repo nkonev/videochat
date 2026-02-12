@@ -363,5 +363,6 @@ export default {
     auto_microphone_enable: "Auto microphone enable (when possible)",
     overridden_permissions: "Permissions",
     override_permissions: "Override permissions",
-    override_permissions_for: "Override permissions for '{0}'"
+    override_permissions_for: "Override permissions for '{0}'",
+    quote_selected: "Quote selected text"
 }

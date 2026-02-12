@@ -102,6 +102,7 @@ import bus, {
   OPEN_FILE_UPLOAD_MODAL,
   MEDIA_LINK_SET,
   EMBED_LINK_SET, OPEN_MESSAGE_EDIT_MEDIA, OPEN_MESSAGE_EDIT_LINK, FILE_CREATED, SET_FILE_CORRELATION_ID,
+  QUOTE_SELECTED,
 } from "./bus/bus";
 import Video from "@/TipTapVideo";
 import Audio from "@/TipTapAudio";
@@ -314,6 +315,9 @@ export default {
     addText(text) {
       this.editor.commands.insertContent(text)
     },
+    onQuoteSelectedSet(text) {
+      this.editor.commands.insertContent('<blockquote>'+text+'</blockquote>')
+    },
     setFileItemUuid(fileItemUuid) {
         this.fileItemUuid = fileItemUuid;
     },
@@ -456,6 +460,7 @@ export default {
     bus.on(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.on(EMBED_LINK_SET, this.onEmbedLinkSet);
     bus.on(SET_FILE_CORRELATION_ID, this.setFileCorrelationId)
+    bus.on(QUOTE_SELECTED, this.onQuoteSelectedSet);
 
     const imagePluginInstance = buildImageHandler(
     (image, shouldAddDateToTheFilename) => {
@@ -609,6 +614,7 @@ export default {
     bus.off(MEDIA_LINK_SET, this.onMediaLinkSet);
     bus.off(EMBED_LINK_SET, this.onEmbedLinkSet);
     bus.off(SET_FILE_CORRELATION_ID, this.setFileCorrelationId)
+    bus.off(QUOTE_SELECTED, this.onQuoteSelectedSet);
     this.resetFileItemUuid();
     this.resetFileCorrelationId();
 

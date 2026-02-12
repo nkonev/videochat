@@ -131,7 +131,6 @@ import {
 import Mark from "mark.js";
 import ChatListContextMenu from "@/ChatListContextMenu.vue";
 import userStatusMixin from "@/mixins/userStatusMixin";
-import MessageItemContextMenu from "@/MessageItemContextMenu.vue";
 import hashMixin from "@/mixins/hashMixin.js";
 import {
   getTopChatPosition,
@@ -834,7 +833,6 @@ export default {
     },
   },
   components: {
-    MessageItemContextMenu,
     ChatListContextMenu
   },
   created() {
