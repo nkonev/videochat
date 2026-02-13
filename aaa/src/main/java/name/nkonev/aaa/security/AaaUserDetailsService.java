@@ -64,9 +64,12 @@ public class AaaUserDetailsService implements UserDetailsService {
             throw new RuntimeException(MESSAGE_WITH_EXPOSED_SECRET);
         }
 
+
+
         return userAccountRepository
                 .findByLogin(username)
-                .map(userAccountConverter::convertToUserAccountDetailsDTO)
+                // TODO fixme
+                .map(u -> userAccountConverter.convertToUserAccountDetailsDTO(u, getUsersOnline(List.of(u.id())).get(0).online()))
                 .orElseThrow(() -> new UsernameNotFoundException("User with login '" + username + "' not found"));
     }
 

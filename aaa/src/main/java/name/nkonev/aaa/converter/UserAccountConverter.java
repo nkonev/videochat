@@ -96,7 +96,7 @@ public class UserAccountConverter {
         return changeEmailConfirmationTokenRepository.findById(userId).map(t -> StringUtils.hasLength(t.newEmail())).orElse(false);
     }
 
-    public UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount) {
+    public UserAccountDetailsDTO convertToUserAccountDetailsDTO(UserAccount userAccount, boolean isOnline) {
         if (userAccount == null) { return null; }
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
@@ -115,7 +115,7 @@ public class UserAccountConverter {
                 Arrays.stream(userAccount.roles()).map(UserAccountConverter::convertRole).collect(Collectors.toSet()),
                 userAccount.email(),
                 awaitingForConfirmEmailChange,
-                userAccount.lastSeenDateTime(),
+                isOnline ? null : userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 userAccount.ldapId(),
@@ -126,7 +126,7 @@ public class UserAccountConverter {
         );
     }
 
-    public name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, LocalDateTime lastSeenDateTime, Long expiresAt) {
+    public name.nkonev.aaa.dto.UserSelfProfileDTO getUserSelfProfile(UserAccountDetailsDTO userAccount, boolean isOnline, LocalDateTime lastSeenDateTime, Long expiresAt) {
         if (userAccount == null) { return null; }
         var roles = convertRoles2Enum(userAccount.getRoles());
         var canShowAdminsCorner = canAccessToAdminsCorner(roles);
@@ -139,7 +139,7 @@ public class UserAccountConverter {
                 userAccount.userAccountDTO().shortInfo(),
                 userAccount.getEmail(),
                 userAccount.awaitingForConfirmEmailChange(),
-                lastSeenDateTime,
+                isOnline ? null : lastSeenDateTime,
                 userAccount.getOauth2Identifiers(),
                 roles,
                 expiresAt,
@@ -174,7 +174,7 @@ public class UserAccountConverter {
         return roles.stream().map(ur -> new SimpleGrantedAuthority(ur.name())).collect(Collectors.toSet());
     }
 
-    public static name.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount) {
+    public static name.nkonev.aaa.dto.UserAccountDTO convertToUserAccountDTO(UserAccount userAccount, boolean isOnline) {
         if (userAccount == null) { return null; }
         AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
         return new name.nkonev.aaa.dto.UserAccountDTO(
@@ -183,7 +183,7 @@ public class UserAccountConverter {
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
-                userAccount.lastSeenDateTime(),
+                isOnline ? null : userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 LdapUtils.isLdapSet(userAccount.ldapId()),
@@ -192,7 +192,7 @@ public class UserAccountConverter {
         );
     }
 
-    public name.nkonev.aaa.dto.UserAccountEventDTO convertToUserAccountEventDTO(UserAccount userAccount) {
+    public name.nkonev.aaa.dto.UserAccountEventDTO convertToUserAccountEventDTO(UserAccount userAccount, boolean isOnline) {
         if (userAccount == null) { return null; }
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
         AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
@@ -205,7 +205,7 @@ public class UserAccountConverter {
                 userAccount.avatar(),
                 userAccount.avatarBig(),
                 userAccount.shortInfo(),
-                userAccount.lastSeenDateTime(),
+                isOnline ? null : userAccount.lastSeenDateTime(),
                 convertOAuth2(userAccount.oauth2Identifiers()),
                 userAccount.loginColor(),
                 LdapUtils.isLdapSet(userAccount.ldapId()),
@@ -214,7 +214,7 @@ public class UserAccountConverter {
         );
     }
 
-    public name.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount) {
+    public name.nkonev.aaa.dto.UserAccountDTOExtended convertToUserAccountDTOExtended(PrincipalToCheck currentUser, UserAccount userAccount, boolean isOnline) {
         if (userAccount == null) { return null; }
         AdditionalDataDTO dataDTO = new AdditionalDataDTO(userAccount.enabled(), userAccount.expired(), userAccount.locked(), userAccount.confirmed(), Arrays.stream(userAccount.roles()).collect(Collectors.toSet()));
         var awaitingForConfirmEmailChange = awaitingForConfirmEmailChange(userAccount.id());
@@ -225,7 +225,7 @@ public class UserAccountConverter {
                     userAccount.avatar(),
                     userAccount.avatarBig(),
                     userAccount.shortInfo(),
-                    userAccount.lastSeenDateTime(),
+                    isOnline ? null : userAccount.lastSeenDateTime(),
                     convertOAuth2(userAccount.oauth2Identifiers()),
                     userAccount.loginColor(),
                     LdapUtils.isLdapSet(userAccount.ldapId()),
