@@ -43,5 +43,11 @@ public class LockService {
         public boolean isWasSet() {
             return wasSet;
         }
+
+        public void runIfLockAcquired(Runnable runnable) {
+            if (wasSet) {
+                runnable.run();
+            }
+        }
     }
 }

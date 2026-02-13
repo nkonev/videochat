@@ -67,9 +67,7 @@ public class SyncKeycloakTask extends AbstractSyncTask<KeycloakUserEntity, Keycl
         }
 
         try (var l = lockService.lock(LOCK_NAME, aaaProperties.schedulers().syncKeycloak().expiration())) {
-            if (l.isWasSet()) {
-                super.scheduledTask();
-            }
+            l.runIfLockAcquired(super::scheduledTask);
         }
     }
 

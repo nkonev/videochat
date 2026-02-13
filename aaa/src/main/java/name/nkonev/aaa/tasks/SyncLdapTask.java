@@ -68,9 +68,7 @@ public class SyncLdapTask extends AbstractSyncTask<LdapEntity, LdapUserInRoleEnt
         }
 
         try (var l = lockService.lock(LOCK_NAME, aaaProperties.schedulers().syncLdap().expiration())) {
-            if (l.isWasSet()) {
-                super.scheduledTask();
-            }
+            l.runIfLockAcquired(super::scheduledTask);
         }
     }
 

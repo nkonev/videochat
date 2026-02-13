@@ -44,9 +44,7 @@ public class UserOnlineTask {
         }
 
         try (var l = lockService.lock(LOCK_NAME, aaaProperties.schedulers().userOnline().expiration())) {
-            if (l.isWasSet()) {
-                this.doWork();
-            }
+            l.runIfLockAcquired(this::doWork);
         }
     }
 
