@@ -31,7 +31,8 @@
         </span>
       </span>
 
-      <v-card-subtitle class="title px-0 pb-0" v-if="viewableUser.lastSeenDateTime">
+      <!-- see also ChatView.vue::onUserStatusChanged() -->
+      <v-card-subtitle class="title px-0 pb-0" v-if="viewableUser.lastSeenDateTime && !online">
         {{ $vuetify.locale.t('$vuetify.last_seen_at', getHumanReadableDate(viewableUser.lastSeenDateTime)) }}
       </v-card-subtitle>
 

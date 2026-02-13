@@ -354,6 +354,8 @@ export default {
     // user 1 sees num of participants
     // user 2 logs out
     // user 1 sees "last login..."
+
+    // see also UserProfile.vue::viewableUser.lastSeenDateTime
     onUserStatusChanged(dtos) {
       const userId = this.getTetAtetOppositeParticipant();
 
