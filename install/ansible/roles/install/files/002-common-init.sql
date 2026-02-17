@@ -21,6 +21,12 @@ alter system set citus.executor_slow_start_interval = 200;
 -- to fix cluster restart we need to insert into pg_dist_authinfo
 -- https://stackoverflow.com/questions/70477676/citus-rebalance-table-shards-fe-sendauth-no-password-supplied/70494597#70494597
 -- https://postgrespro.ru/docs/enterprise/16/citus
+create database chat_old;
+\connect chat_old;
+CREATE EXTENSION citus;
+INSERT INTO pg_dist_authinfo(nodeid, rolename, authinfo) VALUES
+    (0, 'postgres', 'password=postgresqlPassword');
+
 create database chat;
 \connect chat;
 CREATE EXTENSION citus;
