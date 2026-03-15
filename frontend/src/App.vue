@@ -979,7 +979,7 @@ export default {
         },
         onFilesClicked() {
           const chatId = this.$route.params.id;
-          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: {}});
+          bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: { showFileInput: true }});
         },
     },
     components: {

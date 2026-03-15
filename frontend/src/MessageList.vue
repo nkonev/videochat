@@ -501,6 +501,7 @@
             fileItemUuid: item.fileItemUuid,
             fileUploadTask: {
               fileItemUuid: item.fileItemUuid,
+              showFileInput: true,
             }
           };
           if (this.meIsOwnerOfMessage(item)) {

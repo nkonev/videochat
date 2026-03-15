@@ -232,7 +232,7 @@ export default {
     },
     openFiles() {
       const chatId = this.$route.params.id;
-      bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: {}});
+      bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: { showFileInput: true }});
     },
     openPinnedMessages() {
       bus.emit(OPEN_PINNED_MESSAGES_MODAL, {chatId: this.$route.params.id});
