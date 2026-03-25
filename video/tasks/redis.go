@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+
 	"github.com/nkonev/dcron"
 	redisV9 "github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -30,7 +31,7 @@ type RedisLock struct {
 	lgr    *logger.Logger
 }
 
-func (m *RedisLock) Lock(ctx context.Context, key, value string) bool {
+func (m *RedisLock) Lock(ctx context.Context, _ any, key, value string) bool {
 	exp := viper.GetDuration("schedulers." + key + ".expiration")
 	if exp == 0 {
 		m.lgr.WithTracing(ctx).Errorf("not set expiring duration")
@@ -46,7 +47,7 @@ func (m *RedisLock) Lock(ctx context.Context, key, value string) bool {
 	return locked
 }
 
-func (m *RedisLock) Unlock(ctx context.Context, key, value string) {
+func (m *RedisLock) Unlock(ctx context.Context, _ any, key, value string) {
 	m.client.Del(ctx, key)
 }
 
