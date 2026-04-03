@@ -1209,10 +1209,6 @@ html {
     }
 }
 
-div .stop-scrolling {
-    overflow: hidden !important;
-}
-
 .inline-caption-base {
   z-index 2
   display inherit

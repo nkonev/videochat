@@ -11,7 +11,6 @@ export const directionBottom = 'bottom';
 // onScrollCallback(), afterScrollRestored()
 // onScroll() should be called from template
 
-// stop-scrolling class (in App.vue)
 export default (name) => {
   return {
     data() {
@@ -111,16 +110,10 @@ export default (name) => {
       },
       async setNoScroll() {
           return this.$nextTick(()=>{
-              if (isFireFox()) { // This works well only on Firefox, in case Chrome it both doesn't needed and breaks pagination in a random manner
-                  this.scrollerDiv.classList.add("stop-scrolling");
-              }
           })
       },
       async unsetNoScroll() {
           return this.$nextTick(()=>{
-              if (isFireFox()) {
-                  this.scrollerDiv.classList.remove("stop-scrolling");
-              }
           })
       },
       async initialLoad() {
