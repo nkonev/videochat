@@ -173,7 +173,7 @@
           if (chatIdsAreEqual && isScrolledToBottom && emptySearchString) {
             this.addItem(dto);
             this.performMarking();
-            this.scrollDown();
+            this.scrollDown(true);
           } else if (chatIdsAreEqual && isScrolledToBottom) { // not empty searchString
             axios.post(`/api/chat/${this.chatId}/message/filter`, {
               searchString: this.searchString,
@@ -184,7 +184,7 @@
               if (data.found) {
                 this.addItem(dto);
                 this.performMarking();
-                this.scrollDown();
+                this.scrollDown(true);
               }
             })
           } else {
@@ -369,11 +369,17 @@
           return messageIdPrefix + id
         },
 
-        async scrollDown() {
+        async scrollDown(inOtherThread) {
           removeTopMessagePosition(this.chatId);
-          return await this.$nextTick(() => {
-            this.scrollerDiv.scrollTop = 0;
-          });
+          if (inOtherThread) {
+            setTimeout(()=>{
+              this.scrollerDiv.scrollTop = 0;
+            }, 1)
+          } else {
+            return await this.$nextTick(() => {
+              this.scrollerDiv.scrollTop = 0;
+            });
+          }
         },
         scrollerSelector() {
           return ".my-messages-scroller"
