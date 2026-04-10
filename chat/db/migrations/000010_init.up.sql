@@ -29,7 +29,7 @@ create unlogged table chat_common(
     regular_participant_can_write_message BOOLEAN NOT NULL,
     regular_participant_can_add_participant BOOLEAN NOT NULL,
     participants_count bigint not null default 0,
-    participant_ids bigint[] not null default array[]::bigint[], -- last N
+    last_n_participant_ids bigint[] not null default array[]::bigint[], -- last N
     last_message_id bigint,
     last_message_content text,
     last_message_owner_id bigint

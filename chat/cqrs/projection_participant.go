@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
-	"time"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 )
@@ -210,7 +211,7 @@ func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db
 		update chat_common cc
 		SET 
 			participants_count = (select participants_count from input_data),
-			participant_ids = (select participant_ids from input_data)
+			last_n_participant_ids = (select participant_ids from input_data)
 		where cc.id = $1
 		`, chatId, m.cfg.Cqrs.Projections.ChatUserView.MaxViewableParticipants)
 	if err != nil {

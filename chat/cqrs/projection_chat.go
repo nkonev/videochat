@@ -5,13 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/preview"
 	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
-	"time"
 
 	"github.com/qdm12/reprint"
 
@@ -1052,7 +1053,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		LastMessageOwnerId                  *int64           `db:"last_message_owner_id"`
 		LastMessageContent                  *string          `db:"last_message_content"`
 		ParticipantsCount                   int64            `db:"participants_count"`
-		ParticipantIds                      pgtype.Int8Array `db:"participant_ids"` // ids of last N participants
+		ParticipantIds                      pgtype.Int8Array `db:"last_n_participant_ids"` // ids of last N participants
 		Blog                                bool             `db:"blog"`
 		BlogAbout                           bool             `db:"blog_about"`
 		UpdateDateTime                      *time.Time       `db:"update_date_time"`
@@ -1166,7 +1167,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		    cc.last_message_owner_id,
 		    cc.last_message_content,
 		    cc.participants_count,
-		    cc.participant_ids,
+		    cc.last_n_participant_ids,
 		    b.id is not null as blog,
 		    coalesce(b.blog_about, false) as blog_about,
 		    ch.update_date_time,
