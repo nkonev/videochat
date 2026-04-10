@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"nkonev.name/chat/db"
+	"nkonev.name/chat/kafka"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
-	"time"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/kversion"
@@ -789,6 +791,49 @@ func ConfigureCommonProjection(
 
 func SetIsNeedToFastForwardSequences(commonProjection *CommonProjection) error {
 	return commonProjection.SetIsNeedToFastForwardSequences(context.Background())
+}
+
+func Import(
+	lgr *logger.LoggerWrapper,
+	cfg *config.AppConfig,
+	cp *CommonProjection,
+	dbWrapper *db.DB,
+) error {
+	ctx := context.Background()
+	v, err := cp.GetIsNeedToSkipImport(ctx, dbWrapper)
+	if err != nil {
+		return err
+	}
+
+	if v {
+		lgr.Warn("Skipping import because it was already made")
+		return nil
+	}
+
+	err = kafka.Import(lgr, cfg)
+	if err != nil {
+		return err
+	}
+
+	err = SetIsNeedToFastForwardSequences(cp)
+	if err != nil {
+		return err
+	}
+
+	err = SetIsNeedToSkipImport(cp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetIsNeedToSkipImport(commonProjection *CommonProjection) error {
+	return commonProjection.SetIsNeedToSkipImport(context.Background())
+}
+
+func UnsetIsNeedToSkipImport(commonProjection *CommonProjection, dbWrapper *db.DB) error {
+	return commonProjection.UnsetIsNeedToSkipImport(context.Background(), dbWrapper)
 }
 
 func RunSequenceFastforwarder(

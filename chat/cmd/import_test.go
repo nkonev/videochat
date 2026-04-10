@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"log/slog"
+	"os"
+	"testing"
+
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
@@ -13,8 +16,6 @@ import (
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/otel"
 	"nkonev.name/chat/sanitizer"
-	"os"
-	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/twmb/franz-go/pkg/kadm"
@@ -146,8 +147,7 @@ func TestImport(t *testing.T) {
 			db.RunMigrations,
 			kafka.RunCreateTopicChat,
 			kafka.RunCreateTopicUser,
-			kafka.Import,
-			cqrs.SetIsNeedToFastForwardSequences,
+			cqrs.Import,
 			app.Shutdown,
 		),
 	)

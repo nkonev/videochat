@@ -137,6 +137,7 @@ To run without schedulers:
 			cqrs.ListenUserTopic,
 			kafka.WaitForAllEventsProcessedChat,
 			kafka.WaitForAllEventsProcessedUser,
+			cqrs.UnsetIsNeedToSkipImport,
 			cqrs.RunSequenceFastforwarder,
 			producer.EnableOutputEvents,
 			producer.EnableNotificationEvents,

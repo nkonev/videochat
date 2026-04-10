@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
@@ -144,6 +145,28 @@ func (m *CommonProjection) UnsetIsNeedToFastForwardSequences(ctx context.Context
 func (m *CommonProjection) GetIsNeedToFastForwardSequences(ctx context.Context, co db.CommonOperations) (bool, error) {
 	var e bool
 	err := sqlscan.Get(ctx, co, &e, "select exists(select * from technical where the_key = $1 and the_value = $2)", need_to_fast_forward_sequences_key, need_to_fast_forward_sequences_value)
+	if err != nil {
+		return false, err
+	}
+	return e, err
+}
+
+const need_to_skip_import_key = "need_to_skip_import"
+const need_to_skip_import_value = "true"
+
+func (m *CommonProjection) SetIsNeedToSkipImport(ctx context.Context) error {
+	_, err := m.db.ExecContext(ctx, "insert into technical(the_key, the_value) values ($1, $2) on conflict (the_key) do update set the_value = excluded.the_value", need_to_skip_import_key, need_to_skip_import_value)
+	return err
+}
+
+func (m *CommonProjection) UnsetIsNeedToSkipImport(ctx context.Context, co db.CommonOperations) error {
+	_, err := co.ExecContext(ctx, "delete from technical where the_key = $1", need_to_skip_import_key)
+	return err
+}
+
+func (m *CommonProjection) GetIsNeedToSkipImport(ctx context.Context, co db.CommonOperations) (bool, error) {
+	var e bool
+	err := sqlscan.Get(ctx, co, &e, "select exists(select * from technical where the_key = $1 and the_value = $2)", need_to_skip_import_key, need_to_skip_import_value)
 	if err != nil {
 		return false, err
 	}

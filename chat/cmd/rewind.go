@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"log/slog"
+	"os"
+
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
@@ -15,7 +17,6 @@ import (
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/type_registry"
-	"os"
 
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -87,6 +88,7 @@ Then exits.
 			cqrs.ListenUserTopic,
 			kafka.WaitForAllEventsProcessedChat,
 			kafka.WaitForAllEventsProcessedUser,
+			cqrs.UnsetIsNeedToSkipImport,
 			cqrs.RunSequenceFastforwarder,
 			app.Shutdown,
 		),

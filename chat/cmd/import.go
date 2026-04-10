@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"log/slog"
+	"os"
+
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -11,7 +13,6 @@ import (
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/otel"
 	"nkonev.name/chat/sanitizer"
-	"os"
 
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -76,8 +77,7 @@ cat /tmp/export.jsonl | ./%s %s --cqrs.import.file=%s
 			db.RunMigrations,
 			kafka.RunCreateTopicChat,
 			kafka.RunCreateTopicUser,
-			kafka.Import,
-			cqrs.SetIsNeedToFastForwardSequences,
+			cqrs.Import,
 			app.Shutdown,
 		),
 	)
