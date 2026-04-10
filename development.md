@@ -1493,5 +1493,5 @@ SELECT * from citus_get_active_worker_nodes();
 SELECT * FROM citus_check_cluster_node_health();
 
 docker service logs -f --tail 100 VIDEOCHATSTACK_chat
-
+journalctl -f -n 1000 CONTAINER_TAG=chat-kafka-1
 ```
