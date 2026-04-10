@@ -212,21 +212,22 @@ type RedisConfig struct {
 }
 
 type AppConfig struct {
-	Kafka       KafkaConfig
-	Otlp        OtlpConfig
-	PostgreSQL  PostgreSQLConfig
-	Server      HttpServerConfig
-	Cqrs        CqrsConfig
-	Http        RestClientConfig
-	Logger      LoggerConfig
-	Aaa         AaaConfig
-	Message     MessageConfig
-	Chat        ChatConfig
-	Blog        BlogConfig
-	FrontendUrl string
-	RabbitMQ    RabbitMQConfig
-	Schedulers  TaskConfig
-	Redis       RedisConfig
+	Kafka         KafkaConfig
+	Otlp          OtlpConfig
+	PostgreSQL    PostgreSQLConfig
+	PostgreSQLOld PostgreSQLConfig
+	Server        HttpServerConfig
+	Cqrs          CqrsConfig
+	Http          RestClientConfig
+	Logger        LoggerConfig
+	Aaa           AaaConfig
+	Message       MessageConfig
+	Chat          ChatConfig
+	Blog          BlogConfig
+	FrontendUrl   string
+	RabbitMQ      RabbitMQConfig
+	Schedulers    TaskConfig
+	Redis         RedisConfig
 }
 
 //go:embed config
