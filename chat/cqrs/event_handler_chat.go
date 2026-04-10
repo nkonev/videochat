@@ -550,7 +550,7 @@ func (m *EventHandler) onMessagesCreated(ctx context.Context, events []MessageCr
 	for _, msg := range events {
 		adt := adts[msg.AdditionalData.BehalfUserId]
 		if !CanWriteMessage(adt.IsParticipant, adt.IsChatAdmin, adt.ChatCanWriteMessage) {
-			m.lgr.InfoContext(ctx, "Skipping OnBatchMessagesCreated because there is no authorization to do so", logger.AttributeChatId, chatId, logger.AttributeUserId, msg.AdditionalData.BehalfUserId)
+			m.lgr.InfoContext(ctx, "Skipping MessageCreated (part of OnBatchMessagesCreated) because there is no authorization to do so", logger.AttributeChatId, chatId, logger.AttributeUserId, msg.AdditionalData.BehalfUserId, logger.AttributeMessageId, msg.MessageCommoned.Id)
 		} else {
 			authorizedMessageEvents = append(authorizedMessageEvents, msg)
 			authorizedMessageEventsByMessageId[msg.MessageCommoned.Id] = msg

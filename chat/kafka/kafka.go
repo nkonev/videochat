@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"time"
+
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"os"
-	"time"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/twmb/franz-go/pkg/kadm"
@@ -525,6 +526,10 @@ func Export(
 					return
 				}
 			})
+
+			if perr != nil {
+				return
+			}
 		})
 
 		if perr != nil {
@@ -568,29 +573,29 @@ func Import(
 	}
 
 	scanner := bufio.NewScanner(reader)
-	i := 0
+	r := 0
 
 	ctx := context.Background()
 
 	for scanner.Scan() {
-		i++
+		r++
 		str := scanner.Text()
 		jsonObj, err := gabs.ParseJSON([]byte(str))
 		if err != nil {
-			return fmt.Errorf("Error on reading line %v: %w", i, err)
+			return fmt.Errorf("Error on reading line %v: %w", r, err)
 		}
 
 		kd := jsonObj.S(KeyKey).Data()
 		aKey, okk := kd.(string)
 		if !okk {
-			return fmt.Errorf("Error on parsing key on reading line %v from %v", i, kd)
+			return fmt.Errorf("Error on parsing key on reading line %v from %v", r, kd)
 		}
 
 		aValue := jsonObj.S(ValueKey).Bytes()
 		aPartition := jsonObj.S(MetadataKey, MetadataPartitionKey).String()
 		partition, err := utils.ParseInt64(aPartition)
 		if err != nil {
-			return fmt.Errorf("Error on parsing partition on reading line %v: %w", i, err)
+			return fmt.Errorf("Error on parsing partition on reading line %v: %w", r, err)
 		}
 
 		headers := []kgo.RecordHeader{}
@@ -599,7 +604,7 @@ func Import(
 			hd := headerValue.Data()
 			hds, okhv := hd.(string)
 			if !okhv {
-				return fmt.Errorf("Error on parsing header value on reading line %v from %v for key %v", i, hd, headerKey)
+				return fmt.Errorf("Error on parsing header value on reading line %v from %v for key %v", r, hd, headerKey)
 			}
 			headers = append(headers, kgo.RecordHeader{
 				Key:   headerKey,
@@ -619,15 +624,20 @@ func Import(
 
 		var serr error
 		var aerr []error
-		for i := range prs {
-			if prs[i].Err != nil {
-				aerr = append(aerr, prs[i].Err)
+		for ii := range prs {
+			if prs[ii].Err != nil {
+				aerr = append(aerr, prs[ii].Err)
 			}
 		}
 		serr = errors.Join(aerr...)
 		if serr != nil {
-			return fmt.Errorf("Error on sending message from line %v: %w", i, serr)
+			return fmt.Errorf("Error on sending message from line %v: %w", r, serr)
 		}
+	}
+
+	scerr := scanner.Err()
+	if scerr != nil {
+		return fmt.Errorf("Error on scanning last line %v: %w", r, scerr)
 	}
 
 	lgr.Info("Import function was successfully finished")
