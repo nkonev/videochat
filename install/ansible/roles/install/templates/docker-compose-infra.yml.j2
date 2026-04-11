@@ -69,7 +69,8 @@ services:
     networks:
       backend:
     volumes:
-      - /mnt/chat-kafka-1:/var/lib/kafka:z
+      # https://github.com/apache/kafka/blob/4.2.0/docker/jvm/Dockerfile#L108
+      - /mnt/chat-kafka-1/data:/var/lib/kafka/data:z
     logging:
       driver: "journald"
       options:

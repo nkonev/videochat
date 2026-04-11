@@ -296,7 +296,7 @@
 
 - name: Create kafka-1 data directory if it does not exist
   ansible.builtin.file:
-    path: /mnt/chat-kafka-1
+    path: /mnt/chat-kafka-1/data
     state: directory
     mode: u=rwx,g-rwx,o-rwx
     owner: 1000

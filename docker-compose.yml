@@ -137,7 +137,8 @@ services:
       backend:
 
     volumes:
-      - kafka_data:/var/lib/kafka:z
+      # https://github.com/apache/kafka/blob/4.2.0/docker/jvm/Dockerfile#L108
+      - kafka_data:/var/lib/kafka/data:z
 
   redis:
     image: valkey/valkey:8.1.0-alpine3.21
