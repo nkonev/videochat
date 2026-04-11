@@ -39,8 +39,6 @@ Also %s or %s is supported, e. g.:
 		cmd.RunRewind(remainingArgs)
 	case cmd.CommandServeName:
 		cmd.RunServe(remainingArgs)
-	case cmd.CommandMigrateName:
-		cmd.RunMigrate(remainingArgs)
 	default:
 		fmt.Printf("Unknown command '%v'. Expected command is one of %s.\n", theCmd, cmd.AllCommands.String())
 		os.Exit(1)
