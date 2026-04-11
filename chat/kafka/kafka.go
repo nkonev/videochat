@@ -572,15 +572,22 @@ func Import(
 		defer f.Close()
 	}
 
-	scanner := bufio.NewScanner(reader)
+	bufferedScanner := bufio.NewReader(reader)
 	r := 0
 
 	ctx := context.Background()
 
-	for scanner.Scan() {
+	for {
 		r++
-		str := scanner.Text()
-		jsonObj, err := gabs.ParseJSON([]byte(str))
+		bt, scerr := bufferedScanner.ReadBytes('\n')
+		if errors.Is(scerr, io.EOF) {
+			lgr.Info("Reached EOF, it's ok")
+			break
+		} else if scerr != nil {
+			return fmt.Errorf("Error on scanning last line %v: %w", r, scerr)
+		}
+
+		jsonObj, err := gabs.ParseJSON(bt)
 		if err != nil {
 			return fmt.Errorf("Error on reading line %v: %w", r, err)
 		}
@@ -633,11 +640,6 @@ func Import(
 		if serr != nil {
 			return fmt.Errorf("Error on sending message from line %v: %w", r, serr)
 		}
-	}
-
-	scerr := scanner.Err()
-	if scerr != nil {
-		return fmt.Errorf("Error on scanning last line %v: %w", r, scerr)
 	}
 
 	lgr.Info("Import function was successfully finished")
