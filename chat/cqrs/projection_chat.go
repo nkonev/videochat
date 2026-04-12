@@ -418,7 +418,7 @@ func (m *EnrichingProjection) ChatFilter(ctx context.Context, co db.CommonOperat
 	if len(searchString) > 0 {
 		searchClause += " and ("
 
-		searchClauseT, searchCteT, _, queryArgsT := processAdditionalUserIds(queryArgs, additionalFoundUserIds, searchString)
+		searchClauseT, searchCteT, queryArgsT := processAdditionalUserIds(queryArgs, additionalFoundUserIds, searchString)
 		searchClause += searchClauseT
 		searchCte = searchCteT
 		queryArgs = queryArgsT
@@ -445,10 +445,14 @@ func (m *EnrichingProjection) ChatFilter(ctx context.Context, co db.CommonOperat
 	return found, nil
 }
 
-func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int64, searchString string) (searchClause string, searchCte string, searchForPublic bool, queryArgs []any) {
+func isSearchForPublic(searchString string) bool {
+	return searchString == dto.ReservedPublicallyAvailableForSearchChats
+}
+
+func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int64, searchString string) (searchClause string, searchCte string, queryArgs []any) {
 	queryArgs = queryArgsInput
 	var additionalUserIdsClause = ""
-	searchForPublic = searchString == dto.ReservedPublicallyAvailableForSearchChats
+	searchForPublic := isSearchForPublic(searchString)
 	if len(additionalFoundUserIds) > 0 {
 		queryArgs = append(queryArgs, additionalFoundUserIds)
 		searchCte = fmt.Sprintf(`
@@ -1078,6 +1082,8 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 	list := []chatDto{}
 	res := []dto.ChatViewDto{}
 
+	var searchForPublic bool = isSearchForPublic(searchString)
+
 	queryArgs := []any{size, participantIds, dto.NonExistentUser}
 
 	order := "desc"
@@ -1086,7 +1092,15 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		order = "asc"
 	}
 
-	orderClause := fmt.Sprintf("order by (ch.pinned, ch.update_date_time, ch.id) %s", order)
+	const personalOrder = "ch.pinned, ch.update_date_time, ch.id"
+	const publicOrder = "cc.create_date_time, cc.id"
+
+	var orderClause string
+	if !searchForPublic {
+		orderClause = fmt.Sprintf("order by (%s) %s", personalOrder, order)
+	} else {
+		orderClause = fmt.Sprintf("order by (%s) %s", publicOrder, order)
+	}
 	// see also getSafeDefaultUserId() in aaa
 	if includeStartingFrom || startingFromItemId == nil {
 		offset = ""
@@ -1105,24 +1119,32 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		return nil, fmt.Errorf("wrong invariant: both startingFromItemId and chatId provided")
 	}
 
+	if len(searchString) > 0 && chatId != nil {
+		return nil, fmt.Errorf("wrong invariant: both searchString and chatId provided")
+	}
+
 	if startingFromItemId != nil {
-		paginationKeyset := fmt.Sprintf(` and (ch.pinned, ch.update_date_time, ch.id) %s ($%d, $%d, $%d)`, nonEquality, len(queryArgs)+1, len(queryArgs)+2, len(queryArgs)+3)
-		queryArgs = append(queryArgs, startingFromItemId.Pinned, startingFromItemId.LastUpdateDateTime, startingFromItemId.Id)
+		var paginationKeyset string
+		if !searchForPublic {
+			paginationKeyset = fmt.Sprintf(` and (%s) %s ($%d, $%d, $%d)`, personalOrder, nonEquality, len(queryArgs)+1, len(queryArgs)+2, len(queryArgs)+3)
+			queryArgs = append(queryArgs, startingFromItemId.Pinned, startingFromItemId.LastUpdateDateTime, startingFromItemId.Id)
+		} else {
+			paginationKeyset = fmt.Sprintf(` and (%s) %s ($%d, $%d)`, publicOrder, nonEquality, len(queryArgs)+1, len(queryArgs)+2)
+			queryArgs = append(queryArgs, startingFromItemId.LastUpdateDateTime, startingFromItemId.Id)
+		}
 
 		conditionClause += paginationKeyset
 	}
 
 	var searchClause = ""
 	var searchCte = ""
-	var searchForPublic bool
 	if len(searchString) > 0 {
 		searchClause = " and ("
 
-		searchClauseT, searchCteT, searchForPublicT, queryArgsT := processAdditionalUserIds(queryArgs, additionalFoundUserIds, searchString)
+		searchClauseT, searchCteT, queryArgsT := processAdditionalUserIds(queryArgs, additionalFoundUserIds, searchString)
 		searchClause += searchClauseT
 		searchCte = searchCteT
 		queryArgs = queryArgsT
-		searchForPublic = searchForPublicT
 
 		searchClause += " or "
 		queryArgs = append(queryArgs, searchString)
@@ -1139,7 +1161,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 	if chatId != nil {
 		chatIdV := *chatId
 		queryArgs = append(queryArgs, chatIdV)
-		chatIdClause := fmt.Sprintf("and ch.id = $%d", len(queryArgs))
+		chatIdClause := fmt.Sprintf(" and ch.id = $%d", len(queryArgs))
 
 		conditionClause += chatIdClause
 		orderClause = "order by ch.update_date_time desc, ch.user_id" // to prevent flaky tests. the same as in projection_participantv :: getParticipantsCommonExcepting()
@@ -1150,6 +1172,13 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		joinClause = " join "
 	} else {
 		joinClause = " left join "
+	}
+
+	var dateTimeClause string
+	if !searchForPublic {
+		dateTimeClause = "ch.update_date_time"
+	} else {
+		dateTimeClause = "cc.create_date_time"
 	}
 
 	// it is optimized (all order by in the same table)
@@ -1170,7 +1199,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		    cc.last_n_participant_ids,
 		    b.id is not null as blog,
 		    coalesce(b.blog_about, false) as blog_about,
-		    ch.update_date_time,
+		    %s as update_date_time,
 		    cc.tet_a_tet,
 			cc.avatar,
 			cc.avatar_big,
@@ -1191,7 +1220,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		%s
 		limit $1
 		%s
-		`, searchCte, joinClause, conditionClause, searchClause, orderClause, offset)
+		`, searchCte, dateTimeClause, joinClause, conditionClause, searchClause, orderClause, offset)
 	err := sqlscan.Select(ctx, co, &list, q, queryArgs...)
 	if err != nil {
 		return res, err
