@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -387,15 +388,10 @@ type BlogOrderBy int16
 const BlogOrderByCreateDateTime BlogOrderBy = 1
 const BlogOrderByUpdateDateTime BlogOrderBy = 2
 
-func (m *CommonProjection) GetBlogs(ctx context.Context, size int32, offset int64, orderBy BlogOrderBy, reverseOrder bool, searchString string) ([]BlogListViewDto, int64, *blogAbout, error) {
-	queryArgs := []any{size, offset}
-
-	order := "desc"
-	if reverseOrder {
-		order = "asc"
-	}
-
+func (m *CommonProjection) makeBlogSearch(queryArgsInput []any, searchString string) (string, []any) {
 	searchClause := ""
+	queryArgs := slices.Clone(queryArgsInput)
+
 	if len(searchString) > 0 {
 		searchClause = " and ("
 
@@ -409,6 +405,24 @@ func (m *CommonProjection) GetBlogs(ctx context.Context, size int32, offset int6
 
 		searchClause += " ) "
 	}
+
+	return searchClause, queryArgs
+}
+
+func (m *CommonProjection) GetBlogs(ctx context.Context, size int32, offset int64, orderBy BlogOrderBy, reverseOrder bool, searchString string) ([]BlogListViewDto, int64, *blogAbout, error) {
+	itemsQueryArgs := []any{size, offset}
+	countQueryArgs := []any{}
+
+	order := "desc"
+	if reverseOrder {
+		order = "asc"
+	}
+
+	itemsSearchClause := ""
+	itemsSearchClause, itemsQueryArgs = m.makeBlogSearch(itemsQueryArgs, searchString)
+
+	countSearchClause := ""
+	countSearchClause, countQueryArgs = m.makeBlogSearch(countQueryArgs, searchString)
 
 	type postsWithCount struct {
 		blogListViewDto []BlogListViewDto
@@ -443,13 +457,13 @@ func (m *CommonProjection) GetBlogs(ctx context.Context, size int32, offset int6
 			where true %s
 			order by %s %s
 			limit $1 offset $2
-		`, searchClause, orderByCaluse, order), queryArgs...)
+		`, itemsSearchClause, orderByCaluse, order), itemsQueryArgs...)
 		if errInner != nil {
 			return nil, errInner
 		}
 
 		var count int64
-		errInner = sqlscan.Get(ctx, tx, &count, "select count(*) from blog")
+		errInner = sqlscan.Get(ctx, tx, &count, fmt.Sprintf("select count(*) from blog b where true %s", countSearchClause), countQueryArgs...)
 		if errInner != nil {
 			return nil, errInner
 		}
