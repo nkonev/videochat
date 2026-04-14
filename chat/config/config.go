@@ -34,14 +34,10 @@ type KafkaConfig struct {
 }
 
 type KafkaProducerConfig struct {
-	RetryMax      int
-	ReturnSuccess bool
-	RetryBackoff  time.Duration
-	ClientId      string
+	ClientId string
 }
 
 type KafkaConsumerConfig struct {
-	ReturnErrors bool
 	ClientId     string
 	BatchSize    int
 	FetchMaxWait time.Duration

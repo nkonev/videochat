@@ -118,6 +118,7 @@ func ConfigurePublisher(
 ) (*KafkaProducer, error) {
 	cl, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
+		kgo.ClientID(cfg.Kafka.Producer.ClientId),
 		kgo.WithHooks(kotelService.Hooks()...),
 		kgo.MinVersions(kversion.V4_1_0()),
 	)

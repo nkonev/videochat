@@ -14,12 +14,8 @@ kafka:
   consumerGroupChat: ChatProjection
   consumerGroupUser: UserProjection
   producer:
-    retryMax: 10
-    returnSuccess: true
-    retryBackoff: 2s
     clientId: "chat-producer"
   consumer:
-    returnErrors: true
     clientId: "chat-consumer"
     batchSize: 1024
     fetchMaxWait: 500ms
