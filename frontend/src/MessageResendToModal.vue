@@ -88,12 +88,18 @@ export default {
             showSearchButton: true,
             markInstance: null,
             dataLoaded: false,
+            loadedChatId: null,
         }
     },
 
     methods: {
         hasLength,
         showModal(messageDto) {
+            if (this.chatId != this.loadedChatId) {
+              console.info("resetting due to data");
+              this.reset();
+            }
+
             this.messageDto = messageDto;
 
             this.show = true;
@@ -118,6 +124,7 @@ export default {
               }
             }).then(({data}) => {
                 this.chats = data.items;
+                this.loadedChatId = this.chatId;
             }).finally(()=>{
                 if (!silent) {
                     this.loading = false;
@@ -228,6 +235,7 @@ export default {
             this.chats = [];
             this.loading = false;
             this.searchString = null;
+            this.loadedChatId = null;
         },
         shouldReactOnPageChange() {
             return false
