@@ -4479,6 +4479,13 @@ func TestMessageFuzzySearch(t *testing.T) {
 		require.NoError(t, kafka.WaitForAllEventsProcessedUser(lgr, cfg, admCl, lc), "error in waiting for processing events")
 		waitForMessageExists(lgr, m, dba, chat1Id, messageId2, cfg.Cqrs.SleepBeforePolling, cfg.Cqrs.PollingMaxTimes)
 
+		const message4Text = `BASSANOVA - GAUNTLET DOCS LEAKED:$ATOM 2.0WILL CRUSH INFLATION — THE ENDGAME IS HERE #ATOM #cosmosTHE SHOCK DROPCosmos Labs handed Gauntlet (Coinbase/Uniswap tier) the keys to REINVENT $ATOM.16 weeks. Results July. They found the broken model. #Tokenomics #DeFiTHE DIAGNOSIS IS BRUTALPhase 1 rips apart:•Who’s actually holding ATOM?•Why staking dropped off a cliff•How past inflation changes BROKE demand #Crypto #InflationATOM 2.0: ZERO INFLATION ENGINEFees > Security = 0% issuance. First L1 that PAYS YOU TO EXIST.ATOM becomes THE reserve asset for:•Gas - IBC settlement - Interchain Security #Web3 #L1THE KILLER MECHANICS•3-YEAR MELTDOWN: Gradual issuance death•Osmosis cash machine: DEX fees → ATOM buybacks (2.5% supply cap)•Rollup yield: Stake ATOM, secure L2s, collect fees #Staking #YieldTIMING IS NUCLEAR•Gauntlet drops truth bombs July 2026•CometBFT 10k+ TPS live Q2•Bithumb whales positioning NOW #Bullish #WhalesTHE DIRTY SECRETForum buried this RFP for months. Normies sleeping.Maxis knew. Institutions smelled blood. #Insider #FOMO$ATOM isn’t “just another L1.”It’s THE coordination layer eating Solana’s lunch. #CosmosHub #IBCStack or get rekt.RT if you’re loading $ATOM 🚀---crypto`
+		_, err = testRestClient.CreateMessage(ctx, user1, chat1Id, message4Text)
+		require.NoError(t, err, "error in creating message")
+		require.NoError(t, kafka.WaitForAllEventsProcessedChat(lgr, cfg, admCl, lc), "error in waiting for processing events")
+		require.NoError(t, kafka.WaitForAllEventsProcessedUser(lgr, cfg, admCl, lc), "error in waiting for processing events")
+		waitForMessageExists(lgr, m, dba, chat1Id, messageId2, cfg.Cqrs.SleepBeforePolling, cfg.Cqrs.PollingMaxTimes)
+
 		const searchString1 = "Опубликованный"
 		resp1Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSearch(searchString1))
 		require.NoError(t, err)
