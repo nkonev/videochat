@@ -940,15 +940,17 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 	if len(searchString) > 0 {
 		searchClause = " and ("
 
-		// something or
+		queryArgs = append(queryArgs, "%"+searchString+"%")
+		searchClause += fmt.Sprintf(" m.fts_all_content::text ilike $%d ", len(queryArgs))
+		searchClause += " or "
 
 		queryArgs = append(queryArgs, searchString)
-		searchClause += fmt.Sprintf(` 
-		exists ( 
-			select 1 from (select * from (select unnest(tsvector_to_array(m.fts_all_content))) t(av)) inq 
-			where 
-				   ( inq.av %% plainto_tsquery('russian', $%d)::text ) 
-				or ( cyrillic_transliterate(inq.av) %% cyrillic_transliterate(plainto_tsquery('russian', $%d)::text) ) 
+		searchClause += fmt.Sprintf(`
+		exists (
+			select 1 from (select * from (select unnest(tsvector_to_array(m.fts_all_content))) t(av)) inq
+			where
+				word_similarity( inq.av, plainto_tsquery('russian', $%d)::text ) > 0.8
+				or word_similarity( cyrillic_transliterate(inq.av), cyrillic_transliterate(plainto_tsquery('russian', $%d)::text) ) > 0.8
 		) `, len(queryArgs), len(queryArgs))
 
 		searchClause += " ) "

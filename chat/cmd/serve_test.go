@@ -4471,6 +4471,14 @@ func TestMessageFuzzySearch(t *testing.T) {
 		require.NoError(t, kafka.WaitForAllEventsProcessedUser(lgr, cfg, admCl, lc), "error in waiting for processing events")
 		waitForMessageExists(lgr, m, dba, chat1Id, messageId2, cfg.Cqrs.SleepBeforePolling, cfg.Cqrs.PollingMaxTimes)
 
+		const message3Text = `Рабочей силы еще больше!Иран отвлекает от внутренней повестки. Меж тем, индекс hh.ru (соотношение резюме к вакансиям) в марте резко вырос – 11,4 против 9,8 в феврале. Кажется, вообще впервые такой резкий рост. Напомню, минимум был в июне 2024 - 3,1. Значение от 2 до 3,9 - дефицит соискателей,  4-7,9 - умеренный уровень конкуренции за рабочие места, 8,0–11,9 — высокий уровень конкуренции соискателей за рабочие места.В Москве как и по стране 11,4 (в феврале – 10). В Питере 12,1 (в феврале – 10,5). По профобластям дефицит по-прежнему только в розничной торговле (3,9), и то на грани.Еще в ноябре разбирал (тут и тут) как это все вяжется с данными Росстата по безработице (2,1%).@NewGosplanhttps://stats.hh.ru/---Работа Госплан 2.0`
+
+		_, err = testRestClient.CreateMessage(ctx, user1, chat1Id, message3Text)
+		require.NoError(t, err, "error in creating message")
+		require.NoError(t, kafka.WaitForAllEventsProcessedChat(lgr, cfg, admCl, lc), "error in waiting for processing events")
+		require.NoError(t, kafka.WaitForAllEventsProcessedUser(lgr, cfg, admCl, lc), "error in waiting for processing events")
+		waitForMessageExists(lgr, m, dba, chat1Id, messageId2, cfg.Cqrs.SleepBeforePolling, cfg.Cqrs.PollingMaxTimes)
+
 		const searchString1 = "Опубликованный"
 		resp1Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSearch(searchString1))
 		require.NoError(t, err)
@@ -4488,6 +4496,11 @@ func TestMessageFuzzySearch(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resp3Search))
 		assert.Equal(t, resp3Search[0].Content, message2Text)
+
+		const searchString4 = "пастер"
+		resp4Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSearch(searchString4))
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(resp4Search))
 
 		// user 1 adds user 2 to chat 1
 		err = testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
