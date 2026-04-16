@@ -451,7 +451,7 @@ func isSearchForPublic(searchString string) bool {
 
 func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int64, searchString string) (searchClause string, searchCte string, queryArgs []any) {
 	queryArgs = queryArgsInput
-	var additionalUserIdsClause = ""
+	var additionalUserIdsClause = "false"
 	searchForPublic := isSearchForPublic(searchString)
 	if len(additionalFoundUserIds) > 0 {
 		queryArgs = append(queryArgs, additionalFoundUserIds)
@@ -464,11 +464,9 @@ func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int
 				WHERE cc.tet_a_tet IS true AND cp.user_id = any($%d)
 			)
 			`, len(queryArgs))
-		additionalUserIdsClause = fmt.Sprintf(" ( cc.id = any(array(SELECT chat_id FROM tet_a_tet_chats_ids)) ) or ")
+		additionalUserIdsClause = fmt.Sprintf(" ( cc.id = any(array(SELECT chat_id FROM tet_a_tet_chats_ids)) ) ")
 	}
-	searchClause = fmt.Sprintf(" ( ( %s cc.title ILIKE $%d ) OR ( (cc.available_to_search = TRUE OR b.id is not null) AND $%d = true ) )", additionalUserIdsClause, len(queryArgs)+1, len(queryArgs)+2)
-	searchStringPercents := "%" + searchString + "%"
-	queryArgs = append(queryArgs, searchStringPercents)
+	searchClause = fmt.Sprintf(" ( %s OR ( (cc.available_to_search = TRUE OR b.id is not null) AND $%d = true ) )", additionalUserIdsClause, len(queryArgs)+1)
 	queryArgs = append(queryArgs, searchForPublic)
 
 	return
