@@ -940,11 +940,7 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 	if len(searchString) > 0 {
 		searchClause = " and ("
 
-		searchStringPercents := "%" + searchString + "%"
-		queryArgs = append(queryArgs, searchStringPercents)
-		searchClause += fmt.Sprintf(" (strip_tags(coalesce(m.content, '')) || ' ' || strip_tags(coalesce(m.embed ->> 'embedMessageContent', ''))) ILIKE $%d ", len(queryArgs))
-
-		searchClause += " or "
+		// something or
 
 		queryArgs = append(queryArgs, searchString)
 		searchClause += fmt.Sprintf(` 

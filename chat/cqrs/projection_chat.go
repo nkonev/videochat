@@ -1145,10 +1145,11 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		searchClause += searchClauseT
 		searchCte = searchCteT
 		queryArgs = queryArgsT
-
 		searchClause += " or "
+
 		queryArgs = append(queryArgs, searchString)
-		searchClause += fmt.Sprintf(` exists( 
+		searchClause += fmt.Sprintf(`
+		exists( 
 			select 1 from (select * from (select unnest(tsvector_to_array(cc.fts_title))) t(av)) inq 
 			where
 				   ( inq.av %% plainto_tsquery('russian', $%d)::text )

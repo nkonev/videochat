@@ -395,8 +395,11 @@ func (m *CommonProjection) makeBlogSearch(queryArgsInput []any, searchString str
 	if len(searchString) > 0 {
 		searchClause = " and ("
 
+		// something or
+
 		queryArgs = append(queryArgs, searchString)
-		searchClause += fmt.Sprintf(`exists( 
+		searchClause += fmt.Sprintf(`
+		exists( 
 			select 1 from (select * from (select unnest(tsvector_to_array(b.fts_all_content))) t(av)) inq 
 			where
 				   ( inq.av %% plainto_tsquery('russian', $%d)::text )
