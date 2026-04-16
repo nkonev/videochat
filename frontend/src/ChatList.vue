@@ -592,6 +592,7 @@ export default {
         return item.participants.filter((p) => p.id != this.chatStore.currentUser?.id)
     },
     onUserStatusChanged(dtos) {
+          let shouldReMark = false;
           if (dtos) {
               this.items.forEach(item => {
                 if (item.tetATet) {
@@ -599,21 +600,28 @@ export default {
                       if (this.isNormalTetAtTet(item)) { // normal tet-a-tet
                           if (dtoItem.online !== null && this.filterOutMe(item).filter((p) => p.id == dtoItem.userId).length) {
                               item.online = dtoItem.online;
+                              shouldReMark = true;
                           }
                           if (dtoItem.isInVideo !== null && this.filterOutMe(item).filter((p)=> p.id == dtoItem.userId).length) {
                               item.isInVideo = dtoItem.isInVideo;
+                              shouldReMark = true;
                           }
                       } else if (this.withMyselfTetATet(item)) { // tet-a-tet chat with user himself
                           if (dtoItem.online !== null && item.participants.filter((p) => p.id == dtoItem.userId).length) {
                               item.online = dtoItem.online;
+                              shouldReMark = true;
                           }
                           if (dtoItem.isInVideo !== null && item.participants.filter((p)=> p.id == dtoItem.userId).length) {
                               item.isInVideo = dtoItem.isInVideo;
+                              shouldReMark = true;
                           }
                       }
                   })
                 }
               })
+              if (shouldReMark) {
+                  this.performMarking();
+              }
           }
     },
     onChangeUnreadMessages(dto) {
@@ -894,7 +902,7 @@ export default {
               this.graphQlUserStatusUnsubscribe();
           } else {
               if (!isSetEqual(oldValue, newValue)) {
-                  this.graphQlUserStatusSubscribe();
+                  this.graphQlUserStatusSubscribe(); // see this::onUserStatusChanged()
               }
           }
       },
