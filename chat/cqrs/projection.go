@@ -202,3 +202,7 @@ func (m *CommonProjection) SetXactFastForwardSequenceLock(ctx context.Context, t
 	_, err := tx.ExecContext(ctx, "select pg_advisory_xact_lock($1, $2)", lockIdKey1, lockIdKey2)
 	return err
 }
+
+func (m *EnrichingProjection) SanitizeSearchString(searchString string) string {
+	return sanitizer.TrimAmdSanitize(m.policy, searchString)
+}

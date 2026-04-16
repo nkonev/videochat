@@ -14,7 +14,6 @@ import (
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/preview"
-	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
 
 	"github.com/PuerkitoBio/goquery"
@@ -484,7 +483,7 @@ func (m *EnrichingProjection) GetMessagesEnriched(ctx context.Context, behalfUse
 			}
 		}
 
-		searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
+		searchString = m.SanitizeSearchString(searchString)
 
 		const fakeUserId = dto.NonExistentUser
 		if isForPublic {
@@ -1154,28 +1153,6 @@ func (m *CommonProjection) FindMessageByFileItemUuid(ctx context.Context, chatId
 	}
 
 	return &dto.MessageId{messageId}, nil
-}
-
-func (m *EnrichingProjection) MessageFilter(ctx context.Context, co db.CommonOperations, behalfUserId, chatId int64, searchString string, messageId int64) (bool, error) {
-	participant, err := m.cp.IsParticipant(ctx, co, behalfUserId, chatId)
-	if err != nil {
-		return false, err
-	}
-	if !participant {
-		return false, NewUnauthorizedError(fmt.Sprintf("user %v is not a participant of chat %v", behalfUserId, chatId))
-	}
-
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
-
-	searchStringWithPercents := "%" + searchString + "%"
-
-	var found bool
-	err = sqlscan.Get(ctx, co, &found, "SELECT EXISTS (SELECT * FROM message m WHERE m.chat_id = $1 AND m.id = $2 AND strip_tags(m.content) ILIKE $3)", chatId, messageId, searchStringWithPercents)
-	if err != nil {
-		return false, err
-	}
-
-	return found, nil
 }
 
 func (m *EnrichingProjection) GetReadMessageUsers(ctx context.Context, userId int64, chatId int64, messageId int64, size int32, offset int64) (*dto.MessageReadResponse, error) {

@@ -726,7 +726,22 @@ func (mc *MessageHandler) MessagesFilter(g *gin.Context) {
 	searchString := d.SearchString
 	messageId := d.MessageId
 
-	found, err := mc.enrichingProjection.MessageFilter(g.Request.Context(), mc.dbWrapper, userId, chatId, searchString, messageId)
+	searchString = mc.enrichingProjection.SanitizeSearchString(searchString)
+
+	participant, err := mc.commonProjection.IsParticipant(g.Request.Context(), mc.dbWrapper, userId, chatId)
+	if err != nil {
+		mc.lgr.ErrorContext(g.Request.Context(), "Error checking authorization", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if !participant {
+		mc.lgr.InfoContext(g.Request.Context(), "user is not a participant of chat", logger.AttributeUserId, userId, logger.AttributeChatId, chatId)
+		g.Status(http.StatusUnauthorized)
+		return
+	}
+
+	found, err := mc.commonProjection.GetMessages(g.Request.Context(), mc.dbWrapper, chatId, 1, nil, false, false, searchString, []int64{messageId}, []int64{userId})
 	if err != nil {
 		if translateMessageError(g, err) {
 			return
@@ -738,7 +753,7 @@ func (mc *MessageHandler) MessagesFilter(g *gin.Context) {
 	}
 
 	g.JSON(http.StatusOK, dto.FilterDto{
-		Found: found,
+		Found: len(found) > 0,
 	})
 	return
 }

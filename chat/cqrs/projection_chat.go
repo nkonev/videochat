@@ -11,7 +11,6 @@ import (
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/preview"
-	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
 
 	"github.com/qdm12/reprint"
@@ -398,53 +397,6 @@ func (m *CommonProjection) checkAreChatsExist(ctx context.Context, co db.CommonO
 	return res, nil
 }
 
-func (m *EnrichingProjection) ChatFilter(ctx context.Context, co db.CommonOperations, behalfUserId, chatId int64, searchString string) (bool, error) {
-	participant, err := m.cp.IsParticipant(ctx, co, behalfUserId, chatId)
-	if err != nil {
-		return false, err
-	}
-	if !participant {
-		return false, NewUnauthorizedError(fmt.Sprintf("user %v is not a participant of chat %v", behalfUserId, chatId))
-	}
-
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
-
-	additionalFoundUserIds := m.searchForUsers(ctx, searchString)
-
-	queryArgs := []any{chatId, behalfUserId}
-
-	var searchClause = ""
-	var searchCte = ""
-	if len(searchString) > 0 {
-		searchClause += " and ("
-
-		searchClauseT, searchCteT, queryArgsT := processAdditionalUserIds(queryArgs, additionalFoundUserIds, searchString)
-		searchClause += searchClauseT
-		searchCte = searchCteT
-		queryArgs = queryArgsT
-
-		searchClause += " ) "
-	}
-
-	var found bool
-	err = sqlscan.Get(ctx, co, &found, fmt.Sprintf(`
-		%s
-		SELECT EXISTS (
-			select 1
-			from chat_common cc
-			join chat_user_view ch on (cc.id = ch.id and ch.user_id = $2)
-			left join blog b on ch.id = b.id
-			where ch.id = $1
-			%s
-		)
-	`, searchCte, searchClause), queryArgs...)
-	if err != nil {
-		return false, err
-	}
-
-	return found, nil
-}
-
 func isSearchForPublic(searchString string) bool {
 	return searchString == dto.ReservedPublicallyAvailableForSearchChats
 }
@@ -483,9 +435,9 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 		return nil, nil, errors.New("Wrong invariant: multipleBehalfUserId is true and null chatId")
 	}
 
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
+	searchString = m.SanitizeSearchString(searchString)
 
-	additionalFoundUserIds := m.searchForUsers(ctx, searchString)
+	additionalFoundUserIds := m.SearchForUsers(ctx, searchString)
 
 	type tupleDto struct {
 		resultChats       []dto.ChatViewEnrichedDto
@@ -796,7 +748,7 @@ func (m *EnrichingProjection) GetNameForInvite(ctx context.Context, chatId, beha
 	return ret, nil
 }
 
-func (m *EnrichingProjection) searchForUsers(ctx context.Context, searchString string) []int64 {
+func (m *EnrichingProjection) SearchForUsers(ctx context.Context, searchString string) []int64 {
 	var additionalFoundUserIds = []int64{}
 
 	if searchString != "" && searchString != dto.ReservedPublicallyAvailableForSearchChats {
@@ -1115,10 +1067,6 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 
 	if startingFromItemId != nil && chatId != nil {
 		return nil, fmt.Errorf("wrong invariant: both startingFromItemId and chatId provided")
-	}
-
-	if len(searchString) > 0 && chatId != nil {
-		return nil, fmt.Errorf("wrong invariant: both searchString and chatId provided")
 	}
 
 	if startingFromItemId != nil {

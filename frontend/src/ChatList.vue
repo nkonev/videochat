@@ -705,7 +705,7 @@ export default {
         const changedDto = this.applyStateOverride(this.items[idxOf], dto); // preserve online and isInVideo
         this.changeItem(changedDto);
       } else {
-        this.addItem(dto); // used to/along with redraw a public chat when user leaves from it
+        this.onNewChat(dto); // used to/along with redraw a public chat when user leaves from it
       }
       this.performMarking();
     },

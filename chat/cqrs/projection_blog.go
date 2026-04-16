@@ -14,7 +14,6 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
-	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
 
 	"github.com/PuerkitoBio/goquery"
@@ -254,7 +253,7 @@ func (m *CommonProjection) gebBlogAbout(ctx context.Context, co db.CommonOperati
 }
 
 func (m *EnrichingProjection) GetBlogsEnriched(ctx context.Context, size int32, offset int64, orderBy BlogOrderBy, reverseOrder bool, searchString string) (*dto.BlogPostsDTO, error) {
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
+	searchString = m.SanitizeSearchString(searchString)
 
 	blogs, count, b, err := m.cp.GetBlogs(ctx, size, offset, orderBy, reverseOrder, searchString)
 	if err != nil {

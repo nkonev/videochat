@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
+
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
 	"nkonev.name/chat/db"
@@ -13,7 +15,6 @@ import (
 	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/services"
 	"nkonev.name/chat/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -618,19 +619,39 @@ func (ch *ChatHandler) ChatsFilter(g *gin.Context) {
 	searchString := d.SearchString
 	chatId := d.ChatId
 
-	found, err := ch.enrichingProjection.ChatFilter(g.Request.Context(), ch.dbWrapper, userId, chatId, searchString)
+	searchString = ch.enrichingProjection.SanitizeSearchString(searchString)
+
+	participant, err := ch.commonProjection.IsParticipant(g.Request.Context(), ch.dbWrapper, userId, chatId)
+	if err != nil {
+		ch.lgr.ErrorContext(g.Request.Context(), "Error checking authorization", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if !participant {
+		ch.lgr.InfoContext(g.Request.Context(), "user is not a participant of chat", logger.AttributeUserId, userId, logger.AttributeChatId, chatId)
+		g.Status(http.StatusUnauthorized)
+		return
+	}
+
+	var additionalFoundUserIds []int64 = make([]int64, 0)
+	if len(searchString) > 0 {
+		additionalFoundUserIds = ch.enrichingProjection.SearchForUsers(g.Request.Context(), searchString)
+	}
+
+	chats, err := ch.commonProjection.GetChats(g.Request.Context(), ch.dbWrapper, []int64{userId}, 1, nil, false, false, searchString, additionalFoundUserIds, &chatId)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
 		}
 
-		ch.lgr.ErrorContext(g.Request.Context(), "Error invoking MessageFilter", logger.AttributeError, err)
+		ch.lgr.ErrorContext(g.Request.Context(), "Error filtering chats", logger.AttributeError, err)
 		g.Status(http.StatusInternalServerError)
 		return
 	}
 
 	g.JSON(http.StatusOK, dto.FilterDto{
-		Found: found,
+		Found: len(chats) > 0,
 	})
 	return
 }

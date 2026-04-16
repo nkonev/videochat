@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
 	"nkonev.name/chat/db"
@@ -288,7 +289,7 @@ func (ch *ParticipantHandler) ParticipantsFilter(g *gin.Context) {
 		return
 	}
 
-	_, err = getUserId(g)
+	userId, err := getUserId(g)
 	if err != nil {
 		ch.lgr.ErrorContext(g.Request.Context(), "Error parsing UserId", logger.AttributeError, err)
 		g.Status(http.StatusInternalServerError)
@@ -305,11 +306,25 @@ func (ch *ParticipantHandler) ParticipantsFilter(g *gin.Context) {
 	requestedParticipantIds := bindTo.UserId
 	userSearchString := bindTo.SearchString
 
-	response, err := ch.enrichingProjection.ParticipantsFilter(g.Request.Context(), ch.dbWrapper, userSearchString, chatId, requestedParticipantIds)
+	var response []dto.FilteredParticipantItemResponse
+
+	participantsByBehalfs, _, err := ch.enrichingProjection.GetParticipantsEnriched(g.Request.Context(), []int64{userId}, chatId, int32(len(requestedParticipantIds)), 0, userSearchString, false, requestedParticipantIds)
 	if err != nil {
-		ch.lgr.ErrorContext(g.Request.Context(), "Error during ParticipantsFilter", logger.AttributeError, err)
+		if translateParticipantError(g, err) {
+			return
+		}
+
+		ch.lgr.ErrorContext(g.Request.Context(), "Error filtering participants", logger.AttributeError, err)
 		g.Status(http.StatusInternalServerError)
 		return
+	}
+
+	interm := participantsByBehalfs[userId]
+
+	for _, v := range interm {
+		response = append(response, dto.FilteredParticipantItemResponse{
+			Id: v.Id,
+		})
 	}
 
 	g.JSON(http.StatusOK, response)

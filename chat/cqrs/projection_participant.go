@@ -10,7 +10,6 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
-	"nkonev.name/chat/sanitizer"
 	"nkonev.name/chat/utils"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -281,7 +280,7 @@ func (m *EnrichingProjection) GetParticipantsEnriched(ctx context.Context, behal
 		}
 	}
 
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
+	searchString = m.SanitizeSearchString(searchString)
 
 	if !isSingleBehalf && len(searchString) > 0 {
 		return nil, 0, fmt.Errorf("Wrong invariant - we cannot use both searchString and multiple behalfs")
@@ -442,47 +441,8 @@ func makeEnrichedUsers(users []*dto.UserWithAdmin, behalfUserId int64, behalfIsC
 	return res
 }
 
-func (m *EnrichingProjection) ParticipantsFilter(ctx context.Context, co db.CommonOperations, searchString string, chatId int64, requestedParticipantIds []int64) ([]dto.FilteredParticipantItemResponse, error) {
-	userSearchString := sanitizer.TrimAmdSanitize(m.policy, searchString)
-
-	var response = []dto.FilteredParticipantItemResponse{}
-
-	if userSearchString != "" {
-		var batches = [][]int64{}
-		var batch = []int64{}
-		for _, pid := range requestedParticipantIds {
-			batch = append(batch, pid)
-			if len(batch) == utils.DefaultSize {
-				batches = append(batches, batch)
-				batch = []int64{}
-			}
-		}
-		for _, aBatch := range batches { // we already know that requestedParticipantIds belong to this chat, so our sole task is to pass them through aaa filter
-			usersPortion, _, err := m.aaaRestClient.SearchGetUsers(ctx, userSearchString, true, aBatch, 0, utils.DefaultSize)
-			if err != nil {
-				m.lgr.ErrorContext(ctx, "Error get users from aaa", logger.AttributeError, err)
-			} else {
-				for _, user := range usersPortion {
-					response = append(response, dto.FilteredParticipantItemResponse{user.Id})
-				}
-			}
-		}
-	} else {
-		foundParticipantIds, err := m.cp.ParticipantsExistence(ctx, co, chatId, requestedParticipantIds)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, userId := range foundParticipantIds {
-			response = append(response, dto.FilteredParticipantItemResponse{Id: userId})
-		}
-	}
-
-	return response, nil
-}
-
 func (m *EnrichingProjection) SearchUsersContaining(ctx context.Context, co db.CommonOperations, searchString string, chatId int64, pageSize int32, requestOffset int64, reverse bool, needCount bool) ([]*dto.UserWithAdmin, int64, error) {
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
+	searchString = m.SanitizeSearchString(searchString)
 
 	var resUsers = make([]*dto.UserWithAdmin, 0)
 	shouldContinue := true
@@ -560,7 +520,7 @@ func (m *EnrichingProjection) SearchUsersNotContainingForAdding(ctx context.Cont
 		return nil, NewUnauthorizedError(fmt.Sprintf("user %v is not authorized to add the chat %v participants", userId, chatId))
 	}
 
-	searchString = sanitizer.TrimAmdSanitize(m.policy, searchString)
+	searchString = m.SanitizeSearchString(searchString)
 
 	var notFoundUsers []*dto.User = make([]*dto.User, 0)
 	shouldContinueSearch := true
