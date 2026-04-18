@@ -269,6 +269,18 @@ type ChatNotificationSettingsSet struct {
 	Set            bool
 }
 
+type ThreadCreate struct {
+	AdditionalData *AdditionalData
+	ChatId         int64
+	MessageId      int64
+}
+
+type ThreadDelete struct {
+	AdditionalData *AdditionalData
+	ChatId         int64
+	MessageId      int64
+}
+
 type MessageRead struct {
 	AdditionalData     *AdditionalData
 	ChatId             int64
@@ -1397,6 +1409,37 @@ func validateAndSetEmbedFieldsEmbedMessage(ctx context.Context, dba *db.DB, comm
 			return nil
 		}
 		return fmt.Errorf("Unexpected embed type '%v'", embedMessageRequest.EmbedType)
+	}
+
+	return nil
+}
+
+func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) error {
+	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId, s.MessageId)
+	if err != nil {
+		return err
+	}
+
+	if !adt.IsChatFound {
+		return NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
+	}
+
+	if adt.FoundThreadId != nil {
+		return nil
+	}
+
+	if !CanCreateThread(adt.ChatCanCreateThread, adt.IsParticipant) {
+		return NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
+	}
+
+	pa := &ThreadCreated{
+		AdditionalData: s.AdditionalData,
+		ChatId:         s.ChatId,
+	}
+
+	err = eventBus.Publish(ctx, pa)
+	if err != nil {
+		return err
 	}
 
 	return nil

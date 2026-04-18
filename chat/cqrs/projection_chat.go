@@ -996,6 +996,38 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 	return d, nil
 }
 
+func (m *CommonProjection) GetThreadDataForAuthorization(ctx context.Context, co db.CommonOperations, userId, chatId, messageId int64) (dto.ThreadAuthorizationData, error) {
+	d := dto.ThreadAuthorizationData{}
+	err := sqlscan.Get(ctx, co, &d, `
+		with
+		provided as (
+			select 
+				 cast($2 as bigint) as chat_id
+		),
+		chat_participant_row as (
+			SELECT user_id, chat_admin FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1
+		),
+		chat_info as (
+			select * from chat_common where id = $2
+		),
+		provided_message as (
+			select * from message where chat_id = $2 and id = $3
+		)
+		SELECT 
+			cc.id is not null as is_chat_found
+			,(SELECT exists(SELECT * FROM chat_participant_row) as is_chat_participant)
+			,coalesce(cc.can_create_thread, false) as chat_can_create_thread
+			,m.thread_id as already_existing_thread_id
+		FROM provided pr
+		LEFT JOIN chat_info cc on pr.chat_id = cc.id
+		cross join provided_message m
+	`, userId, chatId, messageId)
+	if err != nil {
+		return d, err
+	}
+	return d, nil
+}
+
 func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
 	type chatDto struct {
 		Id                                  int64            `db:"id"`
