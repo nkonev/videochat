@@ -100,6 +100,7 @@ To run without schedulers:
 			handlers.NewMessageHandler,
 			handlers.NewBlogHandler,
 			handlers.NewTechnicalHandler,
+			handlers.NewThreadHandler,
 			handlers.NewStaticHandler,
 			handlers.CreateHttpRouter,
 			handlers.ConfigureHttpServer,
