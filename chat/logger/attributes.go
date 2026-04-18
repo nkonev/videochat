@@ -6,4 +6,5 @@ const (
 	AttributeChatId    = "chat_id"
 	AttributeMessageId = "message_id"
 	AttributeUserId    = "user_id"
+	AttributeThreadId  = "thread_id"
 )
