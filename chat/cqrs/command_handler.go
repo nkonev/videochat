@@ -383,9 +383,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		}
 	}
 
-	chatId, err := db.TransactWithResult(ctx, dba, func(tx *db.Tx) (int64, error) {
-		return commonProjection.GetNextChatId(ctx, tx)
-	})
+	chatId, err := commonProjection.GetNextChatId(ctx, dba)
 	if err != nil {
 		return 0, err
 	}
