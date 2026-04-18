@@ -46,7 +46,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 
 	// send an output event for the users themselves
 	for _, userId := range userIds {
-		ue := &UserChatParticipantAdded{
+		ue := &UserChatParticipantAdded{ // TODO ? rename to UserThreadParticipantAdded
 			EventTime:     event.AdditionalData.CreatedAt,
 			CorrelationId: event.AdditionalData.CorrelationId,
 			ChatId:        event.ChatId,
@@ -343,6 +343,30 @@ func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) er
 	}
 
 	err := m.commonProjection.OnChatCreated(ctx, event)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated) error {
+	adt, err := m.commonProjection.GetThreadDataForAuthorization(ctx, m.db, event.AdditionalData.BehalfUserId, event.ChatId, event.ParentThreadId)
+	if err != nil {
+		return err
+	}
+
+	if !CanCreateThread(adt.ChatCanCreateThread, m.cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot) {
+		m.lgr.InfoContext(ctx, "Skipping OnThreadCreated because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		return nil
+	}
+
+	// TODO
+	//  дано: набор участников одинаков, от идёт чат_сеттингс ~ из ругового треда
+	//  отправку рутового треда(ParentThreadId==0) в Output(на фронт) действительно сделать на добавлении участников (оставить as is)
+	//  отправку дочерних тредов сделать просто на добавлении дочернего треда
+
+	err = m.commonProjection.OnThreadCreated(ctx, event)
 	if err != nil {
 		return err
 	}
