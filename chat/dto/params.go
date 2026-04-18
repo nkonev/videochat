@@ -23,5 +23,7 @@ const UserId = "userId"
 // path
 const ChatIdParam = "id"
 const MessageIdParam = "messageId"
+const ThreadIdParam = "threadId"
+const ThreadIdParamChild = "id"
 const BlogIdParam = "id"
 const ParticipantIdParam = "participantId"

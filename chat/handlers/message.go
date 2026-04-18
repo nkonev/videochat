@@ -75,6 +75,15 @@ func (mc *MessageHandler) CreateMessage(g *gin.Context) {
 		return
 	}
 
+	tid := g.Param(dto.ThreadIdParam)
+
+	threadId, err := utils.ParseInt64(tid)
+	if err != nil {
+		mc.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	userId, err := getUserId(g)
 	if err != nil {
 		mc.lgr.ErrorContext(g.Request.Context(), "Error parsing UserId", logger.AttributeError, err)
@@ -94,6 +103,7 @@ func (mc *MessageHandler) CreateMessage(g *gin.Context) {
 	cc := cqrs.MessageCreate{
 		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
 		ChatId:         chatId,
+		ThreadId:       threadId,
 		Content:        mcd.Content,
 		FileItemUuid:   mcd.FileItemUuid,
 	}
@@ -132,6 +142,15 @@ func (mc *MessageHandler) EditMessage(g *gin.Context) {
 		return
 	}
 
+	tid := g.Param(dto.ThreadIdParam)
+
+	threadId, err := utils.ParseInt64(tid)
+	if err != nil {
+		mc.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	userId, err := getUserId(g)
 	if err != nil {
 		mc.lgr.ErrorContext(g.Request.Context(), "Error parsing UserId", logger.AttributeError, err)
@@ -152,6 +171,7 @@ func (mc *MessageHandler) EditMessage(g *gin.Context) {
 		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
 		MessageId:      ccd.Id,
 		ChatId:         chatId,
+		ThreadId:       threadId,
 		Content:        ccd.Content,
 		FileItemUuid:   ccd.FileItemUuid,
 	}
@@ -239,6 +259,15 @@ func (mc *MessageHandler) SyncEmbed(g *gin.Context) {
 		return
 	}
 
+	tid := g.Param(dto.ThreadIdParam)
+
+	threadId, err := utils.ParseInt64(tid)
+	if err != nil {
+		mc.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	mid := g.Param(dto.MessageIdParam)
 
 	messageId, err := utils.ParseInt64(mid)
@@ -252,6 +281,7 @@ func (mc *MessageHandler) SyncEmbed(g *gin.Context) {
 		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
 		MessageId:      messageId,
 		ChatId:         chatId,
+		ThreadId:       threadId,
 	}
 
 	err = cc.Handle(g.Request.Context(), mc.eventBus, mc.dbWrapper, mc.commonProjection, mc.cfg, mc.lgr, mc.policy)
@@ -277,6 +307,15 @@ func (mc *MessageHandler) DeleteMessage(g *gin.Context) {
 		return
 	}
 
+	tid := g.Param(dto.ThreadIdParam)
+
+	threadId, err := utils.ParseInt64(tid)
+	if err != nil {
+		mc.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	mid := g.Param(dto.MessageIdParam)
 	messageId, err := utils.ParseInt64(mid)
 	if err != nil {
@@ -296,6 +335,7 @@ func (mc *MessageHandler) DeleteMessage(g *gin.Context) {
 		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
 		MessageId:      messageId,
 		ChatId:         chatId,
+		ThreadId:       threadId,
 	}
 
 	err = cc.Handle(g.Request.Context(), mc.eventBus, mc.dbWrapper, mc.commonProjection)

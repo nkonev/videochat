@@ -240,6 +240,9 @@ func ListenChatTopic(
 		EventChatCreated: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatCreated))
 		},
+		EventThreadCreated: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnThreadCreated))
+		},
 		EventChatEdited: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatEdited))
 		},
@@ -919,6 +922,12 @@ func RunSequenceFastforwarder(
 				if errI2 != nil {
 					lgr.Error("Error during setting message id sequences", logger.AttributeError, errI2)
 					return errI2
+				}
+
+				errThr := commonProjection.InitializeChildChatIdSequenceIfNeed(ctx, tx, chatId)
+				if errThr != nil {
+					lgr.Error("Error during setting thread id sequences", logger.AttributeError, errThr)
+					return errThr
 				}
 			}
 		}

@@ -203,6 +203,7 @@ type EmbedMessage struct {
 type MessageCreate struct {
 	AdditionalData *AdditionalData
 	ChatId         int64
+	ThreadId       int64 // TODO take into account
 	Content        string
 	EmbedMessage   *EmbedMessage
 	FileItemUuid   *string
@@ -211,6 +212,7 @@ type MessageCreate struct {
 type MessageEdit struct {
 	AdditionalData *AdditionalData
 	ChatId         int64
+	ThreadId       int64 // TODO take into account
 	MessageId      int64
 	Content        string
 	EmbedMessage   *EmbedMessage
@@ -227,6 +229,7 @@ type MessageSetFileItemUuid struct {
 type MessageSyncEmbed struct {
 	AdditionalData *AdditionalData
 	ChatId         int64
+	ThreadId       int64 // TODO take into account
 	MessageId      int64
 }
 
@@ -254,6 +257,7 @@ func (mcd *MessageEdit) IsValidatabale() bool {
 type MessageDelete struct {
 	AdditionalData *AdditionalData
 	ChatId         int64
+	ThreadId       int64 // TODO take into account
 	MessageId      int64
 }
 
@@ -281,6 +285,23 @@ type ChatNotificationSettingsSet struct {
 	AdditionalData *AdditionalData
 	ChatId         int64
 	Set            bool
+}
+
+type ThreadCreate struct {
+	AdditionalData *AdditionalData
+	ChatId         int64
+	ParentThreadId int64 // // parent (message) thread id
+	MessageId      int64
+	Avatar         *string
+	AvatarBig      *string
+}
+
+type ThreadDelete struct {
+	AdditionalData *AdditionalData
+	ChatId         int64
+	ParentThreadId int64
+	ThreadId       int64
+	MessageId      int64
 }
 
 type MessageRead struct {
@@ -411,11 +432,8 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		TetATetSelf:           tetATetSelf,
 		ChatCommoned: ChatCommoned{
 			ChatId:                              chatId,
-			Title:                               copyCommand.Title,
 			Blog:                                copyCommand.Blog,
 			BlogAbout:                           copyCommand.BlogAbout,
-			Avatar:                              copyCommand.Avatar,
-			AvatarBig:                           copyCommand.AvatarBig,
 			CanResend:                           copyCommand.CanResend,
 			CanReact:                            copyCommand.CanReact,
 			AvailableToSearch:                   copyCommand.AvailableToSearch,
@@ -449,6 +467,27 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	}
 
 	err = eventBus.Publish(ctx, pa)
+	if err != nil {
+		return 0, err
+	}
+
+	threadId, err := commonProjection.GetNextThreadId(ctx, dba, chatId)
+	if err != nil {
+		return 0, err
+	}
+
+	tc := &ThreadCreated{
+		ThreadCommoned: ThreadCommoned{
+			Id:             threadId,
+			ChatId:         chatId,
+			ParentThreadId: dto.RootThreadId,
+			Avatar:         copyCommand.Avatar,
+			AvatarBig:      copyCommand.AvatarBig,
+		},
+		AdditionalData: copyCommand.AdditionalData,
+	}
+
+	err = eventBus.Publish(ctx, tc)
 	if err != nil {
 		return 0, err
 	}
@@ -1422,6 +1461,100 @@ func validateAndSetEmbedFieldsEmbedMessage(ctx context.Context, dba *db.DB, comm
 			return nil
 		}
 		return fmt.Errorf("Unexpected embed type '%v'", embedMessageRequest.EmbedType)
+	}
+
+	return nil
+}
+
+func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) (int64, error) {
+	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId, s.ParentThreadId)
+	if err != nil {
+		return 0, err
+	}
+
+	if !adt.IsChatFound {
+		return 0, NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
+	}
+
+	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot) {
+		return 0, NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
+	}
+
+	threadId, err := commonProjection.GetNextThreadId(ctx, dba, s.ChatId)
+	if err != nil {
+		return 0, err
+	}
+
+	cc := &ThreadCreated{
+		ThreadCommoned: ThreadCommoned{
+			Id:             threadId,
+			ChatId:         s.ChatId,
+			ParentThreadId: s.ParentThreadId,
+			Avatar:         s.Avatar,
+			AvatarBig:      s.AvatarBig,
+		},
+		AdditionalData: s.AdditionalData,
+	}
+	err = eventBus.Publish(ctx, cc)
+	if err != nil {
+		return 0, err
+	}
+
+	me := &MessageEdited{
+		MessageCommoned: MessageCommoned{
+			Id:       s.MessageId,
+			ChatId:   s.ChatId,
+			ThreadId: s.ParentThreadId,
+		},
+		AdditionalData:      s.AdditionalData,
+		MessageEditedAction: MessageEditedActionThreadBind,
+		ChildThreadId:       &threadId,
+	}
+	err = eventBus.Publish(ctx, me)
+	if err != nil {
+		return 0, err
+	}
+
+	return threadId, nil
+}
+
+func (s *ThreadDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) error {
+	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId, s.ParentThreadId)
+	if err != nil {
+		return err
+	}
+
+	if !adt.IsChatFound {
+		return NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
+	}
+
+	if !CanDeleteThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot) {
+		return NewUnauthorizedError(fmt.Sprintf("user %v cannot delete thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
+	}
+
+	cc := &ThreadDeleted{
+		AdditionalData: s.AdditionalData,
+		Id:             s.ThreadId,
+		ChatId:         s.ChatId,
+	}
+	err = eventBus.Publish(ctx, cc)
+	if err != nil {
+		return err
+	}
+
+	me := &MessageEdited{
+		MessageCommoned: MessageCommoned{
+			Id:       s.MessageId,
+			ChatId:   s.ChatId,
+			ThreadId: s.ThreadId,
+		},
+		AdditionalData:      s.AdditionalData,
+		MessageEditedAction: MessageEditedActionThreadUnbind,
+		ChildThreadId:       &s.ThreadId,
+	}
+	err = eventBus.Publish(ctx, me)
+	if err != nil {
+		return err
 	}
 
 	return nil

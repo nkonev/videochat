@@ -15,6 +15,8 @@ const (
 	EventChatCreated                        = "chatCreated"
 	EventChatEdited                         = "chatEdited"
 	EventChatDeleted                        = "chatDeleted"
+	EventThreadCreated                      = "threadCreated"
+	EventThreadDeleted                      = "threadDeleted"
 	EventParticipantsAdded                  = "participantsAdded"
 	EventParticipantsDeleted                = "participantDeleted"
 	EventParticipantsChanged                = "participantChanged"
@@ -80,19 +82,16 @@ func NewMetadata(eventType string) *Metadata {
 }
 
 type ChatCommoned struct {
-	ChatId                              int64   `json:"chatId"`
-	Title                               string  `json:"title"`
-	Blog                                bool    `json:"blog"`
-	BlogAbout                           bool    `json:"blogAbout"`
-	Avatar                              *string `json:"avatar"`
-	AvatarBig                           *string `json:"avatarBig"`
-	CanResend                           bool    `json:"canResend"`
-	CanReact                            bool    `json:"canReact"`
-	AvailableToSearch                   bool    `json:"availableToSearch"`
-	RegularParticipantCanPublishMessage bool    `json:"regularParticipantCanPublishMessage"`
-	RegularParticipantCanPinMessage     bool    `json:"regularParticipantCanPinMessage"`
-	RegularParticipantCanWriteMessage   bool    `json:"regularParticipantCanWriteMessage"`
-	RegularParticipantCanAddParticipant bool    `json:"regularParticipantCanAddParticipant"`
+	ChatId                              int64 `json:"chatId"`
+	Blog                                bool  `json:"blog"`
+	BlogAbout                           bool  `json:"blogAbout"`
+	CanResend                           bool  `json:"canResend"`
+	CanReact                            bool  `json:"canReact"`
+	AvailableToSearch                   bool  `json:"availableToSearch"`
+	RegularParticipantCanPublishMessage bool  `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool  `json:"regularParticipantCanPinMessage"`
+	RegularParticipantCanWriteMessage   bool  `json:"regularParticipantCanWriteMessage"`
+	RegularParticipantCanAddParticipant bool  `json:"regularParticipantCanAddParticipant"`
 }
 
 type ChatCreated struct {
@@ -106,6 +105,31 @@ type ChatCreated struct {
 type ChatEdited struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
 	ChatCommoned
+}
+
+type ThreadCreated struct {
+	ThreadCommoned
+	AdditionalData *AdditionalData `json:"additionalData"`
+}
+
+type ThreadEdited struct {
+	ThreadCommoned
+	AdditionalData *AdditionalData `json:"additionalData"`
+}
+
+type ThreadCommoned struct {
+	Id             int64   `json:"id"`
+	ChatId         int64   `json:"chatId"`
+	ParentThreadId int64   `json:"parentThreadId"`
+	Title          string  `json:"title"`
+	Avatar         *string `json:"avatar"`
+	AvatarBig      *string `json:"avatarBig"`
+}
+
+type ThreadDeleted struct {
+	Id             int64           `json:"id"`
+	ChatId         int64           `json:"chatId"`
+	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
 type ChatDeleted struct {
@@ -190,6 +214,7 @@ type ChatNotificationSettingsSetted struct {
 type MessageCommoned struct {
 	Id           int64   `json:"id"` // message id
 	ChatId       int64   `json:"chatId"`
+	ThreadId     int64   `json:"threadId"` // TODO take into account this threadId coordinate
 	Content      string  `json:"content"`
 	FileItemUuid *string `json:"fileItemUuid"`
 
@@ -289,12 +314,15 @@ const (
 	MessageEditedActionAll MessageEditedAction = iota
 	MessageEditedActionEmbedSync
 	MessageEditedActionSetFileItemUuid
+	MessageEditedActionThreadBind   // TODO handle this action
+	MessageEditedActionThreadUnbind // TODO handle this action
 )
 
 type MessageEdited struct {
 	MessageCommoned     MessageCommoned     `json:"messageCommoned"`
 	AdditionalData      *AdditionalData     `json:"additionalData"`
 	MessageEditedAction MessageEditedAction `json:"messageEditedAction"`
+	ChildThreadId       *int64              `json:"childThreadId"`
 }
 
 type MessageEmbedded struct {
@@ -448,6 +476,14 @@ func (s *ChatDeleted) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
 
+func (s *ThreadCreated) GetPartitionKey() string {
+	return utils.ToString(s.ChatId)
+}
+
+func (s *ThreadDeleted) GetPartitionKey() string {
+	return utils.ToString(s.ChatId)
+}
+
 func (s *ParticipantsAdded) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
@@ -554,6 +590,14 @@ func (s *ChatEdited) GetEventType() string {
 
 func (s *ChatDeleted) GetEventType() string {
 	return EventChatDeleted
+}
+
+func (s *ThreadCreated) GetEventType() string {
+	return EventThreadCreated
+}
+
+func (s *ThreadDeleted) GetEventType() string {
+	return EventThreadDeleted
 }
 
 func (s *ParticipantsAdded) GetEventType() string {
@@ -693,6 +737,14 @@ func (s *ChatPinned) GetEventTopic() EventTopic {
 }
 
 func (s *ChatNotificationSettingsSetted) GetEventTopic() EventTopic {
+	return EventTopicChat
+}
+
+func (s *ThreadCreated) GetEventTopic() EventTopic {
+	return EventTopicChat
+}
+
+func (s *ThreadDeleted) GetEventTopic() EventTopic {
 	return EventTopicChat
 }
 

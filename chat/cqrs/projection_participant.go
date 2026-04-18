@@ -707,7 +707,7 @@ func (m *CommonProjection) IsExistsTetATetTwo(ctx context.Context, co db.CommonO
 					cp.chat_id,
 					count(cp.user_id) 
 				from chat_participant cp 
-				join chat_common ch on ch.id = cp.chat_id 
+				join chat ch on ch.id = cp.chat_id 
 				where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) 
 				group by cp.chat_id
 			) a
@@ -735,7 +735,7 @@ func (m *CommonProjection) IsExistsTetATetOne(ctx context.Context, co db.CommonO
 				select 
 					cp.chat_id
 				from chat_participant cp 
-				join chat_common ch on ch.id = cp.chat_id 
+				join chat ch on ch.id = cp.chat_id 
 				where ch.tet_a_tet = true and ch.tet_a_tet_self = true and cp.user_id = $1
 			) a
 		) b`, participant1)

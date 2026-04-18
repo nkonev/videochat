@@ -106,6 +106,7 @@ chat:
     canReact: true
     autoCreateSelf: true
   allowAdminToDeleteAnyMessage: false
+  canCreateThread: true
 
 blog:
   restrictCreateBlog: false
