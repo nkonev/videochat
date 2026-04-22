@@ -33,7 +33,7 @@ func ConfigureKafkaAdmin(
 ) (*kadm.Client, error) {
 	adm, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
-		kgo.MinVersions(kversion.V4_1_0()),
+		kgo.MinVersions(kversion.V4_2_0()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create admin client: %w", err)
@@ -420,7 +420,7 @@ func Export(
 		kgo.ConsumePartitions(map[string]map[int32]kgo.Offset{
 			cfg.Kafka.TopicChat.Topic: reqStartOffs,
 		}),
-		kgo.MinVersions(kversion.V4_1_0()),
+		kgo.MinVersions(kversion.V4_2_0()),
 	)
 	if err != nil {
 		return err
@@ -550,7 +550,7 @@ func Import(
 
 	cl, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
-		kgo.MinVersions(kversion.V4_1_0()),
+		kgo.MinVersions(kversion.V4_2_0()),
 	)
 	if err != nil {
 		return err

@@ -120,7 +120,7 @@ func ConfigurePublisher(
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
 		kgo.ClientID(cfg.Kafka.Producer.ClientId),
 		kgo.WithHooks(kotelService.Hooks()...),
-		kgo.MinVersions(kversion.V4_1_0()),
+		kgo.MinVersions(kversion.V4_2_0()),
 	)
 	if err != nil {
 		return nil, err
@@ -454,7 +454,7 @@ func (p *KafkaListener) runKafkaListener(
 		kgo.BlockRebalanceOnPoll(),
 		// kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), // was need for to work after import in the previous implementation. now TestImport can work without it
 		kgo.FetchMaxWait(p.cfg.Kafka.Consumer.FetchMaxWait),
-		kgo.MinVersions(kversion.V4_1_0()),
+		kgo.MinVersions(kversion.V4_2_0()),
 	)
 	if err != nil {
 		return err
