@@ -468,7 +468,7 @@ func (m *EnrichingProjection) GetMessagesEnriched(ctx context.Context, behalfUse
 	res, errOuter := db.TransactWithResult(ctx, m.cp.db, func(tx *db.Tx) (*resDto, error) {
 		if needCheckAuth {
 			if authForUserId != nil {
-				participant, err := m.cp.IsParticipant(ctx, m.cp.db, *authForUserId, chatId)
+				participant, err := m.cp.IsParticipant(ctx, tx, *authForUserId, chatId)
 				if err != nil {
 					return nil, err
 				}
