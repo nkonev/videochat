@@ -462,14 +462,14 @@ func (p *KafkaListener) runKafkaListener(
 
 	p.lgr.Info("Starting " + name + " subscriber")
 
-	retryStop := make(chan struct{}, 1)
+	retryStop := make(chan struct{})
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			p.lgr.Info("Begin stopping kafka " + name + " subscriber")
 
-			retryStop <- struct{}{}
+			close(retryStop)
 
-			// handle excess commit offsets in case error in processWithRetry on program exit (1/3)
+			// handle excess commit offsets in case error in processWithRetry on program exit (1/2)
 			cl.Close()
 			return nil
 		},
@@ -494,6 +494,10 @@ func (p *KafkaListener) runKafkaListener(
 			var stopped bool
 			var shouldStopWithoutCommitting bool
 			fetches.EachPartition(func(partition kgo.FetchTopicPartition) {
+				if stopped {
+					return
+				}
+
 				records := partition.Records
 				if len(records) == 0 {
 					return
@@ -502,26 +506,15 @@ func (p *KafkaListener) runKafkaListener(
 				stopped, lastErr = p.processWithRetry(partition, retryStop, name, records, parseFunctionMapping, batchFunctionMapping)
 				shouldStopWithoutCommitting = stopped && lastErr != nil
 				if shouldStopWithoutCommitting {
+					p.lgr.Error("Got last error in "+name+" subscriber, not committing the offset because the client was stopped", logger.AttributeError, lastErr)
+
 					return
 				}
+
+				// We commit manually because it's simpler
+				// handle excess commit offsets in case error in processWithRetry on program exit (2/2)
+				p.commitOffsetsWithRetry(cl, records)
 			})
-
-			// handle excess commit offsets in case error in processWithRetry on program exit (2/3)
-			if !shouldStopWithoutCommitting {
-
-				// we have to collect offsets this way (see https://github.com/twmb/franz-go/blob/ae75cacb982c34f3fe61d06092b70f8e9182359e/examples/group_committing/main.go#L142)
-				// manual separate commits by partition lead us to non-committing some offsets
-				var rs []*kgo.Record
-				fetches.EachRecord(func(r *kgo.Record) {
-					rs = append(rs, r)
-				})
-
-				// We commit manually because in order to
-				// handle excess commit offsets in case error in processWithRetry on program exit (3/3)
-				p.commitOffsetsWithRetry(cl, rs)
-			} else {
-				p.lgr.Error("Got last error in "+name+" subscriber, not committing the offset because the client was stopped", logger.AttributeError, lastErr)
-			}
 
 			cl.AllowRebalance()
 		}
