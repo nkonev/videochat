@@ -722,8 +722,8 @@ func CanSyncEmbedMessage(behalfParticipantId int64, messageOwnerId int64, hasEmb
 	return messageOwnerId == behalfParticipantId && hasEmbed && canWriteMessage
 }
 
-func CanDeleteMessage(behalfParticipantId int64, messageOwnerId int64, canWriteMessage bool) bool {
-	return messageOwnerId == behalfParticipantId && canWriteMessage
+func CanDeleteMessage(behalfParticipantId int64, messageOwnerId int64, canWriteMessage bool, chatadmin bool, admincandelete bool) bool {
+	return (messageOwnerId == behalfParticipantId && canWriteMessage) || (chatadmin && admincandelete)
 }
 
 func CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, messageOwnerId, behalfUserId int64) bool {
