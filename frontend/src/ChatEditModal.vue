@@ -141,6 +141,16 @@
                               color="primary"
                           ></v-checkbox>
 
+
+                          <v-checkbox
+                              :class="isMobile() ? 'mt-2': ''"
+                              v-model="editDto.adminCanDeleteAnyMessage"
+                              :label="$vuetify.locale.t('$vuetify.admin_can_delete_any_message')"
+                              hide-details
+                              density="compact"
+                              color="primary"
+                          ></v-checkbox>
+
                           <template v-if="!isNew">
                               <v-container class="pa-0 ma-0 mt-2">
                                   <img v-if="hasAva"
@@ -212,6 +222,7 @@
             regularParticipantCanWriteMessage: true,
             canReact: true,
             regularParticipantCanAddParticipant: true,
+            adminCanDeleteAnyMessage: true,
         }
     };
 
@@ -292,6 +303,7 @@
                 regularParticipantCanWriteMessage: chatDto.regularParticipantCanWriteMessage,
                 canReact: chatDto.canReact,
                 regularParticipantCanAddParticipant: chatDto.regularParticipantCanAddParticipant,
+                adminCanDeleteAnyMessage: chatDto.adminCanDeleteAnyMessage,
               }
             },
             loadCanCreateBlog() {
