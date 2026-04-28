@@ -88,6 +88,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message
 			,regular_participant_can_write_message
 			,regular_participant_can_add_participant
+			,admin_can_delete_any_message
 		) values (
 			$1
 			,$2
@@ -102,6 +103,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 		    ,$11
 		    ,$12
 		    ,$13
+			,$14
 		)
 		on conflict(id) do update set 
 		    title = excluded.title
@@ -115,7 +117,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message = excluded.regular_participant_can_pin_message
 			,regular_participant_can_write_message = excluded.regular_participant_can_write_message
 			,regular_participant_can_add_participant = excluded.regular_participant_can_add_participant
-	`, event.ChatId, event.Title, event.AdditionalData.CreatedAt, event.TetATet, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+	`, event.ChatId, event.Title, event.AdditionalData.CreatedAt, event.TetATet, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant, event.AdminCanDeleteAnyMessage)
 		if errInner != nil {
 			return errInner
 		}
@@ -173,8 +175,9 @@ func (m *CommonProjection) OnChatEdited(ctx context.Context, event *ChatEdited) 
 				,regular_participant_can_pin_message = $9
 				,regular_participant_can_write_message = $10
 				,regular_participant_can_add_participant = $11
+				,admin_can_delete_any_message= $12
 			where id = $1
-		`, event.ChatId, event.Title, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+		`, event.ChatId, event.Title, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant, event.AdminCanDeleteAnyMessage)
 		if errInner != nil {
 			return errInner
 		}
@@ -985,6 +988,7 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 			,coalesce(cc.can_react, false) as chat_can_react_on_message
 			,coalesce(cc.available_to_search, false) as chat_is_available_to_search
 			,coalesce(cc.regular_participant_can_add_participant, false) as regular_participant_can_add_participant
+			,coalesce(cc.admin_can_delete_any_message) as admin_can_delete_any_message
 			,b.id is not null as chat_is_blog
 		FROM provided pr
 		LEFT JOIN chat_info cc on pr.chat_id = cc.id
@@ -1337,7 +1341,8 @@ func (m *CommonProjection) GetChatsBasicExtended(ctx context.Context, co db.Comm
 			c.available_to_search,
 			c.regular_participant_can_publish_message,
 			c.regular_participant_can_pin_message,
-			c.regular_participant_can_write_message
+			c.regular_participant_can_write_message,
+			c.admin_can_delete_any_message
 		FROM chat_common c
 		CROSS JOIN requested_participants re
 		LEFT JOIN chats_participants cp ON (c.id = cp.chat_id and re.user_id = cp.user_id)

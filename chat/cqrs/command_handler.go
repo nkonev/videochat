@@ -408,6 +408,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 			RegularParticipantCanPinMessage:     copyCommand.RegularParticipantCanPinMessage,
 			RegularParticipantCanWriteMessage:   copyCommand.RegularParticipantCanWriteMessage,
 			RegularParticipantCanAddParticipant: copyCommand.RegularParticipantCanAddParticipant,
+			AdminCanDeleteAnyMessage:            copyCommand.AdminCanDeleteAnyMessage,
 		},
 	}
 	err = eventBus.Publish(ctx, cc)
@@ -484,6 +485,7 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 			RegularParticipantCanPinMessage:     copyCommand.RegularParticipantCanPinMessage,
 			RegularParticipantCanWriteMessage:   copyCommand.RegularParticipantCanWriteMessage,
 			RegularParticipantCanAddParticipant: copyCommand.RegularParticipantCanAddParticipant,
+			AdminCanDeleteAnyMessage:            copyCommand.AdminCanDeleteAnyMessage,
 		},
 	}
 	err = eventBus.Publish(ctx, cc)
@@ -990,7 +992,7 @@ func (s *MessageDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba
 
 	canWriteMessage := CanWriteMessage(adt.IsParticipant, adt.IsChatAdmin, adt.ChatCanWriteMessage)
 
-	if !CanDeleteMessage(s.AdditionalData.BehalfUserId, adt.MessageOwnerId, canWriteMessage) {
+	if !CanDeleteMessage(s.AdditionalData.BehalfUserId, adt.MessageOwnerId, canWriteMessage, adt.IsChatAdmin, adt.AdminCanDeleteAnyMessage) {
 		return NewUnauthorizedError(fmt.Sprintf("user %v is not authorized to delete the message in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 

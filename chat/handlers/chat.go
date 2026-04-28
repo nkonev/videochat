@@ -88,6 +88,7 @@ func (ch *ChatHandler) CreateChat(g *gin.Context) {
 		RegularParticipantCanPinMessage:     utils.GetNullableBooleanOr(ccd.RegularParticipantCanPinMessage, dto.DefaultRegularParticipantCanPinMessage),
 		RegularParticipantCanWriteMessage:   utils.GetNullableBooleanOr(ccd.RegularParticipantCanWriteMessage, dto.DefaultRegularParticipantCanWriteMessage),
 		RegularParticipantCanAddParticipant: utils.GetNullableBooleanOr(ccd.RegularParticipantCanAddParticipant, dto.DefaultRegularParticipantCanAddParticipant),
+		AdminCanDeleteAnyMessage:            utils.GetNullableBooleanOr(ccd.AdminCanDeleteAnyMessage, dto.DefaultAdminCanDeleteAnyMessage),
 	}
 
 	chatId, err := cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.stripTagsPolicy, ch.cfg, ch.rabbitmqOutputEventPublisher, ch.lgr)
@@ -188,6 +189,7 @@ func (ch *ChatHandler) EditChat(g *gin.Context) {
 		RegularParticipantCanPinMessage:     utils.GetNullableBooleanOr(ccd.RegularParticipantCanPinMessage, dto.DefaultRegularParticipantCanPinMessage),
 		RegularParticipantCanWriteMessage:   utils.GetNullableBooleanOr(ccd.RegularParticipantCanWriteMessage, dto.DefaultRegularParticipantCanWriteMessage),
 		RegularParticipantCanAddParticipant: utils.GetNullableBooleanOr(ccd.RegularParticipantCanAddParticipant, dto.DefaultRegularParticipantCanAddParticipant),
+		AdminCanDeleteAnyMessage:            utils.GetNullableBooleanOr(ccd.AdminCanDeleteAnyMessage, dto.DefaultAdminCanDeleteAnyMessage),
 	}
 
 	err = cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.stripTagsPolicy, ch.cfg)

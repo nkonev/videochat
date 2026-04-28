@@ -684,17 +684,17 @@ func enrichMessage(
 		return nil, fmt.Errorf("Logical error during enriching messages not found chat by chatId = %v, userId = %v", chatId, behalfUserId)
 	}
 
-	setMessagePersonalizedFields(&me, chat.TetATet, chat.IsBlog, chat.RegularParticipantCanPublishMessage, chat.RegularParticipantCanPinMessage, chat.RegularParticipantCanWriteMessage, areAdmins[behalfUserId], behalfUserId, isParticipant, bloggingIsAllowed)
+	setMessagePersonalizedFields(&me, chat.TetATet, chat.IsBlog, chat.RegularParticipantCanPublishMessage, chat.RegularParticipantCanPinMessage, chat.RegularParticipantCanWriteMessage, areAdmins[behalfUserId], behalfUserId, isParticipant, bloggingIsAllowed, chat.AdminCanDeleteAnyMessage)
 
 	return &me, nil
 }
 
-func setMessagePersonalizedFields(copied *dto.MessageViewEnrichedDto, chatTetATet, chatIsBlog, chatRegularParticipantCanPublishMessage, chatRegularParticipantCanPinMessage, chatCanWriteMessage, chatIsAdmin bool, participantId int64, isParticipant bool, bloggingIsAllowed bool) {
+func setMessagePersonalizedFields(copied *dto.MessageViewEnrichedDto, chatTetATet, chatIsBlog, chatRegularParticipantCanPublishMessage, chatRegularParticipantCanPinMessage, chatCanWriteMessage, chatIsAdmin bool, participantId int64, isParticipant bool, bloggingIsAllowed bool, admincandeleteanymessage bool) {
 	canWriteMessage := CanWriteMessage(isParticipant, chatIsAdmin, chatCanWriteMessage)
 
 	copied.CanEdit = CanEditMessage(participantId, copied.OwnerId, copied.EmbedMessage != nil, copied.GetEmbedTypeSafe(), canWriteMessage)
 	copied.CanSyncEmbed = CanSyncEmbedMessage(participantId, copied.OwnerId, copied.EmbedMessage != nil, canWriteMessage)
-	copied.CanDelete = CanDeleteMessage(participantId, copied.OwnerId, canWriteMessage)
+	copied.CanDelete = CanDeleteMessage(participantId, copied.OwnerId, canWriteMessage, chatIsAdmin, admincandeleteanymessage)
 	copied.CanPublish = CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin, copied.OwnerId, participantId)
 	copied.CanPin = CanPinMessage(chatRegularParticipantCanPinMessage, chatIsAdmin)
 
@@ -784,6 +784,7 @@ func (m *CommonProjection) GetMessageDataForAuthorization(ctx context.Context, c
 			,coalesce(cc.regular_participant_can_pin_message, false) as chat_can_pin_message
 			,coalesce(cc.regular_participant_can_publish_message, false) as chat_can_publish_message
 			,b.id is not null as chat_is_blog
+			,coalesce(cc.admin_can_delete_any_message,false) as admin_can_delete_any_message
 		FROM provided pr
 		LEFT JOIN chat_info cc on pr.chat_id = cc.id
 		LEFT JOIN message_info mm ON pr.message_id = mm.id
