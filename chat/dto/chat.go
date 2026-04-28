@@ -4,16 +4,19 @@ import (
 	"time"
 )
 
-const NoChatTitle = ""
-const NoSearchString = ""
-const ReservedPublicallyAvailableForSearchChats = "__AVAILABLE_FOR_SEARCH"
-const DefaultCanReact = true
-const DefaultCanResend = false
-const DefaultAvailableToSearch = false
-const DefaultRegularParticipantCanWriteMessage = true
-const DefaultRegularParticipantCanPublishMessage = false
-const DefaultRegularParticipantCanPinMessage = false
-const DefaultRegularParticipantCanAddParticipant = true
+const (
+	NoChatTitle                                = ""
+	NoSearchString                             = ""
+	ReservedPublicallyAvailableForSearchChats  = "__AVAILABLE_FOR_SEARCH"
+	DefaultCanReact                            = true
+	DefaultCanResend                           = false
+	DefaultAvailableToSearch                   = false
+	DefaultRegularParticipantCanWriteMessage   = true
+	DefaultRegularParticipantCanPublishMessage = false
+	DefaultRegularParticipantCanPinMessage     = false
+	DefaultRegularParticipantCanAddParticipant = true
+	DefaultAdminCanDeleteAnyMessage            = false
+)
 
 type ChatViewDto struct {
 	Id                                  int64      `json:"id"`
@@ -42,6 +45,7 @@ type ChatViewDto struct {
 	AvailableToSearch                   bool       `json:"availableToSearch"`
 	IsParticipant                       bool       `json:"-"`
 	RegularParticipantCanAddParticipant bool       `json:"regularParticipantCanAddParticipant"`
+	AdminCanDeleteAnyMessage            bool       `json:"adminCanDeleteAnyMessage"`
 }
 
 type ChatId struct {
@@ -64,6 +68,7 @@ type ChatBaseCreateDto struct {
 	RegularParticipantCanPublishMessage *bool   `json:"regularParticipantCanPublishMessage"`
 	RegularParticipantCanPinMessage     *bool   `json:"regularParticipantCanPinMessage"`
 	RegularParticipantCanAddParticipant *bool   `json:"regularParticipantCanAddParticipant"`
+	AdminCanDeleteAnyMessage            *bool   `json:"adminCanDeleteAnyMessage"`
 }
 
 type ChatCreateDto struct {
@@ -120,6 +125,7 @@ type ChatBasic struct {
 	RegularParticipantCanPublishMessage bool    `db:"regular_participant_can_publish_message"`
 	RegularParticipantCanPinMessage     bool    `db:"regular_participant_can_pin_message"`
 	RegularParticipantCanWriteMessage   bool    `db:"regular_participant_can_write_message"`
+	AdminCanDeleteAnyMessage            bool    `db:"admin_can_delete_any_message"`
 }
 
 type BasicChatDtoExtended struct {
@@ -158,6 +164,7 @@ type ChatAuthorizationData struct {
 	AvailableToSearch                    bool `db:"chat_is_available_to_search"`
 	IsBlog                               bool `db:"chat_is_blog"`
 	RegularParticipantCanAddParticipants bool `db:"regular_participant_can_add_participant"`
+	AdminCanDeleteAnyMessage             bool `db:"admin_can_delete_any_message"`
 }
 
 type ChatNotificationSettingsChanged struct {

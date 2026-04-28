@@ -95,6 +95,7 @@ type ChatCommoned struct {
 	RegularParticipantCanPinMessage     bool    `json:"regularParticipantCanPinMessage"`
 	RegularParticipantCanWriteMessage   bool    `json:"regularParticipantCanWriteMessage"`
 	RegularParticipantCanAddParticipant bool    `json:"regularParticipantCanAddParticipant"`
+	AdminCanDeleteAnyMessage            bool    `json:"adminCanDeleteAnyMessage"`
 }
 
 type ChatCreated struct {

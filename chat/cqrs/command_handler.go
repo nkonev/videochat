@@ -110,6 +110,7 @@ type ChatCreate struct {
 	RegularParticipantCanPinMessage     bool
 	RegularParticipantCanWriteMessage   bool
 	RegularParticipantCanAddParticipant bool
+	AdminCanDeleteAnyMessage            bool
 }
 
 type ChatEdit struct {
@@ -128,6 +129,7 @@ type ChatEdit struct {
 	RegularParticipantCanPinMessage     bool
 	RegularParticipantCanWriteMessage   bool
 	RegularParticipantCanAddParticipant bool
+	AdminCanDeleteAnyMessage            bool
 }
 
 func (cc *ChatEdit) IsValidatabale() bool {
