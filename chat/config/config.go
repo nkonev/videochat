@@ -157,7 +157,8 @@ type MessageConfig struct {
 }
 
 type ChatConfig struct {
-	TetATet TetATetConfig
+	TetATet                  TetATetConfig
+	AdminCanDeleteAnyMessage bool
 }
 
 type BlogConfig struct {
@@ -165,9 +166,8 @@ type BlogConfig struct {
 }
 
 type TetATetConfig struct {
-	CanResend                bool
-	CanReact                 bool
-	AdminCanDeleteAnyMessage bool
+	CanResend bool
+	CanReact  bool
 }
 
 type RabbitMQConfig struct {
