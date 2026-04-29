@@ -55,8 +55,7 @@
 import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore.js";
 import videoPositionMixin from "@/mixins/videoPositionMixin.js";
-import {stopCall} from "@/utils.js";
-import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS} from "@/bus/bus.js";
+import bus, {ADD_SCREEN_SOURCE, ADD_VIDEO_SOURCE_DIALOG, OPEN_SETTINGS, START_CLOSING_VIDEO} from "@/bus/bus.js";
 import {
   positionItems,
   setStoredPresenter, setStoredVideoMessages, setStoredVideoMiniatures,
@@ -113,7 +112,7 @@ export default {
     },
 
     stopCall() {
-      stopCall(this.chatStore, this.$route, this.$router);
+      bus.emit(START_CLOSING_VIDEO)
     },
     addScreenSource() {
       bus.emit(ADD_SCREEN_SOURCE);

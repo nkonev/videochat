@@ -129,6 +129,8 @@ router.beforeEach((to, from, next) => {
   // why pinia is here https://github.com/vuejs/pinia/discussions/723#discussioncomment-3432229
   const chatStore = useChatStore();
 
+  console.log(from.name, to.name, chatStore.leavingVideoAcceptableParam)
+
   if (from.name == videochat_name && to.name != videochat_name && chatStore.leavingVideoAcceptableParam != true) {
     bus.emit(OPEN_SIMPLE_MODAL, {
       buttonName: vuetify.locale.t('$vuetify.ok'),

@@ -208,7 +208,7 @@ import {
   hasLength,
   isCalling,
   isChatRoute,
-  setLanguageToVuetify, stopCall, unescapeHtml, goToPreservingQuery
+  setLanguageToVuetify, unescapeHtml, goToPreservingQuery
 } from "@/utils";
 import {
   confirmation_pending_name,
@@ -250,7 +250,7 @@ import bus, {
   WEBSOCKET_INITIALIZED,
   OPEN_NOTIFICATIONS_DIALOG,
   OPEN_VIEW_FILES_DIALOG,
-  CHAT_NOTIFICATION_SETTINGS_CHANGED,
+  CHAT_NOTIFICATION_SETTINGS_CHANGED, START_CLOSING_VIDEO,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -402,7 +402,7 @@ export default {
             goToPreservingQuery(this.$route, this.$router, routerNewState);
         },
         stopCall() {
-          stopCall(this.chatStore, this.$route, this.$router);
+          bus.emit(START_CLOSING_VIDEO)
         },
 
         async onProfileSet(){

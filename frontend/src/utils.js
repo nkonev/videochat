@@ -532,12 +532,6 @@ export const goToPreservingQuery = (route, router, to) => {
     return router.push({ ...to, query: prev })
 }
 
-export const stopCall = (chatStore, route, router) => {
-    chatStore.leavingVideoAcceptableParam = true;
-    const routerNewState = { name: chat_name };
-    goToPreservingQuery(route, router, routerNewState);
-}
-
 export const setSplitter = (parentSelector, varName, enable) => {
     const splitPanes = document.querySelector(parentSelector);
     if (!splitPanes) {

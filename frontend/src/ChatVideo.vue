@@ -48,7 +48,7 @@ import {
 import bus, {
   ADD_SCREEN_SOURCE,
   ADD_VIDEO_SOURCE, CHANGE_VIDEO_SOURCE, PIN_VIDEO,
-  REQUEST_CHANGE_VIDEO_PARAMETERS, UN_PIN_VIDEO,
+  REQUEST_CHANGE_VIDEO_PARAMETERS, START_CLOSING_VIDEO, UN_PIN_VIDEO,
   VIDEO_PARAMETERS_CHANGED
 } from "@/bus/bus";
 import {chat_name, videochat_name} from "@/router/routes";
@@ -473,7 +473,7 @@ export default {
     },
 
     handleDisconnect() {
-      console.log('disconnected from room');
+      console.log('disconnecting from room');
 
       // handles kick
       if (this.$route.name == videochat_name && !this.inRestarting) {
@@ -956,6 +956,25 @@ export default {
         this.$refs.splVideo.panes[this.shouldUseReverseOrder() ? this.$refs.splVideo.panes.length - 1 : 0].size = 100;
       }
     },
+    async startCloseVideo() {
+      console.info("startCloseVideo()");
+
+      await axios.put(`/api/video/${this.chatId}/dial/exit`, null, {
+        params: {
+          tokenId: this.chatStore.videoTokenId
+        }
+      });
+
+      this.detachPresenter();
+
+      await this.$nextTick(() => { });
+
+      await this.stopLocalTracks()
+
+      await this.stopRoom();
+
+      // go away (routing) from page in handleDisconnect()
+    },
   },
   computed: {
     ...mapStores(useChatStore),
@@ -1126,6 +1145,7 @@ export default {
     bus.on(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
     bus.on(PIN_VIDEO, this.onPinVideo);
     bus.on(UN_PIN_VIDEO, this.onUnpinVideo);
+    bus.on(START_CLOSING_VIDEO, this.startCloseVideo);
 
     this.chatStore.searchType = SEARCH_MODE_MESSAGES;
 
@@ -1135,19 +1155,9 @@ export default {
 
     this.startRoom(enterResponse.data.token);
   },
+
+  // todo think do we need invoke closeVideo()
   beforeUnmount() {
-    axios.put(`/api/video/${this.chatId}/dial/exit`, null, {
-        params: {
-            tokenId: this.chatStore.videoTokenId
-        }
-    });
-
-    this.detachPresenter();
-
-    this.stopLocalTracks().finally(()=>{
-      this.stopRoom();
-    })
-
     console.log("Cleaning videoContainerDiv");
     this.videoContainerDiv = null;
     this.inRestarting = false;
@@ -1183,6 +1193,7 @@ export default {
     bus.off(CHANGE_VIDEO_SOURCE, this.onChangeVideoSource);
     bus.off(PIN_VIDEO, this.onPinVideo);
     bus.off(UN_PIN_VIDEO, this.onUnpinVideo);
+    bus.off(START_CLOSING_VIDEO, this.startCloseVideo);
   },
 }
 
