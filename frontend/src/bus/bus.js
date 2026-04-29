@@ -140,6 +140,8 @@ export const PARTICIPANTS_RELOAD = "participantsReload";
 export const PIN_VIDEO = "pinVideo";
 export const UN_PIN_VIDEO = "unPinVideo";
 
+export const START_CLOSING_VIDEO = "startClosingVideo";
+
 export const CHAT_NOTIFICATION_SETTINGS_CHANGED = "chatNotificationSettingsChanged";
 
 export const QUOTE_SELECTED = "quoteSelected";

@@ -42,7 +42,7 @@
                       <v-btn v-if="chatStore.isReady()" icon tile :loading="chatStore.initializingVideoCall" @click="createCall()" :title="chatStore.tetATet ? $vuetify.locale.t('$vuetify.call_up') : $vuetify.locale.t('$vuetify.enter_into_call')">
                           <v-icon :size="getIconSize()" color="green">{{chatStore.tetATet ? 'mdi-phone' : 'mdi-phone-plus'}}</v-icon>
                       </v-btn>
-                      <v-btn v-else-if="chatStore.isInCall()" icon tile :loading="chatStore.initializingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
+                      <v-btn v-else-if="chatStore.isInCall()" icon tile :loading="chatStore.initializingVideoCall || chatStore.closingVideoCall" @click="stopCall()" :title="$vuetify.locale.t('$vuetify.leave_call')">
                           <v-icon :size="getIconSize()" :class="chatStore.shouldPhoneBlink ? 'call-blink' : 'text-red'">mdi-phone</v-icon>
                       </v-btn>
                   </v-badge>
@@ -208,7 +208,7 @@ import {
   hasLength,
   isCalling,
   isChatRoute,
-  setLanguageToVuetify, stopCall, unescapeHtml, goToPreservingQuery
+  setLanguageToVuetify, unescapeHtml, goToPreservingQuery
 } from "@/utils";
 import {
   confirmation_pending_name,
@@ -250,7 +250,7 @@ import bus, {
   WEBSOCKET_INITIALIZED,
   OPEN_NOTIFICATIONS_DIALOG,
   OPEN_VIEW_FILES_DIALOG,
-  CHAT_NOTIFICATION_SETTINGS_CHANGED,
+  CHAT_NOTIFICATION_SETTINGS_CHANGED, START_CLOSING_VIDEO,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -402,7 +402,7 @@ export default {
             goToPreservingQuery(this.$route, this.$router, routerNewState);
         },
         stopCall() {
-          stopCall(this.chatStore, this.$route, this.$router);
+          bus.emit(START_CLOSING_VIDEO)
         },
 
         async onProfileSet(){

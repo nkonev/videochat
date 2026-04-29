@@ -65,6 +65,7 @@ export const useChatStore = defineStore('chat', {
         localVideoEnabled: false, // current state - enabled or not
         leavingVideoAcceptableParam: false,
         initializingVideoCall: false,
+        closingVideoCall: false,
         isEditingBigText: false,
         fileUploadOverallProgress: 0,
         shouldShowSendMessageButtons: true,
