@@ -680,7 +680,6 @@ export default {
     async stopRoom() {
       console.log('Stopping room');
       await this.room.disconnect();
-      this.room = null;
     },
     onAddVideoSource({videoId, audioId, isScreen}) {
       this.createLocalMediaTracks(videoId, audioId, isScreen)
