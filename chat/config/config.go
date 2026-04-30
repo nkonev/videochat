@@ -157,7 +157,8 @@ type MessageConfig struct {
 }
 
 type ChatConfig struct {
-	TetATet TetATetConfig
+	TetATet                      TetATetConfig
+	AllowAdminToDeleteAnyMessage bool
 }
 
 type BlogConfig struct {
