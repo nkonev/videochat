@@ -101,7 +101,7 @@ chat:
   tetatet:
     canResend: true
     canReact: true
-    Allowadmintodeleteanymessage: false 
+  Allowadmintodeleteanymessage: false 
 
 blog:
   restrictCreateBlog: false
