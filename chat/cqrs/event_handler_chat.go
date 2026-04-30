@@ -1197,7 +1197,7 @@ func (m *EventHandler) OnMessageRemoved(ctx context.Context, event *MessageDelet
 
 	canWriteMessage := CanWriteMessage(adt.IsParticipant, adt.IsChatAdmin, adt.ChatCanWriteMessage)
 
-	if !CanDeleteMessage(event.AdditionalData.BehalfUserId, adt.MessageOwnerId, canWriteMessage) {
+	if !CanDeleteMessage(event.AdditionalData.BehalfUserId, adt.MessageOwnerId, canWriteMessage, adt.IsChatAdmin, m.cfg.Chat.Allowadmintodeleteanymessage) {
 		m.lgr.InfoContext(ctx, "Skipping OnMessageRemoved because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
 		return nil
 	}

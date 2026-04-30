@@ -988,7 +988,7 @@ func (s *MessageDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba
 
 	canWriteMessage := CanWriteMessage(adt.IsParticipant, adt.IsChatAdmin, adt.ChatCanWriteMessage)
 
-	if !CanDeleteMessage(s.AdditionalData.BehalfUserId, adt.MessageOwnerId, canWriteMessage) {
+	if !CanDeleteMessage(s.AdditionalData.BehalfUserId, adt.MessageOwnerId, canWriteMessage, adt.IsChatAdmin, commonProjection.cfg.Chat.Allowadmintodeleteanymessage) {
 		return NewUnauthorizedError(fmt.Sprintf("user %v is not authorized to delete the message in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 

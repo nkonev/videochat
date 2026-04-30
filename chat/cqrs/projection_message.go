@@ -684,17 +684,17 @@ func enrichMessage(
 		return nil, fmt.Errorf("Logical error during enriching messages not found chat by chatId = %v, userId = %v", chatId, behalfUserId)
 	}
 
-	setMessagePersonalizedFields(&me, chat.TetATet, chat.IsBlog, chat.RegularParticipantCanPublishMessage, chat.RegularParticipantCanPinMessage, chat.RegularParticipantCanWriteMessage, areAdmins[behalfUserId], behalfUserId, isParticipant, bloggingIsAllowed)
+	setMessagePersonalizedFields(&me, chat.TetATet, chat.IsBlog, chat.RegularParticipantCanPublishMessage, chat.RegularParticipantCanPinMessage, chat.RegularParticipantCanWriteMessage, areAdmins[behalfUserId], behalfUserId, isParticipant, bloggingIsAllowed, cfg.Chat.Allowadmintodeleteanymessage)
 
 	return &me, nil
 }
 
-func setMessagePersonalizedFields(copied *dto.MessageViewEnrichedDto, chatTetATet, chatIsBlog, chatRegularParticipantCanPublishMessage, chatRegularParticipantCanPinMessage, chatCanWriteMessage, chatIsAdmin bool, participantId int64, isParticipant bool, bloggingIsAllowed bool) {
+func setMessagePersonalizedFields(copied *dto.MessageViewEnrichedDto, chatTetATet, chatIsBlog, chatRegularParticipantCanPublishMessage, chatRegularParticipantCanPinMessage, chatCanWriteMessage, chatIsAdmin bool, participantId int64, isParticipant bool, bloggingIsAllowed bool, admincandeleteanymessage bool) {
 	canWriteMessage := CanWriteMessage(isParticipant, chatIsAdmin, chatCanWriteMessage)
 
 	copied.CanEdit = CanEditMessage(participantId, copied.OwnerId, copied.EmbedMessage != nil, copied.GetEmbedTypeSafe(), canWriteMessage)
 	copied.CanSyncEmbed = CanSyncEmbedMessage(participantId, copied.OwnerId, copied.EmbedMessage != nil, canWriteMessage)
-	copied.CanDelete = CanDeleteMessage(participantId, copied.OwnerId, canWriteMessage)
+	copied.CanDelete = CanDeleteMessage(participantId, copied.OwnerId, canWriteMessage, chatIsAdmin, admincandeleteanymessage)
 	copied.CanPublish = CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin, copied.OwnerId, participantId)
 	copied.CanPin = CanPinMessage(chatRegularParticipantCanPinMessage, chatIsAdmin)
 
@@ -722,8 +722,11 @@ func CanSyncEmbedMessage(behalfParticipantId int64, messageOwnerId int64, hasEmb
 	return messageOwnerId == behalfParticipantId && hasEmbed && canWriteMessage
 }
 
-func CanDeleteMessage(behalfParticipantId int64, messageOwnerId int64, canWriteMessage bool) bool {
-	return messageOwnerId == behalfParticipantId && canWriteMessage
+func CanDeleteMessage(behalfParticipantId int64, messageOwnerId int64, canWriteMessage bool, chatadmin bool, admincandeleteanymessage bool) bool {
+
+	adminallowed := chatadmin && admincandeleteanymessage
+
+	return (messageOwnerId == behalfParticipantId && canWriteMessage) || (adminallowed)
 }
 
 func CanPublishMessage(chatRegularParticipantCanPublishMessage, chatIsAdmin bool, messageOwnerId, behalfUserId int64) bool {
