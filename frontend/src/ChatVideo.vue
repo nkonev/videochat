@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import {createApp} from 'vue';
+import { mount } from 'mount-vue-component'; // to create components dynamically
 import {
   Room,
   RoomEvent,
@@ -23,7 +23,6 @@ import {
   createLocalScreenTracks,
 } from 'livekit-client';
 import UserVideo from "./UserVideo";
-import vuetify from "@/plugins/vuetify";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { retry } from '@lifeomic/attempt';
@@ -31,7 +30,6 @@ import {
   getWebsocketUrlPrefix,
   hasLength,
   isFullscreen,
-  isMobileBrowser,
   PURPOSE_CALL,
   goToPreservingQuery,
   setSplitter,
@@ -55,7 +53,6 @@ import {chat_name, videochat_name} from "@/router/routes";
 import videoServerSettingsMixin from "@/mixins/videoServerSettingsMixin";
 import {useChatStore} from "@/store/chatStore";
 import {mapStores} from "pinia";
-import pinia from "@/store/index";
 import videoPositionMixin from "@/mixins/videoPositionMixin";
 import { Splitpanes, Pane } from 'splitpanes';
 import {largestRect} from "rect-scaler";
@@ -123,16 +120,8 @@ export default {
       }
     },
     createComponent(userIdentity, position, videoTagId, localVideoProperties) {
-      const app = createApp(UserVideo, {
-        id: videoTagId,
-        localVideoProperties: localVideoProperties,
-        loadingName: this.$vuetify.locale.t('$vuetify.user_video_loading'),
-      });
-      app.config.globalProperties.isMobile = () => {
-        return isMobileBrowser()
-      }
-      app.use(vuetify);
-      app.use(pinia);
+      const appCtx = this.appInstance;
+
       const containerEl = document.createElement("div");
 
       this.setUserVideoWrapperClass(containerEl, this.videoIsHorizontal(), this.videoIsGallery());
@@ -144,9 +133,20 @@ export default {
       } else if (position == second) {
         this.insertChildAtIndex(this.videoContainerDiv, containerEl, 1);
       }
-      const instance = app.mount(containerEl);
 
-      this.addComponentForUser(userIdentity, {component: instance, app: app, containerEl: containerEl});
+      const { vNode, destroy } = mount(UserVideo, {
+        props:{
+          id: videoTagId,
+          localVideoProperties: localVideoProperties,
+          loadingName: this.$vuetify.locale.t('$vuetify.user_video_loading'),
+        },
+        element: containerEl,
+        app: appCtx,
+      });
+
+      const instance = vNode.component.proxy;
+
+      this.addComponentForUser(userIdentity, {component: instance, destroy: destroy, containerEl: containerEl});
       return instance;
     },
     insertChildAtIndex(element, child, index) {
@@ -405,7 +405,7 @@ export default {
       let presenterWasDetached = false;
       for (const componentWrapper of this.getByUser(userIdentity)) {
         const component = componentWrapper.component;
-        const app = componentWrapper.app;
+        const destroy = componentWrapper.destroy;
         const containerEl = componentWrapper.containerEl;
         console.debug("For removal checking component=", component, "against", track);
         // it's correct regardless weird design
@@ -422,7 +422,7 @@ export default {
             }
             try {
               console.log("Removing component=", component.getId());
-              app.unmount();
+              destroy();
               this.videoContainerDiv?.removeChild(containerEl);
               this.removeComponentForUser(userIdentity, componentWrapper);
 

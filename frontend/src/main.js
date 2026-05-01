@@ -59,6 +59,8 @@ app.config.globalProperties.isMobile = () => {
     return isMobileBrowser()
 }
 
+app.config.globalProperties.appInstance = app;
+
 app.config.globalProperties.getIdFromRouteHash = getIdFromRouteHash;
 
 app.config.globalProperties.setError = (e, txt, traceId) => {
