@@ -1102,9 +1102,9 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		exists( 
 			select 1 from (select * from (select unnest(tsvector_to_array(cc.fts_title))) t(av)) inq 
 			where
-				   word_similarity( inq.av, plainto_tsquery('russian', $%d)::text ) > 0.9
-			    or word_similarity( cyrillic_transliterate(inq.av), cyrillic_transliterate(plainto_tsquery('russian', $%d)::text) ) > 0.9
-		) `, len(queryArgs), len(queryArgs))
+				   word_similarity( inq.av, plainto_tsquery('russian', $%d)::text ) > %v
+			    or word_similarity( cyrillic_transliterate(inq.av), cyrillic_transliterate(plainto_tsquery('russian', $%d)::text) ) > %v
+		) `, len(queryArgs), m.cfg.Search.Similarity, len(queryArgs), m.cfg.Search.Similarity)
 
 		searchClause += " ) "
 	}

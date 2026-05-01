@@ -165,6 +165,10 @@ type BlogConfig struct {
 	RestrictCreateBlog bool
 }
 
+type SearchConfig struct {
+	Similarity float64
+}
+
 type TetATetConfig struct {
 	CanResend bool
 	CanReact  bool
@@ -220,6 +224,7 @@ type AppConfig struct {
 	Message     MessageConfig
 	Chat        ChatConfig
 	Blog        BlogConfig
+	Search      SearchConfig
 	FrontendUrl string
 	RabbitMQ    RabbitMQConfig
 	Schedulers  TaskConfig

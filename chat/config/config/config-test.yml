@@ -106,6 +106,9 @@ chat:
 blog:
   restrictCreateBlog: false
 
+search:
+  similarity: 0.85
+
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
   checkAreEventsProcessedInterval: 250ms
