@@ -38,7 +38,7 @@ func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.Comm
 		if chatsExists[event.MessageCommoned.ChatId] {
 			validMessageCreateds = append(validMessageCreateds, event)
 		} else {
-			m.lgr.InfoContext(ctx, "Skipping MessageCreated because there is no chat", logger.AttributeChatId, event.MessageCommoned.ChatId)
+			m.lgr.InfoContext(ctx, "Skipping MessageCreated because there is no chat", logger.AttributeChatId, event.MessageCommoned.ChatId, logger.AttributeMessageId, event.MessageCommoned.Id)
 		}
 	}
 
@@ -140,7 +140,7 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 		return nil, err
 	}
 	if !chatExists {
-		m.lgr.InfoContext(ctx, "Skipping MessageEdited because there is no chat", logger.AttributeChatId, event.MessageCommoned.ChatId)
+		m.lgr.InfoContext(ctx, "Skipping MessageEdited because there is no chat", logger.AttributeChatId, event.MessageCommoned.ChatId, logger.AttributeMessageId, event.MessageCommoned.Id)
 		return nil, nil
 	}
 
