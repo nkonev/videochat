@@ -45,17 +45,19 @@ export default {
     computed: {
         ...mapStores(useChatStore),
     },
-    props: [
-        'isLocal',
-        'shouldShowMuteAudio',
-        'shouldShowMuteVideo',
-        'shouldShowClose',
-        'shouldShowVideoKick',
-        'shouldShowAudioMute',
-        'audioMute',
-        'videoMute',
-        'userName'
-    ],
+    data() {
+      return {
+        isLocal: false,
+        shouldShowMuteAudio: false,
+        shouldShowMuteVideo: false,
+        shouldShowClose: false,
+        shouldShowVideoKick: false,
+        shouldShowAudioMute: false,
+        audioMute: false,
+        videoMute: false,
+        userName: "",
+      }
+    },
     methods:{
         className() {
             return "user-video-item-context-menu"

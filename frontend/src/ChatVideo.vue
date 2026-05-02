@@ -4,13 +4,18 @@
         <ChatVideoPresenter v-if="!shouldUseReverseOrder() && shouldShowPresenter" :provider="this" ref="presenterRef"/>
 
         <pane :class="paneVideoContainerClass"  :size="miniaturesPaneSize()">
-          <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoContainerClass"  @click="onClickFromVideos()"></v-col>
+          <v-col cols="12" class="ma-0 pa-0" id="video-container" :class="videoContainerClass"  @click="onClickFromVideos()" @contextmenu.stop="onShowContextMenu($event)"></v-col>
           <VideoButtons v-if="!isMobile() && !shouldShowPresenter" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
         </pane>
 
         <ChatVideoPresenter v-if="shouldUseReverseOrder() && shouldShowPresenter" :provider="this" ref="presenterRef"/>
     </splitpanes>
     <VideoButtons v-if="isMobile()" @requestFullScreen="onButtonsFullscreen" v-show="showControls"/>
+    <UserVideoContextMenu
+        ref="contextMenuRef"
+    >
+    </UserVideoContextMenu>
+
 </template>
 
 <script>
@@ -146,7 +151,7 @@ export default {
 
       const instance = vNode.component.proxy;
 
-      this.addComponentForUser(userIdentity, {component: instance, destroy: destroy, containerEl: containerEl});
+      this.addComponentForUser(userIdentity, {component: instance, destroy: destroy, containerEl: containerEl, id: videoTagId});
       return instance;
     },
     insertChildAtIndex(element, child, index) {
@@ -803,6 +808,17 @@ export default {
       }
       return existingList;
     },
+    getById(id) {
+      for (const [_, list] of this.userVideoComponents) {
+        for (const componentWrapper of list) {
+          const givenId = componentWrapper.id;
+          if (givenId == id) {
+            return componentWrapper;
+          }
+        }
+      }
+      return null;
+    },
     getAnyPrioritizedVideoData() {
       const tmp = [];
       for (const [_, list] of this.userVideoComponents) {
@@ -975,6 +991,28 @@ export default {
 
       // go away (routing) from page in handleDisconnect()
       console.info("finish closing video");
+    },
+
+    onShowContextMenu(e) {
+      const parentId = e?.target?.parentNode.id;
+      if (parentId) {
+        const videoId = parentId.replace("video-container-id-", '')
+        const found = this.getById(videoId);
+        if (found) {
+          const menuableItem = found.component;
+          this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
+
+          this.$refs.contextMenuRef.isLocal=menuableItem.$data.isLocal;
+          this.$refs.contextMenuRef.shouldShowMuteAudio=menuableItem.shouldShowMuteAudio();
+          this.$refs.contextMenuRef.shouldShowMuteVideo=menuableItem.shouldShowMuteVideo();
+          this.$refs.contextMenuRef.shouldShowClose=menuableItem.shouldShowClose();
+          this.$refs.contextMenuRef.shouldShowVideoKick=menuableItem.shouldShowVideoKick();
+          this.$refs.contextMenuRef.shouldShowAudioMute=menuableItem.shouldShowAudioMute()
+          this.$refs.contextMenuRef.audioMute=menuableItem.$data.audioMute
+          this.$refs.contextMenuRef.videoMute=menuableItem.$data.videoMute
+          this.$refs.contextMenuRef.userName=menuableItem.getUserName()
+        }
+      }
     },
   },
   computed: {

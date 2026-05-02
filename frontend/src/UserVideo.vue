@@ -1,23 +1,8 @@
 <template>
-    <div :class="videoContainerElementClass" ref="containerRef" @contextmenu.stop="onShowContextMenu($event, this)">
+    <div :class="videoContainerElementClass" :id="videoContainerElementId" ref="containerRef">
         <img v-show="avatarIsSet && videoMute" :class="videoElementClass" :src="avatar"/>
         <video v-show="!videoMute || !avatarIsSet" :class="videoElementClass" :id="id" autoPlay playsInline ref="videoRef" @click.prevent="pinCurrentVideo()"/>
         <p v-if="shouldShowCaption()" v-bind:class="[speaking ? 'video-container-element-caption-speaking' : '', 'video-container-element-caption', 'inline-caption-base']">{{ userName }} <v-icon v-if="audioMute">mdi-microphone-off</v-icon></p>
-
-        <UserVideoContextMenu
-            ref="contextMenuRef"
-            isLocal="isLocal"
-            :shouldShowMuteAudio="shouldShowMuteAudio()"
-            :shouldShowMuteVideo="shouldShowMuteVideo()"
-            :shouldShowClose="shouldShowClose()"
-            :shouldShowVideoKick="shouldShowVideoKick()"
-            :shouldShowAudioMute="shouldShowAudioMute()"
-            :audioMute="audioMute"
-            :videoMute="videoMute"
-            :userName="getUserName()"
-        >
-        </UserVideoContextMenu>
-
     </div>
 </template>
 
@@ -29,7 +14,6 @@ import {mapStores} from "pinia";
 import {useChatStore} from "@/store/chatStore";
 import videoPositionMixin from "@/mixins/videoPositionMixin.js";
 import speakingMixin from "@/mixins/speakingMixin.js";
-import UserVideoContextMenu from "@/UserVideoContextMenu.vue";
 import bus, {PIN_VIDEO} from "@/bus/bus.js";
 
 export default {
@@ -39,10 +23,6 @@ export default {
         videoPositionMixin(),
         speakingMixin(),
     ],
-
-    components: {
-      UserVideoContextMenu,
-    },
 
     data()  {
 	    return {
@@ -184,9 +164,6 @@ export default {
             return !this.isLocal && this.canAudioMute
         },
 
-        onShowContextMenu(e, menuableItem) {
-          this.$refs.contextMenuRef.onShowContextMenu(e, menuableItem);
-        },
         shouldShowCaption() {
           return !(this.isMobile() && this.chatStore.presenterEnabled) || this.videoIsGallery()
         },
@@ -220,6 +197,9 @@ export default {
             ret.push('video-container-element-position-vertical');
           }
           return ret;
+        },
+        videoContainerElementId() {
+          return 'video-container-id-' + this.id
         },
         videoElementClass() {
           const ret = ['video-element'];
