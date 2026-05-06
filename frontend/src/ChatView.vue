@@ -1,7 +1,7 @@
 <template>
     <splitpanes ref="splOuter" class="default-theme" id="root-splitpanes" :dbl-click-splitter="false" :style="heightWithoutAppBar" @resize="onPanelResized($event)" @pane-add="onPanelAdd($event)" @pane-remove="onPanelRemove($event)">
       <pane :size="leftPaneSize()" v-if="showLeftPane()">
-        <ChatList :embedded="true" v-if="isAllowedChatList()" ref="chatListRef"/>
+        <ChatList :embedded="true" @chatListLoaded="onChatListLoaded" v-if="isAllowedChatList()" ref="chatListRef"/>
       </pane>
 
       <pane style="background: white" :size="centralPaneSize()">
@@ -40,7 +40,7 @@
               </v-alert>
             </div>
 
-            <MessageList :isCompact="isVideoRoute()" ref="messageList"/>
+            <MessageList v-if="isAllowedMessageList()" :isCompact="isVideoRoute()" ref="messageList"/>
 
             <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-arrow-left-thick" :class="backToChatsClass()" @click="backToChats()"></v-btn>
             <v-badge
@@ -185,6 +185,7 @@ export default {
       // shows that all the possible PUT /join have happened and we can get ChatList. Intentionally doesn't reset on switching chat at left
       // if we remove it (or replace with chatDtoIsReady) - there are going to be disappears of ChatList when user clicks on the different chat
       initialChatLoaded: false,
+      initialChatsLoaded: false,
       chatEventsSubscription: null,
       canWriteMessage: true, // for sake prevent disappearing TipTap on switching in the left pane
       initialized: false,
@@ -237,6 +238,7 @@ export default {
     onLogout() {
       this.partialReset(true);
       this.initialChatLoaded = false;
+      this.initialChatsLoaded = false;
       this.chatEventsSubscription.graphQlUnsubscribe();
     },
     doUninitialize() {
@@ -800,6 +802,15 @@ export default {
         // after the joining all user 2 want to see chat of blog at the left
         return this.chatStore.currentUser && this.initialChatLoaded
     },
+    // to fix race condition on desktop when user 2 opens a chat with the new message from user 1 and user 2 still has no established WS connection to receive chat_unread_messages_changed event
+    isAllowedMessageList() {
+      return this.isAllowedChatList() && (this.initialChatsLoaded || this.isMobile())
+    },
+    onChatListLoaded() {
+      if (!this.initialChatsLoaded) {
+        this.initialChatsLoaded = true;
+      }
+    },
     onWsRestoredRefresh() {
       if (this.chatStore.currentUser && this.chatId) {
         this.getInfo(this.chatId);
@@ -1204,6 +1215,7 @@ export default {
     this.partialReset();
     clearInterval(writingUsersTimerId);
     this.initialChatLoaded = false;
+    this.initialChatsLoaded = false;
 
     this.chatStore.isEditingBigText = false;
     this.canWriteMessage = true;

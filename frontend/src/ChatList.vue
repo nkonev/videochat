@@ -322,6 +322,7 @@ export default {
           this.chatStore.decrementProgressCount();
           this.isLoading = false;
         }
+        this.$emit("chatListLoaded");
       }
     },
     afterScrollRestored(el) {
