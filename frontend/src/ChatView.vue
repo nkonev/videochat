@@ -184,7 +184,7 @@ export default {
       broadcastMessage: null,
       // shows that all the possible PUT /join have happened and we can get ChatList. Intentionally doesn't reset on switching chat at left
       // if we remove it (or replace with chatDtoIsReady) - there are going to be disappears of ChatList when user clicks on the different chat
-      initialLoaded: false,
+      initialChatLoaded: false,
       chatEventsSubscription: null,
       canWriteMessage: true, // for sake prevent disappearing TipTap on switching in the left pane
       initialized: false,
@@ -236,7 +236,7 @@ export default {
     },
     onLogout() {
       this.partialReset(true);
-      this.initialLoaded = false;
+      this.initialChatLoaded = false;
       this.chatEventsSubscription.graphQlUnsubscribe();
     },
     doUninitialize() {
@@ -275,7 +275,7 @@ export default {
         this.commonChatEdit(data);
         this.chatStore.tetATet = data.tetATet;
         this.chatStore.setChatDto(data);
-        this.initialLoaded = true;
+        this.initialChatLoaded = true;
         this.canWriteMessage = data.canWriteMessage;
         return Promise.resolve(data);
     },
@@ -798,7 +798,7 @@ export default {
         // user 2 wants to write a comment, clicking the button in blog
         // he is being redirected to chat, because user 2 is not a participant, he gets a http code and the browser issues /join
         // after the joining all user 2 want to see chat of blog at the left
-        return this.chatStore.currentUser && this.initialLoaded
+        return this.chatStore.currentUser && this.initialChatLoaded
     },
     onWsRestoredRefresh() {
       if (this.chatStore.currentUser && this.chatId) {
@@ -1203,7 +1203,7 @@ export default {
 
     this.partialReset();
     clearInterval(writingUsersTimerId);
-    this.initialLoaded = false;
+    this.initialChatLoaded = false;
 
     this.chatStore.isEditingBigText = false;
     this.canWriteMessage = true;
