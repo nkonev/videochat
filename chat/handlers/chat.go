@@ -630,7 +630,9 @@ func (ch *ChatHandler) ChatsFilter(g *gin.Context) {
 
 	if !participant {
 		ch.lgr.InfoContext(g.Request.Context(), "user is not a participant of chat", logger.AttributeUserId, userId, logger.AttributeChatId, chatId)
-		g.Status(http.StatusUnauthorized)
+		g.JSON(http.StatusOK, dto.FilterDto{
+			Found: false,
+		})
 		return
 	}
 

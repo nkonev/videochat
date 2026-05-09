@@ -306,10 +306,16 @@ func (ch *ParticipantHandler) ParticipantsFilter(g *gin.Context) {
 	requestedParticipantIds := bindTo.UserId
 	userSearchString := bindTo.SearchString
 
-	var response []dto.FilteredParticipantItemResponse
+	var response = []dto.FilteredParticipantItemResponse{}
 
 	participantsByBehalfs, _, err := ch.enrichingProjection.GetParticipantsEnriched(g.Request.Context(), []int64{userId}, chatId, int32(len(requestedParticipantIds)), 0, userSearchString, false, requestedParticipantIds)
 	if err != nil {
+		var unauthError *cqrs.UnauthorizedError
+		if errors.As(err, &unauthError) {
+			g.JSON(http.StatusOK, response)
+			return
+		}
+
 		if translateParticipantError(g, err) {
 			return
 		}
