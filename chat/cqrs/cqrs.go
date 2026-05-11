@@ -876,6 +876,12 @@ func RunSequenceFastforwarder(
 					lgr.Error("Error during setting message id sequences", logger.AttributeError, errI2)
 					return errI2
 				}
+
+				errThr := commonProjection.InitializeChildChatIdSequenceIfNeed(ctx, tx, chatId)
+				if errThr != nil {
+					lgr.Error("Error during setting thread id sequences", logger.AttributeError, errThr)
+					return errThr
+				}
 			}
 		}
 

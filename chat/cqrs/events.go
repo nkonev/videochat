@@ -83,6 +83,7 @@ func NewMetadata(eventType string) *Metadata {
 
 type ChatCommoned struct {
 	ChatId                              int64   `json:"chatId"`
+	ParentChatId                        int64   `json:"parentChatId"`
 	Title                               string  `json:"title"`
 	Blog                                bool    `json:"blog"`
 	BlogAbout                           bool    `json:"blogAbout"`

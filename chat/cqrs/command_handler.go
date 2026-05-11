@@ -1404,33 +1404,48 @@ func validateAndSetEmbedFieldsEmbedMessage(ctx context.Context, dba *db.DB, comm
 	return nil
 }
 
-func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) error {
-	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId, s.MessageId)
+func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) (int64, error) {
+	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if !adt.IsChatFound {
-		return NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
+		return 0, NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
 	}
 
-	if adt.FoundThreadId != nil {
-		return nil
+	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant) {
+		return 0, NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
-	if !CanCreateThread(adt.ChatCanCreateThread, adt.IsParticipant) {
-		return NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
-	}
-
-	pa := &ThreadCreated{
-		AdditionalData: s.AdditionalData,
-		ChatId:         s.ChatId,
-	}
-
-	err = eventBus.Publish(ctx, pa)
+	childChatId, err := commonProjection.GetNextChildChatId(ctx, dba, s.ChatId)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	cc := &ChatCreated{
+		AdditionalData: s.AdditionalData,
+		ChatCommoned: ChatCommoned{
+			ChatId:                              childChatId,
+			ParentChatId:                        s.ChatId,
+			Title:                               copyCommand.Title, // TODO подумать и вытащить кучу полей в отд таблицу, используемую только для полноценных чатов (parentId == 0)
+			Blog:                                copyCommand.Blog,
+			BlogAbout:                           copyCommand.BlogAbout,
+			Avatar:                              copyCommand.Avatar,
+			AvatarBig:                           copyCommand.AvatarBig,
+			CanResend:                           copyCommand.CanResend,
+			CanReact:                            copyCommand.CanReact,
+			AvailableToSearch:                   copyCommand.AvailableToSearch,
+			RegularParticipantCanPublishMessage: copyCommand.RegularParticipantCanPublishMessage,
+			RegularParticipantCanPinMessage:     copyCommand.RegularParticipantCanPinMessage,
+			RegularParticipantCanWriteMessage:   copyCommand.RegularParticipantCanWriteMessage,
+			RegularParticipantCanAddParticipant: copyCommand.RegularParticipantCanAddParticipant,
+		},
+	}
+	err = eventBus.Publish(ctx, cc)
+	if err != nil {
+		return 0, err
+	}
+
+	return childChatId, nil
 }

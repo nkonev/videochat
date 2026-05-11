@@ -1,9 +1,5 @@
 package cqrs
 
-func CanCreateThread(chatCanCreateThread, isParticipant bool) bool {
-	if !isParticipant {
-		return false
-	}
-
-	return chatCanCreateThread
+func CanCreateThread(chatCanCreateThread, cfgCanCreateThread, isParticipant bool) bool {
+	return isParticipant && chatCanCreateThread && cfgCanCreateThread
 }
