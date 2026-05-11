@@ -129,6 +129,61 @@ func (m *CommonProjection) InitializeMessageIdSequenceIfNeed(ctx context.Context
 	return nil
 }
 
+func (m *CommonProjection) GetNextChildChatId(ctx context.Context, co db.CommonOperations, chatId int64) (int64, error) {
+
+	var threadId int64
+	err := sqlscan.Get(ctx, co, &threadId, `
+		insert into child_chat_id(
+		  parent_id
+		  ,last_generated_child_chat_id
+		)
+		values ($1, 1)
+		on conflict(parent_id) do update set 
+		last_generated_child_chat_id = child_chat_id.last_generated_child_chat_id + 1
+		returning last_generated_child_chat_id
+	`, chatId)
+	if err != nil {
+		return 0, err
+	}
+
+	return threadId, nil
+}
+
+func (m *CommonProjection) InitializeChildChatIdSequenceIfNeed(ctx context.Context, co db.CommonOperations, chatId int64) error {
+	var currentGeneratedThreadId int64
+
+	err := sqlscan.Get(ctx, co, &currentGeneratedThreadId, "SELECT coalesce(last_generated_child_chat_id, 0) from child_chat_id where parent_id = $1", chatId)
+	if err != nil {
+		return err
+	}
+
+	if currentGeneratedThreadId == 0 {
+		var maxThreadId int64
+		err = sqlscan.Get(ctx, co, &maxThreadId, "SELECT coalesce(max(id), 0) from chat_common where parent_id = $1", chatId)
+		if err != nil {
+			return err
+		}
+
+		if maxThreadId > 0 {
+			m.lgr.Info("Fast-forwarding childChatId sequence", logger.AttributeChatId, chatId)
+
+			_, err = co.ExecContext(ctx, `
+				insert into child_chat_id(
+				  parent_id
+				  ,last_generated_child_chat_id
+				)
+				values ($1, $2)
+				on conflict(parent_id) do update set 
+				last_generated_child_chat_id = $2
+			`, chatId, maxThreadId)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 const need_to_fast_forward_sequences_key = "need_to_fast_forward_sequences"
 const need_to_fast_forward_sequences_value = "true"
 

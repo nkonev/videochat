@@ -43,7 +43,7 @@ func NewThreadHandler(
 	}
 }
 
-func (ch *ThreadHandler) CreateThread(g *gin.Context) {
+func (ch *ThreadHandler) CreateChildChat(g *gin.Context) {
 	userId, err := getUserId(g)
 	if err != nil {
 		ch.lgr.ErrorContext(g.Request.Context(), "Error parsing UserId", logger.AttributeError, err)
@@ -75,7 +75,7 @@ func (ch *ThreadHandler) CreateThread(g *gin.Context) {
 		MessageId:      messageId,
 	}
 
-	threadId, err := cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection)
+	threadId, err := cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.cfg)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
@@ -86,14 +86,14 @@ func (ch *ThreadHandler) CreateThread(g *gin.Context) {
 		return
 	}
 
-	ch.lgr.InfoContext(g.Request.Context(), "created the thread", logger.AttributeChatId, chatId, logger.AttributeThreadId, threadId)
+	ch.lgr.InfoContext(g.Request.Context(), "created the thread", logger.AttributeChatId, chatId, logger.AttributeChildChatId, threadId)
 
 	m := dto.IdResponse{Id: threadId}
 
 	g.JSON(http.StatusOK, m)
 }
 
-func (ch *ThreadHandler) DeleteThread(g *gin.Context) {
+func (ch *ThreadHandler) DeleteChildChat(g *gin.Context) {
 	userId, err := getUserId(g)
 	if err != nil {
 		ch.lgr.ErrorContext(g.Request.Context(), "Error parsing UserId", logger.AttributeError, err)

@@ -161,6 +161,7 @@ type MessageConfig struct {
 type ChatConfig struct {
 	TetATet                      TetATetConfig
 	AllowAdminToDeleteAnyMessage bool
+	CanCreateThread              bool
 }
 
 type BlogConfig struct {

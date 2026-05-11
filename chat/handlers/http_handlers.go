@@ -59,8 +59,8 @@ func CreateHttpRouter(
 	ginRouter.POST("/api/chat/fresh", chatHandler.ChatsFresh)
 	ginRouter.POST("/api/chat/filter", chatHandler.ChatsFilter)
 
-	ginRouter.POST("/api/chat/:id/thread/message/:messageId", threadHandler.CreateThread)
-	ginRouter.DELETE("/api/chat/:id/thread/message/:messageId", threadHandler.DeleteThread)
+	ginRouter.POST("/api/chat/:id/thread/message/:messageId", threadHandler.CreateChildChat)
+	ginRouter.DELETE("/api/chat/:id/thread/message/:messageId", threadHandler.DeleteChildChat)
 
 	ginRouter.PUT("/api/chat/:id/notification", chatHandler.PutUserChatNotificationSettings)
 	ginRouter.GET("/api/chat/:id/notification", chatHandler.GetUserChatNotificationSettings)
