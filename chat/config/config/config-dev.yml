@@ -104,6 +104,7 @@ chat:
     canResend: true
     canReact: true
   allowAdminToDeleteAnyMessage: false
+  canCreateThread: true
 
 blog:
   restrictCreateBlog: false
