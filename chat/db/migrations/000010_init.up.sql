@@ -116,16 +116,16 @@ CREATE unlogged TABLE message_published(
 
 SELECT create_distributed_table('message_published', 'chat_id', colocate_with => 'message');
 
--- TODO обдумать
 create unlogged table chat_user_view(
     id bigint,
+    parent_id bigint,
     pinned boolean not null default false,
     user_id bigint,
     update_date_time timestamp not null,
     consider_messages_as_unread BOOLEAN not null default true,
     unread_messages bigint not null default 0,
     cuv_last_read_message_id bigint not null default 0,
-    primary key (user_id, id)
+    primary key (user_id, parent_id, id)
 );
 SELECT create_distributed_table('chat_user_view', 'user_id');
 
