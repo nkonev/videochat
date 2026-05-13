@@ -1428,7 +1428,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		ChatCommoned: ChatCommoned{
 			ChatId:                              childChatId,
 			ParentChatId:                        s.ChatId,
-			Title:                               copyCommand.Title, // TODO подумать и вытащить кучу полей в отд таблицу, используемую только для полноценных чатов (parentId == 0)
+			Title:                               copyCommand.Title,
 			Blog:                                copyCommand.Blog,
 			BlogAbout:                           copyCommand.BlogAbout,
 			Avatar:                              copyCommand.Avatar,
