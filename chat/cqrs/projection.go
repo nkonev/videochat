@@ -91,7 +91,7 @@ const ChatStillNotExists = -1
 
 func (m *CommonProjection) GetNextMessageId(ctx context.Context, co db.CommonOperations, chatId int64) (int64, error) {
 	var messageId int64
-	err := sqlscan.Get(ctx, co, &messageId, "UPDATE chat_common SET last_generated_message_id = last_generated_message_id + 1 WHERE id = $1 RETURNING last_generated_message_id;", chatId)
+	err := sqlscan.Get(ctx, co, &messageId, "UPDATE chat_common SET last_generated_message_id = last_generated_message_id + 1 WHERE parent_id = $1 and id = $2 RETURNING last_generated_message_id;", parentChatId, chatId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
@@ -105,14 +105,14 @@ func (m *CommonProjection) GetNextMessageId(ctx context.Context, co db.CommonOpe
 func (m *CommonProjection) InitializeMessageIdSequenceIfNeed(ctx context.Context, tx *db.Tx, chatId int64) error {
 	var currentGeneratedMessageId int64
 
-	err := sqlscan.Get(ctx, tx, &currentGeneratedMessageId, "SELECT coalesce(last_generated_message_id, 0) from chat_common where id = $1", chatId)
+	err := sqlscan.Get(ctx, tx, &currentGeneratedMessageId, "SELECT coalesce(last_generated_message_id, 0) from chat_common where parent_id = $1 and id = $2", parentChatId, chatId)
 	if err != nil {
 		return err
 	}
 
 	if currentGeneratedMessageId == 0 {
 		var maxMessageId int64
-		err = sqlscan.Get(ctx, tx, &maxMessageId, "SELECT coalesce(max(id), 0) from message where chat_id = $1", chatId)
+		err = sqlscan.Get(ctx, tx, &maxMessageId, "SELECT coalesce(max(id), 0) from message where chat_id = $1 and child_chat_id = $1", parentChatId, chatId)
 		if err != nil {
 			return err
 		}
@@ -120,7 +120,7 @@ func (m *CommonProjection) InitializeMessageIdSequenceIfNeed(ctx context.Context
 		if maxMessageId > 0 {
 			m.lgr.Info("Fast-forwarding messageId sequence", logger.AttributeChatId, chatId)
 
-			_, err = tx.ExecContext(ctx, "update chat_common set last_generated_message_id = $2 where id = $1", chatId, maxMessageId)
+			_, err = tx.ExecContext(ctx, "update chat_common set last_generated_message_id = $3 where parent_id = $1 and id = $2", parentChatId, chatId, maxMessageId)
 			if err != nil {
 				return err
 			}
@@ -133,14 +133,7 @@ func (m *CommonProjection) GetNextChildChatId(ctx context.Context, co db.CommonO
 
 	var threadId int64
 	err := sqlscan.Get(ctx, co, &threadId, `
-		insert into child_chat_id(
-		  parent_id
-		  ,last_generated_child_chat_id
-		)
-		values ($1, 1)
-		on conflict(parent_id) do update set 
-		last_generated_child_chat_id = child_chat_id.last_generated_child_chat_id + 1
-		returning last_generated_child_chat_id
+		UPDATE chat_parent SET last_generated_child_chat_id = last_generated_child_chat_id + 1 WHERE id = $1 RETURNING last_generated_child_chat_id;
 	`, chatId)
 	if err != nil {
 		return 0, err
@@ -152,14 +145,14 @@ func (m *CommonProjection) GetNextChildChatId(ctx context.Context, co db.CommonO
 func (m *CommonProjection) InitializeChildChatIdSequenceIfNeed(ctx context.Context, co db.CommonOperations, chatId int64) error {
 	var currentGeneratedThreadId int64
 
-	err := sqlscan.Get(ctx, co, &currentGeneratedThreadId, "SELECT coalesce(last_generated_child_chat_id, 0) from child_chat_id where parent_id = $1", chatId)
+	err := sqlscan.Get(ctx, co, &currentGeneratedThreadId, "SELECT coalesce(last_generated_child_chat_id, 0) from chat_parent where id = $1", chatId)
 	if err != nil {
 		return err
 	}
 
 	if currentGeneratedThreadId == 0 {
 		var maxThreadId int64
-		err = sqlscan.Get(ctx, co, &maxThreadId, "SELECT coalesce(max(id), 0) from chat_common where parent_id = $1", chatId)
+		err = sqlscan.Get(ctx, co, &maxThreadId, "SELECT coalesce(max(id), 0) from chat_parent where id = $1", chatId)
 		if err != nil {
 			return err
 		}
@@ -168,13 +161,7 @@ func (m *CommonProjection) InitializeChildChatIdSequenceIfNeed(ctx context.Conte
 			m.lgr.Info("Fast-forwarding childChatId sequence", logger.AttributeChatId, chatId)
 
 			_, err = co.ExecContext(ctx, `
-				insert into child_chat_id(
-				  parent_id
-				  ,last_generated_child_chat_id
-				)
-				values ($1, $2)
-				on conflict(parent_id) do update set 
-				last_generated_child_chat_id = $2
+				update chat_parent set last_generated_child_chat_id = $2 where id = $1
 			`, chatId, maxThreadId)
 			if err != nil {
 				return err
