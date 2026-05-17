@@ -1418,7 +1418,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return 0, NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
-	childChatId, err := commonProjection.GetNextChildChatId(ctx, dba, s.ChatId)
+	threadId, err := commonProjection.GetNextThreadId(ctx, dba, s.ChatId)
 	if err != nil {
 		return 0, err
 	}
@@ -1447,5 +1447,9 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return 0, err
 	}
 
-	return childChatId, nil
+	return threadId, nil
+}
+
+func (s *ThreadDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) error {
+	return nil
 }
