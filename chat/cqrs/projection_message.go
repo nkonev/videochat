@@ -131,7 +131,7 @@ type MessageEditDto struct {
 	pinnedCount, publishedCount int64
 }
 
-func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOperations, event *MessageEdited) (*MessageEditDto, error) {
+func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOperations, event *MessageEdited, isTextBasedEvent bool) (*MessageEditDto, error) {
 
 	var pinnedCount, publishedCount int64
 
@@ -149,27 +149,33 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 		return nil, err
 	}
 
-	isMessagePinned, err := m.isMessagePinned(ctx, co, event.MessageCommoned.ChatId, event.MessageCommoned.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	isMessagePublished, err := m.isMessagePublished(ctx, co, event.MessageCommoned.ChatId, event.MessageCommoned.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	var embed pgtype.JSONB
-	if event.MessageCommoned.Embed != nil {
-		err = embed.Set(event.MessageCommoned.Embed)
+	var isMessagePinned, isMessagePublished bool
+	if isTextBasedEvent {
+		isMessagePinned, err = m.isMessagePinned(ctx, co, event.MessageCommoned.ChatId, event.MessageCommoned.Id)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		embed.Status = pgtype.Null
+
+		isMessagePublished, err = m.isMessagePublished(ctx, co, event.MessageCommoned.ChatId, event.MessageCommoned.Id)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	_, err = co.ExecContext(ctx, `
+	switch event.MessageEditedAction {
+	case MessageEditedActionAll:
+		fallthrough
+	case MessageEditedActionEmbedSync:
+		var embed pgtype.JSONB
+		if event.MessageCommoned.Embed != nil {
+			err = embed.Set(event.MessageCommoned.Embed)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			embed.Status = pgtype.Null
+		}
+		_, err = co.ExecContext(ctx, `
 			update message
 			set	
 			    content = $3
@@ -178,8 +184,22 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 				, file_item_uuid = $6
 			where chat_id = $2 and id = $1 
 		`, event.MessageCommoned.Id, event.MessageCommoned.ChatId, event.MessageCommoned.Content, embed, event.AdditionalData.CreatedAt, event.MessageCommoned.FileItemUuid)
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+	case MessageEditedActionSetFileItemUuid:
+		_, err = co.ExecContext(ctx, `
+			update message
+			set	
+				  update_date_time = $3
+				, file_item_uuid = $4
+			where chat_id = $2 and id = $1 
+		`, event.MessageCommoned.Id, event.MessageCommoned.ChatId, event.AdditionalData.CreatedAt, event.MessageCommoned.FileItemUuid)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("wrong MessageEditedAction: %v", event.MessageEditedAction)
 	}
 
 	if messageBlogPost {
@@ -189,43 +209,45 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 		}
 	}
 
-	if isMessagePinned {
-		previewTxt := m.createMessagePinnedText(event.MessageCommoned.Content)
+	if isTextBasedEvent {
+		if isMessagePinned {
+			previewTxt := m.createMessagePinnedText(event.MessageCommoned.Content)
 
-		_, err = co.ExecContext(ctx, `
+			_, err = co.ExecContext(ctx, `
 				update message_pinned
 				set	
 					preview = $3
 					, update_date_time = $4
 				where chat_id = $2 and message_id = $1 
 			`, event.MessageCommoned.Id, event.MessageCommoned.ChatId, previewTxt, event.AdditionalData.CreatedAt)
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
+
+			pinnedCount, err = m.GetPinnedMessageCount(ctx, m.db, event.MessageCommoned.ChatId)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		pinnedCount, err = m.GetPinnedMessageCount(ctx, m.db, event.MessageCommoned.ChatId)
-		if err != nil {
-			return nil, err
-		}
-	}
+		if isMessagePublished {
+			previewTxt := m.createMessagePublishedText(event.MessageCommoned.Content)
 
-	if isMessagePublished {
-		previewTxt := m.createMessagePublishedText(event.MessageCommoned.Content)
-
-		_, err = co.ExecContext(ctx, `
+			_, err = co.ExecContext(ctx, `
 				update message_published
 				set	
 					preview = $3
 					, update_date_time = $4
 				where chat_id = $2 and message_id = $1 
 			`, event.MessageCommoned.Id, event.MessageCommoned.ChatId, previewTxt, event.AdditionalData.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
+			if err != nil {
+				return nil, err
+			}
 
-		publishedCount, err = m.GetPublishedMessageCount(ctx, co, event.MessageCommoned.ChatId)
-		if err != nil {
-			return nil, err
+			publishedCount, err = m.GetPublishedMessageCount(ctx, co, event.MessageCommoned.ChatId)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

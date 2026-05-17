@@ -1050,7 +1050,8 @@ func (sp *MessageEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 			Content:      copyCommand.Content,
 			FileItemUuid: copyCommand.FileItemUuid,
 		},
-		AdditionalData: copyCommand.AdditionalData,
+		MessageEditedAction: MessageEditedActionAll,
+		AdditionalData:      copyCommand.AdditionalData,
 	}
 
 	err = validateAndSetEmbedFieldsEmbedMessage(ctx, dba, commonProjection, copyCommand.ChatId, copyCommand.EmbedMessage, &cp.MessageCommoned, adt.IsParticipant)
@@ -1072,7 +1073,6 @@ func (sp *MessageSetFileItemUuid) Handle(ctx context.Context, eventBus *KafkaPro
 		ChatId:         sp.ChatId,
 		MessageId:      sp.MessageId,
 		FileItemUuid:   sp.FileItemUuid,
-		// content and embed are set below
 	}
 
 	adt, err := commonProjection.GetMessageDataForAuthorization(ctx, dba, copyCommand.AdditionalData.BehalfUserId, copyCommand.ChatId, copyCommand.MessageId)
@@ -1094,28 +1094,18 @@ func (sp *MessageSetFileItemUuid) Handle(ctx context.Context, eventBus *KafkaPro
 		return NewUnauthorizedError(fmt.Sprintf("user %v is not authorized to edit the message in chat %v", sp.AdditionalData.BehalfUserId, sp.ChatId))
 	}
 
-	mb, err := commonProjection.GetMessageWithEmbed(ctx, dba, copyCommand.ChatId, copyCommand.MessageId)
-	if err != nil {
-		return err
-	}
-
-	copyCommand.Content = mb.Content
-
-	if copyCommand.IsValidatabale() {
-		if err = copyCommand.Validate(); err != nil {
-			return NewValidationError(fmt.Sprintf("Error during validation: %v", err))
-		}
+	if copyCommand.ChatId == 0 || copyCommand.MessageId == 0 {
+		return NewValidationError("missed chatId or messageId")
 	}
 
 	cp := &MessageEdited{
 		MessageCommoned: MessageCommoned{
 			Id:           copyCommand.MessageId,
 			ChatId:       copyCommand.ChatId,
-			Content:      copyCommand.Content,
 			FileItemUuid: copyCommand.FileItemUuid,
-			Embed:        mb.Embed,
 		},
-		AdditionalData: copyCommand.AdditionalData,
+		MessageEditedAction: MessageEditedActionSetFileItemUuid,
+		AdditionalData:      copyCommand.AdditionalData,
 	}
 
 	err = eventBus.Publish(ctx, cp)
@@ -1169,8 +1159,8 @@ func (sp *MessageSyncEmbed) Handle(ctx context.Context, eventBus *KafkaProducer,
 			ChatId:  copyCommand.ChatId,
 			Content: me.Content,
 		},
-		IsEmbedSync:    true,
-		AdditionalData: copyCommand.AdditionalData,
+		MessageEditedAction: MessageEditedActionEmbedSync,
+		AdditionalData:      copyCommand.AdditionalData,
 	}
 
 	err = validateAndSetEmbedFieldsEmbedMessage(ctx, dba, commonProjection, copyCommand.ChatId, embedMessageRequest, &cp.MessageCommoned, adt.IsParticipant)

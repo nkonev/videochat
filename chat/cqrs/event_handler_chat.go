@@ -852,7 +852,7 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 
 	canWriteMessage := CanWriteMessage(adt.IsParticipant, adt.IsChatAdmin, adt.ChatCanWriteMessage)
 
-	if event.IsEmbedSync {
+	if event.MessageEditedAction == MessageEditedActionEmbedSync {
 		if !CanSyncEmbedMessage(event.AdditionalData.BehalfUserId, adt.MessageOwnerId, adt.HasEmbedMessage, canWriteMessage) {
 			m.lgr.InfoContext(ctx, "Skipping OnMessageEdited because there is no authorization to do so (sync)", logger.AttributeChatId, event.MessageCommoned.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
 			return nil
@@ -864,18 +864,27 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 		}
 	}
 
-	messageBasicOld, err := m.commonProjection.GetMessageWithEmbed(ctx, m.db, event.MessageCommoned.ChatId, event.MessageCommoned.Id)
-	if err != nil {
-		return err
-	}
+	isTextBasedChange := event.MessageEditedAction == MessageEditedActionAll || event.MessageEditedAction == MessageEditedActionEmbedSync
 
-	oldMentionedUserIds, oldHasHere, oldHasAll, _, oldRepliedUserId := m.getNotificationData(ctx, messageBasicOld.GetContentOrEmpty(), messageBasicOld.GetEmbed())
-	oldMentionedUserIdsMap := utils.SliceToSetMapIdStruct(oldMentionedUserIds)
+	var oldMentionedUserIdsMap map[int64]struct{}
+	var oldHasHere, oldHasAll bool
+	var oldRepliedUserId *int64
+
+	if isTextBasedChange {
+		messageBasicOld, err := m.commonProjection.GetMessageWithEmbed(ctx, m.db, event.MessageCommoned.ChatId, event.MessageCommoned.Id)
+		if err != nil {
+			return err
+		}
+
+		var oldMentionedUserIds []int64
+		oldMentionedUserIds, oldHasHere, oldHasAll, _, oldRepliedUserId = m.getNotificationData(ctx, messageBasicOld.GetContentOrEmpty(), messageBasicOld.GetEmbed())
+		oldMentionedUserIdsMap = utils.SliceToSetMapIdStruct(oldMentionedUserIds)
+	}
 
 	var isLastMessage bool
 
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*MessageEditDto, error) {
-		resDto, errInn := m.commonProjection.OnMessageEdited(ctx, tx, event)
+		resDto, errInn := m.commonProjection.OnMessageEdited(ctx, tx, event, isTextBasedChange)
 		if errInn != nil {
 			return nil, errInn
 		}
@@ -887,15 +896,20 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 
 		isLastMessage = event.MessageCommoned.Id == lastMessageId
 
-		if isLastMessage {
-			errInn = m.commonProjection.setLastMessage(ctx, tx, event.MessageCommoned.ChatId)
-			if errInn != nil {
-				return nil, errInn
+		if isTextBasedChange {
+			if isLastMessage {
+				errInn = m.commonProjection.setLastMessage(ctx, tx, event.MessageCommoned.ChatId)
+				if errInn != nil {
+					return nil, errInn
+				}
 			}
 		}
 
 		return resDto, nil
 	})
+	if errOuter != nil {
+		return errOuter
+	}
 
 	var isPinned, isPublished bool
 	var pinnedCount, publishedCount int64
@@ -915,8 +929,16 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 		// nothing
 	}
 
-	newMentionedUserIds, newHasHere, newHasAll, newWithoutAnyHtml, newRepliedUserId := m.getNotificationData(ctx, event.MessageCommoned.Content, event.MessageCommoned.Embed)
-	newMentionedUserIdsMap := utils.SliceToSetMapIdStruct(newMentionedUserIds)
+	var newHasHere, newHasAll bool
+	var newMentionedUserIdsMap map[int64]struct{}
+	var newWithoutAnyHtml string
+	var newRepliedUserId *int64
+
+	if isTextBasedChange {
+		var newMentionedUserIds []int64
+		newMentionedUserIds, newHasHere, newHasAll, newWithoutAnyHtml, newRepliedUserId = m.getNotificationData(ctx, event.MessageCommoned.Content, event.MessageCommoned.Embed)
+		newMentionedUserIdsMap = utils.SliceToSetMapIdStruct(newMentionedUserIds)
+	}
 
 	// for cache purposes, kinda optimization
 	var behalfUserDto *dto.User
@@ -927,34 +949,40 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 	var addedRepliedUserId *int64
 	var removedRepliedUserId *int64
 
-	for newUserId := range newMentionedUserIdsMap {
-		if _, ok := oldMentionedUserIdsMap[newUserId]; !ok {
-			addedMentionedUserIds = append(addedMentionedUserIds, newUserId)
+	if isTextBasedChange {
+		for newUserId := range newMentionedUserIdsMap {
+			if _, ok := oldMentionedUserIdsMap[newUserId]; !ok {
+				addedMentionedUserIds = append(addedMentionedUserIds, newUserId)
+			}
 		}
-	}
 
-	for oldUserId := range oldMentionedUserIdsMap {
-		if _, ok := newMentionedUserIdsMap[oldUserId]; !ok {
-			removedMentionedUserIds = append(removedMentionedUserIds, oldUserId)
+		for oldUserId := range oldMentionedUserIdsMap {
+			if _, ok := newMentionedUserIdsMap[oldUserId]; !ok {
+				removedMentionedUserIds = append(removedMentionedUserIds, oldUserId)
+			}
 		}
-	}
 
-	if newRepliedUserId != nil && oldRepliedUserId != nil {
-		if *newRepliedUserId != *oldRepliedUserId {
+		if newRepliedUserId != nil && oldRepliedUserId != nil {
+			if *newRepliedUserId != *oldRepliedUserId {
+				addedRepliedUserId = newRepliedUserId
+				removedRepliedUserId = oldRepliedUserId
+			}
+		} else if newRepliedUserId != nil {
 			addedRepliedUserId = newRepliedUserId
+		} else if oldRepliedUserId != nil {
 			removedRepliedUserId = oldRepliedUserId
 		}
-	} else if newRepliedUserId != nil {
-		addedRepliedUserId = newRepliedUserId
-	} else if oldRepliedUserId != nil {
-		removedRepliedUserId = oldRepliedUserId
 	}
 
-	addedHasAll := !oldHasAll && newHasAll
-	addedHasHere := !oldHasHere && newHasHere
+	var addedHasAll, addedHasHere, removedHasAll, removedHasHere bool
 
-	removedHasAll := oldHasAll && !newHasAll
-	removedHasHere := oldHasHere && !newHasHere
+	if isTextBasedChange {
+		addedHasAll = !oldHasAll && newHasAll
+		addedHasHere = !oldHasHere && newHasHere
+
+		removedHasAll = oldHasAll && !newHasAll
+		removedHasHere = oldHasHere && !newHasHere
+	}
 
 	var additionalUserIdToFetch []int64 = []int64{event.AdditionalData.BehalfUserId}
 
@@ -972,19 +1000,22 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 
 		var pinnedEnricheds = map[int64]*dto.PinnedMessageDto{}
 		var publishedEnricheds = map[int64]*dto.PublishedMessageDto{}
-		if isPinned {
-			// allPortionUsersMap contains message owner
-			pinnedEnricheds, errInn = m.enrichingProjection.GetPinnedMessageEnriched(ctx, m.db, event.MessageCommoned.ChatId, event.MessageCommoned.Id, participantIdsPortion, allPortionUsersMap)
-			if errInn != nil {
-				return errInn
-			}
-		}
 
-		if isPublished {
-			// allPortionUsersMap contains message owner
-			publishedEnricheds, errInn = m.enrichingProjection.GetPublishedMessageEnriched(ctx, m.db, event.MessageCommoned.ChatId, event.MessageCommoned.Id, participantIdsPortion, allPortionUsersMap)
-			if errInn != nil {
-				return errInn
+		if isTextBasedChange {
+			if isPinned {
+				// allPortionUsersMap contains message owner
+				pinnedEnricheds, errInn = m.enrichingProjection.GetPinnedMessageEnriched(ctx, m.db, event.MessageCommoned.ChatId, event.MessageCommoned.Id, participantIdsPortion, allPortionUsersMap)
+				if errInn != nil {
+					return errInn
+				}
+			}
+
+			if isPublished {
+				// allPortionUsersMap contains message owner
+				publishedEnricheds, errInn = m.enrichingProjection.GetPublishedMessageEnriched(ctx, m.db, event.MessageCommoned.ChatId, event.MessageCommoned.Id, participantIdsPortion, allPortionUsersMap)
+				if errInn != nil {
+					return errInn
+				}
 			}
 		}
 
@@ -999,114 +1030,118 @@ func (m *EventHandler) OnMessageEdited(ctx context.Context, event *MessageEdited
 				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
 			}
 
-			if isPinned {
-				// almost the same as sendPromotePinned() but
-				// the differense is that this particular method just sends pinneds, not pinned promoteds
-				// and here is different event - dto.EventTypePinnedMessageEdit
-				pinnedEnriched := pinnedEnricheds[messageView.BehalfUserId]
-				if pinnedEnriched != nil {
-					errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.ChatEvent{
-						EventType: dto.EventTypePinnedMessageEdit,
-						PromoteMessageNotification: &dto.PinnedMessageEvent{
-							Message:    *pinnedEnriched,
-							TotalCount: pinnedCount,
-						},
-						UserId: messageView.BehalfUserId,
-						ChatId: event.MessageCommoned.ChatId,
-					})
-					if errInn != nil {
-						m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+			if isTextBasedChange {
+				if isPinned {
+					// almost the same as sendPromotePinned() but
+					// the differense is that this particular method just sends pinneds, not pinned promoteds
+					// and here is different event - dto.EventTypePinnedMessageEdit
+					pinnedEnriched := pinnedEnricheds[messageView.BehalfUserId]
+					if pinnedEnriched != nil {
+						errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.ChatEvent{
+							EventType: dto.EventTypePinnedMessageEdit,
+							PromoteMessageNotification: &dto.PinnedMessageEvent{
+								Message:    *pinnedEnriched,
+								TotalCount: pinnedCount,
+							},
+							UserId: messageView.BehalfUserId,
+							ChatId: event.MessageCommoned.ChatId,
+						})
+						if errInn != nil {
+							m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+						}
+					} else {
+						m.lgr.WarnContext(ctx, "Pinned enriched isn't found", logger.AttributeUserId, messageView.BehalfUserId)
 					}
-				} else {
-					m.lgr.WarnContext(ctx, "Pinned enriched isn't found", logger.AttributeUserId, messageView.BehalfUserId)
 				}
-			}
 
-			if isPublished {
-				publishedEnriched := publishedEnricheds[messageView.BehalfUserId]
-				if publishedEnriched != nil {
-					errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.ChatEvent{
-						EventType: dto.EventTypePublishedMessageEdit,
-						PublishedMessageNotification: &dto.PublishedMessageEvent{
-							Message:    *publishedEnriched,
-							TotalCount: publishedCount,
-						},
-						UserId: messageView.BehalfUserId,
-						ChatId: event.MessageCommoned.ChatId,
-					})
-					if errInn != nil {
-						m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+				if isPublished {
+					publishedEnriched := publishedEnricheds[messageView.BehalfUserId]
+					if publishedEnriched != nil {
+						errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.ChatEvent{
+							EventType: dto.EventTypePublishedMessageEdit,
+							PublishedMessageNotification: &dto.PublishedMessageEvent{
+								Message:    *publishedEnriched,
+								TotalCount: publishedCount,
+							},
+							UserId: messageView.BehalfUserId,
+							ChatId: event.MessageCommoned.ChatId,
+						})
+						if errInn != nil {
+							m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+						}
+					} else {
+						m.lgr.WarnContext(ctx, "Published enriched isn't found", logger.AttributeUserId, messageView.BehalfUserId)
 					}
-				} else {
-					m.lgr.WarnContext(ctx, "Published enriched isn't found", logger.AttributeUserId, messageView.BehalfUserId)
 				}
 			}
 		}
 
-		addedToSendMentions := m.prepareMentionParticipantIds(ctx, addedHasAll, addedHasHere, addedMentionedUserIds, userOnlines, participantIdsPortion)
-		removedToSendMentions := m.prepareMentionParticipantIds(ctx, removedHasAll, removedHasHere, removedMentionedUserIds, userOnlines, participantIdsPortion)
+		if isTextBasedChange {
+			addedToSendMentions := m.prepareMentionParticipantIds(ctx, addedHasAll, addedHasHere, addedMentionedUserIds, userOnlines, participantIdsPortion)
+			removedToSendMentions := m.prepareMentionParticipantIds(ctx, removedHasAll, removedHasHere, removedMentionedUserIds, userOnlines, participantIdsPortion)
 
-		if behalfUserDto == nil {
-			m.lgr.InfoContext(ctx, "Unable to get behalf user for mention notification", logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		} else {
+			if behalfUserDto == nil {
+				m.lgr.InfoContext(ctx, "Unable to get behalf user for mention notification", logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			} else {
 
-			// add notification
-			for _, participantId := range addedToSendMentions {
-				if participantId == event.AdditionalData.BehalfUserId {
-					continue // skip myself
+				// add notification
+				for _, participantId := range addedToSendMentions {
+					if participantId == event.AdditionalData.BehalfUserId {
+						continue // skip myself
+					}
+
+					errInn = m.rabbitmqNotificationEventsPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.NotificationEvent{
+						EventType: dto.EventTypeMentionAdded,
+						UserId:    participantId,
+						ChatId:    event.MessageCommoned.ChatId,
+						MentionNotification: &dto.MentionNotification{
+							Id:   event.MessageCommoned.Id,
+							Text: newWithoutAnyHtml,
+						},
+						ByUserId:  behalfUserDto.Id,
+						ByLogin:   behalfUserDto.Login,
+						ByAvatar:  behalfUserDto.Avatar,
+						ChatTitle: chatNotificationTitle,
+					})
+					if errInn != nil {
+						m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+					}
 				}
 
-				errInn = m.rabbitmqNotificationEventsPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.NotificationEvent{
-					EventType: dto.EventTypeMentionAdded,
-					UserId:    participantId,
-					ChatId:    event.MessageCommoned.ChatId,
-					MentionNotification: &dto.MentionNotification{
-						Id:   event.MessageCommoned.Id,
-						Text: newWithoutAnyHtml,
-					},
-					ByUserId:  behalfUserDto.Id,
-					ByLogin:   behalfUserDto.Login,
-					ByAvatar:  behalfUserDto.Avatar,
-					ChatTitle: chatNotificationTitle,
-				})
-				if errInn != nil {
-					m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+				// remove notification
+				for _, participantId := range removedToSendMentions {
+					if participantId == event.AdditionalData.BehalfUserId {
+						continue // skip myself
+					}
+
+					errInn = m.rabbitmqNotificationEventsPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.NotificationEvent{
+						EventType: dto.EventTypeMentionDeleted,
+						UserId:    participantId,
+						ChatId:    event.MessageCommoned.ChatId,
+						MentionNotification: &dto.MentionNotification{
+							Id: event.MessageCommoned.Id,
+						},
+					})
+					if errInn != nil {
+						m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+					}
 				}
 			}
 
-			// remove notification
-			for _, participantId := range removedToSendMentions {
-				if participantId == event.AdditionalData.BehalfUserId {
-					continue // skip myself
-				}
-
-				errInn = m.rabbitmqNotificationEventsPublisher.Publish(ctx, event.AdditionalData.GetCorrelationId(), dto.NotificationEvent{
-					EventType: dto.EventTypeMentionDeleted,
-					UserId:    participantId,
-					ChatId:    event.MessageCommoned.ChatId,
-					MentionNotification: &dto.MentionNotification{
-						Id: event.MessageCommoned.Id,
-					},
-				})
-				if errInn != nil {
-					m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
-				}
-			}
-		}
-
-		// transmit an output event with changed last message for the existing participants
-		if isLastMessage {
-			for _, participantId := range participantIdsPortion {
-				ue := &UserChatEdited{
-					ChatId:        event.MessageCommoned.ChatId,
-					UserId:        participantId,
-					ChatAction:    ChatActionRefresh,
-					EventTime:     event.AdditionalData.CreatedAt,
-					CorrelationId: event.AdditionalData.CorrelationId,
-				}
-				errInn = m.eventBus.Publish(ctx, ue)
-				if errInn != nil {
-					return errInn
+			// transmit an output event with changed last message for the existing participants
+			if isLastMessage {
+				for _, participantId := range participantIdsPortion {
+					ue := &UserChatEdited{
+						ChatId:        event.MessageCommoned.ChatId,
+						UserId:        participantId,
+						ChatAction:    ChatActionRefresh,
+						EventTime:     event.AdditionalData.CreatedAt,
+						CorrelationId: event.AdditionalData.CorrelationId,
+					}
+					errInn = m.eventBus.Publish(ctx, ue)
+					if errInn != nil {
+						return errInn
+					}
 				}
 			}
 		}

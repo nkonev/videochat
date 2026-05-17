@@ -297,11 +297,19 @@ type UserMessageDeleted struct {
 	Metadata      *Metadata `json:"-"`
 }
 
+type MessageEditedAction int16
+
+const (
+	MessageEditedActionAll MessageEditedAction = iota
+	MessageEditedActionEmbedSync
+	MessageEditedActionSetFileItemUuid
+)
+
 type MessageEdited struct {
-	MessageCommoned MessageCommoned `json:"messageCommoned"`
-	AdditionalData  *AdditionalData `json:"additionalData"`
-	IsEmbedSync     bool            `json:"isEmbedSync"`
-	Metadata        *Metadata       `json:"-"`
+	MessageCommoned     MessageCommoned     `json:"messageCommoned"`
+	AdditionalData      *AdditionalData     `json:"additionalData"`
+	Metadata            *Metadata           `json:"-"`
+	MessageEditedAction MessageEditedAction `json:"messageEditedAction"`
 }
 
 type MessageEmbedded struct {
