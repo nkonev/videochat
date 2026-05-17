@@ -82,22 +82,22 @@ func NewMetadata(eventType string) *Metadata {
 }
 
 type ChatCommoned struct {
-	ChatId                              int64   `json:"chatId"`
-	ParentChatId                        int64   `json:"parentChatId"`
-	Title                               string  `json:"title"`
-	Blog                                bool    `json:"blog"`
-	BlogAbout                           bool    `json:"blogAbout"`
-	Avatar                              *string `json:"avatar"`
-	AvatarBig                           *string `json:"avatarBig"`
-	CanResend                           bool    `json:"canResend"`
-	CanReact                            bool    `json:"canReact"`
-	AvailableToSearch                   bool    `json:"availableToSearch"`
-	RegularParticipantCanPublishMessage bool    `json:"regularParticipantCanPublishMessage"`
-	RegularParticipantCanPinMessage     bool    `json:"regularParticipantCanPinMessage"`
-	RegularParticipantCanWriteMessage   bool    `json:"regularParticipantCanWriteMessage"`
-	RegularParticipantCanAddParticipant bool    `json:"regularParticipantCanAddParticipant"`
+	ChatId int64 `json:"chatId"`
+	//Title                               string  `json:"title"`
+	Blog      bool `json:"blog"`
+	BlogAbout bool `json:"blogAbout"`
+	//Avatar                              *string `json:"avatar"`
+	//AvatarBig                           *string `json:"avatarBig"`
+	CanResend                           bool `json:"canResend"`
+	CanReact                            bool `json:"canReact"`
+	AvailableToSearch                   bool `json:"availableToSearch"`
+	RegularParticipantCanPublishMessage bool `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool `json:"regularParticipantCanPinMessage"`
+	RegularParticipantCanWriteMessage   bool `json:"regularParticipantCanWriteMessage"`
+	RegularParticipantCanAddParticipant bool `json:"regularParticipantCanAddParticipant"`
 }
 
+// TODO в место, где создаётся чат - добавить создание треда с parentChatId = 0
 type ChatCreated struct {
 	AdditionalData        *AdditionalData `json:"additionalData"`
 	Metadata              *Metadata       `json:"-"`
@@ -111,6 +111,25 @@ type ChatEdited struct {
 	Metadata       *Metadata       `json:"-"`
 	ChatCommoned
 }
+
+type ThreadCreated struct {
+	Id           int64   `json:"id"`
+	ParentChatId int64   `json:"parentChatId"`
+	Title        string  `json:"title"`
+	Avatar       *string `json:"avatar"`
+	AvatarBig    *string `json:"avatarBig"`
+}
+
+type ThreadDeleted struct {
+	Id           int64   `json:"id"`
+	ParentChatId int64   `json:"parentChatId"`
+	Title        string  `json:"title"`
+	Avatar       *string `json:"avatar"`
+	AvatarBig    *string `json:"avatarBig"`
+}
+
+// TODO добавить action в messageEdited (0=all, sync=1, fileUuid=2, threadBind=3, threadUnbind=4)
+//  при создании треда также посылать MessageEdited (action=threadBind)
 
 type ChatDeleted struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
