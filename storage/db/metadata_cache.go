@@ -360,6 +360,9 @@ func GetCountFilesItemUuids(ctx context.Context, co CommonOperations, chatId int
 
 	err := row.Scan(&count)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
 		return 0, eris.Wrap(err, "error during mapping")
 	}
 
