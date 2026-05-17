@@ -400,6 +400,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		return 0, err
 	}
 
+	// TODO слать 2 эвента: ChatCreated(aka ChatSettings) и ThreadCreated(на него мигрируем имеющиеся чаты)
 	cc := &ChatCreated{
 		AdditionalData:        copyCommand.AdditionalData,
 		TetATet:               copyCommand.TetATet,
@@ -1423,6 +1424,8 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return 0, err
 	}
 
+	// TODO слать 1 эвент: ThreadCreated
+
 	cc := &ChatCreated{
 		AdditionalData: s.AdditionalData,
 		ChatCommoned: ChatCommoned{
@@ -1443,6 +1446,19 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		},
 	}
 	err = eventBus.Publish(ctx, cc)
+	if err != nil {
+		return 0, err
+	}
+
+	me := &MessageEdited{
+		MessageCommoned: MessageCommoned{
+			Id:     s.MessageId,
+			ChatId: s.ChatId,
+		},
+		AdditionalData:      s.AdditionalData,
+		MessageEditedAction: MessageEditedActionThreadBind,
+	}
+	err = eventBus.Publish(ctx, me)
 	if err != nil {
 		return 0, err
 	}
