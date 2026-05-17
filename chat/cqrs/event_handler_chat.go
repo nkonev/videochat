@@ -516,12 +516,11 @@ func (m *EventHandler) getMemoizedUserOnlines(ctx context.Context, participantId
 	}
 }
 
-func (m *EventHandler) convertMessageCreatedToUser(messageEvents []MessageCreated) []UserMessageCreated {
-	res := make([]UserMessageCreated, 0, len(messageEvents))
+func (m *EventHandler) convertMessageCreatedToUser(messageEvents []MessageCreated) []UserMessageId {
+	res := make([]UserMessageId, 0, len(messageEvents))
 	for _, event := range messageEvents {
-		res = append(res, UserMessageCreated{
+		res = append(res, UserMessageId{
 			Id:             event.MessageCommoned.Id,
-			ChatId:         event.MessageCommoned.ChatId,
 			AdditionalData: event.AdditionalData,
 		})
 	}
@@ -762,7 +761,7 @@ func (m *EventHandler) onMessagesCreated(ctx context.Context, events []MessageCr
 			}
 
 			for _, userId := range participantIdsPortion {
-				ui := &UserMessagesCreatedEvent{
+				ui := &UserMessagesCreated{
 					ChatId:          chatId,
 					UserId:          userId,
 					MessageCreateds: m.convertMessageCreatedToUser(authorizedMessageEvents),
@@ -773,7 +772,7 @@ func (m *EventHandler) onMessagesCreated(ctx context.Context, events []MessageCr
 					return errInner
 				}
 
-				// transmit an output event with changed last message for the existing participants (should be after UserMessagesCreatedEvent, because it depends on first)
+				// transmit an output event with changed last message for the existing participants (should be after UserMessagesCreated, because it depends on first)
 				for _, participantId := range participantIdsPortion {
 					ue := &UserChatEdited{
 						ChatId:        chatId,
@@ -1250,7 +1249,7 @@ func (m *EventHandler) OnMessageRemoved(ctx context.Context, event *MessageDelet
 
 	errOuter = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
 		for _, userId := range participantIdsPortion {
-			ui := &UserMessageDeletedEvent{
+			ui := &UserMessageDeleted{
 				ChatId:        event.ChatId,
 				UserId:        userId,
 				MessageId:     event.MessageId,
@@ -1347,7 +1346,7 @@ func (m *EventHandler) OnMessageRemoved(ctx context.Context, event *MessageDelet
 		}
 
 		for _, userId := range participantIdsPortion {
-			// transmit an output event with changed last message for the existing participants (should be after UserMessageDeletedEvent, because it depends on first)
+			// transmit an output event with changed last message for the existing participants (should be after UserMessageDeleted, because it depends on first)
 			if isLastMessage {
 				ue := &UserChatEdited{
 					ChatId:        event.ChatId,

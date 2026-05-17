@@ -345,7 +345,7 @@ func (m *EventHandler) OnUserChatNotificationSettingsSetted(ctx context.Context,
 	return nil
 }
 
-func (m *EventHandler) OnUserMessagesCreated(ctx context.Context, event *UserMessagesCreatedEvent) error {
+func (m *EventHandler) OnUserMessagesCreated(ctx context.Context, event *UserMessagesCreated) error {
 	eventTypeChatUnreadMessagesChanged := dto.EventTypeChatUnreadMessagesChanged
 
 	if len(event.MessageCreateds) == 0 {
@@ -395,7 +395,7 @@ func (m *EventHandler) OnUserMessagesCreated(ctx context.Context, event *UserMes
 	return nil
 }
 
-func (m *EventHandler) OnUserMessagesDeleted(ctx context.Context, event *UserMessageDeletedEvent) error {
+func (m *EventHandler) OnUserMessagesDeleted(ctx context.Context, event *UserMessageDeleted) error {
 	eventTypeChatUnreadMessagesChanged := dto.EventTypeChatUnreadMessagesChanged
 
 	err := m.commonProjection.OnUserMessageDeleted(ctx, m.db, event)

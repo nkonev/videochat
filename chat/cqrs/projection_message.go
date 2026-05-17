@@ -364,7 +364,7 @@ func CanReadMessage(isParticipant bool) bool {
 }
 
 // see also updateParticipantMessageReadIdBatch()
-func (m *CommonProjection) OnUserMessagesCreated(ctx context.Context, co db.CommonOperations, event *UserMessagesCreatedEvent) error {
+func (m *CommonProjection) OnUserMessagesCreated(ctx context.Context, co db.CommonOperations, event *UserMessagesCreated) error {
 	if len(event.MessageCreateds) == 0 {
 		return nil
 	}
@@ -406,7 +406,7 @@ func (m *CommonProjection) OnUserMessagesCreated(ctx context.Context, co db.Comm
 	return nil
 }
 
-func (m *CommonProjection) OnUserMessageDeleted(ctx context.Context, co db.CommonOperations, event *UserMessageDeletedEvent) error {
+func (m *CommonProjection) OnUserMessageDeleted(ctx context.Context, co db.CommonOperations, event *UserMessageDeleted) error {
 	err := m.setUnreadMessages(ctx, co, event.UserId, event.ChatId, dto.NoId, SetUnreadedMessagesActionCalculateUnreadsFromTheUsersLastSavedReadedMessage)
 	if err != nil {
 		return err

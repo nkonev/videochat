@@ -277,20 +277,19 @@ type MessageCreated struct {
 	Metadata        *Metadata       `json:"-"`
 }
 
-type UserMessageCreated struct {
+type UserMessageId struct {
 	Id             int64           `json:"id"` // message id
-	ChatId         int64           `json:"chatId"`
 	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
-type UserMessagesCreatedEvent struct {
-	ChatId          int64                `json:"chatId"`
-	UserId          int64                `json:"userId"`
-	MessageCreateds []UserMessageCreated `json:"messageCreated"`
-	Metadata        *Metadata            `json:"-"`
+type UserMessagesCreated struct {
+	ChatId          int64           `json:"chatId"`
+	UserId          int64           `json:"userId"`
+	MessageCreateds []UserMessageId `json:"messageCreated"`
+	Metadata        *Metadata       `json:"-"`
 }
 
-type UserMessageDeletedEvent struct {
+type UserMessageDeleted struct {
 	ChatId        int64     `json:"chatId"`
 	UserId        int64     `json:"userId"`
 	MessageId     int64     `json:"messageId"`
@@ -503,11 +502,11 @@ func (s *MessageCreated) GetPartitionKey() string {
 	return utils.ToString(s.MessageCommoned.ChatId)
 }
 
-func (s *UserMessagesCreatedEvent) GetPartitionKey() string {
+func (s *UserMessagesCreated) GetPartitionKey() string {
 	return utils.ToString(s.UserId)
 }
 
-func (s *UserMessageDeletedEvent) GetPartitionKey() string {
+func (s *UserMessageDeleted) GetPartitionKey() string {
 	return utils.ToString(s.UserId)
 }
 
@@ -611,11 +610,11 @@ func (s *MessageCreated) GetEventType() string {
 	return EventMessageCreated
 }
 
-func (s *UserMessagesCreatedEvent) GetEventType() string {
+func (s *UserMessagesCreated) GetEventType() string {
 	return EventUserMessagesCreated
 }
 
-func (s *UserMessageDeletedEvent) GetEventType() string {
+func (s *UserMessageDeleted) GetEventType() string {
 	return EventUserMessageDeleted
 }
 
@@ -719,11 +718,11 @@ func (s *MessageCreated) GetMetadata() *Metadata {
 	return s.Metadata
 }
 
-func (s *UserMessagesCreatedEvent) GetMetadata() *Metadata {
+func (s *UserMessagesCreated) GetMetadata() *Metadata {
 	return s.Metadata
 }
 
-func (s *UserMessageDeletedEvent) GetMetadata() *Metadata {
+func (s *UserMessageDeleted) GetMetadata() *Metadata {
 	return s.Metadata
 }
 
@@ -827,11 +826,11 @@ func (s *MessageCreated) SetMetadata(m *Metadata) {
 	s.Metadata = m
 }
 
-func (s *UserMessagesCreatedEvent) SetMetadata(m *Metadata) {
+func (s *UserMessagesCreated) SetMetadata(m *Metadata) {
 	s.Metadata = m
 }
 
-func (s *UserMessageDeletedEvent) SetMetadata(m *Metadata) {
+func (s *UserMessageDeleted) SetMetadata(m *Metadata) {
 	s.Metadata = m
 }
 
@@ -935,11 +934,11 @@ func (s *MessageCreated) GetEventPartitioningBy() EventPartitioningBy {
 	return EventPartitioningByChatId
 }
 
-func (s *UserMessagesCreatedEvent) GetEventPartitioningBy() EventPartitioningBy {
+func (s *UserMessagesCreated) GetEventPartitioningBy() EventPartitioningBy {
 	return EventPartitioningByUserId
 }
 
-func (s *UserMessageDeletedEvent) GetEventPartitioningBy() EventPartitioningBy {
+func (s *UserMessageDeleted) GetEventPartitioningBy() EventPartitioningBy {
 	return EventPartitioningByUserId
 }
 

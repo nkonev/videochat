@@ -345,10 +345,10 @@ func ListenUserTopic(
 			return prepareEvent[*UserChatParticipantRemoved](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		EventUserMessagesCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
-			return prepareEvent[*UserMessagesCreatedEvent](p.lgr, p.cfg, metadata, record, p.tracer)
+			return prepareEvent[*UserMessagesCreated](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		EventUserMessageDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
-			return prepareEvent[*UserMessageDeletedEvent](p.lgr, p.cfg, metadata, record, p.tracer)
+			return prepareEvent[*UserMessageDeleted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 	}
 
