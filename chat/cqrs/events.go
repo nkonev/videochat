@@ -128,9 +128,6 @@ type ThreadDeleted struct {
 	AvatarBig    *string `json:"avatarBig"`
 }
 
-// TODO добавить action в messageEdited (0=all, sync=1, fileUuid=2, threadBind=3, threadUnbind=4)
-//  при создании треда также посылать MessageEdited (action=threadBind)
-
 type ChatDeleted struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
 	Metadata       *Metadata       `json:"-"`
@@ -323,6 +320,8 @@ const (
 	MessageEditedActionAll MessageEditedAction = iota
 	MessageEditedActionEmbedSync
 	MessageEditedActionSetFileItemUuid
+	MessageEditedActionThreadBind
+	MessageEditedActionThreadUnbind
 )
 
 type MessageEdited struct {
