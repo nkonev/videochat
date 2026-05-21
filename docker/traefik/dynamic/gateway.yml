@@ -62,6 +62,10 @@ http:
       loadBalancer:
         servers:
           - url: http://dashboards:5601
+    kafka-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://kafkaui:8080
 
   routers:
     frontend-router:
@@ -220,6 +224,12 @@ http:
     opensearch-dashboards-ui-router:
       rule: "PathPrefix(`/opensearch-dashboards`)"
       service: opensearch-dashboards-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
+    kafka-ui-router:
+      rule: "PathPrefix(`/kafka`)"
+      service: kafka-ui-service
       middlewares:
         - "auth-middleware"
         - "retry-middleware"

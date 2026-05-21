@@ -179,6 +179,20 @@
   tags:
     - videochat
 
+- name: Create Kafka UI config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/kafkaui"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create Kafka UI config
+  ansible.builtin.copy:
+    src: files/kafka-ui.yml
+    dest: "{{ dir_prefix }}/kafkaui/kafka-ui.yml"
+  tags:
+    - videochat
+
 - name: Create PostgreSQL config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/postgresql/docker-entrypoint-initdb.d"

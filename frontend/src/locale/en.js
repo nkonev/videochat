@@ -369,5 +369,6 @@ export default {
     remove_contributing_to_unread: "Unread mute",
     start_contributing_to_unread: "Unread unmute",
     regular_participant_can_add_participant: "Regular participant can add participants",
-    add_participants: "Add participants"
+    add_participants: "Add participants",
+    kafka: "Kafka"
 }

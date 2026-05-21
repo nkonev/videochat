@@ -371,6 +371,25 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  kafkaui:
+    image: docker.redpanda.com/redpandadata/console:v2.8.13
+    restart: unless-stopped
+    hostname: kafkaui
+    ports:
+      - 38080:8080
+    networks:
+      backend:
+    command:
+      - "-config.filepath"
+      - "/app/kafka-ui.yml"
+    volumes:
+      - ./docker/kafkaui/kafka-ui.yml:/app/kafka-ui.yml:z
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
 volumes:
   postgres_data:
   postgres_chat_citus_coordinator_1_data:

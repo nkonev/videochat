@@ -413,6 +413,30 @@ services:
       options:
         tag: chat-opensearch-dashboards
 
+  kafkaui:
+    image: docker.redpanda.com/redpandadata/console:v2.8.13
+    hostname: kafkaui
+    networks:
+      backend:
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.kafka-ui-service.loadbalancer.server.port=8080" # ui port
+        - "traefik.http.routers.kafka-ui-router.rule=PathPrefix(`/kafka`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.kafka-ui-router.entrypoints=https"
+        - "traefik.http.routers.kafka-ui-router.tls=true"
+        - "traefik.http.routers.kafka-ui-router.tls.certresolver=myresolver"
+        - "traefik.http.routers.kafka-ui-router.middlewares=auth-middleware@file,retry-middleware@file"
+    command:
+      - "-config.filepath"
+      - "/app/kafka-ui.yml"
+    volumes:
+      - ./kafkaui/kafka-ui.yml:/app/kafka-ui.yml:z
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-kafkaui
+
 volumes:
   redis_data_dir:
   rabbitmq_data_dir:

@@ -1,0 +1,6 @@
+kafka:
+  brokers: ["kafka:29092"]
+server:
+  basePath: "/kafka"
+analytics:
+  enabled: false

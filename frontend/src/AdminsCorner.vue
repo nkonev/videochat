@@ -20,6 +20,9 @@
             <v-list-subheader>{{ $vuetify.locale.t('$vuetify.database') }}</v-list-subheader>
             <v-list-item title="PostgreSQL" href="/postgresql" target="_blank"></v-list-item>
 
+            <v-list-subheader>{{ $vuetify.locale.t('$vuetify.kafka') }}</v-list-subheader>
+            <v-list-item title="Kafka" href="/kafka" target="_blank"></v-list-item>
+
           </v-list>
       </v-card>
       <v-dialog v-model="showVersion" width="auto" scrollable>

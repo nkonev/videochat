@@ -369,5 +369,6 @@ export default {
     remove_contributing_to_unread: "Непрочит. вкл",
     start_contributing_to_unread: "Непрочит. выкл",
     regular_participant_can_add_participant: "Участники могут добавлять участников",
-    add_participants: "Добавить участников"
+    add_participants: "Добавить участников",
+    kafka: "Kafka"
 }

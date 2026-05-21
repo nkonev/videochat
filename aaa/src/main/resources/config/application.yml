@@ -226,6 +226,7 @@ custom.admins-corner:
     - "/rabbitmq"
     - "/postgresql"
     - "/opensearch-dashboards"
+    - "/kafka"
 
 ---
 spring:
