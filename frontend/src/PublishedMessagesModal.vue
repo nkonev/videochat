@@ -69,6 +69,7 @@
                                 active-color="primary"
                                 :density="isMobile() ? 'compact' : 'comfortable'"
                                 v-if="shouldShowPagination"
+                                :disabled="loading"
                                 v-model="page"
                                 :length="pagesCount"
                                 :total-visible="getTotalVisible()"

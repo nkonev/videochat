@@ -20,15 +20,12 @@ export default () => {
                 loading: false,
                 page: firstPage,
                 dataLoaded: false,
+                pagesCount: 0,
             }
         },
         computed: {
-            pagesCount() {
-                const count = Math.ceil(this.itemsDto.count / pageSize);
-                return count;
-            },
             shouldShowPagination() {
-                return this.itemsDto != null && this.itemsDto.items && this.itemsDto.count > pageSize
+                return (this.itemsDto != null && this.itemsDto.items && this.itemsDto.count > pageSize) || this.pagesCount != 0;
             },
         },
         methods: {
@@ -71,6 +68,7 @@ export default () => {
                             this.transformItems(dto?.items);
                         }
                         this.itemsDto = dto;
+                        this.pagesCount = Math.ceil(this.itemsDto.count / pageSize);
                     })
                     .then(()=>{
                         this.dataLoaded = true;
@@ -235,6 +233,7 @@ export default () => {
                 this.page = firstPage;
                 this.itemsDto = dtoFactory();
                 this.dataLoaded = false;
+                this.pagesCount = 0;
                 this.clearOnReset();
                 this.clearOnClose();
             },

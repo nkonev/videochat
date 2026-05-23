@@ -108,6 +108,7 @@
                           active-color="primary"
                           :density="isMobile() ? 'compact' : 'comfortable'"
                           v-if="shouldShowPagination"
+                          :disabled="loading"
                           v-model="page"
                           :length="pagesCount"
                           :total-visible="getTotalVisible()"
@@ -176,15 +177,12 @@ export default {
             fileUploadingSessionType: null,
             correlationId: null,
             fileListMode: false,
+            pagesCount: 0,
         }
     },
     computed: {
-        pagesCount() {
-          const count = Math.ceil(this.itemsDto.count / PAGE_SIZE_SMALL);
-          return count;
-        },
         shouldShowPagination() {
-          return this.itemsDto != null && this.itemsDto.items && this.itemsDto.count > PAGE_SIZE_SMALL
+          return (this.itemsDto != null && this.itemsDto.items && this.itemsDto.count > PAGE_SIZE_SMALL) || this.pagesCount != 0;
         },
 
         fileModeIcon() {
@@ -242,6 +240,7 @@ export default {
                   this.transformItems(dto?.items);
                 }
                 this.itemsDto = dto;
+                this.pagesCount = Math.ceil(this.itemsDto.count / PAGE_SIZE_SMALL);
               })
               .finally(() => {
                 if (!silent) {
@@ -275,6 +274,7 @@ export default {
           this.page = FIRST_PAGE;
           this.itemsDto = dtoFactory();
           this.dataLoaded = false;
+          this.pagesCount = 0;
           this.clearOnReset();
           this.clearOnClose();
         },

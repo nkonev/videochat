@@ -246,6 +246,18 @@ html {
   display: inherit
 }
 
+.v-card {
+  .v-pagination__list {
+    justify-content: start;
+  }
+}
+
+// reverts some changes from ~3.7.0 (from F12)
+.my-actions .v-btn ~ .v-btn:not(.v-btn-toggle .v-btn) {
+  margin-inline-start: .5rem;
+}
+
+
 </style>
 
 <style lang="stylus" scoped>
