@@ -239,8 +239,9 @@ services:
 
   jaeger:
     # https://www.jaegertracing.io/docs/2.0/getting-started/
-    image: jaegertracing/jaeger:2.7.0
+    image: jaegertracing/jaeger:2.18.0
     hostname: jaeger
+    user: "0"
     restart: unless-stopped
     ports:
       # https://www.jaegertracing.io/docs/1.54/deployment/
@@ -249,16 +250,13 @@ services:
       - 36686:16686 # web ui
     networks:
       backend:
-    # https://www.jaegertracing.io/docs/2.7/deployment/configuration/
-    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/internal/all-in-one.yaml
-    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/config-opensearch.yaml
     volumes:
-      - ./docker/jaeger/config.yaml:/jaeger/config.yaml
-    environment:
-      - JAEGER_LISTEN_HOST=0.0.0.0
+      - ./docker/jaeger/config:/etc/jaeger/config:z
+      - jaeger_data:/mnt/jaeger:z
+      - jaeger_archive:/mnt/jaeger_archive:z
     command: [
       "--config",
-      "/jaeger/config.yaml",
+      "/etc/jaeger/config/config-badger.yaml",
     ]
     logging:
       driver: "json-file"
@@ -315,62 +313,6 @@ services:
         max-size: "50m"
         max-file: "1"
 
-  opensearch:
-    image: opensearchproject/opensearch:2.18.0
-    hostname: opensearch
-    restart: unless-stopped
-    environment:
-      - node.name=opensearch
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
-      # - OPENSEARCH_INITIAL_ADMIN_PASSWORD=yourStrongPassword123!
-      # https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/
-      - DISABLE_SECURITY_PLUGIN=true
-      - DISABLE_INSTALL_DEMO_CONFIG=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
-        hard: 65536
-    networks:
-      backend:
-    volumes:
-      - opensearch_data_dir:/usr/share/opensearch/data
-      - ./docker/opensearch/docker-entrypoint-init.d.sh:/docker-entrypoint-init.d.sh:z
-      - ./docker/opensearch/docker-entrypoint-init.d:/docker-entrypoint-init.d:z
-    ports:
-      - 9200:9200
-      # - 9600:9600 # required for Performance Analyzer
-    entrypoint: ["/docker-entrypoint-init.d.sh"]
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-
-  dashboards:
-    image: opensearchproject/opensearch-dashboards:2.18.0
-    hostname: dashboards
-    restart: unless-stopped
-    ports:
-      - 5601:5601
-    networks:
-      backend:
-    environment:
-      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
-      # https://stackoverflow.com/a/74178195
-      DISABLE_SECURITY_DASHBOARDS_PLUGIN: true
-      SERVER_BASEPATH: /opensearch-dashboards
-      SERVER_REWRITEBASEPATH: true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-
   kafkaui:
     image: docker.redpanda.com/redpandadata/console:v2.8.13
     restart: unless-stopped
@@ -390,6 +332,28 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  victoria-logs:
+    image: docker.io/victoriametrics/victoria-logs:v1.50.0
+    restart: unless-stopped
+    hostname: victoria-logs
+    ports:
+      - 39428:9428
+    networks:
+      backend:
+    command:
+      - "-http.pathPrefix"
+      - "/logs"
+      - "-retentionPeriod"
+      - "14d"
+    volumes:
+      - victoria_logs_data:/victoria-logs-data:z
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
+
 volumes:
   postgres_data:
   postgres_chat_citus_coordinator_1_data:
@@ -401,6 +365,9 @@ volumes:
   egress_tmp:
   opensearch_data_dir:
   kafka_data:
+  victoria_logs_data:
+  jaeger_data:
+  jaeger_archive:
 
 networks:
   backend:
