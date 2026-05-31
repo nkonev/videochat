@@ -239,7 +239,7 @@ services:
 
   jaeger:
     # https://www.jaegertracing.io/docs/2.0/getting-started/
-    image: jaegertracing/jaeger:2.7.0
+    image: jaegertracing/jaeger:2.18.0
     hostname: jaeger
     restart: unless-stopped
     ports:
@@ -316,7 +316,7 @@ services:
         max-file: "1"
 
   opensearch:
-    image: opensearchproject/opensearch:2.18.0
+    image: opensearchproject/opensearch:3.6.0
     hostname: opensearch
     restart: unless-stopped
     environment:
@@ -352,7 +352,7 @@ services:
         max-file: "1"
 
   dashboards:
-    image: opensearchproject/opensearch-dashboards:2.18.0
+    image: opensearchproject/opensearch-dashboards:3.6.0
     hostname: dashboards
     restart: unless-stopped
     ports:

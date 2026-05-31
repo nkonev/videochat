@@ -68,7 +68,7 @@ curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/jaeger_s
     "mappings": {
       "properties": {
         "tags": {
-          "dynamic": false,
+          "dynamic": true,
           "type": "nested",
           "properties": {
             "value": {
@@ -78,6 +78,26 @@ curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/jaeger_s
             "key": {
               "ignore_above": 256,
               "type": "keyword"
+            }
+          }
+        },
+        "process": {
+          "dynamic": true,
+          "type": "nested",
+          "properties": {
+            "tags": {
+              "dynamic": true,
+              "type": "nested",
+              "properties": {
+                "value": {
+                  "ignore_above": 256,
+                  "type": "keyword"
+                },
+                "key": {
+                  "ignore_above": 256,
+                  "type": "keyword"
+                }
+              }
             }
           }
         }
