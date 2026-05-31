@@ -4,11 +4,12 @@ import (
 	"context"
 	"io"
 	"log/slog"
-	"nkonev.name/chat/app"
-	"nkonev.name/chat/config"
 	"os"
 	"strings"
 	"time"
+
+	"nkonev.name/chat/app"
+	"nkonev.name/chat/config"
 
 	"go.opentelemetry.io/otel/trace"
 )
@@ -44,6 +45,11 @@ func NewLogger(consoleWriter io.Writer, cfg *config.AppConfig) *LoggerWrapper {
 		if a.Key == "msg" {
 			return slog.Attr{
 				Key:   "message",
+				Value: a.Value,
+			}
+		} else if a.Key == "source" {
+			return slog.Attr{
+				Key:   "sourceFile",
 				Value: a.Value,
 			}
 		} else if a.Key == "time" {
