@@ -10,5 +10,7 @@ infra:
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:39000 -- echo 'minio is up'
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:8081 -- echo 'traefik is up'
+	./scripts/wait-for-http.sh 'localhost:9200' 60 '' 'OpenSearch'
+	./scripts/wait-for-http.sh 'localhost:39428' 60 '/logs' 'Victoria-Logs'
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:39092 -- echo 'kafka is up'
 

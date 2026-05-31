@@ -80,7 +80,7 @@ run-docker-image: package
 run: infra check-env download generate run-docker-image
 
 infra:
-	docker compose -f ../docker-compose.yml up -d traefik jaeger
+	docker compose -f ../docker-compose.yml up -d traefik
 
 infra-test:
 	echo "No test infra"

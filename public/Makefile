@@ -83,8 +83,9 @@ run-docker-image: package
 run: infra check-env download generate run-docker-image
 
 infra:
-	docker compose -f ../docker-compose.yml up -d traefik opensearch jaeger
+	docker compose -f ../docker-compose.yml up -d traefik opensearch jaeger victoria-logs fluentbit
 	../scripts/wait-for-http.sh 'localhost:9200' 60 '' 'OpenSearch'
+	../scripts/wait-for-http.sh 'localhost:39428' 60 '/logs' 'Victoria-Logs'
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
 
 infra-test:
