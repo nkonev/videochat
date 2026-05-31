@@ -58,10 +58,10 @@ http:
         servers:
           - url: http://pgadmin:8080
 
-    opensearch-dashboards-ui-service:
+    victoria-logs-ui-service:
       loadBalancer:
         servers:
-          - url: http://dashboards:5601
+          - url: http://victoria-logs:9428
     kafka-ui-service:
       loadBalancer:
         servers:
@@ -221,11 +221,11 @@ http:
       middlewares:
         - "auth-middleware"
         - "retry-middleware"
-    opensearch-dashboards-ui-router:
-      rule: "PathPrefix(`/opensearch-dashboards`)"
-      service: opensearch-dashboards-ui-service
+    victoria-logs-ui-router:
+      rule: "PathPrefix(`/logs`)"
+      service: victoria-logs-ui-service
       middlewares:
-        - "auth-middleware"
+        - "victoria-logs-auth-middleware"
         - "retry-middleware"
     kafka-ui-router:
       rule: "PathPrefix(`/kafka`)"
@@ -288,6 +288,14 @@ http:
         headerField: "X-Auth-UserId"
         authRequestHeaders:
           - "Accept"
+          - "Cookie"
+          - "uber-trace-id"
+        authResponseHeadersRegex: "^X-Auth-"
+    victoria-logs-auth-middleware:
+      forwardAuth:
+        address: "http://host.docker.internal:8060/internal/profile/auth"
+        headerField: "X-Auth-UserId"
+        authRequestHeaders:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"

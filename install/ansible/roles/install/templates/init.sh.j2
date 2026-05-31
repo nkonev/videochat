@@ -32,24 +32,6 @@ curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_cluster/settings?pretty
 echo "Configuring task interval finished"
 
 
-echo "Creating log index template"
-curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/log_template" -H 'Content-Type: application/json' -d'
-{
-  "index_patterns": [
-    "log-*"
-  ],
-  "template": {
-    "aliases": {
-      "log": {}
-    },
-    "settings": {
-      "number_of_shards": 1,
-      "number_of_replicas": 0
-    }
-  }
-}
-'
-echo "Creating log index template finished"
 
 echo "Creating Jaeger span index template"
 curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/jaeger_span_template" -H 'Content-Type: application/json' -d'
@@ -136,42 +118,6 @@ curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_index_template/jaeger_s
 echo "Creating Jaeger service index template finished"
 
 
-echo "Creating log cleaning policy"
-curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_plugins/_ism/policies/delete_old_log_indexes_policy?pretty" -H 'Content-Type: application/json' -d'
-{
-  "policy": {
-    "description": "delete old log indexes",
-    "default_state": "hot",
-    "schema_version": 1,
-    "states": [
-      {
-        "name": "hot",
-        "transitions": [
-          {
-            "state_name": "delete",
-            "conditions": {
-              "min_index_age": "{{ opensearch_log_retention }}"
-            }
-          }
-        ]
-      },
-      {
-        "name": "delete",
-        "actions": [
-          {
-            "delete": {}
-          }
-        ]
-      }
-    ],
-    "ism_template": {
-      "index_patterns": ["log-*"],
-      "priority": 100
-    }
-  }
-}
-'
-echo "Creating log cleaning policy finished"
 
 echo "Creating Jaeger span cleaning policy"
 curl --fail-with-body -i -Ss -X PUT "http://$HOST:$PORT/_plugins/_ism/policies/delete_old_jaeger_span_indexes_policy?pretty" -H 'Content-Type: application/json' -d'

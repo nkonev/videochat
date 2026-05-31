@@ -280,28 +280,21 @@ services:
 
   jaeger:
     # https://www.jaegertracing.io/docs/2.0/getting-started/
-    image: jaegertracing/jaeger:2.7.0
+    image: jaegertracing/jaeger:2.18.0
     hostname: jaeger
     networks:
       backend:
     deploy:
       labels:
         - "traefik.enable=true"
-
         - "traefik.http.services.jaeger-ui-service.loadbalancer.server.port=16686" # ui port
         - "traefik.http.routers.jaeger-ui-router.rule=PathPrefix(`/jaeger`) && Host(`{{ domain }}`)"
         - "traefik.http.routers.jaeger-ui-router.entrypoints=https"
         - "traefik.http.routers.jaeger-ui-router.tls=true"
         - "traefik.http.routers.jaeger-ui-router.tls.certresolver=myresolver"
         - "traefik.http.routers.jaeger-ui-router.middlewares=auth-middleware@file,retry-middleware@file"
-
-    # https://www.jaegertracing.io/docs/2.7/deployment/configuration/
-    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/internal/all-in-one.yaml
-    # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/config-opensearch.yaml
     volumes:
       - ./jaeger/config.yaml:/jaeger/config.yaml
-    environment:
-      - JAEGER_LISTEN_HOST=0.0.0.0
     command: [
       "--config",
       "/jaeger/config.yaml",
@@ -357,7 +350,7 @@ services:
         tag: chat-fluentbit
 
   opensearch:
-    image: opensearchproject/opensearch:2.18.0
+    image: opensearchproject/opensearch:3.6.0
     hostname: opensearch
     environment:
       - node.name=opensearch
@@ -387,34 +380,9 @@ services:
         tag: chat-opensearch
     entrypoint: ["/docker-entrypoint-init.d.sh"]
 
-  dashboards:
-    image: opensearchproject/opensearch-dashboards:2.18.0
-    hostname: dashboards
-    deploy:
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.services.opensearch-dashboards-ui-service.loadbalancer.server.port=5601" # ui port
-        - "traefik.http.routers.opensearch-dashboards-ui-router.rule=PathPrefix(`/opensearch-dashboards`) && Host(`{{ domain }}`)"
-        - "traefik.http.routers.opensearch-dashboards-ui-router.entrypoints=https"
-        - "traefik.http.routers.opensearch-dashboards-ui-router.tls=true"
-        - "traefik.http.routers.opensearch-dashboards-ui-router.tls.certresolver=myresolver"
-        - "traefik.http.routers.opensearch-dashboards-ui-router.middlewares=auth-middleware@file,retry-middleware@file"
-    networks:
-      backend:
-    environment:
-      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
-      # https://stackoverflow.com/a/74178195
-      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
-      SERVER_BASEPATH: "/opensearch-dashboards"
-      SERVER_REWRITEBASEPATH: "true"
-    logging:
-      driver: "journald"
-      options:
-        tag: chat-opensearch-dashboards
-
-  kafkaui:
+  kafka-ui:
     image: docker.redpanda.com/redpandadata/console:v2.8.13
-    hostname: kafkaui
+    hostname: kafka-ui
     networks:
       backend:
     deploy:
@@ -430,17 +398,44 @@ services:
       - "-config.filepath"
       - "/app/kafka-ui.yml"
     volumes:
-      - ./kafkaui/kafka-ui.yml:/app/kafka-ui.yml:z
+      - ./kafka-ui/kafka-ui.yml:/app/kafka-ui.yml:z
     logging:
       driver: "journald"
       options:
-        tag: chat-kafkaui
+        tag: chat-kafka-ui
+
+  victoria-logs:
+    image: docker.io/victoriametrics/victoria-logs:v1.50.0
+    hostname: victoria-logs
+    networks:
+      backend:
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.victoria-logs-service.loadbalancer.server.port=9428" # ui port
+        - "traefik.http.routers.victoria-logs-router.rule=PathPrefix(`/logs`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.victoria-logs-router.entrypoints=https"
+        - "traefik.http.routers.victoria-logs-router.tls=true"
+        - "traefik.http.routers.victoria-logs-router.tls.certresolver=myresolver"
+        - "traefik.http.routers.victoria-logs-router.middlewares=victoria-logs-auth-middleware@file,retry-middleware@file"
+    command:
+      - "-http.pathPrefix"
+      - "/logs"
+      - "-retentionPeriod"
+      - "{{ log_retention }}"
+    volumes:
+      - victoria_logs_data:/victoria-logs-data:z
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-victoria-logs
 
 volumes:
   redis_data_dir:
   rabbitmq_data_dir:
   egress_tmp:
   opensearch_data_dir:
+  victoria_logs_data:
 
 networks:
   backend:

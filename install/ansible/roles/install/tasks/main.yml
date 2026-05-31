@@ -181,7 +181,7 @@
 
 - name: Create Kafka UI config directory if it does not exist
   ansible.builtin.file:
-    path: "{{ dir_prefix }}/kafkaui"
+    path: "{{ dir_prefix }}/kafka-ui"
     state: directory
   tags:
     - videochat
@@ -189,7 +189,7 @@
 - name: Create Kafka UI config
   ansible.builtin.copy:
     src: files/kafka-ui.yml
-    dest: "{{ dir_prefix }}/kafkaui/kafka-ui.yml"
+    dest: "{{ dir_prefix }}/kafka-ui/kafka-ui.yml"
   tags:
     - videochat
 

@@ -254,8 +254,6 @@ services:
     # https://github.com/jaegertracing/jaeger/blob/v2.7.0/cmd/jaeger/config-opensearch.yaml
     volumes:
       - ./docker/jaeger/config.yaml:/jaeger/config.yaml
-    environment:
-      - JAEGER_LISTEN_HOST=0.0.0.0
     command: [
       "--config",
       "/jaeger/config.yaml",
@@ -315,6 +313,25 @@ services:
         max-size: "50m"
         max-file: "1"
 
+  kafka-ui:
+    image: docker.redpanda.com/redpandadata/console:v2.8.13
+    hostname: kafka-ui
+    restart: unless-stopped
+    ports:
+      - "38080:8080"
+    networks:
+      backend:
+    command:
+      - "-config.filepath"
+      - "/app/kafka-ui.yml"
+    volumes:
+      - ./docker/kafka-ui/kafka-ui.yml:/app/kafka-ui.yml:z
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
+
   opensearch:
     image: opensearchproject/opensearch:3.6.0
     hostname: opensearch
@@ -351,39 +368,21 @@ services:
         max-size: "50m"
         max-file: "1"
 
-  dashboards:
-    image: opensearchproject/opensearch-dashboards:3.6.0
-    hostname: dashboards
+  victoria-logs:
+    image: docker.io/victoriametrics/victoria-logs:v1.50.0
     restart: unless-stopped
+    hostname: victoria-logs
     ports:
-      - 5601:5601
-    networks:
-      backend:
-    environment:
-      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
-      # https://stackoverflow.com/a/74178195
-      DISABLE_SECURITY_DASHBOARDS_PLUGIN: true
-      SERVER_BASEPATH: /opensearch-dashboards
-      SERVER_REWRITEBASEPATH: true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "1"
-
-  kafkaui:
-    image: docker.redpanda.com/redpandadata/console:v2.8.13
-    restart: unless-stopped
-    hostname: kafkaui
-    ports:
-      - 38080:8080
+      - 39428:9428
     networks:
       backend:
     command:
-      - "-config.filepath"
-      - "/app/kafka-ui.yml"
+      - "-http.pathPrefix"
+      - "/logs"
+      - "-retentionPeriod"
+      - "14d"
     volumes:
-      - ./docker/kafkaui/kafka-ui.yml:/app/kafka-ui.yml:z
+      - victoria_logs_data:/victoria-logs-data:z
     logging:
       driver: "json-file"
       options:
@@ -401,6 +400,7 @@ volumes:
   egress_tmp:
   opensearch_data_dir:
   kafka_data:
+  victoria_logs_data:
 
 networks:
   backend:
