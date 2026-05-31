@@ -121,8 +121,10 @@ docker compose exec -it kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstra
 # show kafka topic's messages
 docker compose exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:29092 --topic event-chat --from-beginning --property print.key=true --property print.headers=true
 
-# show offsets
+# show offsets & lags
 docker compose exec -it kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:29092 --group ChatProjection --describe
+# on the server
+docker exec -it $(docker inspect --format "{{.Status.ContainerStatus.ContainerID}}" $(docker service ps VIDEOCHATSTACK_kafka-1 --filter desired-state=running -q)) /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka-1:29092 --group ChatProjection --describe
 
 # non-actual resetting - missed fast-forwarding of sequences
 docker compose exec -it kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:29092 --group ChatProjection --reset-offsets --to-earliest --execute --topic event-chat
