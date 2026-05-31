@@ -238,5 +238,5 @@ custom.admins-corner:
     - "/minio"
     - "/rabbitmq"
     - "/postgresql"
-    - "/logs"
+    - "/opensearch-dashboards"
     - "/kafka"

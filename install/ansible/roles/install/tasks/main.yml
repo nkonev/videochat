@@ -124,22 +124,37 @@
 
 - name: Create Jaeger config directory if it does not exist
   ansible.builtin.file:
-    path: "{{ dir_prefix }}/jaeger/config"
+    path: "{{ dir_prefix }}/jaeger"
     state: directory
   tags:
     - videochat
 
-- name: Create Jaeger UI config
+- name: Create Jaeger config
   ansible.builtin.copy:
-    src: files/jaeger-config-ui.json
-    dest: "{{ dir_prefix }}/jaeger/config/config-ui.json"
+    src: files/config.yaml
+    dest: "{{ dir_prefix }}/jaeger/config.yaml"
   tags:
     - videochat
 
-- name: Create Jaeger config
+- name: Create Opensearch config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create Opensearch init script
   template:
-    src: templates/jaeger-config-badger.yaml.j2
-    dest: "{{ dir_prefix }}/jaeger/config/config-badger.yaml"
+    src: templates/init.sh.j2
+    dest: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d/init.sh"
+  tags:
+    - videochat
+
+- name: Create Opensearch entrypoint
+  ansible.builtin.copy:
+    src: files/docker-entrypoint-init.d.sh
+    dest: "{{ dir_prefix }}/opensearch/docker-entrypoint-init.d.sh"
+    mode: a+x
   tags:
     - videochat
 
@@ -166,7 +181,7 @@
 
 - name: Create Kafka UI config directory if it does not exist
   ansible.builtin.file:
-    path: "{{ dir_prefix }}/kafka-ui"
+    path: "{{ dir_prefix }}/kafkaui"
     state: directory
   tags:
     - videochat
@@ -174,7 +189,7 @@
 - name: Create Kafka UI config
   ansible.builtin.copy:
     src: files/kafka-ui.yml
-    dest: "{{ dir_prefix }}/kafka-ui/kafka-ui.yml"
+    dest: "{{ dir_prefix }}/kafkaui/kafka-ui.yml"
   tags:
     - videochat
 

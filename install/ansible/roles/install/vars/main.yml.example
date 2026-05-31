@@ -28,8 +28,9 @@ github_actions_ssh_public_key: "ssh-rsa AAABBBCCC..."
 livekit_max_participants_per_room: "100"
 livekit_api_key: "APIznJxWShGW3Kt"
 livekit_api_secret: "KEUUtCDVRqXk9me0Ok94g8G9xwtnjMeUxfNMy8dow6iA"
-span_retention: "168h" # 7 days (day unit isn't supported, use hours)
-span_archive_retention: "720h" # 30 days (day unit isn't supported, use hours)
-log_retention: "14d"
+opensearch_scheduler_task_interval_minutes: "5"
+opensearch_log_retention: "14d"
+opensearch_span_retention: "7d"
+opensearch_service_retention: "14d"
 aaa_online_estimation: "10m"
 docker_inter_container_network_subnet: "10.0.1.0/24"
