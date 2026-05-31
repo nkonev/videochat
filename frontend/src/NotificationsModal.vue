@@ -209,7 +209,9 @@ export default {
             bus.emit(OPEN_SETTINGS, 'the_notifications')
         },
         onClickClearAllNotifications() {
-            axios.delete('/api/notification')
+            axios.delete('/api/notification').then(()=>{
+              this.reset()
+            })
         },
         canUpdateItems() {
           return true
