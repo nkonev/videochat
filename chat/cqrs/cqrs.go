@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/twmb/franz-go/plugin/kslog"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/kafka"
 	"nkonev.name/chat/logger"
@@ -121,6 +122,7 @@ func ConfigurePublisher(
 		kgo.ClientID(cfg.Kafka.Producer.ClientId),
 		kgo.WithHooks(kotelService.Hooks()...),
 		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.WithLogger(kslog.New(lgr.Logger)),
 	)
 	if err != nil {
 		return nil, err
@@ -455,6 +457,7 @@ func (p *KafkaListener) runKafkaListener(
 		// kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), // was need for to work after import in the previous implementation. now TestImport can work without it
 		kgo.FetchMaxWait(p.cfg.Kafka.Consumer.FetchMaxWait),
 		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.WithLogger(kslog.New(p.lgr.Logger)),
 	)
 	if err != nil {
 		return err

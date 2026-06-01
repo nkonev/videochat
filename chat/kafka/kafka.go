@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/twmb/franz-go/plugin/kslog"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
@@ -34,6 +35,7 @@ func ConfigureKafkaAdmin(
 	adm, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
 		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.WithLogger(kslog.New(lgr.Logger)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create admin client: %w", err)
@@ -421,6 +423,7 @@ func Export(
 			cfg.Kafka.TopicChat.Topic: reqStartOffs,
 		}),
 		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.WithLogger(kslog.New(lgr.Logger)),
 	)
 	if err != nil {
 		return err
@@ -551,6 +554,7 @@ func Import(
 	cl, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
 		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.WithLogger(kslog.New(lgr.Logger)),
 	)
 	if err != nil {
 		return err
