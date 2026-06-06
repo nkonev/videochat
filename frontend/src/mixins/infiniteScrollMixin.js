@@ -107,23 +107,13 @@ export default (name) => {
           this.scrollerProbeCurrent = 0;
           this.preservedScroll = null;
       },
-      async setNoScroll() {
-          return this.$nextTick(()=>{
-          })
-      },
-      async unsetNoScroll() {
-          return this.$nextTick(()=>{
-          })
-      },
       async initialLoad() {
         await this.$nextTick(()=>{
             if (this.scrollerDiv == null) {
                 this.scrollerDiv = document.querySelector(this.scrollerSelector());
             }
         })
-        await this.setNoScroll();
         const loadedResult = await this.load();
-        await this.unsetNoScroll()
         await this.$nextTick();
         await this.onFirstLoad(loadedResult);
         this.isFirstLoad = false;
@@ -132,23 +122,19 @@ export default (name) => {
       async loadTop() {
           console.log("going to load top in", name);
           this.saveScroll(true); // saves scroll between new portion load
-          await this.setNoScroll();
           await this.load(); // restores scroll after new portion load
           await this.$nextTick();
           await this.reduceListIfNeed();
           await this.restoreScroll(true);
-          await this.unsetNoScroll()
       },
 
       async loadBottom() {
           console.log("going to load bottom in", name);
           this.saveScroll(false);
-          await this.setNoScroll();
           await this.load();
           await this.$nextTick();
           await this.reduceListIfNeed();
           await this.restoreScroll(false);
-          await this.unsetNoScroll()
       },
       isReady() {
           return this.scrollerDiv != null
