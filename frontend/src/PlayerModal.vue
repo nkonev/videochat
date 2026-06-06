@@ -60,7 +60,7 @@ export default {
     methods: {
         showModal(dto) {
             this.$data.show = true;
-            this.fetchStatus(dto.url).then(()=>{
+            this.fetchCurrentItemStatus(dto.url).then(()=>{
                 this.$data.dto = dto;
                 if (this.$data.dto?.canSwitch) {
                     this.fetchMediaListView();
@@ -81,7 +81,7 @@ export default {
             this.$data.fileItemUuid = null;
             this.$data.filename = null;
         },
-        fetchStatus(url) {
+        fetchCurrentItemStatus(url) {
             return axios.post(`/api/storage/view/status`, {
                 url: url
             }).then((res)=>{
@@ -136,7 +136,7 @@ export default {
             this.$data.dto = null;
             this.$nextTick(()=>{
                 this.$data.dto = {};
-                this.fetchStatus(el.url).then(()=>{
+                this.fetchCurrentItemStatus(el.url).then(()=>{
                     this.dto.url = el.url;
                     this.dto.previewUrl = el.previewUrl;
                     this.dto.canPlayAsVideo = el.canPlayAsVideo;
@@ -147,7 +147,7 @@ export default {
         },
         onFileCreatedEvent(dto) {
             if (this.show && this.dto?.url == dto.fileInfoDto.url) {
-                this.fetchStatus(dto.fileInfoDto.url).then(()=>{
+                this.fetchCurrentItemStatus(dto.fileInfoDto.url).then(()=>{
                     this.fetchMediaListView();
                 })
             }
