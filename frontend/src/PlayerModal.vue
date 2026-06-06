@@ -36,7 +36,7 @@ export default {
             show: false,
             dto: null,
             itemsList: [],
-            currentThisItemIdx: 0,
+            currentItemIdx: 0,
             status: null,
             statusImage: null,
             fileItemUuid: null,
@@ -51,10 +51,10 @@ export default {
             return this.itemsList.length > 1
         },
         canShowLeftArrow() {
-            return this.currentThisItemIdx > 0
+            return this.currentItemIdx > 0
         },
         canShowRightArrow() {
-            return this.currentThisItemIdx < this.itemsList.length - 1
+            return this.currentItemIdx < this.itemsList.length - 1
         },
     },
     methods: {
@@ -75,7 +75,7 @@ export default {
             }
             this.$data.dto = null;
             this.$data.itemsList = [];
-            this.$data.currentThisItemIdx = 0;
+            this.$data.currentItemIdx = 0;
             this.$data.status = null;
             this.$data.statusImage = null;
             this.$data.fileItemUuid = null;
@@ -102,8 +102,8 @@ export default {
                 for (let i = 0; i < this.itemsList.length; ++i) {
                     const el = this.itemsList[i];
                     if (el.this) {
-                        this.currentThisItemIdx = i;
-                        // console.debug("Setting currentThisItemIdx", this.currentThisItemIdx);
+                        this.currentItemIdx = i;
+                        // console.debug("Setting currentItemIdx", this.currentItemIdx);
                         break
                     }
                 }
@@ -121,18 +121,18 @@ export default {
         },
         arrowLeft() {
             if (this.canShowLeftArrow) {
-                this.currentThisItemIdx--;
+                this.currentItemIdx--;
                 this.setEl();
             }
         },
         arrowRight() {
             if (this.canShowRightArrow) {
-                this.currentThisItemIdx++;
+                this.currentItemIdx++;
                 this.setEl();
             }
         },
         setEl() {
-            const el = this.itemsList[this.currentThisItemIdx];
+            const el = this.itemsList[this.currentItemIdx];
             this.$data.dto = null;
             this.$nextTick(()=>{
                 this.$data.dto = {};
