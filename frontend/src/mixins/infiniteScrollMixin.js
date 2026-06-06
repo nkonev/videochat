@@ -1,5 +1,4 @@
 import debounce from "lodash/debounce";
-import {isFireFox} from "@/utils.js";
 
 export const directionTop = 'top';
 export const directionBottom = 'bottom';
