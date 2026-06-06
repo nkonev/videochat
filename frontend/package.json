@@ -48,7 +48,7 @@
     "splitpanes": "^3.1.5",
     "typeface-roboto": "1.1.13",
     "uuid": "^13.0.0",
-    "vue": "3.5.28",
+    "vue": "3.5.35",
     "vue-router": "5.0.2",
     "vuetify": "3.8.1"
   },
