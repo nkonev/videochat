@@ -35,8 +35,8 @@ export default {
         return {
             show: false,
             dto: null,
-            viewList: [],
-            thisIdx: 0,
+            itemsList: [],
+            currentThisItemIdx: 0,
             status: null,
             statusImage: null,
             fileItemUuid: null,
@@ -48,13 +48,13 @@ export default {
             return this.$route.params.id
         },
         showArrows() {
-            return this.viewList.length > 1
+            return this.itemsList.length > 1
         },
         canShowLeftArrow() {
-            return this.thisIdx > 0
+            return this.currentThisItemIdx > 0
         },
         canShowRightArrow() {
-            return this.thisIdx < this.viewList.length - 1
+            return this.currentThisItemIdx < this.itemsList.length - 1
         },
     },
     methods: {
@@ -74,8 +74,8 @@ export default {
                 window.removeEventListener("keydown", this.onKeyPress);
             }
             this.$data.dto = null;
-            this.$data.viewList = [];
-            this.$data.thisIdx = 0;
+            this.$data.itemsList = [];
+            this.$data.currentThisItemIdx = 0;
             this.$data.status = null;
             this.$data.statusImage = null;
             this.$data.fileItemUuid = null;
@@ -98,12 +98,12 @@ export default {
             axios.post(`/api/storage/view/list`, {
                 url: this.$data.dto.url
             }).then((res) => {
-                this.viewList = res.data.items;
-                for (let i = 0; i < this.viewList.length; ++i) {
-                    const el = this.viewList[i];
+                this.itemsList = res.data.items;
+                for (let i = 0; i < this.itemsList.length; ++i) {
+                    const el = this.itemsList[i];
                     if (el.this) {
-                        this.thisIdx = i;
-                        // console.debug("Setting thisIdx", this.thisIdx);
+                        this.currentThisItemIdx = i;
+                        // console.debug("Setting currentThisItemIdx", this.currentThisItemIdx);
                         break
                     }
                 }
@@ -121,18 +121,18 @@ export default {
         },
         arrowLeft() {
             if (this.canShowLeftArrow) {
-                this.thisIdx--;
+                this.currentThisItemIdx--;
                 this.setEl();
             }
         },
         arrowRight() {
             if (this.canShowRightArrow) {
-                this.thisIdx++;
+                this.currentThisItemIdx++;
                 this.setEl();
             }
         },
         setEl() {
-            const el = this.viewList[this.thisIdx];
+            const el = this.itemsList[this.currentThisItemIdx];
             this.$data.dto = null;
             this.$nextTick(()=>{
                 this.$data.dto = {};
