@@ -32,11 +32,8 @@ func ConfigureKafkaAdmin(
 	cfg *config.AppConfig,
 	lc fx.Lifecycle,
 ) (*kadm.Client, error) {
-	adm, err := kgo.NewClient(
-		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
-		kgo.MinVersions(kversion.V4_2_0()),
-		kgo.WithLogger(kslog.New(lgr.Logger)),
-	)
+
+	adm, err := kgo.NewClient(CommonKafkaOptions(lgr, cfg)...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create admin client: %w", err)
 	}
@@ -417,14 +414,12 @@ func Export(
 		reqStartOffs[i] = kgo.NewOffset().AtStart()
 	}
 
-	cl, err := kgo.NewClient(
-		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
-		kgo.ConsumePartitions(map[string]map[int32]kgo.Offset{
-			cfg.Kafka.TopicChat.Topic: reqStartOffs,
-		}),
-		kgo.MinVersions(kversion.V4_2_0()),
-		kgo.WithLogger(kslog.New(lgr.Logger)),
-	)
+	opts := CommonKafkaOptions(lgr, cfg)
+	opts = append(opts, kgo.ConsumePartitions(map[string]map[int32]kgo.Offset{
+		cfg.Kafka.TopicChat.Topic: reqStartOffs,
+	}))
+
+	cl, err := kgo.NewClient(opts...)
 	if err != nil {
 		return err
 	}
@@ -545,17 +540,25 @@ func Export(
 	return nil
 }
 
+func CommonKafkaOptions(lgr *logger.LoggerWrapper, cfg *config.AppConfig) []kgo.Opt {
+	opts := []kgo.Opt{}
+
+	opts = append(opts,
+		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
+		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.WithLogger(kslog.New(lgr.Logger)),
+	)
+
+	return opts
+}
+
 func Import(
 	lgr *logger.LoggerWrapper,
 	cfg *config.AppConfig,
 ) error {
 	lgr.Info("Start import function")
 
-	cl, err := kgo.NewClient(
-		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
-		kgo.MinVersions(kversion.V4_2_0()),
-		kgo.WithLogger(kslog.New(lgr.Logger)),
-	)
+	cl, err := kgo.NewClient(CommonKafkaOptions(lgr, cfg)...)
 	if err != nil {
 		return err
 	}
