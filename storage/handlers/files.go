@@ -454,7 +454,8 @@ type ViewItem struct {
 }
 
 type ListViewRequest struct {
-	Url string `json:"url"`
+	Url     string `json:"url"`
+	Reverse bool   `json:"reverse"`
 }
 
 func (h *FilesHandler) ViewListHandler(c echo.Context) error {

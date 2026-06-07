@@ -17,8 +17,8 @@
         </span>
         <v-btn class="close-button" @click="hideModal()" icon="mdi-close" rounded="0" :title="$vuetify.locale.t('$vuetify.close')"></v-btn>
         <template v-if="showArrows">
-            <v-btn v-if="canShowLeftArrow" class="arrow-left-button" variant="text" color="white" icon @click="arrowLeft"><v-icon size="x-large">mdi-arrow-left-bold</v-icon></v-btn>
-            <v-btn v-if="canShowRightArrow" class="arrow-right-button" variant="text" color="white" icon @click="arrowRight"><v-icon size="x-large">mdi-arrow-right-bold</v-icon></v-btn>
+            <v-btn v-if="canShowLeftArrow" :disabled="loading" :loading="loading" class="arrow-left-button" variant="text" color="white" icon @click="arrowLeft"><v-icon size="x-large">mdi-arrow-left-bold</v-icon></v-btn>
+            <v-btn v-if="canShowRightArrow" :disabled="loading" :loading="loading" class="arrow-right-button" variant="text" color="white" icon @click="arrowRight"><v-icon size="x-large">mdi-arrow-right-bold</v-icon></v-btn>
         </template>
     </v-overlay>
 </template>
@@ -41,6 +41,7 @@ export default {
             statusImage: null,
             fileItemUuid: null,
             filename: null,
+            loading: false,
         }
     },
     computed: {
@@ -50,11 +51,17 @@ export default {
         showArrows() {
             return this.itemsList.length > 1
         },
-        canShowLeftArrow() {
+        canShowLeftArrow() { // TODO учесть "мы попробовали загрузить и это реально всё"
             return this.currentItemIdx > 0
         },
         canShowRightArrow() {
             return this.currentItemIdx < this.itemsList.length - 1
+        },
+        isLeftBound() {
+          return this.currentItemIdx == 0
+        },
+        isRightBound() {
+          return this.currentItemIdx == this.itemsList.length - 1
         },
     },
     methods: {
@@ -63,7 +70,8 @@ export default {
             this.fetchCurrentItemStatus(dto.url).then(()=>{
                 this.$data.dto = dto;
                 if (this.$data.dto?.canSwitch) {
-                    this.fetchMediaListView();
+                    const startFromItemId = this.getStartFromItemId();
+                    this.fetchMediaListView(startFromItemId);
                     window.addEventListener("keydown", this.onKeyPress);
                 }
             })
@@ -80,6 +88,7 @@ export default {
             this.$data.statusImage = null;
             this.$data.fileItemUuid = null;
             this.$data.filename = null;
+            this.$data.loading = false;
         },
         fetchCurrentItemStatus(url) {
             return axios.post(`/api/storage/view/status`, {
@@ -94,9 +103,12 @@ export default {
         isCorrectStatus() {
             return this.$data.status == "ok"
         },
-        fetchMediaListView() {
-            axios.post(`/api/storage/view/list`, {
-                url: this.$data.dto.url
+        fetchMediaListView(startFromItemId, reverse) {
+            this.loading = true;
+            return axios.post(`/api/storage/view/list`, {
+                url: this.$data.dto.url,
+                startFromItemId: startFromItemId,
+                reverse: reverse,
             }).then((res) => {
                 this.itemsList = res.data.items;
                 for (let i = 0; i < this.itemsList.length; ++i) {
@@ -107,6 +119,8 @@ export default {
                         break
                     }
                 }
+            }).finally(()=>{
+                this.loading = false;
             })
         },
         onKeyPress(event) {
@@ -119,42 +133,66 @@ export default {
                     break;
             }
         },
-        arrowLeft() {
+        async arrowLeft() {
+            if (this.isLeftBound) {
+              const reverse = true;
+              const startFromItemId = this.getStartFromItemId(reverse);
+              await this.fetchMediaListView(startFromItemId, reverse)
+            }
             if (this.canShowLeftArrow) {
                 this.currentItemIdx--;
-                this.setEl();
             }
         },
-        arrowRight() {
+        async arrowRight() {
+            if (this.isRightBound) {
+              const reverse = false;
+              const startFromItemId = this.getStartFromItemId(reverse);
+              await this.fetchMediaListView(startFromItemId, reverse)
+            }
             if (this.canShowRightArrow) {
                 this.currentItemIdx++;
-                this.setEl();
             }
         },
+        getStartFromItemId(reverse) { // reverse == left
+          if (!this.itemsList.length) {
+            return 0;
+          }
+
+          if (!reverse) {
+            return this.itemsList[0].id;
+          } else {
+            return this.itemsList[this.itemsList.length - 1].id;
+          }
+        },
         setEl() {
+            if (!this.$data.show) { // guard in case closed modal
+                return;
+            }
+
             const el = this.itemsList[this.currentItemIdx];
-            this.$data.dto = null;
+            this.$data.dto = {};
             this.$nextTick(()=>{
-                this.$data.dto = {};
-                this.fetchCurrentItemStatus(el.url).then(()=>{
-                    this.dto.url = el.url;
-                    this.dto.previewUrl = el.previewUrl;
-                    this.dto.canPlayAsVideo = el.canPlayAsVideo;
-                    this.dto.canShowAsImage = el.canShowAsImage;
-                    this.filename = el.filename;
-                })
+                this.dto.url = el.url;
+                this.dto.previewUrl = el.previewUrl;
+                this.dto.canPlayAsVideo = el.canPlayAsVideo;
+                this.dto.canShowAsImage = el.canShowAsImage;
+                this.filename = el.filename;
+                this.fetchCurrentItemStatus(el.url);
             })
         },
         onFileCreatedEvent(dto) {
             if (this.show && this.dto?.url == dto.fileInfoDto.url) {
                 this.fetchCurrentItemStatus(dto.fileInfoDto.url).then(()=>{
-                    this.fetchMediaListView();
+                  // this is update current page
+                  const startFromItemId = this.getStartFromItemId();
+                  this.fetchMediaListView(startFromItemId);
                 })
             }
         },
         onFileDeletedEvent(dto) {
             if (this.show && this.fileItemUuid == dto.fileInfoDto.fileItemUuid) {
-                this.fetchMediaListView();
+                const startFromItemId = this.getStartFromItemId();
+                this.fetchMediaListView(startFromItemId);
             }
         },
     },
@@ -173,7 +211,10 @@ export default {
             if (!newValue) {
                 this.hideModal();
             }
-        }
+        },
+        currentItemIdx(newValue) {
+            this.setEl();
+        },
     }
 }
 </script>
