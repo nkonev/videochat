@@ -454,7 +454,12 @@ type ViewItem struct {
 }
 
 type ListViewRequest struct {
-	Url string `json:"url"`
+	Url                        string     `json:"url"`
+	Reverse                    bool       `json:"reverse"`
+	Size                       int        `json:"size"`
+	StartingFromCreateDateTime *time.Time `json:"startingFromCreateDateTime"`
+	StartingFromFilename       string     `json:"startingFromFilename"`
+	IncludeStartingFrom        bool       `json:"includeStartingFrom"`
 }
 
 func (h *FilesHandler) ViewListHandler(c echo.Context) error {
@@ -504,6 +509,9 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 		return err
 	}
 
+	size := utils.FixSize(reqDto.Size)
+	reverse := reqDto.Reverse
+
 	var userId *int64 = nil
 	var isAnonymous = false // public message or blog
 	if userPrincipalDto != nil {
@@ -519,8 +527,9 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	filterObj := db.NewFilterByType(services.GetPreviewableExtensions())
 
-	viewListLimit := viper.GetInt("viewList.maxSize")
-	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, true, viewListLimit, 0)
+	pag := db.NewListPaginationKeyset(fileItemUuid, reqDto.StartingFromCreateDateTime, reqDto.StartingFromFilename, reqDto.IncludeStartingFrom, size)
+
+	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, pag, reverse)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userId, chatId, err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -639,12 +648,28 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 	// obj is nil in case when video is still converting
 
 	if exists {
-		filename := services.ReadFilename(obj.Key)
-		return c.JSON(http.StatusOK, StatusItem{
+		mcid, err := utils.BuildMetadataCacheId(fileId)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache id %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		mce, err := db.Get(c.Request().Context(), h.dba, *mcid, nil)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		r := StatusItem{
 			Status:       "ok",
-			Filename:     filename,
+			Filename:     services.ReadFilename(obj.Key),
 			FileItemUuid: &fileItemUuid,
-		})
+		}
+		if mce != nil {
+			r.CreateDateTime = &mce.CreateDateTime
+		}
+
+		return c.JSON(http.StatusOK, r)
 	} else {
 		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
 		if err != nil {
@@ -675,8 +700,10 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 type StatusItem struct {
 	Status       string  `json:"status"`
 	FileItemUuid *string `json:"fileItemUuid"`
-	Filename     string  `json:"filename"`
 	StatusImage  *string `json:"statusImage"`
+
+	CreateDateTime *time.Time `json:"createDateTime"`
+	Filename       string     `json:"filename"`
 }
 
 func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {
@@ -840,14 +867,16 @@ func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, f
 
 	eventType := utils.FILE_DELETED
 
+	now := time.Now().UTC()
 	err := h.restClient.GetChatParticipantIds(c, chatId, func(participantIds []int64) error {
 		for _, fileOjInfo := range batch {
 			normalizedKey := utils.StripBucketName(fileOjInfo.Key, bucketName)
 
 			fileInfo := &dto.FileInfoDto{
-				Id:           normalizedKey,
-				FileItemUuid: fileItemUuid,
-				LastModified: time.Now().UTC(),
+				Id:             normalizedKey,
+				FileItemUuid:   fileItemUuid,
+				LastModified:   now,
+				CreateDateTime: now,
 			}
 
 			for _, participantId := range participantIds {

@@ -95,7 +95,7 @@ message:
   allowedMediaUrls: ""
   allowedIframeUrls: ""
   # should be aligned with viewList.maxSize in storage
-  maxMedias: 100 # image, video, audio, iframe
+  maxMedias: 2000 # image, video, audio, iframe
   maxDisplayableReactionUsers: 10
   previewMaxTextSize: 256
 

@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgtype"
 	"github.com/rotisserie/eris"
@@ -35,21 +37,22 @@ const getMetadatasSql = `select ` +
 	metadataColumns +
 	`
 	from metadata_cache
-	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s
-	order by chat_id, file_item_uuid desc, create_date_time %s
-	limit $3 offset $4
+	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s -- filter
+	%s -- keyset
+	%s -- order
+	%s -- offset
 `
 const getMetadatasCountSql = `select 
 	count(*)
 	from metadata_cache
-	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s
+	where ($1 = -1 or chat_id = $1) and ($2 = '' or file_item_uuid = $2) %s -- filter
 `
 
 const getMetadataSql = `select ` +
 	metadataColumns +
 	`
 	from metadata_cache
-	where chat_id = $1 and file_item_uuid = $2 and filename = $3 %s
+	where chat_id = $1 and file_item_uuid = $2 and filename = $3 %s -- filter
 `
 
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
@@ -108,15 +111,18 @@ func provideScanToMetadataCache(ucs *dto.MetadataCache) []any {
 func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId, filterObj Filter) (*dto.MetadataCache, error) {
 	baseSqlArgs := []any{metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename}
 
-	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadataSql, baseSqlArgs)
+	filterSqlString, filterSqlArgs, filterNoData, err := applyFilter(filterObj, baseSqlArgs)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during building sql")
 	}
-	if noData {
+	if filterNoData {
 		return nil, nil // see also below "sql.ErrNoRows"
 	}
+	baseSqlArgs = slices.Clone(filterSqlArgs)
 
-	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
+	sqlString := fmt.Sprintf(getMetadataSql, filterSqlString)
+
+	row := co.QueryRowContext(ctx, sqlString, baseSqlArgs...)
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -146,7 +152,7 @@ func CheckFileItemBelongsToUser(ctx context.Context, co CommonOperations, chatId
 }
 
 type Filter interface {
-	apply(baseSqlTemplate string, existingArgs []any) (string, []any, bool, error)
+	apply(existingArgs []any) (string, []any, bool, error)
 }
 
 type FilterBySearchString struct {
@@ -169,19 +175,17 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 	}
 }
 
-func (f *FilterBySearchString) apply(baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
-	sqlArgs := existingArgs
-	sqlString := ""
+func (f *FilterBySearchString) apply(existingArgs []any) (string, []any, bool, error) {
+	sqlArgs := slices.Clone(existingArgs)
 
 	suffix := fmt.Sprintf("and filename ILIKE '%%' || $%v || '%%'", len(sqlArgs)+1)
-	sqlString = fmt.Sprintf(baseSqlTemplate, suffix)
 	sqlArgs = append(sqlArgs, f.searchString)
 
-	return sqlString, sqlArgs, false, nil
+	return suffix, sqlArgs, false, nil
 }
 
-func (f *FilterByType) apply(baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
-	sqlArgs := existingArgs
+func (f *FilterByType) apply(existingArgs []any) (string, []any, bool, error) {
+	sqlArgs := slices.Clone(existingArgs)
 	sqlString := ""
 
 	if len(f.typeExtensions) > 0 {
@@ -195,7 +199,7 @@ func (f *FilterByType) apply(baseSqlTemplate string, existingArgs []any) (string
 		}
 		builder += ") "
 
-		sqlString = fmt.Sprintf(baseSqlTemplate, builder)
+		sqlString = builder
 	} else {
 		return sqlString, sqlArgs, true, nil // true means "no data" because of no extension
 	}
@@ -203,17 +207,17 @@ func (f *FilterByType) apply(baseSqlTemplate string, existingArgs []any) (string
 	return sqlString, sqlArgs, false, nil
 }
 
-func applyFilter(filterObj Filter, baseSqlTemplate string, existingArgs []any) (string, []any, bool, error) {
+func applyFilter(filterObj Filter, existingArgs []any) (string, []any, bool, error) {
 	var sqlArgs []any
 	sqlString := ""
 	noData := false
 	var err error
 
 	if filterObj == nil {
-		sqlString = fmt.Sprintf(baseSqlTemplate, "")
+		sqlString = ""
 		sqlArgs = existingArgs
 	} else {
-		sqlString, sqlArgs, noData, err = filterObj.apply(baseSqlTemplate, existingArgs)
+		sqlString, sqlArgs, noData, err = filterObj.apply(existingArgs)
 		if err != nil {
 			return sqlString, sqlArgs, false, err
 		}
@@ -225,28 +229,194 @@ func applyFilter(filterObj Filter, baseSqlTemplate string, existingArgs []any) (
 	return sqlString, sqlArgs, false, nil
 }
 
-func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, reverse bool, limit, offset int) ([]dto.MetadataCache, error) {
-	list := make([]dto.MetadataCache, 0)
+type ListPagination interface {
+	apply(existingArgs []any, alreadyProvidedFileItemUuid bool, reverse bool) (
+		string, // offsetString
+		string, // keysetString
+		string, // orderString
+		[]any, // args
+		bool, // noData
+		error,
+	)
+}
 
-	baseSqlArgs := []any{chatId, fileItemUuid, limit, offset}
+type ListPaginationOffset struct {
+	limit, offset int
+}
+
+type keyset struct {
+	fileItemUuid   string
+	createDateTime time.Time
+	filename       string
+}
+
+type ListPaginationKeyset struct {
+	startingFromItemId  *keyset
+	includeStartingFrom bool
+	size                int
+}
+
+func NewListPaginationOffset(limit, offset int) *ListPaginationOffset {
+	return &ListPaginationOffset{
+		limit:  limit,
+		offset: offset,
+	}
+}
+
+func NewListPaginationKeyset(
+	startingFromFileItemUuid string,
+	startingFromCreateDateTime *time.Time,
+	startingFromFilename string,
+	includeStartingFrom bool,
+	size int,
+) *ListPaginationKeyset {
+	v := &ListPaginationKeyset{
+		includeStartingFrom: includeStartingFrom,
+		size:                size,
+	}
+	if len(startingFromFileItemUuid) > 0 && startingFromCreateDateTime != nil && len(startingFromFilename) > 0 {
+		v.startingFromItemId = &keyset{
+			fileItemUuid:   startingFromFileItemUuid,
+			createDateTime: *startingFromCreateDateTime,
+			filename:       startingFromFilename,
+		}
+	}
+	return v
+}
+
+func (p *ListPaginationOffset) apply(existingArgs []any, _ bool, reverse bool) (string, string, string, []any, bool, error) {
+	sqlArgs := slices.Clone(existingArgs)
+	limitString := ""
+
+	limitString = fmt.Sprintf(" limit $%v offset $%v ", len(sqlArgs)+1, len(sqlArgs)+2)
+	sqlArgs = append(sqlArgs, p.limit, p.offset)
 
 	var order string
 	if reverse {
-		order = "asc"
-	} else {
 		order = "desc"
+	} else {
+		order = "asc"
 	}
-	tmpSql := fmt.Sprintf(getMetadatasSql, "%s", order)
 
-	sqlString, sqlArgs, noData, err := applyFilter(filterObj, tmpSql, baseSqlArgs)
+	orderStr := fmt.Sprintf(" order by chat_id, file_item_uuid desc, create_date_time %s ", order)
+
+	return limitString, "", orderStr, sqlArgs, false, nil
+}
+
+func (p *ListPaginationKeyset) apply(existingArgs []any, alreadyProvidedFileItemUuid bool, reverse bool) (string, string, string, []any, bool, error) {
+	sqlArgs := slices.Clone(existingArgs)
+	keySetString := ""
+
+	var order string
+	if reverse {
+		order = "desc"
+	} else {
+		order = "asc"
+	}
+
+	const colsTemplateF = " file_item_uuid %s, create_date_time %s, filename %s "
+	const colsTemplateC = " create_date_time %s, filename %s "
+
+	var keySetColumns string
+	var orderColumns string
+	if !alreadyProvidedFileItemUuid {
+		keySetColumns = fmt.Sprintf(colsTemplateF, "", "", "")
+		orderColumns = fmt.Sprintf(colsTemplateF, order, order, order)
+	} else {
+		keySetColumns = fmt.Sprintf(colsTemplateC, "", "")
+		orderColumns = fmt.Sprintf(colsTemplateC, order, order)
+	}
+
+	if p.startingFromItemId != nil {
+		nonEquality := ""
+		if reverse {
+			if p.includeStartingFrom {
+				nonEquality = "<="
+			} else {
+				nonEquality = "<"
+			}
+		} else {
+			if p.includeStartingFrom {
+				nonEquality = ">="
+			} else {
+				nonEquality = ">"
+			}
+		}
+
+		if !alreadyProvidedFileItemUuid {
+			keySetString = fmt.Sprintf(" and (%s) %s ($%v, $%v, $%v) ", keySetColumns, nonEquality, len(sqlArgs)+1, len(sqlArgs)+2, len(sqlArgs)+3)
+			sqlArgs = append(sqlArgs, p.startingFromItemId.fileItemUuid)
+			sqlArgs = append(sqlArgs, p.startingFromItemId.createDateTime)
+			sqlArgs = append(sqlArgs, p.startingFromItemId.filename)
+		} else {
+			keySetString = fmt.Sprintf(" and (%s) %s ($%v, $%v) ", keySetColumns, nonEquality, len(sqlArgs)+1, len(sqlArgs)+2)
+			sqlArgs = append(sqlArgs, p.startingFromItemId.createDateTime)
+			sqlArgs = append(sqlArgs, p.startingFromItemId.filename)
+		}
+	} else {
+		emptySuffix := ""
+		keySetString = emptySuffix
+	}
+
+	orderStr := fmt.Sprintf(" order by %s", orderColumns)
+
+	limitString := fmt.Sprintf(" limit $%v ", len(sqlArgs)+1)
+	sqlArgs = append(sqlArgs, p.size)
+
+	return limitString, keySetString, orderStr, sqlArgs, false, nil
+}
+
+func applyPagination(paginationObj ListPagination, alreadyProvidedFileItemUuid bool, existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
+	var sqlArgs []any
+	offsetSqlString := ""
+	keysetSqlString := ""
+	orderStr := ""
+	noData := false
+	var err error
+
+	if paginationObj == nil {
+		return "", "", "", nil, false, errors.New("no pagination object")
+	} else {
+		offsetSqlString, keysetSqlString, orderStr, sqlArgs, noData, err = paginationObj.apply(existingArgs, alreadyProvidedFileItemUuid, reverse)
+		if err != nil {
+			return "", "", "", sqlArgs, false, err
+		}
+		if noData {
+			return "", "", "", sqlArgs, true, nil // true means "no data" because of no extension
+		}
+	}
+
+	return offsetSqlString, keysetSqlString, orderStr, sqlArgs, false, nil
+}
+
+func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUuid string, filterObj Filter, paginationObj ListPagination, reverse bool) ([]dto.MetadataCache, error) {
+	list := make([]dto.MetadataCache, 0)
+
+	hasFileItemUuid := len(fileItemUuid) > 0
+
+	baseSqlArgs := []any{chatId, fileItemUuid}
+
+	offsetSqlString, keysetSqlString, orderString, paginationSqlArgs, paginationNoData, err := applyPagination(paginationObj, hasFileItemUuid, baseSqlArgs, reverse)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during building sql")
 	}
-	if noData {
+	if paginationNoData {
 		return []dto.MetadataCache{}, nil
 	}
+	baseSqlArgs = slices.Clone(paginationSqlArgs)
 
-	rows, err := co.QueryContext(ctx, sqlString, sqlArgs...)
+	filterSqlString, filterSqlArgs, filterNoData, err := applyFilter(filterObj, baseSqlArgs)
+	if err != nil {
+		return nil, eris.Wrap(err, "error during building sql")
+	}
+	if filterNoData {
+		return []dto.MetadataCache{}, nil
+	}
+	baseSqlArgs = slices.Clone(filterSqlArgs)
+
+	sqlString := fmt.Sprintf(getMetadatasSql, filterSqlString, keysetSqlString, orderString, offsetSqlString)
+
+	rows, err := co.QueryContext(ctx, sqlString, baseSqlArgs...)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during interacting with db")
 	}
@@ -268,15 +438,19 @@ func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUu
 
 	baseSqlArgs := []any{chatId, fileItemUuid}
 
-	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadatasCountSql, baseSqlArgs)
+	filterSqlString, filterSqlArgs, filterNoData, err := applyFilter(filterObj, baseSqlArgs)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during building sql")
 	}
-	if noData {
+	if filterNoData {
 		return 0, nil
 	}
 
-	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
+	sqlString := fmt.Sprintf(getMetadatasCountSql, filterSqlString)
+
+	baseSqlArgs = slices.Clone(filterSqlArgs)
+
+	row := co.QueryRowContext(ctx, sqlString, baseSqlArgs...)
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}

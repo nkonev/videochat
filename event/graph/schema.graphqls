@@ -185,6 +185,7 @@ type FileInfoDto {
     canEdit:             Boolean!
     canShare:             Boolean!
     lastModified: Time!
+    createDateTime: Time!
     ownerId: Int64!
     owner:  Participant
     canPlayAsVideo:           Boolean!

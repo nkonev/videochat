@@ -15,6 +15,7 @@ type FileInfoDto struct {
 	CanEdit        bool      `json:"canEdit"`
 	CanShare       bool      `json:"canShare"`
 	LastModified   time.Time `json:"lastModified"`
+	CreateDateTime time.Time `json:"createDateTime"`
 	OwnerId        int64     `json:"ownerId"`
 	Owner          *User     `json:"owner"`
 	CanPlayAsVideo bool      `json:"canPlayAsVideo"`

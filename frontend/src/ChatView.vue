@@ -589,6 +589,7 @@ export default {
                                         canEdit
                                         canShare
                                         lastModified
+                                        createDateTime
                                         ownerId
                                         owner {
                                           id

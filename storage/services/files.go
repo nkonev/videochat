@@ -65,7 +65,7 @@ func (h *FilesService) GetListFilesInFileItem(
 	}
 
 	res, errOuter := db.TransactWithResult(c, h.dba, func(tx *db.Tx) (*getListFilesInFileItemResult, error) {
-		metadatas, err := db.GetList(c, tx, chatId, fileItemUuid, filterObj, false, size, offset)
+		metadatas, err := db.GetList(c, tx, chatId, fileItemUuid, filterObj, db.NewListPaginationOffset(size, offset), true)
 		if err != nil {
 			h.lgr.WithTracing(c).Errorf("Error during getting list, userId = %v, chatId = %v: %v", behalfUserId, chatId, err)
 			return nil, err
@@ -315,6 +315,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		FileItemUuid:   itemUuid,
 		Previewable:    utils.IsPreviewable(aKey),
 		Type:           aType,
+		CreateDateTime: mce.CreateDateTime,
 	}
 	return info, nil
 }
