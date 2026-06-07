@@ -71,7 +71,9 @@ export default {
             this.fetchCurrentItemStatus(dto.url).then(()=>{
                 if (this.$data.dto?.canSwitch) {
                     const startFromItemId = this.getStartFromItemId();
-                    this.fetchMediaListView(startFromItemId);
+                    this.fetchMediaListView(startFromItemId).then(res => {
+                      this.setCurrentItemIdx(res.data);
+                    });
                     window.addEventListener("keydown", this.onKeyPress);
                 }
             })
@@ -109,19 +111,20 @@ export default {
                 url: this.$data.dto.url,
                 startFromItemId: startFromItemId,
                 reverse: reverse,
-            }).then((res) => {
-                this.itemsList = res.data.items;
-                for (let i = 0; i < this.itemsList.length; ++i) {
-                    const el = this.itemsList[i];
-                    if (el.this) {
-                        this.currentItemIdx = i;
-                        // console.debug("Setting currentItemIdx", this.currentItemIdx);
-                        break
-                    }
-                }
             }).finally(()=>{
                 this.loading = false;
             })
+        },
+        setCurrentItemIdx(data) {
+          this.itemsList = data.items;
+          for (let i = 0; i < this.itemsList.length; ++i) {
+            const el = this.itemsList[i];
+            if (el.this) {
+              this.currentItemIdx = i;
+              console.debug("Setting currentItemIdx", this.currentItemIdx);
+              break
+            }
+          }
         },
         onKeyPress(event) {
             switch (event.key) {
