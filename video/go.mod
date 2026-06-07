@@ -15,7 +15,7 @@ require (
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/rotisserie/eris v0.5.4
 	github.com/spf13/viper v1.7.0
-	github.com/streadway/amqp v1.0.0
+	github.com/streadway/amqp v1.1.0
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.51.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0

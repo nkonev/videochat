@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/montag451/go-eventbus v0.0.0-20220923162824-015489a65e6a
 	github.com/spf13/viper v1.7.0
-	github.com/streadway/amqp v1.0.0
+	github.com/streadway/amqp v1.1.0
 	github.com/vektah/gqlparser/v2 v2.5.27
 	github.com/zhevron/gqlgen-opentelemetry/v2 v2.1.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.51.0

@@ -16,7 +16,7 @@ require (
 	github.com/rotisserie/eris v0.5.4
 	github.com/siyouyun-open/imaging v0.1.0
 	github.com/spf13/viper v1.7.0
-	github.com/streadway/amqp v1.0.0
+	github.com/streadway/amqp v1.1.0
 	github.com/tidwall/gjson v1.14.4
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.51.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.51.0

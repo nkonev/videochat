@@ -8,7 +8,7 @@ require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rotisserie/eris v0.5.4
 	github.com/spf13/viper v1.7.0
-	github.com/streadway/amqp v1.0.0
+	github.com/streadway/amqp v1.1.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.51.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.26.0
 	go.opentelemetry.io/otel v1.39.0
