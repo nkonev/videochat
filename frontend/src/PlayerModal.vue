@@ -67,8 +67,8 @@ export default {
     methods: {
         showModal(dto) {
             this.$data.show = true;
+            this.$data.dto = dto;
             this.fetchCurrentItemStatus(dto.url).then(()=>{
-                this.$data.dto = dto;
                 if (this.$data.dto?.canSwitch) {
                     const startFromItemId = this.getStartFromItemId();
                     this.fetchMediaListView(startFromItemId);
@@ -133,22 +133,12 @@ export default {
                     break;
             }
         },
-        async arrowLeft() {
-            if (this.isLeftBound) {
-              const reverse = true;
-              const startFromItemId = this.getStartFromItemId(reverse);
-              await this.fetchMediaListView(startFromItemId, reverse)
-            }
+        arrowLeft() {
             if (this.canShowLeftArrow) {
                 this.currentItemIdx--;
             }
         },
-        async arrowRight() {
-            if (this.isRightBound) {
-              const reverse = false;
-              const startFromItemId = this.getStartFromItemId(reverse);
-              await this.fetchMediaListView(startFromItemId, reverse)
-            }
+        arrowRight() {
             if (this.canShowRightArrow) {
                 this.currentItemIdx++;
             }
@@ -164,9 +154,21 @@ export default {
             return this.itemsList[this.itemsList.length - 1].id;
           }
         },
-        setEl() {
+        async setEl() {
             if (!this.$data.show) { // guard in case closed modal
                 return;
+            }
+
+            if (this.isLeftBound) {
+              const reverse = true;
+              const startFromItemId = this.getStartFromItemId(reverse);
+              await this.fetchMediaListView(startFromItemId, reverse)
+            }
+
+            if (this.isRightBound) {
+              const reverse = false;
+              const startFromItemId = this.getStartFromItemId(reverse);
+              await this.fetchMediaListView(startFromItemId, reverse)
             }
 
             const el = this.itemsList[this.currentItemIdx];
