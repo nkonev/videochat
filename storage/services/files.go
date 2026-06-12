@@ -65,7 +65,7 @@ func (h *FilesService) GetListFilesInFileItem(
 	}
 
 	res, errOuter := db.TransactWithResult(c, h.dba, func(tx *db.Tx) (*getListFilesInFileItemResult, error) {
-		metadatas, err := db.GetList(c, tx, chatId, fileItemUuid, filterObj, false, size, offset)
+		metadatas, err := db.GetList(c, tx, chatId, fileItemUuid, filterObj, true, size, offset)
 		if err != nil {
 			h.lgr.WithTracing(c).Errorf("Error during getting list, userId = %v, chatId = %v: %v", behalfUserId, chatId, err)
 			return nil, err

@@ -454,8 +454,10 @@ type ViewItem struct {
 }
 
 type ListViewRequest struct {
-	Url     string `json:"url"`
-	Reverse bool   `json:"reverse"`
+	Url                string `json:"url"`
+	Reverse            bool   `json:"reverse"`
+	Size               int    `json:"size"`
+	StartingFromItemId *int64 `json:"startingFromItemId"`
 }
 
 func (h *FilesHandler) ViewListHandler(c echo.Context) error {
@@ -505,6 +507,10 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 		return err
 	}
 
+	size := utils.FixSize(reqDto.Size)
+	reverse := reqDto.Reverse
+	startingFromItemId := reqDto.StartingFromItemId
+
 	var userId *int64 = nil
 	var isAnonymous = false // public message or blog
 	if userPrincipalDto != nil {
@@ -521,7 +527,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 	filterObj := db.NewFilterByType(services.GetPreviewableExtensions())
 
 	viewListLimit := viper.GetInt("viewList.maxSize")
-	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, true, viewListLimit, 0)
+	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, reverse, viewListLimit, 0)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting list, userId = %v, chatId = %v: %v", userId, chatId, err)
 		return c.NoContent(http.StatusInternalServerError)
