@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/jackc/pgtype"
@@ -116,10 +117,11 @@ func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataC
 	if filterNoData {
 		return nil, nil // see also below "sql.ErrNoRows"
 	}
+	baseSqlArgs = slices.Clone(filterSqlArgs)
 
 	sqlString := fmt.Sprintf(getMetadataSql, filterSqlString)
 
-	row := co.QueryRowContext(ctx, sqlString, filterSqlArgs...)
+	row := co.QueryRowContext(ctx, sqlString, baseSqlArgs...)
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -173,7 +175,7 @@ func NewFilterByType(typeExtensions []string) *FilterByType {
 }
 
 func (f *FilterBySearchString) apply(existingArgs []any) (string, []any, bool, error) {
-	sqlArgs := existingArgs
+	sqlArgs := slices.Clone(existingArgs)
 
 	suffix := fmt.Sprintf("and filename ILIKE '%%' || $%v || '%%'", len(sqlArgs)+1)
 	sqlArgs = append(sqlArgs, f.searchString)
@@ -182,7 +184,7 @@ func (f *FilterBySearchString) apply(existingArgs []any) (string, []any, bool, e
 }
 
 func (f *FilterByType) apply(existingArgs []any) (string, []any, bool, error) {
-	sqlArgs := existingArgs
+	sqlArgs := slices.Clone(existingArgs)
 	sqlString := ""
 
 	if len(f.typeExtensions) > 0 {
@@ -263,7 +265,7 @@ func NewListPaginationKeyset(startingFromItemId *int64, includeStartingFrom bool
 }
 
 func (p *ListPaginationOffset) apply(existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
-	sqlArgs := existingArgs
+	sqlArgs := slices.Clone(existingArgs)
 	limitString := ""
 
 	limitString = fmt.Sprintf(" limit $%v offset $%v ", len(sqlArgs)+1, len(sqlArgs)+2)
@@ -282,7 +284,7 @@ func (p *ListPaginationOffset) apply(existingArgs []any, reverse bool) (string, 
 }
 
 func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
-	sqlArgs := existingArgs
+	sqlArgs := slices.Clone(existingArgs)
 	keySetString := ""
 
 	col := "filename"
@@ -361,7 +363,7 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 	if paginationNoData {
 		return []dto.MetadataCache{}, nil
 	}
-	baseSqlArgs = append(baseSqlArgs, paginationSqlArgs...)
+	baseSqlArgs = slices.Clone(paginationSqlArgs)
 
 	filterSqlString, filterSqlArgs, filterNoData, err := applyFilter(filterObj, baseSqlArgs)
 	if err != nil {
@@ -370,7 +372,7 @@ func GetList(ctx context.Context, co CommonOperations, chatId int64, fileItemUui
 	if filterNoData {
 		return []dto.MetadataCache{}, nil
 	}
-	baseSqlArgs = append(baseSqlArgs, filterSqlArgs...)
+	baseSqlArgs = slices.Clone(filterSqlArgs)
 
 	sqlString := fmt.Sprintf(getMetadatasSql, filterSqlString, keysetSqlString, orderString, offsetSqlString)
 
@@ -406,7 +408,9 @@ func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUu
 
 	sqlString := fmt.Sprintf(getMetadatasCountSql, filterSqlString)
 
-	row := co.QueryRowContext(ctx, sqlString, filterSqlArgs...)
+	baseSqlArgs = slices.Clone(filterSqlArgs)
+
+	row := co.QueryRowContext(ctx, sqlString, baseSqlArgs...)
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}
