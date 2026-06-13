@@ -50,7 +50,7 @@ const getMetadataSql = `select ` +
 	metadataColumns +
 	`
 	from metadata_cache
-	where chat_id = $1 and file_item_uuid = $2 and filename = $3 %s
+	where chat_id = $1 and file_item_uuid = $2 and filename = $3 %s -- filter
 `
 
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
@@ -109,15 +109,17 @@ func provideScanToMetadataCache(ucs *dto.MetadataCache) []any {
 func Get(ctx context.Context, co CommonOperations, metadataCacheId dto.MetadataCacheId, filterObj Filter) (*dto.MetadataCache, error) {
 	baseSqlArgs := []any{metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename}
 
-	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadataSql, baseSqlArgs)
+	filterSqlString, filterSqlArgs, filterNoData, err := applyFilter(filterObj, baseSqlArgs)
 	if err != nil {
 		return nil, eris.Wrap(err, "error during building sql")
 	}
-	if noData {
+	if filterNoData {
 		return nil, nil // see also below "sql.ErrNoRows"
 	}
 
-	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
+	sqlString := fmt.Sprintf(getMetadataSql, filterSqlString)
+
+	row := co.QueryRowContext(ctx, sqlString, filterSqlArgs...)
 	if row.Err() != nil {
 		return nil, eris.Wrap(row.Err(), "error during interacting with db")
 	}
@@ -242,6 +244,7 @@ type ListPaginationOffset struct {
 type ListPaginationKeyset struct {
 	startingFromItemId  *int64
 	includeStartingFrom bool
+	size                int
 }
 
 func NewListPaginationOffset(limit, offset int) *ListPaginationOffset {
@@ -251,18 +254,19 @@ func NewListPaginationOffset(limit, offset int) *ListPaginationOffset {
 	}
 }
 
-func NewListPaginationKeyset(startingFromItemId *int64, includeStartingFrom bool) *ListPaginationKeyset {
+func NewListPaginationKeyset(startingFromItemId *int64, includeStartingFrom bool, size int) *ListPaginationKeyset {
 	return &ListPaginationKeyset{
 		startingFromItemId:  startingFromItemId,
 		includeStartingFrom: includeStartingFrom,
+		size:                size,
 	}
 }
 
 func (p *ListPaginationOffset) apply(existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
 	sqlArgs := existingArgs
-	sqlString := ""
+	limitString := ""
 
-	sqlString = fmt.Sprintf(" limit $%v offset $%v ", len(sqlArgs)+1, len(sqlArgs)+2)
+	limitString = fmt.Sprintf(" limit $%v offset $%v ", len(sqlArgs)+1, len(sqlArgs)+2)
 	sqlArgs = append(sqlArgs, p.limit, p.offset)
 
 	var order string
@@ -274,12 +278,12 @@ func (p *ListPaginationOffset) apply(existingArgs []any, reverse bool) (string, 
 
 	orderStr := fmt.Sprintf(" order by chat_id, file_item_uuid desc, create_date_time %s ", order)
 
-	return sqlString, "", orderStr, sqlArgs, false, nil
+	return limitString, "", orderStr, sqlArgs, false, nil
 }
 
 func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
 	sqlArgs := existingArgs
-	sqlString := ""
+	keySetString := ""
 
 	col := "filename"
 
@@ -300,11 +304,11 @@ func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, 
 		}
 
 		suffix := fmt.Sprintf(" and %s %s $%v ", col, nonEquality, len(sqlArgs)+1)
-		sqlString = suffix
+		keySetString = suffix
 		sqlArgs = append(sqlArgs, p.startingFromItemId)
 	} else {
 		emptySuffix := ""
-		sqlString = emptySuffix
+		keySetString = emptySuffix
 	}
 
 	var order string
@@ -316,7 +320,10 @@ func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, 
 
 	orderStr := fmt.Sprintf(" order by %s %s ", col, order)
 
-	return "", sqlString, orderStr, sqlArgs, false, nil
+	limitString := fmt.Sprintf(" limit $%v ", len(sqlArgs)+1)
+	sqlArgs = append(sqlArgs, p.size)
+
+	return limitString, keySetString, orderStr, sqlArgs, false, nil
 }
 
 func applyPagination(paginationObj ListPagination, existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
@@ -328,9 +335,7 @@ func applyPagination(paginationObj ListPagination, existingArgs []any, reverse b
 	var err error
 
 	if paginationObj == nil {
-		offsetSqlString = ""
-		keysetSqlString = ""
-		sqlArgs = existingArgs
+		return "", "", "", nil, false, errors.New("no pagination object")
 	} else {
 		offsetSqlString, keysetSqlString, orderStr, sqlArgs, noData, err = paginationObj.apply(existingArgs, reverse)
 		if err != nil {
@@ -391,15 +396,17 @@ func GetCount(ctx context.Context, co CommonOperations, chatId int64, fileItemUu
 
 	baseSqlArgs := []any{chatId, fileItemUuid}
 
-	sqlString, sqlArgs, noData, err := applyFilter(filterObj, getMetadatasCountSql, baseSqlArgs)
+	filterSqlString, filterSqlArgs, filterNoData, err := applyFilter(filterObj, baseSqlArgs)
 	if err != nil {
 		return 0, eris.Wrap(err, "error during building sql")
 	}
-	if noData {
+	if filterNoData {
 		return 0, nil
 	}
 
-	row := co.QueryRowContext(ctx, sqlString, sqlArgs...)
+	sqlString := fmt.Sprintf(getMetadatasCountSql, filterSqlString)
+
+	row := co.QueryRowContext(ctx, sqlString, filterSqlArgs...)
 	if row.Err() != nil {
 		return 0, eris.Wrap(row.Err(), "error during interacting with db")
 	}

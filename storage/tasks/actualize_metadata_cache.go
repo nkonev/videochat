@@ -138,7 +138,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 	srv.lgr.WithTracing(c).Infof("Checking for excess metadata cache items")
 	offset := 0
 	for {
-		metadatas, err := db.GetList(c, srv.dba, dto.NoChatId, dto.NoFileItemUuid, nil, true, utils.DefaultSize, offset)
+		metadatas, err := db.GetList(c, srv.dba, dto.NoChatId, dto.NoFileItemUuid, nil, db.NewListPaginationOffset(utils.DefaultSize, offset), true)
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error during paginate: %v", err)
 			return
