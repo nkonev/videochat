@@ -30,6 +30,8 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 
+const defaultReverse = true
+
 export default {
     data () {
         return {
@@ -71,7 +73,7 @@ export default {
             this.fetchCurrentItemStatus(dto.url).then(()=>{
                 if (this.$data.dto?.canSwitch) {
                     const startFromItemId = this.getStartFromItemId();
-                    this.fetchMediaListView(startFromItemId, false, true).then(res => {
+                    this.fetchMediaListView(startFromItemId, defaultReverse, true).then(res => {
                       this.setCurrentItemIdx(res.data);
                     });
                     window.addEventListener("keydown", this.onKeyPress);
@@ -164,13 +166,13 @@ export default {
             }
 
             if (this.isLeftBound) {
-              const reverse = true;
+              const reverse = false;
               const startFromItemId = this.getStartFromItemId(reverse);
               await this.fetchMediaListView(startFromItemId, reverse, false)
             }
 
             if (this.isRightBound) {
-              const reverse = false;
+              const reverse = true;
               const startFromItemId = this.getStartFromItemId(reverse);
               await this.fetchMediaListView(startFromItemId, reverse, false)
             }
@@ -191,14 +193,14 @@ export default {
                 this.fetchCurrentItemStatus(dto.fileInfoDto.url).then(()=>{
                   // this is update current page
                   const startFromItemId = this.getStartFromItemId();
-                  this.fetchMediaListView(startFromItemId, false, false);
+                  this.fetchMediaListView(startFromItemId, defaultReverse, false);
                 })
             }
         },
         onFileDeletedEvent(dto) {
             if (this.show && this.fileItemUuid == dto.fileInfoDto.fileItemUuid) {
                 const startFromItemId = this.getStartFromItemId();
-                this.fetchMediaListView(startFromItemId, false, false);
+                this.fetchMediaListView(startFromItemId, defaultReverse, false);
             }
         },
     },
