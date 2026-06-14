@@ -185,6 +185,7 @@ type ComplexityRoot struct {
 		CanPlayAsVideo func(childComplexity int) int
 		CanShare       func(childComplexity int) int
 		CanShowAsImage func(childComplexity int) int
+		CreateDateTime func(childComplexity int) int
 		FileItemUUID   func(childComplexity int) int
 		Filename       func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -1175,6 +1176,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.FileInfoDto.CanShowAsImage(childComplexity), true
+
+	case "FileInfoDto.createDateTime":
+		if e.complexity.FileInfoDto.CreateDateTime == nil {
+			break
+		}
+
+		return e.complexity.FileInfoDto.CreateDateTime(childComplexity), true
 
 	case "FileInfoDto.fileItemUuid":
 		if e.complexity.FileInfoDto.FileItemUUID == nil {
@@ -7272,6 +7280,50 @@ func (ec *executionContext) _FileInfoDto_lastModified(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_FileInfoDto_lastModified(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileInfoDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileInfoDto_createDateTime(ctx context.Context, field graphql.CollectedField, obj *model.FileInfoDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileInfoDto_createDateTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateDateTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileInfoDto_createDateTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FileInfoDto",
 		Field:      field,
@@ -14245,6 +14297,8 @@ func (ec *executionContext) fieldContext_WrappedFileInfoDto_fileInfoDto(_ contex
 				return ec.fieldContext_FileInfoDto_canShare(ctx, field)
 			case "lastModified":
 				return ec.fieldContext_FileInfoDto_lastModified(ctx, field)
+			case "createDateTime":
+				return ec.fieldContext_FileInfoDto_createDateTime(ctx, field)
 			case "ownerId":
 				return ec.fieldContext_FileInfoDto_ownerId(ctx, field)
 			case "owner":
@@ -17171,6 +17225,11 @@ func (ec *executionContext) _FileInfoDto(ctx context.Context, sel ast.SelectionS
 			}
 		case "lastModified":
 			out.Values[i] = ec._FileInfoDto_lastModified(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createDateTime":
+			out.Values[i] = ec._FileInfoDto_createDateTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

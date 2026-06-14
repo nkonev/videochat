@@ -168,6 +168,7 @@ func convertToChatEvent(e *dto.ChatEvent) *model.ChatEvent {
 				CanEdit:        fileEvent.FileInfoDto.CanEdit,
 				CanShare:       fileEvent.FileInfoDto.CanShare,
 				LastModified:   fileEvent.FileInfoDto.LastModified,
+				CreateDateTime: fileEvent.FileInfoDto.CreateDateTime,
 				OwnerID:        fileEvent.FileInfoDto.OwnerId,
 				Owner:          convertParticipant(fileEvent.FileInfoDto.Owner),
 				CanPlayAsVideo: fileEvent.FileInfoDto.CanPlayAsVideo,

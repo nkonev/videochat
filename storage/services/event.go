@@ -102,6 +102,8 @@ func (r *HandleEventResponse) GetObjectInfo() *minio.ObjectInfo {
 }
 
 func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
+	now := time.Now().UTC()
+
 	// iterate over chat participants
 	for _, participantId := range participantIds {
 		var fileInfo *dto.FileInfoDto
@@ -127,9 +129,10 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 			}
 
 			fileInfo = &dto.FileInfoDto{
-				Id:           normalizedKey,
-				FileItemUuid: fileItemUuid,
-				LastModified: time.Now().UTC(),
+				Id:             normalizedKey,
+				FileItemUuid:   fileItemUuid,
+				LastModified:   now,
+				CreateDateTime: now,
 			}
 		}
 		var correlationId *string

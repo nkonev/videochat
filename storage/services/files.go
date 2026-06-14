@@ -315,6 +315,7 @@ func (h *FilesService) GetFileInfo(c context.Context, public bool, overrideChatI
 		FileItemUuid:   itemUuid,
 		Previewable:    utils.IsPreviewable(aKey),
 		Type:           aType,
+		CreateDateTime: mce.CreateDateTime,
 	}
 	return info, nil
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgtype"
 	"github.com/rotisserie/eris"
@@ -233,8 +234,8 @@ type ListPagination interface {
 		string, // offsetString
 		string, // keysetString
 		string, // orderString
-		[]any,  // args
-		bool,   // noData
+		[]any, // args
+		bool, // noData
 		error,
 	)
 }
@@ -243,8 +244,13 @@ type ListPaginationOffset struct {
 	limit, offset int
 }
 
+type keyset struct {
+	fileItemUuid   string
+	createDateTime time.Time
+}
+
 type ListPaginationKeyset struct {
-	startingFromItemId  *int64
+	startingFromItemId  *keyset
 	includeStartingFrom bool
 	size                int
 }
@@ -256,12 +262,23 @@ func NewListPaginationOffset(limit, offset int) *ListPaginationOffset {
 	}
 }
 
-func NewListPaginationKeyset(startingFromItemId *int64, includeStartingFrom bool, size int) *ListPaginationKeyset {
-	return &ListPaginationKeyset{
-		startingFromItemId:  startingFromItemId,
+func NewListPaginationKeyset(
+	startingFromFileItemUuid string,
+	startingFromCreateDateTime *time.Time,
+	includeStartingFrom bool,
+	size int,
+) *ListPaginationKeyset {
+	v := &ListPaginationKeyset{
 		includeStartingFrom: includeStartingFrom,
 		size:                size,
 	}
+	if len(startingFromFileItemUuid) > 0 && startingFromCreateDateTime != nil {
+		v.startingFromItemId = &keyset{
+			fileItemUuid:   startingFromFileItemUuid,
+			createDateTime: *startingFromCreateDateTime,
+		}
+	}
+	return v
 }
 
 func (p *ListPaginationOffset) apply(existingArgs []any, reverse bool) (string, string, string, []any, bool, error) {
@@ -287,7 +304,7 @@ func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, 
 	sqlArgs := slices.Clone(existingArgs)
 	keySetString := ""
 
-	col := "filename"
+	colsTemplate := " file_item_uuid %s, create_date_time %s "
 
 	if p.startingFromItemId != nil {
 		nonEquality := ""
@@ -305,9 +322,9 @@ func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, 
 			}
 		}
 
-		suffix := fmt.Sprintf(" and %s %s $%v ", col, nonEquality, len(sqlArgs)+1)
-		keySetString = suffix
-		sqlArgs = append(sqlArgs, p.startingFromItemId)
+		keySetString = fmt.Sprintf(" and (%s) %s ($%v, $%v) ", fmt.Sprintf(colsTemplate, "", ""), nonEquality, len(sqlArgs)+1, len(sqlArgs)+2)
+		sqlArgs = append(sqlArgs, p.startingFromItemId.fileItemUuid)
+		sqlArgs = append(sqlArgs, p.startingFromItemId.createDateTime)
 	} else {
 		emptySuffix := ""
 		keySetString = emptySuffix
@@ -320,7 +337,7 @@ func (p *ListPaginationKeyset) apply(existingArgs []any, reverse bool) (string, 
 		order = "asc"
 	}
 
-	orderStr := fmt.Sprintf(" order by %s %s ", col, order)
+	orderStr := fmt.Sprintf(" order by %s", fmt.Sprintf(colsTemplate, order, order))
 
 	limitString := fmt.Sprintf(" limit $%v ", len(sqlArgs)+1)
 	sqlArgs = append(sqlArgs, p.size)

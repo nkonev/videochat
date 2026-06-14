@@ -454,11 +454,11 @@ type ViewItem struct {
 }
 
 type ListViewRequest struct {
-	Url                 string `json:"url"`
-	Reverse             bool   `json:"reverse"`
-	Size                int    `json:"size"`
-	StartingFromItemId  *int64 `json:"startingFromItemId"`
-	IncludeStartingFrom bool   `json:"includeStartingFrom"`
+	Url                        string     `json:"url"`
+	Reverse                    bool       `json:"reverse"`
+	Size                       int        `json:"size"`
+	StartingFromCreateDateTime *time.Time `json:"startingFromCreateDateTime"`
+	IncludeStartingFrom        bool       `json:"includeStartingFrom"`
 }
 
 func (h *FilesHandler) ViewListHandler(c echo.Context) error {
@@ -526,7 +526,7 @@ func (h *FilesHandler) ViewListHandler(c echo.Context) error {
 
 	filterObj := db.NewFilterByType(services.GetPreviewableExtensions())
 
-	pag := db.NewListPaginationKeyset(reqDto.StartingFromItemId, reqDto.IncludeStartingFrom, size)
+	pag := db.NewListPaginationKeyset(fileItemUuid, reqDto.StartingFromCreateDateTime, reqDto.IncludeStartingFrom, size)
 
 	metadatas, err := db.GetList(c.Request().Context(), h.dba, chatId, fileItemUuid, filterObj, pag, reverse)
 	if err != nil {
@@ -848,14 +848,16 @@ func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, f
 
 	eventType := utils.FILE_DELETED
 
+	now := time.Now().UTC()
 	err := h.restClient.GetChatParticipantIds(c, chatId, func(participantIds []int64) error {
 		for _, fileOjInfo := range batch {
 			normalizedKey := utils.StripBucketName(fileOjInfo.Key, bucketName)
 
 			fileInfo := &dto.FileInfoDto{
-				Id:           normalizedKey,
-				FileItemUuid: fileItemUuid,
-				LastModified: time.Now().UTC(),
+				Id:             normalizedKey,
+				FileItemUuid:   fileItemUuid,
+				LastModified:   now,
+				CreateDateTime: now,
 			}
 
 			for _, participantId := range participantIds {

@@ -30,7 +30,7 @@ import bus, {
 } from "./bus/bus";
 import axios from "axios";
 
-const defaultReverse = true
+const defaultReverse = false
 
 export default {
     data () {
@@ -72,7 +72,7 @@ export default {
             this.$data.dto = dto;
             this.fetchCurrentItemStatus(dto.url).then(()=>{
                 if (this.$data.dto?.canSwitch) {
-                    const startFromItemId = this.getStartFromItemId();
+                    const startFromItemId = this.getStartFromItemId(defaultReverse);
                     this.fetchMediaListView(startFromItemId, defaultReverse, true).then(res => {
                       this.setCurrentItemIdx(res.data);
                     });
@@ -107,11 +107,11 @@ export default {
         isCorrectStatus() {
             return this.$data.status == "ok"
         },
-        fetchMediaListView(startFromItemId, reverse, includeStartingFrom) {
+        fetchMediaListView(startFromCreateDateTime, reverse, includeStartingFrom) {
             this.loading = true;
             return axios.post(`/api/storage/view/list`, {
                 url: this.$data.dto.url,
-                startFromItemId: startFromItemId,
+                startingFromCreateDateTime: startFromCreateDateTime,
                 reverse: reverse,
                 includeStartingFrom: includeStartingFrom,
             }).finally(()=>{
@@ -151,13 +151,13 @@ export default {
         },
         getStartFromItemId(reverse) { // reverse == left
           if (!this.itemsList.length) {
-            return 0;
+            return null;
           }
 
           if (!reverse) {
-            return this.itemsList[0].id;
+            return this.itemsList[0].createDateTime;
           } else {
-            return this.itemsList[this.itemsList.length - 1].id;
+            return this.itemsList[this.itemsList.length - 1].createDateTime;
           }
         },
         async setEl() {
@@ -192,14 +192,14 @@ export default {
             if (this.show && this.dto?.url == dto.fileInfoDto.url) {
                 this.fetchCurrentItemStatus(dto.fileInfoDto.url).then(()=>{
                   // this is update current page
-                  const startFromItemId = this.getStartFromItemId();
+                  const startFromItemId = this.getStartFromItemId(defaultReverse);
                   this.fetchMediaListView(startFromItemId, defaultReverse, false);
                 })
             }
         },
         onFileDeletedEvent(dto) {
             if (this.show && this.fileItemUuid == dto.fileInfoDto.fileItemUuid) {
-                const startFromItemId = this.getStartFromItemId();
+                const startFromItemId = this.getStartFromItemId(defaultReverse);
                 this.fetchMediaListView(startFromItemId, defaultReverse, false);
             }
         },
