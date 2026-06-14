@@ -647,12 +647,28 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 	// obj is nil in case when video is still converting
 
 	if exists {
-		filename := services.ReadFilename(obj.Key)
-		return c.JSON(http.StatusOK, StatusItem{
+		mcid, err := utils.BuildMetadataCacheId(fileId)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache id %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		mce, err := db.Get(c.Request().Context(), h.dba, *mcid, nil)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting metadata cache %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		r := StatusItem{
 			Status:       "ok",
-			Filename:     filename,
+			Filename:     services.ReadFilename(obj.Key),
 			FileItemUuid: &fileItemUuid,
-		})
+		}
+		if mce != nil {
+			r.CreateDateTime = &mce.CreateDateTime
+		}
+
+		return c.JSON(http.StatusOK, r)
 	} else {
 		converting, err := h.redisInfoService.GetConvertedConverting(c.Request().Context(), fileId)
 		if err != nil {
@@ -681,10 +697,11 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 }
 
 type StatusItem struct {
-	Status       string  `json:"status"`
-	FileItemUuid *string `json:"fileItemUuid"`
-	Filename     string  `json:"filename"`
-	StatusImage  *string `json:"statusImage"`
+	Status         string     `json:"status"`
+	FileItemUuid   *string    `json:"fileItemUuid"`
+	CreateDateTime *time.Time `json:"createDateTime"`
+	Filename       string     `json:"filename"`
+	StatusImage    *string    `json:"statusImage"`
 }
 
 func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {

@@ -42,6 +42,7 @@ export default {
             status: null,
             statusImage: null,
             fileItemUuid: null,
+            fileCreateDateTime: null,
             filename: null,
             loading: false,
         }
@@ -70,6 +71,7 @@ export default {
         showModal(dto) {
             this.$data.show = true;
             this.$data.dto = dto;
+            // TODO учесть что пользователь мог кликнуть на среднюю картинку и нужно загрузить слева и справа - это должно было посылаться в startFromItemId
             this.fetchCurrentItemStatus(dto.url).then(()=>{
                 if (this.$data.dto?.canSwitch) {
                     const startFromItemId = this.getStartFromItemId(defaultReverse);
@@ -91,6 +93,7 @@ export default {
             this.$data.status = null;
             this.$data.statusImage = null;
             this.$data.fileItemUuid = null;
+            this.$data.fileCreateDateTime = null;
             this.$data.filename = null;
             this.$data.loading = false;
         },
@@ -102,6 +105,7 @@ export default {
                 this.$data.filename = res.data.filename;
                 this.$data.statusImage = res.data.statusImage;
                 this.$data.fileItemUuid = res.data.fileItemUuid;
+                this.$data.fileCreateDateTime = res.data.createDateTime;
             })
         },
         isCorrectStatus() {
