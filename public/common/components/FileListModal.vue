@@ -225,6 +225,9 @@ export default {
         translatePage() {
           return this.page - 1;
         },
+        setCount() {
+          this.pagesCount = Math.ceil(this.itemsDto.count / PAGE_SIZE_SMALL);
+        },
         // smart fetching
         updateItems(silent) {
           if (!this.canUpdateItems()) {
@@ -240,7 +243,7 @@ export default {
                   this.transformItems(dto?.items);
                 }
                 this.itemsDto = dto;
-                this.pagesCount = Math.ceil(this.itemsDto.count / PAGE_SIZE_SMALL);
+                this.setCount();
               })
               .finally(() => {
                 if (!silent) {
