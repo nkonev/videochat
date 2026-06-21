@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -168,6 +169,10 @@ func calcBucketsConsumption(ctx context.Context, lgr *logger.Logger, restClient 
 	}
 
 	mfi := mf["minio_bucket_usage_total_bytes"]
+
+	if mfi == nil {
+		return 0, errors.New("bucket usage still is not ready")
+	}
 
 	for _, me := range mfi.Metric {
 		if me != nil && me.Gauge != nil && me.Gauge.Value != nil {
