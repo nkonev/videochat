@@ -53,6 +53,9 @@ export default () => {
             translatePage() {
                 return this.page - 1;
             },
+            setCount() {
+                this.pagesCount = Math.ceil(this.itemsDto.count / pageSize);
+            },
             // smart fetching
             updateItems(silent) {
                 if (!this.canUpdateItems()) {
@@ -68,7 +71,7 @@ export default () => {
                             this.transformItems(dto?.items);
                         }
                         this.itemsDto = dto;
-                        this.pagesCount = Math.ceil(this.itemsDto.count / pageSize);
+                        this.setCount();
                     })
                     .then(()=>{
                         this.dataLoaded = true;
@@ -132,6 +135,7 @@ export default () => {
                 // filter and load items count
                 this.initiateCountRequest(dto).then((response) => {
                     this.itemsDto.count = response.data.count;
+                    this.setCount();
                 }).then(()=> {
                     if (this.page == firstPage) {
                         this.initiateFilteredRequest(dto).then((response) => {
@@ -203,6 +207,7 @@ export default () => {
                 // load items count
                 this.initiateCountRequest(dto).then((response) => {
                         this.itemsDto.count = response.data.count;
+                        this.setCount();
                     }).then(() => {
                         if (this.page > this.pagesCount) { // fix case when we stay on the last page but there is lesser pages on the server
                             this.page = this.pagesCount == 0 ? firstPage : this.pagesCount; // this causes update() because of watch
