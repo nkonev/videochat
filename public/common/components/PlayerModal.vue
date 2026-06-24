@@ -156,7 +156,7 @@ export default {
             this.$data.filename = null;
         },
         fetchCurrentItemStatus(url) {
-          return axios.post(`/api/storage/view/status`, {
+          return axios.post(`/api/storage/public/view/status`, {
             url: url
           }).then((res)=>{
             this.$data.status = res.data.status;
@@ -170,7 +170,7 @@ export default {
             return this.$data.status == "ok"
         },
         fetchItems(startFrom, reverse, includeStartingFrom) {
-          return axios.post(`/api/storage/view/list`, {
+          return axios.post(`/api/storage/public/view/list`, {
             size: PAGE_SIZE,
             url: this.$data.dto.url,
             startingFromCreateDateTime: startFrom?.createDateTime,
