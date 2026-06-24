@@ -15,6 +15,7 @@ const (
 	EventChatCreated                        = "chatCreated"
 	EventChatEdited                         = "chatEdited"
 	EventChatDeleted                        = "chatDeleted"
+	EventThreadCreated                      = "threadCreated"
 	EventParticipantsAdded                  = "participantsAdded"
 	EventParticipantsDeleted                = "participantDeleted"
 	EventParticipantsChanged                = "participantChanged"
@@ -97,7 +98,6 @@ type ChatCommoned struct {
 	RegularParticipantCanAddParticipant bool `json:"regularParticipantCanAddParticipant"`
 }
 
-// TODO в место, где создаётся чат - добавить создание треда с parentChatId = 0
 type ChatCreated struct {
 	AdditionalData        *AdditionalData `json:"additionalData"`
 	Metadata              *Metadata       `json:"-"`
@@ -113,11 +113,12 @@ type ChatEdited struct {
 }
 
 type ThreadCreated struct {
-	Id           int64   `json:"id"`
-	ParentChatId int64   `json:"parentChatId"`
-	Title        string  `json:"title"`
-	Avatar       *string `json:"avatar"`
-	AvatarBig    *string `json:"avatarBig"`
+	Id           int64     `json:"id"`
+	ParentChatId int64     `json:"parentChatId"`
+	Title        string    `json:"title"`
+	Avatar       *string   `json:"avatar"`
+	AvatarBig    *string   `json:"avatarBig"`
+	Metadata     *Metadata `json:"-"`
 }
 
 type ThreadDeleted struct {
@@ -493,6 +494,10 @@ func (s *ChatDeleted) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
 
+func (s *ThreadCreated) GetPartitionKey() string {
+	return utils.ToString(s.ParentChatId)
+}
+
 func (s *ParticipantsAdded) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
@@ -601,6 +606,10 @@ func (s *ChatDeleted) GetEventType() string {
 	return EventChatDeleted
 }
 
+func (s *ThreadCreated) GetEventType() string {
+	return EventThreadCreated
+}
+
 func (s *ParticipantsAdded) GetEventType() string {
 	return EventParticipantsAdded
 }
@@ -706,6 +715,10 @@ func (s *ChatEdited) GetMetadata() *Metadata {
 }
 
 func (s *ChatDeleted) GetMetadata() *Metadata {
+	return s.Metadata
+}
+
+func (s *ThreadCreated) GetMetadata() *Metadata {
 	return s.Metadata
 }
 
@@ -817,6 +830,10 @@ func (s *ChatDeleted) SetMetadata(m *Metadata) {
 	s.Metadata = m
 }
 
+func (s *ThreadCreated) SetMetadata(m *Metadata) {
+	s.Metadata = m
+}
+
 func (s *ParticipantsAdded) SetMetadata(m *Metadata) {
 	s.Metadata = m
 }
@@ -922,6 +939,10 @@ func (s *ChatEdited) GetEventPartitioningBy() EventPartitioningBy {
 }
 
 func (s *ChatDeleted) GetEventPartitioningBy() EventPartitioningBy {
+	return EventPartitioningByChatId
+}
+
+func (s *ThreadCreated) GetEventPartitioningBy() EventPartitioningBy {
 	return EventPartitioningByChatId
 }
 
