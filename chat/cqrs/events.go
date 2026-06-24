@@ -15,6 +15,7 @@ const (
 	EventChatCreated                        = "chatCreated"
 	EventChatEdited                         = "chatEdited"
 	EventChatDeleted                        = "chatDeleted"
+	EventThreadCreated                      = "threadCreated"
 	EventParticipantsAdded                  = "participantsAdded"
 	EventParticipantsDeleted                = "participantDeleted"
 	EventParticipantsChanged                = "participantChanged"
@@ -95,7 +96,6 @@ type ChatCommoned struct {
 	RegularParticipantCanAddParticipant bool `json:"regularParticipantCanAddParticipant"`
 }
 
-// TODO в место, где создаётся чат - добавить создание треда с parentChatId = 0
 type ChatCreated struct {
 	AdditionalData        *AdditionalData `json:"additionalData"`
 	TetATet               bool            `json:"tetATet"`
@@ -109,11 +109,12 @@ type ChatEdited struct {
 }
 
 type ThreadCreated struct {
-	Id           int64   `json:"id"`
-	ParentChatId int64   `json:"parentChatId"`
-	Title        string  `json:"title"`
-	Avatar       *string `json:"avatar"`
-	AvatarBig    *string `json:"avatarBig"`
+	Id           int64     `json:"id"`
+	ParentChatId int64     `json:"parentChatId"`
+	Title        string    `json:"title"`
+	Avatar       *string   `json:"avatar"`
+	AvatarBig    *string   `json:"avatarBig"`
+	Metadata     *Metadata `json:"-"`
 }
 
 type ThreadDeleted struct {
@@ -464,6 +465,10 @@ func (s *ChatDeleted) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
 
+func (s *ThreadCreated) GetPartitionKey() string {
+	return utils.ToString(s.ParentChatId)
+}
+
 func (s *ParticipantsAdded) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
@@ -570,6 +575,10 @@ func (s *ChatEdited) GetEventType() string {
 
 func (s *ChatDeleted) GetEventType() string {
 	return EventChatDeleted
+}
+
+func (s *ThreadCreated) GetEventType() string {
+	return EventThreadCreated
 }
 
 func (s *ParticipantsAdded) GetEventType() string {
@@ -709,6 +718,10 @@ func (s *ChatPinned) GetEventTopic() EventTopic {
 }
 
 func (s *ChatNotificationSettingsSetted) GetEventTopic() EventTopic {
+	return EventTopicChat
+}
+
+func (s *ThreadCreated) GetEventTopic() EventTopic {
 	return EventTopicChat
 }
 

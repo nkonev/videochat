@@ -400,18 +400,14 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		return 0, err
 	}
 
-	// TODO слать 2 эвента: ChatCreated(aka ChatSettings) и ThreadCreated(на него мигрируем имеющиеся чаты)
 	cc := &ChatCreated{
 		AdditionalData:        copyCommand.AdditionalData,
 		TetATet:               copyCommand.TetATet,
 		TetATetOppositeUserId: tetATetOppositeUserId,
 		ChatCommoned: ChatCommoned{
 			ChatId:                              chatId,
-			Title:                               copyCommand.Title,
 			Blog:                                copyCommand.Blog,
 			BlogAbout:                           copyCommand.BlogAbout,
-			Avatar:                              copyCommand.Avatar,
-			AvatarBig:                           copyCommand.AvatarBig,
 			CanResend:                           copyCommand.CanResend,
 			CanReact:                            copyCommand.CanReact,
 			AvailableToSearch:                   copyCommand.AvailableToSearch,
@@ -444,6 +440,23 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	}
 
 	err = eventBus.Publish(ctx, pa)
+	if err != nil {
+		return 0, err
+	}
+
+	threadId, err := commonProjection.GetNextThreadId(ctx, dba, chatId)
+	if err != nil {
+		return 0, err
+	}
+
+	tc := &ThreadCreated{
+		Id:           threadId,
+		ParentChatId: chatId,
+		Avatar:       copyCommand.Avatar,
+		AvatarBig:    copyCommand.AvatarBig,
+	}
+
+	err = eventBus.Publish(ctx, tc)
 	if err != nil {
 		return 0, err
 	}
