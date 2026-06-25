@@ -83,19 +83,16 @@ func NewMetadata(eventType string) *Metadata {
 }
 
 type ChatCommoned struct {
-	ChatId int64 `json:"chatId"`
-	//Title                               string  `json:"title"`
-	Blog      bool `json:"blog"`
-	BlogAbout bool `json:"blogAbout"`
-	//Avatar                              *string `json:"avatar"`
-	//AvatarBig                           *string `json:"avatarBig"`
-	CanResend                           bool `json:"canResend"`
-	CanReact                            bool `json:"canReact"`
-	AvailableToSearch                   bool `json:"availableToSearch"`
-	RegularParticipantCanPublishMessage bool `json:"regularParticipantCanPublishMessage"`
-	RegularParticipantCanPinMessage     bool `json:"regularParticipantCanPinMessage"`
-	RegularParticipantCanWriteMessage   bool `json:"regularParticipantCanWriteMessage"`
-	RegularParticipantCanAddParticipant bool `json:"regularParticipantCanAddParticipant"`
+	ChatId                              int64 `json:"chatId"`
+	Blog                                bool  `json:"blog"`
+	BlogAbout                           bool  `json:"blogAbout"`
+	CanResend                           bool  `json:"canResend"`
+	CanReact                            bool  `json:"canReact"`
+	AvailableToSearch                   bool  `json:"availableToSearch"`
+	RegularParticipantCanPublishMessage bool  `json:"regularParticipantCanPublishMessage"`
+	RegularParticipantCanPinMessage     bool  `json:"regularParticipantCanPinMessage"`
+	RegularParticipantCanWriteMessage   bool  `json:"regularParticipantCanWriteMessage"`
+	RegularParticipantCanAddParticipant bool  `json:"regularParticipantCanAddParticipant"`
 }
 
 type ChatCreated struct {
@@ -113,20 +110,30 @@ type ChatEdited struct {
 }
 
 type ThreadCreated struct {
-	Id           int64     `json:"id"`
-	ParentChatId int64     `json:"parentChatId"`
-	Title        string    `json:"title"`
-	Avatar       *string   `json:"avatar"`
-	AvatarBig    *string   `json:"avatarBig"`
-	Metadata     *Metadata `json:"-"`
+	ThreadCommoned
+	AdditionalData *AdditionalData `json:"additionalData"`
+	Metadata       *Metadata       `json:"-"`
 }
 
-type ThreadDeleted struct {
+type ThreadEdited struct {
+	ThreadCommoned
+	AdditionalData *AdditionalData `json:"additionalData"`
+	Metadata       *Metadata       `json:"-"`
+}
+
+type ThreadCommoned struct {
 	Id           int64   `json:"id"`
 	ParentChatId int64   `json:"parentChatId"`
 	Title        string  `json:"title"`
 	Avatar       *string `json:"avatar"`
 	AvatarBig    *string `json:"avatarBig"`
+}
+
+type ThreadDeleted struct {
+	Id             int64           `json:"id"`
+	ParentChatId   int64           `json:"parentChatId"`
+	AdditionalData *AdditionalData `json:"additionalData"`
+	Metadata       *Metadata       `json:"-"`
 }
 
 type ChatDeleted struct {
