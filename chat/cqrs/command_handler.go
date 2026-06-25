@@ -449,6 +449,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		return 0, err
 	}
 
+	// TODO сделать реакцию на ThreadCreated в chat/cqrs/event_handler_chat.go с отсылкой внешнего эента в RabbitMQ
 	tc := &ThreadCreated{
 		Id:           threadId,
 		ParentChatId: chatId,
