@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/twmb/franz-go/pkg/kerr"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/kafka"
 	"nkonev.name/chat/logger"
@@ -441,6 +442,8 @@ func (p *KafkaListener) runKafkaListener(
 	batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error),
 	lc fx.Lifecycle,
 ) error {
+	cancelCtx, cancelFn := context.WithCancel(context.Background())
+
 	opts := kafka.CommonKafkaOptions(p.lgr, p.cfg)
 	opts = append(opts,
 		kgo.ClientID(p.cfg.Kafka.Consumer.ClientId),
@@ -451,80 +454,102 @@ func (p *KafkaListener) runKafkaListener(
 		kgo.BlockRebalanceOnPoll(),
 		// kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), // was need for to work after import in the previous implementation. now TestImport can work without it
 		kgo.FetchMaxWait(p.cfg.Kafka.Consumer.FetchMaxWait),
+		kgo.WithContext(cancelCtx),
 	)
 
 	cl, err := kgo.NewClient(opts...)
 	if err != nil {
+		cancelFn()
+
 		return err
 	}
 
 	p.lgr.Info("Starting " + name + " subscriber")
 
-	retryStop := make(chan struct{})
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			p.lgr.Info("Begin stopping kafka " + name + " subscriber")
 
-			close(retryStop)
+			cancelFn()
 
 			// handle excess commit offsets in case error in processWithRetry on program exit (1/2)
 			cl.Close()
+
+			p.lgr.Info("Finish stopping " + name + " subscriber")
+
 			return nil
 		},
 	})
 
-	ctx := context.Background()
-
 	go func() {
 		for {
 			// https://github.com/twmb/franz-go/blob/master/examples/group_committing/main.go
-			fetches := cl.PollRecords(ctx, p.cfg.Kafka.Consumer.BatchSize)
-			if fetches.IsClientClosed() {
-				p.lgr.Info("Client is closed, exiting " + name + " subscriber")
-				return
-			}
+			fetches := cl.PollRecords(cancelCtx, p.cfg.Kafka.Consumer.BatchSize)
+			shuttingDown := false
 
 			fetches.EachError(func(to string, pa int32, err error) {
+				if errors.Is(err, context.Canceled) {
+					shuttingDown = true
+					p.lgr.Info("Begin exiting loop in " + name + " subscriber")
+					return
+				}
+
 				p.lgr.Error("Got fetch error in "+name+" subscriber", "topic", to, "partition", pa, logger.AttributeError, err)
 			})
 
-			var lastErr error
-			var stopped bool
-			var shouldStopWithoutCommitting bool
-			fetches.EachPartition(func(partition kgo.FetchTopicPartition) {
-				if stopped {
-					return
-				}
+			if !shuttingDown {
+				var lastErr error
+				var stopped bool
+				var shouldStopWithoutCommitting bool
+				fetches.EachPartition(func(partition kgo.FetchTopicPartition) {
+					if stopped {
+						return
+					}
 
-				records := partition.Records
-				if len(records) == 0 {
-					return
-				}
+					records := partition.Records
+					if len(records) == 0 {
+						return
+					}
 
-				stopped, lastErr = p.processWithRetry(partition, retryStop, name, records, parseFunctionMapping, batchFunctionMapping)
-				shouldStopWithoutCommitting = stopped && lastErr != nil
-				if shouldStopWithoutCommitting {
-					p.lgr.Error("Got last error in "+name+" subscriber, not committing the offset because the client was stopped", logger.AttributeError, lastErr)
+					stopped, lastErr = p.processWithRetry(cancelCtx, partition, name, records, parseFunctionMapping, batchFunctionMapping)
+					shouldStopWithoutCommitting = stopped && lastErr != nil
+					if shouldStopWithoutCommitting {
+						p.lgr.Error("Got last error in "+name+" subscriber, not committing the offset because the client was stopped", logger.AttributeError, lastErr)
 
-					return
-				}
+						return
+					}
 
-				// We commit manually because it's simpler
-				// handle excess commit offsets in case error in processWithRetry on program exit (2/2)
-				p.commitOffsetsWithRetry(cl, records)
-			})
+					// We commit manually because it's simpler
+					// handle excess commit offsets in case error in processWithRetry on program exit (2/2)
+					p.commitOffsetsWithRetry(cancelCtx, cl, records)
+				})
+			}
 
 			cl.AllowRebalance()
+
+			if shuttingDown {
+				p.lgr.Info("Finish exiting loop in " + name + " subscriber")
+
+				return
+			}
 		}
 	}()
 
 	return nil
 }
 
-func (p *KafkaListener) commitOffsetsWithRetry(cl *kgo.Client, rs []*kgo.Record) {
+func (p *KafkaListener) commitOffsetsWithRetry(cancelCtx context.Context, cl *kgo.Client, rs []*kgo.Record) {
 	for {
 		p.lgr.Debug("Begin committing offsets")
-		if cerr := cl.CommitRecords(context.Background(), rs...); cerr != nil {
+		if cerr := cl.CommitRecords(cancelCtx, rs...); cerr != nil {
+			if errors.Is(cerr, kerr.UnknownMemberID) {
+				p.lgr.Warn("Not committing offset because is not member anymore", logger.AttributeError, cerr)
+				break
+			}
+			if errors.Is(cerr, context.Canceled) {
+				p.lgr.Warn("Not committing offset because context is canceled", logger.AttributeError, cerr)
+				break
+			}
 			p.lgr.Error("Error during committing offsets", logger.AttributeError, cerr)
 
 			continue
@@ -535,11 +560,11 @@ func (p *KafkaListener) commitOffsetsWithRetry(cl *kgo.Client, rs []*kgo.Record)
 	}
 }
 
-func (p *KafkaListener) processWithRetry(tp kgo.FetchTopicPartition, retryStop chan struct{}, name string, records []*kgo.Record, parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error), batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error)) (bool, error) {
+func (p *KafkaListener) processWithRetry(cancelCtx context.Context, tp kgo.FetchTopicPartition, name string, records []*kgo.Record, parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error), batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error)) (bool, error) {
 	var lastError error
 	for {
 		select {
-		case <-retryStop:
+		case <-cancelCtx.Done():
 			p.lgr.Info("Exiting processing retrier in " + name + " subscriber")
 			return true, lastError
 		default:
