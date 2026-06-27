@@ -454,7 +454,7 @@ func (p *KafkaListener) runKafkaListener(
 		kgo.BlockRebalanceOnPoll(),
 		// kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), // was need for to work after import in the previous implementation. now TestImport can work without it
 		kgo.FetchMaxWait(p.cfg.Kafka.Consumer.FetchMaxWait),
-		kgo.WithContext(cancelCtx),
+		// we don't set context here because it hurdles propagating committed offset into waiters
 	)
 
 	cl, err := kgo.NewClient(opts...)
@@ -487,15 +487,21 @@ func (p *KafkaListener) runKafkaListener(
 			fetches := cl.PollRecords(cancelCtx, p.cfg.Kafka.Consumer.BatchSize)
 			shuttingDown := false
 
-			fetches.EachError(func(to string, pa int32, err error) {
-				if errors.Is(err, context.Canceled) {
-					shuttingDown = true
-					p.lgr.Info("Begin exiting loop in " + name + " subscriber")
-					return
-				}
+			if fetches.IsClientClosed() { // for the case
+				shuttingDown = true
+				p.lgr.Info("Begin exiting loop in " + name + " subscriber due to client closing")
+			} else {
+				// normal stopping
+				fetches.EachError(func(to string, pa int32, err error) {
+					if errors.Is(err, context.Canceled) {
+						shuttingDown = true
+						p.lgr.Info("Begin exiting loop in " + name + " subscriber")
+						return
+					}
 
-				p.lgr.Error("Got fetch error in "+name+" subscriber", "topic", to, "partition", pa, logger.AttributeError, err)
-			})
+					p.lgr.Error("Got fetch error in "+name+" subscriber", "topic", to, "partition", pa, logger.AttributeError, err)
+				})
+			}
 
 			if !shuttingDown {
 				var lastErr error
@@ -514,6 +520,7 @@ func (p *KafkaListener) runKafkaListener(
 					stopped, lastErr = p.processWithRetry(cancelCtx, partition, name, records, parseFunctionMapping, batchFunctionMapping)
 					shouldStopWithoutCommitting = stopped && lastErr != nil
 					if shouldStopWithoutCommitting {
+						// enters here only in the first time, not in restart
 						p.lgr.Error("Got last error in "+name+" subscriber, not committing the offset because the client was stopped", logger.AttributeError, lastErr)
 
 						return
