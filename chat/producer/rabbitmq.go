@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	"go.uber.org/fx"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
 	myRabbitmq "nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/type_registry"
-	"time"
 
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
@@ -78,11 +80,24 @@ type RabbitOutputEventsPublisher struct {
 	cfg          *config.AppConfig
 }
 
-func NewRabbitOutputEventsPublisher(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, typeRegistry *type_registry.TypeRegistryInstance, cfg *config.AppConfig) (*RabbitOutputEventsPublisher, error) {
+func NewRabbitOutputEventsPublisher(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	typeRegistry *type_registry.TypeRegistryInstance,
+	cfg *config.AppConfig,
+	lc fx.Lifecycle,
+) (*RabbitOutputEventsPublisher, error) {
 	cha, err := myRabbitmq.CreateRabbitMqChannel(lgr, connection)
 	if err != nil {
 		return nil, err
 	}
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			return cha.Close()
+		},
+	})
+
 	p := &RabbitOutputEventsPublisher{
 		channel:      cha,
 		lgr:          lgr,
@@ -146,11 +161,24 @@ type RabbitInternalEventsPublisher struct {
 	cfg          *config.AppConfig
 }
 
-func NewRabbitInternalEventsPublisher(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, typeRegistry *type_registry.TypeRegistryInstance, cfg *config.AppConfig) (*RabbitInternalEventsPublisher, error) {
+func NewRabbitInternalEventsPublisher(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	typeRegistry *type_registry.TypeRegistryInstance,
+	cfg *config.AppConfig,
+	lc fx.Lifecycle,
+) (*RabbitInternalEventsPublisher, error) {
 	cha, err := myRabbitmq.CreateRabbitMqChannel(lgr, connection)
 	if err != nil {
 		return nil, err
 	}
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			return cha.Close()
+		},
+	})
+
 	return &RabbitInternalEventsPublisher{
 		channel:      cha,
 		lgr:          lgr,
@@ -205,11 +233,24 @@ type RabbitTestInputEventsPublisher struct {
 	cfg          *config.AppConfig
 }
 
-func NewRabbitTestInputEventsPublisher(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, typeRegistry *type_registry.TypeRegistryInstance, cfg *config.AppConfig) (*RabbitTestInputEventsPublisher, error) {
+func NewRabbitTestInputEventsPublisher(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	typeRegistry *type_registry.TypeRegistryInstance,
+	cfg *config.AppConfig,
+	lc fx.Lifecycle,
+) (*RabbitTestInputEventsPublisher, error) {
 	cha, err := myRabbitmq.CreateRabbitMqChannel(lgr, connection)
 	if err != nil {
 		return nil, err
 	}
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			return cha.Close()
+		},
+	})
+
 	return &RabbitTestInputEventsPublisher{
 		channel:      cha,
 		lgr:          lgr,
@@ -276,11 +317,24 @@ type RabbitNotificationEventsPublisher struct {
 	cfg          *config.AppConfig
 }
 
-func NewRabbitNotificationEventsPublisher(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, typeRegistry *type_registry.TypeRegistryInstance, cfg *config.AppConfig) (*RabbitNotificationEventsPublisher, error) {
+func NewRabbitNotificationEventsPublisher(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	typeRegistry *type_registry.TypeRegistryInstance,
+	cfg *config.AppConfig,
+	lc fx.Lifecycle,
+) (*RabbitNotificationEventsPublisher, error) {
 	cha, err := myRabbitmq.CreateRabbitMqChannel(lgr, connection)
 	if err != nil {
 		return nil, err
 	}
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			return cha.Close()
+		},
+	})
+	
 	p := &RabbitNotificationEventsPublisher{
 		channel:      cha,
 		lgr:          lgr,

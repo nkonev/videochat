@@ -2,6 +2,7 @@ package listener
 
 import (
 	"context"
+
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
 	myRabbit "nkonev.name/chat/rabbitmq"
@@ -70,6 +71,7 @@ func DeleteTestEventQueue(lgr *logger.LoggerWrapper, connection *rabbitmq.Connec
 	if err != nil {
 		return err
 	}
+	defer ch.Close()
 
 	lgr.Warn("Deleting test queue", "queue", testOutputQueueName)
 	_, err = ch.QueueDelete(testOutputQueueName, false, false, false)
@@ -79,7 +81,13 @@ func DeleteTestEventQueue(lgr *logger.LoggerWrapper, connection *rabbitmq.Connec
 	return nil
 }
 
-func CreateAndListenTestOutputEventChannel(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, onMessage TestOutputEventListener, lc fx.Lifecycle, sh fx.Shutdowner) (*ChatChannel, error) {
+func CreateAndListenTestOutputEventChannel(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	onMessage TestOutputEventListener,
+	lc fx.Lifecycle,
+	sh fx.Shutdowner,
+) (*ChatChannel, error) {
 
 	ch, err := myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
@@ -113,7 +121,13 @@ func CreateAndListenTestOutputEventChannel(lgr *logger.LoggerWrapper, connection
 	return &ChatChannel{ch}, nil
 }
 
-func CreateAndListenTestNotificationEventChannel(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, onMessage TestNotificationEventListener, lc fx.Lifecycle, sh fx.Shutdowner) (*ChatChannel, error) {
+func CreateAndListenTestNotificationEventChannel(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	onMessage TestNotificationEventListener,
+	lc fx.Lifecycle,
+	sh fx.Shutdowner,
+) (*ChatChannel, error) {
 
 	ch, err := myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
@@ -189,7 +203,13 @@ func CreateAndListenInternalEventsChannel(
 	return &InternalEventChannel{ch}, nil
 }
 
-func CreateAndListenAaaChannel(lgr *logger.LoggerWrapper, connection *rabbitmq.Connection, onMessage AaaUserProfileUpdateListener, lc fx.Lifecycle, sh fx.Shutdowner) (*AaaEventsChannel, error) {
+func CreateAndListenAaaChannel(
+	lgr *logger.LoggerWrapper,
+	connection *rabbitmq.Connection,
+	onMessage AaaUserProfileUpdateListener,
+	lc fx.Lifecycle,
+	sh fx.Shutdowner,
+) (*AaaEventsChannel, error) {
 	ch, err := myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
 		connection,
@@ -227,7 +247,8 @@ func listen(
 	channel *rabbitmq.Channel,
 	queue *amqp.Queue,
 	onMessage func(*amqp.Delivery) error,
-	sh fx.Shutdowner) {
+	sh fx.Shutdowner,
+) {
 	lgr.Info("Listening queue", "queue", queue.Name)
 	go func() {
 		var deliveries <-chan amqp.Delivery
