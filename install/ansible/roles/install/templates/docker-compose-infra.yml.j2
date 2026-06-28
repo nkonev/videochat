@@ -46,7 +46,7 @@ services:
         tag: chat-postgresql
 
   kafka-1:
-    image: apache/kafka:4.3.0
+    image: apache/kafka:4.3.1
     hostname: kafka-1
     environment:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
