@@ -675,6 +675,10 @@ func enrichMessage(
 	isParticipant bool,
 	bloggingIsAllowed bool,
 ) (*dto.MessageViewEnrichedDto, error) {
+	owner := users[m.OwnerId]
+	if owner == nil {
+		owner = getDeletedUser(m.OwnerId)
+	}
 	me := dto.MessageViewEnrichedDto{
 		Id:      m.Id,
 		ChatId:  chatId,
@@ -684,7 +688,7 @@ func enrichMessage(
 		BlogPost:       m.BlogPost,
 		UpdateDateTime: m.UpdateDateTime,
 		CreateDateTime: m.CreateDateTime,
-		Owner:          users[m.OwnerId],
+		Owner:          owner,
 		BehalfUserId:   behalfUserId,
 		FileItemUuid:   m.FileItemUuid,
 		Pinned:         m.Pinned,
@@ -862,6 +866,9 @@ func makeEmbed(
 		switch typed := srcEmbed.(type) {
 		case *dto.EmbedReply:
 			embeddedUser := users[typed.OwnerId]
+			if embeddedUser == nil {
+				embeddedUser = getDeletedUser(typed.OwnerId)
+			}
 			return &dto.EmbedMessageResponse{
 				Id:        typed.MessageId,
 				Text:      typed.MessageContent,
@@ -870,6 +877,9 @@ func makeEmbed(
 			}, nil
 		case *dto.EmbedResend:
 			embeddedUser := users[typed.OwnerId]
+			if embeddedUser == nil {
+				embeddedUser = getDeletedUser(typed.OwnerId)
+			}
 			var embedChatName *string = nil
 			var isParticipant bool
 
