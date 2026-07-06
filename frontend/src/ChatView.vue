@@ -803,9 +803,11 @@ export default {
         // after the joining all user 2 want to see chat of blog at the left
         return this.chatStore.currentUser && this.initialChatLoaded
     },
-    // to fix race condition on desktop when user 2 opens a chat with the new message from user 1 and user 2 still has no established WS connection to receive chat_unread_messages_changed event
+    // allowedMessageListChat: to fix race condition on desktop when user 2 opens a chat with the new message from user 1 and user 2 still has no established WS connection to receive chat_unread_messages_changed event
     isAllowedMessageList() {
-      return this.isAllowedChatList() && (this.initialChatsLoaded || this.isMobile())
+      const allowedMessageListChat = this.isAllowedChatList() && (this.initialChatsLoaded || this.isMobile());
+      const allowedMessageListVideo = this.isAllowedVideo();
+      return allowedMessageListChat || allowedMessageListVideo;
     },
     onChatListLoaded() {
       if (!this.initialChatsLoaded) {
