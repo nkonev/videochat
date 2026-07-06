@@ -93,7 +93,7 @@ func NewRabbitOutputEventsPublisher(
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			lgr.Info("Stopping RabbitOutputEventsPublisher")
 			return cha.Close()
 		},
 	})
@@ -174,7 +174,7 @@ func NewRabbitInternalEventsPublisher(
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			lgr.Info("Stopping RabbitInternalEventsPublisher")
 			return cha.Close()
 		},
 	})
@@ -246,7 +246,7 @@ func NewRabbitTestInputEventsPublisher(
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			lgr.Info("Stopping RabbitTestInputEventsPublisher")
 			return cha.Close()
 		},
 	})
@@ -330,11 +330,11 @@ func NewRabbitNotificationEventsPublisher(
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			lgr.Info("Stopping wRabbitOutputEventsPublisher")
+			lgr.Info("Stopping RabbitNotificationEventsPublisher")
 			return cha.Close()
 		},
 	})
-	
+
 	p := &RabbitNotificationEventsPublisher{
 		channel:      cha,
 		lgr:          lgr,
