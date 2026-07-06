@@ -32,8 +32,8 @@ check:
 ```bash
 $JAVA_HOME/bin/javac -version
 ```
-* Node.js 22.12.0 [here](https://nodejs.org/en/download/package-manager) via `nvm` (Node Version Manager)
-* Golang 1.22 [here](https://go.dev/dl/)
+* Node.js 24.18.0 [here](https://nodejs.org/en/download/package-manager) via `nvm` (Node Version Manager)
+* Golang 1.25 [here](https://go.dev/dl/)
 
 An example content of `~/.bashrc`:
 ```bash
