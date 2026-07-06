@@ -977,15 +977,19 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 		queryArgs = append(queryArgs, "%"+searchString+"%")
 		searchClause += fmt.Sprintf(" m.fts_all_content::text ilike $%d ", len(queryArgs))
 		searchClause += " or "
+		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.fts_all_content::text) ilike cyrillic_transliterate($%d) ", len(queryArgs))
+		searchClause += " or "
 
 		queryArgs = append(queryArgs, searchString)
 		searchClause += fmt.Sprintf(`
-		exists (
-			select 1 from (select * from (select unnest(tsvector_to_array(m.fts_all_content))) t(av)) inq
-			where
-				word_similarity( inq.av, plainto_tsquery('russian', $%d)::text ) > %v
-				or word_similarity( cyrillic_transliterate(inq.av), cyrillic_transliterate(plainto_tsquery('russian', $%d)::text) ) > %v
-		) `, len(queryArgs), m.cfg.Search.Similarity, len(queryArgs), m.cfg.Search.Similarity)
+		m.fts_all_content @@ plainto_tsquery('russian', $%d)
+		`, len(queryArgs))
+		searchClause += " or "
+
+		queryArgs = append(queryArgs, searchString)
+		searchClause += fmt.Sprintf(" m.fts_all_content::text %% $%d ", len(queryArgs))
+		searchClause += " or "
+		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.fts_all_content::text) %% cyrillic_transliterate($%d) ", len(queryArgs))
 
 		searchClause += " ) "
 	}
