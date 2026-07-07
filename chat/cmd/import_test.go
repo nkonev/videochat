@@ -154,41 +154,43 @@ func TestImport(t *testing.T) {
 	appImportFx.Run()
 	lgr.Info("Exit import command")
 
-	runTestFunc(lgr, cfg, t, func(
-		lgr *logger.LoggerWrapper,
-		cfg *config.AppConfig,
-		testRestClient *client.TestRestClient,
-		admCl *kadm.Client,
-		m *cqrs.CommonProjection,
-		aaaRestClient client.AaaRestClient,
-		lc fx.Lifecycle,
-	) {
-		mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
-		mockAaaClient.EXPECT().GetUsers(mock.Anything, []int64{user1}).Return([]*dto.User{&mockUser1}, nil)
+	runTestFuncWithPreInvoke(lgr, cfg, t,
+		func( // TODO migrate other tests to preinvoke
+			aaaRestClient client.AaaRestClient,
+		) {
+			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
+			mockAaaClient.EXPECT().GetUsers(mock.Anything, []int64{user1}).Return([]*dto.User{&mockUser1}, nil)
+		}, func(
+			lgr *logger.LoggerWrapper,
+			cfg *config.AppConfig,
+			testRestClient *client.TestRestClient,
+			admCl *kadm.Client,
+			m *cqrs.CommonProjection,
+			lc fx.Lifecycle,
+		) {
+			ctx := context.Background()
 
-		ctx := context.Background()
+			require.NoError(t, kafka.WaitForAllEventsProcessedChat(lgr, cfg, admCl, lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUser(lgr, cfg, admCl, lc), "error in waiting for processing events")
 
-		require.NoError(t, kafka.WaitForAllEventsProcessedChat(lgr, cfg, admCl, lc), "error in waiting for processing events")
-		require.NoError(t, kafka.WaitForAllEventsProcessedUser(lgr, cfg, admCl, lc), "error in waiting for processing events")
+			user1Chats, _, err := testRestClient.GetChats(ctx, user1)
+			require.NoError(t, err, "error in getting chats")
+			assert.Equal(t, 1, len(user1Chats))
+			chat1OfUser1 := user1Chats[0]
+			assert.Equal(t, chat1Name, chat1OfUser1.Title)
+			assert.Equal(t, int64(0), chat1OfUser1.UnreadMessages)
 
-		user1Chats, _, err := testRestClient.GetChats(ctx, user1)
-		require.NoError(t, err, "error in getting chats")
-		assert.Equal(t, 1, len(user1Chats))
-		chat1OfUser1 := user1Chats[0]
-		assert.Equal(t, chat1Name, chat1OfUser1.Title)
-		assert.Equal(t, int64(0), chat1OfUser1.UnreadMessages)
+			chat1Participants, _, err := testRestClient.GetChatParticipants(ctx, user1, chat1Id)
+			require.NoError(t, err, "error in char participants")
+			require.Equal(t, 1, len(chat1Participants))
+			assert.Equal(t, user1, chat1Participants[0].Id)
+			assert.Equal(t, user1Login, chat1Participants[0].Login)
 
-		chat1Participants, _, err := testRestClient.GetChatParticipants(ctx, user1, chat1Id)
-		require.NoError(t, err, "error in char participants")
-		require.Equal(t, 1, len(chat1Participants))
-		assert.Equal(t, user1, chat1Participants[0].Id)
-		assert.Equal(t, user1Login, chat1Participants[0].Login)
-
-		chat1Messages, _, err := testRestClient.GetMessages(ctx, user1, chat1Id)
-		require.NoError(t, err, "error in getting messages")
-		assert.Equal(t, 1, len(chat1Messages))
-		message1 := chat1Messages[0]
-		assert.Equal(t, message1Id, message1.Id)
-		assert.Equal(t, message1Text, message1.Content)
-	})
+			chat1Messages, _, err := testRestClient.GetMessages(ctx, user1, chat1Id)
+			require.NoError(t, err, "error in getting messages")
+			assert.Equal(t, 1, len(chat1Messages))
+			message1 := chat1Messages[0]
+			assert.Equal(t, message1Id, message1.Id)
+			assert.Equal(t, message1Text, message1.Content)
+		})
 }

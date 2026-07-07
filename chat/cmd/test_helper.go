@@ -82,7 +82,7 @@ func aaaClientFactory(t *testing.T) func() client.AaaRestClient {
 	}
 }
 
-func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, testFunc interface{}) {
+func runTestFuncWithPreInvoke(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
 	var s fx.Shutdowner
 
 	appTestFx := fxtest.New(
@@ -142,6 +142,7 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 			cqrs.NewBatchOptimizer,
 		),
 		fx.Invoke(
+			preInvokeFunc,
 			cqrs.ListenChatTopic,
 			cqrs.ListenUserTopic,
 			producer.EnableOutputEvents,
@@ -158,6 +159,10 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 	)
 	defer appTestFx.RequireStart().RequireStop()
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
+}
+
+func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, testFunc interface{}) {
+	runTestFuncWithPreInvoke(lgr, cfg, t, func() {}, testFunc)
 }
 
 func startAppFull(t *testing.T, testFunc interface{}) {
