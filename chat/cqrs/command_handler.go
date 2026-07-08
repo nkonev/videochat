@@ -7,7 +7,7 @@ package cqrs
 // See comments about it in TestUnreads()
 // Also, in order to keep these command's response times fast we should avoid iterations over db rows here. The best place for it is event_handler, projection.
 
-// To have some happens-before relationship garantees, it's strongly not recommended to send user events (EventPartitioningByUserId) depending on chat data, from here (command_handler).
+// To have some happens-before relationship garantees, it's strongly not recommended to send user events (EventTopicUser) depending on chat data, from here (command_handler).
 // It's recommended to (re)send them from event_handler
 
 import (

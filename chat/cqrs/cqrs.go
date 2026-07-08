@@ -47,14 +47,14 @@ func (p *KafkaProducer) Publish(ctx context.Context, msg CqrsEvent) error {
 
 	var topic string
 
-	kind := msg.GetEventPartitioningBy()
-	switch kind {
-	case EventPartitioningByChatId:
+	eventTopic := msg.GetEventTopic()
+	switch eventTopic {
+	case EventTopicChat:
 		topic = p.cfg.Kafka.TopicChat.Topic
-	case EventPartitioningByUserId:
+	case EventTopicUser:
 		topic = p.cfg.Kafka.TopicUser.Topic
 	default:
-		return fmt.Errorf("Unknown kind: %v", kind)
+		return fmt.Errorf("unknown eventTopic: %v", eventTopic)
 	}
 
 	key := msg.GetPartitionKey()
@@ -86,9 +86,9 @@ func (p *KafkaProducer) Publish(ctx context.Context, msg CqrsEvent) error {
 
 	if p.cfg.Cqrs.Dump {
 		if p.cfg.Cqrs.PrettyLog && !p.cfg.Logger.Json {
-			fmt.Printf("[kafka cqrs publisher] Sending record: trace_id=%s, topic=%s, kind=%v, event_type=%v, body: %v\n", logger.GetTraceId(ctx), record.Topic, kind, metadata.EventType, string(value))
+			fmt.Printf("[kafka cqrs publisher] Sending record: trace_id=%s, topic=%s, event_topic=%v, event_type=%v, body: %v\n", logger.GetTraceId(ctx), record.Topic, eventTopic, metadata.EventType, string(value))
 		} else {
-			p.lgr.InfoContext(ctx, "[kafka cqrs publisher] Sending record:", "topic", record.Topic, "event_type", metadata.EventType, "key", string(record.Key), "event_kind", kind, "value", string(record.Value))
+			p.lgr.InfoContext(ctx, "[kafka cqrs publisher] Sending record:", "topic", record.Topic, "event_type", metadata.EventType, "key", string(record.Key), "event_topic", eventTopic, "value", string(record.Value))
 		}
 	}
 

@@ -46,7 +46,7 @@ type CqrsEvent interface {
 	GetEventType() string
 	GetMetadata() *Metadata
 	SetMetadata(*Metadata)
-	GetEventPartitioningBy() EventPartitioningBy
+	GetEventTopic() EventTopic
 }
 
 type AdditionalData struct {
@@ -442,21 +442,21 @@ func GenerateMessageAdditionalData(correlationId *string, behalfUserId int64) *A
 	}
 }
 
-type EventPartitioningBy int16
+type EventTopic int16
 
 const (
-	EventPartitioningByUnspecified EventPartitioningBy = iota
-	EventPartitioningByChatId
-	EventPartitioningByUserId
+	EventTopicUnspecified EventTopic = iota
+	EventTopicChat
+	EventTopicUser
 )
 
-func (k EventPartitioningBy) String() string {
+func (k EventTopic) String() string {
 	switch k {
-	case EventPartitioningByUnspecified:
+	case EventTopicUnspecified:
 		return "unspecified"
-	case EventPartitioningByChatId:
+	case EventTopicChat:
 		return "chat"
-	case EventPartitioningByUserId:
+	case EventTopicUser:
 		return "user"
 	}
 	return "unknown"
@@ -894,110 +894,110 @@ func (s *UserChatParticipantRemoved) SetMetadata(m *Metadata) {
 	s.Metadata = m
 }
 
-func (s *ChatCreated) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ChatCreated) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ChatEdited) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ChatEdited) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ChatDeleted) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ChatDeleted) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ParticipantsAdded) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ParticipantsAdded) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ParticipantDeleted) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ParticipantDeleted) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ParticipantChanged) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ParticipantChanged) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ProjectionsTruncated) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ProjectionsTruncated) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *UserChatPinned) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserChatPinned) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *UserChatNotificationSettingsSetted) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserChatNotificationSettingsSetted) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *ChatPinned) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ChatPinned) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *ChatNotificationSettingsSetted) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *ChatNotificationSettingsSetted) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessageCreated) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageCreated) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *UserMessagesCreated) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserMessagesCreated) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *UserMessageDeleted) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserMessageDeleted) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *MessageEdited) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageEdited) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *UserMessageReaded) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserMessageReaded) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *MessageReaded) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageReaded) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessageBlogPostMade) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageBlogPostMade) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessageDeleted) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageDeleted) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessagePinned) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessagePinned) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessagePublished) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessagePublished) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessageReactionCreated) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageReactionCreated) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *MessageReactionRemoved) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *MessageReactionRemoved) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *TechnicalAbandonedChatRemoved) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByChatId
+func (s *TechnicalAbandonedChatRemoved) GetEventTopic() EventTopic {
+	return EventTopicChat
 }
 
-func (s *UserChatParticipantAdded) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserChatParticipantAdded) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *UserChatEdited) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserChatEdited) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
 
-func (s *UserChatParticipantRemoved) GetEventPartitioningBy() EventPartitioningBy {
-	return EventPartitioningByUserId
+func (s *UserChatParticipantRemoved) GetEventTopic() EventTopic {
+	return EventTopicUser
 }
