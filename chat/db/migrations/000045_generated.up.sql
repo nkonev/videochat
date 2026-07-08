@@ -1,0 +1,2 @@
+alter table message add column all_content text generated always as (strip_tags(coalesce(content, '') || ' ' || strip_tags(coalesce(embed ->> 'embedMessageContent', '')))) stored;
+alter table blog add column all_content text generated always as (strip_tags(coalesce(title, '')) || ' ' || strip_tags(coalesce(post, ''))) stored;

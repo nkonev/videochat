@@ -975,9 +975,9 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 		searchClause = " and ("
 
 		queryArgs = append(queryArgs, "%"+searchString+"%")
-		searchClause += fmt.Sprintf(" m.fts_all_content::text ilike $%d ", len(queryArgs))
+		searchClause += fmt.Sprintf(" m.all_content ilike $%d ", len(queryArgs))
 		searchClause += " or "
-		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.fts_all_content::text) ilike cyrillic_transliterate($%d) ", len(queryArgs))
+		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.all_content) ilike cyrillic_transliterate($%d) ", len(queryArgs))
 		searchClause += " or "
 
 		queryArgs = append(queryArgs, searchString)
@@ -987,9 +987,9 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 		searchClause += " or "
 
 		queryArgs = append(queryArgs, searchString)
-		searchClause += fmt.Sprintf(" m.fts_all_content::text %% $%d ", len(queryArgs))
+		searchClause += fmt.Sprintf(" m.all_content %% $%d ", len(queryArgs))
 		searchClause += " or "
-		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.fts_all_content::text) %% cyrillic_transliterate($%d) ", len(queryArgs))
+		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.all_content) %% cyrillic_transliterate($%d) ", len(queryArgs))
 
 		searchClause += " ) "
 	}
