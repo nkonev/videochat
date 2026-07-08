@@ -82,7 +82,7 @@ func aaaClientFactory(t *testing.T) func() client.AaaRestClient {
 	}
 }
 
-func runTestFuncWithPreInvoke(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
+func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
 	var s fx.Shutdowner
 
 	appTestFx := fxtest.New(
@@ -161,11 +161,7 @@ func runTestFuncWithPreInvoke(lgr *logger.LoggerWrapper, cfg *config.AppConfig, 
 	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 
-func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, testFunc interface{}) {
-	runTestFuncWithPreInvoke(lgr, cfg, t, func() {}, testFunc)
-}
-
-func startAppFull(t *testing.T, testFunc interface{}) {
+func startAppFull(t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
 	cfg, err := config.CreateTestTypedConfig()
 	if err != nil {
 		panic(err)
@@ -175,7 +171,7 @@ func startAppFull(t *testing.T, testFunc interface{}) {
 
 	resetInfra(lgr, cfg)
 
-	runTestFunc(lgr, cfg, t, testFunc)
+	runTestFunc(lgr, cfg, t, preInvokeFunc, testFunc)
 }
 
 func waitForHealthCheck(lgr *logger.LoggerWrapper, restClient *client.TestRestClient, cfg *config.AppConfig) {
