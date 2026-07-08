@@ -173,65 +173,65 @@ func ListenChatTopic(
 	p *KafkaListener,
 	lc fx.Lifecycle,
 ) error {
-	parseFunctionMapping := map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error){
-		EventChatCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+	parseFunctionMapping := map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error){
+		EventChatCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ChatCreated](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventChatEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventChatEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ChatEdited](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventChatDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventChatDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ChatDeleted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		// this event need to be in event-chat topic, because only this topic is backupable
-		EventChatPinned: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventChatPinned: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ChatPinned](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		// this event need to be in event-chat topic, because only this topic is backupable
-		EventChatNotificationSettingsSetted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventChatNotificationSettingsSetted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ChatNotificationSettingsSetted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventParticipantsAdded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventParticipantsAdded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ParticipantsAdded](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventParticipantsDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventParticipantsDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ParticipantDeleted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventParticipantsChanged: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventParticipantsChanged: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ParticipantChanged](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessageCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageCreated](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessageEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageEdited](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessageDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageDeleted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		// this event need to be in event-chat topic, because only this topic is backupable
-		EventMessageReaded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageReaded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageReaded](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessageBlogPostMade: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageBlogPostMade: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageBlogPostMade](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessageReactionCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageReactionCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageReactionCreated](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessageReactionRemoved: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessageReactionRemoved: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessageReactionRemoved](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessagePinned: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessagePinned: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessagePinned](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventMessagePublished: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventMessagePublished: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*MessagePublished](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventProjectionsResetted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventProjectionsResetted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*ProjectionsTruncated](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventTechnicalAbandonedChatRemoved: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventTechnicalAbandonedChatRemoved: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*TechnicalAbandonedChatRemoved](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 	}
@@ -321,33 +321,33 @@ func ListenUserTopic(
 	lc fx.Lifecycle,
 ) error {
 
-	parseFunctionMapping := map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error){
-		EventUserChatPinned: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+	parseFunctionMapping := map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error){
+		EventUserChatPinned: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserChatPinned](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventUserChatNotificationSettingsSetted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserChatNotificationSettingsSetted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserChatNotificationSettingsSetted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventUserMessageReaded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserMessageReaded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserMessageReaded](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		// we introduced a dedicated event-user topic in order to eliminate the distributed deadlock in event_handler_chat.go::OnChatViewRefreshed(),
 		// which would be due to mutating userId-partitioned chat_user_view and has_unread_messages tables from the chatId-partitioned event-chat topic
 		// see also https://docs.citusdata.com/en/v13.0/reference/common_errors.html#canceling-the-transaction-since-it-was-involved-in-a-distributed-deadlock
 		// https://www.cybertec-postgresql.com/en/postgresql-understanding-deadlocks/
-		EventUserChatParticipantAdded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserChatParticipantAdded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserChatParticipantAdded](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventUserChatEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserChatEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserChatEdited](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventUserChatParticipantRemoved: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserChatParticipantRemoved: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserChatParticipantRemoved](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventUserMessagesCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserMessagesCreated: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserMessagesCreated](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
-		EventUserMessageDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error) {
+		EventUserMessageDeleted: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserMessageDeleted](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 	}
@@ -438,7 +438,7 @@ func NewKotel(tracer *kotel.Tracer) *kotel.Kotel {
 func (p *KafkaListener) runKafkaListener(
 	name string,
 	topic, consumerGroup string,
-	parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error),
+	parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error),
 	batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error),
 	lc fx.Lifecycle,
 ) error {
@@ -567,7 +567,7 @@ func (p *KafkaListener) commitOffsetsWithRetry(cancelCtx context.Context, cl *kg
 	}
 }
 
-func (p *KafkaListener) processWithRetry(cancelCtx context.Context, tp kgo.FetchTopicPartition, name string, records []*kgo.Record, parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error), batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error)) (bool, error) {
+func (p *KafkaListener) processWithRetry(cancelCtx context.Context, tp kgo.FetchTopicPartition, name string, records []*kgo.Record, parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error), batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error)) (bool, error) {
 	var lastError error
 	for {
 		select {
@@ -577,12 +577,17 @@ func (p *KafkaListener) processWithRetry(cancelCtx context.Context, tp kgo.Fetch
 		default:
 			p.lgr.Debug("got records in "+name+" subscriber", "partition", tp.Partition, "len", len(records))
 			var errCtx context.Context
+			var errSpan trace.Span
 			errCtx, lastError = p.processEventBatch(records, name, tp, parseFunctionMapping, batchFunctionMapping)
 			if lastError != nil {
 				if errCtx != nil {
 					p.lgr.ErrorContext(errCtx, "Got error during processing in "+name+" subscriber", "topic", tp.Topic, "partition", tp.Partition, logger.AttributeError, lastError)
 				} else {
 					p.lgr.Error("Got error during processing in "+name+" subscriber", "topic", tp.Topic, "partition", tp.Partition, logger.AttributeError, lastError)
+				}
+
+				if errSpan != nil {
+					errSpan.End()
 				}
 
 				// https://github.com/twmb/franz-go/issues/590#issuecomment-1759883590
@@ -613,9 +618,8 @@ func processEvent[T BatchEvent](lgr *logger.LoggerWrapper, cfg *config.AppConfig
 	return ctx, nil
 }
 
-func prepareEvent[T CqrsEvent](lgr *logger.LoggerWrapper, cfg *config.AppConfig, metadata *Metadata, record *kgo.Record, tracer *kotel.Tracer) (T, context.Context, error) {
+func prepareEvent[T CqrsEvent](lgr *logger.LoggerWrapper, cfg *config.AppConfig, metadata *Metadata, record *kgo.Record, tracer *kotel.Tracer) (T, context.Context, trace.Span, error) {
 	ctx, span := tracer.WithProcessSpan(record)
-	defer span.End()
 
 	if cfg.Cqrs.SleepBeforeEvent > 0 {
 		lgr.InfoContext(ctx, "Sleeping")
@@ -633,16 +637,17 @@ func prepareEvent[T CqrsEvent](lgr *logger.LoggerWrapper, cfg *config.AppConfig,
 	mi, err := parseRecord[T](record)
 	if err != nil {
 		lgr.ErrorContext(ctx, "Error during unmarshalling", logger.AttributeError, err)
-		return mi, ctx, err
+		return mi, ctx, span, err
 	}
 
-	return mi, ctx, nil
+	return mi, ctx, span, nil
 }
 
 type EventHolder struct {
 	event    CqrsEvent
 	ctx      context.Context
 	metadata *Metadata
+	span     trace.Span
 }
 
 type BatchOptimizer struct {
@@ -695,7 +700,7 @@ func (p *KafkaListener) processEventBatch(
 	records []*kgo.Record, // assumes records from the one partition
 	name string,
 	tp kgo.FetchTopicPartition,
-	parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, error),
+	parseFunctionMapping map[string]func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error),
 	batchFunctionMapping map[string]func(b BatchEvent) (context.Context, error),
 ) (retErrCtx context.Context, retErr error) {
 	// defer recover
@@ -723,18 +728,30 @@ func (p *KafkaListener) processEventBatch(
 			retErr = fmt.Errorf("unknown event type %v", metadata.EventType)
 			return
 		}
-		parsedEvent, ctx, err := f(metadata, record)
+		parsedEvent, ctx, span, err := f(metadata, record)
 		if err != nil {
 			retErr = err
 			retErrCtx = ctx
+			if span != nil {
+				span.End()
+			}
 			return
 		}
 		events = append(events, EventHolder{
 			event:    parsedEvent,
 			ctx:      ctx,
+			span:     span,
 			metadata: metadata,
 		})
 	}
+
+	defer func() {
+		for _, ev := range events {
+			if ev.span != nil {
+				ev.span.End()
+			}
+		}
+	}()
 
 	batchItems, errCtx, err := p.batchOptimizer.Optimize(events)
 	if err != nil {
