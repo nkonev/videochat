@@ -95,13 +95,13 @@ run: infra check-env download generate package-go
 infra:
 	docker compose -f ../docker-compose.yml up -d postgresql-citus-coordinator-1 postgresql-citus-worker-1 postgresql-citus-worker-2 redis rabbitmq opensearch jaeger kafka victoria-logs fluentbit
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:45401 -- echo 'postgresql-citus-coordinator-1 is up'
-	../scripts/wait-for-postgresql.sh postgres chat 60
+	../scripts/wait-for-postgresql.sh postgres chat 120
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:39092 -- echo 'kafka is up'
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
-	../scripts/wait-for-http.sh 'localhost:35672' 60 '' 'RabbitMQ' # wait for rabbitmq http port will be available
-	../scripts/wait-for-http.sh 'localhost:9200' 60 '' 'OpenSearch'
-	../scripts/wait-for-http.sh 'localhost:39428' 60 '/logs' 'Victoria-Logs'
+	../scripts/wait-for-http.sh 'localhost:35672' 120 '' 'RabbitMQ' # wait for rabbitmq http port will be available
+	../scripts/wait-for-http.sh 'localhost:9200' 120 '' 'OpenSearch'
+	../scripts/wait-for-http.sh 'localhost:39428' 120 '/logs' 'Victoria-Logs'
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
 
 infra-test:
