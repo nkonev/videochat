@@ -5,7 +5,7 @@
   "description": "Some text",
   "scripts": {},
   "devDependencies":    {
-    "axios": "1.13.1",
-    "@playwright/test": "1.45.2"
+    "axios": "1.13.5",
+    "@playwright/test": "1.61.1"
   }
 }
