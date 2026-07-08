@@ -636,14 +636,13 @@ func prepareEvent[T CqrsEvent](lgr *logger.LoggerWrapper, cfg *config.AppConfig,
 		return mi, ctx, err
 	}
 
-	mi.SetMetadata(metadata)
-
 	return mi, ctx, nil
 }
 
 type EventHolder struct {
-	event CqrsEvent
-	ctx   context.Context
+	event    CqrsEvent
+	ctx      context.Context
+	metadata *Metadata
 }
 
 type BatchOptimizer struct {
@@ -731,8 +730,9 @@ func (p *KafkaListener) processEventBatch(
 			return
 		}
 		events = append(events, EventHolder{
-			event: parsedEvent,
-			ctx:   ctx,
+			event:    parsedEvent,
+			ctx:      ctx,
+			metadata: metadata,
 		})
 	}
 
