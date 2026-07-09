@@ -577,17 +577,12 @@ func (p *KafkaListener) processWithRetry(cancelCtx context.Context, tp kgo.Fetch
 		default:
 			p.lgr.Debug("got records in "+name+" subscriber", "partition", tp.Partition, "len", len(records))
 			var errCtx context.Context
-			var errSpan trace.Span
 			errCtx, lastError = p.processEventBatch(records, name, tp, parseFunctionMapping, batchFunctionMapping)
 			if lastError != nil {
 				if errCtx != nil {
 					p.lgr.ErrorContext(errCtx, "Got error during processing in "+name+" subscriber", "topic", tp.Topic, "partition", tp.Partition, logger.AttributeError, lastError)
 				} else {
 					p.lgr.Error("Got error during processing in "+name+" subscriber", "topic", tp.Topic, "partition", tp.Partition, logger.AttributeError, lastError)
-				}
-
-				if errSpan != nil {
-					errSpan.End()
 				}
 
 				// https://github.com/twmb/franz-go/issues/590#issuecomment-1759883590
