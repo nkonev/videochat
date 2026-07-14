@@ -1785,14 +1785,14 @@ func (m *EventHandler) OnMessageBlogPostMade(ctx context.Context, event *Message
 }
 
 func (m *EventHandler) OnMessageReactionCreated(ctx context.Context, event *MessageReactionCreated) error {
-	return m.onMessageReactionFlipped(ctx, event.AdditionalData, event.Metadata, event.MessageReactionCommoned, true)
+	return m.onMessageReactionFlipped(ctx, event.AdditionalData, event.MessageReactionCommoned, true)
 }
 
 func (m *EventHandler) OnMessageReactionRemoved(ctx context.Context, event *MessageReactionRemoved) error {
-	return m.onMessageReactionFlipped(ctx, event.AdditionalData, event.Metadata, event.MessageReactionCommoned, false)
+	return m.onMessageReactionFlipped(ctx, event.AdditionalData, event.MessageReactionCommoned, false)
 }
 
-func (m *EventHandler) onMessageReactionFlipped(ctx context.Context, additionalData *AdditionalData, metadata *Metadata, mrc MessageReactionCommoned, created bool) error {
+func (m *EventHandler) onMessageReactionFlipped(ctx context.Context, additionalData *AdditionalData, mrc MessageReactionCommoned, created bool) error {
 	ctx, messageSpan := m.tr.Start(ctx, fmt.Sprintf("message.reaction"))
 	defer messageSpan.End()
 
@@ -1808,12 +1808,12 @@ func (m *EventHandler) onMessageReactionFlipped(ctx context.Context, additionalD
 
 	var wasAdded bool
 	if created {
-		wasAdded, err = m.commonProjection.OnMessageReactionCreated(ctx, additionalData, metadata, mrc.ChatId, mrc.MessageId, mrc.Reaction)
+		wasAdded, err = m.commonProjection.OnMessageReactionCreated(ctx, additionalData, mrc.ChatId, mrc.MessageId, mrc.Reaction)
 		if err != nil {
 			return err
 		}
 	} else {
-		wasAdded, err = m.commonProjection.OnMessageReactionDeleted(ctx, additionalData, metadata, mrc.ChatId, mrc.MessageId, mrc.Reaction)
+		wasAdded, err = m.commonProjection.OnMessageReactionDeleted(ctx, additionalData, mrc.ChatId, mrc.MessageId, mrc.Reaction)
 		if err != nil {
 			return err
 		}

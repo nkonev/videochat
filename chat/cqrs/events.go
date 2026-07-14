@@ -97,7 +97,6 @@ type ChatCommoned struct {
 
 type ChatCreated struct {
 	AdditionalData        *AdditionalData `json:"additionalData"`
-	Metadata              *Metadata       `json:"-"`
 	TetATet               bool            `json:"tetATet"`
 	TetATetOppositeUserId *int64          `json:"tetATetOppositeUserId"`
 	ChatCommoned
@@ -105,19 +104,16 @@ type ChatCreated struct {
 
 type ChatEdited struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatCommoned
 }
 
 type ChatDeleted struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 }
 
 type ParticipantsAdded struct {
 	AdditionalData *AdditionalData        `json:"additionalData"`
-	Metadata       *Metadata              `json:"-"`
 	Participants   []ParticipantWithAdmin `json:"participants"`
 	ChatId         int64                  `json:"chatId"`
 	IsChatCreating bool                   `json:"isChatCreating"`
@@ -146,7 +142,6 @@ const (
 
 type ParticipantDeleted struct {
 	AdditionalData             *AdditionalData     `json:"additionalData"`
-	Metadata                   *Metadata           `json:"-"`
 	GetParticipantsType        GetParticipantsType `json:"getParticipantsType"`
 	ParticipantIds             []int64             `json:"participantIds"`
 	AllParticipantIdsExcepting []int64             `json:"allParticipantIdsExcepting"`
@@ -158,40 +153,34 @@ type ParticipantDeleted struct {
 
 type ParticipantChanged struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ParticipantId  int64           `json:"participantId"`
 	ChatId         int64           `json:"chatId"`
 	NewAdmin       bool            `json:"newAdmin"`
 }
 
 type ProjectionsTruncated struct {
-	Metadata *Metadata `json:"-"`
 }
 
 type UserChatPinned struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	Pinned         bool            `json:"pinned"`
 }
 
 type UserChatNotificationSettingsSetted struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	Setted         bool            `json:"setted"`
 }
 
 type ChatPinned struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	Pinned         bool            `json:"pinned"`
 }
 
 type ChatNotificationSettingsSetted struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	Setted         bool            `json:"setted"`
 }
@@ -272,7 +261,6 @@ type MessageOwner struct {
 type MessageCreated struct {
 	MessageCommoned MessageCommoned `json:"messageCommoned"`
 	AdditionalData  *AdditionalData `json:"additionalData"`
-	Metadata        *Metadata       `json:"-"`
 }
 
 type UserMessageId struct {
@@ -284,15 +272,13 @@ type UserMessagesCreated struct {
 	ChatId          int64           `json:"chatId"`
 	UserId          int64           `json:"userId"`
 	MessageCreateds []UserMessageId `json:"messageCreated"`
-	Metadata        *Metadata       `json:"-"`
 }
 
 type UserMessageDeleted struct {
-	ChatId        int64     `json:"chatId"`
-	UserId        int64     `json:"userId"`
-	MessageId     int64     `json:"messageId"`
-	CorrelationId *string   `json:"correlationId"`
-	Metadata      *Metadata `json:"-"`
+	ChatId        int64   `json:"chatId"`
+	UserId        int64   `json:"userId"`
+	MessageId     int64   `json:"messageId"`
+	CorrelationId *string `json:"correlationId"`
 }
 
 type MessageEditedAction int16
@@ -306,7 +292,6 @@ const (
 type MessageEdited struct {
 	MessageCommoned     MessageCommoned     `json:"messageCommoned"`
 	AdditionalData      *AdditionalData     `json:"additionalData"`
-	Metadata            *Metadata           `json:"-"`
 	MessageEditedAction MessageEditedAction `json:"messageEditedAction"`
 }
 
@@ -335,7 +320,6 @@ const (
 
 type UserMessageReaded struct {
 	AdditionalData     *AdditionalData    `json:"additionalData"`
-	Metadata           *Metadata          `json:"-"`
 	ChatId             int64              `json:"chatId"`
 	MessageId          int64              `json:"messageId"`
 	ReadMessagesAction ReadMessagesAction `json:"readMessagesAction"`
@@ -343,7 +327,6 @@ type UserMessageReaded struct {
 
 type MessageReaded struct {
 	AdditionalData     *AdditionalData    `json:"additionalData"`
-	Metadata           *Metadata          `json:"-"`
 	ChatId             int64              `json:"chatId"`
 	MessageId          int64              `json:"messageId"`
 	ReadMessagesAction ReadMessagesAction `json:"readMessagesAction"`
@@ -351,7 +334,6 @@ type MessageReaded struct {
 
 type MessageBlogPostMade struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	MessageId      int64           `json:"messageId"`
 	BlogPost       bool            `json:"blogPost"`
@@ -359,14 +341,12 @@ type MessageBlogPostMade struct {
 
 type MessageDeleted struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	MessageId      int64           `json:"messageId"`
 }
 
 type MessagePinned struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	MessageId      int64           `json:"messageId"`
 	Pinned         bool            `json:"pinned"`
@@ -374,7 +354,6 @@ type MessagePinned struct {
 
 type MessagePublished struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	ChatId         int64           `json:"chatId"`
 	MessageId      int64           `json:"messageId"`
 	Published      bool            `json:"published"`
@@ -388,25 +367,21 @@ type MessageReactionCommoned struct {
 
 type MessageReactionCreated struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	MessageReactionCommoned
 }
 
 type MessageReactionRemoved struct {
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 	MessageReactionCommoned
 }
 
 type TechnicalAbandonedChatRemoved struct {
-	ChatId   int64     `json:"chatId"`
-	Metadata *Metadata `json:"-"`
+	ChatId int64 `json:"chatId"`
 }
 
 type UserChatParticipantAdded struct {
 	EventTime     time.Time `json:"eventTime"`
 	CorrelationId *string   `json:"correlationId"`
-	Metadata      *Metadata `json:"-"`
 	ChatId        int64     `json:"chatId"`
 	UserId        int64     `json:"userId"`
 	TetATet       bool      `json:"tetATet"`
@@ -418,13 +393,11 @@ type UserChatEdited struct {
 	ChatAction    ChatAction `json:"chatAction"`
 	EventTime     time.Time  `json:"eventTime"`
 	CorrelationId *string    `json:"correlationId"`
-	Metadata      *Metadata  `json:"-"`
 }
 
 type UserChatParticipantRemoved struct {
 	EventTime               time.Time `json:"eventTime"`
 	CorrelationId           *string   `json:"correlationId"`
-	Metadata                *Metadata `json:"-"`
 	ChatId                  int64     `json:"chatId"`
 	UserId                  int64     `json:"userId"`
 	WereRemovedUsersFromAaa bool      `json:"wereRemovedUsersFromAaa"`

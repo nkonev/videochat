@@ -3,6 +3,7 @@ package cqrs
 import (
 	"context"
 	"fmt"
+
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
@@ -11,7 +12,7 @@ import (
 	"github.com/jackc/pgtype"
 )
 
-func (m *CommonProjection) OnMessageReactionCreated(ctx context.Context, additionalData *AdditionalData, metadata *Metadata, chatId int64, messageId int64, reactionStr string) (bool, error) {
+func (m *CommonProjection) OnMessageReactionCreated(ctx context.Context, additionalData *AdditionalData, chatId int64, messageId int64, reactionStr string) (bool, error) {
 	wasAdded, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (bool, error) {
 		var wasAddedInner bool
 
@@ -40,7 +41,7 @@ func (m *CommonProjection) OnMessageReactionCreated(ctx context.Context, additio
 	return wasAdded, errOuter
 }
 
-func (m *CommonProjection) OnMessageReactionDeleted(ctx context.Context, additionalData *AdditionalData, metadata *Metadata, chatId int64, messageId int64, reactionStr string) (bool, error) {
+func (m *CommonProjection) OnMessageReactionDeleted(ctx context.Context, additionalData *AdditionalData, chatId int64, messageId int64, reactionStr string) (bool, error) {
 	wasAdded, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (bool, error) {
 		var wasAddedInner bool
 
