@@ -395,6 +395,24 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		}
 	}
 
+	threadId, err := commonProjection.GetNextThreadId(ctx, dba, dto.NoParentChatId)
+	if err != nil {
+		return 0, err
+	}
+
+	// TODO сделать реакцию на ThreadCreated в chat/cqrs/event_handler_chat.go с отсылкой внешнего эента в RabbitMQ
+	tc := &ThreadCreated{
+		Id:           threadId,
+		ParentChatId: chatId,
+		Avatar:       copyCommand.Avatar,
+		AvatarBig:    copyCommand.AvatarBig,
+	}
+
+	err = eventBus.Publish(ctx, tc)
+	if err != nil {
+		return 0, err
+	}
+
 	chatId, err := commonProjection.GetNextChatId(ctx, dba)
 	if err != nil {
 		return 0, err
@@ -440,24 +458,6 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	}
 
 	err = eventBus.Publish(ctx, pa)
-	if err != nil {
-		return 0, err
-	}
-
-	threadId, err := commonProjection.GetNextThreadId(ctx, dba, chatId)
-	if err != nil {
-		return 0, err
-	}
-
-	// TODO сделать реакцию на ThreadCreated в chat/cqrs/event_handler_chat.go с отсылкой внешнего эента в RabbitMQ
-	tc := &ThreadCreated{
-		Id:           threadId,
-		ParentChatId: chatId,
-		Avatar:       copyCommand.Avatar,
-		AvatarBig:    copyCommand.AvatarBig,
-	}
-
-	err = eventBus.Publish(ctx, tc)
 	if err != nil {
 		return 0, err
 	}

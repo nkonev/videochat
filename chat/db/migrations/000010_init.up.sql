@@ -12,7 +12,7 @@ LANGUAGE SQL IMMUTABLE COST 100;
 
 create sequence chat_id_sequence;
 
-create unlogged table thread( -- aka chat_common; there is  thread with parent_chat_id=0 in case root chat
+create unlogged table thread( -- aka chat_common; there is thread with parent_chat_id=0 in case root chat
     id bigint bigint not null,
     parent_chat_id bigint not null default 0, -- 0 is for root chat itself
     last_generated_message_id bigint not null default 0,
@@ -27,7 +27,7 @@ create unlogged table thread( -- aka chat_common; there is  thread with parent_c
     primary key(parent_chat_id, id)
 );
 
-create unlogged table chat( -- aka parent_chat, aka chat_settings
+create unlogged table chat( -- aka chat_settings
     id bigint primary key,
     tet_a_tet boolean not null,
     available_to_search boolean not null,
