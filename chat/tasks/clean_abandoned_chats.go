@@ -64,7 +64,7 @@ func (srv *CleanAnandonedChatsService) processChats(c context.Context) {
 	}
 
 	if aaaCount < srv.count {
-		srv.lgr.InfoContext(c, fmt.Sprintf("There is %v users in aaa which is lower than %v threshold to start cleaning AbandonedChat", aaaCount, srv.count), logger.AttributeError, err)
+		srv.lgr.InfoContext(c, fmt.Sprintf("There is %v users in aaa which is lower than %v threshold to start cleaning AbandonedChat", aaaCount, srv.count))
 		return
 	}
 

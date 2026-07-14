@@ -658,6 +658,24 @@ func (ch *ChatHandler) ChatsFilter(g *gin.Context) {
 	return
 }
 
+func (ch *ChatHandler) CountChat(g *gin.Context) {
+	count, err := ch.commonProjection.CountChats(g.Request.Context())
+	if err != nil {
+		if translateChatError(g, err) {
+			return
+		}
+
+		ch.lgr.ErrorContext(g.Request.Context(), "Error count chats", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
+	g.JSON(http.StatusOK, dto.CountDto{
+		Count: count,
+	})
+	return
+}
+
 func (ch *ChatHandler) CheckAccess(g *gin.Context) {
 	m := map[string]string{}
 	err := g.BindQuery(&m)

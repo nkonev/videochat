@@ -66,7 +66,7 @@ func (srv *CleanDeletedUserDataService) processChats(c context.Context) {
 	}
 
 	if aaaCount < srv.count {
-		srv.lgr.InfoContext(c, fmt.Sprintf("There is %v users in aaa which is lower than %v threshold to start cleaning ContentOfDeletedUser", aaaCount, srv.count), logger.AttributeError, err)
+		srv.lgr.InfoContext(c, fmt.Sprintf("There is %v users in aaa which is lower than %v threshold to start cleaning ContentOfDeletedUser", aaaCount, srv.count))
 		return
 	}
 

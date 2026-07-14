@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
@@ -40,6 +41,7 @@ type CleanFilesOfDeletedChatService struct {
 	chatClient         *client.RestClient
 	tracer             trace.Tracer
 	lgr                *logger.Logger
+	count              int64
 }
 
 func (srv *CleanFilesOfDeletedChatService) doJob(ctx context.Context) {
@@ -50,6 +52,17 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 	filenameChatPrefix := "chat/"
 
 	srv.lgr.WithTracing(c).Infof("Starting cleaning files of deleted chats job")
+
+	chatCount, err := srv.chatClient.CountChats(c)
+	if err != nil {
+		srv.lgr.WithTracing(c).Errorf("Got error getting chat count: %v", err)
+		return
+	}
+
+	if chatCount < srv.count {
+		srv.lgr.WithTracing(c).Infof("There is %v chats in chat which is lower than %v threshold to start cleaning FilesOfDeletedChat", chatCount, srv.count)
+		return
+	}
 
 	// get only top-level chats (no recursive)
 	var objectsChats <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
@@ -136,5 +149,6 @@ func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, minioClient *s3.Inter
 		minioBucketsConfig: minioBucketsConfig,
 		chatClient:         chatClient,
 		tracer:             trcr,
+		count:              viper.GetInt64("schedulers.cleanFilesOfDeletedChatTask.chatCount"),
 	}
 }

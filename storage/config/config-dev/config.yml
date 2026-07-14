@@ -73,6 +73,7 @@ chat:
     removeFileItem: "/internal/remove-file-item"
     checkChatExistsPath: "/internal/does-chats-exist"
     chatParticipants: "/internal/participant-ids"
+    chatCount: "/internal/chat/count"
 
 aaa:
   url:
@@ -106,6 +107,7 @@ schedulers:
     cron: "0 * * * * *"
     batchChats: 20
     expiration: "30m"
+    chatCount: 100
   actualizeGeneratedFilesTask:
     enabled: true
     cron: "0 * * * * *"

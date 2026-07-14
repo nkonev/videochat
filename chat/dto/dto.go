@@ -36,3 +36,7 @@ type FreshDto struct {
 type FilterDto struct {
 	Found bool `json:"found"`
 }
+
+type CountDto struct {
+	Count int64 `json:"count"`
+}

@@ -6,18 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
-	"strings"
 )
 
 type RestClient struct {
@@ -29,6 +30,7 @@ type RestClient struct {
 	aaaGetUsersUrl         string
 	checkChatExistsPath    string
 	chatParticipantIdsPath string
+	chatCountPath          string
 	tracer                 trace.Tracer
 	lgr                    *logger.Logger
 }
@@ -58,6 +60,7 @@ func NewChatAccessClient(lgr *logger.Logger) *RestClient {
 		aaaGetUsersUrl:         viper.GetString("aaa.url.getUsers"),
 		checkChatExistsPath:    viper.GetString("chat.url.checkChatExistsPath"),
 		chatParticipantIdsPath: viper.GetString("chat.url.chatParticipants"),
+		chatCountPath:          viper.GetString("chat.url.chatCount"),
 		tracer:                 trcr,
 		lgr:                    lgr,
 	}
@@ -266,6 +269,60 @@ func (h *RestClient) CheckIsChatExists(c context.Context, chatIds []int64) (*[]C
 		return nil, err
 	}
 	return resultMap, nil
+}
+
+func (h *RestClient) CountChats(c context.Context) (int64, error) {
+	contentType := "application/json;charset=UTF-8"
+	fullUrl := h.baseUrl + h.chatCountPath
+
+	requestHeaders := map[string][]string{
+		"Accept-Encoding": {"gzip, deflate"},
+		"Accept":          {contentType},
+		"Content-Type":    {contentType},
+	}
+
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorln("Failed during parse chat count url:", err)
+		return 0, err
+	}
+	request := &http.Request{
+		Method: "GET",
+		Header: requestHeaders,
+		URL:    parsedUrl,
+	}
+
+	ctx, span := h.tracer.Start(c, "chat.GetCount")
+	defer span.End()
+	request = request.WithContext(ctx)
+
+	resp, err := h.client.Do(request)
+	if err != nil {
+		h.lgr.WithTracing(c).Warnln("Failed to request chat count response:", err)
+		return 0, err
+	}
+	defer resp.Body.Close()
+	code := resp.StatusCode
+	if code != 200 {
+		h.lgr.WithTracing(c).Warnln("Chat response responded non-200 code: ", code)
+		return 0, err
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		h.lgr.WithTracing(c).Errorln("Failed to decode chat count response:", err)
+		return 0, err
+	}
+
+	type chatCount struct {
+		Count int64 `json:"count"`
+	}
+
+	var cc chatCount
+	if err := json.Unmarshal(bodyBytes, &cc); err != nil {
+		h.lgr.WithTracing(c).Errorln("Failed to parse chat count:", err)
+		return 0, err
+	}
+	return cc.Count, nil
 }
 
 func (h *RestClient) GetChatParticipantIdsByPage(c context.Context, chatId int64, page, size int) ([]int64, error) {

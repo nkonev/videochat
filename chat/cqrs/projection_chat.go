@@ -1220,6 +1220,12 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 	return res, nil
 }
 
+func (m *CommonProjection) CountChats(ctx context.Context) (int64, error) {
+	var count int64
+	err := sqlscan.Get(ctx, m.db, &count, "select count(*) from chat_common")
+	return count, err
+}
+
 func (m *CommonProjection) GetHasUnreadMessages(ctx context.Context, userIds []int64) (map[int64]bool, error) {
 	var has = map[int64]bool{}
 
