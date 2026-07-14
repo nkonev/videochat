@@ -103,3 +103,4 @@ infra:
 infra-test:
 	docker compose -f ../docker-compose.keycloak.yml up -d keycloak
 	../scripts/wait-for-http.sh 'localhost:9484' 120 '/health/ready' 'Keycloak'
+

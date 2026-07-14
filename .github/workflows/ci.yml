@@ -19,7 +19,7 @@ jobs:
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up JDK
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: liberica
           java-version: 21.0.2
@@ -135,7 +135,7 @@ jobs:
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.25.1
           cache-dependency-path: 'chat/go.sum'
@@ -177,7 +177,7 @@ jobs:
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.25.1
           cache-dependency-path: 'event/go.sum'
@@ -211,7 +211,7 @@ jobs:
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.25.1
           cache-dependency-path: 'notification/go.sum'
@@ -245,7 +245,7 @@ jobs:
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.25.1
           cache-dependency-path: 'storage/go.sum'
@@ -279,7 +279,7 @@ jobs:
         run: ./scripts/should-run.sh HEAD ${GITHUB_JOB} ${{ secrets.WebSitePrefix }} && echo "SHOULD_RUN=true" >> "$GITHUB_ENV" || echo "SHOULD_RUN=false" >> "$GITHUB_ENV"
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.25.1
           cache-dependency-path: 'video/go.sum'
@@ -321,7 +321,7 @@ jobs:
 
       - name: Set up JDK
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: liberica
           java-version: 21.0.2
@@ -338,7 +338,7 @@ jobs:
             e2e-test/package-lock.json
       - name: Cache Playwright browsers and Node.js dependencies
         if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/ms-playwright
@@ -349,7 +349,7 @@ jobs:
         run: (cd e2e-test; make check-env clean download)
       - name: Set up Go
         if: env.SHOULD_RUN == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.25.1
           cache-dependency-path: |
@@ -395,7 +395,7 @@ jobs:
         run: (cd e2e-test; make test)
       - name: Upload test results
         if: env.SHOULD_RUN == 'true' && always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-results
           path: e2e-test/test-results

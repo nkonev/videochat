@@ -13,4 +13,3 @@ infra:
 	./scripts/wait-for-http.sh 'localhost:9200' 120 '' 'OpenSearch'
 	./scripts/wait-for-http.sh 'localhost:39428' 120 '/logs' 'Victoria-Logs'
 	./scripts/wait-for-it.sh -t 30 127.0.0.1:39092 -- echo 'kafka is up'
-

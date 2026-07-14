@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -25,7 +27,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net/http"
 	"nkonev.name/event/app"
 	"nkonev.name/event/client"
 	"nkonev.name/event/config"
