@@ -69,6 +69,7 @@ create unlogged table message(
     create_date_time timestamp not null,
     update_date_time timestamp,
     fts_all_content tsvector generated always as (to_tsvector('russian', strip_tags(coalesce(content, '')) || ' ' || strip_tags(coalesce(embed ->> 'embedMessageContent', '')))) stored,
+    all_content text generated always as (strip_tags(coalesce(content, '') || ' ' || strip_tags(coalesce(embed ->> 'embedMessageContent', '')))) stored,
     primary key (parent_chat_id, thread_id, id)
 );
 SELECT create_distributed_table('message', 'chat_id');
@@ -144,5 +145,6 @@ create unlogged table blog(
     create_date_time timestamp not null,
     update_date_time timestamp,
     file_item_uuid varchar(36),
-    fts_all_content tsvector generated always as (to_tsvector('russian', strip_tags(coalesce(title, '')) || ' ' || strip_tags(coalesce(post, '')))) stored
+    fts_all_content tsvector generated always as (to_tsvector('russian', strip_tags(coalesce(title, '')) || ' ' || strip_tags(coalesce(post, '')))) stored,
+    all_content text generated always as (strip_tags(coalesce(title, '')) || ' ' || strip_tags(coalesce(post, ''))) stored
 );
