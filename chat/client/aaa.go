@@ -3,10 +3,11 @@ package client
 import (
 	"context"
 	"crypto/tls"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
 	"net/http"
 	"net/url"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
@@ -22,6 +23,7 @@ type AaaRestClient interface {
 	SearchGetUsers(ctx context.Context, searchString string, including bool, ids []int64, page int64, size int32) ([]*dto.User, int64, error)
 	GetOnlines(ctx context.Context, userIds []int64) ([]*dto.UserOnline, error)
 	CheckAreUsersExists(ctx context.Context, userIds []int64) ([]dto.UserExists, error)
+	CountUsers(ctx context.Context) (int64, error)
 }
 
 func NewAAARestClient(cfg *config.AppConfig, lgr *logger.LoggerWrapper) AaaRestClient {
@@ -52,6 +54,14 @@ func (rc *aaaRestClient) GetUsers(ctx context.Context, userIds []int64) ([]*dto.
 		return []*dto.User{}, err
 	}
 	return resp, nil
+}
+
+func (rc *aaaRestClient) CountUsers(ctx context.Context) (int64, error) {
+	resp, err := query[any, dto.UserCount](ctx, &rc.restClient, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserCount, "user.Count", nil, nil)
+	if err != nil {
+		return 0, err
+	}
+	return resp.Count, nil
 }
 
 func (rc *aaaRestClient) SearchGetUsers(ctx context.Context, searchString string, including bool, ids []int64, page int64, size int32) ([]*dto.User, int64, error) {

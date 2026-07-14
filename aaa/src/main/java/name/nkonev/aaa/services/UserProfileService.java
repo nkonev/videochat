@@ -491,6 +491,10 @@ public class UserProfileService {
         return aaaUserDetailsService.getUsersOnline(userIds);
     }
 
+    public long getUsersCount() {
+        return userAccountRepository.count();
+    }
+
     @Transactional
     public Map<String, Session> sessions(UserAccountDetailsDTO userAccount, long userId){
         return aaaUserDetailsService.getSessions(userId);

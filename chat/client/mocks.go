@@ -6,10 +6,10 @@ package client
 
 import (
 	"context"
-	"nkonev.name/chat/dto"
 	"net/url"
 
 	mock "github.com/stretchr/testify/mock"
+	"nkonev.name/chat/dto"
 )
 
 // NewMockAaaRestClient creates a new instance of MockAaaRestClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -103,6 +103,66 @@ func (_c *MockAaaRestClient_CheckAreUsersExists_Call) Return(userExistss []dto.U
 }
 
 func (_c *MockAaaRestClient_CheckAreUsersExists_Call) RunAndReturn(run func(ctx context.Context, userIds []int64) ([]dto.UserExists, error)) *MockAaaRestClient_CheckAreUsersExists_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CountUsers provides a mock function for the type MockAaaRestClient
+func (_mock *MockAaaRestClient) CountUsers(ctx context.Context) (int64, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountUsers")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) int64); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockAaaRestClient_CountUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountUsers'
+type MockAaaRestClient_CountUsers_Call struct {
+	*mock.Call
+}
+
+// CountUsers is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockAaaRestClient_Expecter) CountUsers(ctx interface{}) *MockAaaRestClient_CountUsers_Call {
+	return &MockAaaRestClient_CountUsers_Call{Call: _e.mock.On("CountUsers", ctx)}
+}
+
+func (_c *MockAaaRestClient_CountUsers_Call) Run(run func(ctx context.Context)) *MockAaaRestClient_CountUsers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockAaaRestClient_CountUsers_Call) Return(n int64, err error) *MockAaaRestClient_CountUsers_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *MockAaaRestClient_CountUsers_Call) RunAndReturn(run func(ctx context.Context) (int64, error)) *MockAaaRestClient_CountUsers_Call {
 	_c.Call.Return(run)
 	return _c
 }

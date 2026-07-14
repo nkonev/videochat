@@ -37,6 +37,10 @@ func (u *User) GetId() int64 {
 	}
 }
 
+type UserCount struct {
+	Count int64 `json:"count"`
+}
+
 type UserWithAdmin struct {
 	User
 	ChatAdmin bool `json:"admin"`

@@ -32,6 +32,7 @@ public class Constants {
 
         public static final String ONLINE = "/online";
         public static final String LIST = "/list";
+        public static final String COUNT = "/count";
 
         public static final String SEARCH = "/search";
         public static final String FRESH = "/fresh";

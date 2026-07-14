@@ -83,6 +83,7 @@ aaa:
     searchUsers: "/internal/user/search"
     getUserOnlines: "/internal/user/online"
     getUserExists: "/internal/user/exist"
+    getUserCount: "/internal/user/count"
 
 frontendUrl: "http://localhost:8081"
 
@@ -127,7 +128,9 @@ schedulers:
     enabled: true
     cron: "0 * * * * *"
     expiration: "30m"
+    aaaUserCount: 100
   cleanDeletedUsersDataTask:
     enabled: true
     cron: "30 * * * * *"
     expiration: "30m"
+    aaaUserCount: 100

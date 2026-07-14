@@ -26,7 +26,10 @@ install-mockery:
 check-env:
 	docker version && go env
 
-generate: generate-git
+generate: generate-git generate-mocks
+
+generate-mocks:
+	mockery
 
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 STATIC_JSON := ./handlers/static/git.json

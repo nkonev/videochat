@@ -2,6 +2,8 @@ package tasks
 
 import (
 	"context"
+	"fmt"
+
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -47,6 +49,7 @@ type CleanDeletedUserDataService struct {
 	lgr        *logger.LoggerWrapper
 	eventBus   *cqrs.KafkaProducer
 	co         *cqrs.CommonProjection
+	count      int64
 }
 
 func (srv *CleanDeletedUserDataService) DoJob(ctx context.Context) {
@@ -55,6 +58,17 @@ func (srv *CleanDeletedUserDataService) DoJob(ctx context.Context) {
 
 func (srv *CleanDeletedUserDataService) processChats(c context.Context) {
 	srv.lgr.InfoContext(c, "Starting cleaning deleted users data job")
+
+	aaaCount, err := srv.restClient.CountUsers(c)
+	if err != nil {
+		srv.lgr.ErrorContext(c, "Got error getting users count", logger.AttributeError, err)
+		return
+	}
+
+	if aaaCount < srv.count {
+		srv.lgr.InfoContext(c, fmt.Sprintf("There is %v users in aaa which is lower than %v threshold to start cleaning ContentOfDeletedUser", aaaCount, srv.count), logger.AttributeError, err)
+		return
+	}
 
 	errOuter := srv.co.IterateOverAllParticipants(c, srv.dbR, func(chatParticipants []dto.ChatParticipant) error {
 		userIdMap := map[int64]struct{}{}
@@ -118,6 +132,7 @@ func NewCleanDeletedUserDataService(
 	dbR *db.DB,
 	eventBus *cqrs.KafkaProducer,
 	co *cqrs.CommonProjection,
+	cfg *config.AppConfig,
 ) *CleanDeletedUserDataService {
 	trcr := otel.Tracer("scheduler/clean-deleted-users-data")
 	return &CleanDeletedUserDataService{
@@ -127,5 +142,6 @@ func NewCleanDeletedUserDataService(
 		lgr:        lgr,
 		eventBus:   eventBus,
 		co:         co,
+		count:      cfg.Schedulers.CleanDeletedUsersDataTask.AaaUserCount,
 	}
 }

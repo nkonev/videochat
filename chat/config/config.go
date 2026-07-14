@@ -134,6 +134,7 @@ type AaaConfig struct {
 type AaaUrlConfig struct {
 	Base           string
 	GetUsers       string
+	GetUserCount   string
 	GetUserOnlines string
 	GetUserExists  string
 	SearchUsers    string
@@ -185,15 +186,17 @@ type RabbitMQConfig struct {
 }
 
 type CleanAbandonedChatsTask struct {
-	Enabled    bool
-	Cron       string
-	Expiration time.Duration
+	Enabled      bool
+	Cron         string
+	Expiration   time.Duration
+	AaaUserCount int64
 }
 
 type CleanDeletedUsersDataTask struct {
-	Enabled    bool
-	Cron       string
-	Expiration time.Duration
+	Enabled      bool
+	Cron         string
+	Expiration   time.Duration
+	AaaUserCount int64
 }
 
 type TaskConfig struct {

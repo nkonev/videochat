@@ -2,6 +2,8 @@ package tasks
 
 import (
 	"context"
+	"fmt"
+
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -45,6 +47,7 @@ type CleanAnandonedChatsService struct {
 	lgr        *logger.LoggerWrapper
 	eventBus   *cqrs.KafkaProducer
 	co         *cqrs.CommonProjection
+	count      int64
 }
 
 func (srv *CleanAnandonedChatsService) DoJob(ctx context.Context) {
@@ -53,6 +56,17 @@ func (srv *CleanAnandonedChatsService) DoJob(ctx context.Context) {
 
 func (srv *CleanAnandonedChatsService) processChats(c context.Context) {
 	srv.lgr.InfoContext(c, "Starting cleaning abandoned chats job")
+
+	aaaCount, err := srv.restClient.CountUsers(c)
+	if err != nil {
+		srv.lgr.ErrorContext(c, "Got error getting users count", logger.AttributeError, err)
+		return
+	}
+
+	if aaaCount < srv.count {
+		srv.lgr.InfoContext(c, fmt.Sprintf("There is %v users in aaa which is lower than %v threshold to start cleaning AbandonedChat", aaaCount, srv.count), logger.AttributeError, err)
+		return
+	}
 
 	errOuter := srv.co.IterateOverAllChats(c, srv.dbR, func(chatIdsPortion []int64) error {
 		hasParticipantsMap, err := srv.co.HasParticipants(c, srv.dbR, chatIdsPortion) // will re-check on the projection side after kafka
@@ -98,6 +112,7 @@ func NewCleanAbandonedChatsService(
 	dbR *db.DB,
 	eventBus *cqrs.KafkaProducer,
 	co *cqrs.CommonProjection,
+	cfg *config.AppConfig,
 ) *CleanAnandonedChatsService {
 	trcr := otel.Tracer("scheduler/clean-abandoned-chats")
 	return &CleanAnandonedChatsService{
@@ -107,5 +122,6 @@ func NewCleanAbandonedChatsService(
 		lgr:        lgr,
 		eventBus:   eventBus,
 		co:         co,
+		count:      cfg.Schedulers.CleanAbandonedChatsTask.AaaUserCount,
 	}
 }

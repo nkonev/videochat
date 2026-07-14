@@ -192,6 +192,12 @@ public class UserProfileController {
     }
 
     @ResponseBody
+    @GetMapping(Constants.Urls.INTERNAL_API + Constants.Urls.USER+Constants.Urls.COUNT)
+    public CountDTO getUsersCount(){
+        return new CountDTO(userProfileService.getUsersCount());
+    }
+
+    @ResponseBody
     @PreAuthorize("@aaaInternalPermissionService.hasSessionManagementPermission(#userAccount)")
     @GetMapping(Constants.Urls.EXTERNAL_API +Constants.Urls.SESSIONS)
     public Map<String, Session> sessions(@AuthenticationPrincipal UserAccountDetailsDTO userAccount, @RequestParam("userId") long userId){
