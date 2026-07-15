@@ -2,12 +2,13 @@ package tasks
 
 import (
 	"context"
+
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
 	redisV9 "github.com/redis/go-redis/v9"
 	"go.uber.org/fx"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
-	"time"
 )
 
 func RedisV9(lc fx.Lifecycle, lgr *logger.LoggerWrapper, cfg *config.AppConfig) *redisV9.Client {
@@ -26,36 +27,9 @@ func RedisV9(lc fx.Lifecycle, lgr *logger.LoggerWrapper, cfg *config.AppConfig) 
 	return rv8
 }
 
-type RedisLock struct {
-	client *redisV9.Client
-	lgr    *logger.LoggerWrapper
-	cfg    *config.TaskConfig
-}
-
-func (m *RedisLock) Lock(ctx context.Context, jobSettings any, key, value string) bool {
-	exp := jobSettings.(time.Duration)
-	if exp == 0 {
-		m.lgr.ErrorContext(ctx, "bad zero expiration", dcron.SlogKeyTaskName, key)
-		return false
-	}
-
-	locked, err := m.client.SetNX(ctx, key, value, exp).Result()
-	if err != nil {
-		m.lgr.ErrorContext(ctx, "unable to invoke redis", logger.AttributeError, err)
-		return false
-	}
-
-	return locked
-}
-
-func (m *RedisLock) Unlock(ctx context.Context, jobSetting any, key, value string) {
-	m.client.Del(ctx, key)
-}
-
-func RedisLocker(redisClient *redisV9.Client, lgr *logger.LoggerWrapper, cfg *config.AppConfig) (*RedisLock, error) {
-	return &RedisLock{client: redisClient, lgr: lgr, cfg: &cfg.Schedulers}, nil
-}
-
-func Scheduler(locker *RedisLock, lgr *logger.LoggerWrapper) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithLock(locker), dcron.WithSLog(lgr)), nil
+func Scheduler(redisClient *redisV9.Client, lgr *logger.LoggerWrapper) (*dcron.Cron, error) {
+	return dcron.NewCron(
+		redisLock.WithLock(redisClient, redisLock.WithSLog(lgr)),
+		dcron.WithSLog(lgr),
+	), nil
 }

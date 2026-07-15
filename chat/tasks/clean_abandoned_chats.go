@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -34,7 +35,7 @@ func CleanAbandonedChatsScheduler(
 		return nil
 	},
 		dcron.WithTracing(service.spanStarter, service.spanFinisher),
-		dcron.WithJobSettings(cfg.Schedulers.CleanAbandonedChatsTask.Expiration),
+		redisLock.WithLockTTL(cfg.Schedulers.CleanAbandonedChatsTask.Expiration),
 	)
 
 	return &CleanAbandonedChatsTask{job}

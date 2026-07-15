@@ -120,7 +120,6 @@ To run without schedulers:
 			listener.CreateRabbitAaaUserProfileUpdateListener,
 			type_registry.NewTypeRegistryInstance,
 			tasks.RedisV9,
-			tasks.RedisLocker,
 			tasks.Scheduler,
 			tasks.CleanAbandonedChatsScheduler,
 			tasks.CleanDeletedUserDataScheduler,
