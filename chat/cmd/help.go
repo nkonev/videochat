@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+
+	parser "github.com/nkonev/args-parser"
 	"nkonev.name/chat/app"
 )
 
@@ -37,13 +39,13 @@ To get the particular command's help, use
 Examples:
 ./%s %s %s
 
-`, ExecutableName, app.ConfigLongPrefix, app.ConfigShortPrefix,
+`, ExecutableName, parser.ConfigLongPrefix, parser.ConfigShortPrefix,
 		AllCommands.String(),
-		ExecutableName, CommandServeName, app.ConfigLongPrefix,
-		ExecutableName, CommandServeName, app.ConfigLongPrefix,
-		ExecutableName, CommandServeName, app.ConfigShortPrefix,
-		ExecutableName, CommandServeName, app.ConfigShortPrefix,
-		ExecutableName, app.HelpLongPrefix, app.HelpShortPrefix,
-		ExecutableName, CommandServeName, app.HelpLongPrefix,
+		ExecutableName, CommandServeName, parser.ConfigLongPrefix,
+		ExecutableName, CommandServeName, parser.ConfigLongPrefix,
+		ExecutableName, CommandServeName, parser.ConfigShortPrefix,
+		ExecutableName, CommandServeName, parser.ConfigShortPrefix,
+		ExecutableName, parser.HelpLongPrefix, parser.HelpShortPrefix,
+		ExecutableName, CommandServeName, parser.HelpLongPrefix,
 	)
 }

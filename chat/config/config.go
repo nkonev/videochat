@@ -11,6 +11,7 @@ import (
 
 	"nkonev.name/chat/app"
 
+	"github.com/nkonev/args-parser"
 	"github.com/traefik/paerser/env"
 	"github.com/traefik/paerser/file"
 	"github.com/traefik/paerser/flag"
@@ -246,7 +247,7 @@ func createTypedConfig(filename string, args ...string) (*AppConfig, error) {
 
 	var argsToReadConfig []string
 
-	hasConfigInArgs, configFilePath, argsToConfig, err := app.IsConfig(args)
+	hasConfigInArgs, configFilePath, argsToConfig, err := parser.HasConfig(args)
 	if err != nil {
 		return nil, fmt.Errorf("An error occured during working with config: %w", err)
 	}

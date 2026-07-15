@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"nkonev.name/chat/app"
+	"github.com/nkonev/args-parser"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -29,7 +29,7 @@ import (
 const CommandServeName = "serve"
 
 func RunServe(args []string) {
-	processedArgs, hasHelp := app.IsHelp(args)
+	processedArgs, hasHelp := parser.HasHelp(args)
 	if hasHelp {
 		fmt.Printf(`
 Starts normal api requests serving.
@@ -56,7 +56,7 @@ To run on the specific port:
 To run without schedulers:
 ./%s %s --schedulers.cleanAbandonedChatsTask.enabled=false --schedulers.cleanDeletedUsersDataTask.enabled=false
 
-`, ExecutableName, CommandServeName, app.ConfigLongPrefix,
+`, ExecutableName, CommandServeName, parser.ConfigLongPrefix,
 			ExecutableName, CommandServeName,
 			ExecutableName, CommandServeName,
 			ExecutableName, CommandServeName,

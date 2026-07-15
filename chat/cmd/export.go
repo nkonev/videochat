@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/nkonev/args-parser"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/kafka"
@@ -17,7 +18,7 @@ import (
 const CommandExportName = "export"
 
 func RunExport(args []string) {
-	processedArgs, hasHelp := app.IsHelp(args)
+	processedArgs, hasHelp := parser.HasHelp(args)
 	if hasHelp {
 		fmt.Printf(`
 Performs export of CQRS Kafka events topic to the json line file.

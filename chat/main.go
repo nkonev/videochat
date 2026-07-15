@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"nkonev.name/chat/app"
+	"github.com/nkonev/args-parser"
 	"nkonev.name/chat/cmd"
 )
 
@@ -17,8 +17,8 @@ Also %s or %s is supported, e. g.:
 %s %s %s
 
 `, cmd.AllCommands.String(),
-			app.HelpLongPrefix, app.HelpShortPrefix,
-			cmd.ExecutableName, cmd.CommandServeName, app.HelpLongPrefix,
+			parser.HelpLongPrefix, parser.HelpShortPrefix,
+			cmd.ExecutableName, cmd.CommandServeName, parser.HelpLongPrefix,
 		)
 		os.Exit(1)
 	}

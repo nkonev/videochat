@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/nkonev/args-parser"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -21,7 +22,7 @@ import (
 const CommandImportName = "import"
 
 func RunImport(args []string) {
-	processedArgs, hasHelp := app.IsHelp(args)
+	processedArgs, hasHelp := parser.HasHelp(args)
 	if hasHelp {
 		fmt.Printf(`
 Performs import to the Kafka events topic from the json line file produced by "export" command

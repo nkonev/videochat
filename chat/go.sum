@@ -224,6 +224,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
+github.com/nkonev/args-parser v0.0.1 h1:zuAN+fk7/tQPkHCgoaqWBBJ3YrJdehS5HggopXRm+vQ=
+github.com/nkonev/args-parser v0.0.1/go.mod h1:r0wmR4fPsINhzILGPm7uPMz8GsjWF42xjIzR7TV0g2A=
 github.com/nkonev/dcron v1.7.12 h1:oDDm7Yn70CZ96gZ6266DbdG2C1aldy4jKCq0POYQdz0=
 github.com/nkonev/dcron v1.7.12/go.mod h1:29bAKiUz0Mt8z+7+UqRVW+JSrrTO91mxLhHbBIPfLAc=
 github.com/nkonev/dcron/plugin/lock/redis v1.0.1 h1:OL8Ln8lxRpCFfl3B3VfxigUeyuNlMhoeSH+uQ1RITDM=

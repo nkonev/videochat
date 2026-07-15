@@ -14,6 +14,7 @@ require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/mcosta74/pgx-slog v0.4.1
 	github.com/microcosm-cc/bluemonday v1.0.27
+	github.com/nkonev/args-parser v0.0.1
 	github.com/nkonev/dcron v1.7.12
 	github.com/nkonev/dcron/plugin/lock/redis v1.0.1
 	github.com/nkonev/dcron/plugin/trace/otel v1.0.0

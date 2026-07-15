@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/nkonev/args-parser"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -21,7 +22,7 @@ import (
 const CommandResetName = "reset"
 
 func RunReset(args []string) {
-	processedArgs, hasHelp := app.IsHelp(args)
+	processedArgs, hasHelp := parser.HasHelp(args)
 	if hasHelp {
 		fmt.Println(`
 Performs reset the CQRS projections in PostgreSQL 

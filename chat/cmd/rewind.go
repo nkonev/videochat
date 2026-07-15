@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/nkonev/args-parser"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
@@ -25,7 +26,7 @@ import (
 const CommandRewindName = "rewind"
 
 func RunRewind(args []string) {
-	processedArgs, hasHelp := app.IsHelp(args)
+	processedArgs, hasHelp := parser.HasHelp(args)
 	if hasHelp {
 		fmt.Printf(`
 Consumes all the events from the Kafka events topic
