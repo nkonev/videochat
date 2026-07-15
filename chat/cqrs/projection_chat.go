@@ -111,7 +111,6 @@ func (m *CommonProjection) OnChatCreated0(ctx context.Context, event *ChatCreate
 
 		if event.Blog {
 			// add blog
-			// TODO rewrite refreshBlog()
 			_, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
 			if errInner != nil {
 				return errInner

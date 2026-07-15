@@ -38,14 +38,15 @@ func (m *CommonProjection) refreshBlog(ctx context.Context, co db.CommonOperatio
 	select 
 		cc.id as chat_id,
 		m.id as message_id,
-		coalesce(cc.avatar_big, cc.avatar) as chat_avatar,
+		coalesce(t.avatar_big, t.avatar) as chat_avatar,
 		m.content as message_text,
 		coalesce(b.blog_about, false) as blog_about
-	from chat_common cc
+	from chat cc
+	left join thread t on (cc.id = t.chat_id and t.parent_thread_id = $2)
 	left join blog_message m on cc.id = m.chat_id
 	left join blog b on cc.id = b.id
 	where cc.id = $1
-	`, chatId)
+	`, chatId, dto.RootThreadId)
 	if err != nil {
 		return nil, err
 	}
