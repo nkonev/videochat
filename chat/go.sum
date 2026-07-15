@@ -224,10 +224,12 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
-github.com/nkonev/dcron v1.7.11 h1:xQU5XF0S8wgVMVYLPRhl+f3sAgcB/4gOoaBiNIJu3Wc=
-github.com/nkonev/dcron v1.7.11/go.mod h1:29bAKiUz0Mt8z+7+UqRVW+JSrrTO91mxLhHbBIPfLAc=
+github.com/nkonev/dcron v1.7.12 h1:oDDm7Yn70CZ96gZ6266DbdG2C1aldy4jKCq0POYQdz0=
+github.com/nkonev/dcron v1.7.12/go.mod h1:29bAKiUz0Mt8z+7+UqRVW+JSrrTO91mxLhHbBIPfLAc=
 github.com/nkonev/dcron/plugin/lock/redis v1.0.1 h1:OL8Ln8lxRpCFfl3B3VfxigUeyuNlMhoeSH+uQ1RITDM=
 github.com/nkonev/dcron/plugin/lock/redis v1.0.1/go.mod h1:AeHE4aEqjRG4FAPAfdWMrQYoHRmUEE2rgqzmOnYMeBo=
+github.com/nkonev/dcron/plugin/trace/otel v1.0.0 h1:oIn6EYaWyQUFprSGVmnfPmtB2Pnp8TOlJdiVDsSpxN8=
+github.com/nkonev/dcron/plugin/trace/otel v1.0.0/go.mod h1:+FQKujuWdK74MgoPgU4LdCxxQnilI7MdXW1gl8ep8Oc=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=

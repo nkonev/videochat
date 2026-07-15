@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
+
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -34,7 +36,7 @@ func CleanAbandonedChatsScheduler(
 		service.DoJob(ctx)
 		return nil
 	},
-		dcron.WithTracing(service.spanStarter, service.spanFinisher),
+		otelTrace.WithTracing(service.tracer, "scheduler.cleanAbandonedChats"),
 		redisLock.WithLockTTL(cfg.Schedulers.CleanAbandonedChatsTask.Expiration),
 	)
 
@@ -97,14 +99,6 @@ func (srv *CleanAnandonedChatsService) processChats(c context.Context) {
 	}
 
 	srv.lgr.InfoContext(c, "End of cleaning abandoned chats job")
-}
-
-func (srv *CleanAnandonedChatsService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.cleanAbandonedChats")
-}
-
-func (srv *CleanAnandonedChatsService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
 }
 
 func NewCleanAbandonedChatsService(
