@@ -41,7 +41,6 @@ func (m *CommonProjection) OnChatCreated0(ctx context.Context, event *ChatCreate
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		if event.TetATet {
 			if event.TetATetOppositeUserId != nil {
-				// TODO rewrite IsExistsTetATetTwo()
 				tetATetTwoExists, _, errInner := m.IsExistsTetATetTwo(ctx, tx, event.AdditionalData.BehalfUserId, *event.TetATetOppositeUserId)
 				if errInner != nil {
 					return errInner
@@ -56,7 +55,6 @@ func (m *CommonProjection) OnChatCreated0(ctx context.Context, event *ChatCreate
 					return nil
 				}
 			} else {
-				// TODO rewrite IsExistsTetATetOne()
 				tetATetOneExists, _, errInner := m.IsExistsTetATetOne(ctx, tx, event.AdditionalData.BehalfUserId)
 				if errInner != nil {
 					return errInner
