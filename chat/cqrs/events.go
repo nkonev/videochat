@@ -108,28 +108,26 @@ type ChatEdited struct {
 type ThreadCreated struct {
 	ThreadCommoned
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 }
 
 type ThreadEdited struct {
 	ThreadCommoned
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 }
 
 type ThreadCommoned struct {
-	Id           int64   `json:"id"`
-	ParentChatId int64   `json:"parentChatId"`
-	Title        string  `json:"title"`
-	Avatar       *string `json:"avatar"`
-	AvatarBig    *string `json:"avatarBig"`
+	Id             int64   `json:"id"`
+	ChatId         int64   `json:"chatId"`
+	ParentThreadId int64   `json:"parentThreadId"`
+	Title          string  `json:"title"`
+	Avatar         *string `json:"avatar"`
+	AvatarBig      *string `json:"avatarBig"`
 }
 
 type ThreadDeleted struct {
 	Id             int64           `json:"id"`
 	ParentChatId   int64           `json:"parentChatId"`
 	AdditionalData *AdditionalData `json:"additionalData"`
-	Metadata       *Metadata       `json:"-"`
 }
 
 type ChatDeleted struct {

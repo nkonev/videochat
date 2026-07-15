@@ -1,7 +1,5 @@
 package dto
 
-const NoParentChatId = 0
-
 type ThreadAuthorizationData struct {
 	IsChatFound         bool `db:"is_chat_found"`
 	IsParticipant       bool `db:"is_chat_participant"`

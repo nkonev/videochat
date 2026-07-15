@@ -35,12 +35,13 @@ func (m *CommonProjection) GetChatIds(ctx context.Context, tx *db.Tx, size int32
 	return ma, nil
 }
 
-func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated) error {
+func (m *CommonProjection) OnChatCreated0(ctx context.Context, event *ChatCreated) error {
 	// we don't check chat existence for the chat creation
 
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		if event.TetATet {
 			if event.TetATetOppositeUserId != nil {
+				// TODO rewrite IsExistsTetATetTwo()
 				tetATetTwoExists, _, errInner := m.IsExistsTetATetTwo(ctx, tx, event.AdditionalData.BehalfUserId, *event.TetATetOppositeUserId)
 				if errInner != nil {
 					return errInner
@@ -50,12 +51,12 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 					m.lgr.InfoContext(ctx,
 						"Not created common chat because 2-participant tet-a-tet esists",
 						logger.AttributeChatId, event.ChatId,
-						"title", event.Title,
 					)
 
 					return nil
 				}
 			} else {
+				// TODO rewrite IsExistsTetATetOne()
 				tetATetOneExists, _, errInner := m.IsExistsTetATetOne(ctx, tx, event.AdditionalData.BehalfUserId)
 				if errInner != nil {
 					return errInner
@@ -65,7 +66,6 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 					m.lgr.InfoContext(ctx,
 						"Not created common chat because 1-participant tet-a-tet esists",
 						logger.AttributeChatId, event.ChatId,
-						"title", event.Title,
 					)
 
 					return nil
@@ -74,13 +74,10 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 		}
 
 		_, errInner := tx.ExecContext(ctx, `
-		insert into chat_common(
+		insert into chat(
 			 id
-			,title
 			,create_date_time
 			,tet_a_tet
-			,avatar
-			,avatar_big
 			,can_resend
 			,can_react
 			,available_to_search
@@ -99,15 +96,9 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 		    ,$8
 		    ,$9
 		    ,$10
-		    ,$11
-		    ,$12
-		    ,$13
 		)
 		on conflict(id) do update set 
-		    title = excluded.title
 		    ,tet_a_tet = excluded.tet_a_tet
-		    ,avatar = excluded.avatar
-		    ,avatar_big = excluded.avatar_big
 			,can_resend = excluded.can_resend
 			,can_react = excluded.can_react
 			,available_to_search = excluded.available_to_search
@@ -115,13 +106,14 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message = excluded.regular_participant_can_pin_message
 			,regular_participant_can_write_message = excluded.regular_participant_can_write_message
 			,regular_participant_can_add_participant = excluded.regular_participant_can_add_participant
-	`, event.ChatId, event.Title, event.AdditionalData.CreatedAt, event.TetATet, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+	`, event.ChatId, event.AdditionalData.CreatedAt, event.TetATet, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
 		if errInner != nil {
 			return errInner
 		}
 
 		if event.Blog {
 			// add blog
+			// TODO rewrite refreshBlog()
 			_, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
 			if errInner != nil {
 				return errInner
@@ -136,7 +128,56 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 	}
 
 	m.lgr.InfoContext(ctx,
-		"Common chat created",
+		"Common chat container created",
+		logger.AttributeChatId, event.ChatId,
+	)
+
+	return nil
+}
+
+func (m *CommonProjection) OnThreadCreated(ctx context.Context, event *ThreadCreated) error {
+	// we don't check chat existence for the chat creation
+
+	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
+
+		_, errInner := tx.ExecContext(ctx, `
+		insert into thread(
+			 id
+			,chat_id
+			,parent_thread_id
+			,title
+			,create_date_time
+			,avatar
+			,avatar_big
+		) values (
+			$1
+			,$2
+			,$3
+			,$4
+			,$5
+		    ,$6
+		    ,$7
+		)
+		on conflict(chat_id, id) do update set 
+		     parent_thread_id = excluded.parent_thread_id
+		    ,title = excluded.title
+		    ,avatar = excluded.avatar
+		    ,avatar_big = excluded.avatar_big
+	`, event.Id, event.ChatId, event.ParentThreadId, event.Title, event.AdditionalData.CreatedAt, event.Avatar, event.AvatarBig)
+		if errInner != nil {
+			return errInner
+		}
+
+		return nil
+	})
+
+	if errOuter != nil {
+		return errOuter
+	}
+
+	m.lgr.InfoContext(ctx,
+		"Thread created",
+		logger.AttributeThreadId, event.Id,
 		logger.AttributeChatId, event.ChatId,
 		"title", event.Title,
 	)

@@ -89,9 +89,9 @@ func (m *CommonProjection) InitializeChatIdSequenceIfNeed(ctx context.Context, t
 
 const ChatStillNotExists = -1
 
-func (m *CommonProjection) GetNextMessageId(ctx context.Context, co db.CommonOperations, parentChatId, threadId int64) (int64, error) {
+func (m *CommonProjection) GetNextMessageId(ctx context.Context, co db.CommonOperations, chatId, threadId int64) (int64, error) {
 	var messageId int64
-	err := sqlscan.Get(ctx, co, &messageId, "UPDATE thread SET last_generated_message_id = last_generated_message_id + 1 WHERE parent_chat_id = $1 and id = $2 RETURNING last_generated_message_id;", parentChatId, threadId)
+	err := sqlscan.Get(ctx, co, &messageId, "UPDATE thread SET last_generated_message_id = last_generated_message_id + 1 WHERE chat_id = $1 and id = $2 RETURNING last_generated_message_id;", chatId, threadId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// there were no rows, but otherwise no error occurred
@@ -102,25 +102,25 @@ func (m *CommonProjection) GetNextMessageId(ctx context.Context, co db.CommonOpe
 	return messageId, nil
 }
 
-func (m *CommonProjection) InitializeMessageIdSequenceIfNeed(ctx context.Context, tx *db.Tx, parentChatId, threadId int64) error {
+func (m *CommonProjection) InitializeMessageIdSequenceIfNeed(ctx context.Context, tx *db.Tx, chatId, threadId int64) error {
 	var currentGeneratedMessageId int64
 
-	err := sqlscan.Get(ctx, tx, &currentGeneratedMessageId, "SELECT coalesce(last_generated_message_id, 0) from thread where parent_chat_id = $1 and id = $2", parentChatId, threadId)
+	err := sqlscan.Get(ctx, tx, &currentGeneratedMessageId, "SELECT coalesce(last_generated_message_id, 0) from thread where chat_id = $1 and id = $2", chatId, threadId)
 	if err != nil {
 		return err
 	}
 
 	if currentGeneratedMessageId == 0 {
 		var maxMessageId int64
-		err = sqlscan.Get(ctx, tx, &maxMessageId, "SELECT coalesce(max(id), 0) from message where parent_chat_id = $1 and thread_id = $2", parentChatId, threadId)
+		err = sqlscan.Get(ctx, tx, &maxMessageId, "SELECT coalesce(max(id), 0) from message where chat_id = $1 and thread_id = $2", chatId, threadId)
 		if err != nil {
 			return err
 		}
 
 		if maxMessageId > 0 {
-			m.lgr.Info("Fast-forwarding messageId sequence", logger.AttributeParentChatId, parentChatId, logger.AttributeThreadId, threadId, maxMessageId)
+			m.lgr.Info("Fast-forwarding messageId sequence", logger.AttributeParentChatId, chatId, logger.AttributeThreadId, threadId, maxMessageId)
 
-			_, err = tx.ExecContext(ctx, "update thread set last_generated_message_id = $3 where parent_chat_id = $1 and id = $2", parentChatId, threadId, maxMessageId)
+			_, err = tx.ExecContext(ctx, "update thread set last_generated_message_id = $3 where chat_id = $1 and id = $2", chatId, threadId, maxMessageId)
 			if err != nil {
 				return err
 			}
@@ -130,12 +130,12 @@ func (m *CommonProjection) InitializeMessageIdSequenceIfNeed(ctx context.Context
 }
 
 // for real threads (aka child chats)
-func (m *CommonProjection) GetNextThreadId(ctx context.Context, co db.CommonOperations, parentChatId int64) (int64, error) {
+func (m *CommonProjection) GetNextThreadId(ctx context.Context, co db.CommonOperations, chatId int64) (int64, error) {
 
 	var threadId int64
 	err := sqlscan.Get(ctx, co, &threadId, `
 		UPDATE chat SET last_generated_thread_id = last_generated_thread_id + 1 WHERE id = $1 RETURNING last_generated_thread_id;
-	`, parentChatId)
+	`, chatId)
 	if err != nil {
 		return 0, err
 	}
@@ -144,27 +144,27 @@ func (m *CommonProjection) GetNextThreadId(ctx context.Context, co db.CommonOper
 }
 
 // for real threads (aka child chats)
-func (m *CommonProjection) InitializeThreadIdSequenceIfNeed(ctx context.Context, co db.CommonOperations, parentChatId int64) error {
+func (m *CommonProjection) InitializeThreadIdSequenceIfNeed(ctx context.Context, co db.CommonOperations, chatId int64) error {
 	var currentGeneratedThreadId int64
 
-	err := sqlscan.Get(ctx, co, &currentGeneratedThreadId, "SELECT coalesce(last_generated_thread_id, 0) from chat where id = $1", parentChatId)
+	err := sqlscan.Get(ctx, co, &currentGeneratedThreadId, "SELECT coalesce(last_generated_thread_id, 0) from chat where id = $1", chatId)
 	if err != nil {
 		return err
 	}
 
 	if currentGeneratedThreadId == 0 {
 		var maxThreadId int64
-		err = sqlscan.Get(ctx, co, &maxThreadId, "SELECT coalesce(max(id), 0) from thread where parent_chat_id = $1", parentChatId)
+		err = sqlscan.Get(ctx, co, &maxThreadId, "SELECT coalesce(max(id), 0) from thread where chat_id = $1", chatId)
 		if err != nil {
 			return err
 		}
 
 		if maxThreadId > 0 {
-			m.lgr.Info("Fast-forwarding threadId sequence", logger.AttributeParentChatId, parentChatId)
+			m.lgr.Info("Fast-forwarding threadId sequence", logger.AttributeParentChatId, chatId)
 
 			_, err = co.ExecContext(ctx, `
 				update chat set last_generated_thread_id = $2 where id = $1
-			`, parentChatId, maxThreadId)
+			`, chatId, maxThreadId)
 			if err != nil {
 				return err
 			}
