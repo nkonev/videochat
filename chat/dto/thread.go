@@ -1,5 +1,7 @@
 package dto
 
+const RootThreadId = 0
+
 type ThreadAuthorizationData struct {
 	IsChatFound         bool `db:"is_chat_found"`
 	IsParticipant       bool `db:"is_chat_participant"`

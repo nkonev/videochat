@@ -451,10 +451,11 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 
 	tc := &ThreadCreated{
 		ThreadCommoned: ThreadCommoned{
-			Id:           threadId,
-			ParentChatId: chatId,
-			Avatar:       copyCommand.Avatar,
-			AvatarBig:    copyCommand.AvatarBig,
+			Id:             threadId,
+			ChatId:         chatId,
+			ParentThreadId: dto.RootThreadId,
+			Avatar:         copyCommand.Avatar,
+			AvatarBig:      copyCommand.AvatarBig,
 		},
 	}
 
