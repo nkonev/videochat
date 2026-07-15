@@ -339,8 +339,20 @@ func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) er
 }
 
 func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated) error {
-	// TODO check authorization
-	err := m.commonProjection.OnThreadCreated(ctx, event)
+	adt, err := m.commonProjection.GetThreadDataForAuthorization(ctx, m.db, event.AdditionalData.BehalfUserId, event.ChatId, event.ParentThreadId)
+	if err != nil {
+		return err
+	}
+
+	if !CanCreateThread(adt.ChatCanCreateThread, m.cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot) {
+		m.lgr.InfoContext(ctx, "Skipping OnThreadCreated because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		return nil
+	}
+
+	// TODO подумать переосмыслить output event "chat created" - сейчас оно по добавлению юзера
+	// TODO точно послылать эвент "thread created" чтобы появлялись треды в списке тредов
+
+	err = m.commonProjection.OnThreadCreated(ctx, event)
 	if err != nil {
 		return err
 	}

@@ -1441,7 +1441,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return 0, NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
 	}
 
-	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot, false) {
+	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot) {
 		return 0, NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
@@ -1493,8 +1493,8 @@ func (s *ThreadDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
 	}
 
-	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot, false) {
-		return NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
+	if !CanDeleteThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot) {
+		return NewUnauthorizedError(fmt.Sprintf("user %v cannot delete thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
 	cc := &ThreadDeleted{

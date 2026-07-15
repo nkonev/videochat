@@ -2,14 +2,20 @@ package cqrs
 
 import (
 	"context"
+
 	"nkonev.name/chat/db"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"nkonev.name/chat/dto"
 )
 
-func CanCreateThread(chatCanCreateThread, cfgCanCreateThread, isParticipant, parentThreadIsRoot, thereIsNoParentThread bool) bool {
-	return isParticipant && chatCanCreateThread && cfgCanCreateThread && (parentThreadIsRoot || thereIsNoParentThread)
+func CanCreateThread(chatCanCreateThread, cfgCanCreateThread, isParticipant, parentThreadIsRoot bool) bool {
+	return isParticipant && chatCanCreateThread && cfgCanCreateThread && parentThreadIsRoot
+}
+
+// TODO тред может удалить только автор сообщения или админ (по настройке) - подумать
+func CanDeleteThread(chatCanCreateThread, cfgCanCreateThread, isParticipant, parentThreadIsRoot bool) bool {
+	return isParticipant && chatCanCreateThread && cfgCanCreateThread && parentThreadIsRoot
 }
 
 func (m *CommonProjection) GetThreadDataForAuthorization(ctx context.Context, co db.CommonOperations, userId, chatId, parentThreadId int64) (dto.ThreadAuthorizationData, error) {
