@@ -59,8 +59,8 @@ func CreateHttpRouter(
 	ginRouter.POST("/api/chat/fresh", chatHandler.ChatsFresh)
 	ginRouter.POST("/api/chat/filter", chatHandler.ChatsFilter)
 
-	ginRouter.POST("/api/chat/:id/thread/from-message/:messageId", threadHandler.CreateThread)
-	ginRouter.DELETE("/api/chat/:id/thread/from-message/:messageId", threadHandler.DeleteThread)
+	ginRouter.POST("/api/chat/:id/parent-thread/:threadId/message/:messageId", threadHandler.CreateThread)
+	ginRouter.DELETE("/api/chat/:id/parent-thread/:threadId/message/:messageId/thread/:id", threadHandler.DeleteThread)
 
 	ginRouter.PUT("/api/chat/:id/notification", chatHandler.PutUserChatNotificationSettings)
 	ginRouter.GET("/api/chat/:id/notification", chatHandler.GetUserChatNotificationSettings)
@@ -76,10 +76,10 @@ func CreateHttpRouter(
 	ginRouter.PUT("/api/chat/:id/leave", participantHandler.LeaveChat)
 	ginRouter.PUT("/api/chat/:id/join", participantHandler.JoinChat)
 
-	ginRouter.POST("/api/chat/:id/message", messageHandler.CreateMessage)
-	ginRouter.PUT("/api/chat/:id/message", messageHandler.EditMessage)
-	ginRouter.PUT("/api/chat/:id/message/:messageId/sync-embed", messageHandler.SyncEmbed)
-	ginRouter.DELETE("/api/chat/:id/message/:messageId", messageHandler.DeleteMessage)
+	ginRouter.POST("/api/chat/:id/thread/:threadId/message", messageHandler.CreateMessage)
+	ginRouter.PUT("/api/chat/:id/thread/:threadId/message", messageHandler.EditMessage)
+	ginRouter.PUT("/api/chat/:id/thread/:threadId/message/:messageId/sync-embed", messageHandler.SyncEmbed)
+	ginRouter.DELETE("/api/chat/:id/thread/:threadId/message/:messageId", messageHandler.DeleteMessage)
 	ginRouter.GET("/api/chat/:id/message/read/:messageId", messageHandler.GetReadMessageUsers)
 	ginRouter.PUT("/api/chat/:id/message/read/:messageId", messageHandler.ReadMessage)
 	ginRouter.PUT("/api/chat/:id/read", messageHandler.MarkChatAsRead)

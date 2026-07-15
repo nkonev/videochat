@@ -16,6 +16,7 @@ const (
 	EventChatEdited                         = "chatEdited"
 	EventChatDeleted                        = "chatDeleted"
 	EventThreadCreated                      = "threadCreated"
+	EventThreadDeleted                      = "threadDeleted"
 	EventParticipantsAdded                  = "participantsAdded"
 	EventParticipantsDeleted                = "participantDeleted"
 	EventParticipantsChanged                = "participantChanged"
@@ -126,7 +127,7 @@ type ThreadCommoned struct {
 
 type ThreadDeleted struct {
 	Id             int64           `json:"id"`
-	ParentChatId   int64           `json:"parentChatId"`
+	ChatId         int64           `json:"chatId"`
 	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
@@ -211,6 +212,7 @@ type ChatNotificationSettingsSetted struct {
 type MessageCommoned struct {
 	Id           int64   `json:"id"` // message id
 	ChatId       int64   `json:"chatId"`
+	ThreadId     int64   `json:"threadId"` // TODO take into account this threadId coordinate
 	Content      string  `json:"content"`
 	FileItemUuid *string `json:"fileItemUuid"`
 
@@ -310,14 +312,15 @@ const (
 	MessageEditedActionAll MessageEditedAction = iota
 	MessageEditedActionEmbedSync
 	MessageEditedActionSetFileItemUuid
-	MessageEditedActionThreadBind
-	MessageEditedActionThreadUnbind
+	MessageEditedActionThreadBind   // TODO handle this action
+	MessageEditedActionThreadUnbind // TODO handle this action
 )
 
 type MessageEdited struct {
 	MessageCommoned     MessageCommoned     `json:"messageCommoned"`
 	AdditionalData      *AdditionalData     `json:"additionalData"`
 	MessageEditedAction MessageEditedAction `json:"messageEditedAction"`
+	ChildThreadId       *int64              `json:"childThreadId"`
 }
 
 type MessageEmbedded struct {
@@ -471,7 +474,11 @@ func (s *ChatDeleted) GetPartitionKey() string {
 }
 
 func (s *ThreadCreated) GetPartitionKey() string {
-	return utils.ToString(s.ParentChatId)
+	return utils.ToString(s.ChatId)
+}
+
+func (s *ThreadDeleted) GetPartitionKey() string {
+	return utils.ToString(s.ChatId)
 }
 
 func (s *ParticipantsAdded) GetPartitionKey() string {
@@ -584,6 +591,10 @@ func (s *ChatDeleted) GetEventType() string {
 
 func (s *ThreadCreated) GetEventType() string {
 	return EventThreadCreated
+}
+
+func (s *ThreadDeleted) GetEventType() string {
+	return EventThreadDeleted
 }
 
 func (s *ParticipantsAdded) GetEventType() string {
@@ -727,6 +738,10 @@ func (s *ChatNotificationSettingsSetted) GetEventTopic() EventTopic {
 }
 
 func (s *ThreadCreated) GetEventTopic() EventTopic {
+	return EventTopicChat
+}
+
+func (s *ThreadDeleted) GetEventTopic() EventTopic {
 	return EventTopicChat
 }
 

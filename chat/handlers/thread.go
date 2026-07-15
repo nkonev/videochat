@@ -60,6 +60,15 @@ func (ch *ThreadHandler) CreateThread(g *gin.Context) {
 		return
 	}
 
+	ptid := g.Param(dto.ThreadIdParam)
+
+	parentThreadId, err := utils.ParseInt64(ptid)
+	if err != nil {
+		ch.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	mid := g.Param(dto.MessageIdParam)
 
 	messageId, err := utils.ParseInt64(mid)
@@ -72,7 +81,10 @@ func (ch *ThreadHandler) CreateThread(g *gin.Context) {
 	cc := cqrs.ThreadCreate{
 		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
 		ChatId:         chatId,
+		ParentThreadId: parentThreadId, // parent (message) thread id
 		MessageId:      messageId,
+		Avatar:         nil,
+		AvatarBig:      nil,
 	}
 
 	threadId, err := cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.cfg)
@@ -86,7 +98,7 @@ func (ch *ThreadHandler) CreateThread(g *gin.Context) {
 		return
 	}
 
-	ch.lgr.InfoContext(g.Request.Context(), "created the thread", logger.AttributeParentChatId, chatId, logger.AttributeThreadId, threadId)
+	ch.lgr.InfoContext(g.Request.Context(), "created the thread", logger.AttributeChatId, chatId, logger.AttributeThreadId, threadId)
 
 	m := dto.IdResponse{Id: threadId}
 
@@ -110,6 +122,15 @@ func (ch *ThreadHandler) DeleteThread(g *gin.Context) {
 		return
 	}
 
+	ptid := g.Param(dto.ThreadIdParam)
+
+	parentThreadId, err := utils.ParseInt64(ptid)
+	if err != nil {
+		ch.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	mid := g.Param(dto.MessageIdParam)
 
 	messageId, err := utils.ParseInt64(mid)
@@ -119,9 +140,20 @@ func (ch *ThreadHandler) DeleteThread(g *gin.Context) {
 		return
 	}
 
+	ctid := g.Param(dto.ThreadIdParamChild)
+
+	threadId, err := utils.ParseInt64(ctid)
+	if err != nil {
+		ch.lgr.ErrorContext(g.Request.Context(), "Error binding threadId", logger.AttributeError, err)
+		g.Status(http.StatusInternalServerError)
+		return
+	}
+
 	cc := cqrs.ThreadDelete{
 		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
 		ChatId:         chatId,
+		ParentThreadId: parentThreadId,
+		ThreadId:       threadId,
 		MessageId:      messageId,
 	}
 
@@ -136,7 +168,7 @@ func (ch *ThreadHandler) DeleteThread(g *gin.Context) {
 		return
 	}
 
-	ch.lgr.InfoContext(g.Request.Context(), "deleted the thread from message", logger.AttributeParentChatId, chatId, logger.AttributeMessageId, messageId)
+	ch.lgr.InfoContext(g.Request.Context(), "deleted the thread from message", logger.AttributeChatId, chatId, logger.AttributeMessageId, messageId)
 
 	g.Status(http.StatusOK)
 }
