@@ -238,7 +238,7 @@ func ListenChatTopic(
 
 	batchFunctionMapping := map[string]func(b BatchEvent) (context.Context, error){
 		EventChatCreated: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatCreated0))
+			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatCreated))
 		},
 		EventThreadCreated: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnThreadCreated))

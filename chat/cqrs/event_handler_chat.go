@@ -328,9 +328,9 @@ func (m *EventHandler) OnParticipantChanged(ctx context.Context, event *Particip
 	return nil
 }
 
-func (m *EventHandler) OnChatCreated0(ctx context.Context, event *ChatCreated) error {
+func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) error {
 	// we don't check authorization for the chat creation
-	err := m.commonProjection.OnChatCreated0(ctx, event)
+	err := m.commonProjection.OnChatCreated(ctx, event)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func (m *EventHandler) OnChatCreated0(ctx context.Context, event *ChatCreated) e
 }
 
 func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated) error {
-	// we don't check authorization for the chat creation
+	// TODO check authorization
 	err := m.commonProjection.OnThreadCreated(ctx, event)
 	if err != nil {
 		return err

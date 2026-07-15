@@ -35,7 +35,7 @@ func (m *CommonProjection) GetChatIds(ctx context.Context, tx *db.Tx, size int32
 	return ma, nil
 }
 
-func (m *CommonProjection) OnChatCreated0(ctx context.Context, event *ChatCreated) error {
+func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated) error {
 	// we don't check chat existence for the chat creation
 
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
