@@ -1432,7 +1432,7 @@ func validateAndSetEmbedFieldsEmbedMessage(ctx context.Context, dba *db.DB, comm
 }
 
 func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) (int64, error) {
-	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId)
+	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId, s.ParentThreadId)
 	if err != nil {
 		return 0, err
 	}
@@ -1441,8 +1441,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return 0, NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
 	}
 
-	// TODO consider parentThreadId - right now we can create thread only first level nesting
-	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant) {
+	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot, false) {
 		return 0, NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
@@ -1485,7 +1484,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 }
 
 func (s *ThreadDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, cfg *config.AppConfig) error {
-	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId)
+	adt, err := commonProjection.GetThreadDataForAuthorization(ctx, dba, s.AdditionalData.BehalfUserId, s.ChatId, s.ParentThreadId)
 	if err != nil {
 		return err
 	}
@@ -1494,7 +1493,7 @@ func (s *ThreadDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return NewChatStillNotExistsError(fmt.Sprintf("chat %d still does not exist", s.ChatId))
 	}
 
-	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant) {
+	if !CanCreateThread(adt.ChatCanCreateThread, cfg.Chat.CanCreateThread, adt.IsParticipant, adt.ParentThreadIsRoot, false) {
 		return NewUnauthorizedError(fmt.Sprintf("user %v cannot create thread in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
