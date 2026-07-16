@@ -64,7 +64,6 @@ func main() {
 			db.ConfigureDb,
 			configureMigrations,
 			tasks.RedisV9,
-			tasks.RedisLocker,
 			tasks.Scheduler,
 			tasks.NewCleanFilesOfDeletedChatService,
 			tasks.CleanFilesOfDeletedChatScheduler,
