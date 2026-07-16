@@ -426,18 +426,18 @@ func Export(
 	defer cl.Close()
 
 	var writer io.Writer
-	var f *os.File
 	if cfg.Cqrs.Export.File == app.PseudoFileStdout {
 		writer = os.Stdout
 	} else {
+		var f *os.File
 		f, err = os.Create(cfg.Cqrs.Export.File)
 		if err != nil {
 			return err
 		}
 		writer = f
-	}
-	if f != nil {
-		defer f.Close()
+		if f != nil {
+			defer f.Close()
+		}
 	}
 
 	ctx := context.Background()
@@ -565,18 +565,18 @@ func Import(
 	defer cl.Close()
 
 	var reader io.Reader
-	var f *os.File
 	if cfg.Cqrs.Import.File == app.PseudoFileStdin {
 		reader = os.Stdin
 	} else {
+		var f *os.File
 		f, err = os.Open(cfg.Cqrs.Import.File)
 		if err != nil {
 			return err
 		}
 		reader = f
-	}
-	if f != nil {
-		defer f.Close()
+		if f != nil {
+			defer f.Close()
+		}
 	}
 
 	bufferedScanner := bufio.NewReader(reader)
