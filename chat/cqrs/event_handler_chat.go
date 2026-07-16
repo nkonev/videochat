@@ -349,8 +349,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 		return nil
 	}
 
-	// TODO подумать переосмыслить output event "chat created" - сейчас оно по добавлению юзера
-	// TODO точно послылать эвент "thread created" чтобы появлялись треды в списке тредов
+	// TODO перевесить эвент output event "chat created" на ThreadCreated
 
 	err = m.commonProjection.OnThreadCreated(ctx, event)
 	if err != nil {
