@@ -189,13 +189,13 @@ services:
         tag: chat-minio
 
   rabbitmq:
-    image: rabbitmq:4.2.0-management-alpine
+    image: rabbitmq:4.3.2-management-alpine
     hostname: rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=videoChat
       - RABBITMQ_DEFAULT_PASS=videoChatPazZw0rd
     volumes:
-      - rabbitmq_data_dir:/var/lib/rabbitmq/mnesia
+      - rabbitmq_data_dir:/var/lib/rabbitmq
       - ./rabbitmq/additional.conf:/etc/rabbitmq/conf.d/additional.conf:ro,z
     networks:
       backend:
