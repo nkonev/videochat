@@ -419,6 +419,8 @@ func Export(
 		cfg.Kafka.TopicChat.Topic: reqStartOffs,
 	}))
 
+	lgr.Info("starting a dedicated client for export")
+
 	cl, err := kgo.NewClient(opts...)
 	if err != nil {
 		return err
