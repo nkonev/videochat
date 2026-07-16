@@ -6,6 +6,8 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -30,7 +32,10 @@ func CleanFilesOfDeletedChatScheduler(
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.doJob(ctx)
 		return nil
-	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
+	},
+		otelTrace.WithTracing(service.tracer, "scheduler.cleanFilesOfDeletedChat"),
+		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+	)
 
 	return &CleanFilesOfDeletedChatTask{job}
 }
@@ -131,14 +136,6 @@ func (srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatI
 			}
 		}
 	}
-}
-
-func (srv *CleanFilesOfDeletedChatService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.cleanFilesOfDeletedChat")
-}
-
-func (srv *CleanFilesOfDeletedChatService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
 }
 
 func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {

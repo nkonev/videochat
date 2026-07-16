@@ -6,6 +6,8 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -30,7 +32,10 @@ func ActualizeGeneratedFilesScheduler(
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.doJob(ctx)
 		return nil
-	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
+	},
+		otelTrace.WithTracing(service.tracer, "scheduler.ActualizeGeneratedFiles"),
+		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+	)
 
 	return &ActualizeGeneratedFilesTask{job}
 }
@@ -157,14 +162,6 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("Checking for excess previews finished")
 
 	srv.lgr.WithTracing(c).Infof("End of generated files job")
-}
-
-func (srv *ActualizeGeneratedFilesService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.ActualizeGeneratedFiles")
-}
-
-func (srv *ActualizeGeneratedFilesService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
 }
 
 func NewActualizeGeneratedFilesService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {

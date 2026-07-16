@@ -5,6 +5,8 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -31,7 +33,10 @@ func ActualizeMetadataCacheScheduler(
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.doJob(ctx)
 		return nil
-	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
+	},
+		otelTrace.WithTracing(service.tracer, "scheduler.ActualizeMetadataCache"),
+		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+	)
 
 	return &ActualizeMetadataCacheTask{job}
 }
@@ -50,7 +55,7 @@ func (srv *ActualizeMetadataCacheService) doJob(ctx context.Context) {
 }
 
 func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filenameChatPrefix string) {
-	srv.lgr.WithTracing(c).Infof("Starting actualize actualize metadata cache job")
+	srv.lgr.WithTracing(c).Infof("Starting actualize metadata cache job")
 
 	// create metadata cache for files if need
 	srv.lgr.WithTracing(c).Infof("Checking for missing metadata cache items")
@@ -215,14 +220,6 @@ func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fi
 	}
 
 	return ownerId, correlationId, timestamp, nil
-}
-
-func (srv *ActualizeMetadataCacheService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.ActualizeMetadataCache")
-}
-
-func (srv *ActualizeMetadataCacheService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
 }
 
 func NewActualizeMetadataCacheService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {
