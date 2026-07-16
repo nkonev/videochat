@@ -2,7 +2,11 @@ package tasks
 
 import (
 	"context"
+	"time"
+
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -14,7 +18,6 @@ import (
 	"nkonev.name/video/producer"
 	"nkonev.name/video/services"
 	"nkonev.name/video/utils"
-	"time"
 )
 
 type ChatDialerService struct {
@@ -170,14 +173,6 @@ func (srv *ChatDialerService) cleanNotNeededAnymoreDialData(
 	}
 }
 
-func (srv *ChatDialerService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.ChatDialer")
-}
-
-func (srv *ChatDialerService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
-}
-
 type ChatDialerTask struct {
 	dcron.Job
 }
@@ -193,7 +188,10 @@ func ChatDialerScheduler(
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.doJob(ctx)
 		return nil
-	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
+	},
+		otelTrace.WithTracing(service.tracer, "scheduler.ChatDialer"),
+		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+	)
 
 	return &ChatDialerTask{job}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nkonev/dcron"
@@ -76,7 +77,6 @@ func main() {
 			services.NewStateChangedEventService,
 			services.NewEgressService,
 			tasks.RedisV9,
-			tasks.RedisLocker,
 			tasks.Scheduler,
 			tasks.NewVideoCallUsersCountNotifierService,
 			tasks.VideoCallUsersCountNotifierScheduler,

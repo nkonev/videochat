@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
 	redisV9 "github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
@@ -26,37 +27,12 @@ func RedisV9(lgr *logger.Logger, lc fx.Lifecycle) *redisV9.Client {
 	return rv8
 }
 
-type RedisLock struct {
-	client *redisV9.Client
-	lgr    *logger.Logger
-}
-
-func (m *RedisLock) Lock(ctx context.Context, _ any, key, value string) bool {
-	exp := viper.GetDuration("schedulers." + key + ".expiration")
-	if exp == 0 {
-		m.lgr.WithTracing(ctx).Errorf("not set expiring duration")
-		return false
-	}
-
-	locked, err := m.client.SetNX(ctx, key, value, exp).Result()
-	if err != nil {
-		m.lgr.WithTracing(ctx).Errorf("unable to invoke redis: %v", err)
-		return false
-	}
-
-	return locked
-}
-
-func (m *RedisLock) Unlock(ctx context.Context, _ any, key, value string) {
-	m.client.Del(ctx, key)
-}
-
-func RedisLocker(redisClient *redisV9.Client, lgr *logger.Logger) (*RedisLock, error) {
-	return &RedisLock{client: redisClient, lgr: lgr}, nil
-}
-
-func Scheduler(locker *RedisLock, lgr *logger.Logger) (*dcron.Cron, error) {
-	return dcron.NewCron(dcron.WithLock(locker), dcron.WithSLog(&TracingLoggerAdapter{lgr})), nil
+func Scheduler(redisClient *redisV9.Client, lgr *logger.Logger) (*dcron.Cron, error) {
+	ad := &TracingLoggerAdapter{lgr}
+	return dcron.NewCron(
+		redisLock.WithLock(redisClient, redisLock.WithSLog(ad)),
+		dcron.WithSLog(ad),
+	), nil
 }
 
 type TracingLoggerAdapter struct {

@@ -4,6 +4,16 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+	test "net/http/httptest"
+	"net/url"
+	"os"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/livekit/protocol/livekit"
@@ -14,11 +24,6 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 	"go.uber.org/fx/fxtest"
-	"io"
-	"io/ioutil"
-	"net/http"
-	test "net/http/httptest"
-	"net/url"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
 	"nkonev.name/video/db"
@@ -32,10 +37,6 @@ import (
 	"nkonev.name/video/tasks"
 	"nkonev.name/video/type_registry"
 	"nkonev.name/video/utils"
-	"os"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -272,7 +273,6 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 			services.NewStateChangedEventService,
 			services.NewEgressService,
 			tasks.RedisV9,
-			tasks.RedisLocker,
 			tasks.Scheduler,
 			tasks.NewSynchronizeWithLivekitService,
 			listener.CreateAaaUserSessionsKilledListener,

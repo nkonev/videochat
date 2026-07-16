@@ -2,7 +2,10 @@ package tasks
 
 import (
 	"context"
+
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -45,14 +48,6 @@ func (srv *UsersInVideoStatusNotifierService) doJob(ctx context.Context) {
 	srv.lgr.WithTracing(ctx).Debugf("End of UsersInVideoStatusNotifier")
 }
 
-func (srv *UsersInVideoStatusNotifierService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.UsersInVideoStatusNotifier")
-}
-
-func (srv *UsersInVideoStatusNotifierService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
-}
-
 type UsersInVideoStatusNotifierTask struct {
 	dcron.Job
 }
@@ -68,7 +63,10 @@ func UsersInVideoStatusNotifierScheduler(
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.doJob(ctx)
 		return nil
-	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
+	},
+		otelTrace.WithTracing(service.tracer, "scheduler.UsersInVideoStatusNotifier"),
+		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+	)
 
 	return &UsersInVideoStatusNotifierTask{job}
 }

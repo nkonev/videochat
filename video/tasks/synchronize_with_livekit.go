@@ -2,8 +2,11 @@ package tasks
 
 import (
 	"context"
+
 	"github.com/livekit/protocol/livekit"
 	"github.com/nkonev/dcron"
+	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -229,14 +232,6 @@ func (srv *SynchronizeWithLivekitService) Contains(participants []dto.UserCallSt
 	return false
 }
 
-func (srv *SynchronizeWithLivekitService) spanStarter(ctx context.Context) (context.Context, any) {
-	return srv.tracer.Start(ctx, "scheduler.SynchronizeWithLivekit")
-}
-
-func (srv *SynchronizeWithLivekitService) spanFinisher(ctx context.Context, span any) {
-	span.(trace.Span).End()
-}
-
 type SynchronizeWithLivekitTask struct {
 	dcron.Job
 }
@@ -252,7 +247,10 @@ func SynchronizeWithLivekitSheduler(
 	job := dcron.NewJob(key, str, func(ctx context.Context) error {
 		service.DoJob(ctx)
 		return nil
-	}, dcron.WithTracing(service.spanStarter, service.spanFinisher))
+	},
+		otelTrace.WithTracing(service.tracer, "scheduler.SynchronizeWithLivekit"),
+		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+	)
 
 	return &SynchronizeWithLivekitTask{job}
 }
