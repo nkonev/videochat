@@ -64,7 +64,7 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
 	offset := int64(0)
 	hasMoreElements := true
 	for hasMoreElements {
-		err := db.Transact(ctx, srv.database, func(tx *db.Tx) error {
+		errOuter := db.Transact(ctx, srv.database, func(tx *db.Tx) error {
 			// here we use order by owner_id
 			batchUserStates, err := tx.GetAllUserStates(ctx, utils.DefaultSize, offset)
 			if err != nil {
@@ -79,9 +79,9 @@ func (srv *SynchronizeWithLivekitService) cleanOrphans(ctx context.Context) {
 			return nil
 		})
 
-		if err != nil {
-			srv.lgr.WithTracing(ctx).Errorf("error during processing: %v", err)
-			continue
+		if errOuter != nil {
+			srv.lgr.WithTracing(ctx).Errorf("error during processing: %v", errOuter)
+			break
 		}
 	}
 }

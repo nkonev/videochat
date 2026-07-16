@@ -70,7 +70,7 @@ func (srv *ChatDialerService) makeDial(ctx context.Context) {
 			batchUserStates, err := tx.GetAllUserStatesOrderByOwnerAndChat(ctx, utils.DefaultSize, offset)
 			if err != nil {
 				srv.lgr.WithTracing(ctx).Errorf("error during reading user states %v", err)
-				continue
+				return err
 			}
 
 			// prepare batch

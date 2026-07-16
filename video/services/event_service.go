@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/livekit/protocol/livekit"
 	"nkonev.name/video/client"
 	"nkonev.name/video/config"
@@ -108,7 +109,7 @@ func (h *StateChangedEventService) NotifyAllChatsAboutUsersInVideoStatus(ctx con
 			batchUserStates, err := tx.GetAllUserStates(ctx, utils.DefaultSize, offset)
 			if err != nil {
 				h.lgr.WithTracing(ctx).Errorf("error during reading user states %v", err)
-				continue
+				break
 			}
 			h.processBatch(ctx, batchUserStates)
 
