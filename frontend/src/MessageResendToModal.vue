@@ -19,7 +19,7 @@
                 </v-card-title>
 
                 <v-card-text class="ma-0 pa-0 resend-to-wrapper">
-                    <v-list class="pb-0" v-if="!loading">
+                    <v-list class="py-0" v-if="!loading">
                         <template v-if="chats.length > 0">
                             <template v-for="(item, index) in chats">
                                 <v-hover v-slot="{ isHovering, props }">
@@ -27,10 +27,9 @@
                                         <template v-slot:prepend v-if="hasLength(item.avatar)">
                                             <v-avatar :image="item.avatar"></v-avatar>
                                         </template>
-                                        <v-list-item-title class="chat-name" v-html="getChatName(item)"></v-list-item-title>
-                                        <v-list-item-subtitle :class="!isHovering ? 'white-colored' : ''">{{ getSubtitle(item, isHovering) }}</v-list-item-subtitle>
+                                        <v-list-item-title class="chat-name" v-html="getChatName(item, isHovering)"></v-list-item-title>
                                     </v-list-item>
-
+                                    <v-divider></v-divider>
                                 </v-hover>
                             </template>
                         </template>
@@ -134,8 +133,11 @@ export default {
                 this.performMarking();
             })
         },
-        getChatName(item) {
-            return item.name
+        getChatName(item, isHovering) {
+            let bldr = '<span>' + item.name + '</span>';
+            bldr += " ";
+            bldr += '<span class="gray-colored">' + this.getSubtitle(item, isHovering) + '</span>';
+            return bldr;
         },
         hasSearchString() {
             return hasLength(this.searchString)
@@ -229,7 +231,7 @@ export default {
               return this.$vuetify.locale.t('$vuetify.resend_to_here')
             }
           } else {
-            return '-'
+            return ''
           }
         },
         onLogout() {
@@ -305,7 +307,7 @@ export default {
 </script>
 
 <style lang="stylus">
-.white-colored {
-    color white !important
+.gray-colored {
+    color gray !important
 }
 </style>
