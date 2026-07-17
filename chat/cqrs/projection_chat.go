@@ -1179,7 +1179,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 			cc.available_to_search,
 			ch.id is not null as is_participant,
 			cc.regular_participant_can_add_participant,
-			ch.tet_a_tet_self
+			cc.tet_a_tet_self
 		from chat_common cc
 		%s chat_user_view ch on (cc.id = ch.id and ch.user_id = any($2))
 		left join blog b on cc.id = b.id
