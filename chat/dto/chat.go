@@ -30,6 +30,7 @@ type ChatViewDto struct {
 	BlogAbout                           bool       `json:"blogAbout"`
 	UpdateDateTime                      *time.Time `json:"lastUpdateDateTime"` // for sake compatibility
 	TetATet                             bool       `json:"tetATet"`
+	TetATetSelf                         bool       `json:"tetATetSelf"`
 	Avatar                              *string    `json:"avatar"`
 	AvatarBig                           *string    `json:"avatarBig"`
 	ConsiderMessagesAsUnread            bool       `json:"considerMessagesAsUnread"`

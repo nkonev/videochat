@@ -91,6 +91,7 @@ type ChatDto {
     canVideoKick:        Boolean!
     canChangeChatAdmins: Boolean!
     tetATet:             Boolean!
+    tetATetSelf: Boolean!
     canAudioMute:        Boolean!
     participants:             [Participant!]!
     participantsCount:        Int!

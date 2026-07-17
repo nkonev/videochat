@@ -28,7 +28,7 @@
                                             <v-avatar :image="item.avatar"></v-avatar>
                                         </template>
                                         <v-list-item-title class="chat-name" v-html="getChatName(item)"></v-list-item-title>
-                                        <v-list-item-subtitle :class="!isHovering ? 'white-colored' : ''">{{ isHovering ? $vuetify.locale.t('$vuetify.resend_to_here') : '-' }}</v-list-item-subtitle>
+                                        <v-list-item-subtitle :class="!isHovering ? 'white-colored' : ''">{{ getSubtitle(item, isHovering) }}</v-list-item-subtitle>
                                     </v-list-item>
 
                                 </v-hover>
@@ -220,6 +220,17 @@ export default {
             if (notEnoughItemsOnPage) {
                 this.loadData(true);
             }
+        },
+        getSubtitle(item, isHovering) {
+          if ( isHovering ) {
+            if (item.tetATetSelf) {
+              return this.$vuetify.locale.t('$vuetify.resend_to_myself')
+            } else {
+              return this.$vuetify.locale.t('$vuetify.resend_to_here')
+            }
+          } else {
+            return '-'
+          }
         },
         onLogout() {
             this.reset();

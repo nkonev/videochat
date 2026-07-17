@@ -305,6 +305,7 @@ func convertToGlobalEvent(e *dto.GlobalUserEvent) *model.GlobalEvent {
 			CanAudioMute:                        chatEvent.CanAudioMute,
 			CanChangeChatAdmins:                 chatEvent.CanChangeChatAdmins,
 			TetATet:                             chatEvent.IsTetATet,
+			TetATetSelf:                         chatEvent.TetATetSelf,
 			ParticipantsCount:                   chatEvent.ParticipantsCount,
 			Participants:                        convertParticipants(chatEvent.Participants),
 			CanResend:                           chatEvent.CanResend,

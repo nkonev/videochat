@@ -162,6 +162,7 @@ export default {
     resend: "Переслать",
     remove_answer: "Убрать ответ на сообщение",
     resend_to: "Выберите чат для пересылки",
+    resend_to_myself: "Переслать себе",
     no_chats: "Нет чатов",
     search_by_chats: "Поиск по чатам",
     can_resend: "Разрешить пересылку сообщений в другие чаты",

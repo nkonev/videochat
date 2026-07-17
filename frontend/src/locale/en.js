@@ -162,6 +162,7 @@ export default {
     resend: "Resend",
     remove_answer: "Remove answer on message",
     resend_to: "Choose chat to resend to",
+    resend_to_myself: "Send to myself",
     no_chats: "No chats",
     search_by_chats: "Search by chats",
     can_resend: "Allow message resending into other chats",

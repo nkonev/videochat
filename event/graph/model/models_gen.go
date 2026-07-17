@@ -52,6 +52,7 @@ type ChatDto struct {
 	CanVideoKick                        bool            `json:"canVideoKick"`
 	CanChangeChatAdmins                 bool            `json:"canChangeChatAdmins"`
 	TetATet                             bool            `json:"tetATet"`
+	TetATetSelf                         bool            `json:"tetATetSelf"`
 	CanAudioMute                        bool            `json:"canAudioMute"`
 	Participants                        []*Participant  `json:"participants"`
 	ParticipantsCount                   int             `json:"participantsCount"`

@@ -1030,6 +1030,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		AvailableToSearch                   bool             `db:"available_to_search"`
 		IsParticipant                       bool             `db:"is_participant"`
 		RegularParticipantCanAddParticipant bool             `db:"regular_participant_can_add_participant"`
+		TetATetSelf                         bool             `db:"tet_a_tet_self"`
 	}
 
 	if size == dto.NoSize {
@@ -1177,7 +1178,8 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 			cc.regular_participant_can_write_message,
 			cc.available_to_search,
 			ch.id is not null as is_participant,
-			cc.regular_participant_can_add_participant
+			cc.regular_participant_can_add_participant,
+			ch.tet_a_tet_self
 		from chat_common cc
 		%s chat_user_view ch on (cc.id = ch.id and ch.user_id = any($2))
 		left join blog b on cc.id = b.id
@@ -1207,6 +1209,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 			BlogAbout:                           de.BlogAbout,
 			UpdateDateTime:                      de.UpdateDateTime,
 			TetATet:                             de.TetATet,
+			TetATetSelf:                         de.TetATetSelf,
 			Avatar:                              de.Avatar,
 			AvatarBig:                           de.AvatarBig,
 			ConsiderMessagesAsUnread:            de.ConsiderMessagesAsUnread,

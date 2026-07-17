@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 		RegularParticipantCanWriteMessage   func(childComplexity int) int
 		ShortInfo                           func(childComplexity int) int
 		TetATet                             func(childComplexity int) int
+		TetATetSelf                         func(childComplexity int) int
 		UnreadMessages                      func(childComplexity int) int
 	}
 
@@ -812,6 +813,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChatDto.TetATet(childComplexity), true
+
+	case "ChatDto.tetATetSelf":
+		if e.complexity.ChatDto.TetATetSelf == nil {
+			break
+		}
+
+		return e.complexity.ChatDto.TetATetSelf(childComplexity), true
 
 	case "ChatDto.unreadMessages":
 		if e.complexity.ChatDto.UnreadMessages == nil {
@@ -3823,6 +3831,50 @@ func (ec *executionContext) _ChatDto_tetATet(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_ChatDto_tetATet(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChatDto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChatDto_tetATetSelf(ctx context.Context, field graphql.CollectedField, obj *model.ChatDto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChatDto_tetATetSelf(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TetATetSelf, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChatDto_tetATetSelf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ChatDto",
 		Field:      field,
@@ -7891,6 +7943,8 @@ func (ec *executionContext) fieldContext_GlobalEvent_chatEvent(_ context.Context
 				return ec.fieldContext_ChatDto_canChangeChatAdmins(ctx, field)
 			case "tetATet":
 				return ec.fieldContext_ChatDto_tetATet(ctx, field)
+			case "tetATetSelf":
+				return ec.fieldContext_ChatDto_tetATetSelf(ctx, field)
 			case "canAudioMute":
 				return ec.fieldContext_ChatDto_canAudioMute(ctx, field)
 			case "participants":
@@ -16682,6 +16736,11 @@ func (ec *executionContext) _ChatDto(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "tetATet":
 			out.Values[i] = ec._ChatDto_tetATet(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tetATetSelf":
+			out.Values[i] = ec._ChatDto_tetATetSelf(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

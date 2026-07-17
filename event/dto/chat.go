@@ -20,6 +20,7 @@ type BaseChatDto struct {
 	CanVideoKick                        bool            `json:"canVideoKick"`
 	CanChangeChatAdmins                 bool            `json:"canChangeChatAdmins"`
 	IsTetATet                           bool            `json:"tetATet"`
+	TetATetSelf                         bool            `json:"tetATetSelf"`
 	CanAudioMute                        bool            `json:"canAudioMute"`
 	ParticipantsCount                   int             `json:"participantsCount"`
 	CanResend                           bool            `json:"canResend"`

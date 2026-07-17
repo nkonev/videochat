@@ -480,6 +480,7 @@ export default {
                         canVideoKick
                         canChangeChatAdmins
                         tetATet
+                        tetATetSelf
                         canAudioMute
                         participantsCount
                         participants {
