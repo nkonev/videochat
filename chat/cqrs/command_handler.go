@@ -1363,7 +1363,7 @@ func validateAndSetEmbedFieldsEmbedMessage(ctx context.Context, dba *db.DB, comm
 			)
 			return nil
 		} else if embedMessageRequest.EmbedType == dto.EmbedMessageTypeResend {
-			m, err := commonProjection.GetMessageBasic(ctx, dba, embedMessageRequest.ChatId, embedMessageRequest.Id)
+			m, err := commonProjection.GetMessageWithEmbed(ctx, dba, embedMessageRequest.ChatId, embedMessageRequest.Id)
 			if err != nil {
 				return err
 			}
@@ -1382,11 +1382,28 @@ func validateAndSetEmbedFieldsEmbedMessage(ctx context.Context, dba *db.DB, comm
 			if !CanResendMessage(chat.CanResend, isParticipant) {
 				return errors.New("Resending is forbidden for this chat")
 			}
+
+			var embedMessageId int64 = embedMessageRequest.Id
+			var embedContent string = m.Content
+			var embedOwnerId int64 = m.OwnerId
+			var embedChatId int64 = embedMessageRequest.ChatId
+
+			// handle already resent
+			if m.GetEmbed() != nil {
+				switch typed := m.GetEmbed().(type) {
+				case *dto.EmbedResend:
+					embedMessageId = typed.MessageId
+					embedContent = typed.MessageContent
+					embedOwnerId = typed.OwnerId
+					embedChatId = typed.ChatId
+				}
+			}
+
 			receiver.Embed = dto.NewEmbedResend(
-				embedMessageRequest.Id,
-				m.Content,
-				m.OwnerId,
-				embedMessageRequest.ChatId,
+				embedMessageId,
+				embedContent,
+				embedOwnerId,
+				embedChatId,
 			)
 			return nil
 		}
