@@ -438,6 +438,8 @@ func (ch *ChatHandler) SearchChats(g *gin.Context) {
 	size := utils.FixSizeString(g.Query(dto.SizeParam))
 	reverse := utils.GetBoolean(g.Query(dto.ReverseParam))
 
+	tetATetSelfFirst := utils.GetBoolean(g.Query(dto.TetATetSelfFirstParam))
+
 	pinned := utils.GetBooleanNullable(g.Query(dto.PinnedParam))
 	lastUpdateDateTime := utils.GetTimeNullable(g.Query(dto.LastUpdateDateTimeParam))
 	id := utils.ParseInt64Nullable(g.Query(dto.ChatIdParam))
@@ -447,7 +449,7 @@ func (ch *ChatHandler) SearchChats(g *gin.Context) {
 
 	searchString := g.Query(dto.SearchStringParam)
 
-	chats, _, err := ch.enrichingProjection.GetChatsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, reverse, searchString, nil, false)
+	chats, _, err := ch.enrichingProjection.GetChatsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, tetATetSelfFirst, reverse, searchString, nil, false)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
@@ -530,7 +532,7 @@ func (ch *ChatHandler) ChatsFresh(g *gin.Context) {
 		return
 	}
 
-	chatDtos, _, err := ch.enrichingProjection.GetChatsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, reverse, searchString, nil, false)
+	chatDtos, _, err := ch.enrichingProjection.GetChatsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, nil, false)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
@@ -641,7 +643,7 @@ func (ch *ChatHandler) ChatsFilter(g *gin.Context) {
 		additionalFoundUserIds = ch.enrichingProjection.SearchForUsers(g.Request.Context(), searchString)
 	}
 
-	chats, err := ch.commonProjection.GetChats(g.Request.Context(), ch.dbWrapper, []int64{userId}, 1, nil, false, false, searchString, additionalFoundUserIds, &chatId)
+	chats, err := ch.commonProjection.GetChats(g.Request.Context(), ch.dbWrapper, []int64{userId}, 1, nil, false, false, false, searchString, additionalFoundUserIds, &chatId)
 	if err != nil {
 		if translateChatError(g, err) {
 			return

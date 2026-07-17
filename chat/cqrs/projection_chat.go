@@ -35,6 +35,10 @@ func (m *CommonProjection) GetChatIds(ctx context.Context, tx *db.Tx, size int32
 	return ma, nil
 }
 
+func isTetATetSelf(tetATet bool, tetATetOppositeUserId *int64) bool {
+	return tetATet && tetATetOppositeUserId == nil
+}
+
 func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated) error {
 	// we don't check chat existence for the chat creation
 
@@ -73,12 +77,15 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			}
 		}
 
+		tetATetSelf := event.TetATetSelf
+
 		_, errInner := tx.ExecContext(ctx, `
 		insert into chat_common(
 			 id
 			,title
 			,create_date_time
 			,tet_a_tet
+			,tet_a_tet_self
 			,avatar
 			,avatar_big
 			,can_resend
@@ -102,10 +109,10 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 		    ,$11
 		    ,$12
 		    ,$13
+		    ,$14
 		)
 		on conflict(id) do update set 
 		    title = excluded.title
-		    ,tet_a_tet = excluded.tet_a_tet
 		    ,avatar = excluded.avatar
 		    ,avatar_big = excluded.avatar_big
 			,can_resend = excluded.can_resend
@@ -115,7 +122,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message = excluded.regular_participant_can_pin_message
 			,regular_participant_can_write_message = excluded.regular_participant_can_write_message
 			,regular_participant_can_add_participant = excluded.regular_participant_can_add_participant
-	`, event.ChatId, event.Title, event.AdditionalData.CreatedAt, event.TetATet, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+	`, event.ChatId, event.Title, event.AdditionalData.CreatedAt, event.TetATet, tetATetSelf, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
 		if errInner != nil {
 			return errInner
 		}
@@ -426,7 +433,7 @@ func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int
 
 // contract: either multiple chats
 // or one chatId != nil
-func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, reverse bool, searchString string, chatId *int64, forceNonParticipant bool) ([]dto.ChatViewEnrichedDto, map[int64]*dto.User, error) {
+func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, chatId *int64, forceNonParticipant bool) ([]dto.ChatViewEnrichedDto, map[int64]*dto.User, error) {
 	if len(behalfParticipantIds) == 0 {
 		return nil, nil, errors.New("Wrong invariant: len(behalfParticipantIds) == 0")
 	}
@@ -445,7 +452,7 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 	}
 
 	d, errOuter := db.TransactWithResult(ctx, m.cp.db, func(tx *db.Tx) (*tupleDto, error) {
-		chats, err := m.cp.GetChats(ctx, tx, behalfParticipantIds, size, startingFromItemId, includeStartingFrom, reverse, searchString, additionalFoundUserIds, chatId)
+		chats, err := m.cp.GetChats(ctx, tx, behalfParticipantIds, size, startingFromItemId, includeStartingFrom, tetATetSelfFirst, reverse, searchString, additionalFoundUserIds, chatId)
 		if err != nil {
 			m.lgr.ErrorContext(ctx, "Error getting chats", logger.AttributeError, err)
 			return nil, err
@@ -608,7 +615,7 @@ func (m *EnrichingProjection) GetChat(ctx context.Context, userId, chatId int64)
 	includeStartingFrom := true
 	searchString := ""
 
-	chats, _, errG := m.GetChatsEnriched(ctx, []int64{userId}, size, startingFromItemId, includeStartingFrom, reverse, searchString, &chatId, false)
+	chats, _, errG := m.GetChatsEnriched(ctx, []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, &chatId, false)
 	if errG != nil {
 		m.lgr.ErrorContext(ctx, "Error getting chats", logger.AttributeError, errG)
 		err = errG
@@ -996,7 +1003,7 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 	return d, nil
 }
 
-func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
+func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
 	type chatDto struct {
 		Id                                  int64            `db:"id"`
 		UserId                              int64            `db:"user_id"`
@@ -1047,7 +1054,11 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 
 	var orderClause string
 	if !searchForPublic {
-		orderClause = fmt.Sprintf("order by (%s) %s", personalOrder, order)
+		if !tetATetSelfFirst {
+			orderClause = fmt.Sprintf("order by (%s) %s", personalOrder, order)
+		} else {
+			orderClause = fmt.Sprintf("order by (ch.tet_a_tet_self) desc, (%s) %s", personalOrder, order)
+		}
 	} else {
 		orderClause = fmt.Sprintf("order by (%s) %s", publicOrder, order)
 	}

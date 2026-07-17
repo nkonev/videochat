@@ -99,6 +99,7 @@ type ChatCreated struct {
 	AdditionalData        *AdditionalData `json:"additionalData"`
 	TetATet               bool            `json:"tetATet"`
 	TetATetOppositeUserId *int64          `json:"tetATetOppositeUserId"`
+	TetATetSelf           bool            `json:"tetATetSelf"`
 	ChatCommoned
 }
 
@@ -118,6 +119,7 @@ type ParticipantsAdded struct {
 	ChatId         int64                  `json:"chatId"`
 	IsChatCreating bool                   `json:"isChatCreating"`
 	IsJoining      bool                   `json:"isJoining"`
+	TetATetSelf    bool                   `json:"tetATetSelf"`
 }
 
 func (p *ParticipantsAdded) GetParticipantIds() []int64 {
@@ -385,6 +387,7 @@ type UserChatParticipantAdded struct {
 	ChatId        int64     `json:"chatId"`
 	UserId        int64     `json:"userId"`
 	TetATet       bool      `json:"tetATet"`
+	TetATetSelf   bool      `json:"tetATetSelf"`
 }
 
 type UserChatEdited struct {

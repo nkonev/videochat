@@ -388,10 +388,13 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		return 0, err
 	}
 
+	tetATetSelf := isTetATetSelf(copyCommand.TetATet, tetATetOppositeUserId)
+
 	cc := &ChatCreated{
 		AdditionalData:        copyCommand.AdditionalData,
 		TetATet:               copyCommand.TetATet,
 		TetATetOppositeUserId: tetATetOppositeUserId,
+		TetATetSelf:           tetATetSelf,
 		ChatCommoned: ChatCommoned{
 			ChatId:                              chatId,
 			Title:                               copyCommand.Title,
@@ -418,6 +421,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		ChatId:         chatId,
 		Participants:   make([]ParticipantWithAdmin, 0),
 		IsChatCreating: true,
+		TetATetSelf:    tetATetSelf,
 	}
 	for _, participantId := range copyCommand.ParticipantIds {
 		pa.Participants = append(pa.Participants, ParticipantWithAdmin{

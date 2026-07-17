@@ -4,6 +4,7 @@ package dto
 const PageParam = "page"
 const SizeParam = "size"
 const ReverseParam = "reverse"
+const TetATetSelfFirstParam = "tetATetSelfFirst"
 const PinnedParam = "pinned"
 const LastUpdateDateTimeParam = "lastUpdateDateTime"
 const IncludeStartingFromParam = "includeStartingFrom"

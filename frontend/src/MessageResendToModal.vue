@@ -121,6 +121,7 @@ export default {
               params: {
                 size: PAGE_SIZE,
                 searchString: this.searchString,
+                tetATetSelfFirst: true,
               }
             }).then(({data}) => {
                 this.chats = data.items;

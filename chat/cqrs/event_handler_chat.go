@@ -52,6 +52,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 			ChatId:        event.ChatId,
 			UserId:        userId,
 			TetATet:       adt.ChatIsTetATet,
+			TetATetSelf:   event.TetATetSelf,
 		}
 		err = m.eventBus.Publish(ctx, ue)
 		if err != nil {
@@ -330,6 +331,17 @@ func (m *EventHandler) OnParticipantChanged(ctx context.Context, event *Particip
 
 func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) error {
 	// we don't check authorization for the chat creation
+
+	if event.TetATetSelf && !event.TetATet {
+		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		return nil
+	}
+
+	if event.TetATet && event.TetATetSelf && event.TetATetOppositeUserId != nil {
+		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		return nil
+	}
+
 	err := m.commonProjection.OnChatCreated(ctx, event)
 	if err != nil {
 		return err

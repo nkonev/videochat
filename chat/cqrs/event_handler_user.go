@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
+
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"slices"
 )
 
 func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserChatParticipantAdded) error {
@@ -15,7 +16,7 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 
 	userIds := []int64{event.UserId}
 
-	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime)
+	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
 	if err != nil {
 		return err
 	}
@@ -26,7 +27,7 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 	m.lgr.DebugContext(ctx, "Sending notification about the chat to participants", "event_type", eventTypeChatCreated, "user_ids", userIds)
 
 	// we don't need to change GetChatsEnriched to additionally process [behalf]userIds because we've already added users in our projection and the projection return all the users
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
 	if err != nil {
 		return err
 	}
@@ -126,7 +127,7 @@ func (m *EventHandler) OnUserChatViewUpdated(ctx context.Context, event *UserCha
 		eventType = dto.EventTypeChatRedraw
 	}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
 	if err != nil {
 		return err
 	}
@@ -285,7 +286,7 @@ func (m *EventHandler) OnUserChatPinned(ctx context.Context, event *UserChatPinn
 
 	userIds := []int64{event.AdditionalData.BehalfUserId}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
 	if err != nil {
 		return err
 	}

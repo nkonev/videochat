@@ -66,7 +66,7 @@ func (m *CommonProjection) OnParticipantAdded(ctx context.Context, event *Partic
 	return res, nil
 }
 
-func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, chatId int64, eventTime time.Time) error {
+func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, chatId int64, eventTime time.Time, tetATetSelf bool) error {
 	return db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		// no problems here because
 		// a) we've already added participants in the previous step
@@ -81,15 +81,16 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 				c.id as chat_id, 
 				false as pinned, 
 				cast ($1 as bigint) as user_id, 
-				cast ($3 as timestamp) as update_date_time
+				cast ($3 as timestamp) as update_date_time,
+				cast ($4 as boolean) as tet_a_tet_self
 			from (select cc.id from chat_common cc where cc.id = $2) c 
 		)
-		insert into chat_user_view(id, pinned, user_id, update_date_time) 
-			select chat_id, pinned, user_id, update_date_time from input_data
+		insert into chat_user_view(id, pinned, user_id, update_date_time, tet_a_tet_self) 
+			select chat_id, pinned, user_id, update_date_time, tet_a_tet_self from input_data
 		on conflict(user_id, id) do update set
 			pinned = excluded.pinned
 			, update_date_time = excluded.update_date_time 
-		`, userId, chatId, eventTime)
+		`, userId, chatId, eventTime, tetATetSelf)
 		if err != nil {
 			return err
 		}
@@ -735,7 +736,7 @@ func (m *CommonProjection) IsExistsTetATetOne(ctx context.Context, co db.CommonO
 					cp.chat_id
 				from chat_participant cp 
 				join chat_common ch on ch.id = cp.chat_id 
-				where ch.tet_a_tet = true and ch.participants_count = 1 and cp.user_id = $1
+				where ch.tet_a_tet = true and ch.tet_a_tet_self = true and cp.user_id = $1
 			) a
 		) b`, participant1)
 	if errors.Is(err, sql.ErrNoRows) {
