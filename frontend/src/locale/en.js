@@ -204,7 +204,7 @@ export default {
     message_edit_embed: "Embed content (YouTube, ...)",
     add_media_embed: "Add embed media",
     users_read: "Users who read this message",
-    search_by_selected: "Search by selected",
+    search_by_selected: "Search selected",
     screen_share_in_process: "Screen share in progress",
     scroll_down: "Scroll down",
     settings: "Settings",
