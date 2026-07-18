@@ -840,6 +840,10 @@ func getTetATetDisplayableUser(behalfUserId int64, tetATetSelf bool, participant
 		if tetATetOppositeUserIdP != nil {
 			oppositeUserId := *tetATetOppositeUserIdP
 			displayableUser = users[oppositeUserId]
+
+			if displayableUser == nil {
+				displayableUser = getDeletedUser(*tetATetOppositeUserIdP)
+			}
 		}
 	}
 

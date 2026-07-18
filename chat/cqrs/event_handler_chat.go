@@ -199,7 +199,7 @@ func (m *EventHandler) handleParticipantRemoved(ctx context.Context, additionalD
 	}
 
 	// also updateViewableParticipants()
-	errp := m.commonProjection.OnParticipantRemoved(ctx, userIds, chatId, isChatRemoving)
+	errp := m.commonProjection.OnParticipantRemoved(ctx, userIds, chatId, isChatRemoving, wereRemovedUsersFromAaa)
 	if errp != nil {
 		return errp
 	}

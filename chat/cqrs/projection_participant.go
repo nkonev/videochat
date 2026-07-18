@@ -104,13 +104,13 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 	})
 }
 
-func (m *CommonProjection) OnParticipantRemoved(ctx context.Context, participantIds []int64, chatId int64, isRemoveAllParticipantsFromChat bool) error {
+func (m *CommonProjection) OnParticipantRemoved(ctx context.Context, participantIds []int64, chatId int64, isRemoveAllParticipantsFromChat, wereRemovedUsersFromAaa bool) error {
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
-		chatExists, err := m.checkChatExists(ctx, tx, chatId)
+		cb, err := m.GetChatBasic(ctx, tx, chatId)
 		if err != nil {
 			return err
 		}
-		if !chatExists {
+		if cb == nil {
 			m.lgr.InfoContext(ctx, "Skipping OnParticipantRemoved because there is no chat", logger.AttributeChatId, chatId)
 			return nil
 		}
@@ -122,7 +122,7 @@ func (m *CommonProjection) OnParticipantRemoved(ctx context.Context, participant
 			return err
 		}
 
-		if !isRemoveAllParticipantsFromChat { // an optimization for chat deletion
+		if !isRemoveAllParticipantsFromChat && !(cb.TetATet && wereRemovedUsersFromAaa) { // !isRemoveAllParticipantsFromChat is an optimization for chat deletion; !(cb.TetATet && wereRemovedUsersFromAaa) is to display those tet-a-tet users somehow - see getTetATetDisplayableUser()
 			err = m.updateViewableParticipants(ctx, tx, chatId)
 			if err != nil {
 				return err
