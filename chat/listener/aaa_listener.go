@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/chat/config"
@@ -55,9 +56,24 @@ func CreateRabbitAaaUserProfileUpdateListener(lgr *logger.LoggerWrapper, cfg *co
 				return err
 			}
 			if bindTo.EventType == dto.EventTypeUserAccountChanged {
-				not.NotifyAboutProfileChanged(ctx, bindTo.User)
+				not.NotifyAboutProfileChanged(ctx, &bindTo.User.User)
+
+				if bindTo.User.Verified {
+					not.CreateTetATetSelfIfNeed(ctx, bindTo.User.User.Id)
+				}
+			}
+		case dto.UserAccountEventCreated:
+			err := json.Unmarshal(bytesData, &bindTo)
+			if err != nil {
+				lgr.ErrorContext(ctx, "Error during deserialize notification", logger.AttributeError, err)
+				return err
 			}
 
+			if bindTo.EventType == dto.EventTypeUserAccountCreated {
+				if bindTo.User.Verified {
+					not.CreateTetATetSelfIfNeed(ctx, bindTo.User.User.Id)
+				}
+			}
 		default:
 			lgr.ErrorContext(ctx, "Unexpected type:", "instance", anInstance)
 			return errors.New(fmt.Sprintf("Unexpected type : %v", anInstance))

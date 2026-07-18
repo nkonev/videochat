@@ -227,7 +227,8 @@ public class UserAccountConverter {
                 userAccount.loginColor(),
                 LdapUtils.isLdapSet(userAccount.ldapId()),
                 dataDTO,
-                PermissionsUtils.areOverriddenPermissions(userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions())
+                PermissionsUtils.areOverriddenPermissions(userAccount.overrideAddPermissions(), userAccount.overrideRemovePermissions()),
+                userAccount.enabled() && userAccount.confirmed() && !userAccount.locked() && !userAccount.expired()
         );
     }
 

@@ -29,6 +29,11 @@ type User struct {
 	Permissions      []string        `json:"permissions"`
 }
 
+type EventUser struct {
+	User
+	Verified bool `json:"verified"`
+}
+
 func (u *User) GetId() int64 {
 	if u != nil {
 		return u.Id
@@ -92,9 +97,14 @@ type FilteredParticipantItemResponse struct {
 	Id int64 `json:"id"`
 }
 
+type UserAccountEventCreated struct {
+	User      *EventUser `json:"user"`
+	EventType string     `json:"eventType"`
+}
+
 type UserAccountEventChanged struct {
-	User      *User  `json:"user"`
-	EventType string `json:"eventType"`
+	User      *EventUser `json:"user"`
+	EventType string     `json:"eventType"`
 }
 
 type UserExists struct {

@@ -4690,10 +4690,12 @@ func TestEventSendingOnUserProfileChange(t *testing.T) {
 
 			a := user1Avatar
 			err = testEventsPublisher.Publish(ctx, dto.UserAccountEventChanged{
-				User: &dto.User{
-					Id:     user1,
-					Login:  user1LoginNew,
-					Avatar: &a,
+				User: &dto.EventUser{
+					User: dto.User{
+						Id:     user1,
+						Login:  user1LoginNew,
+						Avatar: &a,
+					},
 				},
 				EventType: dto.EventTypeUserAccountChanged,
 			})

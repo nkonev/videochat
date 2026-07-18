@@ -1,9 +1,10 @@
 package type_registry
 
 import (
+	"reflect"
+
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/utils"
-	"reflect"
 )
 
 type TypeRegistryInstance struct {
@@ -17,6 +18,7 @@ func NewTypeRegistryInstance() *TypeRegistryInstance {
 	}
 
 	// input events
+	res.AddToRegistryIfNeed(dto.UserAccountEventCreated{})
 	res.AddToRegistryIfNeed(dto.UserAccountEventChanged{})
 
 	// output events

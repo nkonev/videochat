@@ -90,7 +90,7 @@ run-bin:
 	./$(EXECUTABLE) $(SERVE_COMMAND)
 
 run-test:
-	./$(EXECUTABLE) $(SERVE_COMMAND) --cqrs.testhelpermethods=true
+	./$(EXECUTABLE) $(SERVE_COMMAND) --cqrs.testhelpermethods=true --chat.tetatet.autocreateself=false
 
 run: infra check-env download generate package-go
 	./$(EXECUTABLE) $(SERVE_COMMAND)

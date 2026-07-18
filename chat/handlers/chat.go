@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -124,17 +123,7 @@ func (ch *ChatHandler) CreateTetAChat(g *gin.Context) {
 		return
 	}
 
-	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", userId, oppositeUserId)
-
-	cc := cqrs.ChatCreate{
-		AdditionalData: cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId),
-		Title:          tetATetChatName,
-		ParticipantIds: []int64{oppositeUserId},
-		TetATet:        true,
-		Blog:           false,
-		CanResend:      ch.cfg.Chat.TetATet.CanResend,
-		CanReact:       ch.cfg.Chat.TetATet.CanReact,
-	}
+	cc := cqrs.NewTetATetChatCreate(userId, oppositeUserId, cqrs.GenerateMessageAdditionalData(getCorrelationId(g), userId), ch.cfg.Chat.TetATet)
 
 	chatId, err := cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.stripTagsPolicy, ch.cfg, ch.rabbitmqOutputEventPublisher, ch.lgr)
 	if err != nil {

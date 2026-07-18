@@ -112,6 +112,20 @@ type ChatCreate struct {
 	RegularParticipantCanAddParticipant bool
 }
 
+func NewTetATetChatCreate(behalfUserId, oppositeUserId int64, additionalData *AdditionalData, tetATetCfg config.TetATetConfig) ChatCreate {
+	tetATetChatName := fmt.Sprintf("tet_a_tet_%v_%v", behalfUserId, oppositeUserId)
+
+	return ChatCreate{
+		AdditionalData: additionalData,
+		Title:          tetATetChatName,
+		ParticipantIds: []int64{oppositeUserId},
+		TetATet:        true,
+		Blog:           false,
+		CanResend:      tetATetCfg.CanResend,
+		CanReact:       tetATetCfg.CanReact,
+	}
+}
+
 type ChatEdit struct {
 	AdditionalData                      *AdditionalData
 	ChatId                              int64

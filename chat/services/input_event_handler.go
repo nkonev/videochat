@@ -3,13 +3,16 @@ package services
 import (
 	"context"
 	"fmt"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/producer"
+	"nkonev.name/chat/sanitizer"
 )
 
 type InputEventHandler struct {
@@ -18,6 +21,9 @@ type InputEventHandler struct {
 	lgr                          *logger.LoggerWrapper
 	tr                           trace.Tracer
 	rabbitmqOutputEventPublisher *producer.RabbitOutputEventsPublisher
+	cfg                          *config.AppConfig
+	eventBus                     *cqrs.KafkaProducer
+	stripTagsPolicy              *sanitizer.StripTagsPolicy
 }
 
 func NewInputEventHandler(
@@ -25,6 +31,9 @@ func NewInputEventHandler(
 	dba *db.DB,
 	lgr *logger.LoggerWrapper,
 	rabbitmqEventPublisher *producer.RabbitOutputEventsPublisher,
+	cfg *config.AppConfig,
+	eventBus *cqrs.KafkaProducer,
+	stripTagsPolicy *sanitizer.StripTagsPolicy,
 ) *InputEventHandler {
 	tr := otel.Tracer("event")
 
@@ -34,6 +43,33 @@ func NewInputEventHandler(
 		lgr:                          lgr,
 		tr:                           tr,
 		rabbitmqOutputEventPublisher: rabbitmqEventPublisher,
+		cfg:                          cfg,
+		eventBus:                     eventBus,
+		stripTagsPolicy:              stripTagsPolicy,
+	}
+}
+
+func (not InputEventHandler) CreateTetATetSelfIfNeed(ctx context.Context, userId int64) {
+	if !not.cfg.Chat.TetATet.AutoCreateSelf {
+		return
+	}
+
+	exists, _, err := not.commonProjection.IsExistsTetATetOne(ctx, not.dba, userId)
+	if err != nil {
+		not.lgr.ErrorContext(ctx, "Error during IsExistsTetATetOne", logger.AttributeError, err)
+		return
+	}
+
+	if !exists {
+		cc := cqrs.NewTetATetChatCreate(userId, userId, cqrs.GenerateMessageAdditionalData(nil, userId), not.cfg.Chat.TetATet)
+
+		_, err = cc.Handle(ctx, not.eventBus, not.dba, not.commonProjection, not.stripTagsPolicy, not.cfg, not.rabbitmqOutputEventPublisher, not.lgr)
+		if err != nil {
+			not.lgr.ErrorContext(ctx, "Error during handling command", logger.AttributeError, err)
+			return
+		}
+
+		not.lgr.InfoContext(ctx, "Created self tet-a-tet chat", logger.AttributeUserId, userId)
 	}
 }
 

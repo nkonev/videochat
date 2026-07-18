@@ -24,6 +24,7 @@ public record UserAccountEventDTO(
         String loginColor,
         boolean ldap,
         AdditionalDataDTO additionalData,
-        boolean overriddenPermissions
+        boolean overriddenPermissions,
+        boolean verified
 ) {
 }

@@ -168,8 +168,9 @@ type BlogConfig struct {
 }
 
 type TetATetConfig struct {
-	CanResend bool
-	CanReact  bool
+	AutoCreateSelf bool
+	CanResend      bool
+	CanReact       bool
 }
 
 type RabbitMQConfig struct {
