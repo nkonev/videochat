@@ -766,12 +766,10 @@ export default {
               const i = this.chatStore.aaaSessionPingInterval;
               console.debug("Setting aaa ping interval", i);
               sessionPingedTimer = setInterval(this.pingSession, i)
-            }).then(()=>{
-              this.fetchProfileIfNeed();
             })
         },
         fetchProfileIfNeed() {
-            if (!this.chatStore.currentUser) {
+            if (!this.chatStore.currentUser && !this.chatStore.isProfileLoading) {
                 if (this.$route.name == registration_name || this.$route.name == confirmation_pending_name || this.$route.name == forgot_password_name || this.$route.name == password_restore_enter_new_name || this.$route.name == check_email_name || this.$route.name == confirmation_pending_name || this.$route.name == registration_resend_email_name) {
                     return
                 }
@@ -1106,7 +1104,8 @@ export default {
         // To trigger fetching profile that 's going to trigger starting subscriptions
         // It's placed after each route in order not to have a race-condition
         this.$router.afterEach((to, from) => {
-          this.afterRouteInitializedOnce()
+          this.afterRouteInitializedOnce();
+          this.fetchProfileIfNeed();
         });
 
         this.chatStore.showDrawer = getMainDrawer();

@@ -24,6 +24,7 @@ export const useChatStore = defineStore('chat', {
   state: () => {
     return {
         currentUser: null,
+        isProfileLoading: false,
         notificationsCount: 0,
         showCallManagement: false,
         callState: callStateReady,
@@ -103,6 +104,7 @@ export const useChatStore = defineStore('chat', {
       this.currentUser = null
     },
     fetchUserProfile() {
+        this.isProfileLoading = true;
         this.incrementProgressCount();
         return axios.get(`/api/aaa/profile`).then(( {data} ) => {
             console.debug("fetched profile =", data);
@@ -114,6 +116,7 @@ export const useChatStore = defineStore('chat', {
                 setStoredLanguage(lang);
             })
         }).finally(()=>{
+            this.isProfileLoading = false;
             this.decrementProgressCount();
         });
     },
