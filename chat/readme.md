@@ -1,6 +1,6 @@
 # chat application
 
-A (future) replacement of chat microservice in videochat project, 
+A chat microservice, 
 built using CQRS (anti)pattern on top of Kafka as event store 
 and PostgreSQL with Citus sharding extension as projection store.
 
