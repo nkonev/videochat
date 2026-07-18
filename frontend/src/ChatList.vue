@@ -587,7 +587,7 @@ export default {
         return item.participantIds.length == 2
     },
     withMyselfTetATet(item) {
-        return item.participantIds.length == 1
+        return item.tetATetSelf
     },
     filterOutMe(item) {
         return item.participants.filter((p) => p.id != this.chatStore.currentUser?.id)
