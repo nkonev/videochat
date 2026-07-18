@@ -139,6 +139,25 @@ func (m *EnrichingProjection) GetPublishedMessageEnriched(ctx context.Context, c
 	}
 }
 
+func getTetATetTitleForPublic(tetATetParticipantIds []int64, userMap map[int64]*dto.User) string {
+	var aTitle string
+
+	first := true
+	aTitle = ""
+	for _, userId := range tetATetParticipantIds {
+		if !first {
+			aTitle += ", "
+		}
+		usr := userMap[userId]
+		if usr != nil {
+			aTitle += usr.Login
+		}
+		first = false
+	}
+
+	return aTitle
+}
+
 func (m *EnrichingProjection) GetPublishedMessageForPublic(ctx context.Context, chatId, messageId int64) (*dto.PublishedMessageWrapper, bool, error) {
 	cb, err := m.cp.GetChatBasic(ctx, m.cp.db, chatId)
 	if err != nil {
@@ -178,18 +197,7 @@ func (m *EnrichingProjection) GetPublishedMessageForPublic(ctx context.Context, 
 
 	aTitle := cb.Title
 	if cb.TetATet {
-		first := true
-		aTitle = ""
-		for _, userId := range tetATetParticipantIds {
-			if !first {
-				aTitle += ", "
-			}
-			usr := userMap[userId]
-			if usr != nil {
-				aTitle += usr.Login
-			}
-			first = false
-		}
+		aTitle = getTetATetTitleForPublic(tetATetParticipantIds, userMap)
 	}
 
 	return &dto.PublishedMessageWrapper{

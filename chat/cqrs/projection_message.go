@@ -472,6 +472,16 @@ func (m *CommonProjection) GetLastMessageId(ctx context.Context, co db.CommonOpe
 	return maxMessageId, nil
 }
 
+func populateTetATets(usersSet map[int64]bool, chatsByChatId map[int64]*dto.BasicChatDtoExtended) {
+	for _, chatBasic := range chatsByChatId {
+		if chatBasic.TetATet {
+			for _, p := range chatBasic.LastNParticipantIds {
+				usersSet[p] = true
+			}
+		}
+	}
+}
+
 func (m *EnrichingProjection) GetMessagesEnriched(ctx context.Context, behalfUserIds []int64, needCheckAuth, isForPublic bool, authForUserId *int64, chatId int64, size int32, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string, requestedMessageIds []int64, additionalUserIdToFetch []int64) ([]dto.MessageViewEnrichedDto, bool, []*dto.User, error) {
 	type resDto struct {
 		items           []dto.MessageViewEnrichedDto
@@ -560,11 +570,19 @@ func (m *EnrichingProjection) GetMessagesEnriched(ctx context.Context, behalfUse
 				m.lgr.ErrorContext(ctx, "Error getting chat basic", logger.AttributeError, err)
 				return nil, err
 			}
+
+			chatsByChatId := chatsByUserIdByChatId[fakeUserId]
+			populateTetATets(usersSet, chatsByChatId)
 		} else {
 			chatsByUserIdByChatId, err = m.cp.GetChatsBasicExtended(ctx, tx, utils.SetMapIdBoolToSlice(chatsPreSet), behalfUserIds)
 			if err != nil {
 				m.lgr.ErrorContext(ctx, "Error getting chat basic", logger.AttributeError, err)
 				return nil, err
+			}
+
+			for _, behalfUserId := range behalfUserIds {
+				chatsByChatId := chatsByUserIdByChatId[behalfUserId]
+				populateTetATets(usersSet, chatsByChatId)
 			}
 		}
 
@@ -696,7 +714,7 @@ func enrichMessage(
 	}
 
 	chatsBehalfUser := chatsByUserIdByChatId[behalfUserId]
-	embed, err := makeEmbed(m.Embed, users, chatsBehalfUser)
+	embed, err := makeEmbed(behalfUserId, m.Embed, users, chatsBehalfUser)
 	if err != nil {
 		return nil, err
 	}
@@ -858,6 +876,7 @@ func getDeletedUser(id int64) *dto.User {
 }
 
 func makeEmbed(
+	behalfUserId int64,
 	srcEmbed dto.Embeddable,
 	users map[int64]*dto.User,
 	chatsBehalfUserByChatId map[int64]*dto.BasicChatDtoExtended,
@@ -885,9 +904,23 @@ func makeEmbed(
 
 			basicEmbeddedChat := chatsBehalfUserByChatId[typed.ChatId]
 			if basicEmbeddedChat != nil { // basicEmbeddedChat can be deleted
-				if !basicEmbeddedChat.TetATet {
-					embedChatName = &basicEmbeddedChat.Title
+				embedChatName = &basicEmbeddedChat.Title
+				if basicEmbeddedChat.TetATet {
+					embedChatName = nil
+
+					if behalfUserId != dto.NonExistentUser {
+						displayableUser := getTetATetDisplayableUser(behalfUserId, basicEmbeddedChat.TetATetSelf, basicEmbeddedChat.LastNParticipantIds, users)
+						if displayableUser != nil {
+							embedChatName = &displayableUser.Login
+						}
+					} else {
+						pubTetName := getTetATetTitleForPublic(basicEmbeddedChat.LastNParticipantIds, users)
+						if pubTetName != "" {
+							embedChatName = &pubTetName
+						}
+					}
 				}
+
 				isParticipant = basicEmbeddedChat.BehalfUserIsParticipant
 			}
 

@@ -803,6 +803,8 @@ func (m *EnrichingProjection) GetCommentsEnriched(ctx context.Context, blogId in
 
 		chatsBehalfUserByChatId := chatsByUserByChatId[behalfUserId]
 
+		populateTetATets(usersSet, chatsBehalfUserByChatId)
+
 		var count int64
 		errInn = sqlscan.Get(ctx, tx, &count, "SELECT count(*) FROM message m WHERE m.chat_id = $1 AND m.id > $2", blogId, postMessageId)
 		if errInn != nil {
@@ -842,7 +844,7 @@ func (m *EnrichingProjection) GetCommentsEnriched(ctx context.Context, blogId in
 			Owner:          usersMap[co.OwnerId],
 		}
 
-		embed, err := makeEmbed(co.Embed, usersMap, cwd.chatsBehalfUserByChatId)
+		embed, err := makeEmbed(dto.NonExistentUser, co.Embed, usersMap, cwd.chatsBehalfUserByChatId)
 		if err != nil {
 			return nil, err
 		}

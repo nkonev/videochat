@@ -826,23 +826,33 @@ func tetATetOpposite(participantIds []int64, behalfUserId int64) *int64 {
 	return nil
 }
 
+func getTetATetDisplayableUser(behalfUserId int64, tetATetSelf bool, participantIds []int64, users map[int64]*dto.User) *dto.User {
+	var displayableUser *dto.User
+
+	if tetATetSelf {
+		if len(participantIds) != 1 {
+			return displayableUser
+		}
+		currUserId := participantIds[0]
+		displayableUser = users[currUserId]
+	} else {
+		tetATetOppositeUserIdP := tetATetOpposite(participantIds, behalfUserId)
+		if tetATetOppositeUserIdP != nil {
+			oppositeUserId := *tetATetOppositeUserIdP
+			displayableUser = users[oppositeUserId]
+		}
+	}
+
+	return displayableUser
+}
+
 func (m *EnrichingProjection) enrichChat(behalfUserId int64, ch dto.ChatViewDto, users map[int64]*dto.User, admin bool, tetATetOnlines map[int64]bool, forceNonParticipant bool) dto.ChatViewEnrichedDto {
 	che := dto.ChatViewEnrichedDto{
 		ChatViewDto:  ch,
 		Participants: makeParticipants(ch.ParticipantIds, users),
 	}
 	if che.ChatViewDto.TetATet {
-		var displayableUser *dto.User
-		if che.ChatViewDto.ParticipantsCount == 1 {
-			oppositeUserId := che.ChatViewDto.ParticipantIds[0]
-			displayableUser = users[oppositeUserId]
-		} else {
-			tetATetOpposite := tetATetOpposite(che.ParticipantIds, behalfUserId)
-			if tetATetOpposite != nil {
-				oppositeUserId := *tetATetOpposite
-				displayableUser = users[oppositeUserId]
-			}
-		}
+		displayableUser := getTetATetDisplayableUser(behalfUserId, che.ChatViewDto.TetATetSelf, che.ChatViewDto.ParticipantIds, users)
 
 		if displayableUser != nil {
 			che.Title = displayableUser.Login
@@ -1307,6 +1317,7 @@ func (m *CommonProjection) GetChatBasic(ctx context.Context, co db.CommonOperati
 			coalesce(c.avatar_big, c.avatar) as avatar,
 		    c.can_resend,
 		    c.tet_a_tet,
+		    c.tet_a_tet_self,
 			b.id is not null as blog,
 			c.available_to_search,
 			c.regular_participant_can_publish_message,
@@ -1356,12 +1367,14 @@ func (m *CommonProjection) GetChatsBasicExtended(ctx context.Context, co db.Comm
 			coalesce(c.avatar_big, c.avatar) as avatar,
 			(cp.user_id is not null) as behalf_user_is_participant,
 			c.tet_a_tet,
+			c.tet_a_tet_self,
 			c.can_resend,
 			b.id is not null as blog,
 			c.available_to_search,
 			c.regular_participant_can_publish_message,
 			c.regular_participant_can_pin_message,
-			c.regular_participant_can_write_message
+			c.regular_participant_can_write_message,
+			c.last_n_participant_ids
 		FROM chat_common c
 		CROSS JOIN requested_participants re
 		LEFT JOIN chats_participants cp ON (c.id = cp.chat_id and re.user_id = cp.user_id)
@@ -1373,6 +1386,11 @@ func (m *CommonProjection) GetChatsBasicExtended(ctx context.Context, co db.Comm
 		return nil, err
 	}
 	for _, bc := range list {
+		err = bc.DbLastNParticipantIds.AssignTo(&bc.LastNParticipantIds)
+		if err != nil {
+			return nil, err
+		}
+
 		innerMap, ok := result[bc.BehalfUserId]
 		if !ok {
 			innerMap = map[int64]*dto.BasicChatDtoExtended{}
