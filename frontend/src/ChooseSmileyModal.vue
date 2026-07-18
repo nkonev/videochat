@@ -11,7 +11,7 @@
                   >
                     <template v-slot:text>
                       <div class="smiley-buttons">
-                        <v-btn @click="onSmileySettingClick(smiley)" v-for="smiley in groupSmileys" :variant="getVariant(smiley)" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
+                        <v-btn @click="onSmileySettingClick(smiley)" v-for="smiley in groupSmileys" :variant="getVariant(smiley)" class="smiley" height="1.3em" width="1.3em" min-width="unset">{{smiley}}</v-btn>
                       </div>
                     </template>
                   </v-expansion-panel>
@@ -19,7 +19,7 @@
 
                 <v-card-text class="py-0 pt-2 smiley-buttons" :class="isMobile() ? 'px-2' : 'px-4'" v-else>
                     <template v-if="!loading">
-                      <v-btn @click="onSmileyClick(smiley)" v-for="smiley in userSmileys" variant="flat" class="smiley" height="42px" width="42px" min-width="unset">{{smiley}}</v-btn>
+                      <v-btn @click="onSmileyClick(smiley)" v-for="smiley in userSmileys" variant="flat" class="smiley" height="1.3em" width="1.3em" min-width="unset">{{smiley}}</v-btn>
                     </template>
 
                     <v-progress-circular
