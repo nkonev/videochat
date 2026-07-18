@@ -5093,7 +5093,6 @@ func TestCleanAbandonedChats(t *testing.T) {
 		) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
-			mockAaaClient.EXPECT().CountUsers(mock.Anything).Return(1_000_000, nil)
 		},
 		func(
 			lgr *logger.LoggerWrapper,

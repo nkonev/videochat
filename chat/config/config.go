@@ -187,10 +187,9 @@ type RabbitMQConfig struct {
 }
 
 type CleanAbandonedChatsTask struct {
-	Enabled      bool
-	Cron         string
-	Expiration   time.Duration
-	AaaUserCount int64
+	Enabled    bool
+	Cron       string
+	Expiration time.Duration
 }
 
 type CleanDeletedUsersDataTask struct {

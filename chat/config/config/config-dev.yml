@@ -127,7 +127,6 @@ schedulers:
     enabled: true
     cron: "0 * * * * *"
     expiration: "30m"
-    aaaUserCount: 100
   cleanDeletedUsersDataTask:
     enabled: true
     cron: "30 * * * * *"
