@@ -80,7 +80,7 @@ export default Node.create({
         return [
             'span', {"class": "media-in-message-wrapper media-in-message-wrapper-iframe"},
             ['img', mergeAttributes({"class": "iframe-custom-class"}, HTMLAttributes)],
-            ['span', { "class": "media-in-message-button-replace media-in-message-button-replace-first mdi mdi-play-box-outline", "title": "Play in-place"}],
+            ['span', { "class": "media-in-message-button-replace media-in-message-button-replace-first mdi mdi-play-circle-outline", "title": "Play in-place"}],
         ];
     },
 

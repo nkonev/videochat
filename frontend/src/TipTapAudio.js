@@ -43,7 +43,7 @@ const Audio = Node.create({
             'span', {"class": "media-in-message-wrapper media-in-message-wrapper-audio"},
             ['img', mergeAttributes({"class": "audio-custom-class"}, HTMLAttributes)],
             ['span', {"class": "media-in-message-button-open mdi mdi-arrow-expand-all", "title": "Open in player"}],
-            ['span', {"class": "media-in-message-button-replace mdi mdi-play-box-outline", "title": "Play in-place"}],
+            ['span', {"class": "media-in-message-button-replace mdi mdi-play-circle-outline", "title": "Play in-place"}],
         ];
     },
     addCommands() {
