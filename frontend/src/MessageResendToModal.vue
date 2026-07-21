@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center">
-        <v-dialog v-model="show" max-width="700" scrollable :persistent="hasSearchString()">
+        <v-dialog v-model="show" max-width="700" height="100%" scrollable :persistent="hasSearchString()">
             <v-card>
                 <v-card-title class="d-flex align-center ml-1 py-1">
                     <template v-if="showSearchButton">
