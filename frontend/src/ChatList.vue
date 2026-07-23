@@ -501,7 +501,7 @@ export default {
           let builder = "";
           if (chat.tetATetSelf) {
               builder += this.$vuetify.locale.t('$vuetify.tet_a_tet_self');
-          } if (chat.tetATet) {
+          } else if (chat.tetATet) {
               builder += this.$vuetify.locale.t('$vuetify.tet_a_tet');
           } else {
               const logins = chat.participants.map(p => p.login);
