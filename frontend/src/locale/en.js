@@ -169,6 +169,7 @@ export default {
     in: " in ",
     resend_to_here: "Click to resend here",
     tet_a_tet: "Tet-a-tet dialog",
+    tet_a_tet_self: "Saved messages",
     copy_link_to_message: "Copy link to message",
     copy_link_to_chat: "Copy link to chat",
     copy_selected: "Copy selected text",

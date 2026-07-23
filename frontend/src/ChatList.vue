@@ -499,7 +499,9 @@ export default {
               return chat.shortInfo
           }
           let builder = "";
-          if (chat.tetATet) {
+          if (chat.tetATetSelf) {
+              builder += this.$vuetify.locale.t('$vuetify.tet_a_tet_self');
+          } if (chat.tetATet) {
               builder += this.$vuetify.locale.t('$vuetify.tet_a_tet');
           } else {
               const logins = chat.participants.map(p => p.login);

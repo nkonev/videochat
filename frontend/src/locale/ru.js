@@ -169,6 +169,7 @@ export default {
     in: " в ",
     resend_to_here: "Кликните для пересылки сюда",
     tet_a_tet: "Диалог тет-а-тет",
+    tet_a_tet_self: "Избранное",
     copy_link_to_message: "Скопировать ссылку на сообщение",
     copy_link_to_chat: "Скопировать ссылку на чат",
     copy_selected: "Скопировать выделенный текст",
