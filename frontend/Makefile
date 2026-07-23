@@ -2,7 +2,7 @@
 # export CONNECT_LINE=user@api.site.local
 # before calling goals which deploy image to server
 
-.PHONY: check-env download package-docker push-docker-image-to-registry clean clean-builddir clean-cache push-docker-image-to-server deploy-docker-image run-dev run-docker-image run infra infra-test
+.PHONY: check-env download package-docker push-docker-image-to-registry clean clean-builddir clean-cache clean-dot-env push-docker-image-to-server deploy-docker-image run-dev run-docker-image run infra infra-test
 
 BUILDDIR := ./build
 DIST := ./dist
@@ -18,6 +18,7 @@ SERVER_COMPOSE_DIR := /opt/videochat
 STACK_NAME := VIDEOCHATSTACK
 JSON_DIR := $(DIST)/$(SERVICE_NAME)
 STATIC_JSON := $(JSON_DIR)/git.json
+DOT_ENV := .env
 
 download:
 	npm install
@@ -25,11 +26,12 @@ download:
 check-env:
 	docker version && echo -n 'npm: ' && npm --version && echo -n 'node: ' && node --version
 
-generate: generate-git
-
 generate-git:
 	mkdir -p $(JSON_DIR) && \
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"service\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
+
+generate-dot-env:
+	echo "GIT_HASH=$(GIT_COMMIT)" > $(DOT_ENV)
 
 package-node:
 	npm run build
@@ -42,7 +44,7 @@ package-docker:
 	echo "Will build docker $(SERVICE_NAME) image" && \
  	docker build -t $(IMAGE) $(BUILDDIR)
 
-package: clean-builddir package-node generate package-docker
+package: clean-builddir generate-dot-env package-node generate-git package-docker
 
 push-docker-image-to-registry:
 	echo "Will push docker $(SERVICE_NAME) image" && \
@@ -61,10 +63,13 @@ deploy-docker-image:
 	ssh $(SSH_OPTIONS) -q ${CONNECT_LINE} 'docker stack deploy --compose-file $(SERVER_COMPOSE_DIR)/docker-compose-$(SERVICE_NAME).yml $(STACK_NAME)'
 
 
-clean: clean-builddir clean-cache
+clean: clean-builddir clean-cache clean-dot-env
 
 clean-builddir:
 	rm -rf $(DIST) $(BUILDDIR)
+
+clean-dot-env:
+	rm -f $(DOT_ENV)
 
 # https://vitejs.dev/guide/dep-pre-bundling.html
 clean-cache:
@@ -77,7 +82,7 @@ run-dev:
 run-docker-image: package
 	docker run --rm -p 3000:8082 $(IMAGE)
 
-run: infra check-env download generate run-docker-image
+run: infra check-env download run-docker-image
 
 infra:
 	docker compose -f ../docker-compose.yml up -d traefik

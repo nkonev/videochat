@@ -372,5 +372,6 @@ export default {
     start_contributing_to_unread: "Непрочит. выкл",
     regular_participant_can_add_participant: "Участники могут добавлять участников",
     add_participants: "Добавить участников",
-    kafka: "Kafka"
+    kafka: "Kafka",
+    outdated_frontend_modal_text: "Ваша версия устарела. Пожалуйста, нажмите кнопку Обновить"
 }

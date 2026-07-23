@@ -372,5 +372,6 @@ export default {
     start_contributing_to_unread: "Unread unmute",
     regular_participant_can_add_participant: "Regular participant can add participants",
     add_participants: "Add participants",
-    kafka: "Kafka"
+    kafka: "Kafka",
+    outdated_frontend_modal_text: "Your version is out of date. Please click the Update button."
 }

@@ -145,3 +145,5 @@ export const START_CLOSING_VIDEO = "startClosingVideo";
 export const CHAT_NOTIFICATION_SETTINGS_CHANGED = "chatNotificationSettingsChanged";
 
 export const QUOTE_SELECTED = "quoteSelected";
+
+export const OPEN_OUTDATED_FRONTEND_MODAL = "openOutdatedFrontendModal";

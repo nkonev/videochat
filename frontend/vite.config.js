@@ -3,51 +3,57 @@ import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 // Utilities
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 const base = "/";
 
-export default defineConfig({
-  base: base,
-  build: {
-    rollupOptions: {
-      input: {
-        appMain: resolve(__dirname, 'index.html'),
+export default defineConfig(({ mode }) =>{
+  const env = loadEnv(mode, process.cwd(), '')
+  return {
+    base: base,
+    build: {
+      rollupOptions: {
+        input: {
+          appMain: resolve(__dirname, 'index.html'),
+        },
       },
     },
-  },
-  plugins: [
-    vue({
-      template: { transformAssetUrls }
-    }),
-    // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
-    vuetify({
-      autoImport: true,
-      styles: {
-        configFile: 'src/styles/settings.scss',
-      },
-    }),
-  ],
-  define: { 'process.env': {} },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    },
-    extensions: [
-      '.js',
-      '.json',
-      '.jsx',
-      '.mjs',
-      '.ts',
-      '.tsx',
-      '.vue',
+    plugins: [
+      vue({
+        template: { transformAssetUrls }
+      }),
+      // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
+      vuetify({
+        autoImport: true,
+        styles: {
+          configFile: 'src/styles/settings.scss',
+        },
+      }),
     ],
-  },
-  server: {
-    port: 3000,
-    strictPort: true,
-  },
+    define: {
+      'process.env': {},
+      __GIT_HASH__: JSON.stringify(env.GIT_HASH)
+    },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      },
+      extensions: [
+        '.js',
+        '.json',
+        '.jsx',
+        '.mjs',
+        '.ts',
+        '.tsx',
+        '.vue',
+      ],
+    },
+    server: {
+      port: 3000,
+      strictPort: true,
+    },
+  }
 })

@@ -192,6 +192,7 @@
         <MessageDeleteModal/>
         <!-- we store MessageEditMediaModal here in order to make its cache working -->
         <MessageEditMediaModal/>
+        <OutDatedFrontendModal/>
       </v-main>
 
     <v-navigation-drawer :location="'left'" v-model="chatStore.showDrawer">
@@ -250,7 +251,7 @@ import bus, {
   WEBSOCKET_INITIALIZED,
   OPEN_NOTIFICATIONS_DIALOG,
   OPEN_VIEW_FILES_DIALOG,
-  CHAT_NOTIFICATION_SETTINGS_CHANGED, START_CLOSING_VIDEO,
+  CHAT_NOTIFICATION_SETTINGS_CHANGED, START_CLOSING_VIDEO, OPEN_OUTDATED_FRONTEND_MODAL,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -300,6 +301,7 @@ import {getHumanReadableDate} from "@/date.js";
 import cancelRequestsMixin from "@/mixins/cancelRequestsMixin.js";
 import SetPasswordModal from "@/SetPasswordModal.vue";
 import MessageEditMediaModal from "@/MessageEditMediaModal.vue";
+import OutDatedFrontendModal from "@/OutDatedFrontendModal.vue"
 
 const audio = new Audio(`${prefix}/call.mp3`);
 
@@ -1021,6 +1023,32 @@ export default {
           const chatId = this.$route.params.id;
           bus.emit(OPEN_VIEW_FILES_DIALOG, {chatId: chatId, fileUploadTask: { showFileInput: true }});
         },
+        onVisibilityChange() {
+          if (document.visibilityState !== 'hidden') {
+            this.checkFrontendFreshness()
+          }
+        },
+        checkFrontendFreshness() {
+          if (__GIT_HASH__) { // don't check in case there is no generated file...
+            axios.get('/frontend/git.json',   {
+              // query URL without using browser cache
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+              },
+            }).then(({data}) => {
+              console.log('checking git hash: embedded', __GIT_HASH__, 'server', data.commit);
+              if (data.commit) {
+                if (__GIT_HASH__ != data.commit) {
+                  bus.emit(OPEN_OUTDATED_FRONTEND_MODAL)
+                }
+              } else {
+                console.warn("unable to get server's git hash")
+              }
+            })
+          }
+        },
     },
     components: {
         ChooseColorModal,
@@ -1049,6 +1077,7 @@ export default {
         SetPasswordModal,
         MessageEditMediaModal,
         MessageDeleteModal,
+        OutDatedFrontendModal,
     },
     watch: {
       'chatStore.notificationsCount': {
@@ -1086,6 +1115,9 @@ export default {
     },
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
+        window.addEventListener("visibilitychange", this.onVisibilityChange);
+
+        this.checkFrontendFreshness();
 
         createGraphQlClient(this);
 
@@ -1119,6 +1151,7 @@ export default {
 
         this.uninstallCancelRequests();
         window.removeEventListener("resize", this.onWindowResized);
+        window.removeEventListener("visibilitychange", this.onVisibilityChange);
 
         bus.off(PROFILE_SET, this.onProfileSet);
         bus.off(LOGGED_OUT, this.onLoggedOut);
