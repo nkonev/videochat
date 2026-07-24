@@ -9,7 +9,7 @@
                     <v-btn color="primary" variant="flat" @click="refreshPage()">
                         {{ $vuetify.locale.t('$vuetify.refresh') }}
                     </v-btn>
-                    <v-btn color="red" variant="flat" @click="show=false">
+                    <v-btn color="red" variant="flat" @click="closeModal">
                       {{ $vuetify.locale.t('$vuetify.close') }}
                     </v-btn>
                 </v-card-actions>
@@ -19,7 +19,7 @@
 </template>
 
 <script>
-    import bus, {OPEN_OUTDATED_FRONTEND_MODAL} from "./bus/bus";
+    import bus, {OPEN_OUTDATED_FRONTEND_MODAL, CLOSE_OUTDATED_FRONTEND_MODAL} from "./bus/bus";
 
     export default {
         data () {
@@ -34,12 +34,17 @@
             refreshPage() {
               location.reload();
             },
+            closeModal() {
+                this.show=false
+            },
         },
         mounted() {
             bus.on(OPEN_OUTDATED_FRONTEND_MODAL, this.showModal);
+            bus.on(CLOSE_OUTDATED_FRONTEND_MODAL, this.closeModal);
         },
         beforeUnmount() {
             bus.off(OPEN_OUTDATED_FRONTEND_MODAL, this.showModal);
+            bus.off(CLOSE_OUTDATED_FRONTEND_MODAL, this.closeModal);
         },
     }
 </script>

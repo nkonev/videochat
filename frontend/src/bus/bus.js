@@ -147,3 +147,4 @@ export const CHAT_NOTIFICATION_SETTINGS_CHANGED = "chatNotificationSettingsChang
 export const QUOTE_SELECTED = "quoteSelected";
 
 export const OPEN_OUTDATED_FRONTEND_MODAL = "openOutdatedFrontendModal";
+export const CLOSE_OUTDATED_FRONTEND_MODAL = "closeOutdatedFrontendModal";

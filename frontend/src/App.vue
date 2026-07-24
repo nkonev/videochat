@@ -251,7 +251,7 @@ import bus, {
   WEBSOCKET_INITIALIZED,
   OPEN_NOTIFICATIONS_DIALOG,
   OPEN_VIEW_FILES_DIALOG,
-  CHAT_NOTIFICATION_SETTINGS_CHANGED, START_CLOSING_VIDEO, OPEN_OUTDATED_FRONTEND_MODAL,
+  CHAT_NOTIFICATION_SETTINGS_CHANGED, START_CLOSING_VIDEO, OPEN_OUTDATED_FRONTEND_MODAL, CLOSE_OUTDATED_FRONTEND_MODAL,
 } from "@/bus/bus";
 import LoginModal from "@/LoginModal.vue";
 import {useChatStore} from "@/store/chatStore";
@@ -435,6 +435,7 @@ export default {
 
             this.globalEventsSubscription = null;
             this.selfProfileEventsSubscription = null;
+            this.checkFrontendFreshness()
         },
         resetVariables() {
             this.resetVideoInvitation()
@@ -1041,10 +1042,17 @@ export default {
               console.log('checking git hash: embedded', __GIT_HASH__, 'server', data.commit);
               if (data.commit) {
                 if (__GIT_HASH__ != data.commit) {
-                  bus.emit(OPEN_OUTDATED_FRONTEND_MODAL)
+                  bus.emit(CLOSE_OUTDATED_FRONTEND_MODAL)
+                  this.$nextTick(()=>{
+                    bus.emit(OPEN_OUTDATED_FRONTEND_MODAL)
+                  })
                 }
               } else {
                 console.warn("unable to get server's git hash")
+                // bus.emit(CLOSE_OUTDATED_FRONTEND_MODAL)
+                // this.$nextTick(()=>{
+                //   bus.emit(OPEN_OUTDATED_FRONTEND_MODAL)
+                // })
               }
             })
           }
