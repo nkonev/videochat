@@ -495,12 +495,11 @@ export default {
         }
     },
     printParticipants(chat) {
-          if (hasLength(chat.shortInfo)) {
-              return chat.shortInfo
-          }
           let builder = "";
           if (chat.tetATetSelf) {
               builder += this.$vuetify.locale.t('$vuetify.tet_a_tet_self');
+          } else if (hasLength(chat.shortInfo)) {
+              builder += chat.shortInfo
           } else if (chat.tetATet) {
               builder += this.$vuetify.locale.t('$vuetify.tet_a_tet');
           } else {
