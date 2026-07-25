@@ -63,7 +63,7 @@ app.config.globalProperties.appInstance = app;
 
 app.config.globalProperties.getIdFromRouteHash = getIdFromRouteHash;
 
-app.config.globalProperties.setError = (e, txt, traceId) => {
+app.config.globalProperties.setError = (e, txt, traceId, showAlertDebounced) => {
     console.error(txt, e, "traceId=", traceId);
     let messageText = "";
     messageText += txt;
@@ -77,7 +77,7 @@ app.config.globalProperties.setError = (e, txt, traceId) => {
     }
     chatStore.lastError = messageText;
     chatStore.showAlert = true;
-    chatStore.showAlertDebounced = true;
+    chatStore.showAlertDebounced = showAlertDebounced;
     chatStore.errorColor = "error";
 }
 
@@ -86,38 +86,29 @@ app.config.globalProperties.setErrorSilent = (e, traceId) => {
     console.error(e, "traceId=", traceId);
 }
 
-app.config.globalProperties.setWarning = (txt) => {
+app.config.globalProperties.setWarning = (txt, showAlertDebounced) => {
     console.warn(txt);
     chatStore.lastError = txt;
     chatStore.showAlert = true;
-    chatStore.showAlertDebounced = true;
+    chatStore.showAlertDebounced = showAlertDebounced;
     chatStore.errorColor = "warning";
 }
 
-app.config.globalProperties.setOk = (txt) => {
+app.config.globalProperties.setOk = (txt, showAlertDebounced) => {
     console.info(txt);
     chatStore.lastError = txt;
     chatStore.showAlert = true;
-    chatStore.showAlertDebounced = true;
+    chatStore.showAlertDebounced = showAlertDebounced;
     chatStore.errorColor = "green";
 }
 
-app.config.globalProperties.setTempNotification = (txt) => {
+app.config.globalProperties.setTempNotification = (txt, showAlertDebounced) => {
     console.info(txt);
     chatStore.lastError = txt;
     chatStore.showAlert = true;
-    chatStore.showAlertDebounced = true;
+    chatStore.showAlertDebounced = showAlertDebounced;
     chatStore.errorColor = "black";
     chatStore.alertTimeout = 3000;
-}
-
-app.config.globalProperties.setTempGoTo = (txt, actionText, action) => {
-    console.info(txt);
-    chatStore.showTempGoTo = txt;
-    chatStore.showAlert = true;
-    chatStore.showAlertDebounced = true;
-    chatStore.errorColor = "black";
-    chatStore.alertTimeout = 5000;
 }
 
 // fixes https://stackoverflow.com/questions/49627750/vuetify-closing-snackbar-without-closing-dialog
@@ -136,7 +127,9 @@ const debouncedHideAlert = debounce(hideAlert, 3000);
 app.config.globalProperties.closeError = () => {
     chatStore.lastError = "";
     chatStore.showAlert = false;
-    debouncedHideAlert();
+    if (chatStore.showAlertDebounced) {
+        debouncedHideAlert();
+    }
     chatStore.errorColor = "";
 }
 

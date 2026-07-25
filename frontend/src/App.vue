@@ -113,7 +113,8 @@
         <v-container fluid class="ma-0 pa-0" style="height: 100%; width: 100%; position: relative !important;" id="my-app-container">
           <v-overlay v-model="showOverlay" attach="#my-app-container" contained></v-overlay>
 
-          <v-snackbar v-model="chatStore.showAlert" :color="chatStore.errorColor" :timeout="chatStore.alertTimeout ? chatStore.alertTimeout : -1" :transition="false">
+          <!-- it's common alert for setError(), setErrorSilent(), setOk(), setTempNotification() - see frontend/src/main.js -->
+          <v-snackbar v-model="chatStore.showAlert" :color="chatStore.errorColor" :timeout="chatStore.alertTimeout ? chatStore.alertTimeout : -1" :transition="false" @update:modelValue="onAlert">
             {{ chatStore.lastError }}
 
             <template v-slot:actions>
@@ -1055,6 +1056,11 @@ export default {
                 // })
               }
             })
+          }
+        },
+        onAlert(value) {
+          if (!value) {
+            this.closeError()
           }
         },
     },

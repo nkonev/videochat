@@ -267,7 +267,7 @@
                     }
                 }).catch((e) => {
                   if (e.response.status == 409) {
-                    this.setWarning(this.$vuetify.locale.t('$vuetify.user_is_already_in_other_call', this.getUserNameWrapper(dto)))
+                    this.setWarning(this.$vuetify.locale.t('$vuetify.user_is_already_in_other_call', this.getUserNameWrapper(dto)), true)
                   } else {
                     throw e
                   }
