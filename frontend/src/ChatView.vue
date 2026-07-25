@@ -42,7 +42,6 @@
 
             <MessageList v-if="isAllowedMessageList()" :isCompact="isVideoRoute()" ref="messageList"/>
 
-            <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-arrow-left-thick" :class="backToChatsClass()" @click="backToChats()"></v-btn>
             <v-badge
                 v-if="chatStore.showScrollDown"
                 :content="chatStore.chatDto.unreadMessages"
@@ -54,6 +53,7 @@
             >
               <v-btn variant="elevated" color="primary" icon="mdi-arrow-down-thick" @click="scrollDown()"></v-btn>
             </v-badge>
+            <v-btn v-if="isMobile()" variant="elevated" color="primary" icon="mdi-arrow-left-thick" :class="backToChatsClass()" @click="backToChats()"></v-btn>
             <v-btn v-if="isMobile() && canWriteMessage" variant="elevated" icon color="primary" :class="createMessageClass()" @click="openNewMessageDialog()" :title="$vuetify.locale.t('$vuetify.create_message')">
               <v-badge
                   color="red"
@@ -1062,7 +1062,7 @@ export default {
 
     backToChatsClass() {
       if (this.canWriteMessage && this.chatStore.showScrollDown) {
-        return "new-fab-c"
+        return "new-fab-b"
       } else if (this.canWriteMessage) {
         return "new-fab-b"
       } else {
@@ -1075,9 +1075,9 @@ export default {
     scrollDownClass() {
       if (this.isMobile()) {
         if (!this.canWriteMessage) {
-          return "new-fab-a"
-        } else {
           return "new-fab-b"
+        } else {
+          return "new-fab-c"
         }
       } else {
         return "new-fab-a"
