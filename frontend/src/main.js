@@ -20,6 +20,40 @@ import {useChatStore} from "@/store/chatStore";
 import pinia from "@/store/index";
 import FontAwesomeIcon from "@/plugins/faIcons";
 import debounce from "lodash/debounce.js";
+import Bowser from "bowser";
+
+function checkBrowserVersion() {
+    const browser = Bowser.getParser(window.navigator.userAgent, window.navigator.userAgentData);
+    let isBad = false;
+
+    const minFirefoxVersion = '>=115';
+    const minChromeVersion = '>=120';
+    const minEdgeVersion = '>=150';
+
+    if (browser.isBrowser('firefox')) {
+        if (!browser.satisfies({firefox: minFirefoxVersion })) {
+            isBad = true;
+        }
+    } else if (browser.isBrowser('chrome')) {
+        if (!browser.satisfies({chrome: minChromeVersion })) {
+            isBad = true;
+        }
+    } else if (browser.isBrowser("Microsoft Edge")) {
+        if (!browser.satisfies({"Microsoft Edge": minEdgeVersion })) {
+            isBad = true;
+        }
+    }
+
+    console.log(`Browser:`, browser.getBrowser(), 'is bad', isBad);
+
+    if (isBad) {
+        const el = document.getElementById("app");
+        el.textContent = `Bad browser version, valid are: Firefox ${minFirefoxVersion}, Chrome ${minChromeVersion}, Edge ${minEdgeVersion}`;
+        throw ("Bad browser");
+    }
+}
+
+checkBrowserVersion()
 
 axios.defaults.xsrfCookieName = "VIDEOCHAT_XSRF_TOKEN";
 axios.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
