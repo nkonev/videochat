@@ -15,9 +15,9 @@ require (
 	github.com/mcosta74/pgx-slog v0.4.1
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nkonev/args-parser v0.0.1
-	github.com/nkonev/dcron v1.7.12
-	github.com/nkonev/dcron/plugin/lock/redis v1.0.1
-	github.com/nkonev/dcron/plugin/trace/otel v1.0.0
+	github.com/nkonev/dcron v1.7.13
+	github.com/nkonev/dcron/plugin/lock/redis v1.0.2
+	github.com/nkonev/dcron/plugin/trace/otel v1.0.1
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/sanity-io/litter v1.5.8
@@ -90,7 +90,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
 	go.uber.org/dig v1.19.0 // indirect
-	go.uber.org/mock v0.5.0 // indirect
+	go.uber.org/mock v0.6.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.20.0 // indirect
