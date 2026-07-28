@@ -3,6 +3,7 @@ package cqrs
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -17,7 +18,6 @@ import (
 	"nkonev.name/chat/utils"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/jackc/pgtype"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 )
@@ -685,13 +685,13 @@ func (m *CommonProjection) getBlogPostMessageId(ctx context.Context, co db.Commo
 
 func (m *CommonProjection) getComments(ctx context.Context, co db.CommonOperations, blogId, postMessageId int64, size int32, offset int64, reverseOrder bool) ([]dto.CommentViewDto, error) {
 	type commentViewDto struct {
-		Id             int64        `db:"id"`
-		OwnerId        int64        `db:"owner_id"`
-		Content        string       `db:"content"`
-		Embed          pgtype.JSONB `db:"embed"`
-		FileItemUuid   *string      `db:"file_item_uuid"`
-		CreateDateTime time.Time    `db:"create_date_time"`
-		UpdateDateTime *time.Time   `db:"update_date_time"` // for sake compatibility
+		Id             int64           `db:"id"`
+		OwnerId        int64           `db:"owner_id"`
+		Content        string          `db:"content"`
+		Embed          json.RawMessage `db:"embed"`
+		FileItemUuid   *string         `db:"file_item_uuid"`
+		CreateDateTime time.Time       `db:"create_date_time"`
+		UpdateDateTime *time.Time      `db:"update_date_time"` // for sake compatibility
 	}
 
 	mar := []dto.CommentViewDto{}
