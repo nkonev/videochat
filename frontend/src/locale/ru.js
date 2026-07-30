@@ -53,7 +53,7 @@ export default {
     participants: "участника(ов)",
     message_edit_placeholder: "Нажмите Ctrl + Enter для отправки сообщения, Esc для очистки. Также можно перетащить файл картинки на эту надпись. Также можно вставить скопированное изображение из редактора.",
     message_edit_placeholder_short: "Напишите сообщение...",
-    message_editing: "Редактирование сообщения",
+    message_editing: "Редактирование сообщ.",
     message_creating: "Новое сообщение",
     message_broadcast: "Показать всем",
     user_is_writing: "печатает...",
