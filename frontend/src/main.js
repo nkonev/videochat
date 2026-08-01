@@ -26,7 +26,7 @@ function checkBrowserVersion() {
     const browser = Bowser.getParser(window.navigator.userAgent, window.navigator.userAgentData);
     let isBad = false;
 
-    const minFirefoxVersion = '>=115';
+    const minFirefoxVersion = '>=130';
     const minChromeVersion = '>=120';
     const minEdgeVersion = '>=150';
 
