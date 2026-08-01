@@ -743,7 +743,15 @@
                     if (isChatRoute(newValue)) {
                         if (newValue.params.id != oldValue.params.id) {
                             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
-                            if (hasLength(newValue.params.id)) {
+                            // this.chatStore.currentUser?.id: don't trigger load in case still not set user
+                            // testcase:
+                            // user on mobile starts to edit message
+                            // doesn't press send, just close editing modal
+                            // reload page
+                            // without this change
+                            // loadFromStore() -> removeOwnerFromSavedMessageIfNeed() would remove id of message because there is no user id
+                            // see also eager in MessageEditModal.vue
+                            if (hasLength(newValue.params.id) && this.chatStore.currentUser?.id) {
                                 this.$nextTick(() => {
                                     this.loadFromStore();
                                 })
