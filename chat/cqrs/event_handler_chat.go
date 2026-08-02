@@ -46,7 +46,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 
 	// send an output event for the users themselves
 	for _, userId := range userIds {
-		ue := &UserChatParticipantAdded{
+		ue := &UserChatParticipantAdded{ // TODO rename to UserThreadParticipantAdded
 			EventTime:     event.AdditionalData.CreatedAt,
 			CorrelationId: event.AdditionalData.CorrelationId,
 			ChatId:        event.ChatId,
