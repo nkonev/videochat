@@ -47,12 +47,14 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 	// send an output event for the users themselves
 	for _, userId := range userIds {
 		ue := &UserThreadParticipantAdded{
-			EventTime:     event.AdditionalData.CreatedAt,
-			CorrelationId: event.AdditionalData.CorrelationId,
-			ChatId:        event.ChatId,
-			UserId:        userId,
-			TetATet:       adt.ChatIsTetATet,
-			TetATetSelf:   event.TetATetSelf,
+			EventTime:      event.AdditionalData.CreatedAt,
+			CorrelationId:  event.AdditionalData.CorrelationId,
+			ChatId:         event.ChatId,
+			UserId:         userId,
+			TetATet:        adt.ChatIsTetATet,
+			TetATetSelf:    event.TetATetSelf,
+			ParentThreadId: dto.RootThreadId, //
+			ThreadId:       1,                // todo
 		}
 		err = m.eventBus.Publish(ctx, ue)
 		if err != nil {
@@ -362,8 +364,8 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 	}
 
 	// TODO
-	//  дано: набор участников одинаков, идёт от чат_сеттингс ~ из ругового треда
-	//  отправку рутового треда(ParentThreadId==0) в Output(на фронт) действительно сделать на добавлении участников (оставить as is)
+	//  given: same participants for all threads in chat, goes from level 0 (root) ~ chat_settings
+	//  In case root thread(ParentThreadId==0) we send Output event EventTypeThreadCreated as is - see OnUserThreadViewCreated()
 	//  отправку дочерних тредов сделать просто на добавлении дочернего треда
 
 	err = m.commonProjection.OnThreadCreated(ctx, event)

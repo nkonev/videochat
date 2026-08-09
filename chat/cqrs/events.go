@@ -410,12 +410,14 @@ type TechnicalAbandonedChatRemoved struct {
 }
 
 type UserThreadParticipantAdded struct {
-	EventTime     time.Time `json:"eventTime"`
-	CorrelationId *string   `json:"correlationId"`
-	ChatId        int64     `json:"chatId"`
-	UserId        int64     `json:"userId"`
-	TetATet       bool      `json:"tetATet"`
-	TetATetSelf   bool      `json:"tetATetSelf"`
+	EventTime      time.Time `json:"eventTime"`
+	CorrelationId  *string   `json:"correlationId"`
+	ChatId         int64     `json:"chatId"`
+	UserId         int64     `json:"userId"`
+	TetATet        bool      `json:"tetATet"`
+	TetATetSelf    bool      `json:"tetATetSelf"`
+	ParentThreadId int64     `json:"parentThreadId"`
+	ThreadId       int64     `json:"threadId"`
 }
 
 type UserChatEdited struct {

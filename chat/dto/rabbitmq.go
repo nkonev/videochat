@@ -3,7 +3,7 @@ package dto
 type GlobalUserEvent struct {
 	EventType                        string                           `json:"eventType"`
 	UserId                           int64                            `json:"userId"`
-	ChatNotification                 *ChatViewEnrichedDto             `json:"chatNotification"`
+	ChatNotification                 *ThreadViewEnrichedDto           `json:"chatNotification"`
 	ChatDeletedDto                   *ChatDeletedDto                  `json:"chatDeletedNotification"`
 	ChatTetATetUpsertedDto           *ChatTetATetUpsertedDto          `json:"chatTetATetUpsertedNotification"`
 	CoChattedParticipantNotification *User                            `json:"coChattedParticipantNotification"`

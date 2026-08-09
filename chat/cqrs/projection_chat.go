@@ -471,7 +471,8 @@ func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int
 
 // contract: either multiple chats
 // or one chatId != nil
-func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, chatId *int64, forceNonParticipant bool) ([]dto.ChatViewEnrichedDto, map[int64]*dto.User, error) {
+func (m *EnrichingProjection) GetThreadsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, chatId *int64, forceNonParticipant bool, parentThreadId, threadId int64) ([]dto.ThreadViewEnrichedDto, map[int64]*dto.User, error) {
+	// TODO process input parentThreadId, threadId and set output ones
 	if len(behalfParticipantIds) == 0 {
 		return nil, nil, errors.New("Wrong invariant: len(behalfParticipantIds) == 0")
 	}
@@ -485,7 +486,7 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 	additionalFoundUserIds := m.SearchForUsers(ctx, searchString)
 
 	type tupleDto struct {
-		resultChats       []dto.ChatViewEnrichedDto
+		resultChats       []dto.ThreadViewEnrichedDto
 		intermediateUsers map[int64]*dto.User
 	}
 
@@ -525,13 +526,13 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 			m.lgr.WarnContext(ctx, "Something bad during getting tetATetOnlines", logger.AttributeError, err)
 		}
 
-		chatsEnriched := make([]dto.ChatViewEnrichedDto, 0, len(chats))
+		chatsEnriched := make([]dto.ThreadViewEnrichedDto, 0, len(chats))
 		for _, ch := range chats {
 			var admin bool
 			if multipleBehalfUserId {
 				admin = areAdminsOfUserIds[ch.BehalfUserId]
 			} else {
-				admin = areAdminsOfChatIds[ch.Id]
+				admin = areAdminsOfChatIds[ch.ChatId]
 			}
 
 			che := m.enrichChat(ch.BehalfUserId, ch, usersMap, admin, tetATetOnlines, forceNonParticipant)
@@ -645,7 +646,7 @@ func (m *EnrichingProjection) getParticipantsOnlineForTetATetMap(ctx context.Con
 	return ret, err
 }
 
-func (m *EnrichingProjection) GetChat(ctx context.Context, userId, chatId int64) (res *dto.ChatViewEnrichedDto, shouldJoin bool, err error) {
+func (m *EnrichingProjection) GetChat(ctx context.Context, userId, chatId int64) (res *dto.ThreadViewEnrichedDto, shouldJoin bool, err error) {
 	size := int32(1)
 	reverse := false
 
@@ -653,7 +654,7 @@ func (m *EnrichingProjection) GetChat(ctx context.Context, userId, chatId int64)
 	includeStartingFrom := true
 	searchString := ""
 
-	chats, _, errG := m.GetChatsEnriched(ctx, []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, &chatId, false)
+	chats, _, errG := m.GetThreadsEnriched(ctx, []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, &chatId, false)
 	if errG != nil {
 		m.lgr.ErrorContext(ctx, "Error getting chats", logger.AttributeError, errG)
 		err = errG
@@ -808,7 +809,7 @@ func (m *EnrichingProjection) SearchForUsers(ctx context.Context, searchString s
 	return additionalFoundUserIds
 }
 
-func getUserIdsFromChats(chats []dto.ChatViewDto) ([]int64, []int64) {
+func getUserIdsFromChats(chats []dto.ThreadViewDto) ([]int64, []int64) {
 	m := map[int64]struct{}{}
 	mt := map[int64]struct{}{}
 
@@ -840,11 +841,11 @@ func getUserIdsFromChats(chats []dto.ChatViewDto) ([]int64, []int64) {
 	return r, rt
 }
 
-func getChatIdsFromChats(chats []dto.ChatViewDto) []int64 {
+func getChatIdsFromChats(chats []dto.ThreadViewDto) []int64 {
 	m := map[int64]struct{}{}
 
 	for _, ch := range chats {
-		m[ch.Id] = struct{}{}
+		m[ch.ChatId] = struct{}{}
 	}
 
 	r := []int64{}
@@ -884,13 +885,13 @@ func getTetATetDisplayableUser(behalfUserId int64, tetATetSelf bool, participant
 	return displayableUser
 }
 
-func (m *EnrichingProjection) enrichChat(behalfUserId int64, ch dto.ChatViewDto, users map[int64]*dto.User, admin bool, tetATetOnlines map[int64]bool, forceNonParticipant bool) dto.ChatViewEnrichedDto {
-	che := dto.ChatViewEnrichedDto{
-		ChatViewDto:  ch,
-		Participants: makeParticipants(ch.ParticipantIds, users),
+func (m *EnrichingProjection) enrichChat(behalfUserId int64, ch dto.ThreadViewDto, users map[int64]*dto.User, admin bool, tetATetOnlines map[int64]bool, forceNonParticipant bool) dto.ThreadViewEnrichedDto {
+	che := dto.ThreadViewEnrichedDto{
+		ThreadViewDto: ch,
+		Participants:  makeParticipants(ch.ParticipantIds, users),
 	}
-	if che.ChatViewDto.TetATet {
-		displayableUser := getTetATetDisplayableUser(behalfUserId, che.ChatViewDto.TetATetSelf, che.ChatViewDto.ParticipantIds, users)
+	if che.ThreadViewDto.TetATet {
+		displayableUser := getTetATetDisplayableUser(behalfUserId, che.ThreadViewDto.TetATetSelf, che.ThreadViewDto.ParticipantIds, users)
 
 		if displayableUser != nil {
 			che.Title = displayableUser.Login
@@ -933,7 +934,7 @@ func (m *EnrichingProjection) enrichChat(behalfUserId int64, ch dto.ChatViewDto,
 	return che
 }
 
-func SetChatPersonalizedFields(copied *dto.ChatViewEnrichedDto, behalfUserId int64, admin bool, participant bool) {
+func SetChatPersonalizedFields(copied *dto.ThreadViewEnrichedDto, behalfUserId int64, admin bool, participant bool) {
 	canEdit := CanEditChat(admin, copied.TetATet)
 	copied.CanEdit = &canEdit
 	canDelete := CanDeleteChat(admin)
@@ -1051,7 +1052,7 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 	return d, nil
 }
 
-func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
+func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ThreadViewDto, error) {
 	type chatDto struct {
 		Id                                  int64            `db:"id"`
 		UserId                              int64            `db:"user_id"`
@@ -1086,7 +1087,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 	}
 
 	list := []chatDto{}
-	res := []dto.ChatViewDto{}
+	res := []dto.ThreadViewDto{}
 
 	var searchForPublic bool = isSearchForPublic(searchString)
 
@@ -1243,8 +1244,8 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 	}
 
 	for i, de := range list {
-		mapped := dto.ChatViewDto{
-			Id:                                  de.Id,
+		mapped := dto.ThreadViewDto{
+			ChatId:                              de.Id,
 			BehalfUserId:                        de.UserId,
 			Title:                               de.Title,
 			Pinned:                              de.Pinned,

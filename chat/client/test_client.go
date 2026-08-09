@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
+
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -234,7 +235,7 @@ func (r *ChatGetOptionWithSearch) Apply(queryParams *url.Values) *url.Values {
 	return queryParams
 }
 
-func (rc *TestRestClient) GetChats(ctx context.Context, behalfUserId int64, chatGetOptions ...ChatGetOption) ([]dto.ChatViewEnrichedDto, bool, error) {
+func (rc *TestRestClient) GetChats(ctx context.Context, behalfUserId int64, chatGetOptions ...ChatGetOption) ([]dto.ThreadViewEnrichedDto, bool, error) {
 	var queryParams *url.Values
 	for _, opt := range chatGetOptions {
 		if opt != nil {
@@ -244,7 +245,7 @@ func (rc *TestRestClient) GetChats(ctx context.Context, behalfUserId int64, chat
 
 	res, err := query[any, dto.GetChatsResponseDto](ctx, &rc.restClient, behalfUserId, http.MethodGet, "/api/chat/search", "chat.Search", nil, queryParams)
 	if err != nil {
-		return []dto.ChatViewEnrichedDto{}, false, err
+		return []dto.ThreadViewEnrichedDto{}, false, err
 	}
 	return res.Items, res.HasNext, nil
 }

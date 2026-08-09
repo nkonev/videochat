@@ -17,8 +17,8 @@ const DefaultRegularParticipantCanPublishMessage = false
 const DefaultRegularParticipantCanPinMessage = false
 const DefaultRegularParticipantCanAddParticipant = true
 
-type ChatViewDto struct {
-	Id                                  int64      `json:"id"`
+type ThreadViewDto struct {
+	ChatId                              int64      `json:"chatId"`
 	BehalfUserId                        int64      `json:"-"` // behalf user id
 	Title                               string     `json:"name"`
 	Pinned                              bool       `json:"pinned"`
@@ -45,6 +45,8 @@ type ChatViewDto struct {
 	AvailableToSearch                   bool       `json:"availableToSearch"`
 	IsParticipant                       bool       `json:"-"`
 	RegularParticipantCanAddParticipant bool       `json:"regularParticipantCanAddParticipant"`
+	ParentThreadId                      int64      `json:"parentThreadId"`
+	ThreadId                            int64      `json:"threadId"`
 }
 
 type ChatId struct {
@@ -86,8 +88,8 @@ type ChatTetATetUpsertedDto struct {
 	ChatId int64 `json:"chatId"`
 }
 
-type ChatViewEnrichedDto struct {
-	ChatViewDto
+type ThreadViewEnrichedDto struct {
+	ThreadViewDto
 	LastMessagePreview  *string `json:"lastMessagePreview"`
 	Participants        []User  `json:"participants"`
 	CanEdit             *bool   `json:"canEdit"`
@@ -108,8 +110,8 @@ type ChatViewEnrichedDto struct {
 }
 
 type GetChatsResponseDto struct {
-	Items   []ChatViewEnrichedDto `json:"items"`
-	HasNext bool                  `json:"hasNext"`
+	Items   []ThreadViewEnrichedDto `json:"items"`
+	HasNext bool                    `json:"hasNext"`
 }
 
 type ChatBasic struct {

@@ -438,7 +438,7 @@ func (ch *ChatHandler) SearchChats(g *gin.Context) {
 
 	searchString := g.Query(dto.SearchStringParam)
 
-	chats, _, err := ch.enrichingProjection.GetChatsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, tetATetSelfFirst, reverse, searchString, nil, false)
+	chats, _, err := ch.enrichingProjection.GetThreadsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, tetATetSelfFirst, reverse, searchString, nil, false)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
@@ -514,14 +514,14 @@ func (ch *ChatHandler) ChatsFresh(g *gin.Context) {
 
 	searchString := g.Query(dto.SearchStringParam)
 
-	var bindTo = make([]*dto.ChatViewEnrichedDto, 0)
+	var bindTo = make([]*dto.ThreadViewEnrichedDto, 0)
 	if err = g.Bind(&bindTo); err != nil {
 		ch.lgr.ErrorContext(g.Request.Context(), "Error during binding to dto", logger.AttributeError, err)
 		g.Status(http.StatusInternalServerError)
 		return
 	}
 
-	chatDtos, _, err := ch.enrichingProjection.GetChatsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, nil, false)
+	chatDtos, _, err := ch.enrichingProjection.GetThreadsEnriched(g.Request.Context(), []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, nil, false)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
@@ -542,7 +542,7 @@ func (ch *ChatHandler) ChatsFresh(g *gin.Context) {
 	for i := range aLen {
 		currentChat := chatDtos[i]
 		gottenChat := bindTo[i]
-		if currentChat.Id != gottenChat.Id {
+		if currentChat.ChatId != gottenChat.ChatId {
 			edge = false
 			break
 		}

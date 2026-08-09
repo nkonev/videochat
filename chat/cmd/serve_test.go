@@ -148,8 +148,8 @@ func TestUnreads(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -265,8 +265,8 @@ func TestUnreads(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 3 && // in case race condition it's going to fail
 						e.ChatNotification.Participants[0].Id == user3 &&
 						e.ChatNotification.Participants[0].Login == user3Login &&
@@ -887,7 +887,7 @@ func TestReadOneChat(t *testing.T) {
 			assert.Equal(t, 2, len(user2ChatsNew))
 			chat1OfUser2New := user2ChatsNew[0]
 			chat2OfUser2New := user2ChatsNew[1]
-			assert.Equal(t, chat1Id, chat2OfUser2New.Id)
+			assert.Equal(t, chat1Id, chat2OfUser2New.ChatId)
 			assert.Equal(t, int64(0), chat2OfUser2New.UnreadMessages)
 			assert.Equal(t, int64(1), chat1OfUser2New.UnreadMessages)
 
@@ -1350,11 +1350,11 @@ func TestResendMessage(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat2Id &&
-						e.ChatNotification.ChatViewDto.Title == chat2Name &&
-						*e.ChatNotification.ChatViewDto.LastMessageId == message1ResentId &&
-						*e.ChatNotification.ChatViewDto.LastMessageOwnerId == user2 &&
-						*e.ChatNotification.ChatViewDto.LastMessageContent == message1TextNew &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat2Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat2Name &&
+						*e.ChatNotification.ThreadViewDto.LastMessageId == message1ResentId &&
+						*e.ChatNotification.ThreadViewDto.LastMessageOwnerId == user2 &&
+						*e.ChatNotification.ThreadViewDto.LastMessageContent == message1TextNew &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2190,8 +2190,8 @@ func TestPinChat(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2281,8 +2281,8 @@ func TestCreateChat(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
@@ -2348,8 +2348,8 @@ func TestCreateChatWithMultipleParticipants(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2360,8 +2360,8 @@ func TestCreateChatWithMultipleParticipants(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2436,8 +2436,8 @@ func TestEditChatWithAddingParticipants(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
@@ -2448,8 +2448,8 @@ func TestEditChatWithAddingParticipants(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1NewName &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1NewName &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2460,8 +2460,8 @@ func TestEditChatWithAddingParticipants(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1NewName &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1NewName &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2530,8 +2530,8 @@ func TestDeleteChat(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2542,8 +2542,8 @@ func TestDeleteChat(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2758,8 +2758,8 @@ func TestAddParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1NewName &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1NewName &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -2770,8 +2770,8 @@ func TestAddParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1NewName &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1NewName &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3114,8 +3114,8 @@ func TestLeaveFromChat(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
@@ -3202,8 +3202,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
@@ -3223,8 +3223,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeThreadCreated &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3253,8 +3253,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3334,8 +3334,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3380,8 +3380,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
@@ -3482,11 +3482,11 @@ func TestCreateMessage(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
-						*e.ChatNotification.ChatViewDto.LastMessageId == message1Id &&
-						*e.ChatNotification.ChatViewDto.LastMessageOwnerId == user1 &&
-						*e.ChatNotification.ChatViewDto.LastMessageContent == message1Text &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
+						*e.ChatNotification.ThreadViewDto.LastMessageId == message1Id &&
+						*e.ChatNotification.ThreadViewDto.LastMessageOwnerId == user1 &&
+						*e.ChatNotification.ThreadViewDto.LastMessageContent == message1Text &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3504,11 +3504,11 @@ func TestCreateMessage(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
-						*e.ChatNotification.ChatViewDto.LastMessageId == message1Id &&
-						*e.ChatNotification.ChatViewDto.LastMessageOwnerId == user1 &&
-						*e.ChatNotification.ChatViewDto.LastMessageContent == message1Text &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
+						*e.ChatNotification.ThreadViewDto.LastMessageId == message1Id &&
+						*e.ChatNotification.ThreadViewDto.LastMessageOwnerId == user1 &&
+						*e.ChatNotification.ThreadViewDto.LastMessageContent == message1Text &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3687,11 +3687,11 @@ func TestEditMessage(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
-						*e.ChatNotification.ChatViewDto.LastMessageId == message2Id &&
-						*e.ChatNotification.ChatViewDto.LastMessageOwnerId == user1 &&
-						*e.ChatNotification.ChatViewDto.LastMessageContent == message2TextNew &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
+						*e.ChatNotification.ThreadViewDto.LastMessageId == message2Id &&
+						*e.ChatNotification.ThreadViewDto.LastMessageOwnerId == user1 &&
+						*e.ChatNotification.ThreadViewDto.LastMessageContent == message2TextNew &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -3703,11 +3703,11 @@ func TestEditMessage(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user2 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
-						*e.ChatNotification.ChatViewDto.LastMessageId == message2Id &&
-						*e.ChatNotification.ChatViewDto.LastMessageOwnerId == user1 &&
-						*e.ChatNotification.ChatViewDto.LastMessageContent == message2TextNew &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
+						*e.ChatNotification.ThreadViewDto.LastMessageId == message2Id &&
+						*e.ChatNotification.ThreadViewDto.LastMessageOwnerId == user1 &&
+						*e.ChatNotification.ThreadViewDto.LastMessageContent == message2TextNew &&
 						len(e.ChatNotification.Participants) == 2 &&
 						e.ChatNotification.Participants[0].Id == user2 &&
 						e.ChatNotification.Participants[0].Login == user2Login &&
@@ -4347,7 +4347,7 @@ func TestChatPaginate(t *testing.T) {
 			assert.Equal(t, "generated_chat961", resp1[39].Title)
 
 			lastPinned := resp1[len(resp1)-1].Pinned
-			lastId := resp1[len(resp1)-1].Id
+			lastId := resp1[len(resp1)-1].ChatId
 			lastLastUpdateDateTime := resp1[len(resp1)-1].UpdateDateTime
 
 			// get second page
@@ -5029,8 +5029,8 @@ func TestCleanDeletedUsersData(t *testing.T) {
 					e, ok := ee.(*dto.GlobalUserEvent)
 					return ok && e.EventType == dto.EventTypeChatEdited &&
 						e.UserId == user1 &&
-						e.ChatNotification.ChatViewDto.Id == chat1Id &&
-						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ThreadViewDto.ChatId == chat1Id &&
+						e.ChatNotification.ThreadViewDto.Title == chat1Name &&
 						len(e.ChatNotification.Participants) == 1 && // in case race condition it's going to fail
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
