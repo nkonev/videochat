@@ -338,8 +338,8 @@ func ListenUserTopic(
 		// which would be due to mutating userId-partitioned chat_user_view and has_unread_messages tables from the chatId-partitioned event-chat topic
 		// see also https://docs.citusdata.com/en/v13.0/reference/common_errors.html#canceling-the-transaction-since-it-was-involved-in-a-distributed-deadlock
 		// https://www.cybertec-postgresql.com/en/postgresql-understanding-deadlocks/
-		EventUserThreadParticipantAdded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
-			return prepareEvent[*UserThreadParticipantAdded](p.lgr, p.cfg, metadata, record, p.tracer)
+		EventUserThreadAdded: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
+			return prepareEvent[*UserThreadAdded](p.lgr, p.cfg, metadata, record, p.tracer)
 		},
 		EventUserChatEdited: func(metadata *Metadata, record *kgo.Record) (CqrsEvent, context.Context, trace.Span, error) {
 			return prepareEvent[*UserChatEdited](p.lgr, p.cfg, metadata, record, p.tracer)
@@ -369,7 +369,7 @@ func ListenUserTopic(
 		// which would be due to mutating userId-partitioned chat_user_view and has_unread_messages tables from the chatId-partitioned event-chat topic
 		// see also https://docs.citusdata.com/en/v13.0/reference/common_errors.html#canceling-the-transaction-since-it-was-involved-in-a-distributed-deadlock
 		// https://www.cybertec-postgresql.com/en/postgresql-understanding-deadlocks/
-		EventUserThreadParticipantAdded: func(b BatchEvent) (context.Context, error) {
+		EventUserThreadAdded: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnUserThreadViewCreated))
 		},
 		EventUserChatEdited: func(b BatchEvent) (context.Context, error) {

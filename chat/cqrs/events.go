@@ -36,7 +36,7 @@ const (
 	EventMessageReactionCreated             = "messageReactionCreated"
 	EventMessageReactionRemoved             = "messageReactionDeleted"
 	EventTechnicalAbandonedChatRemoved      = "technicalAbandonedChatDeleted"
-	EventUserThreadParticipantAdded         = "userThreadParticipantAdded"
+	EventUserThreadAdded                    = "userThreadAdded"
 	EventUserChatEdited                     = "userChatEdited"
 	EventUserChatParticipantRemoved         = "userChatParticipantDeleted"
 	EventUserMessagesCreated                = "userMessagesCreated"
@@ -409,7 +409,7 @@ type TechnicalAbandonedChatRemoved struct {
 	ChatId int64 `json:"chatId"`
 }
 
-type UserThreadParticipantAdded struct {
+type UserThreadAdded struct {
 	EventTime      time.Time `json:"eventTime"`
 	CorrelationId  *string   `json:"correlationId"`
 	ChatId         int64     `json:"chatId"`
@@ -570,7 +570,7 @@ func (s *TechnicalAbandonedChatRemoved) GetPartitionKey() string {
 	return utils.ToString(s.ChatId)
 }
 
-func (s *UserThreadParticipantAdded) GetPartitionKey() string {
+func (s *UserThreadAdded) GetPartitionKey() string {
 	return utils.ToString(s.UserId)
 }
 
@@ -686,8 +686,8 @@ func (s *TechnicalAbandonedChatRemoved) GetEventType() string {
 	return EventTechnicalAbandonedChatRemoved
 }
 
-func (s *UserThreadParticipantAdded) GetEventType() string {
-	return EventUserThreadParticipantAdded
+func (s *UserThreadAdded) GetEventType() string {
+	return EventUserThreadAdded
 }
 
 func (s *UserChatEdited) GetEventType() string {
@@ -802,7 +802,7 @@ func (s *TechnicalAbandonedChatRemoved) GetEventTopic() EventTopic {
 	return EventTopicChat
 }
 
-func (s *UserThreadParticipantAdded) GetEventTopic() EventTopic {
+func (s *UserThreadAdded) GetEventTopic() EventTopic {
 	return EventTopicUser
 }
 

@@ -46,7 +46,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 
 	// send an output event for the users themselves
 	for _, userId := range userIds {
-		ue := &UserThreadParticipantAdded{
+		ue := &UserThreadAdded{
 			EventTime:      event.AdditionalData.CreatedAt,
 			CorrelationId:  event.AdditionalData.CorrelationId,
 			ChatId:         event.ChatId,
@@ -54,7 +54,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 			TetATet:        adt.ChatIsTetATet,
 			TetATetSelf:    event.TetATetSelf,
 			ParentThreadId: dto.RootThreadId,
-			ThreadId:       event.ThreadId, // TODO кажется не нужно
+			ThreadId:       event.ThreadId, // this is "thread created user view", we do need ThreadId
 		}
 		err = m.eventBus.Publish(ctx, ue)
 		if err != nil {
@@ -372,10 +372,10 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 		return err
 	}
 
-	// Send child threads here
+	// Send only child threads here
 	if event.ParentThreadId != dto.RootThreadId {
-		for _, userId := range userIds { // iterate over...()
-			ue := &UserThreadParticipantAdded{
+		for _, userId := range userIds { // TODO iterate over...()
+			ue := &UserThreadAdded{
 				EventTime:      event.AdditionalData.CreatedAt,
 				CorrelationId:  event.AdditionalData.CorrelationId,
 				ChatId:         event.ChatId,
@@ -383,7 +383,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 				TetATet:        adt.ChatIsTetATet,
 				TetATetSelf:    event.TetATetSelf,
 				ParentThreadId: dto.RootThreadId,
-				ThreadId:       event.ThreadId, // TODO кажется не нужно
+				ThreadId:       event.Id,
 			}
 			err = m.eventBus.Publish(ctx, ue)
 			if err != nil {

@@ -11,7 +11,7 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnUserThreadViewCreated(ctx context.Context, event *UserThreadParticipantAdded) error {
+func (m *EventHandler) OnUserThreadViewCreated(ctx context.Context, event *UserThreadAdded) error {
 	userIds := []int64{event.UserId}
 
 	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
