@@ -1,6 +1,6 @@
 package dto
 
-const EventTypeChatCreated = "chat_created"
+const EventTypeThreadCreated = "thread_created"
 const EventTypeChatEdited = "chat_edited"
 const EventTypeChatDeleted = "chat_deleted"
 const EventTypeChatTetATetUpserted = "chat_tet_a_tet_upserted"

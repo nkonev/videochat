@@ -46,7 +46,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 
 	// send an output event for the users themselves
 	for _, userId := range userIds {
-		ue := &UserChatParticipantAdded{ // TODO ? rename to UserThreadParticipantAdded
+		ue := &UserThreadParticipantAdded{
 			EventTime:     event.AdditionalData.CreatedAt,
 			CorrelationId: event.AdditionalData.CorrelationId,
 			ChatId:        event.ChatId,
@@ -362,7 +362,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 	}
 
 	// TODO
-	//  дано: набор участников одинаков, от идёт чат_сеттингс ~ из ругового треда
+	//  дано: набор участников одинаков, идёт от чат_сеттингс ~ из ругового треда
 	//  отправку рутового треда(ParentThreadId==0) в Output(на фронт) действительно сделать на добавлении участников (оставить as is)
 	//  отправку дочерних тредов сделать просто на добавлении дочернего треда
 

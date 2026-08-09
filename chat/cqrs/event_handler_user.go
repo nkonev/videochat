@@ -11,7 +11,7 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserChatParticipantAdded) error {
+func (m *EventHandler) OnUserThreadViewCreated(ctx context.Context, event *UserThreadParticipantAdded) error {
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
 
 	userIds := []int64{event.UserId}
@@ -21,10 +21,9 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 		return err
 	}
 
-	eventTypeChatCreated := dto.EventTypeChatCreated
 	eventTypeUnreadMessagesChanged := dto.EventTypeHasUnreadMessagesChanged
 
-	m.lgr.DebugContext(ctx, "Sending notification about the chat to participants", "event_type", eventTypeChatCreated, "user_ids", userIds)
+	m.lgr.DebugContext(ctx, "Sending notification about the thread to participants", "event_type", dto.EventTypeThreadCreated, "user_ids", userIds)
 
 	// we don't need to change GetChatsEnriched to additionally process [behalf]userIds because we've already added users in our projection and the projection return all the users
 	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
@@ -41,7 +40,7 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 	for _, cv := range chatViews {
 		dt := dto.GlobalUserEvent{
 			UserId:           cv.BehalfUserId,
-			EventType:        eventTypeChatCreated,
+			EventType:        dto.EventTypeThreadCreated,
 			ChatNotification: &cv,
 		}
 		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dt)
