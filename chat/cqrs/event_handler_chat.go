@@ -53,8 +53,8 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 			UserId:         userId,
 			TetATet:        adt.ChatIsTetATet,
 			TetATetSelf:    event.TetATetSelf,
-			ParentThreadId: dto.RootThreadId, //
-			ThreadId:       1,                // todo
+			ParentThreadId: dto.RootThreadId,
+			ThreadId:       event.ThreadId,
 		}
 		err = m.eventBus.Publish(ctx, ue)
 		if err != nil {
