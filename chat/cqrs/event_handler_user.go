@@ -56,7 +56,7 @@ func (m *EventHandler) OnUserThreadViewCreated(ctx context.Context, event *UserT
 			m.lgr.ErrorContext(ctx, "Error during IterateOverParticipantsChatIds", logger.AttributeError, err)
 		}
 
-		if event.TetATet {
+		if event.ParentThreadId == dto.RootThreadId && event.TetATet {
 			err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
 				UserId:    cv.BehalfUserId,
 				EventType: dto.EventTypeChatTetATetUpserted,
