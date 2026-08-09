@@ -363,14 +363,33 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 		return nil
 	}
 
-	// TODO
 	//  given: same participants for all threads in chat, goes from level 0 (root) ~ chat_settings
-	//  In case root thread(ParentThreadId==0) we send Output event EventTypeThreadCreated as is - see OnUserThreadViewCreated()
-	//  отправку дочерних тредов сделать просто на добавлении дочернего треда
+	//  - In case root thread(ParentThreadId==0) we send Output event EventTypeThreadCreated as is - see OnUserThreadViewCreated()
+	//  - Send child threads here
 
 	err = m.commonProjection.OnThreadCreated(ctx, event)
 	if err != nil {
 		return err
+	}
+
+	// Send child threads here
+	if event.ParentThreadId != dto.RootThreadId {
+		for _, userId := range userIds { // iterate over...()
+			ue := &UserThreadParticipantAdded{
+				EventTime:      event.AdditionalData.CreatedAt,
+				CorrelationId:  event.AdditionalData.CorrelationId,
+				ChatId:         event.ChatId,
+				UserId:         userId,
+				TetATet:        adt.ChatIsTetATet,
+				TetATetSelf:    event.TetATetSelf,
+				ParentThreadId: dto.RootThreadId,
+				ThreadId:       event.ThreadId,
+			}
+			err = m.eventBus.Publish(ctx, ue)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
