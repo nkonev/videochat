@@ -118,7 +118,7 @@ type ThreadEdited struct {
 }
 
 type ThreadCommoned struct {
-	Id             int64   `json:"id"`
+	ThreadId       int64   `json:"threadId"`
 	ChatId         int64   `json:"chatId"`
 	ParentThreadId int64   `json:"parentThreadId"`
 	Title          string  `json:"title"`
@@ -127,7 +127,7 @@ type ThreadCommoned struct {
 }
 
 type ThreadDeleted struct {
-	Id             int64           `json:"id"`
+	ThreadId       int64           `json:"threadId"`
 	ChatId         int64           `json:"chatId"`
 	AdditionalData *AdditionalData `json:"additionalData"`
 }

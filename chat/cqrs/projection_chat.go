@@ -167,7 +167,7 @@ func (m *CommonProjection) OnThreadCreated(ctx context.Context, event *ThreadCre
 		    ,title = excluded.title
 		    ,avatar = excluded.avatar
 		    ,avatar_big = excluded.avatar_big
-	`, event.Id, event.ChatId, event.ParentThreadId, event.Title, event.AdditionalData.CreatedAt, event.Avatar, event.AvatarBig)
+	`, event.ThreadId, event.ChatId, event.ParentThreadId, event.Title, event.AdditionalData.CreatedAt, event.Avatar, event.AvatarBig)
 		if errInner != nil {
 			return errInner
 		}
@@ -181,7 +181,7 @@ func (m *CommonProjection) OnThreadCreated(ctx context.Context, event *ThreadCre
 
 	m.lgr.InfoContext(ctx,
 		"Thread created",
-		logger.AttributeThreadId, event.Id,
+		logger.AttributeThreadId, event.ThreadId,
 		logger.AttributeChatId, event.ChatId,
 		"title", event.Title,
 	)

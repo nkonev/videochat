@@ -383,7 +383,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 				TetATet:        adt.ChatIsTetATet,
 				TetATetSelf:    event.TetATetSelf,
 				ParentThreadId: dto.RootThreadId,
-				ThreadId:       event.Id,
+				ThreadId:       event.ThreadId,
 			}
 			err = m.eventBus.Publish(ctx, ue)
 			if err != nil {

@@ -478,7 +478,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 
 	tc := &ThreadCreated{
 		ThreadCommoned: ThreadCommoned{
-			Id:             threadId,
+			ThreadId:       threadId,
 			ChatId:         chatId,
 			ParentThreadId: dto.RootThreadId,
 			Avatar:         copyCommand.Avatar,
@@ -1487,7 +1487,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 
 	cc := &ThreadCreated{
 		ThreadCommoned: ThreadCommoned{
-			Id:             threadId,
+			ThreadId:       threadId,
 			ChatId:         s.ChatId,
 			ParentThreadId: s.ParentThreadId,
 			Avatar:         s.Avatar,
