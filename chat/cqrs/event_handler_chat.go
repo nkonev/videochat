@@ -54,7 +54,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 			TetATet:        adt.ChatIsTetATet,
 			TetATetSelf:    event.TetATetSelf,
 			ParentThreadId: dto.RootThreadId,
-			ThreadId:       event.ThreadId,
+			ThreadId:       event.ThreadId, // TODO кажется не нужно
 		}
 		err = m.eventBus.Publish(ctx, ue)
 		if err != nil {
@@ -383,7 +383,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 				TetATet:        adt.ChatIsTetATet,
 				TetATetSelf:    event.TetATetSelf,
 				ParentThreadId: dto.RootThreadId,
-				ThreadId:       event.ThreadId,
+				ThreadId:       event.ThreadId, // TODO кажется не нужно
 			}
 			err = m.eventBus.Publish(ctx, ue)
 			if err != nil {
