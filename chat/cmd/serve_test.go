@@ -4359,13 +4359,14 @@ func TestChatPaginate(t *testing.T) {
 			assert.Equal(t, "generated_chat958", resp2[2].Title)
 			assert.Equal(t, "generated_chat921", resp2[39].Title)
 
-			// get second page with search
+			// get first page with search
 			const searchString = "generated_chat96"
-			resp2Search, _, err := testRestClient.GetChats(ctx, user1, client.NewChatGetOptionWithSize(40), client.NewChatGetOptionWithStartsFromChatPinned(lastPinned), client.NewChatGetOptionWithStartsFromChatLastUpdateDateTime(lastLastUpdateDateTime), client.NewChatGetOptionWithStartsFromChatId(lastId), client.NewChatGetOptionWithSearch(searchString))
+			resp2Search, _, err := testRestClient.GetChats(ctx, user1, client.NewChatGetOptionWithSize(40), client.NewChatGetOptionWithSearch(searchString))
 			require.NoError(t, err)
-			assert.Equal(t, 40, len(resp2Search))
-			assert.Equal(t, "generated_chat960", resp2Search[0].Title)
-			assert.Equal(t, "generated_chat959", resp2Search[1].Title)
+			assert.Equal(t, 11, len(resp2Search))
+			assert.Equal(t, "generated_chat969", resp2Search[0].Title)
+			assert.Equal(t, "generated_chat968", resp2Search[1].Title)
+			assert.Equal(t, "generated_chat967", resp2Search[2].Title)
 		})
 }
 
@@ -4415,13 +4416,6 @@ func TestChatFuzzySearch(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, 1, len(resp2Search))
 			assert.Equal(t, resp2Search[0].Title, chat1Name)
-
-			const searchString3 = "самсунгу"
-
-			resp3Search, _, err := testRestClient.GetChats(ctx, user1, client.NewChatGetOptionWithSearch(searchString3))
-			require.NoError(t, err)
-			assert.Equal(t, 1, len(resp3Search))
-			assert.Equal(t, resp3Search[0].Title, chat2Name)
 		})
 }
 
@@ -4490,13 +4484,13 @@ func TestMessagePaginate(t *testing.T) {
 			assert.Equal(t, int64(12), resp2[2].Id)
 
 			const searchString = "generated_message10"
-			// get second page with search
-			resp2Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSize(3), client.NewMessageGetOptionWithStartsFromItemId(lastId), client.NewMessageGetOptionWithSearch(searchString))
+			// get first page with search
+			resp2Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSize(3), client.NewMessageGetOptionWithSearch(searchString))
 			require.NoError(t, err)
 			assert.Equal(t, 3, len(resp2Search))
 			assert.True(t, strings.HasPrefix(resp2Search[0].Content, "generated_message10"))
-			assert.True(t, strings.HasPrefix(resp2Search[1].Content, "generated_message11"))
-			assert.True(t, strings.HasPrefix(resp2Search[2].Content, "generated_message12"))
+			assert.True(t, strings.HasPrefix(resp2Search[1].Content, "generated_message100"))
+			assert.True(t, strings.HasPrefix(resp2Search[2].Content, "generated_message101"))
 		})
 }
 
@@ -4599,12 +4593,6 @@ func TestMessageFuzzySearch(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, 1, len(resp2Search))
 			assert.Equal(t, resp2Search[0].Content, messageText1)
-
-			const searchString3 = "самсунгу"
-			resp3Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSearch(searchString3))
-			require.NoError(t, err)
-			assert.Equal(t, 1, len(resp3Search))
-			assert.Equal(t, resp3Search[0].Content, message2Text)
 
 			const searchString4 = "пастер"
 			resp4Search, _, err := testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSearch(searchString4))

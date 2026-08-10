@@ -1017,12 +1017,6 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 		searchClause += fmt.Sprintf(`
 		m.fts_all_content @@ plainto_tsquery('russian', $%d)
 		`, len(queryArgs))
-		searchClause += " or "
-
-		queryArgs = append(queryArgs, searchString)
-		searchClause += fmt.Sprintf(" m.all_content %% $%d ", len(queryArgs))
-		searchClause += " or "
-		searchClause += fmt.Sprintf(" cyrillic_transliterate(m.all_content) %% cyrillic_transliterate($%d) ", len(queryArgs))
 
 		searchClause += " ) "
 	}

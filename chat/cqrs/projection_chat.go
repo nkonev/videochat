@@ -1121,16 +1121,16 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		searchClause += fmt.Sprintf(" cyrillic_transliterate(cc.fts_title::text) ilike cyrillic_transliterate($%d) ", len(queryArgs))
 		searchClause += " or "
 
+		queryArgs = append(queryArgs, "%"+searchString+"%")
+		searchClause += fmt.Sprintf(" cc.title ilike $%d ", len(queryArgs))
+		searchClause += " or "
+		searchClause += fmt.Sprintf(" cyrillic_transliterate(cc.title) ilike cyrillic_transliterate($%d) ", len(queryArgs))
+		searchClause += " or "
+
 		queryArgs = append(queryArgs, searchString)
 		searchClause += fmt.Sprintf(`
 		cc.fts_title @@ plainto_tsquery('russian', $%d)
 		`, len(queryArgs))
-		searchClause += " or "
-
-		queryArgs = append(queryArgs, searchString)
-		searchClause += fmt.Sprintf(" cc.fts_title::text %% $%d ", len(queryArgs))
-		searchClause += " or "
-		searchClause += fmt.Sprintf(" cyrillic_transliterate(cc.fts_title::text) %% cyrillic_transliterate($%d) ", len(queryArgs))
 
 		searchClause += " ) "
 	}
