@@ -140,6 +140,7 @@ type ChatDeleted struct {
 type ParticipantsAdded struct {
 	AdditionalData *AdditionalData        `json:"additionalData"`
 	Participants   []ParticipantWithAdmin `json:"participants"`
+	ThreadId       int64                  `json:"threadId"`
 	ChatId         int64                  `json:"chatId"`
 	IsChatCreating bool                   `json:"isChatCreating"`
 	IsJoining      bool                   `json:"isJoining"`

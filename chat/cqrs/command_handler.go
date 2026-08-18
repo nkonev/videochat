@@ -423,6 +423,11 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		return 0, err
 	}
 
+	threadId, err := commonProjection.GetNextThreadId(ctx, dba, chatId)
+	if err != nil {
+		return 0, err
+	}
+
 	tetATetSelf := isTetATetSelf(copyCommand.TetATet, tetATetOppositeUserId)
 
 	cc := &ChatCreated{
@@ -451,6 +456,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	pa := &ParticipantsAdded{
 		AdditionalData: copyCommand.AdditionalData,
 		ChatId:         chatId,
+		ThreadId:       threadId,
 		Participants:   make([]ParticipantWithAdmin, 0),
 		IsChatCreating: true,
 		TetATetSelf:    tetATetSelf,
@@ -467,11 +473,6 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	}
 
 	err = eventBus.Publish(ctx, pa)
-	if err != nil {
-		return 0, err
-	}
-
-	threadId, err := commonProjection.GetNextThreadId(ctx, dba, chatId)
 	if err != nil {
 		return 0, err
 	}
@@ -549,6 +550,7 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 	if len(copyCommand.ParticipantIdsToAdd) > 0 {
 		pa := &ParticipantsAdded{
 			AdditionalData: copyCommand.AdditionalData,
+			ThreadId:       sp.ThreadId, // TODO continue here
 			ChatId:         copyCommand.ChatId,
 		}
 		for _, participantId := range copyCommand.ParticipantIdsToAdd {
@@ -624,6 +626,7 @@ func (s *ParticipantAdd) Handle(ctx context.Context, eventBus *KafkaProducer, db
 	pa := &ParticipantsAdded{
 		AdditionalData: s.AdditionalData,
 		ChatId:         s.ChatId,
+		ThreadId:       sp.ThreadId, // TODO
 		IsJoining:      s.IsJoining,
 	}
 	for _, participantId := range s.ParticipantIds {
