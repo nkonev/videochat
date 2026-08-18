@@ -632,10 +632,19 @@ func (s *ParticipantAdd) Handle(ctx context.Context, eventBus *KafkaProducer, db
 		return fmt.Errorf("Max allowed participants %d, got %d", cfg.Cqrs.Commands.MaxParticipantsPerSingleCommand, s.ParticipantIds)
 	}
 
+	rootThreadId, err := commonProjection.FindRootThread(ctx, dba, s.ChatId)
+	if err != nil {
+		return err
+	}
+
+	if rootThreadId == nil {
+		return fmt.Errorf("no thread found in chatIs %d", s.ChatId)
+	}
+
 	pa := &ParticipantsAdded{
 		AdditionalData: s.AdditionalData,
 		ChatId:         s.ChatId,
-		ThreadId:       sp.ThreadId, // TODO
+		ThreadId:       *rootThreadId,
 		IsJoining:      s.IsJoining,
 	}
 	for _, participantId := range s.ParticipantIds {

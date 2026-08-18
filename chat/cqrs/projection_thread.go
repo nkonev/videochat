@@ -2,6 +2,8 @@ package cqrs
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"nkonev.name/chat/db"
 
@@ -56,6 +58,9 @@ func (m *CommonProjection) FindRootThread(ctx context.Context, co db.CommonOpera
 	var res *int64
 
 	err := sqlscan.Get(ctx, co, &res, "select id from thread where chat_id = $1 and parent_thread_id = $2", chatId, dto.RootThreadId)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
 
 	return res, err
 }
