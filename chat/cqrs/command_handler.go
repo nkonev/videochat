@@ -496,7 +496,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	return chatId, nil
 }
 
-func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, stripTagsPolicy *sanitizer.StripTagsPolicy, cfg *config.AppConfig) error {
+func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db.DB, commonProjection *CommonProjection, stripTagsPolicy *sanitizer.StripTagsPolicy, cfg *config.AppConfig, lgr *logger.LoggerWrapper) error {
 	var copyCommand *ChatEdit
 	err := reprint.FromTo(&sp, &copyCommand)
 	if err != nil {
@@ -524,6 +524,11 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 		}
 	}
 
+	rootThreadId, err := commonProjection.FindRootThread(ctx, dba, copyCommand.ChatId)
+	if err != nil {
+		return err
+	}
+
 	cc := &ChatEdited{
 		AdditionalData: copyCommand.AdditionalData,
 		ChatCommoned: ChatCommoned{
@@ -547,26 +552,30 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 		return err
 	}
 
-	if len(copyCommand.ParticipantIdsToAdd) > 0 {
-		pa := &ParticipantsAdded{
-			AdditionalData: copyCommand.AdditionalData,
-			ThreadId:       sp.ThreadId, // TODO continue here
-			ChatId:         copyCommand.ChatId,
-		}
-		for _, participantId := range copyCommand.ParticipantIdsToAdd {
-			pa.Participants = append(pa.Participants, ParticipantWithAdmin{
-				ParticipantId: participantId,
-				ChatAdmin:     false,
-			})
-		}
-		if len(pa.Participants) == 0 {
-			return NewParticipantsError("Cannot add 0 participants")
-		}
+	if rootThreadId != nil {
+		if len(copyCommand.ParticipantIdsToAdd) > 0 {
+			pa := &ParticipantsAdded{
+				AdditionalData: copyCommand.AdditionalData,
+				ThreadId:       *rootThreadId,
+				ChatId:         copyCommand.ChatId,
+			}
+			for _, participantId := range copyCommand.ParticipantIdsToAdd {
+				pa.Participants = append(pa.Participants, ParticipantWithAdmin{
+					ParticipantId: participantId,
+					ChatAdmin:     false,
+				})
+			}
+			if len(pa.Participants) == 0 {
+				return NewParticipantsError("Cannot add 0 participants")
+			}
 
-		err = eventBus.Publish(ctx, pa)
-		if err != nil {
-			return err
+			err = eventBus.Publish(ctx, pa)
+			if err != nil {
+				return err
+			}
 		}
+	} else {
+		lgr.InfoContext(ctx, "Parent thread isn't found, skipped adding participants", logger.AttributeChatId, sp.ChatId)
 	}
 
 	return nil

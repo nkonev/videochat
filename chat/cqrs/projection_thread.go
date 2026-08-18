@@ -51,3 +51,11 @@ func (m *CommonProjection) GetThreadDataForAuthorization(ctx context.Context, co
 	}
 	return d, nil
 }
+
+func (m *CommonProjection) FindRootThread(ctx context.Context, co db.CommonOperations, chatId int64) (*int64, error) {
+	var res *int64
+
+	err := sqlscan.Get(ctx, co, &res, "select id from thread where chat_id = $1 and parent_thread_id = $2", chatId, dto.RootThreadId)
+
+	return res, err
+}

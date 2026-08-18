@@ -1,7 +1,6 @@
 package dto
 
-// every chat has root thread
-const RootThreadId = 0
+const RootThreadId = 0 // aka root thread has no parent thread
 
 type ThreadAuthorizationData struct {
 	IsChatFound         bool `db:"is_chat_found"`

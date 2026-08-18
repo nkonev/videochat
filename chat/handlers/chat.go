@@ -179,7 +179,7 @@ func (ch *ChatHandler) EditChat(g *gin.Context) {
 		RegularParticipantCanAddParticipant: utils.GetNullableBooleanOr(ccd.RegularParticipantCanAddParticipant, dto.DefaultRegularParticipantCanAddParticipant),
 	}
 
-	err = cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.stripTagsPolicy, ch.cfg)
+	err = cc.Handle(g.Request.Context(), ch.eventBus, ch.dbWrapper, ch.commonProjection, ch.stripTagsPolicy, ch.cfg, ch.lgr)
 	if err != nil {
 		if translateChatError(g, err) {
 			return
