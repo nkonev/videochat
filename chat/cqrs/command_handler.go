@@ -456,7 +456,6 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 	pa := &ParticipantsAdded{
 		AdditionalData: copyCommand.AdditionalData,
 		ChatId:         chatId,
-		ThreadId:       threadId,
 		Participants:   make([]ParticipantWithAdmin, 0),
 		IsChatCreating: true,
 		TetATetSelf:    tetATetSelf,
@@ -524,11 +523,6 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 		}
 	}
 
-	rootThreadId, err := commonProjection.FindRootThread(ctx, dba, copyCommand.ChatId)
-	if err != nil {
-		return err
-	}
-
 	cc := &ChatEdited{
 		AdditionalData: copyCommand.AdditionalData,
 		ChatCommoned: ChatCommoned{
@@ -552,30 +546,25 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 		return err
 	}
 
-	if rootThreadId != nil {
-		if len(copyCommand.ParticipantIdsToAdd) > 0 {
-			pa := &ParticipantsAdded{
-				AdditionalData: copyCommand.AdditionalData,
-				ThreadId:       *rootThreadId,
-				ChatId:         copyCommand.ChatId,
-			}
-			for _, participantId := range copyCommand.ParticipantIdsToAdd {
-				pa.Participants = append(pa.Participants, ParticipantWithAdmin{
-					ParticipantId: participantId,
-					ChatAdmin:     false,
-				})
-			}
-			if len(pa.Participants) == 0 {
-				return NewParticipantsError("Cannot add 0 participants")
-			}
-
-			err = eventBus.Publish(ctx, pa)
-			if err != nil {
-				return err
-			}
+	if len(copyCommand.ParticipantIdsToAdd) > 0 {
+		pa := &ParticipantsAdded{
+			AdditionalData: copyCommand.AdditionalData,
+			ChatId:         copyCommand.ChatId,
 		}
-	} else {
-		lgr.InfoContext(ctx, "Parent thread isn't found, skipped adding participants", logger.AttributeChatId, sp.ChatId)
+		for _, participantId := range copyCommand.ParticipantIdsToAdd {
+			pa.Participants = append(pa.Participants, ParticipantWithAdmin{
+				ParticipantId: participantId,
+				ChatAdmin:     false,
+			})
+		}
+		if len(pa.Participants) == 0 {
+			return NewParticipantsError("Cannot add 0 participants")
+		}
+
+		err = eventBus.Publish(ctx, pa)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -632,19 +621,9 @@ func (s *ParticipantAdd) Handle(ctx context.Context, eventBus *KafkaProducer, db
 		return fmt.Errorf("Max allowed participants %d, got %d", cfg.Cqrs.Commands.MaxParticipantsPerSingleCommand, s.ParticipantIds)
 	}
 
-	rootThreadId, err := commonProjection.FindRootThread(ctx, dba, s.ChatId)
-	if err != nil {
-		return err
-	}
-
-	if rootThreadId == nil {
-		return fmt.Errorf("no thread found in chatIs %d", s.ChatId)
-	}
-
 	pa := &ParticipantsAdded{
 		AdditionalData: s.AdditionalData,
 		ChatId:         s.ChatId,
-		ThreadId:       *rootThreadId,
 		IsJoining:      s.IsJoining,
 	}
 	for _, participantId := range s.ParticipantIds {

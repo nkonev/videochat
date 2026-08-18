@@ -14,7 +14,7 @@ import (
 func (m *EventHandler) OnUserThreadViewCreated(ctx context.Context, event *UserThreadAdded) error {
 	userIds := []int64{event.UserId}
 
-	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
+	err := m.commonProjection.OnUserThreadViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func (m *EventHandler) OnUserThreadViewCreated(ctx context.Context, event *UserT
 	m.lgr.DebugContext(ctx, "Sending notification about the thread to participants", "event_type", dto.EventTypeThreadCreated, "user_ids", userIds)
 
 	// we don't need to change GetChatsEnriched to additionally process [behalf]userIds because we've already added users in our projection and the projection return all the users
-	threadViews, _, err := m.enrichingProjection.GetThreadsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false, event.ParentThreadId, event.ThreadId)
+	threadViews, _, err := m.enrichingProjection.GetThreadsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false, event.ParentThreadId)
 	if err != nil {
 		return err
 	}

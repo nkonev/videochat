@@ -471,8 +471,8 @@ func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int
 
 // contract: either multiple chats
 // or one chatId != nil
-func (m *EnrichingProjection) GetThreadsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, chatId *int64, forceNonParticipant bool, parentThreadId, threadId int64) ([]dto.ThreadViewEnrichedDto, map[int64]*dto.User, error) {
-	// TODO process input parentThreadId, threadId and set output ones
+func (m *EnrichingProjection) GetThreadsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, chatId *int64, forceNonParticipant bool, parentThreadId int64) ([]dto.ThreadViewEnrichedDto, map[int64]*dto.User, error) {
+	// TODO process input parentThreadId and set output ones
 	if len(behalfParticipantIds) == 0 {
 		return nil, nil, errors.New("Wrong invariant: len(behalfParticipantIds) == 0")
 	}

@@ -66,7 +66,7 @@ func (m *CommonProjection) OnParticipantAdded(ctx context.Context, event *Partic
 	return res, nil
 }
 
-func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, chatId int64, eventTime time.Time, tetATetSelf bool) error {
+func (m *CommonProjection) OnUserThreadViewCreated(ctx context.Context, userId int64, chatId int64, eventTime time.Time, tetATetSelf bool) error {
 	return db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		// no problems here because
 		// a) we've already added participants in the previous step

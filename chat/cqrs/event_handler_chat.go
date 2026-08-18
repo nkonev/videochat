@@ -44,6 +44,16 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 
 	userIds := event.GetParticipantIds()
 
+	rootThreadId, err := m.commonProjection.FindRootThread(ctx, m.db, event.ChatId)
+	if err != nil {
+		return err
+	}
+
+	if rootThreadId == nil {
+		m.lgr.InfoContext(ctx, "Skipping sending UserThreadAdded because there is no root thread found", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		return nil
+	}
+
 	// send an output event for the users themselves
 	for _, userId := range userIds {
 		ue := &UserThreadAdded{
@@ -54,7 +64,7 @@ func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *Participan
 			TetATet:        adt.ChatIsTetATet,
 			TetATetSelf:    event.TetATetSelf,
 			ParentThreadId: dto.RootThreadId,
-			ThreadId:       event.ThreadId, // this is "thread created user view", we do need ThreadId
+			ThreadId:       *rootThreadId, // this is "frontend thread id", aka id of item, aka id of root thread in case participant adding
 		}
 		err = m.eventBus.Publish(ctx, ue)
 		if err != nil {
@@ -382,7 +392,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 				UserId:         userId,
 				TetATet:        adt.ChatIsTetATet,
 				TetATetSelf:    event.TetATetSelf,
-				ParentThreadId: dto.RootThreadId,
+				ParentThreadId: event.ParentThreadId,
 				ThreadId:       event.ThreadId,
 			}
 			err = m.eventBus.Publish(ctx, ue)
