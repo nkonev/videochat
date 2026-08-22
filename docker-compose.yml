@@ -223,7 +223,7 @@ services:
       - ./docker/livekit/livekit.yaml:/etc/livekit.yaml
 
   egress:
-    image: livekit/egress:v1.13.0
+    image: livekit/egress:v1.14.1
     restart: unless-stopped
     networks:
       backend:
