@@ -436,7 +436,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 		TetATetOppositeUserId: tetATetOppositeUserId,
 		TetATetSelf:           tetATetSelf,
 		ChatCommoned: ChatCommoned{
-			ChatId:                              chatId,
+			Id:                                  chatId,
 			Blog:                                copyCommand.Blog,
 			BlogAbout:                           copyCommand.BlogAbout,
 			CanResend:                           copyCommand.CanResend,
@@ -478,7 +478,7 @@ func (sp *ChatCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba *
 
 	tc := &ThreadCreated{
 		ThreadCommoned: ThreadCommoned{
-			ThreadId:       threadId,
+			Id:             threadId,
 			ChatId:         chatId,
 			ParentThreadId: dto.RootThreadId,
 			Avatar:         copyCommand.Avatar,
@@ -526,7 +526,7 @@ func (sp *ChatEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba *db
 	cc := &ChatEdited{
 		AdditionalData: copyCommand.AdditionalData,
 		ChatCommoned: ChatCommoned{
-			ChatId:                              copyCommand.ChatId,
+			Id:                                  copyCommand.ChatId,
 			Title:                               copyCommand.Title,
 			Blog:                                copyCommand.Blog,
 			BlogAbout:                           copyCommand.BlogAbout,
@@ -594,7 +594,7 @@ func (s *ChatDelete) Handle(ctx context.Context, eventBus *KafkaProducer, dba *d
 
 	cc := &ChatDeleted{
 		AdditionalData: s.AdditionalData,
-		ChatId:         s.ChatId,
+		Id:             s.ChatId,
 	}
 	err = eventBus.Publish(ctx, cc)
 	if err != nil {
@@ -1487,7 +1487,7 @@ func (s *ThreadCreate) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 
 	cc := &ThreadCreated{
 		ThreadCommoned: ThreadCommoned{
-			ThreadId:       threadId,
+			Id:             threadId,
 			ChatId:         s.ChatId,
 			ParentThreadId: s.ParentThreadId,
 			Avatar:         s.Avatar,

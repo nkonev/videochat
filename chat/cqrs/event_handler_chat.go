@@ -345,12 +345,12 @@ func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) er
 	// we don't check authorization for the chat creation
 
 	if event.TetATetSelf && !event.TetATet {
-		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.Id, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
 		return nil
 	}
 
 	if event.TetATet && event.TetATetSelf && event.TetATetOppositeUserId != nil {
-		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.Id, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
 		return nil
 	}
 
@@ -393,7 +393,7 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 				TetATet:        adt.ChatIsTetATet,
 				TetATetSelf:    event.TetATetSelf,
 				ParentThreadId: event.ParentThreadId,
-				ThreadId:       event.ThreadId,
+				ThreadId:       event.Id,
 			}
 			err = m.eventBus.Publish(ctx, ue)
 			if err != nil {
@@ -406,17 +406,17 @@ func (m *EventHandler) OnThreadCreated(ctx context.Context, event *ThreadCreated
 }
 
 func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) error {
-	adt, err := m.commonProjection.GetChatDataForAuthorization(ctx, m.db, event.AdditionalData.BehalfUserId, event.ChatId)
+	adt, err := m.commonProjection.GetChatDataForAuthorization(ctx, m.db, event.AdditionalData.BehalfUserId, event.Id)
 	if err != nil {
 		return err
 	}
 
 	if !CanEditChat(adt.IsChatAdmin, adt.ChatIsTetATet) {
-		m.lgr.InfoContext(ctx, "Skipping OnChatEdited because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+		m.lgr.InfoContext(ctx, "Skipping OnChatEdited because there is no authorization to do so", logger.AttributeChatId, event.Id, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
 		return nil
 	}
 
-	chatBasicBefore, err := m.commonProjection.GetChatBasic(ctx, m.commonProjection.db, event.ChatId)
+	chatBasicBefore, err := m.commonProjection.GetChatBasic(ctx, m.commonProjection.db, event.Id)
 	if err != nil {
 		return err
 	}
@@ -426,7 +426,7 @@ func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) erro
 		return err
 	}
 
-	errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, []int64{}, func(participantIdsPortion []int64) error {
+	errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.Id, []int64{}, func(participantIdsPortion []int64) error {
 		// if it was another "blog about" and now there is set a new - send an event to that's chat of the previous blog about in order to disable the previous blog about
 		if previousBlogAbout != nil {
 			for _, participantId := range participantIdsPortion {
@@ -446,7 +446,7 @@ func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) erro
 
 		for _, participantId := range participantIdsPortion {
 			ue := &UserChatEdited{
-				ChatId:        event.ChatId,
+				ChatId:        event.Id,
 				UserId:        participantId,
 				ChatAction:    ChatActionRefresh,
 				EventTime:     event.AdditionalData.CreatedAt,
@@ -464,7 +464,7 @@ func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) erro
 		return errOuter
 	}
 
-	chatBasicAfter, err := m.commonProjection.GetChatBasic(ctx, m.commonProjection.db, event.ChatId)
+	chatBasicAfter, err := m.commonProjection.GetChatBasic(ctx, m.commonProjection.db, event.Id)
 	if err != nil {
 		return err
 	}
@@ -475,8 +475,8 @@ func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) erro
 		canWriteMessageInternal(chatBasicBefore.RegularParticipantCanWriteMessage) != canWriteMessageInternal(chatBasicAfter.RegularParticipantCanWriteMessage) ||
 		isBlogInternal(chatBasicBefore.IsBlog) != isBlogInternal(chatBasicAfter.IsBlog) {
 
-		errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
-			m.notifyMessagesReloadCommand(ctx, event.ChatId, participantIdsPortion, event.AdditionalData.GetCorrelationId())
+		errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.Id, nil, func(participantIdsPortion []int64) error {
+			m.notifyMessagesReloadCommand(ctx, event.Id, participantIdsPortion, event.AdditionalData.GetCorrelationId())
 
 			return nil
 		})

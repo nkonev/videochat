@@ -82,7 +82,7 @@ func NewMetadata(eventType string) *Metadata {
 }
 
 type ChatCommoned struct {
-	ChatId                              int64 `json:"chatId"`
+	Id                                  int64 `json:"id"` // ChatId
 	Blog                                bool  `json:"blog"`
 	BlogAbout                           bool  `json:"blogAbout"`
 	CanResend                           bool  `json:"canResend"`
@@ -118,7 +118,7 @@ type ThreadEdited struct {
 }
 
 type ThreadCommoned struct {
-	ThreadId       int64   `json:"threadId"`
+	Id             int64   `json:"id"` // ThreadId
 	ChatId         int64   `json:"chatId"`
 	ParentThreadId int64   `json:"parentThreadId"`
 	Title          string  `json:"title"`
@@ -127,14 +127,14 @@ type ThreadCommoned struct {
 }
 
 type ThreadDeleted struct {
-	ThreadId       int64           `json:"threadId"`
+	Id             int64           `json:"id"` // ThreadId
 	ChatId         int64           `json:"chatId"`
 	AdditionalData *AdditionalData `json:"additionalData"`
 }
 
 type ChatDeleted struct {
+	Id             int64           `json:"id"` // ChatId
 	AdditionalData *AdditionalData `json:"additionalData"`
-	ChatId         int64           `json:"chatId"`
 }
 
 type ParticipantsAdded struct {
@@ -467,15 +467,15 @@ func (k EventTopic) String() string {
 }
 
 func (s *ChatCreated) GetPartitionKey() string {
-	return utils.ToString(s.ChatId)
+	return utils.ToString(s.Id)
 }
 
 func (s *ChatEdited) GetPartitionKey() string {
-	return utils.ToString(s.ChatId)
+	return utils.ToString(s.Id)
 }
 
 func (s *ChatDeleted) GetPartitionKey() string {
-	return utils.ToString(s.ChatId)
+	return utils.ToString(s.Id)
 }
 
 func (s *ThreadCreated) GetPartitionKey() string {

@@ -53,7 +53,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 				if tetATetTwoExists {
 					m.lgr.InfoContext(ctx,
 						"Not created common chat because 2-participant tet-a-tet esists",
-						logger.AttributeChatId, event.ChatId,
+						logger.AttributeChatId, event.Id,
 					)
 
 					return nil
@@ -67,7 +67,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 				if tetATetOneExists {
 					m.lgr.InfoContext(ctx,
 						"Not created common chat because 1-participant tet-a-tet esists",
-						logger.AttributeChatId, event.ChatId,
+						logger.AttributeChatId, event.Id,
 					)
 
 					return nil
@@ -111,14 +111,14 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message = excluded.regular_participant_can_pin_message
 			,regular_participant_can_write_message = excluded.regular_participant_can_write_message
 			,regular_participant_can_add_participant = excluded.regular_participant_can_add_participant
-	`, event.ChatId, event.AdditionalData.CreatedAt, event.TetATet, tetATetSelf, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+	`, event.Id, event.AdditionalData.CreatedAt, event.TetATet, tetATetSelf, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
 		if errInner != nil {
 			return errInner
 		}
 
 		if event.Blog {
 			// add blog
-			_, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
+			_, errInner = m.refreshBlog(ctx, tx, event.Id, event.AdditionalData.CreatedAt, &event.BlogAbout)
 			if errInner != nil {
 				return errInner
 			}
@@ -133,7 +133,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 
 	m.lgr.InfoContext(ctx,
 		"Common chat container created",
-		logger.AttributeChatId, event.ChatId,
+		logger.AttributeChatId, event.Id,
 	)
 
 	return nil
@@ -167,7 +167,7 @@ func (m *CommonProjection) OnThreadCreated(ctx context.Context, event *ThreadCre
 		    ,title = excluded.title
 		    ,avatar = excluded.avatar
 		    ,avatar_big = excluded.avatar_big
-	`, event.ThreadId, event.ChatId, event.ParentThreadId, event.Title, event.AdditionalData.CreatedAt, event.Avatar, event.AvatarBig)
+	`, event.Id, event.ChatId, event.ParentThreadId, event.Title, event.AdditionalData.CreatedAt, event.Avatar, event.AvatarBig)
 		if errInner != nil {
 			return errInner
 		}
@@ -181,7 +181,7 @@ func (m *CommonProjection) OnThreadCreated(ctx context.Context, event *ThreadCre
 
 	m.lgr.InfoContext(ctx,
 		"Thread created",
-		logger.AttributeThreadId, event.ThreadId,
+		logger.AttributeThreadId, event.Id,
 		logger.AttributeChatId, event.ChatId,
 		"title", event.Title,
 	)
@@ -192,16 +192,16 @@ func (m *CommonProjection) OnThreadCreated(ctx context.Context, event *ThreadCre
 func (m *CommonProjection) OnChatEdited(ctx context.Context, event *ChatEdited) (*int64, error) {
 	var previousBlogAbout *int64
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
-		chatExists, err := m.checkChatExists(ctx, tx, event.ChatId)
+		chatExists, err := m.checkChatExists(ctx, tx, event.Id)
 		if err != nil {
 			return err
 		}
 		if !chatExists {
-			m.lgr.InfoContext(ctx, "Skipping ChatEdited because there is no chat", logger.AttributeChatId, event.ChatId)
+			m.lgr.InfoContext(ctx, "Skipping ChatEdited because there is no chat", logger.AttributeChatId, event.Id)
 			return nil
 		}
 
-		blog, errInner := m.isChatBlog(ctx, tx, event.ChatId)
+		blog, errInner := m.isChatBlog(ctx, tx, event.Id)
 		if errInner != nil {
 			return errInner
 		}
@@ -219,31 +219,31 @@ func (m *CommonProjection) OnChatEdited(ctx context.Context, event *ChatEdited) 
 				,regular_participant_can_write_message = $10
 				,regular_participant_can_add_participant = $11
 			where id = $1
-		`, event.ChatId, event.Title, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+		`, event.Id, event.Title, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
 		if errInner != nil {
 			return errInner
 		}
 		m.lgr.InfoContext(ctx,
 			"Common chat edited",
-			logger.AttributeChatId, event.ChatId,
+			logger.AttributeChatId, event.Id,
 			"title", event.Title,
 		)
 
 		if blog && !event.Blog {
 			// rm blog
-			err = m.removeBlog(ctx, tx, event.ChatId)
+			err = m.removeBlog(ctx, tx, event.Id)
 			if errInner != nil {
 				return errInner
 			}
 		} else if !blog && event.Blog {
 			// add blog
-			previousBlogAbout, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
+			previousBlogAbout, errInner = m.refreshBlog(ctx, tx, event.Id, event.AdditionalData.CreatedAt, &event.BlogAbout)
 			if errInner != nil {
 				return errInner
 			}
 		} else if blog && event.Blog {
 			// update blog
-			previousBlogAbout, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
+			previousBlogAbout, errInner = m.refreshBlog(ctx, tx, event.Id, event.AdditionalData.CreatedAt, &event.BlogAbout)
 			if errInner != nil {
 				return errInner
 			}
@@ -263,7 +263,7 @@ func (m *CommonProjection) OnChatRemoved(ctx context.Context, event *ChatDeleted
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		// we don't check IsChatAdmin because a participant was already removed
 
-		blog, errInner := m.isChatBlog(ctx, tx, event.ChatId)
+		blog, errInner := m.isChatBlog(ctx, tx, event.Id)
 		if errInner != nil {
 			return errInner
 		}
@@ -271,7 +271,7 @@ func (m *CommonProjection) OnChatRemoved(ctx context.Context, event *ChatDeleted
 		_, errInner = m.db.ExecContext(ctx, `
 			delete from chat_common
 			where id = $1
-		`, event.ChatId)
+		`, event.Id)
 		if errInner != nil {
 			return errInner
 		}
@@ -279,13 +279,13 @@ func (m *CommonProjection) OnChatRemoved(ctx context.Context, event *ChatDeleted
 		_, errInner = m.db.ExecContext(ctx, `
 			delete from message
 			where chat_id = $1
-		`, event.ChatId)
+		`, event.Id)
 		if errInner != nil {
 			return errInner
 		}
 
 		if blog {
-			err := m.removeBlog(ctx, tx, event.ChatId)
+			err := m.removeBlog(ctx, tx, event.Id)
 			if err != nil {
 				return err
 			}
@@ -293,7 +293,7 @@ func (m *CommonProjection) OnChatRemoved(ctx context.Context, event *ChatDeleted
 
 		m.lgr.InfoContext(ctx,
 			"Common chat removed",
-			logger.AttributeChatId, event.ChatId,
+			logger.AttributeChatId, event.Id,
 		)
 		return nil
 	})
