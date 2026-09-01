@@ -16,41 +16,99 @@ import (
 )
 
 type OnParticipantAddedResponse struct {
-	ChatExists bool
+	ChatExists   map[int64]bool
+	ChatTetATets map[int64]bool
 }
 
-func (m *CommonProjection) OnParticipantAdded(ctx context.Context, event *ParticipantsAdded) (*OnParticipantAddedResponse, error) {
+func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
+	res := []int64{}
+	for _, v := range evs {
+		res = append(res, v.ChatId)
+	}
+
+	return res
+}
+
+func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*OnParticipantAddedResponse, error) {
-		chatExists, err := m.checkChatExists(ctx, tx, event.ChatId)
+		cids := getChatIdsFromPa(events)
+		existedChats, err := m.checkAreChatsExist(ctx, tx, cids)
 		if err != nil {
 			return nil, err
 		}
-		if !chatExists {
-			m.lgr.InfoContext(ctx, "Skipping OnParticipantAdded because there is no chat", logger.AttributeChatId, event.ChatId)
-			return &OnParticipantAddedResponse{
-				ChatExists: false,
-			}, nil
+
+		tets, err := m.AreTetATets(ctx, tx, cids)
+		if err != nil {
+			return nil, err
+		}
+
+		filteredEvents := []ParticipantsAdded{}
+
+		for _, event := range events {
+			chatExists := existedChats[event.ChatId]
+			if !chatExists {
+				m.lgr.InfoContext(ctx, "Skipping OnParticipantAdded because there is no chat", logger.AttributeChatId, event.ChatId)
+				continue
+			}
+			filteredEvents = append(filteredEvents, event)
+		}
+
+		participantIds := []int64{}
+		admins := []bool{}
+		chatIds := []int64{}
+		createDateTimes := []time.Time{}
+
+		for _, event := range filteredEvents {
+			for _, item := range event.Participants {
+				participantIds = append(participantIds, item.ParticipantId)
+				admins = append(admins, item.ChatAdmin)
+				chatIds = append(chatIds, event.ChatId)
+				createDateTimes = append(createDateTimes, event.AdditionalData.CreatedAt)
+			}
 		}
 
 		_, err = tx.ExecContext(ctx, `
 			with input_data as (
-				select * from unnest(cast ($1 as bigint[]), cast ($2 as boolean[])) as t(user_id, chat_admin)
+				select * from unnest(
+					cast ($1 as bigint[])
+					,cast ($2 as boolean[])
+					,cast ($3 as bigint[])
+					,cast ($4 as timestamp[])
+				) as t (
+					user_id
+					,chat_admin
+					,chat_id
+					,create_date_time
+				)
 			)
-			insert into chat_participant(user_id, chat_admin, chat_id, create_date_time)
-			select idt.user_id, idt.chat_admin, $3, $4 from input_data idt
+			insert into chat_participant(
+				user_id
+				,chat_admin
+				,chat_id
+				,create_date_time
+			)
+			select 
+				idt.user_id
+				,idt.chat_admin
+				,idt.chat_id
+				,idt.create_date_time
+			from input_data idt
 			on conflict(user_id, chat_id) do nothing
-		`, GetParticipantIds(event.Participants), getParticipantChatAdmins(event.Participants), event.ChatId, event.AdditionalData.CreatedAt)
+		`, participantIds, admins, chatIds, createDateTimes)
 		if err != nil {
 			return nil, err
 		}
 
-		err = m.updateViewableParticipants(ctx, tx, event.ChatId)
+		uniqueChatIds := utils.Unique(chatIds)
+
+		err = m.updateViewableParticipants(ctx, tx, uniqueChatIds)
 		if err != nil {
 			return nil, err
 		}
 
 		return &OnParticipantAddedResponse{
-			ChatExists: true,
+			ChatExists:   existedChats,
+			ChatTetATets: tets,
 		}, nil
 	})
 	if errOuter != nil {
@@ -58,15 +116,28 @@ func (m *CommonProjection) OnParticipantAdded(ctx context.Context, event *Partic
 	}
 
 	m.lgr.InfoContext(ctx,
-		"Participant added into common chat",
-		"user_ids", GetParticipantIds(event.Participants),
-		logger.AttributeChatId, event.ChatId,
+		"Participants were added into common chat",
 	)
 
 	return res, nil
 }
 
-func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, chatId int64, eventTime time.Time, tetATetSelf bool) error {
+func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, userChatAddeds []UserChatParticipantAdded) error {
+
+	var (
+		userIds      []int64     = []int64{}
+		chatIds      []int64     = []int64{}
+		eventTimes   []time.Time = []time.Time{}
+		tetATetSelfs []bool      = []bool{}
+	)
+
+	for _, v := range userChatAddeds {
+		userIds = append(userIds, userId)
+		chatIds = append(chatIds, v.ChatId)
+		eventTimes = append(eventTimes, v.EventTime)
+		tetATetSelfs = append(tetATetSelfs, v.TetATetSelf)
+	}
+
 	return db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		// no problems here because
 		// a) we've already added participants in the previous step
@@ -77,26 +148,40 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 		_, err := tx.ExecContext(ctx, `
 		with 
 		input_data as (
+			select * from unnest (
+				cast($1 as bigint[])
+				,cast($2 as bigint[])
+				,cast($3 as timestamp[])
+				,cast($4 as boolean[])
+			) as t(
+			  user_id
+			  ,chat_id
+			  ,update_date_time
+			  ,tet_a_tet_self
+			)
+		),
+		input_data_prepared as (
 			select 
-				c.id as chat_id, 
-				false as pinned, 
-				cast ($1 as bigint) as user_id, 
-				cast ($3 as timestamp) as update_date_time,
-				cast ($4 as boolean) as tet_a_tet_self
-			from (select cc.id from chat_common cc where cc.id = $2) c 
+				idt.chat_id
+				,false as pinned
+				,idt.user_id
+				,idt.update_date_time
+				,idt.tet_a_tet_self
+			from input_data idt 
+			join chat_common cc on idt.chat_id = cc.id
 		)
 		insert into chat_user_view(id, pinned, user_id, update_date_time, tet_a_tet_self) 
-			select chat_id, pinned, user_id, update_date_time, tet_a_tet_self from input_data
+			select chat_id, pinned, user_id, update_date_time, tet_a_tet_self from input_data_prepared
 		on conflict(user_id, id) do update set
 			pinned = excluded.pinned
 			, update_date_time = excluded.update_date_time 
-		`, userId, chatId, eventTime, tetATetSelf)
+		`, userIds, chatIds, eventTimes, tetATetSelfs)
 		if err != nil {
 			return err
 		}
 
 		// recalc in case an user was added after
-		err = m.initializeMessageUnreadMultipleParticipants(ctx, tx, userId, chatId)
+		err = m.initializeMessageUnreadMultipleChatsParticipants(ctx, tx, userId, chatIds)
 		if err != nil {
 			return err
 		}
@@ -123,7 +208,7 @@ func (m *CommonProjection) OnParticipantRemoved(ctx context.Context, participant
 		}
 
 		if !isRemoveAllParticipantsFromChat { // an optimization for chat deletion
-			err = m.updateViewableParticipants(ctx, tx, chatId)
+			err = m.updateViewableParticipants(ctx, tx, []int64{chatId})
 			if err != nil {
 				return err
 			}
@@ -191,29 +276,48 @@ func (m *CommonProjection) OnParticipantRemovedSingle(ctx context.Context, parti
 	return nil
 }
 
-func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db.CommonOperations, chatId int64) error {
+func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db.CommonOperations, chatIds []int64) error {
 	_, err := co.ExecContext(ctx, `
-		with 
-		this_chat_participants as (
-			select user_id, create_date_time from chat_participant where chat_id = $1
+		with
+		chats_provided as (
+			select * from unnest(cast($1 as bigint[])) as t(chat_id)
+		),
+		these_chat_participants as (
+			select user_id, chat_id, create_date_time from chat_participant where chat_id in (select chat_id from chats_provided)
 		),
 		chat_participant_count as (
-			select count (*) as count from this_chat_participants
+			select count(user_id) as count, chat_id from these_chat_participants group by chat_id
 		),
-		chat_participants_last_n as (
-			select user_id from this_chat_participants order by create_date_time desc limit $2
+		chat_participants_last_n as (	
+			select
+				ch.chat_id,
+				array_agg(ltr.user_id) as participant_ids
+			from chats_provided ch
+			join lateral (
+				select innr.*
+				from these_chat_participants innr
+				where innr.chat_id = ch.chat_id
+				order by innr.create_date_time desc
+				limit $2
+			) ltr on true
+			group by ch.chat_id
 		),
 		input_data as (
 			select 
-				(select count from chat_participant_count) as participants_count, 
-				(select coalesce(array_agg(user_id), cast(array[] as bigint[])) from chat_participants_last_n) as participant_ids
+				cp.chat_id
+				,coalesce(tcp.count, 0) as participants_count
+				,coalesce(cpln.participant_ids, cast(array[] as bigint[])) as participant_ids
+			from chats_provided cp 
+			left join chat_participant_count tcp on cp.chat_id = tcp.chat_id
+			left join chat_participants_last_n cpln on tcp.chat_id = cpln.chat_id
 		)
 		update chat_common cc
 		SET 
-			participants_count = (select participants_count from input_data),
-			last_n_participant_ids = (select participant_ids from input_data)
-		where cc.id = $1
-		`, chatId, m.cfg.Cqrs.Projections.ChatUserView.MaxViewableParticipants)
+			participants_count = idt.participants_count
+			,last_n_participant_ids = idt.participant_ids
+		from input_data idt
+		where cc.id = idt.chat_id
+		`, chatIds, m.cfg.Cqrs.Projections.ChatUserView.MaxViewableParticipants)
 	if err != nil {
 		return err
 	}
@@ -427,19 +531,76 @@ func (m *EnrichingProjection) GetParticipantsEnriched(ctx context.Context, behal
 	}
 }
 
+type ChatIdUserId struct {
+	ChatId int64
+	UserId int64
+}
+
+func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx context.Context, behalfs []*ParticipantWithChatIdWithAdmin, consideredUserId int64, consideredUserAdminByChatIds map[int64]bool, usersMap map[int64]*dto.User, chatsById map[int64]*dto.ChatBasic) (map[ChatIdUserId]*dto.UserViewEnrichedDto, error) {
+	res := map[ChatIdUserId]*dto.UserViewEnrichedDto{}
+
+	consideredUserWithAdminByChatIds, err := m.makeConsideredUserWithAdminByChatIds(ctx, consideredUserId, consideredUserAdminByChatIds, usersMap)
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "unable to makeConsideredUserWithAdminByChatIds", logger.AttributeError, err)
+		return nil, err
+	}
+
+	for _, p := range behalfs {
+		cht := chatsById[p.ChatId]
+		if cht != nil {
+			cu := consideredUserWithAdminByChatIds[p.ChatId]
+			if cu != nil {
+				// build enriched considered user behalf p
+				eu := makeEnrichedUser(cu, p.ParticipantId, p.ChatAdmin, cht.TetATet)
+				res[ChatIdUserId{ChatId: p.ChatId, UserId: p.ParticipantId}] = eu
+			} else {
+				m.lgr.InfoContext(ctx, "unable to consideredUserWithAdminByChatIds", logger.AttributeChatId, p.ChatId)
+			}
+		} else {
+			m.lgr.ErrorContext(ctx, "unable to get chatById", logger.AttributeChatId, p.ChatId)
+			return nil, err
+		}
+	}
+
+	return res, nil
+}
+
+func (m *EnrichingProjection) makeConsideredUserWithAdminByChatIds(ctx context.Context, consideredUserId int64, consideredUserAdminByChatIds map[int64]bool, usersMap map[int64]*dto.User) (map[int64]*dto.UserWithAdmin, error) {
+	consideredUserWithAdminByChatIds := map[int64]*dto.UserWithAdmin{}
+	for chatId, admin := range consideredUserAdminByChatIds {
+		u := usersMap[consideredUserId]
+		if u != nil {
+			consideredUserWithAdminByChatIds[chatId] = &dto.UserWithAdmin{
+				User:      *u,
+				ChatAdmin: admin,
+			}
+		} else {
+			m.lgr.InfoContext(ctx, "unable to find user", logger.AttributeUserId, consideredUserId)
+		}
+	}
+
+	return consideredUserWithAdminByChatIds, nil
+}
+
 func makeEnrichedUsers(users []*dto.UserWithAdmin, behalfUserId int64, behalfIsChatAdmin bool, isTetATetChat bool) []*dto.UserViewEnrichedDto {
 	var res = make([]*dto.UserViewEnrichedDto, 0, len(users))
 	for _, u := range users {
-		enriched := dto.UserViewEnrichedDto{
-			BehalfUserId:  behalfUserId,
-			UserWithAdmin: *u,
-			CanChange:     CanChangeParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, u.Id),
-			CanDelete:     CanRemoveParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, false, true, u.Id, false),
-		}
-		res = append(res, &enriched)
+		enriched := makeEnrichedUser(u, behalfUserId, behalfIsChatAdmin, isTetATetChat)
+		res = append(res, enriched)
 	}
 
 	return res
+}
+
+func makeEnrichedUser(u *dto.UserWithAdmin, behalfUserId int64, behalfIsChatAdmin bool, isTetATetChat bool) *dto.UserViewEnrichedDto {
+	enriched := dto.UserViewEnrichedDto{
+		BehalfUserId:  behalfUserId,
+		UserWithAdmin: *u,
+		CanChange:     CanChangeParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, u.Id),
+		CanDelete:     CanRemoveParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, false, true, u.Id, false),
+	}
+
+	return &enriched
 }
 
 func (m *EnrichingProjection) SearchUsersContaining(ctx context.Context, co db.CommonOperations, searchString string, chatId int64, pageSize int32, requestOffset int64, reverse bool, needCount bool) ([]*dto.UserWithAdmin, int64, error) {
@@ -594,6 +755,62 @@ func (m *CommonProjection) IterateOverChatParticipantIdsExcepting(ctx context.Co
 	return lastError
 }
 
+func (m *CommonProjection) IterateOverAllParticipantIdsByChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := int64(0); shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		participants, err := getAllParticipantsCommonOfChatIds(ctx, co, chatIds, utils.DefaultSize, offset, false)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during getting portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+		if len(participants) == 0 {
+			return nil
+		}
+		if len(participants) < utils.DefaultSize {
+			shouldContinue = false
+		}
+
+		err = consumer(participants)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during invoking consumer portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+	}
+	return lastError
+}
+
+func (m *CommonProjection) IterateOverAllParticipantsByChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := int64(0); shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		participants, err := getAllParticipantsByChatIds(ctx, co, chatIds, utils.DefaultSize, offset, false)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during getting portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+		if len(participants) == 0 {
+			return nil
+		}
+		if len(participants) < utils.DefaultSize {
+			shouldContinue = false
+		}
+
+		err = consumer(participants)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during invoking consumer portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+	}
+	return lastError
+}
+
 func (m *CommonProjection) IterateOverChatParticipantIdsIncluding(ctx context.Context, co db.CommonOperations, chatId int64, including []int64, consumer func(participantIdsPortion []int64) error) error {
 	shouldContinue := true
 	var lastError error
@@ -728,6 +945,34 @@ func (m *CommonProjection) IsExistsTetATetOne(ctx context.Context, co db.CommonO
 		return false, 0, fmt.Errorf("error during interacting with db: %w", err)
 	}
 	return true, chatId, nil
+}
+
+func (m *CommonProjection) AreTetATets(ctx context.Context, co db.CommonOperations, chatIds []int64) (map[int64]bool, error) {
+	type resDto struct {
+		ChatId  int64 `db:"chat_id"`
+		TetATet bool  `db:"tet_a_tet"`
+	}
+
+	lst := []resDto{}
+
+	err := sqlscan.Select(ctx, co, &lst, `
+		select 
+			cc.id as chat_id
+			,cc.tet_a_tet
+		from chat_common cc
+		where cc.id = any(cast($1 as bigint[]))
+	`, chatIds)
+	if err != nil {
+		return map[int64]bool{}, fmt.Errorf("error during interacting with db: %w", err)
+	}
+
+	res := map[int64]bool{}
+
+	for _, v := range lst {
+		res[v.ChatId] = v.TetATet
+	}
+
+	return res, nil
 }
 
 func (m *CommonProjection) HasParticipants(ctx context.Context, co db.CommonOperations, chatIds []int64) (map[int64]bool, error) {
@@ -881,6 +1126,12 @@ type ParticipantWithAdmin struct {
 	ChatAdmin     bool  `json:"chatAdmin" db:"chat_admin"`
 }
 
+type ParticipantWithChatIdWithAdmin struct {
+	ParticipantId int64 `db:"user_id"`
+	ChatAdmin     bool  `db:"chat_admin"`
+	ChatId        int64 `db:"chat_id"`
+}
+
 func (u *ParticipantWithAdmin) GetId() int64 {
 	if u != nil {
 		return u.ParticipantId
@@ -889,26 +1140,10 @@ func (u *ParticipantWithAdmin) GetId() int64 {
 	}
 }
 
-func GetParticipantIds(participants []ParticipantWithAdmin) []int64 {
-	res := make([]int64, 0, len(participants))
-	for _, pa := range participants {
-		res = append(res, pa.ParticipantId)
-	}
-	return res
-}
-
 func GetParticipantIdsP(participants []*ParticipantWithAdmin) []int64 {
 	res := make([]int64, 0, len(participants))
 	for _, pa := range participants {
 		res = append(res, pa.ParticipantId)
-	}
-	return res
-}
-
-func getParticipantChatAdmins(participants []ParticipantWithAdmin) []bool {
-	res := make([]bool, 0, len(participants))
-	for _, pa := range participants {
-		res = append(res, pa.ChatAdmin)
 	}
 	return res
 }
@@ -955,6 +1190,62 @@ func getParticipantsCommonExcepting(ctx context.Context, co db.CommonOperations,
 		ORDER BY create_date_time %s, user_id asc
 		LIMIT $2 OFFSET $3
 	`, condition, order)
+	err = sqlscan.Select(ctx, co, &list, sqlQuery, sqlArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("error during interacting with db: %w", err)
+	}
+	return list, nil
+}
+
+func getAllParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithChatIdWithAdmin, error) {
+	list := make([]*ParticipantWithChatIdWithAdmin, 0)
+
+	var err error
+
+	order := "asc"
+	if reverseOrder {
+		order = "desc"
+	}
+
+	sqlArgs := []any{chatIds, participantsSize, participantsOffset}
+	sqlQuery := fmt.Sprintf(`
+		SELECT 
+		    user_id,
+		    chat_admin,
+		    chat_id
+		FROM chat_participant
+		WHERE chat_id = any($1)
+		ORDER BY chat_id, create_date_time %s, user_id asc
+		LIMIT $2 OFFSET $3
+	`, order)
+	err = sqlscan.Select(ctx, co, &list, sqlQuery, sqlArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("error during interacting with db: %w", err)
+	}
+	return list, nil
+}
+
+func getAllParticipantsByChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithChatIdWithAdmin, error) {
+	list := make([]*ParticipantWithChatIdWithAdmin, 0)
+
+	var err error
+
+	order := "asc"
+	if reverseOrder {
+		order = "desc"
+	}
+
+	sqlArgs := []any{chatIds, participantsSize, participantsOffset}
+	sqlQuery := fmt.Sprintf(`
+		SELECT 
+		    user_id,
+		    chat_admin,
+		    chat_id
+		FROM chat_participant
+		WHERE chat_id = any($1)
+		ORDER BY chat_id, create_date_time %s, user_id asc
+		LIMIT $2 OFFSET $3
+	`, order)
 	err = sqlscan.Select(ctx, co, &list, sqlQuery, sqlArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("error during interacting with db: %w", err)

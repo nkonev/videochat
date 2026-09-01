@@ -73,7 +73,7 @@ type SetUnreadedMessagesAction int16
 
 const (
 	SetUnreadedMessagesActionUnspecified SetUnreadedMessagesAction = iota
-	SetUnreadedMessagesActionInitialize
+	SetUnreadedMessagesActionInitialize                            // unused
 	SetUnreadedMessagesActionCalculateUnreadsFromTheUsersLastSavedReadedMessage
 	SetUnreadedMessagesActionCalculateUnreadsFromTheProvidedMessage
 )
@@ -85,14 +85,7 @@ func (m *CommonProjection) setUnreadMessages(ctx context.Context, co db.CommonOp
 
 	switch setUnreadedMessagesAction {
 	case SetUnreadedMessagesActionInitialize:
-		inputOptionClause = `
-		normalized_considerable_message as (
-			select 
-				n.user_id,
-				0 as normalized_read_message_id
-			from normalized_user n
-		)
-		`
+		return fmt.Errorf("unsupported SetUnreadedMessagesAction: %v", SetUnreadedMessagesActionInitialize)
 	case SetUnreadedMessagesActionCalculateUnreadsFromTheProvidedMessage:
 		queryArgs = append(queryArgs, messageId)
 		// to calculate against just from the message
@@ -168,6 +161,44 @@ func (m *CommonProjection) setUnreadMessages(ctx context.Context, co db.CommonOp
 		   unread_messages = idt.unread_messages
 		  ,cuv_last_read_message_id = idt.last_read_message_id
 	`, inputOptionClause)
+
+	_, err := co.ExecContext(ctx, q, queryArgs...)
+	if err != nil {
+		return err
+	}
+
+	err = m.updateHasUnreads(ctx, co, participantId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *CommonProjection) initializeMessageUnreadMultipleChatsParticipants(ctx context.Context, co db.CommonOperations, participantId int64, chatIds []int64) error {
+	queryArgs := []any{participantId, chatIds}
+
+	q := `
+		with 
+		provided_chats as (
+			select * from unnest(cast($2 as bigint[])) t(chat_id)
+		),
+		input_data as (
+			select
+				cast($1 as bigint) as user_id
+				,m.chat_id
+				,count(m.id) as unread_messages
+			from message m
+			where m.chat_id in (select chat_id from provided_chats)
+			group by m.chat_id
+		)
+		merge into chat_user_view cuv
+		using input_data idt
+		on (idt.chat_id, idt.user_id) = (cuv.id, cuv.user_id)
+		when matched then update set 
+		   unread_messages = idt.unread_messages
+		  ,cuv_last_read_message_id = 0
+	`
 
 	_, err := co.ExecContext(ctx, q, queryArgs...)
 	if err != nil {

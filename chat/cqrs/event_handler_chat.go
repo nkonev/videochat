@@ -15,73 +15,130 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *ParticipantsAdded) error {
-
+func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEventBatch) (context.Context, error) {
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
+	ctx := eventBatch.GetContext()
 	ctx, participantAddSpan := m.tr.Start(ctx, fmt.Sprintf("participant.%s", eventTypeParticipantAdded))
 	defer participantAddSpan.End()
 
-	adt, err := m.commonProjection.GetChatDataForAuthorization(ctx, m.db, event.AdditionalData.BehalfUserId, event.ChatId)
+	areqs := []UserIdAndChatId{}
+	for idx, v := range eventBatch.ParticipantsAddeds {
+		areqs = append(areqs, UserIdAndChatId{UserId: v.AdditionalData.BehalfUserId, ChatId: v.ChatId, CorrelationKey: int64(idx)})
+	}
+	adts, err := m.commonProjection.GetChatDataForAuthorizationBatch(ctx, m.db, areqs)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
-	if !CanAddParticipant(adt.IsChatAdmin, adt.ChatIsTetATet, event.IsJoining, adt.AvailableToSearch, adt.IsBlog, event.IsChatCreating, adt.IsParticipant, adt.RegularParticipantCanAddParticipants) {
-		m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
+	filteredParticipantsAddeds := []ParticipantsAdded{}
+
+	for idx, event := range eventBatch.ParticipantsAddeds {
+		adt, ok := adts[int64(idx)]
+		if !ok {
+			return ctx, fmt.Errorf("missed adt for correlationKey: %v", idx)
+		}
+		if !CanAddParticipant(adt.IsChatAdmin, adt.ChatIsTetATet, event.IsJoining, adt.AvailableToSearch, adt.IsBlog, event.IsChatCreating, adt.IsParticipant, adt.RegularParticipantCanAddParticipants) {
+			m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
+		}
+
+		filteredParticipantsAddeds = append(filteredParticipantsAddeds, event)
 	}
 
 	// also updateViewableParticipants()
-	resp, errp := m.commonProjection.OnParticipantAdded(ctx, event)
+	resp, errp := m.commonProjection.OnBatchParticipantsAdded(ctx, filteredParticipantsAddeds)
 	if errp != nil {
-		return errp
+		return ctx, errp
 	}
 
-	if !resp.ChatExists {
-		m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no chat exists. Probably it's protection against ahead creating tet-a-tet", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
-	}
+	chatIds := []int64{}
+	allUserIds := []int64{}
 
-	userIds := event.GetParticipantIds()
+	createdAtsByChatId := map[int64]time.Time{}
+	correlationIdByChatId := map[int64]*string{}
 
-	// send an output event for the users themselves
-	for _, userId := range userIds {
-		ue := &UserChatParticipantAdded{
-			EventTime:     event.AdditionalData.CreatedAt,
-			CorrelationId: event.AdditionalData.CorrelationId,
-			ChatId:        event.ChatId,
-			UserId:        userId,
-			TetATet:       adt.ChatIsTetATet,
-			TetATetSelf:   event.TetATetSelf,
+	var ues = []CqrsEvent{}
+
+	for _, event := range filteredParticipantsAddeds {
+		chatExists := resp.ChatExists[event.ChatId]
+
+		chatIds = append(chatIds, event.ChatId)
+		createdAtsByChatId[event.ChatId] = event.AdditionalData.CreatedAt
+		correlationIdByChatId[event.ChatId] = event.AdditionalData.CorrelationId
+
+		if !chatExists {
+			m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no chat exists. Probably it's protection against ahead creating tet-a-tet", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
 		}
-		err = m.eventBus.Publish(ctx, ue)
-		if err != nil {
-			return err
-		}
-	}
 
-	errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
-		// transmit an output event with changed last participants for the existing participants
-		for _, participantId := range participantIdsPortion {
-			ue := &UserChatEdited{
-				ChatId:        event.ChatId,
-				UserId:        participantId,
-				ChatAction:    ChatActionRefresh,
+		userIds := event.GetParticipantIds()
+		allUserIds = append(allUserIds, userIds...)
+
+		// send an output event for the users themselves
+		for _, userId := range userIds {
+			ue := &UserChatParticipantAdded{
 				EventTime:     event.AdditionalData.CreatedAt,
 				CorrelationId: event.AdditionalData.CorrelationId,
+				ChatId:        event.ChatId,
+				UserId:        userId,
+				TetATet:       resp.ChatTetATets[event.ChatId],
+				TetATetSelf:   event.TetATetSelf,
 			}
-			errInn := m.eventBus.Publish(ctx, ue)
-			if errInn != nil {
-				return errInn
-			}
+
+			ues = append(ues, ue)
 		}
-		return nil
-	})
-	if errOuter != nil {
-		return errOuter
 	}
 
-	return nil
+	err = m.eventBus.Publish(ctx, ues...)
+	if err != nil {
+		return ctx, err
+	}
+
+	chatIdsUniqueOfAddedParticipants := utils.Unique(chatIds)
+
+	if len(filteredParticipantsAddeds) > 0 {
+		errOuter := m.commonProjection.IterateOverAllParticipantIdsByChatIds(ctx, m.db, chatIdsUniqueOfAddedParticipants, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+			var ueds = []CqrsEvent{}
+
+			// transmit an output event with changed last participants for the existing participants
+			for _, participantItem := range participantIdsPortion {
+				createdAt, ok := createdAtsByChatId[participantItem.ChatId]
+				if !ok {
+					m.lgr.WarnContext(ctx, "Unable to get createdAt, fallback to the first filtered event", logger.AttributeChatId, participantItem.ChatId)
+					createdAt = filteredParticipantsAddeds[0].AdditionalData.CreatedAt
+				}
+
+				correlationId, ok := correlationIdByChatId[participantItem.ChatId]
+				if !ok {
+					m.lgr.WarnContext(ctx, "Unable to get correlationId, fallback to the first filtered event", logger.AttributeChatId, participantItem.ChatId)
+					correlationId = filteredParticipantsAddeds[0].AdditionalData.CorrelationId
+				}
+
+				ue := &UserChatEdited{
+					ChatId:        participantItem.ChatId,
+					UserId:        participantItem.ParticipantId,
+					ChatAction:    ChatActionRefresh,
+					EventTime:     createdAt,
+					CorrelationId: correlationId,
+				}
+
+				ueds = append(ueds, ue)
+			}
+
+			sendErr := m.eventBus.Publish(ctx, ueds...)
+			if sendErr != nil {
+				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, sendErr)
+				return nil
+			}
+
+			return nil
+		})
+		if errOuter != nil {
+			return ctx, errOuter
+		}
+	}
+
+	return ctx, nil
 }
 
 func (m *EventHandler) OnParticipantRemoved(ctx context.Context, event *ParticipantDeleted) error {
@@ -329,25 +386,32 @@ func (m *EventHandler) OnParticipantChanged(ctx context.Context, event *Particip
 	return nil
 }
 
-func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) error {
+func (m *EventHandler) OnBatchChatsCreated(events *ChatCreatedEventBatch) (context.Context, error) {
 	// we don't check authorization for the chat creation
 
-	if event.TetATetSelf && !event.TetATet {
-		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
+	authorizedEvents := []ChatCreated{}
+
+	for _, event := range events.ChatCreateds {
+
+		if event.TetATetSelf && !event.TetATet {
+			m.lgr.InfoContext(events.FirstElementContext, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
+		}
+
+		if event.TetATet && event.TetATetSelf && event.TetATetOppositeUserId != nil {
+			m.lgr.InfoContext(events.FirstElementContext, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
+		}
+
+		authorizedEvents = append(authorizedEvents, event)
 	}
 
-	if event.TetATet && event.TetATetSelf && event.TetATetOppositeUserId != nil {
-		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
-	}
-
-	err := m.commonProjection.OnChatCreated(ctx, event)
+	err := m.commonProjection.OnChatCreated(events.FirstElementContext, authorizedEvents)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) error {

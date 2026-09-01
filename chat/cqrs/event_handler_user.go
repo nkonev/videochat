@@ -3,7 +3,6 @@ package cqrs
 import (
 	"context"
 	"fmt"
-	"maps"
 	"slices"
 
 	"nkonev.name/chat/dto"
@@ -11,14 +10,35 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserChatParticipantAdded) error {
+func getChatIds(events *UserChatParticipantAddedBatch) []int64 {
+	res := []int64{}
+	for _, v := range events.UserChatAddeds {
+		res = append(res, v.ChatId)
+	}
+
+	un := utils.Unique(res)
+	slices.Sort(un)
+
+	return un
+}
+
+func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAddedBatch) (context.Context, error) {
+	ctx := events.FirstElementContext
+
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
 
-	userIds := []int64{event.UserId}
+	userIds := []int64{events.UserId}
 
-	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
+	chatIds := getChatIds(events)
+
+	correlationIdByChatId := map[int64]*string{}
+	for _, v := range events.UserChatAddeds {
+		correlationIdByChatId[v.ChatId] = v.CorrelationId
+	}
+
+	err := m.commonProjection.OnUserChatViewCreated(ctx, events.UserId, events.UserChatAddeds)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	eventTypeChatCreated := dto.EventTypeChatCreated
@@ -27,16 +47,18 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 	m.lgr.DebugContext(ctx, "Sending notification about the chat to participants", "event_type", eventTypeChatCreated, "user_ids", userIds)
 
 	// we don't need to change GetChatsEnriched to additionally process [behalf]userIds because we've already added users in our projection and the projection return all the users
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, chatIds, false)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	var hasUnreadMessages = map[int64]bool{}
 	hasUnreadMessages, err = m.commonProjection.GetHasUnreadMessages(ctx, userIds)
 	if err != nil {
-		return err
+		return ctx, err
 	}
+
+	var firstCorrelationId *string
 
 	for _, cv := range chatViews {
 		dt := dto.GlobalUserEvent{
@@ -44,24 +66,19 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 			EventType:        eventTypeChatCreated,
 			ChatNotification: &cv,
 		}
-		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dt)
+
+		correlationId := correlationIdByChatId[cv.Id]
+		if firstCorrelationId == nil {
+			firstCorrelationId = correlationId
+		}
+
+		err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dt)
 		if err != nil {
 			m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 		}
 
-		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
-			UserId:    cv.BehalfUserId,
-			EventType: eventTypeUnreadMessagesChanged,
-			HasUnreadMessagesChanged: &dto.HasUnreadMessagesChanged{
-				HasUnreadMessages: hasUnreadMessages[cv.BehalfUserId],
-			},
-		})
-		if err != nil {
-			m.lgr.ErrorContext(ctx, "Error during IterateOverParticipantsChatIds", logger.AttributeError, err)
-		}
-
-		if event.TetATet {
-			err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
+		if cv.TetATet {
+			err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dto.GlobalUserEvent{
 				UserId:    cv.BehalfUserId,
 				EventType: dto.EventTypeChatTetATetUpserted,
 				ChatTetATetUpsertedDto: &dto.ChatTetATetUpsertedDto{
@@ -71,32 +88,62 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 			if err != nil {
 				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 			}
-
 		}
+	}
+
+	err = m.rabbitmqOutputEventPublisher.Publish(ctx, firstCorrelationId, dto.GlobalUserEvent{
+		UserId:    events.UserId,
+		EventType: eventTypeUnreadMessagesChanged,
+		HasUnreadMessagesChanged: &dto.HasUnreadMessagesChanged{
+			HasUnreadMessages: hasUnreadMessages[events.UserId],
+		},
+	})
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "Error during IterateOverParticipantsChatIds", logger.AttributeError, err)
 	}
 
 	m.lgr.DebugContext(ctx, "Sending notification about the participants", "event_type", eventTypeParticipantAdded, "user_ids", userIds)
 
-	// this is an event for ChatParticipantsModal.vue
-	err = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
-		participantsByBehalfs, _, errInn := m.enrichingProjection.GetParticipantsEnriched(ctx, participantIdsPortion, event.ChatId, int32(len(userIds)), utils.DefaultOffset, dto.NoSearchString, false, userIds)
+	users, err := m.aaaRestClient.GetUsers(ctx, []int64{events.UserId})
+	if err != nil {
+		m.lgr.WarnContext(ctx, "unable to get users")
+	}
+
+	usersMap := utils.ToMap(users)
+
+	consideredUserAdminByChatIds, err := m.enrichingProjection.cp.getAreAdminsOfChatIds(ctx, m.enrichingProjection.cp.db, events.UserId, chatIds)
+	if err != nil {
+		return nil, err
+	}
+
+	chatsById, err := m.enrichingProjection.cp.GetChatsBasic(ctx, m.enrichingProjection.cp.db, chatIds)
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "unable to get chats")
+		return nil, err
+	}
+
+	// send an event participant_added for ChatParticipantsModal.vue to all the participants of the chosen chats
+	err = m.commonProjection.IterateOverAllParticipantsByChatIds(ctx, m.db, chatIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsBehalfOfGivenParticipants(ctx, participantIdsPortion, events.UserId, consideredUserAdminByChatIds, usersMap, chatsById)
 		if errInn != nil {
 			return errInn
 		}
 
-		sortedParticipants := slices.Sorted(maps.Keys(participantsByBehalfs))
-
 		// for every participant of chat we send an info about the newly added participants
-		for _, behalfUserId := range sortedParticipants {
-			hisParticipantsViews := participantsByBehalfs[behalfUserId]
-			errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.ChatEvent{
-				EventType:    eventTypeParticipantAdded,
-				UserId:       behalfUserId,
-				ChatId:       event.ChatId,
-				Participants: &hisParticipantsViews,
-			})
-			if errInn != nil {
-				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+		for _, participant := range participantIdsPortion {
+			hisParticipantsView := participantsByChatIds[ChatIdUserId{ChatId: participant.ChatId, UserId: participant.ParticipantId}]
+			if hisParticipantsView != nil {
+				errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationIdByChatId[participant.ChatId], dto.ChatEvent{
+					EventType:    eventTypeParticipantAdded,
+					UserId:       participant.ParticipantId,
+					ChatId:       participant.ChatId,
+					Participants: &[]*dto.UserViewEnrichedDto{hisParticipantsView},
+				})
+				if errInn != nil {
+					m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+				}
+			} else {
+				m.lgr.InfoContext(ctx, "Not found view behalf", logger.AttributeChatId, participant.ChatId, logger.AttributeUserId, participant.ParticipantId)
 			}
 		}
 		return nil
@@ -105,7 +152,7 @@ func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserCha
 		m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 	}
 
-	return nil
+	return ctx, nil
 }
 
 func (m *EventHandler) OnUserChatViewUpdated(ctx context.Context, event *UserChatEdited) error {
@@ -127,7 +174,7 @@ func (m *EventHandler) OnUserChatViewUpdated(ctx context.Context, event *UserCha
 		eventType = dto.EventTypeChatRedraw
 	}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, []int64{event.ChatId}, false)
 	if err != nil {
 		return err
 	}
@@ -286,7 +333,7 @@ func (m *EventHandler) OnUserChatPinned(ctx context.Context, event *UserChatPinn
 
 	userIds := []int64{event.AdditionalData.BehalfUserId}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, []int64{event.ChatId}, false)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,12 @@
 package cqrs
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/twmb/franz-go/pkg/kerr"
@@ -36,63 +38,73 @@ type KafkaProducer struct {
 	lgr *logger.LoggerWrapper
 }
 
-func (p *KafkaProducer) Publish(ctx context.Context, msg CqrsEvent) error {
+func (p *KafkaProducer) Publish(ctx context.Context, msgs ...CqrsEvent) error {
 	// Start a new span with options.
 	opts := []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindProducer),
 	}
-	ctx, span := p.tr.Start(ctx, "event", opts...)
+	ctx, span := p.tr.Start(ctx, "events", opts...)
 	// End the span when function exits.
 	defer span.End()
 
-	var topic string
-
-	eventTopic := msg.GetEventTopic()
-	switch eventTopic {
-	case EventTopicChat:
-		topic = p.cfg.Kafka.TopicChat.Topic
-	case EventTopicUser:
-		topic = p.cfg.Kafka.TopicUser.Topic
-	default:
-		return fmt.Errorf("unknown eventTopic: %v", eventTopic)
+	if len(msgs) == 0 {
+		return nil
 	}
 
-	key := msg.GetPartitionKey()
+	var records []*kgo.Record = make([]*kgo.Record, 0, len(msgs))
 
-	metadata := NewMetadata(msg.GetEventType())
+	for _, msg := range msgs {
+		var topic string
 
-	headers := []kgo.RecordHeader{
-		kgo.RecordHeader{
-			Key:   kafkaHeaderEventId,
-			Value: []byte(metadata.EventId),
-		},
-		kgo.RecordHeader{
-			Key:   kafkaHeaderEventType,
-			Value: []byte(metadata.EventType),
-		},
-	}
-
-	value, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	record := &kgo.Record{
-		Topic:   topic,
-		Key:     []byte(key),
-		Headers: headers,
-		Value:   value,
-	}
-
-	if p.cfg.Cqrs.Dump {
-		if p.cfg.Cqrs.PrettyLog && !p.cfg.Logger.Json {
-			fmt.Printf("[kafka cqrs publisher] Sending record: trace_id=%s, topic=%s, event_topic=%v, event_type=%v, body: %v\n", logger.GetTraceId(ctx), record.Topic, eventTopic, metadata.EventType, string(value))
-		} else {
-			p.lgr.InfoContext(ctx, "[kafka cqrs publisher] Sending record:", "topic", record.Topic, "event_type", metadata.EventType, "key", string(record.Key), "event_topic", eventTopic, "value", string(record.Value))
+		eventTopic := msg.GetEventTopic()
+		switch eventTopic {
+		case EventTopicChat:
+			topic = p.cfg.Kafka.TopicChat.Topic
+		case EventTopicUser:
+			topic = p.cfg.Kafka.TopicUser.Topic
+		default:
+			return fmt.Errorf("unknown eventTopic: %v", eventTopic)
 		}
+
+		key := msg.GetPartitionKey()
+
+		metadata := NewMetadata(msg.GetEventType())
+
+		headers := []kgo.RecordHeader{
+			kgo.RecordHeader{
+				Key:   kafkaHeaderEventId,
+				Value: []byte(metadata.EventId),
+			},
+			kgo.RecordHeader{
+				Key:   kafkaHeaderEventType,
+				Value: []byte(metadata.EventType),
+			},
+		}
+
+		value, err := json.Marshal(msg)
+		if err != nil {
+			return err
+		}
+
+		record := &kgo.Record{
+			Topic:   topic,
+			Key:     []byte(key),
+			Headers: headers,
+			Value:   value,
+		}
+
+		if p.cfg.Cqrs.Dump {
+			if p.cfg.Cqrs.PrettyLog && !p.cfg.Logger.Json {
+				fmt.Printf("[kafka cqrs publisher] Sending record: trace_id=%s, topic=%s, event_topic=%v, event_type=%v, body: %v\n", logger.GetTraceId(ctx), record.Topic, eventTopic, metadata.EventType, string(value))
+			} else {
+				p.lgr.InfoContext(ctx, "[kafka cqrs publisher] Sending record:", "topic", record.Topic, "event_type", metadata.EventType, "key", string(record.Key), "event_topic", eventTopic, "value", string(record.Value))
+			}
+		}
+
+		records = append(records, record)
 	}
 
-	prs := p.cl.ProduceSync(ctx, record)
+	prs := p.cl.ProduceSync(ctx, records...)
 
 	var serr error
 	var aerr []error
@@ -237,9 +249,10 @@ func ListenChatTopic(
 	}
 
 	batchFunctionMapping := map[string]func(b BatchEvent) (context.Context, error){
-		EventChatCreated: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatCreated))
+		BatchChatsCreated: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnBatchChatsCreated)
 		},
+
 		EventChatEdited: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatEdited))
 		},
@@ -254,8 +267,8 @@ func ListenChatTopic(
 		EventChatNotificationSettingsSetted: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatNotificationSettingsSetted))
 		},
-		EventParticipantsAdded: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnParticipantAdded))
+		BatchParticipantsAdded: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnBatchParticipantsAdded)
 		},
 		EventParticipantsDeleted: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnParticipantRemoved))
@@ -366,8 +379,8 @@ func ListenUserTopic(
 		// which would be due to mutating userId-partitioned chat_user_view and has_unread_messages tables from the chatId-partitioned event-chat topic
 		// see also https://docs.citusdata.com/en/v13.0/reference/common_errors.html#canceling-the-transaction-since-it-was-involved-in-a-distributed-deadlock
 		// https://www.cybertec-postgresql.com/en/postgresql-understanding-deadlocks/
-		EventUserChatParticipantAdded: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnUserChatViewCreated))
+		BatchEventUserChatParticipantAdded: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnUserChatViewCreatedBatch)
 		},
 		EventUserChatEdited: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnUserChatViewUpdated))
@@ -685,6 +698,10 @@ func (p *BatchOptimizer) Optimize(events []EventHolder) ([]BatchEvent, context.C
 			batchItems = append(batchItems, bi)
 		}
 	}
+
+	slices.SortStableFunc(batchItems, func(a, b BatchEvent) int {
+		return cmp.Compare(a.GetOrder(), b.GetOrder())
+	})
 
 	if len(events) > len(batchItems) {
 		p.lgr.Info(fmt.Sprintf("Batch optimizer reduced %d events into %d", len(events), len(batchItems)))
