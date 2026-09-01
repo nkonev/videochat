@@ -39,47 +39,114 @@ func isTetATetSelf(tetATet bool, tetATetOppositeUserId *int64) bool {
 	return tetATet && tetATetOppositeUserId == nil
 }
 
-func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated) error {
-	// we don't check chat existence for the chat creation
-
+func (m *CommonProjection) OnChatCreated(ctx context.Context, events []ChatCreated) error {
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
-		if event.TetATet {
-			if event.TetATetOppositeUserId != nil {
-				tetATetTwoExists, _, errInner := m.IsExistsTetATetTwo(ctx, tx, event.AdditionalData.BehalfUserId, *event.TetATetOppositeUserId)
-				if errInner != nil {
-					return errInner
-				}
+		filtered := []ChatCreated{}
 
-				if tetATetTwoExists {
-					m.lgr.InfoContext(ctx,
-						"Not created common chat because 2-participant tet-a-tet esists",
-						logger.AttributeChatId, event.ChatId,
-						"title", event.Title,
-					)
+		for _, event := range events {
+			if event.TetATet {
+				if event.TetATetOppositeUserId != nil {
+					tetATetTwoExists, _, errInner := m.IsExistsTetATetTwo(ctx, tx, event.AdditionalData.BehalfUserId, *event.TetATetOppositeUserId)
+					if errInner != nil {
+						return errInner
+					}
 
-					return nil
-				}
-			} else {
-				tetATetOneExists, _, errInner := m.IsExistsTetATetOne(ctx, tx, event.AdditionalData.BehalfUserId)
-				if errInner != nil {
-					return errInner
-				}
+					if tetATetTwoExists {
+						m.lgr.InfoContext(ctx,
+							"Not created common chat because 2-participant tet-a-tet exists",
+							logger.AttributeChatId, event.ChatId,
+							"title", event.Title,
+						)
 
-				if tetATetOneExists {
-					m.lgr.InfoContext(ctx,
-						"Not created common chat because 1-participant tet-a-tet esists",
-						logger.AttributeChatId, event.ChatId,
-						"title", event.Title,
-					)
+						continue
+					}
+				} else {
+					tetATetOneExists, _, errInner := m.IsExistsTetATetOne(ctx, tx, event.AdditionalData.BehalfUserId)
+					if errInner != nil {
+						return errInner
+					}
 
-					return nil
+					if tetATetOneExists {
+						m.lgr.InfoContext(ctx,
+							"Not created common chat because 1-participant tet-a-tet exists",
+							logger.AttributeChatId, event.ChatId,
+							"title", event.Title,
+						)
+
+						continue
+					}
 				}
 			}
+
+			filtered = append(filtered, event)
 		}
 
-		tetATetSelf := event.TetATetSelf
+		var chatIds = []int64{}
+		var titles = []string{}
+		var createdAts = []time.Time{}
+		var tetATets = []bool{}
+		var tetATetSelfs = []bool{}
+		var avatars = []*string{}
+		var avatarBigs = []*string{}
+		var canResends = []bool{}
+		var canReacts = []bool{}
+		var availableToSearchs = []bool{}
+		var regularParticipantCanPublishMessages = []bool{}
+		var regularParticipantCanPinMessages = []bool{}
+		var regularParticipantCanWriteMessages = []bool{}
+		var regularParticipantCanAddParticipants = []bool{}
+
+		for _, event := range filtered {
+			chatIds = append(chatIds, event.ChatId)
+			titles = append(titles, event.Title)
+			createdAts = append(createdAts, event.AdditionalData.CreatedAt)
+			tetATets = append(tetATets, event.TetATet)
+			tetATetSelfs = append(tetATetSelfs, event.TetATetSelf)
+			avatars = append(avatars, event.Avatar)
+			avatarBigs = append(avatarBigs, event.AvatarBig)
+			canResends = append(canResends, event.CanResend)
+			canReacts = append(canReacts, event.CanReact)
+			availableToSearchs = append(availableToSearchs, event.AvailableToSearch)
+			regularParticipantCanPublishMessages = append(regularParticipantCanPublishMessages, event.RegularParticipantCanPublishMessage)
+			regularParticipantCanPinMessages = append(regularParticipantCanPinMessages, event.RegularParticipantCanPinMessage)
+			regularParticipantCanWriteMessages = append(regularParticipantCanWriteMessages, event.RegularParticipantCanWriteMessage)
+			regularParticipantCanAddParticipants = append(regularParticipantCanAddParticipants, event.RegularParticipantCanAddParticipant)
+		}
 
 		_, errInner := tx.ExecContext(ctx, `
+		with input_data as (
+			select * from unnest(
+				 cast($1 as bigint[])
+				,cast($2 as text[])
+				,cast($3 as timestamp[])
+				,cast($4 as boolean[])
+				,cast($5 as boolean[])
+				,cast($6 as text[])
+				,cast($7 as text[])
+				,cast($8 as boolean[])
+				,cast($9 as boolean[])
+				,cast($10 as boolean[])
+				,cast($11 as boolean[])
+				,cast($12 as boolean[])
+				,cast($13 as boolean[])
+				,cast($14 as boolean[])
+			) as t (
+				 id
+				,title
+				,create_date_time
+				,tet_a_tet
+				,tet_a_tet_self
+				,avatar
+				,avatar_big
+				,can_resend
+				,can_react
+				,available_to_search
+				,regular_participant_can_publish_message
+				,regular_participant_can_pin_message
+				,regular_participant_can_write_message
+				,regular_participant_can_add_participant
+			)
+		)
 		insert into chat_common(
 			 id
 			,title
@@ -95,22 +162,23 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message
 			,regular_participant_can_write_message
 			,regular_participant_can_add_participant
-		) values (
-			$1
-			,$2
-			,$3
-			,$4
-			,$5
-		    ,$6
-		    ,$7
-		    ,$8
-		    ,$9
-		    ,$10
-		    ,$11
-		    ,$12
-		    ,$13
-		    ,$14
-		)
+		) 
+		select
+			 idt.id
+			,idt.title
+			,idt.create_date_time
+			,idt.tet_a_tet
+			,idt.tet_a_tet_self
+			,idt.avatar
+			,idt.avatar_big
+			,idt.can_resend
+			,idt.can_react
+			,idt.available_to_search
+			,idt.regular_participant_can_publish_message
+			,idt.regular_participant_can_pin_message
+			,idt.regular_participant_can_write_message
+			,idt.regular_participant_can_add_participant
+		from input_data idt
 		on conflict(id) do update set 
 		    title = excluded.title
 		    ,avatar = excluded.avatar
@@ -122,16 +190,18 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 			,regular_participant_can_pin_message = excluded.regular_participant_can_pin_message
 			,regular_participant_can_write_message = excluded.regular_participant_can_write_message
 			,regular_participant_can_add_participant = excluded.regular_participant_can_add_participant
-	`, event.ChatId, event.Title, event.AdditionalData.CreatedAt, event.TetATet, tetATetSelf, event.Avatar, event.AvatarBig, event.CanResend, event.CanReact, event.AvailableToSearch, event.RegularParticipantCanPublishMessage, event.RegularParticipantCanPinMessage, event.RegularParticipantCanWriteMessage, event.RegularParticipantCanAddParticipant)
+	`, chatIds, titles, createdAts, tetATets, tetATetSelfs, avatars, avatarBigs, canResends, canReacts, availableToSearchs, regularParticipantCanPublishMessages, regularParticipantCanPinMessages, regularParticipantCanWriteMessages, regularParticipantCanAddParticipants)
 		if errInner != nil {
 			return errInner
 		}
 
-		if event.Blog {
-			// add blog
-			_, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
-			if errInner != nil {
-				return errInner
+		for _, event := range filtered {
+			if event.Blog {
+				// add blog
+				_, errInner = m.refreshBlog(ctx, tx, event.ChatId, event.AdditionalData.CreatedAt, &event.BlogAbout)
+				if errInner != nil {
+					return errInner
+				}
 			}
 		}
 
@@ -143,9 +213,7 @@ func (m *CommonProjection) OnChatCreated(ctx context.Context, event *ChatCreated
 	}
 
 	m.lgr.InfoContext(ctx,
-		"Common chat created",
-		logger.AttributeChatId, event.ChatId,
-		"title", event.Title,
+		"Common chats created",
 	)
 
 	return nil

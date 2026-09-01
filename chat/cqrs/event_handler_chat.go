@@ -329,25 +329,32 @@ func (m *EventHandler) OnParticipantChanged(ctx context.Context, event *Particip
 	return nil
 }
 
-func (m *EventHandler) OnChatCreated(ctx context.Context, event *ChatCreated) error {
+func (m *EventHandler) OnBatchChatsCreated(events *ChatCreatedEventBatch) (context.Context, error) {
 	// we don't check authorization for the chat creation
 
-	if event.TetATetSelf && !event.TetATet {
-		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
+	authorizedEvents := []ChatCreated{}
+
+	for _, event := range events.ChatCreateds {
+
+		if event.TetATetSelf && !event.TetATet {
+			m.lgr.InfoContext(events.FirstElementContext, "Skipping OnChatCreated because TetATetSelf is true and TetATet is not true", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
+		}
+
+		if event.TetATet && event.TetATetSelf && event.TetATetOppositeUserId != nil {
+			m.lgr.InfoContext(events.FirstElementContext, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
+		}
+
+		authorizedEvents = append(authorizedEvents, event)
 	}
 
-	if event.TetATet && event.TetATetSelf && event.TetATetOppositeUserId != nil {
-		m.lgr.InfoContext(ctx, "Skipping OnChatCreated because TetATetSelf is true and TetATetOppositeUserId is not null", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
-	}
-
-	err := m.commonProjection.OnChatCreated(ctx, event)
+	err := m.commonProjection.OnChatCreated(events.FirstElementContext, authorizedEvents)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (m *EventHandler) OnChatEdited(ctx context.Context, event *ChatEdited) error {
