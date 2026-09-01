@@ -1,10 +1,12 @@
 package cqrs
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/twmb/franz-go/pkg/kerr"
@@ -237,9 +239,10 @@ func ListenChatTopic(
 	}
 
 	batchFunctionMapping := map[string]func(b BatchEvent) (context.Context, error){
-		EventChatCreated: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatCreated))
+		BatchChatsCreated: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnBatchChatsCreated)
 		},
+
 		EventChatEdited: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatEdited))
 		},
@@ -254,8 +257,8 @@ func ListenChatTopic(
 		EventChatNotificationSettingsSetted: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatNotificationSettingsSetted))
 		},
-		EventParticipantsAdded: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnParticipantAdded))
+		BatchParticipantsAdded: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnBatchParticipantsAdded)
 		},
 		EventParticipantsDeleted: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnParticipantRemoved))
@@ -685,6 +688,10 @@ func (p *BatchOptimizer) Optimize(events []EventHolder) ([]BatchEvent, context.C
 			batchItems = append(batchItems, bi)
 		}
 	}
+
+	slices.SortStableFunc(batchItems, func(a, b BatchEvent) int {
+		return cmp.Compare(a.GetOrder(), b.GetOrder())
+	})
 
 	if len(events) > len(batchItems) {
 		p.lgr.Info(fmt.Sprintf("Batch optimizer reduced %d events into %d", len(events), len(batchItems)))
