@@ -696,23 +696,12 @@ func (m *CommonProjection) IsExistsTetATetTwo(ctx context.Context, co db.CommonO
 	var chatId int64
 
 	err := sqlscan.Get(ctx, co, &chatId, `
-		select
-			b.chat_id
-		from (
-			select 
-				a.count = 2 as exists, 
-				a.chat_id 
-			from (
-				select 
-					cp.chat_id,
-					count(cp.user_id) 
-				from chat_participant cp 
-				join chat_common ch on ch.id = cp.chat_id 
-				where ch.tet_a_tet = true and (cp.user_id = $1 or cp.user_id = $2) 
-				group by cp.chat_id
-			) a
-		) b 
-		where b.exists`, participant1, participant2)
+		select p1.chat_id from
+		(select chat_id, user_id from chat_participant where user_id = $1) p1
+		join (select chat_id, user_id from chat_participant where user_id = $2) p2 on p1.chat_id = p2.chat_id
+		join chat_common ch on ch.id = p1.chat_id
+		where ch.tet_a_tet = true and ch.tet_a_tet_self = false
+		`, participant1, participant2)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return false, 0, nil
@@ -726,19 +715,12 @@ func (m *CommonProjection) IsExistsTetATetOne(ctx context.Context, co db.CommonO
 	var chatId int64
 
 	err := sqlscan.Get(ctx, co, &chatId, `
-		select
-			b.chat_id
-		from (
-			select 
-				a.chat_id 
-			from (
-				select 
-					cp.chat_id
-				from chat_participant cp 
-				join chat_common ch on ch.id = cp.chat_id 
-				where ch.tet_a_tet = true and ch.tet_a_tet_self = true and cp.user_id = $1
-			) a
-		) b`, participant1)
+		select 
+			cp.chat_id
+		from chat_participant cp 
+		join chat_common ch on ch.id = cp.chat_id 
+		where ch.tet_a_tet = true and ch.tet_a_tet_self = true and cp.user_id = $1
+	`, participant1)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
 		return false, 0, nil
