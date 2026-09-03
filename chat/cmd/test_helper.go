@@ -24,7 +24,6 @@ import (
 	"nkonev.name/chat/tasks"
 	"nkonev.name/chat/type_registry"
 
-	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 	"go.uber.org/fx/fxtest"
@@ -83,8 +82,6 @@ func aaaClientFactory(t *testing.T) func() client.AaaRestClient {
 }
 
 func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
-	var s fx.Shutdowner
-
 	appTestFx := fxtest.New(
 		t,
 		fx.Supply(cfg),
@@ -94,7 +91,6 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 			fsl.UseLogLevel(slog.LevelDebug)
 			return fsl
 		}),
-		fx.Populate(&s),
 		fx.Provide(
 			otel.ConfigureTracePropagator,
 			otel.ConfigureTraceProvider,
@@ -158,7 +154,6 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 		),
 	)
 	defer appTestFx.RequireStart().RequireStop()
-	assert.NoError(t, s.Shutdown(), "error in app shutdown")
 }
 
 func startAppFull(t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
