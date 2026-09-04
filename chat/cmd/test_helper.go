@@ -119,7 +119,7 @@ func makeCommonDepsExtractor(testFunc tfunc) (
 ) {
 	var ed = new(commonTestDeps)
 
-	var depExporter = func(
+	var depExtractor = func(
 		lgr0 *logger.LoggerWrapper,
 		cfg0 *config.AppConfig,
 		testRestClient0 *client.TestRestClient,
@@ -157,7 +157,7 @@ func makeCommonDepsExtractor(testFunc tfunc) (
 		testFunc(i)
 	}
 
-	return depsGetter, depExporter, tf
+	return depsGetter, depExtractor, tf
 }
 
 func runTestFunc(
