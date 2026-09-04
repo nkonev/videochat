@@ -151,9 +151,7 @@ func makeCommonDepsExtractor() (
 	return ed, depExporter
 }
 
-func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc tfunc) {
-	deps, depsExtractor := makeCommonDepsExtractor()
-
+func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, deps *commonTestDeps, depsExtractor any, testFunc tfunc) {
 	appTestFx := fxtest.New(
 		t,
 		fx.Supply(cfg),
@@ -242,7 +240,8 @@ func resetInfraAndStartAppTest(t *testing.T, preInvokeFunc interface{}, testFunc
 
 	resetInfra(lgr, cfg)
 
-	runTestFunc(lgr, cfg, t, preInvokeFunc, testFunc)
+	deps, depsExtractor := makeCommonDepsExtractor()
+	runTestFunc(lgr, cfg, t, preInvokeFunc, deps, depsExtractor, testFunc)
 }
 
 func waitForHealthCheck(lgr *logger.LoggerWrapper, restClient *client.TestRestClient, cfg *config.AppConfig) {
