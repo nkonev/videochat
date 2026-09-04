@@ -53,7 +53,7 @@ func TestImport(t *testing.T) {
 
 	resetInfra(lgr, cfg)
 
-	deps1, depsExtractor1 := makeCommonDepsExtractor()
+	depsGetter1, depsExtractor1 := makeCommonDepsExtractor()
 
 	// fill with 1 chat and 1 message
 	runTestFunc(lgr, cfg, t,
@@ -63,7 +63,7 @@ func TestImport(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, []int64{user1}).Return([]*dto.User{&mockUser1}, nil)
 		},
-		deps1,
+		depsGetter1,
 		depsExtractor1,
 		func(deps *commonTestDeps) {
 
@@ -154,7 +154,7 @@ func TestImport(t *testing.T) {
 	appImportFx.Run()
 	lgr.Info("Exit import command")
 
-	deps2, depsExtractor2 := makeCommonDepsExtractor()
+	depsGetter2, depsExtractor2 := makeCommonDepsExtractor()
 
 	runTestFunc(lgr, cfg, t,
 		func(
@@ -163,7 +163,7 @@ func TestImport(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, []int64{user1}).Return([]*dto.User{&mockUser1}, nil)
 		},
-		deps2,
+		depsGetter2,
 		depsExtractor2,
 		func(deps *commonTestDeps) {
 			ctx := context.Background()

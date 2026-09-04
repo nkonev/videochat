@@ -100,7 +100,7 @@ type commonTestDeps struct {
 }
 
 func makeCommonDepsExtractor() (
-	*commonTestDeps,
+	func() *commonTestDeps,
 	func(
 		lgr0 *logger.LoggerWrapper,
 		cfg0 *config.AppConfig,
@@ -148,10 +148,22 @@ func makeCommonDepsExtractor() (
 		}
 	}
 
-	return ed, depExporter
+	var depsGetter = func() *commonTestDeps {
+		return ed
+	}
+
+	return depsGetter, depExporter
 }
 
-func runTestFunc[testDeps any, depsExtractorFx any, testFuncGotest func(testDeps)](lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, deps testDeps, depsExtractor depsExtractorFx, testFunc testFuncGotest) {
+func runTestFunc[testDeps any, depsExtractorFx any, testFuncGotest func(testDeps)](
+	lgr *logger.LoggerWrapper,
+	cfg *config.AppConfig,
+	t *testing.T,
+	preInvokeFunc interface{},
+	depsGetter func() testDeps, // returns extracted deps for testFunc
+	depsExtractor depsExtractorFx, // extracts deps by running in Fx and stores them into memory, accessible by depsGetter
+	testFunc testFuncGotest,
+) {
 	appTestFx := fxtest.New(
 		t,
 		fx.Supply(cfg),
@@ -225,9 +237,9 @@ func runTestFunc[testDeps any, depsExtractorFx any, testFuncGotest func(testDeps
 	)
 	defer appTestFx.RequireStart().RequireStop()
 
-	// invoke it regularly (not via fx.Invoke) because in case assertion fail shutdown won't happen
+	// invoke testFunc regularly (not via fx.Invoke) because in case assertion fail shutdown won't happen
 	// and the subsequent test is going to fail due to busy port
-	testFunc(deps)
+	testFunc(depsGetter())
 }
 
 func resetInfraAndStartAppTest(t *testing.T, preInvokeFunc interface{}, testFunc tfunc) {
@@ -240,11 +252,11 @@ func resetInfraAndStartAppTest(t *testing.T, preInvokeFunc interface{}, testFunc
 
 	resetInfra(lgr, cfg)
 
-	deps, depsExtractor := makeCommonDepsExtractor()
+	depsGetter, depsExtractor := makeCommonDepsExtractor()
 	f := func(i *commonTestDeps) {
 		testFunc(i)
 	}
-	runTestFunc(lgr, cfg, t, preInvokeFunc, deps, depsExtractor, f)
+	runTestFunc(lgr, cfg, t, preInvokeFunc, depsGetter, depsExtractor, f)
 }
 
 func waitForHealthCheck(lgr *logger.LoggerWrapper, restClient *client.TestRestClient, cfg *config.AppConfig) {
