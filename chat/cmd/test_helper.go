@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/twmb/franz-go/pkg/kadm"
 	"nkonev.name/chat/app"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
@@ -81,7 +82,26 @@ func aaaClientFactory(t *testing.T) func() client.AaaRestClient {
 	}
 }
 
-func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
+type tfunc func(d *exportedDeps)
+
+type exportedDeps struct {
+	lgr                               *logger.LoggerWrapper
+	cfg                               *config.AppConfig
+	testRestClient                    *client.TestRestClient
+	admCl                             *kadm.Client
+	dba                               *db.DB
+	m                                 *cqrs.CommonProjection
+	testOutputEventsAccumulator       *listener.TestOutputEventAccumulator
+	testNotificationEventsAccumulator *listener.TestNotificationEventAccumulator
+	testEventsPublisher               *producer.RabbitTestInputEventsPublisher
+	cleanAbandonedChatsService        *tasks.CleanAnandonedChatsService
+	cleanDeletedUserDataService       *tasks.CleanDeletedUserDataService
+	lc                                fx.Lifecycle
+}
+
+func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc tfunc) {
+	var ed *exportedDeps
+
 	appTestFx := fxtest.New(
 		t,
 		fx.Supply(cfg),
@@ -150,13 +170,43 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 			cqrs.UnsetIsNeedToSkipImport,
 			handlers.RunHttpServer,
 			waitForHealthCheck,
-			testFunc,
+			func(
+				testRestClient0 *client.TestRestClient,
+				admCl0 *kadm.Client,
+				dba0 *db.DB,
+				m0 *cqrs.CommonProjection,
+				testOutputEventsAccumulator0 *listener.TestOutputEventAccumulator,
+				testNotificationEventsAccumulator0 *listener.TestNotificationEventAccumulator,
+				testEventsPublisher0 *producer.RabbitTestInputEventsPublisher,
+				cleanAbandonedChats0 *tasks.CleanAnandonedChatsService,
+				cleanDeletedUserDataService0 *tasks.CleanDeletedUserDataService,
+				lc0 fx.Lifecycle,
+			) {
+				ed = &exportedDeps{
+					lgr,
+					cfg,
+					testRestClient0,
+					admCl0,
+					dba0,
+					m0,
+					testOutputEventsAccumulator0,
+					testNotificationEventsAccumulator0,
+					testEventsPublisher0,
+					cleanAbandonedChats0,
+					cleanDeletedUserDataService0,
+					lc0,
+				}
+			},
 		),
 	)
 	defer appTestFx.RequireStart().RequireStop()
+
+	// invoke it regularly (not via fx.Invoke) because in case assertion fail shutdown won't happen
+	// and the subsequent test is going to fail due to busy port
+	testFunc(ed)
 }
 
-func startAppFull(t *testing.T, preInvokeFunc interface{}, testFunc interface{}) {
+func resetInfraAndStartAppTest(t *testing.T, preInvokeFunc interface{}, testFunc tfunc) {
 	cfg, err := config.CreateTestTypedConfig()
 	if err != nil {
 		panic(err)
