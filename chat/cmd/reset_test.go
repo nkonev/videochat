@@ -52,8 +52,6 @@ func TestReset(t *testing.T) {
 
 	resetInfra(lgr, cfg)
 
-	depsGetter1, depsExtractor1 := makeCommonDepsExtractor()
-
 	// fill with 1 chat and 1 message
 	runTestFunc(lgr, cfg, t,
 		func(
@@ -62,8 +60,6 @@ func TestReset(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
 		},
-		depsGetter1,
-		depsExtractor1,
 		func(deps *commonTestDeps) {
 			ctx := context.Background()
 
@@ -133,8 +129,6 @@ func TestReset(t *testing.T) {
 	appExportFx.Run()
 	lgr.Info("Exit reset command")
 
-	depsGetter2, depsExtractor2 := makeCommonDepsExtractor()
-
 	// normal run after reset
 	runTestFunc(lgr, cfg, t,
 		func(
@@ -143,8 +137,6 @@ func TestReset(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
 		},
-		depsGetter2,
-		depsExtractor2,
 		func(deps *commonTestDeps) {
 			ctx := context.Background()
 
