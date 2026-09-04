@@ -254,7 +254,7 @@ func runTestFuncGeneralized[testDeps any, depsExtractorFx any, testFuncGotest fu
 	)
 	defer appTestFx.RequireStart().RequireStop()
 
-	// invoke testFunc regularly (not via fx.Invoke) because in case assertion fail shutdown won't happen
+	// invoke testFunc regularly (not via fx.Invoke) because in case assertion fail the fx shutdown won't happen
 	// and the subsequent test is going to fail due to busy port
 	testFunc(depsGetter())
 }
