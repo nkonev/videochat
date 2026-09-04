@@ -61,7 +61,7 @@ func TestUnreads(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2, &mockUser3}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -552,7 +552,7 @@ func TestUnreadsInitFromEmptyChatOfBothUsers(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -635,7 +635,7 @@ func TestReadAllChats(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 
 			const chat1Name = "new chat 1"
 			const chat2Name = "new chat 2"
@@ -764,7 +764,7 @@ func TestReadOneChat(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 
 			const chat1Name = "new chat 1"
 			const chat2Name = "new chat 2"
@@ -921,7 +921,7 @@ func TestReaction(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 
 			const chat1Name = "new chat 1"
 
@@ -1118,7 +1118,7 @@ func TestCreateTetATetChat(t *testing.T) {
 				Online: true,
 			}}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			ctx := context.Background()
 
 			chat1Id, err := deps.testRestClient.CreateTetATetChat(ctx, user1, user2)
@@ -1183,7 +1183,7 @@ func TestResendMessage(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1 src"
 			const chat2Name = "new chat 1 dst"
 
@@ -1348,7 +1348,7 @@ func TestReplyMessage(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -1508,7 +1508,7 @@ func TestMentionNotification(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -1696,7 +1696,7 @@ func TestReplyNotification(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -1796,7 +1796,7 @@ func TestReactionNotification(t *testing.T) {
 		mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 		mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 	},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -1896,7 +1896,7 @@ func TestBrowserNotification(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2002,7 +2002,7 @@ func TestPinChat(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2139,7 +2139,7 @@ func TestCreateChat(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2198,7 +2198,7 @@ func TestCreateChatWithMultipleParticipants(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1 with multiple participants"
 
 			ctx := context.Background()
@@ -2271,7 +2271,7 @@ func TestEditChatWithAddingParticipants(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 			const chat1NewName = "new chat 1 with adding participants"
 
@@ -2363,7 +2363,7 @@ func TestDeleteChat(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2512,7 +2512,7 @@ func TestAddParticipant(t *testing.T) {
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 			mockAaaClient.EXPECT().SearchGetUsers(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*dto.User{&mockUser2}, 2, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2649,7 +2649,7 @@ func TestAddParticipant(t *testing.T) {
 func TestAddParticipantChatStillNotExists(t *testing.T) {
 	resetInfraAndStartAppTest(t,
 		func(aaaRestClient client.AaaRestClient) {},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const user1 int64 = 1
 			const user2 int64 = 2
 
@@ -2696,7 +2696,7 @@ func TestDeleteParticipant(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2823,7 +2823,7 @@ func TestLeaveFromChat(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -2991,7 +2991,7 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -3228,7 +3228,7 @@ func TestCreateMessage(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 			const message1Text = "message text 1"
 
@@ -3321,7 +3321,7 @@ func TestCreateMessageChatStillNotExists(t *testing.T) {
 	resetInfraAndStartAppTest(t,
 		func(aaaRestClient client.AaaRestClient) {
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const user1 int64 = 1
 
 			const message1Text = "message text 1"
@@ -3369,7 +3369,7 @@ func TestEditMessage(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -3550,7 +3550,7 @@ func TestPinMessage(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -3781,7 +3781,7 @@ func TestPublishMessage(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -3898,7 +3898,7 @@ func TestEditMessageStillNotExists(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat10Id = 12345
 			const message1Id = 54321
 
@@ -3944,7 +3944,7 @@ func TestBlog(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -4055,7 +4055,7 @@ func TestChatPaginate(t *testing.T) {
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{}, nil)
 			mockAaaClient.EXPECT().SearchGetUsers(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*dto.User{}, 0, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const user1 int64 = 1
 			const num = 1000
 			const chatPrefix = "generated_chat"
@@ -4116,7 +4116,7 @@ func TestChatFuzzySearch(t *testing.T) {
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{}, nil)
 			mockAaaClient.EXPECT().SearchGetUsers(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*dto.User{}, 1, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const user1 int64 = 1
 			const chat1Name = "чат Опубликована платформа Node.js 25.0.0"
 
@@ -4157,7 +4157,7 @@ func TestMessagePaginate(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const user1 int64 = 1
 			const chat1Name = "new chat 1"
 			const num = 500
@@ -4249,7 +4249,7 @@ func TestMessageFuzzySearch(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1 src"
 			const chat2Name = "new chat 1 dst"
 
@@ -4370,7 +4370,7 @@ func TestEventSendingOnUserProfileChange(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()
@@ -4448,7 +4448,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1, &mockUser2}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 			const chat2Name = "new chat 2"
 			const chat3Name = "new chat 3"
@@ -4648,7 +4648,7 @@ func TestCleanDeletedUsersData(t *testing.T) {
 			}}, nil) // not exists
 			mockAaaClient.EXPECT().CountUsers(mock.Anything).Return(1_000_000, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 			const chat2Name = "new chat 2"
 
@@ -4770,7 +4770,7 @@ func TestCleanAbandonedChats(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			const chat1Name = "new chat 1"
 
 			ctx := context.Background()

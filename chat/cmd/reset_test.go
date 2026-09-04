@@ -60,7 +60,7 @@ func TestReset(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			ctx := context.Background()
 
 			var err error
@@ -137,7 +137,7 @@ func TestReset(t *testing.T) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
 			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
 		},
-		func(deps *exportedDeps) {
+		func(deps *commonTestDeps) {
 			ctx := context.Background()
 
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")

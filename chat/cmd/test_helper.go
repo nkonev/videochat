@@ -82,9 +82,9 @@ func aaaClientFactory(t *testing.T) func() client.AaaRestClient {
 	}
 }
 
-type tfunc func(d *exportedDeps)
+type tfunc func(d *commonTestDeps)
 
-type exportedDeps struct {
+type commonTestDeps struct {
 	lgr                               *logger.LoggerWrapper
 	cfg                               *config.AppConfig
 	testRestClient                    *client.TestRestClient
@@ -99,8 +99,60 @@ type exportedDeps struct {
 	lc                                fx.Lifecycle
 }
 
+func makeCommonDepsExtractor() (
+	*commonTestDeps,
+	func(
+		lgr0 *logger.LoggerWrapper,
+		cfg0 *config.AppConfig,
+		testRestClient0 *client.TestRestClient,
+		admCl0 *kadm.Client,
+		dba0 *db.DB,
+		commonProjection0 *cqrs.CommonProjection,
+		testOutputEventsAccumulator0 *listener.TestOutputEventAccumulator,
+		testNotificationEventsAccumulator0 *listener.TestNotificationEventAccumulator,
+		testEventsPublisher0 *producer.RabbitTestInputEventsPublisher,
+		cleanAbandonedChats0 *tasks.CleanAnandonedChatsService,
+		cleanDeletedUserDataService0 *tasks.CleanDeletedUserDataService,
+		lc0 fx.Lifecycle,
+	),
+) {
+	var ed = new(commonTestDeps)
+
+	var depExporter = func(
+		lgr0 *logger.LoggerWrapper,
+		cfg0 *config.AppConfig,
+		testRestClient0 *client.TestRestClient,
+		admCl0 *kadm.Client,
+		dba0 *db.DB,
+		commonProjection0 *cqrs.CommonProjection,
+		testOutputEventsAccumulator0 *listener.TestOutputEventAccumulator,
+		testNotificationEventsAccumulator0 *listener.TestNotificationEventAccumulator,
+		testEventsPublisher0 *producer.RabbitTestInputEventsPublisher,
+		cleanAbandonedChats0 *tasks.CleanAnandonedChatsService,
+		cleanDeletedUserDataService0 *tasks.CleanDeletedUserDataService,
+		lc0 fx.Lifecycle,
+	) {
+		*ed = commonTestDeps{
+			lgr0,
+			cfg0,
+			testRestClient0,
+			admCl0,
+			dba0,
+			commonProjection0,
+			testOutputEventsAccumulator0,
+			testNotificationEventsAccumulator0,
+			testEventsPublisher0,
+			cleanAbandonedChats0,
+			cleanDeletedUserDataService0,
+			lc0,
+		}
+	}
+
+	return ed, depExporter
+}
+
 func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T, preInvokeFunc interface{}, testFunc tfunc) {
-	var ed *exportedDeps
+	deps, depsExtractor := makeCommonDepsExtractor()
 
 	appTestFx := fxtest.New(
 		t,
@@ -170,40 +222,14 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 			cqrs.UnsetIsNeedToSkipImport,
 			handlers.RunHttpServer,
 			waitForHealthCheck,
-			func(
-				testRestClient0 *client.TestRestClient,
-				admCl0 *kadm.Client,
-				dba0 *db.DB,
-				commonProjection0 *cqrs.CommonProjection,
-				testOutputEventsAccumulator0 *listener.TestOutputEventAccumulator,
-				testNotificationEventsAccumulator0 *listener.TestNotificationEventAccumulator,
-				testEventsPublisher0 *producer.RabbitTestInputEventsPublisher,
-				cleanAbandonedChats0 *tasks.CleanAnandonedChatsService,
-				cleanDeletedUserDataService0 *tasks.CleanDeletedUserDataService,
-				lc0 fx.Lifecycle,
-			) {
-				ed = &exportedDeps{
-					lgr,
-					cfg,
-					testRestClient0,
-					admCl0,
-					dba0,
-					commonProjection0,
-					testOutputEventsAccumulator0,
-					testNotificationEventsAccumulator0,
-					testEventsPublisher0,
-					cleanAbandonedChats0,
-					cleanDeletedUserDataService0,
-					lc0,
-				}
-			},
+			depsExtractor,
 		),
 	)
 	defer appTestFx.RequireStart().RequireStop()
 
 	// invoke it regularly (not via fx.Invoke) because in case assertion fail shutdown won't happen
 	// and the subsequent test is going to fail due to busy port
-	testFunc(ed)
+	testFunc(deps)
 }
 
 func resetInfraAndStartAppTest(t *testing.T, preInvokeFunc interface{}, testFunc tfunc) {
