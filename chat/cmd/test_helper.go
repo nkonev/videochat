@@ -90,7 +90,7 @@ type exportedDeps struct {
 	testRestClient                    *client.TestRestClient
 	admCl                             *kadm.Client
 	dba                               *db.DB
-	m                                 *cqrs.CommonProjection
+	commonProjection                  *cqrs.CommonProjection
 	testOutputEventsAccumulator       *listener.TestOutputEventAccumulator
 	testNotificationEventsAccumulator *listener.TestNotificationEventAccumulator
 	testEventsPublisher               *producer.RabbitTestInputEventsPublisher
@@ -174,7 +174,7 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 				testRestClient0 *client.TestRestClient,
 				admCl0 *kadm.Client,
 				dba0 *db.DB,
-				m0 *cqrs.CommonProjection,
+				commonProjection0 *cqrs.CommonProjection,
 				testOutputEventsAccumulator0 *listener.TestOutputEventAccumulator,
 				testNotificationEventsAccumulator0 *listener.TestNotificationEventAccumulator,
 				testEventsPublisher0 *producer.RabbitTestInputEventsPublisher,
@@ -188,7 +188,7 @@ func runTestFunc(lgr *logger.LoggerWrapper, cfg *config.AppConfig, t *testing.T,
 					testRestClient0,
 					admCl0,
 					dba0,
-					m0,
+					commonProjection0,
 					testOutputEventsAccumulator0,
 					testNotificationEventsAccumulator0,
 					testEventsPublisher0,

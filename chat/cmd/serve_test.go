@@ -75,7 +75,7 @@ func TestUnreads(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 
@@ -2013,7 +2013,7 @@ func TestPinChat(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 
@@ -2403,7 +2403,7 @@ func TestDeleteChat(t *testing.T) {
 
 			deps.testOutputEventsAccumulator.Clean()
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 
@@ -2471,7 +2471,7 @@ func TestDeleteChat(t *testing.T) {
 				},
 			}))
 
-			ch, err := deps.m.GetChatBasic(ctx, deps.dba, chat1Id)
+			ch, err := deps.commonProjection.GetChatBasic(ctx, deps.dba, chat1Id)
 			require.NoError(t, err, "error in getting chat")
 			require.Nil(t, ch) // assert that the chat was physically removed
 		})
@@ -2523,7 +2523,7 @@ func TestAddParticipant(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 
@@ -2707,7 +2707,7 @@ func TestDeleteParticipant(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 
@@ -2834,7 +2834,7 @@ func TestLeaveFromChat(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 
@@ -3380,7 +3380,7 @@ func TestEditMessage(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
@@ -3561,7 +3561,7 @@ func TestPinMessage(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
@@ -3792,7 +3792,7 @@ func TestPublishMessage(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message1Text = "new message 1"
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
@@ -4072,7 +4072,7 @@ func TestChatPaginate(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, lastChatId, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, lastChatId, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			// get initial page
 			resp1, _, err := deps.testRestClient.GetChats(ctx, user1, client.NewChatGetOptionWithSize(40))
@@ -4179,7 +4179,7 @@ func TestMessagePaginate(t *testing.T) {
 			}
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, lastMessageId, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, lastMessageId, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			// get first page
 			resp1, _, err := deps.testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSize(3), client.NewMessageGetOptionWithStartsFromItemId(6))
@@ -4271,7 +4271,7 @@ func TestMessageFuzzySearch(t *testing.T) {
 
 			messageId1, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, messageText1)
 			require.NoError(t, err, "error in creating message")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, messageId1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message2Text = "samsung"
 
@@ -4279,7 +4279,7 @@ func TestMessageFuzzySearch(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message3Text = `Рабочей силы еще больше!Иран отвлекает от внутренней повестки. Меж тем, индекс hh.ru (соотношение резюме к вакансиям) в марте резко вырос – 11,4 против 9,8 в феврале. Кажется, вообще впервые такой резкий рост. Напомню, минимум был в июне 2024 - 3,1. Значение от 2 до 3,9 - дефицит соискателей,  4-7,9 - умеренный уровень конкуренции за рабочие места, 8,0–11,9 — высокий уровень конкуренции соискателей за рабочие места.В Москве как и по стране 11,4 (в феврале – 10). В Питере 12,1 (в феврале – 10,5). По профобластям дефицит по-прежнему только в розничной торговле (3,9), и то на грани.Еще в ноябре разбирал (тут и тут) как это все вяжется с данными Росстата по безработице (2,1%).@NewGosplanhttps://stats.hh.ru/---Работа Госплан 2.0`
 
@@ -4287,14 +4287,14 @@ func TestMessageFuzzySearch(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message4Text = `BASSANOVA - GAUNTLET DOCS LEAKED:$ATOM 2.0WILL CRUSH INFLATION — THE ENDGAME IS HERE #ATOM #cosmosTHE SHOCK DROPCosmos Labs handed Gauntlet (Coinbase/Uniswap tier) the keys to REINVENT $ATOM.16 weeks. Results July. They found the broken model. #Tokenomics #DeFiTHE DIAGNOSIS IS BRUTALPhase 1 rips apart:•Who’s actually holding ATOM?•Why staking dropped off a cliff•How past inflation changes BROKE demand #Crypto #InflationATOM 2.0: ZERO INFLATION ENGINEFees > Security = 0% issuance. First L1 that PAYS YOU TO EXIST.ATOM becomes THE reserve asset for:•Gas - IBC settlement - Interchain Security #Web3 #L1THE KILLER MECHANICS•3-YEAR MELTDOWN: Gradual issuance death•Osmosis cash machine: DEX fees → ATOM buybacks (2.5% supply cap)•Rollup yield: Stake ATOM, secure L2s, collect fees #Staking #YieldTIMING IS NUCLEAR•Gauntlet drops truth bombs July 2026•CometBFT 10k+ TPS live Q2•Bithumb whales positioning NOW #Bullish #WhalesTHE DIRTY SECRETForum buried this RFP for months. Normies sleeping.Maxis knew. Institutions smelled blood. #Insider #FOMO$ATOM isn’t “just another L1.”It’s THE coordination layer eating Solana’s lunch. #CosmosHub #IBCStack or get rekt.RT if you’re loading $ATOM 🚀---crypto`
 			_, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message4Text)
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const searchString1 = "Опубликованный"
 			resp1Search, _, err := deps.testRestClient.GetMessages(ctx, user1, chat1Id, client.NewMessageGetOptionWithSearch(searchString1))
@@ -4324,7 +4324,7 @@ func TestMessageFuzzySearch(t *testing.T) {
 			require.NoError(t, err, "error in resending message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, message1ResentId, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1ResentId, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			// user 2 searches for the message
 			resp22Search, _, err := deps.testRestClient.GetMessages(ctx, user2, chat2Id, client.NewMessageGetOptionWithSearch(searchString1))
@@ -4461,7 +4461,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const messageText1 = "message 1"
 
@@ -4469,7 +4469,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const reaction = "😀"
 			err = deps.testRestClient.Reaction(ctx, user1, chat1Id, message1Id, reaction)
@@ -4483,7 +4483,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
 			// assert that the reaction is deleted along with message
-			reactionExists, err := deps.m.IsReactionExists(ctx, chat1Id, message1Id, reaction)
+			reactionExists, err := deps.commonProjection.IsReactionExists(ctx, chat1Id, message1Id, reaction)
 			require.NoError(t, err, "error in checking reaction")
 			assert.False(t, reactionExists)
 
@@ -4493,13 +4493,13 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat2Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat2Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
-			existsUv21, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat2Id, user1)
+			existsUv21, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat2Id, user1)
 			require.NoError(t, err, "error in checking chat user view")
 			assert.True(t, existsUv21)
 
-			existsC21, err := deps.m.IsChatExists(ctx, deps.dba, chat2Id)
+			existsC21, err := deps.commonProjection.IsChatExists(ctx, deps.dba, chat2Id)
 			require.NoError(t, err, "error in checking chat common")
 			assert.True(t, existsC21)
 
@@ -4509,9 +4509,9 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat2Id, message2Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat2Id, message2Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
-			messageExists, err := deps.m.IsMessageExists(ctx, deps.dba, chat2Id, message2Id)
+			messageExists, err := deps.commonProjection.IsMessageExists(ctx, deps.dba, chat2Id, message2Id)
 			require.NoError(t, err, "error in checking message")
 			assert.True(t, messageExists)
 
@@ -4540,15 +4540,15 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			deps.testOutputEventsAccumulator.Clean()
 
 			// assert that the message is deleted along with chat
-			messageExists2, err := deps.m.IsMessageExists(ctx, deps.dba, chat2Id, message2Id)
+			messageExists2, err := deps.commonProjection.IsMessageExists(ctx, deps.dba, chat2Id, message2Id)
 			require.NoError(t, err, "error in checking message")
 			assert.False(t, messageExists2)
 
-			existsUv22, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat2Id, user1)
+			existsUv22, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat2Id, user1)
 			require.NoError(t, err, "error in checking chat user view")
 			assert.False(t, existsUv22)
 
-			existsC22, err := deps.m.IsChatExists(ctx, deps.dba, chat2Id)
+			existsC22, err := deps.commonProjection.IsChatExists(ctx, deps.dba, chat2Id)
 			require.NoError(t, err, "error in checking chat common")
 			assert.False(t, existsC22)
 
@@ -4558,7 +4558,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat3Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat3Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const messageText3 = "message 3"
 
@@ -4566,7 +4566,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat3Id, message3Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat3Id, message3Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			blogsNewW, err := deps.testRestClient.SearchBlogs(ctx)
 			require.NoError(t, err, "error in searching blog posts")
@@ -4601,7 +4601,7 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			blogsNew2 := blogsNewW2.Items
 			assert.Equal(t, 0, len(blogsNew2))
 
-			messageExists33, err := deps.m.IsMessageExists(ctx, deps.dba, chat3Id, message3Id)
+			messageExists33, err := deps.commonProjection.IsMessageExists(ctx, deps.dba, chat3Id, message3Id)
 			require.NoError(t, err, "error in checking message")
 			assert.False(t, messageExists33)
 		})
@@ -4658,13 +4658,13 @@ func TestCleanDeletedUsersData(t *testing.T) {
 			require.NoError(t, err, "error in creating chat")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user2, chat2Name)
 			require.NoError(t, err, "error in creating chat")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat2Id, user2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat2Id, user2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const messageText1 = "message 1"
 			const messageText2 = "message 2"
@@ -4673,37 +4673,37 @@ func TestCleanDeletedUsersData(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user2, chat2Id, messageText2)
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, message2Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message2Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			deps.testOutputEventsAccumulator.Clean()
 
-			cuv11before, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat1Id, user1)
+			cuv11before, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat1Id, user1)
 			require.NoError(t, err, "error in checking chat user view")
 			require.True(t, cuv11before)
 
-			cuv21before, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat1Id, user2)
+			cuv21before, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat1Id, user2)
 			require.NoError(t, err, "error in checking chat user view")
 			require.True(t, cuv21before)
 
-			cuv22before, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat2Id, user2)
+			cuv22before, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat2Id, user2)
 			require.NoError(t, err, "error in checking chat user view")
 			require.True(t, cuv22before)
 
-			cp21before, err := deps.m.IsParticipantExists(ctx, deps.dba, chat1Id, user2)
+			cp21before, err := deps.commonProjection.IsParticipantExists(ctx, deps.dba, chat1Id, user2)
 			require.NoError(t, err, "error in checking chat participant")
 			require.True(t, cp21before)
 
-			cp22before, err := deps.m.IsParticipantExists(ctx, deps.dba, chat2Id, user2)
+			cp22before, err := deps.commonProjection.IsParticipantExists(ctx, deps.dba, chat2Id, user2)
 			require.NoError(t, err, "error in checking chat participant")
 			require.True(t, cp22before)
 
-			urm2before, err := deps.m.AreHasUnreadMessagesExists(ctx, deps.dba, user2)
+			urm2before, err := deps.commonProjection.AreHasUnreadMessagesExists(ctx, deps.dba, user2)
 			require.NoError(t, err, "error in checking unread messages")
 			require.True(t, urm2before)
 
@@ -4723,27 +4723,27 @@ func TestCleanDeletedUsersData(t *testing.T) {
 				},
 			}))
 
-			cuv11after, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat1Id, user1)
+			cuv11after, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat1Id, user1)
 			require.NoError(t, err, "error in checking chat user view")
 			require.True(t, cuv11after)
 
-			cuv21after, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat1Id, user2)
+			cuv21after, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat1Id, user2)
 			require.NoError(t, err, "error in checking chat user view")
 			require.False(t, cuv21after)
 
-			cuv22after, err := deps.m.IsChatUserViewExists(ctx, deps.dba, chat2Id, user2)
+			cuv22after, err := deps.commonProjection.IsChatUserViewExists(ctx, deps.dba, chat2Id, user2)
 			require.NoError(t, err, "error in checking chat user view")
 			require.False(t, cuv22after)
 
-			cp21after, err := deps.m.IsParticipantExists(ctx, deps.dba, chat1Id, user2)
+			cp21after, err := deps.commonProjection.IsParticipantExists(ctx, deps.dba, chat1Id, user2)
 			require.NoError(t, err, "error in checking chat participant")
 			require.False(t, cp21after)
 
-			cp22after, err := deps.m.IsParticipantExists(ctx, deps.dba, chat2Id, user2)
+			cp22after, err := deps.commonProjection.IsParticipantExists(ctx, deps.dba, chat2Id, user2)
 			require.NoError(t, err, "error in checking chat participant")
 			require.False(t, cp22after)
 
-			urm2after, err := deps.m.AreHasUnreadMessagesExists(ctx, deps.dba, user2)
+			urm2after, err := deps.commonProjection.AreHasUnreadMessagesExists(ctx, deps.dba, user2)
 			require.NoError(t, err, "error in checking unread messages")
 			require.False(t, urm2after)
 		})
@@ -4779,7 +4779,7 @@ func TestCleanAbandonedChats(t *testing.T) {
 			require.NoError(t, err, "error in creating chat")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForChatExists(deps.lgr, deps.m, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const messageText1 = "message 1"
 
@@ -4787,12 +4787,12 @@ func TestCleanAbandonedChats(t *testing.T) {
 			require.NoError(t, err, "error in creating message")
 			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
 			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			waitForMessageExists(deps.lgr, deps.m, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
-			err = deps.m.UnsafeDeleteParticipantForTest(ctx, deps.dba, chat1Id, user1)
+			err = deps.commonProjection.UnsafeDeleteParticipantForTest(ctx, deps.dba, chat1Id, user1)
 			require.NoError(t, err, "error in deleting chat")
 
-			existsC1before, err := deps.m.IsChatExists(ctx, deps.dba, chat1Id)
+			existsC1before, err := deps.commonProjection.IsChatExists(ctx, deps.dba, chat1Id)
 			require.NoError(t, err, "error in checking chat common")
 			assert.True(t, existsC1before)
 
@@ -4801,9 +4801,9 @@ func TestCleanAbandonedChats(t *testing.T) {
 			// do cleanup
 			deps.cleanAbandonedChatsService.DoJob(ctx)
 
-			waitForChatNotExists(deps.lgr, deps.m, deps.dba, chat1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
+			waitForChatNotExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
-			existsC1after, err := deps.m.IsChatExists(ctx, deps.dba, chat1Id)
+			existsC1after, err := deps.commonProjection.IsChatExists(ctx, deps.dba, chat1Id)
 			require.NoError(t, err, "error in checking existence")
 			require.False(t, existsC1after)
 		})
