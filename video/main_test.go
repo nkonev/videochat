@@ -237,15 +237,72 @@ func startChatEmu() *http.Server {
 	return s
 }
 
-func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
-	var s fx.Shutdowner
-	app := fxtest.New(
+type tfunc func(d *commonTestDeps)
+
+type commonTestDeps struct {
+	database          *db.DB
+	task              *tasks.SynchronizeWithLivekitService
+	livekitRoomClient client.LivekitRoomClient
+	e                 *ApiEcho
+}
+
+func makeCommonDepsExtractor(testFunc tfunc) (
+	func() *commonTestDeps,
+	func(
+		database0 *db.DB,
+		task0 *tasks.SynchronizeWithLivekitService,
+		livekitRoomClient0 client.LivekitRoomClient,
+		e0 *ApiEcho,
+	),
+	func(*commonTestDeps),
+) {
+	var ed = new(commonTestDeps)
+
+	var depExtractor = func(
+		database0 *db.DB,
+		task0 *tasks.SynchronizeWithLivekitService,
+		livekitRoomClient0 client.LivekitRoomClient,
+		e0 *ApiEcho,
+	) {
+		*ed = commonTestDeps{
+			database0,
+			task0,
+			livekitRoomClient0,
+			e0,
+		}
+	}
+
+	var depsGetter = func() *commonTestDeps {
+		return ed
+	}
+
+	var tf = func(i *commonTestDeps) {
+		testFunc(i)
+	}
+
+	return depsGetter, depExtractor, tf
+}
+
+func runTest(t *testing.T, testFunc tfunc) {
+
+	depsGetter, depsExtractor, tf := makeCommonDepsExtractor(testFunc)
+
+	runTestFuncGeneralized(t, func() {}, depsGetter, depsExtractor, tf)
+}
+
+func runTestFuncGeneralized[testDeps any, depsExtractorFx any, testFuncGotest func(testDeps)](
+	t *testing.T,
+	preInvokeFunc interface{},
+	depsGetter func() testDeps, // returns extracted deps for testFunc
+	depsExtractor depsExtractorFx, // extracts deps from Fx by being run in Fx and stores them into memory, accessible by depsGetter
+	testFunc testFuncGotest,
+) {
+	appTestFx := fxtest.New(
 		t,
 		fx.Supply(lgr),
 		fx.WithLogger(func(log *logger.Logger) fxevent.Logger {
 			return &fxevent.ZapLogger{Logger: log.ZapLogger}
 		}),
-		fx.Populate(&s),
 		fx.Provide(
 			createTypedConfig,
 			configureTracer,
@@ -282,13 +339,15 @@ func runTest(t *testing.T, testFunc interface{}) *fxtest.App {
 		),
 		fx.Invoke(
 			runMigrations,
-			//runEcho,
-			testFunc,
+			preInvokeFunc,
+			depsExtractor,
 		),
 	)
-	defer app.RequireStart().RequireStop()
-	assert.NoError(t, s.Shutdown(), "error in app shutdown")
-	return app
+	defer appTestFx.RequireStart().RequireStop()
+
+	// invoke testFunc regularly (not via fx.Invoke) because in case assertion fail the fx shutdown won't happen
+	// and the subsequent test is going to fail due to busy port
+	testFunc(depsGetter())
 }
 
 func newMockLivekitRoomClient(t *testing.T) func() client.LivekitRoomClient {
@@ -344,69 +403,67 @@ func TestLivekitSynchronizeTaskIsGoingToCreateTheMissedEntries(t *testing.T) {
 	chatEmu := startChatEmu()
 	defer chatEmu.Close()
 
-	runTest(t, func(
-		database *db.DB,
-		task *tasks.SynchronizeWithLivekitService,
-		livekitRoomClient client.LivekitRoomClient,
-	) {
-		mockLivekitRoomClient := livekitRoomClient.(*client.MockLivekitRoomClient)
-		var chatId int64 = 1
-		roomName := "chat" + utils.Int64ToString(chatId)
-		mockLivekitRoomClient.On("ListRooms", mock.Anything, mock.Anything).Return(&livekit.ListRoomsResponse{
-			Rooms: []*livekit.Room{
-				{
-					Name: roomName,
+	runTest(
+		t,
+		func(deps *commonTestDeps) {
+			mockLivekitRoomClient := deps.livekitRoomClient.(*client.MockLivekitRoomClient)
+			var chatId int64 = 1
+			roomName := "chat" + utils.Int64ToString(chatId)
+			mockLivekitRoomClient.On("ListRooms", mock.Anything, mock.Anything).Return(&livekit.ListRoomsResponse{
+				Rooms: []*livekit.Room{
+					{
+						Name: roomName,
+					},
 				},
-			},
-		}, nil)
-		tokenId := "93e9d926-3291-43bb-bfb0-81be053705d9"
-		var userId int64 = 3
-		md := &dto.MetadataDto{
-			UserId:  userId,
-			Login:   "userlogin" + utils.Int64ToString(userId),
-			Avatar:  "",
-			TokenId: uuid.MustParse(tokenId),
-		}
-		mdb, err := json.Marshal(md)
-		assert.NoError(t, err)
-		mdbs := string(mdb)
-		mockLivekitRoomClient.On("ListParticipants",
-			mock.Anything,
-			&livekit.ListParticipantsRequest{Room: roomName}).
-			Return(&livekit.ListParticipantsResponse{Participants: []*livekit.ParticipantInfo{
-				{
-					Identity: utils.Int64ToString(userId) + "_02e9d926-3291-43bb-bfb0-81be053705d9",
-					Metadata: mdbs,
-				},
-			}}, nil)
-
-		var numOfEntriesBefore int
-		rowBefore := database.QueryRow("select count (*) from user_call_state")
-		assert.NoError(t, rowBefore.Scan(&numOfEntriesBefore))
-		assert.Equal(t, 0, numOfEntriesBefore)
-
-		// run the periodic task
-		task.DoJob(context.Background())
-
-		var numOfEntriesAfter int
-		rowAfter := database.QueryRow("select count (*) from user_call_state")
-		assert.NoError(t, rowAfter.Scan(&numOfEntriesAfter))
-		assert.Equal(t, 1, numOfEntriesAfter)
-
-		userState, err := db.TransactWithResult(context.Background(), database, func(tx *db.Tx) (*dto.UserCallState, error) {
-			return tx.Get(context.Background(), dto.UserCallStateId{
-				TokenId: uuid.MustParse(tokenId),
+			}, nil)
+			tokenId := "93e9d926-3291-43bb-bfb0-81be053705d9"
+			var userId int64 = 3
+			md := &dto.MetadataDto{
 				UserId:  userId,
-			})
-		})
-		assert.NoError(t, err)
+				Login:   "userlogin" + utils.Int64ToString(userId),
+				Avatar:  "",
+				TokenId: uuid.MustParse(tokenId),
+			}
+			mdb, err := json.Marshal(md)
+			assert.NoError(t, err)
+			mdbs := string(mdb)
+			mockLivekitRoomClient.On("ListParticipants",
+				mock.Anything,
+				&livekit.ListParticipantsRequest{Room: roomName}).
+				Return(&livekit.ListParticipantsResponse{Participants: []*livekit.ParticipantInfo{
+					{
+						Identity: utils.Int64ToString(userId) + "_02e9d926-3291-43bb-bfb0-81be053705d9",
+						Metadata: mdbs,
+					},
+				}}, nil)
 
-		assert.Equal(t, uuid.MustParse(tokenId), userState.TokenId)
-		assert.Equal(t, (*uuid.UUID)(nil), userState.OwnerTokenId)
-		assert.Equal(t, chatId, userState.ChatId)
-		assert.Equal(t, db.CallStatusInCall, userState.Status)
-		assert.Equal(t, (*int64)(nil), userState.OwnerUserId)
-	})
+			var numOfEntriesBefore int
+			rowBefore := deps.database.QueryRow("select count (*) from user_call_state")
+			assert.NoError(t, rowBefore.Scan(&numOfEntriesBefore))
+			assert.Equal(t, 0, numOfEntriesBefore)
+
+			// run the periodic task
+			deps.task.DoJob(context.Background())
+
+			var numOfEntriesAfter int
+			rowAfter := deps.database.QueryRow("select count (*) from user_call_state")
+			assert.NoError(t, rowAfter.Scan(&numOfEntriesAfter))
+			assert.Equal(t, 1, numOfEntriesAfter)
+
+			userState, err := db.TransactWithResult(context.Background(), deps.database, func(tx *db.Tx) (*dto.UserCallState, error) {
+				return tx.Get(context.Background(), dto.UserCallStateId{
+					TokenId: uuid.MustParse(tokenId),
+					UserId:  userId,
+				})
+			})
+			assert.NoError(t, err)
+
+			assert.Equal(t, uuid.MustParse(tokenId), userState.TokenId)
+			assert.Equal(t, (*uuid.UUID)(nil), userState.OwnerTokenId)
+			assert.Equal(t, chatId, userState.ChatId)
+			assert.Equal(t, db.CallStatusInCall, userState.Status)
+			assert.Equal(t, (*int64)(nil), userState.OwnerUserId)
+		})
 }
 
 func TestItsImpossibleToMakeACallToUserWhoAlreadyInCall(t *testing.T) {
@@ -416,31 +473,30 @@ func TestItsImpossibleToMakeACallToUserWhoAlreadyInCall(t *testing.T) {
 	chatEmu := startChatEmu()
 	defer chatEmu.Close()
 
-	runTest(t, func(
-		e *ApiEcho,
-		database *db.DB,
-	) {
-		var calleeUserId int64 = 42
-		var chatId int64 = 1
+	runTest(
+		t,
+		func(deps *commonTestDeps) {
+			var calleeUserId int64 = 42
+			var chatId int64 = 1
 
-		tokenId := "9449d926-3291-43bb-bfb0-81be053705d9"
+			tokenId := "9449d926-3291-43bb-bfb0-81be053705d9"
 
-		// create an entry that represents calleeUserId is already in call
-		assert.NoError(t, db.Transact(context.Background(), database, func(tx *db.Tx) error {
-			return tx.Set(context.Background(), dto.UserCallState{
-				TokenId:    uuid.MustParse(tokenId),
-				UserId:     calleeUserId,
-				ChatId:     chatId,
-				TokenTaken: true,
-				Status:     db.CallStatusInCall,
-			})
-		}))
+			// create an entry that represents calleeUserId is already in call
+			assert.NoError(t, db.Transact(context.Background(), deps.database, func(tx *db.Tx) error {
+				return tx.Set(context.Background(), dto.UserCallState{
+					TokenId:    uuid.MustParse(tokenId),
+					UserId:     calleeUserId,
+					ChatId:     chatId,
+					TokenTaken: true,
+					Status:     db.CallStatusInCall,
+				})
+			}))
 
-		var userId int64 = 4
+			var userId int64 = 4
 
-		// try to invite him
-		c, _, _ := request("PUT", "/api/video/"+utils.Int64ToString(chatId)+"/dial/invite?userId="+utils.Int64ToString(calleeUserId)+"&call=true", userId, nil, e)
+			// try to invite him
+			c, _, _ := request("PUT", "/api/video/"+utils.Int64ToString(chatId)+"/dial/invite?userId="+utils.Int64ToString(calleeUserId)+"&call=true", userId, nil, deps.e)
 
-		assert.Equal(t, http.StatusConflict, c)
-	})
+			assert.Equal(t, http.StatusConflict, c)
+		})
 }
