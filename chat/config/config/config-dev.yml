@@ -117,12 +117,6 @@ rabbitmq:
   skipPublishOutputEventsOnRewind: false
   skipPublishNotificationEventsOnRewind: false
 
-redis:
-  address: :36379
-  password: ""
-  db: 5
-  maxRetries: 10000
-
 schedulers:
   cleanAbandonedChatsTask:
     enabled: true

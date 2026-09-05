@@ -43,8 +43,6 @@ services:
       - CHAT_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/chat?sslmode=disable&application_name=chat-app
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
-      - CHAT_REDIS.ADDRESS=redis:6379
-      - CHAT_REDIS.DB=5
       - CHAT_OTLP.ENDPOINT=jaeger:4317
       - CHAT_FRONTENDURL=https://{{ domain }}
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=

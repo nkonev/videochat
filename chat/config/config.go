@@ -205,13 +205,6 @@ type TaskConfig struct {
 	CleanDeletedUsersDataTask CleanDeletedUsersDataTask
 }
 
-type RedisConfig struct {
-	Address    string
-	Password   string
-	Db         int
-	MaxRetries int
-}
-
 type AppConfig struct {
 	Kafka       KafkaConfig
 	Otlp        OtlpConfig
@@ -227,7 +220,6 @@ type AppConfig struct {
 	FrontendUrl string
 	RabbitMQ    RabbitMQConfig
 	Schedulers  TaskConfig
-	Redis       RedisConfig
 }
 
 //go:embed config

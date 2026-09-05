@@ -119,7 +119,6 @@ To run without schedulers:
 			listener.CreateRabbitInternalEventsListener,
 			listener.CreateRabbitAaaUserProfileUpdateListener,
 			type_registry.NewTypeRegistryInstance,
-			tasks.RedisV9,
 			tasks.Scheduler,
 			tasks.CleanAbandonedChatsScheduler,
 			tasks.CleanDeletedUserDataScheduler,

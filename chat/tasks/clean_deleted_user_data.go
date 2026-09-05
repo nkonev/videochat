@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
+	postgresLock "github.com/nkonev/dcron/plugin/lock/postgres_pgx5"
 	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
@@ -38,7 +38,7 @@ func CleanDeletedUserDataScheduler(
 		return nil
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.cleanDeletedUsersData"),
-		redisLock.WithLockTTL(cfg.Schedulers.CleanDeletedUsersDataTask.Expiration),
+		postgresLock.WithKeys(3, 4),
 	)
 
 	return &CleanDeletedUserDataTask{job}

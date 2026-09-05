@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
 
@@ -26,7 +27,7 @@ import (
 )
 
 type DB struct {
-	pool *pgxpool.Pool
+	Pool *pgxpool.Pool
 	lgr  *logger.LoggerWrapper
 	*sql.DB
 }
@@ -248,7 +249,7 @@ func (db *DB) Migrate(mc config.MigrationConfig) error {
 	}
 
 	// here we acquire a dedicated sql db in order to properly close it to prevent hanging on the app shutdown
-	stdDb := stdlib.OpenDBFromPool(db.pool)
+	stdDb := stdlib.OpenDBFromPool(db.Pool)
 	defer stdDb.Close()
 
 	pgInstance, err := pgxMigrate.WithInstance(stdDb, &pgxMigrate.Config{
