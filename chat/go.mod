@@ -15,9 +15,9 @@ require (
 	github.com/mcosta74/pgx-slog v0.4.1
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nkonev/args-parser v0.0.1
-	github.com/nkonev/dcron v1.8.0
-	github.com/nkonev/dcron/plugin/lock/redis v1.1.0
-	github.com/nkonev/dcron/plugin/trace/otel v1.1.0
+	github.com/nkonev/dcron v1.9.0
+	github.com/nkonev/dcron/plugin/lock/redis v1.2.0
+	github.com/nkonev/dcron/plugin/trace/otel v1.2.0
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/sanity-io/litter v1.5.8
