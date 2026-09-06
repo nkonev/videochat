@@ -51,7 +51,7 @@ func (p *SingleEventBatch) GetContext() context.Context {
 	return p.ctx
 }
 func (p *SingleEventBatch) GetOrder() int {
-	return 10000
+	return 200
 }
 
 type batchCommonPart struct {
@@ -108,7 +108,7 @@ func (p *MessageCreatedEventBatch) GetContext() context.Context {
 	return p.FirstElementContext
 }
 func (p *MessageCreatedEventBatch) GetOrder() int {
-	return 200
+	return 300
 }
 
 func (p *ChatCreatedEventBatch) TryAppend(event EventHolder) bool {
