@@ -6,7 +6,6 @@ import (
 	postgresLock "github.com/nkonev/dcron/plugin/lock/postgres_pgx5"
 	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
 
-	"nkonev.name/chat/client"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
 	"nkonev.name/chat/db"
@@ -43,12 +42,11 @@ func CleanAbandonedChatsScheduler(
 }
 
 type CleanAnandonedChatsService struct {
-	restClient client.AaaRestClient
-	tracer     trace.Tracer
-	dbR        *db.DB
-	lgr        *logger.LoggerWrapper
-	eventBus   *cqrs.KafkaProducer
-	co         *cqrs.CommonProjection
+	tracer   trace.Tracer
+	dbR      *db.DB
+	lgr      *logger.LoggerWrapper
+	eventBus *cqrs.KafkaProducer
+	co       *cqrs.CommonProjection
 }
 
 func (srv *CleanAnandonedChatsService) DoJob(ctx context.Context) {
@@ -90,7 +88,6 @@ func (srv *CleanAnandonedChatsService) processChats(c context.Context) {
 
 func NewCleanAbandonedChatsService(
 	lgr *logger.LoggerWrapper,
-	chatClient client.AaaRestClient,
 	dbR *db.DB,
 	eventBus *cqrs.KafkaProducer,
 	co *cqrs.CommonProjection,
@@ -98,11 +95,10 @@ func NewCleanAbandonedChatsService(
 ) *CleanAnandonedChatsService {
 	trcr := otel.Tracer("scheduler/clean-abandoned-chats")
 	return &CleanAnandonedChatsService{
-		restClient: chatClient,
-		tracer:     trcr,
-		dbR:        dbR,
-		lgr:        lgr,
-		eventBus:   eventBus,
-		co:         co,
+		tracer:   trcr,
+		dbR:      dbR,
+		lgr:      lgr,
+		eventBus: eventBus,
+		co:       co,
 	}
 }
