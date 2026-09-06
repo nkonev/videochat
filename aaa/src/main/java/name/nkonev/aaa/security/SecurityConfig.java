@@ -14,6 +14,7 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
@@ -193,4 +194,11 @@ public class SecurityConfig {
 //        return new AuthenticationTrustResolverImpl();
 //    }
 
+//    https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
+//    https://github.com/spring-projects/spring-security/issues/10938
+//    https://github.com/spring-projects/spring-security/issues/10913
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return web -> web.ignoring().requestMatchers(Constants.Urls.INTERNAL_API+ "/**");
+//    }
 }

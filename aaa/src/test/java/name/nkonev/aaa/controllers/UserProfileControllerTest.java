@@ -733,7 +733,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     @Test
     public void adminCanAccessToJaeger() throws Exception {
         mockMvc.perform(
-                get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
+                get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
                     .header("x-forwarded-uri", "/jaeger")
             )
             .andDo(result -> {
@@ -748,7 +748,7 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
     public void userCannotAccessToJaeger() throws Exception {
 
         mockMvc.perform(
-                get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE, Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
+                get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
                     .header("x-forwarded-uri", "/jaeger")
             )
             .andDo(result -> {
