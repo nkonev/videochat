@@ -19,7 +19,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/georgysavva/scany/v2/sqlscan"
-	"github.com/jackc/pgtype"
 )
 
 func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.CommonOperations, events []MessageCreated) error {
@@ -46,7 +45,7 @@ func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.Comm
 	var messageIds = []int64{}
 	var ownerIds = []int64{}
 	var contents = []string{}
-	var embeds = []pgtype.JSONB{}
+	var embeds = []*json.RawMessage{}
 	var fileItemUuids = []*string{}
 	var dbChatIds = []int64{}
 	var createdAts = []time.Time{}
@@ -57,14 +56,10 @@ func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.Comm
 		ownerIds = append(ownerIds, event.AdditionalData.BehalfUserId)
 		contents = append(contents, event.MessageCommoned.Content)
 
-		var embed pgtype.JSONB
-		if event.MessageCommoned.Embed != nil {
-			err = embed.Set(event.MessageCommoned.Embed)
-			if err != nil {
-				return err
-			}
-		} else {
-			embed.Status = pgtype.Null
+		var embed *json.RawMessage
+		embed, err = embeddableToRaw(event.MessageCommoned.Embed)
+		if err != nil {
+			return err
 		}
 		embeds = append(embeds, embed)
 
@@ -167,14 +162,9 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 	case MessageEditedActionAll:
 		fallthrough
 	case MessageEditedActionEmbedSync:
-		var embed pgtype.JSONB
-		if event.MessageCommoned.Embed != nil {
-			err = embed.Set(event.MessageCommoned.Embed)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			embed.Status = pgtype.Null
+		embed, err := embeddableToRaw(event.MessageCommoned.Embed)
+		if err != nil {
+			return nil, err
 		}
 		_, err = co.ExecContext(ctx, `
 			update message
@@ -1117,6 +1107,22 @@ func makeEmbedddable(embedJsonb *json.RawMessage) (dto.Embeddable, error) {
 		}
 	}
 	return nil, nil
+}
+
+func embeddableToRaw(embeddable dto.Embeddable) (*json.RawMessage, error) {
+	if embeddable != nil {
+		var ret json.RawMessage
+		var err error
+
+		ret, err = json.Marshal(embeddable)
+		if err != nil {
+			return nil, err
+		}
+
+		return &ret, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (m *CommonProjection) GetMessageBasic(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (*dto.MessageBasic, error) {
