@@ -8,7 +8,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/montag451/go-eventbus"
@@ -202,11 +201,6 @@ func configureGraphQlServer(lgr *logger.Logger, bus *eventbus.Bus, httpClient *c
 	d := viper.GetDuration("graphql.websocket.keepAlivePingInterval")
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: d,
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
 	})
 	srv.Use(extension.Introspection{})
 	srv.Use(gqlgen_opentelemetry.Tracer{

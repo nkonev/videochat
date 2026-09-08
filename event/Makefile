@@ -30,10 +30,10 @@ generate-git:
 	echo "{\"commit\": \"$(GIT_COMMIT)\", \"service\": \"$(SERVICE_NAME)\"}" > $(STATIC_JSON)
 
 install-graphql:
-	go install github.com/99designs/gqlgen@v0.17.74
+	go install github.com/99designs/gqlgen@v0.17.95
 
 generate-graphql:
-	go run github.com/99designs/gqlgen --verbose generate
+	gqlgen --verbose generate
 
 test:
 	go test ./... -count=1 -test.v -test.timeout=60s -p 1
