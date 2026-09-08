@@ -193,8 +193,8 @@ type MessageCommoned struct {
 	Content      string  `json:"content"`
 	FileItemUuid *string `json:"fileItemUuid"`
 
-	Embed    dto.Embeddable  `json:"-"` // seem marshalling below
-	RawEmbed json.RawMessage `json:"embed"`
+	Embed    dto.Embeddable   `json:"-"` // seem marshalling below
+	RawEmbed *json.RawMessage `json:"embed"`
 }
 
 func (f *MessageCommoned) UnmarshalJSON(b []byte) error {
@@ -204,9 +204,9 @@ func (f *MessageCommoned) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	if f.RawEmbed != nil && string(f.RawEmbed) != "null" {
+	if f.RawEmbed != nil {
 		var v dto.EmbedTyper
-		err = json.Unmarshal(f.RawEmbed, &v)
+		err = json.Unmarshal(*f.RawEmbed, &v)
 		if err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ func (f *MessageCommoned) UnmarshalJSON(b []byte) error {
 			return fmt.Errorf("Unknown type in unmarshalling: %s", v.Type)
 		}
 
-		err = json.Unmarshal(f.RawEmbed, i)
+		err = json.Unmarshal(*f.RawEmbed, i)
 		if err != nil {
 			return err
 		}
@@ -233,19 +233,22 @@ func (f *MessageCommoned) UnmarshalJSON(b []byte) error {
 func (f *MessageCommoned) MarshalJSON() ([]byte, error) {
 	type res MessageCommoned
 	if f.Embed != nil {
+		var b json.RawMessage
+		var err error
+
 		switch typed := f.Embed.(type) {
 		case *dto.EmbedReply:
-			b, err := json.Marshal(typed)
+			b, err = json.Marshal(typed)
 			if err != nil {
 				return nil, err
 			}
-			f.RawEmbed = b
+			f.RawEmbed = &b
 		case *dto.EmbedResend:
-			b, err := json.Marshal(typed)
+			b, err = json.Marshal(typed)
 			if err != nil {
 				return nil, err
 			}
-			f.RawEmbed = b
+			f.RawEmbed = &b
 		default:
 			return nil, fmt.Errorf("Unknown type in marshalling:%T", f.Embed)
 		}
