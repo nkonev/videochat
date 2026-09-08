@@ -74,7 +74,7 @@ type MockLivekitRoomClient_ListParticipants_Call struct {
 // ListParticipants is a helper method to define mock.On call
 //   - ctx context.Context
 //   - req *livekit.ListParticipantsRequest
-func (_e *MockLivekitRoomClient_Expecter) ListParticipants(ctx interface{}, req interface{}) *MockLivekitRoomClient_ListParticipants_Call {
+func (_e *MockLivekitRoomClient_Expecter) ListParticipants(ctx any, req any) *MockLivekitRoomClient_ListParticipants_Call {
 	return &MockLivekitRoomClient_ListParticipants_Call{Call: _e.mock.On("ListParticipants", ctx, req)}
 }
 
@@ -142,7 +142,7 @@ type MockLivekitRoomClient_ListRooms_Call struct {
 // ListRooms is a helper method to define mock.On call
 //   - ctx context.Context
 //   - req *livekit.ListRoomsRequest
-func (_e *MockLivekitRoomClient_Expecter) ListRooms(ctx interface{}, req interface{}) *MockLivekitRoomClient_ListRooms_Call {
+func (_e *MockLivekitRoomClient_Expecter) ListRooms(ctx any, req any) *MockLivekitRoomClient_ListRooms_Call {
 	return &MockLivekitRoomClient_ListRooms_Call{Call: _e.mock.On("ListRooms", ctx, req)}
 }
 
@@ -210,7 +210,7 @@ type MockLivekitRoomClient_MutePublishedTrack_Call struct {
 // MutePublishedTrack is a helper method to define mock.On call
 //   - ctx context.Context
 //   - req *livekit.MuteRoomTrackRequest
-func (_e *MockLivekitRoomClient_Expecter) MutePublishedTrack(ctx interface{}, req interface{}) *MockLivekitRoomClient_MutePublishedTrack_Call {
+func (_e *MockLivekitRoomClient_Expecter) MutePublishedTrack(ctx any, req any) *MockLivekitRoomClient_MutePublishedTrack_Call {
 	return &MockLivekitRoomClient_MutePublishedTrack_Call{Call: _e.mock.On("MutePublishedTrack", ctx, req)}
 }
 
@@ -278,7 +278,7 @@ type MockLivekitRoomClient_RemoveParticipant_Call struct {
 // RemoveParticipant is a helper method to define mock.On call
 //   - ctx context.Context
 //   - req *livekit.RoomParticipantIdentity
-func (_e *MockLivekitRoomClient_Expecter) RemoveParticipant(ctx interface{}, req interface{}) *MockLivekitRoomClient_RemoveParticipant_Call {
+func (_e *MockLivekitRoomClient_Expecter) RemoveParticipant(ctx any, req any) *MockLivekitRoomClient_RemoveParticipant_Call {
 	return &MockLivekitRoomClient_RemoveParticipant_Call{Call: _e.mock.On("RemoveParticipant", ctx, req)}
 }
 
