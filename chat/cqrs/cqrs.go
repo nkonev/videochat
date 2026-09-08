@@ -257,8 +257,8 @@ func ListenChatTopic(
 		EventChatNotificationSettingsSetted: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnChatNotificationSettingsSetted))
 		},
-		EventParticipantsAdded: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnParticipantAdded))
+		BatchParticipantsAdded: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnBatchParticipantsAdded)
 		},
 		EventParticipantsDeleted: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnParticipantRemoved))

@@ -15,7 +15,7 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnParticipantAdded(ctx context.Context, event *ParticipantsAdded) error {
+func (m *EventHandler) OnBatchParticipantsAdded(event *ParticipantsAddedEventBatch) (context.Context, error) {
 
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
 	ctx, participantAddSpan := m.tr.Start(ctx, fmt.Sprintf("participant.%s", eventTypeParticipantAdded))

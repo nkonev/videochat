@@ -3,8 +3,9 @@ package cqrs
 import "context"
 
 const (
-	BatchMessagesCreated = "batchMessagesCreated"
-	BatchChatsCreated    = "batchChatsCreated"
+	BatchMessagesCreated   = "batchMessagesCreated"
+	BatchChatsCreated      = "batchChatsCreated"
+	BatchParticipantsAdded = "batchParticipantsAdded"
 )
 
 func (p *EventHolder) MakeBatchItem() (BatchEvent, context.Context, error) {
@@ -20,6 +21,13 @@ func (p *EventHolder) MakeBatchItem() (BatchEvent, context.Context, error) {
 	case *ChatCreated:
 		return &ChatCreatedEventBatch{
 			ChatCreateds: []ChatCreated{
+				*typed,
+			},
+			FirstElementContext: p.ctx,
+		}, p.ctx, nil
+	case *ParticipantsAdded:
+		return &ParticipantsAddedEventBatch{
+			ParticipantsAddeds: []ParticipantsAdded{
 				*typed,
 			},
 			FirstElementContext: p.ctx,
@@ -51,7 +59,7 @@ func (p *SingleEventBatch) GetContext() context.Context {
 	return p.ctx
 }
 func (p *SingleEventBatch) GetOrder() int {
-	return 200
+	return 400
 }
 
 type batchCommonPart struct {
@@ -72,6 +80,13 @@ type ChatCreatedEventBatch struct {
 
 	FirstElementContext context.Context
 	ChatCreateds        []ChatCreated
+}
+
+type ParticipantsAddedEventBatch struct {
+	batchCommonPart
+
+	FirstElementContext context.Context
+	ParticipantsAddeds  []ParticipantsAdded
 }
 
 func (p *MessageCreatedEventBatch) TryAppend(event EventHolder) bool {
@@ -133,4 +148,28 @@ func (p *ChatCreatedEventBatch) GetContext() context.Context {
 }
 func (p *ChatCreatedEventBatch) GetOrder() int {
 	return 100
+}
+
+func (p *ParticipantsAddedEventBatch) TryAppend(event EventHolder) bool {
+	if p.closedForAppendingNew {
+		return false
+	}
+
+	switch typed := event.event.(type) {
+	case *ParticipantsAdded:
+		p.ParticipantsAddeds = append(p.ParticipantsAddeds, *typed)
+
+		return true
+	}
+
+	return false
+}
+func (p *ParticipantsAddedEventBatch) GetBatchType() string {
+	return BatchParticipantsAdded
+}
+func (p *ParticipantsAddedEventBatch) GetContext() context.Context {
+	return p.FirstElementContext
+}
+func (p *ParticipantsAddedEventBatch) GetOrder() int {
+	return 200
 }
