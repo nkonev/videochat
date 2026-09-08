@@ -724,7 +724,7 @@ func (m *CommonProjection) getComments(ctx context.Context, co db.CommonOperatio
 			FileItemUuid:   mm.FileItemUuid,
 		}
 
-		embeddable, err := makeEmbedddable(mm.Embed)
+		embeddable, err := makeEmbeddable(mm.Embed)
 		if err != nil {
 			return mar, fmt.Errorf("error during mapping on index %d: %w", i, err)
 		}

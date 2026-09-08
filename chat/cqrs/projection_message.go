@@ -1055,7 +1055,7 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 			Published:      mm.Published,
 		}
 
-		embeddable, err := makeEmbedddable(mm.Embed)
+		embeddable, err := makeEmbeddable(mm.Embed)
 		if err != nil {
 			return mar, fmt.Errorf("error during mapping on index %d: %w", i, err)
 		}
@@ -1067,7 +1067,7 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 	return mar, nil
 }
 
-func makeEmbedddable(embedJsonb *json.RawMessage) (dto.Embeddable, error) {
+func makeEmbeddable(embedJsonb *json.RawMessage) (dto.Embeddable, error) {
 	if embedJsonb != nil {
 		var typer dto.EmbedTyper
 
@@ -1126,7 +1126,7 @@ func (m *CommonProjection) GetMessageEmbed(ctx context.Context, co db.CommonOper
 		return nil, err
 	}
 
-	embeddable, err := makeEmbedddable(embed)
+	embeddable, err := makeEmbeddable(embed)
 	if err != nil {
 		return nil, fmt.Errorf("error during mapping: %w", err)
 	}
@@ -1154,7 +1154,7 @@ func (m *CommonProjection) GetMessageWithEmbed(ctx context.Context, co db.Common
 		return nil, err
 	}
 
-	embeddable, err := makeEmbedddable(msg.Embed)
+	embeddable, err := makeEmbeddable(msg.Embed)
 	if err != nil {
 		return nil, fmt.Errorf("error during mapping: %w", err)
 	}
