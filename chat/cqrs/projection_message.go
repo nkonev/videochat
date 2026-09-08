@@ -3,6 +3,7 @@ package cqrs
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -943,17 +944,17 @@ func makeEmbed(
 
 func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperations, chatId int64, size int32, startingFromItemId *int64, includeStartingFrom, reverse bool, searchString string, messageIds []int64, behaldUserIds []int64) ([]dto.MessageDto, error) {
 	type messageDto struct {
-		Id             int64        `db:"id"`
-		OwnerId        int64        `db:"owner_id"`
-		BehalfUserId   int64        `db:"behalf_user_id"`
-		Content        string       `db:"content"`
-		BlogPost       bool         `db:"blog_post"`
-		Embed          pgtype.JSONB `db:"embed"`
-		CreateDateTime time.Time    `db:"create_date_time"`
-		UpdateDateTime *time.Time   `db:"update_date_time"`
-		FileItemUuid   *string      `db:"file_item_uuid"`
-		Pinned         bool         `db:"pinned"`
-		Published      bool         `db:"published"`
+		Id             int64            `db:"id"`
+		OwnerId        int64            `db:"owner_id"`
+		BehalfUserId   int64            `db:"behalf_user_id"`
+		Content        string           `db:"content"`
+		BlogPost       bool             `db:"blog_post"`
+		Embed          *json.RawMessage `db:"embed"`
+		CreateDateTime time.Time        `db:"create_date_time"`
+		UpdateDateTime *time.Time       `db:"update_date_time"`
+		FileItemUuid   *string          `db:"file_item_uuid"`
+		Pinned         bool             `db:"pinned"`
+		Published      bool             `db:"published"`
 	}
 
 	if startingFromItemId != nil && len(messageIds) != 0 {
@@ -1087,10 +1088,11 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 	return mar, nil
 }
 
-func makeEmbedddable(embedJsonb pgtype.JSONB) (dto.Embeddable, error) {
-	if embedJsonb.Status == pgtype.Present {
+func makeEmbedddable(embedJsonb *json.RawMessage) (dto.Embeddable, error) {
+	if embedJsonb != nil {
 		var typer dto.EmbedTyper
-		err := embedJsonb.AssignTo(&typer)
+
+		err := json.Unmarshal(*embedJsonb, &typer)
 		if err != nil {
 			return nil, fmt.Errorf("error during mapping %w", err)
 		}
@@ -1098,14 +1100,14 @@ func makeEmbedddable(embedJsonb pgtype.JSONB) (dto.Embeddable, error) {
 		switch typer.Type {
 		case dto.EmbedMessageTypeReply:
 			var erpl dto.EmbedReply
-			err = embedJsonb.AssignTo(&erpl)
+			err = json.Unmarshal(*embedJsonb, &erpl)
 			if err != nil {
 				return nil, fmt.Errorf("error during mapping: %w", err)
 			}
 			return &erpl, nil
 		case dto.EmbedMessageTypeResend:
 			var eres dto.EmbedResend
-			err = embedJsonb.AssignTo(&eres)
+			err = json.Unmarshal(*embedJsonb, &eres)
 			if err != nil {
 				return nil, fmt.Errorf("error during mapping: %w", err)
 			}
@@ -1133,7 +1135,7 @@ func (m *CommonProjection) GetMessageBasic(ctx context.Context, co db.CommonOper
 }
 
 func (m *CommonProjection) GetMessageEmbed(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (dto.Embeddable, error) {
-	var embed pgtype.JSONB
+	var embed *json.RawMessage
 	err := sqlscan.Get(ctx, co, &embed, `
 	select m.embed
 	from message m where m.chat_id = $1 and m.id = $2
@@ -1155,10 +1157,10 @@ func (m *CommonProjection) GetMessageEmbed(ctx context.Context, co db.CommonOper
 
 func (m *CommonProjection) GetMessageWithEmbed(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (*dto.MessageWithEmbed, error) {
 	type messageDto struct {
-		Id      int64        `db:"id"`
-		OwnerId int64        `db:"owner_id"`
-		Content string       `db:"content"`
-		Embed   pgtype.JSONB `db:"embed"`
+		Id      int64            `db:"id"`
+		OwnerId int64            `db:"owner_id"`
+		Content string           `db:"content"`
+		Embed   *json.RawMessage `db:"embed"`
 	}
 
 	var msg messageDto
