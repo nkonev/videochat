@@ -75,7 +75,7 @@ type MockAaaRestClient_CheckAreUsersExists_Call struct {
 // CheckAreUsersExists is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userIds []int64
-func (_e *MockAaaRestClient_Expecter) CheckAreUsersExists(ctx interface{}, userIds interface{}) *MockAaaRestClient_CheckAreUsersExists_Call {
+func (_e *MockAaaRestClient_Expecter) CheckAreUsersExists(ctx any, userIds any) *MockAaaRestClient_CheckAreUsersExists_Call {
 	return &MockAaaRestClient_CheckAreUsersExists_Call{Call: _e.mock.On("CheckAreUsersExists", ctx, userIds)}
 }
 
@@ -140,7 +140,7 @@ type MockAaaRestClient_CountUsers_Call struct {
 
 // CountUsers is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockAaaRestClient_Expecter) CountUsers(ctx interface{}) *MockAaaRestClient_CountUsers_Call {
+func (_e *MockAaaRestClient_Expecter) CountUsers(ctx any) *MockAaaRestClient_CountUsers_Call {
 	return &MockAaaRestClient_CountUsers_Call{Call: _e.mock.On("CountUsers", ctx)}
 }
 
@@ -203,7 +203,7 @@ type MockAaaRestClient_GetOnlines_Call struct {
 // GetOnlines is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userIds []int64
-func (_e *MockAaaRestClient_Expecter) GetOnlines(ctx interface{}, userIds interface{}) *MockAaaRestClient_GetOnlines_Call {
+func (_e *MockAaaRestClient_Expecter) GetOnlines(ctx any, userIds any) *MockAaaRestClient_GetOnlines_Call {
 	return &MockAaaRestClient_GetOnlines_Call{Call: _e.mock.On("GetOnlines", ctx, userIds)}
 }
 
@@ -271,7 +271,7 @@ type MockAaaRestClient_GetUsers_Call struct {
 // GetUsers is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userIds []int64
-func (_e *MockAaaRestClient_Expecter) GetUsers(ctx interface{}, userIds interface{}) *MockAaaRestClient_GetUsers_Call {
+func (_e *MockAaaRestClient_Expecter) GetUsers(ctx any, userIds any) *MockAaaRestClient_GetUsers_Call {
 	return &MockAaaRestClient_GetUsers_Call{Call: _e.mock.On("GetUsers", ctx, userIds)}
 }
 
@@ -349,7 +349,7 @@ type MockAaaRestClient_SearchGetUsers_Call struct {
 //   - ids []int64
 //   - page int64
 //   - size int32
-func (_e *MockAaaRestClient_Expecter) SearchGetUsers(ctx interface{}, searchString interface{}, including interface{}, ids interface{}, page interface{}, size interface{}) *MockAaaRestClient_SearchGetUsers_Call {
+func (_e *MockAaaRestClient_Expecter) SearchGetUsers(ctx any, searchString any, including any, ids any, page any, size any) *MockAaaRestClient_SearchGetUsers_Call {
 	return &MockAaaRestClient_SearchGetUsers_Call{Call: _e.mock.On("SearchGetUsers", ctx, searchString, including, ids, page, size)}
 }
 
@@ -441,7 +441,7 @@ type MockChatCreateOption_Apply_Call struct {
 
 // Apply is a helper method to define mock.On call
 //   - createDto *dto.ChatBaseCreateDto
-func (_e *MockChatCreateOption_Expecter) Apply(createDto interface{}) *MockChatCreateOption_Apply_Call {
+func (_e *MockChatCreateOption_Expecter) Apply(createDto any) *MockChatCreateOption_Apply_Call {
 	return &MockChatCreateOption_Apply_Call{Call: _e.mock.On("Apply", createDto)}
 }
 
@@ -521,7 +521,7 @@ type MockChatGetOption_Apply_Call struct {
 
 // Apply is a helper method to define mock.On call
 //   - queryParams *url.Values
-func (_e *MockChatGetOption_Expecter) Apply(queryParams interface{}) *MockChatGetOption_Apply_Call {
+func (_e *MockChatGetOption_Expecter) Apply(queryParams any) *MockChatGetOption_Apply_Call {
 	return &MockChatGetOption_Apply_Call{Call: _e.mock.On("Apply", queryParams)}
 }
 
@@ -588,7 +588,7 @@ type MockMessageCreateOption_Apply_Call struct {
 
 // Apply is a helper method to define mock.On call
 //   - messageCreateDto *dto.MessageCreateDto
-func (_e *MockMessageCreateOption_Expecter) Apply(messageCreateDto interface{}) *MockMessageCreateOption_Apply_Call {
+func (_e *MockMessageCreateOption_Expecter) Apply(messageCreateDto any) *MockMessageCreateOption_Apply_Call {
 	return &MockMessageCreateOption_Apply_Call{Call: _e.mock.On("Apply", messageCreateDto)}
 }
 
@@ -668,7 +668,7 @@ type MockMessagePinnedGetOption_Apply_Call struct {
 
 // Apply is a helper method to define mock.On call
 //   - queryParams *url.Values
-func (_e *MockMessagePinnedGetOption_Expecter) Apply(queryParams interface{}) *MockMessagePinnedGetOption_Apply_Call {
+func (_e *MockMessagePinnedGetOption_Expecter) Apply(queryParams any) *MockMessagePinnedGetOption_Apply_Call {
 	return &MockMessagePinnedGetOption_Apply_Call{Call: _e.mock.On("Apply", queryParams)}
 }
 
@@ -748,7 +748,7 @@ type MockMessageGetOption_Apply_Call struct {
 
 // Apply is a helper method to define mock.On call
 //   - queryParams *url.Values
-func (_e *MockMessageGetOption_Expecter) Apply(queryParams interface{}) *MockMessageGetOption_Apply_Call {
+func (_e *MockMessageGetOption_Expecter) Apply(queryParams any) *MockMessageGetOption_Apply_Call {
 	return &MockMessageGetOption_Apply_Call{Call: _e.mock.On("Apply", queryParams)}
 }
 
@@ -828,7 +828,7 @@ type MockParticipantGetOption_Apply_Call struct {
 
 // Apply is a helper method to define mock.On call
 //   - queryParams *url.Values
-func (_e *MockParticipantGetOption_Expecter) Apply(queryParams interface{}) *MockParticipantGetOption_Apply_Call {
+func (_e *MockParticipantGetOption_Expecter) Apply(queryParams any) *MockParticipantGetOption_Apply_Call {
 	return &MockParticipantGetOption_Apply_Call{Call: _e.mock.On("Apply", queryParams)}
 }
 

@@ -21,7 +21,7 @@ SERVE_COMMAND := serve
 download: install-mockery
 
 install-mockery:
-	go install github.com/vektra/mockery/v3@v3.5.4
+	go install github.com/vektra/mockery/v3@v3.7.4
 
 check-env:
 	docker version && go env
