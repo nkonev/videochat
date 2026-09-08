@@ -16,7 +16,6 @@ import (
 	"github.com/qdm12/reprint"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
-	"github.com/jackc/pgtype"
 )
 
 func (m *CommonProjection) GetChatIds(ctx context.Context, tx *db.Tx, size int32, offset int64) ([]int64, error) {
@@ -1015,32 +1014,32 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 
 func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
 	type chatDto struct {
-		Id                                  int64            `db:"id"`
-		UserId                              int64            `db:"user_id"`
-		Title                               string           `db:"title"`
-		Pinned                              bool             `db:"pinned"`
-		UnreadMessages                      int64            `db:"unread_messages"`
-		LastMessageId                       *int64           `db:"last_message_id"`
-		LastMessageOwnerId                  *int64           `db:"last_message_owner_id"`
-		LastMessageContent                  *string          `db:"last_message_content"`
-		ParticipantsCount                   int64            `db:"participants_count"`
-		ParticipantIds                      pgtype.Int8Array `db:"last_n_participant_ids"` // ids of last N participants
-		Blog                                bool             `db:"blog"`
-		BlogAbout                           bool             `db:"blog_about"`
-		UpdateDateTime                      *time.Time       `db:"update_date_time"`
-		TetATet                             bool             `db:"tet_a_tet"`
-		Avatar                              *string          `db:"avatar"`
-		AvatarBig                           *string          `db:"avatar_big"`
-		ConsiderMessagesAsUnread            bool             `db:"consider_messages_as_unread"`
-		CanResend                           bool             `db:"can_resend"`
-		CanReact                            bool             `db:"can_react"`
-		RegularParticipantCanPublishMessage bool             `db:"regular_participant_can_publish_message"`
-		RegularParticipantCanPinMessage     bool             `db:"regular_participant_can_pin_message"`
-		RegularParticipantCanWriteMessage   bool             `db:"regular_participant_can_write_message"`
-		AvailableToSearch                   bool             `db:"available_to_search"`
-		IsParticipant                       bool             `db:"is_participant"`
-		RegularParticipantCanAddParticipant bool             `db:"regular_participant_can_add_participant"`
-		TetATetSelf                         bool             `db:"tet_a_tet_self"`
+		Id                                  int64      `db:"id"`
+		UserId                              int64      `db:"user_id"`
+		Title                               string     `db:"title"`
+		Pinned                              bool       `db:"pinned"`
+		UnreadMessages                      int64      `db:"unread_messages"`
+		LastMessageId                       *int64     `db:"last_message_id"`
+		LastMessageOwnerId                  *int64     `db:"last_message_owner_id"`
+		LastMessageContent                  *string    `db:"last_message_content"`
+		ParticipantsCount                   int64      `db:"participants_count"`
+		ParticipantIds                      []int64    `db:"last_n_participant_ids"` // ids of last N participants
+		Blog                                bool       `db:"blog"`
+		BlogAbout                           bool       `db:"blog_about"`
+		UpdateDateTime                      *time.Time `db:"update_date_time"`
+		TetATet                             bool       `db:"tet_a_tet"`
+		Avatar                              *string    `db:"avatar"`
+		AvatarBig                           *string    `db:"avatar_big"`
+		ConsiderMessagesAsUnread            bool       `db:"consider_messages_as_unread"`
+		CanResend                           bool       `db:"can_resend"`
+		CanReact                            bool       `db:"can_react"`
+		RegularParticipantCanPublishMessage bool       `db:"regular_participant_can_publish_message"`
+		RegularParticipantCanPinMessage     bool       `db:"regular_participant_can_pin_message"`
+		RegularParticipantCanWriteMessage   bool       `db:"regular_participant_can_write_message"`
+		AvailableToSearch                   bool       `db:"available_to_search"`
+		IsParticipant                       bool       `db:"is_participant"`
+		RegularParticipantCanAddParticipant bool       `db:"regular_participant_can_add_participant"`
+		TetATetSelf                         bool       `db:"tet_a_tet_self"`
 	}
 
 	if size == dto.NoSize {
@@ -1204,7 +1203,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		return res, err
 	}
 
-	for i, de := range list {
+	for _, de := range list {
 		mapped := dto.ChatViewDto{
 			Id:                                  de.Id,
 			BehalfUserId:                        de.UserId,
@@ -1214,6 +1213,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 			LastMessageId:                       de.LastMessageId,
 			LastMessageOwnerId:                  de.LastMessageOwnerId,
 			LastMessageContent:                  de.LastMessageContent,
+			ParticipantIds:                      de.ParticipantIds,
 			ParticipantsCount:                   de.ParticipantsCount,
 			Blog:                                de.Blog,
 			BlogAbout:                           de.BlogAbout,
@@ -1232,10 +1232,6 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 			IsParticipant:                       de.IsParticipant,
 			CanPin:                              de.IsParticipant,
 			RegularParticipantCanAddParticipant: de.RegularParticipantCanAddParticipant,
-		}
-		err = de.ParticipantIds.AssignTo(&mapped.ParticipantIds)
-		if err != nil {
-			return res, fmt.Errorf("error during mapping on index %d: %w", i, err)
 		}
 
 		res = append(res, mapped)
@@ -1386,11 +1382,6 @@ func (m *CommonProjection) GetChatsBasicExtended(ctx context.Context, co db.Comm
 		return nil, err
 	}
 	for _, bc := range list {
-		err = bc.DbLastNParticipantIds.AssignTo(&bc.LastNParticipantIds)
-		if err != nil {
-			return nil, err
-		}
-
 		innerMap, ok := result[bc.BehalfUserId]
 		if !ok {
 			innerMap = map[int64]*dto.BasicChatDtoExtended{}

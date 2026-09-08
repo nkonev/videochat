@@ -2,8 +2,6 @@ package dto
 
 import (
 	"time"
-
-	"github.com/jackc/pgtype"
 )
 
 const NoChatTitle = ""
@@ -128,10 +126,9 @@ type ChatBasic struct {
 
 type BasicChatDtoExtended struct {
 	ChatBasic
-	BehalfUserId            int64            `db:"user_id"`
-	BehalfUserIsParticipant bool             `db:"behalf_user_is_participant"`
-	DbLastNParticipantIds   pgtype.Int8Array `db:"last_n_participant_ids"`
-	LastNParticipantIds     []int64          `db:"-"`
+	BehalfUserId            int64   `db:"user_id"`
+	BehalfUserIsParticipant bool    `db:"behalf_user_is_participant"`
+	LastNParticipantIds     []int64 `db:"last_n_participant_ids"`
 }
 
 type UserChatNotificationSettings struct {

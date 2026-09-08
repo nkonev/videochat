@@ -9,7 +9,6 @@ import (
 	"nkonev.name/chat/logger"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
-	"github.com/jackc/pgtype"
 )
 
 func (m *CommonProjection) OnMessageReactionCreated(ctx context.Context, additionalData *AdditionalData, chatId int64, messageId int64, reactionStr string) (bool, error) {
@@ -57,10 +56,10 @@ func (m *CommonProjection) OnMessageReactionDeleted(ctx context.Context, additio
 
 func getReactionsCommon(ctx context.Context, co db.CommonOperations, chatId int64, messageIds []int64, reaction *string, maxDisplayableUsers int) ([]dto.ReactionDto, error) {
 	type reactionDto struct {
-		MessageId int64            `db:"message_id"`
-		UserIds   pgtype.Int8Array `db:"user_ids"`
-		Reaction  string           `db:"reaction"`
-		Count     int64            `db:"count"`
+		MessageId int64   `db:"message_id"`
+		UserIds   []int64 `db:"user_ids"`
+		Reaction  string  `db:"reaction"`
+		Count     int64   `db:"count"`
 	}
 
 	reactions := []reactionDto{}
@@ -106,15 +105,12 @@ func getReactionsCommon(ctx context.Context, co db.CommonOperations, chatId int6
 		return res, fmt.Errorf("error during interacting with db: %w", err)
 	}
 
-	for i, de := range reactions {
+	for _, de := range reactions {
 		mapped := dto.ReactionDto{
 			MessageId: de.MessageId,
 			Reaction:  de.Reaction,
 			Count:     de.Count,
-		}
-		err = de.UserIds.AssignTo(&mapped.UserIds)
-		if err != nil {
-			return res, fmt.Errorf("error during mapping on index %d: %w", i, err)
+			UserIds:   de.UserIds,
 		}
 		res = append(res, mapped)
 	}
