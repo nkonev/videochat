@@ -55,14 +55,7 @@ func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.Comm
 		dbChatIds = append(dbChatIds, event.MessageCommoned.ChatId)
 		ownerIds = append(ownerIds, event.AdditionalData.BehalfUserId)
 		contents = append(contents, event.MessageCommoned.Content)
-
-		var embed *json.RawMessage
-		embed, err = embeddableToRaw(event.MessageCommoned.Embed)
-		if err != nil {
-			return err
-		}
-		embeds = append(embeds, embed)
-
+		embeds = append(embeds, event.MessageCommoned.RawEmbed)
 		fileItemUuids = append(fileItemUuids, event.MessageCommoned.FileItemUuid)
 		createdAts = append(createdAts, event.AdditionalData.CreatedAt)
 	}
@@ -162,10 +155,6 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 	case MessageEditedActionAll:
 		fallthrough
 	case MessageEditedActionEmbedSync:
-		embed, err := embeddableToRaw(event.MessageCommoned.Embed)
-		if err != nil {
-			return nil, err
-		}
 		_, err = co.ExecContext(ctx, `
 			update message
 			set	
@@ -174,7 +163,7 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 				, update_date_time = $5
 				, file_item_uuid = $6
 			where chat_id = $2 and id = $1 
-		`, event.MessageCommoned.Id, event.MessageCommoned.ChatId, event.MessageCommoned.Content, embed, event.AdditionalData.CreatedAt, event.MessageCommoned.FileItemUuid)
+		`, event.MessageCommoned.Id, event.MessageCommoned.ChatId, event.MessageCommoned.Content, event.MessageCommoned.RawEmbed, event.AdditionalData.CreatedAt, event.MessageCommoned.FileItemUuid)
 		if err != nil {
 			return nil, err
 		}
@@ -1107,22 +1096,6 @@ func makeEmbedddable(embedJsonb *json.RawMessage) (dto.Embeddable, error) {
 		}
 	}
 	return nil, nil
-}
-
-func embeddableToRaw(embeddable dto.Embeddable) (*json.RawMessage, error) {
-	if embeddable != nil {
-		var ret json.RawMessage
-		var err error
-
-		ret, err = json.Marshal(embeddable)
-		if err != nil {
-			return nil, err
-		}
-
-		return &ret, nil
-	} else {
-		return nil, nil
-	}
 }
 
 func (m *CommonProjection) GetMessageBasic(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (*dto.MessageBasic, error) {
