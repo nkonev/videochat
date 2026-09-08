@@ -49,7 +49,7 @@ func (rc *aaaRestClient) GetUsers(ctx context.Context, userIds []int64) ([]*dto.
 	for _, u := range userIds {
 		queryParams.Add("userId", utils.ToString(u))
 	}
-	resp, err := query[any, []*dto.User](ctx, &rc.restClient, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUsers, "user.Get", nil, &queryParams)
+	resp, err := rc.query[any, []*dto.User](ctx, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUsers, "user.Get", nil, &queryParams)
 	if err != nil {
 		return []*dto.User{}, err
 	}
@@ -57,7 +57,7 @@ func (rc *aaaRestClient) GetUsers(ctx context.Context, userIds []int64) ([]*dto.
 }
 
 func (rc *aaaRestClient) CountUsers(ctx context.Context) (int64, error) {
-	resp, err := query[any, dto.UserCount](ctx, &rc.restClient, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserCount, "user.Count", nil, nil)
+	resp, err := rc.query[any, dto.UserCount](ctx, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserCount, "user.Count", nil, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -73,7 +73,7 @@ func (rc *aaaRestClient) SearchGetUsers(ctx context.Context, searchString string
 		Size:         size,
 	}
 
-	respDto, err := query[dto.SearchUsersRequestDto, dto.SearchUsersResponseDto](ctx, &rc.restClient, dto.NonExistentUser, http.MethodPost, rc.cfg.Aaa.Url.SearchUsers, "user.Search", &req, nil)
+	respDto, err := rc.query[dto.SearchUsersRequestDto, dto.SearchUsersResponseDto](ctx, dto.NonExistentUser, http.MethodPost, rc.cfg.Aaa.Url.SearchUsers, "user.Search", &req, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -89,7 +89,7 @@ func (rc *aaaRestClient) GetOnlines(ctx context.Context, userIds []int64) ([]*dt
 	for _, u := range userIds {
 		queryParams.Add("userId", utils.ToString(u))
 	}
-	resp, err := query[any, []*dto.UserOnline](ctx, &rc.restClient, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserOnlines, "user.GetOnlines", nil, &queryParams)
+	resp, err := rc.query[any, []*dto.UserOnline](ctx, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserOnlines, "user.GetOnlines", nil, &queryParams)
 	if err != nil {
 		return []*dto.UserOnline{}, err
 	}
@@ -105,7 +105,7 @@ func (rc *aaaRestClient) CheckAreUsersExists(ctx context.Context, userIds []int6
 	for _, u := range userIds {
 		queryParams.Add("userId", utils.ToString(u))
 	}
-	resp, err := query[any, []dto.UserExists](ctx, &rc.restClient, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserExists, "user.GetExists", nil, &queryParams)
+	resp, err := rc.query[any, []dto.UserExists](ctx, dto.NonExistentUser, http.MethodGet, rc.cfg.Aaa.Url.GetUserExists, "user.GetExists", nil, &queryParams)
 	if err != nil {
 		return []dto.UserExists{}, err
 	}

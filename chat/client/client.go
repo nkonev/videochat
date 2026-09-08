@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
@@ -27,7 +28,7 @@ type restClient struct {
 }
 
 // You should call defer httpResp.Body.Close()
-func queryRawResponse[ReqDto any](ctx context.Context, rc *restClient, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) (*http.Response, error) {
+func (rc *restClient) queryRawResponse[ReqDto any](ctx context.Context, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) (*http.Response, error) {
 	contentType := "application/json;charset=UTF-8"
 	fullUrl := utils.StringToUrl(rc.protocolHostPort + url)
 	if queryParams != nil {
@@ -106,10 +107,10 @@ func queryRawResponse[ReqDto any](ctx context.Context, rc *restClient, behalfUse
 	return httpResp, err
 }
 
-func query[ReqDto any, ResDto any](ctx context.Context, rc *restClient, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) (ResDto, error) {
+func (rc *restClient) query[ReqDto any, ResDto any](ctx context.Context, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) (ResDto, error) {
 	var resp ResDto
 	var err error
-	httpResp, err := queryRawResponse(ctx, rc, behalfUserId, method, url, opName, req, queryParams)
+	httpResp, err := rc.queryRawResponse(ctx, behalfUserId, method, url, opName, req, queryParams)
 	if err != nil {
 		return resp, err
 	}
@@ -130,9 +131,9 @@ func query[ReqDto any, ResDto any](ctx context.Context, rc *restClient, behalfUs
 	return resp, nil
 }
 
-func queryNoResponse[ReqDto any](ctx context.Context, rc *restClient, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) error {
+func (rc *restClient) queryNoResponse[ReqDto any](ctx context.Context, behalfUserId int64, method, url, opName string, req *ReqDto, queryParams *url.Values) error {
 	var err error
-	httpResp, err := queryRawResponse(ctx, rc, behalfUserId, method, url, opName, req, queryParams)
+	httpResp, err := rc.queryRawResponse(ctx, behalfUserId, method, url, opName, req, queryParams)
 	if err != nil {
 		return err
 	}
