@@ -45,13 +45,13 @@ func CleanDeletedUserDataScheduler(
 }
 
 type CleanDeletedUserDataService struct {
-	restClient client.AaaRestClient
-	tracer     trace.Tracer
-	dbR        *db.DB
-	lgr        *logger.LoggerWrapper
-	eventBus   *cqrs.KafkaProducer
-	co         *cqrs.CommonProjection
-	count      int64
+	aaaClient client.AaaRestClient
+	tracer    trace.Tracer
+	dbR       *db.DB
+	lgr       *logger.LoggerWrapper
+	eventBus  *cqrs.KafkaProducer
+	co        *cqrs.CommonProjection
+	count     int64
 }
 
 func (srv *CleanDeletedUserDataService) DoJob(ctx context.Context) {
@@ -61,7 +61,7 @@ func (srv *CleanDeletedUserDataService) DoJob(ctx context.Context) {
 func (srv *CleanDeletedUserDataService) processChats(c context.Context) {
 	srv.lgr.InfoContext(c, "Starting cleaning deleted users data job")
 
-	aaaCount, err := srv.restClient.CountUsers(c)
+	aaaCount, err := srv.aaaClient.CountUsers(c)
 	if err != nil {
 		srv.lgr.ErrorContext(c, "Got error getting users count", logger.AttributeError, err)
 		return
@@ -78,7 +78,7 @@ func (srv *CleanDeletedUserDataService) processChats(c context.Context) {
 			userIdMap[cp.UserId] = struct{}{}
 		}
 
-		existResponse, err := srv.restClient.CheckAreUsersExists(c, utils.SetMapIdStructToSlice(userIdMap))
+		existResponse, err := srv.aaaClient.CheckAreUsersExists(c, utils.SetMapIdStructToSlice(userIdMap))
 		if err != nil {
 			srv.lgr.ErrorContext(c, "Got error getting existResponse", logger.AttributeError, err)
 			return nil
@@ -122,7 +122,7 @@ func (srv *CleanDeletedUserDataService) processChats(c context.Context) {
 
 func NewCleanDeletedUserDataService(
 	lgr *logger.LoggerWrapper,
-	chatClient client.AaaRestClient,
+	aaaClient client.AaaRestClient,
 	dbR *db.DB,
 	eventBus *cqrs.KafkaProducer,
 	co *cqrs.CommonProjection,
@@ -130,12 +130,12 @@ func NewCleanDeletedUserDataService(
 ) *CleanDeletedUserDataService {
 	trcr := otel.Tracer("scheduler/clean-deleted-users-data")
 	return &CleanDeletedUserDataService{
-		restClient: chatClient,
-		tracer:     trcr,
-		dbR:        dbR,
-		lgr:        lgr,
-		eventBus:   eventBus,
-		co:         co,
-		count:      cfg.Schedulers.CleanDeletedUsersDataTask.AaaUserCount,
+		aaaClient: aaaClient,
+		tracer:    trcr,
+		dbR:       dbR,
+		lgr:       lgr,
+		eventBus:  eventBus,
+		co:        co,
+		count:     cfg.Schedulers.CleanDeletedUsersDataTask.AaaUserCount,
 	}
 }
