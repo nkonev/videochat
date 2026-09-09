@@ -38,7 +38,7 @@ func CleanDeletedUserDataScheduler(
 		return nil
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.cleanDeletedUsersData"),
-		postgresLock.WithKeys(3, 4),
+		postgresLock.WithKeys(1, 3),
 	)
 
 	return &CleanDeletedUserDataTask{job}
