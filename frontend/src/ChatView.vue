@@ -1282,7 +1282,7 @@ export default {
 .pinned-promoted {
   .v-alert__content{
     text-overflow: ellipsis;
-    height: 20px; // to force vertical align on Chrome
+    font-size 1rem
   }
   .v-alert {
     padding-top 0
