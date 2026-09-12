@@ -198,7 +198,7 @@ type MessageCommoned struct {
 }
 
 func (f *MessageCommoned) UnmarshalJSON(b []byte) error {
-	type cp MessageCommoned
+	type cp MessageCommoned // create a new local type cp that inherits all data fields from MessageCommoned but does not inherit its methods to avoid recursion
 	err := json.Unmarshal(b, (*cp)(f))
 	if err != nil {
 		return err
