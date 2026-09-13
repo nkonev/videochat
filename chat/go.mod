@@ -21,7 +21,7 @@ require (
 	github.com/sanity-io/litter v1.5.8
 	github.com/streadway/amqp v1.1.0
 	github.com/stretchr/testify v1.11.1
-	github.com/traefik/paerser v0.2.2
+	github.com/traefik/paerser v0.2.3
 	github.com/twmb/franz-go v1.21.6
 	github.com/twmb/franz-go/pkg/kadm v1.18.0
 	github.com/twmb/franz-go/plugin/kotel v1.6.0
