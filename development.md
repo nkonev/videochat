@@ -85,7 +85,7 @@ make run
 I develop in IntelliJ IDEA with Golang and Vue plugins. I open the entire project folder, e.g. `videochat` in the one window.
 All the configs doesn't require a change for the development.
 
-Also there is VS code launchers in `.vscode/launch.json` for all the services.
+Also there are VS code launchers in `.vscode/launch.json` for all the services.
 
 #### Java (micro)service:
 Just run `AaaApplication.java` with IDE.
