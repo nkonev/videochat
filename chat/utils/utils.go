@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"nkonev.name/chat/logger"
 	"strconv"
 	"strings"
 	"time"
+
+	"nkonev.name/chat/logger"
 )
 
 const maxSize = 100
@@ -18,6 +19,11 @@ const HeaderUserId = "X-Auth-Userid"
 const HeaderUserRole = "X-Auth-Role"
 const HeaderUserPermission = "X-Auth-Permission"
 const HeaderUserLogin = "X-Auth-Username"
+
+const PostgresLockIdKeyChat = 1
+const PostgresLockIdKeyFastForwardSequence = 2
+const PostgresLockIdKeyCleanAbandonedChats = 3
+const PostgresLockIdKeyCleanDeletedUserData = 4
 
 func ToString(in any) string {
 	return fmt.Sprintf("%v", in)

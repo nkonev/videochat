@@ -11,6 +11,7 @@ import (
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/sanitizer"
+	"nkonev.name/chat/utils"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 )
@@ -195,11 +196,8 @@ func (m *CommonProjection) GetIsTruncatingCompleted(ctx context.Context, co db.C
 	return e, err
 }
 
-const lockIdKey1 = 1
-const lockIdKey2 = 2
-
 func (m *CommonProjection) SetXactFastForwardSequenceLock(ctx context.Context, tx *db.Tx) error {
-	_, err := tx.ExecContext(ctx, "select pg_advisory_xact_lock($1, $2)", lockIdKey1, lockIdKey2)
+	_, err := tx.ExecContext(ctx, "select pg_advisory_xact_lock($1, $2)", utils.PostgresLockIdKeyChat, utils.PostgresLockIdKeyFastForwardSequence)
 	return err
 }
 

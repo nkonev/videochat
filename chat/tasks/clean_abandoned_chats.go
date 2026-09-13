@@ -5,6 +5,7 @@ import (
 
 	postgresLock "github.com/nkonev/dcron/plugin/lock/postgres_pgx5"
 	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
+	"nkonev.name/chat/utils"
 
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
@@ -35,7 +36,7 @@ func CleanAbandonedChatsScheduler(
 		return nil
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.cleanAbandonedChats"),
-		postgresLock.WithKeys(1, 2),
+		postgresLock.WithKeys(utils.PostgresLockIdKeyChat, utils.PostgresLockIdKeyCleanAbandonedChats),
 	)
 
 	return &CleanAbandonedChatsTask{job}
