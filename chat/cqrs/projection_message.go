@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
@@ -17,7 +18,6 @@ import (
 	"nkonev.name/chat/preview"
 	"nkonev.name/chat/utils"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/georgysavva/scany/v2/sqlscan"
 )
 
@@ -1261,7 +1261,6 @@ func (m *CommonProjection) AreHasUnreadMessagesExists(ctx context.Context, co db
 	return t, nil
 }
 
-// see also cqrs/event_handler.go
 func (m *EnrichingProjection) parseMentionUserIdsFromMessageHtml(ctx context.Context, msg string) ([]int64, bool, bool) {
 	ret := []int64{}
 
