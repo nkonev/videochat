@@ -694,7 +694,7 @@ func enrichMessage(
 	}
 
 	chatsBehalfUser := chatsByUserIdByChatId[behalfUserId]
-	embed, err := makeEmbed(behalfUserId, m.Embed, users, chatsBehalfUser)
+	embed, err := makeEmbedResponse(behalfUserId, m.Embed, users, chatsBehalfUser)
 	if err != nil {
 		return nil, err
 	}
@@ -855,7 +855,7 @@ func getDeletedUser(id int64) *dto.User {
 	return &dto.User{Login: fmt.Sprintf("deleted_user_%v", id), Id: id}
 }
 
-func makeEmbed(
+func makeEmbedResponse(
 	behalfUserId int64,
 	srcEmbed dto.Embeddable,
 	users map[int64]*dto.User,
@@ -1055,47 +1055,15 @@ func (m *CommonProjection) GetMessages(ctx context.Context, co db.CommonOperatio
 			Published:      mm.Published,
 		}
 
-		embeddable, err := makeEmbeddable(mm.Embed)
+		mc.Embed, err = makeEmbeddable(mm.Embed)
 		if err != nil {
 			return mar, fmt.Errorf("error during mapping on index %d: %w", i, err)
 		}
-		mc.Embed = embeddable
 
 		mar = append(mar, mc)
 	}
 
 	return mar, nil
-}
-
-func makeEmbeddable(embedJsonb *json.RawMessage) (dto.Embeddable, error) {
-	if embedJsonb != nil {
-		var typer dto.EmbedTyper
-
-		err := json.Unmarshal(*embedJsonb, &typer)
-		if err != nil {
-			return nil, fmt.Errorf("error during mapping %w", err)
-		}
-
-		switch typer.Type {
-		case dto.EmbedMessageTypeReply:
-			var erpl dto.EmbedReply
-			err = json.Unmarshal(*embedJsonb, &erpl)
-			if err != nil {
-				return nil, fmt.Errorf("error during mapping: %w", err)
-			}
-			return &erpl, nil
-		case dto.EmbedMessageTypeResend:
-			var eres dto.EmbedResend
-			err = json.Unmarshal(*embedJsonb, &eres)
-			if err != nil {
-				return nil, fmt.Errorf("error during mapping: %w", err)
-			}
-			return &eres, nil
-		default:
-			return nil, fmt.Errorf("Unknown type in GetMessages: %v", typer.Type)
-		}
-	}
-	return nil, nil
 }
 
 func (m *CommonProjection) GetMessageBasic(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (*dto.MessageBasic, error) {

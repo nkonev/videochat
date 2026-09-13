@@ -1331,6 +1331,8 @@ func buildEmbedRequestFromMessage(ctx context.Context, dba *db.DB, commonProject
 		ret.EmbedType = string(typed.EmbedTyper.Type)
 		ret.Id = typed.MessageId
 		ret.ChatId = typed.ChatId
+	default:
+		return nil, false, fmt.Errorf("Unknown type in building: %T", embed)
 	}
 
 	exists, err := commonProjection.IsMessageExists(ctx, dba, ret.ChatId, ret.Id)

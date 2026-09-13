@@ -204,30 +204,39 @@ func (f *MessageCommoned) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	if f.RawEmbed != nil {
-		var v dto.EmbedTyper
-		err = json.Unmarshal(*f.RawEmbed, &v)
-		if err != nil {
-			return err
-		}
-
-		var i dto.Embeddable
-		switch v.Type {
-		case dto.EmbedMessageTypeReply:
-			i = &dto.EmbedReply{}
-		case dto.EmbedMessageTypeResend:
-			i = &dto.EmbedResend{}
-		default:
-			return fmt.Errorf("Unknown type in unmarshalling: %s", v.Type)
-		}
-
-		err = json.Unmarshal(*f.RawEmbed, i)
-		if err != nil {
-			return err
-		}
-		f.Embed = i
+	f.Embed, err = makeEmbeddable(f.RawEmbed)
+	if err != nil {
+		return err
 	}
 	return nil
+}
+
+func makeEmbeddable(jsonBytes *json.RawMessage) (dto.Embeddable, error) {
+	if jsonBytes == nil {
+		return nil, nil
+	}
+
+	var v dto.EmbedTyper
+	err := json.Unmarshal(*jsonBytes, &v)
+	if err != nil {
+		return nil, err
+	}
+
+	var i dto.Embeddable
+	switch v.Type {
+	case dto.EmbedMessageTypeReply:
+		i = &dto.EmbedReply{}
+	case dto.EmbedMessageTypeResend:
+		i = &dto.EmbedResend{}
+	default:
+		return nil, fmt.Errorf("Unknown type in unmarshalling: %s", v.Type)
+	}
+
+	err = json.Unmarshal(*jsonBytes, i)
+	if err != nil {
+		return nil, err
+	}
+	return i, nil
 }
 
 func (f *MessageCommoned) MarshalJSON() ([]byte, error) {
@@ -250,7 +259,7 @@ func (f *MessageCommoned) MarshalJSON() ([]byte, error) {
 			}
 			f.RawEmbed = &b
 		default:
-			return nil, fmt.Errorf("Unknown type in marshalling:%T", f.Embed)
+			return nil, fmt.Errorf("Unknown type in marshalling: %T", f.Embed)
 		}
 	}
 

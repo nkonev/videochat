@@ -837,7 +837,7 @@ func (m *EnrichingProjection) GetCommentsEnriched(ctx context.Context, blogId in
 			Owner:          usersMap[co.OwnerId],
 		}
 
-		embed, err := makeEmbed(dto.NonExistentUser, co.Embed, usersMap, cwd.chatsBehalfUserByChatId)
+		embed, err := makeEmbedResponse(dto.NonExistentUser, co.Embed, usersMap, cwd.chatsBehalfUserByChatId)
 		if err != nil {
 			return nil, err
 		}
