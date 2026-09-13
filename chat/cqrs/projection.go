@@ -204,5 +204,5 @@ func (m *CommonProjection) SetXactFastForwardSequenceLock(ctx context.Context, t
 }
 
 func (m *EnrichingProjection) SanitizeSearchString(searchString string) string {
-	return sanitizer.TrimAmdSanitize(m.policy, searchString)
+	return sanitizer.TrimAndSanitize(m.policy, searchString)
 }

@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/microcosm-cc/bluemonday"
-	"net/url"
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"strings"
 )
 
 type SanitizerPolicy struct {
@@ -60,11 +61,11 @@ func SanitizeMessage(policy *SanitizerPolicy, input string) string {
 	return policy.Sanitize(input)
 }
 
-func TrimAmdSanitize(policy *SanitizerPolicy, input string) string {
+func TrimAndSanitize(policy *SanitizerPolicy, input string) string {
 	return Trim(SanitizeMessage(policy, input))
 }
 
-func TrimAmdSanitizeMessage(ctx context.Context, cfg *config.AppConfig, lgr *logger.LoggerWrapper, policy *SanitizerPolicy, input string) (string, error) {
+func TrimAndSanitizeMessage(ctx context.Context, cfg *config.AppConfig, lgr *logger.LoggerWrapper, policy *SanitizerPolicy, input string) (string, error) {
 	sanitizedHtml := Trim(SanitizeMessage(policy, input))
 
 	whitelist := cfg.Message.AllowedMediaUrls

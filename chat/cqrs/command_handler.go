@@ -773,7 +773,7 @@ func (sp *MessageCreate) Handle(ctx context.Context, eventBus *KafkaProducer, db
 	bloggingAllowed := IsBloggingAllowed(cfg, userPermissions)
 	canMakeMessageBlogPost := CanMakeMessageBlogPost(adt.IsChatAdmin, adt.ChatIsTetATet, adt.IsMessageBlogPost, adt.IsBlog, bloggingAllowed)
 
-	trimmedAndSanitized, err := sanitizer.TrimAmdSanitizeMessage(ctx, cfg, lgr, policy, copyCommand.Content)
+	trimmedAndSanitized, err := sanitizer.TrimAndSanitizeMessage(ctx, cfg, lgr, policy, copyCommand.Content)
 	if err != nil {
 		return 0, err
 	}
@@ -1049,7 +1049,7 @@ func (sp *MessageEdit) Handle(ctx context.Context, eventBus *KafkaProducer, dba 
 		return NewUnauthorizedError(fmt.Sprintf("user %v is not authorized to edit the message in chat %v", sp.AdditionalData.BehalfUserId, sp.ChatId))
 	}
 
-	trimmedAndSanitized, err := sanitizer.TrimAmdSanitizeMessage(ctx, cfg, lgr, policy, copyCommand.Content)
+	trimmedAndSanitized, err := sanitizer.TrimAndSanitizeMessage(ctx, cfg, lgr, policy, copyCommand.Content)
 	if err != nil {
 		return err
 	}
@@ -1252,7 +1252,7 @@ func (s *MessageReactionFlip) Handle(ctx context.Context, eventBus *KafkaProduce
 		return NewUnauthorizedError(fmt.Sprintf("user %v is not authorized to react on a message in chat %v", s.AdditionalData.BehalfUserId, s.ChatId))
 	}
 
-	sanitizedReaction := sanitizer.TrimAmdSanitize(policy, s.Reaction)
+	sanitizedReaction := sanitizer.TrimAndSanitize(policy, s.Reaction)
 
 	if len([]rune(sanitizedReaction)) > 4 || len([]rune(sanitizedReaction)) < 1 {
 		return NewValidationError("Wrong length of reaction")

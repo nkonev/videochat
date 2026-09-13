@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/chat/config"
@@ -218,7 +219,7 @@ func (p *MessageService) SearchForUsersToMention(ctx context.Context, chatId, us
 		return nil, cqrs.NewUnauthorizedError(fmt.Sprintf("user %v is not a participant of chat %v", userId, chatId))
 	}
 
-	searchString = sanitizer.TrimAmdSanitize(p.policy, searchString)
+	searchString = sanitizer.TrimAndSanitize(p.policy, searchString)
 
 	usersWithAdmin, _, err := p.enrichingProjection.SearchUsersContaining(ctx, p.dbWrapper, searchString, chatId, utils.DefaultSize, utils.DefaultOffset, true, false)
 	if err != nil {
