@@ -91,6 +91,7 @@ Also there is VS code launchers in `.vscode/launch.json` for all the services.
 Just run `AaaApplication.java` with IDE.
 #### Go (micro)services:
 Just run `main.go` with IDE.
+Note: `chat` service requires `serve` argument.
 #### Node.js (micro)services:
 Run `npm run dev` in the console.
 
