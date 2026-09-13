@@ -33,12 +33,12 @@ check:
 $JAVA_HOME/bin/javac -version
 ```
 * Node.js 24.18.0 [here](https://nodejs.org/en/download/package-manager) via `nvm` (Node Version Manager)
-* Golang 1.25 [here](https://go.dev/dl/)
+* Golang 1.27.1 [here](https://go.dev/dl/)
 
 An example content of `~/.bashrc`:
 ```bash
 export GOPATH=/home/nkonev/go
-export GOROOT=/home/nkonev/apps/go122/go
+export GOROOT=/home/nkonev/apps/go127/go
 export JAVA_HOME=/usr/lib/jvm/java-21
 export PATH="$PATH:$GOROOT/bin:$GOPATH/bin:$JAVA_HOME/bin"
 

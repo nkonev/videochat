@@ -15,6 +15,5 @@ git.json
 /notification/notification
 test-results/
 playwright-report/
-__debug_bin
-.vscode/
+__debug_bin*
 *.log
