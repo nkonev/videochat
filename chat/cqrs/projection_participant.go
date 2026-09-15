@@ -19,7 +19,7 @@ type OnParticipantAddedResponse struct {
 	ChatExists bool
 }
 
-func (m *CommonProjection) OnParticipantAdded(ctx context.Context, event *ParticipantsAdded) (*OnParticipantAddedResponse, error) {
+func (m *CommonProjection) OnParticipantAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*OnParticipantAddedResponse, error) {
 		chatExists, err := m.checkChatExists(ctx, tx, event.ChatId)
 		if err != nil {

@@ -15,24 +15,38 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnBatchParticipantsAdded(event *ParticipantsAddedEventBatch) (context.Context, error) {
-
+func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEventBatch) (context.Context, error) {
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
+	ctx := eventBatch.GetContext()
 	ctx, participantAddSpan := m.tr.Start(ctx, fmt.Sprintf("participant.%s", eventTypeParticipantAdded))
 	defer participantAddSpan.End()
 
-	adt, err := m.commonProjection.GetChatDataForAuthorization(ctx, m.db, event.AdditionalData.BehalfUserId, event.ChatId)
+	areqs := []UserIdAndChatId{}
+	for idx, v := range eventBatch.ParticipantsAddeds {
+		areqs = append(areqs, UserIdAndChatId{UserId: v.AdditionalData.BehalfUserId, ChatId: v.ChatId, CorrelationKey: idx})
+	}
+	adts, err := m.commonProjection.GetChatDataForAuthorizationBatch(ctx, m.db, areqs)
 	if err != nil {
 		return err
 	}
 
-	if !CanAddParticipant(adt.IsChatAdmin, adt.ChatIsTetATet, event.IsJoining, adt.AvailableToSearch, adt.IsBlog, event.IsChatCreating, adt.IsParticipant, adt.RegularParticipantCanAddParticipants) {
-		m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
+	filteredParticipantsAddeds := []ParticipantsAdded{}
+
+	for idx, event := range eventBatch.ParticipantsAddeds {
+		adt, ok := adts[idx]
+		if !ok {
+			return ctx, fmt.Errorf("missed adt for correlationKey: %v", idx)
+		}
+		if !CanAddParticipant(adt.IsChatAdmin, adt.ChatIsTetATet, event.IsJoining, adt.AvailableToSearch, adt.IsBlog, event.IsChatCreating, adt.IsParticipant, adt.RegularParticipantCanAddParticipants) {
+			m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no authorization to do so", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
+		}
+
+		filteredParticipantsAddeds = append(filteredParticipantsAddeds, event)
 	}
 
 	// also updateViewableParticipants()
-	resp, errp := m.commonProjection.OnParticipantAdded(ctx, event)
+	resp, errp := m.commonProjection.OnParticipantAdded(ctx, filteredParticipantsAddeds)
 	if errp != nil {
 		return errp
 	}
