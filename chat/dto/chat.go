@@ -151,16 +151,17 @@ type ChatFilterDto struct {
 }
 
 type ChatAuthorizationData struct {
-	IsChatFound                          bool `db:"is_chat_found"`
-	IsParticipant                        bool `db:"is_chat_participant"`
-	IsChatAdmin                          bool `db:"is_chat_admin"`
-	ChatCanWriteMessage                  bool `db:"chat_can_write_message"`
-	ChatCanResendMessage                 bool `db:"chat_can_resend_message"`
-	ChatCanReactOnMessage                bool `db:"chat_can_react_on_message"`
-	ChatIsTetATet                        bool `db:"chat_is_tet_a_tet"`
-	AvailableToSearch                    bool `db:"chat_is_available_to_search"`
-	IsBlog                               bool `db:"chat_is_blog"`
-	RegularParticipantCanAddParticipants bool `db:"regular_participant_can_add_participant"`
+	CorrelationKey                       int64 `json:"correlation_key"`
+	IsChatFound                          bool  `db:"is_chat_found"`
+	IsParticipant                        bool  `db:"is_chat_participant"`
+	IsChatAdmin                          bool  `db:"is_chat_admin"`
+	ChatCanWriteMessage                  bool  `db:"chat_can_write_message"`
+	ChatCanResendMessage                 bool  `db:"chat_can_resend_message"`
+	ChatCanReactOnMessage                bool  `db:"chat_can_react_on_message"`
+	ChatIsTetATet                        bool  `db:"chat_is_tet_a_tet"`
+	AvailableToSearch                    bool  `db:"chat_is_available_to_search"`
+	IsBlog                               bool  `db:"chat_is_blog"`
+	RegularParticipantCanAddParticipants bool  `db:"regular_participant_can_add_participant"`
 }
 
 type ChatNotificationSettingsChanged struct {
