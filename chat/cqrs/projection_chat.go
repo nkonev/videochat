@@ -1046,15 +1046,34 @@ func (m *CommonProjection) IterateOverAllChats(ctx context.Context, co db.Common
 }
 
 func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co db.CommonOperations, userId, chatId int64) (dto.ChatAuthorizationData, error) {
-	d := dto.ChatAuthorizationData{}
+
+}
+
+type UserIdAndChatId struct {
+	UserId int64
+	ChatId int64
+}
+
+func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context, co db.CommonOperations, inputList []UserIdAndChatId) (dto.ChatAuthorizationData, error) {
+	userIds := []int64{}
+	chatIds := []int64{}
+
+	for _, v := range inputList {
+		userIds = append(userIds, v.UserId)
+		chatIds = append(chatIds, v.ChatId)
+	}
+
+	// TODO savepoint here
+	d := []dto.ChatAuthorizationData{}
 	err := sqlscan.Get(ctx, co, &d, `
 		with
 		provided as (
-			select 
-				 cast($2 as bigint) as chat_id
+			select * from unnest(cast($1 as bigint[]), cast($2 as bigint[])) 
+			as t(user_id, chat_id)
 		),
-		chat_participant_row as (
-			SELECT user_id, chat_admin FROM chat_participant WHERE user_id = $1 AND chat_id = $2 LIMIT 1
+		chat_participant_rows as (
+			SELECT user_id, chat_id, chat_admin FROM chat_participant cp
+			right join provided pr on (cp.user_id, cp.chat_id) = (pr.user_id, pr.chat_id)
 		),
 		chat_info as (
 			select * from chat_common where id = $2
@@ -1073,7 +1092,7 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 		FROM provided pr
 		LEFT JOIN chat_info cc on pr.chat_id = cc.id
 		left join blog b on cc.id = b.id
-	`, userId, chatId)
+	`, userIds, chatIds)
 	if err != nil {
 		return d, err
 	}
