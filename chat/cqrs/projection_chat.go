@@ -1046,42 +1046,59 @@ func (m *CommonProjection) IterateOverAllChats(ctx context.Context, co db.Common
 }
 
 func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co db.CommonOperations, userId, chatId int64) (dto.ChatAuthorizationData, error) {
+	const correlationKey = 123
+	ress, err := m.GetChatDataForAuthorizationBatch(ctx, co, []UserIdAndChatId{{UserId: userId, ChatId: chatId, CorrelationKey: correlationKey}})
+	if err != nil {
+		return dto.ChatAuthorizationData{}, err
+	}
+	if len(ress) != 1 {
+		return dto.ChatAuthorizationData{}, fmt.Errorf("wrong invariant - only 1 row expected, even if no data, got %v", len(ress))
+	}
 
+	r, ok := ress[correlationKey]
+	if !ok {
+		return nil, fmt.Errorf("in GetChatDataForAuthorization() missed adt for correlationKey: %v", correlationKey)
+	}
+
+	return r, nil
 }
 
 type UserIdAndChatId struct {
-	UserId int64
-	ChatId int64
+	UserId         int64
+	ChatId         int64
+	CorrelationKey int64
 }
 
-func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context, co db.CommonOperations, inputList []UserIdAndChatId) (dto.ChatAuthorizationData, error) {
+func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context, co db.CommonOperations, inputList []UserIdAndChatId) (map[int64]dto.ChatAuthorizationData, error) {
 	userIds := []int64{}
 	chatIds := []int64{}
+	correlationKeys := []int64{}
 
 	for _, v := range inputList {
 		userIds = append(userIds, v.UserId)
 		chatIds = append(chatIds, v.ChatId)
+		correlationKeys = append(correlationKeys, v.CorrelationKey)
 	}
 
-	// TODO savepoint here
-	d := []dto.ChatAuthorizationData{}
-	err := sqlscan.Get(ctx, co, &d, `
+	ds := []dto.ChatAuthorizationData{}
+	err := sqlscan.Get(ctx, co, &ds, `
 		with
 		provided as (
-			select * from unnest(cast($1 as bigint[]), cast($2 as bigint[])) 
-			as t(user_id, chat_id)
+			select * from unnest(cast($1 as bigint[]), cast($2 as bigint[]), cast($3 as bigint[])) 
+			as t(user_id, chat_id, correlation_key)
 		),
 		chat_participant_rows as (
-			SELECT user_id, chat_id, chat_admin FROM chat_participant cp
-			right join provided pr on (cp.user_id, cp.chat_id) = (pr.user_id, pr.chat_id)
+			SELECT cp.user_id, cp.chat_id, cp.chat_admin FROM chat_participant cp
+			inner join provided pr on (cp.user_id, cp.chat_id) = (pr.user_id, pr.chat_id)
 		),
-		chat_info as (
-			select * from chat_common where id = $2
+		chat_infos as (
+			select * from chat_common where id = any(cast($2 as bigint[]))
 		)
-		SELECT 
-			cc.id is not null as is_chat_found
-			,(SELECT exists(SELECT * FROM chat_participant_row) as is_chat_participant)
-			,(SELECT exists(SELECT * FROM chat_participant_row WHERE chat_admin) as is_chat_admin)
+		SELECT
+			pr.correlation_key
+			,cc.id is not null as is_chat_found
+			,cpr.user_id is not null as is_chat_participant
+			,coalesce(cpr.chat_admin, false) as is_chat_admin
 			,coalesce(cc.regular_participant_can_write_message, false) as chat_can_write_message
 			,coalesce(cc.tet_a_tet, false) as chat_is_tet_a_tet
 			,coalesce(cc.can_resend, false) as chat_can_resend_message
@@ -1091,12 +1108,19 @@ func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context,
 			,b.id is not null as chat_is_blog
 		FROM provided pr
 		LEFT JOIN chat_info cc on pr.chat_id = cc.id
+		left join chat_participant_rows cpr on (pr.user_id, pr.chat_id) = (cpr.user_id, cpr.chat_id)
 		left join blog b on cc.id = b.id
-	`, userIds, chatIds)
+	`, userIds, chatIds, correlationKeys)
 	if err != nil {
-		return d, err
+		return nil, err
 	}
-	return d, nil
+
+	res := map[int64]dto.ChatAuthorizationData{}
+	for _, v := range ds {
+		res[v.CorrelationKey] = v
+	}
+
+	return res, nil
 }
 
 func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
