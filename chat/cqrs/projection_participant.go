@@ -241,9 +241,12 @@ func (m *CommonProjection) OnParticipantRemovedSingle(ctx context.Context, parti
 
 func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db.CommonOperations, chatIds []int64) error {
 	_, err := co.ExecContext(ctx, `
-		with 
+		with
+		chats_provided as (
+			select * from unnest(cast($1 as bigint[])) as t(chat_id)
+		),
 		these_chat_participants as (
-			select user_id, chat_id, create_date_time from chat_participant where chat_id = any(cast($1 as bigint[]))
+			select user_id, chat_id, create_date_time from chat_participant where chat_id in (select chat_id from chats_provided)
 		),
 		chat_participant_count as (
 			select count(user_id) as count, chat_id from these_chat_participants group by chat_id
@@ -251,8 +254,8 @@ func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db
 		chat_participants_last_n as (	
 			select
 				ch.chat_id,
-				coalesce(array_agg(ltr.user_id), cast(array[] as bigint[])) as participant_ids
-			from (select * from unnest(cast($1 as bigint[])) as t(chat_id)) ch
+				array_agg(ltr.user_id) as participant_ids
+			from chats_provided ch
 			join lateral (
 				select innr.*
 				from these_chat_participants innr
@@ -264,11 +267,13 @@ func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db
 		),
 		input_data as (
 			select 
-				tcp.chat_id
-				,tcp.count as participants_count
-				,cpln.participant_ids
-			from chat_participant_count tcp
-			join chat_participants_last_n cpln on tcp.chat_id = cpln.chat_id
+					cp.chat_id
+				,coalesce(tcp.count, 0) as participants_count
+				,coalesce(cpln.participant_ids, cast(array[] as bigint[])) as participant_ids
+			from 
+			chats_provided cp 
+			left join chat_participant_count tcp on cp.chat_id = tcp.chat_id
+			left join chat_participants_last_n cpln on tcp.chat_id = cpln.chat_id
 		)
 		update chat_common cc
 		SET 
