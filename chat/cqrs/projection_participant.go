@@ -267,11 +267,10 @@ func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db
 		),
 		input_data as (
 			select 
-					cp.chat_id
+				cp.chat_id
 				,coalesce(tcp.count, 0) as participants_count
 				,coalesce(cpln.participant_ids, cast(array[] as bigint[])) as participant_ids
-			from 
-			chats_provided cp 
+			from chats_provided cp 
 			left join chat_participant_count tcp on cp.chat_id = tcp.chat_id
 			left join chat_participants_last_n cpln on tcp.chat_id = cpln.chat_id
 		)
