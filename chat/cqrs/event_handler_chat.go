@@ -46,7 +46,7 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	}
 
 	// also updateViewableParticipants()
-	resp, errp := m.commonProjection.OnParticipantAdded(ctx, filteredParticipantsAddeds)
+	resp, errp := m.commonProjection.OnBatchParticipantsAdded(ctx, filteredParticipantsAddeds)
 	if errp != nil {
 		return errp
 	}
