@@ -28,7 +28,7 @@ func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
 	return res
 }
 
-func (m *CommonProjection) OnParticipantAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
+func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*OnParticipantAddedResponse, error) {
 		existedChats, err := m.checkAreChatsExist(ctx, tx, getChatIdsFromPa(events))
 		if err != nil {
