@@ -16,41 +16,91 @@ import (
 )
 
 type OnParticipantAddedResponse struct {
-	ChatExists bool
+	ChatExists map[int64]bool
+}
+
+func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
+	res := []int64{}
+	for _, v := range evs {
+		res = append(res, v.ChatId)
+	}
+
+	return res
 }
 
 func (m *CommonProjection) OnParticipantAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*OnParticipantAddedResponse, error) {
-		chatExists, err := m.checkChatExists(ctx, tx, event.ChatId)
+		existedChats, err := m.checkAreChatsExist(ctx, tx, getChatIdsFromPa(events))
 		if err != nil {
 			return nil, err
 		}
-		if !chatExists {
-			m.lgr.InfoContext(ctx, "Skipping OnParticipantAdded because there is no chat", logger.AttributeChatId, event.ChatId)
-			return &OnParticipantAddedResponse{
-				ChatExists: false,
-			}, nil
+
+		filteredEvents := []ParticipantsAdded{}
+
+		for _, event := range events {
+			chatExists := existedChats[event.ChatId]
+			if !chatExists {
+				m.lgr.InfoContext(ctx, "Skipping OnParticipantAdded because there is no chat", logger.AttributeChatId, event.ChatId)
+				continue
+			}
+			filteredEvents = append(filteredEvents, event)
+		}
+
+		participantIds := []int64{}
+		admins := []bool{}
+		chatIds := []int64{}
+		createDateTimes := []time.Time{}
+
+		for _, event := range filteredEvents {
+			for _, item := range event.Participants {
+				participantIds = append(participantIds, item.ParticipantId)
+				admins = append(admins, item.ChatAdmin)
+				chatIds = append(chatIds, event.ChatId)
+				createDateTimes = append(createDateTimes, event.AdditionalData.CreatedAt)
+			}
 		}
 
 		_, err = tx.ExecContext(ctx, `
 			with input_data as (
-				select * from unnest(cast ($1 as bigint[]), cast ($2 as boolean[])) as t(user_id, chat_admin)
+				select * from unnest(
+					cast ($1 as bigint[])
+					,cast ($2 as boolean[])
+					,cast ($3 as bigint[])
+					,cast ($4 as timestamp[])
+				) as t (
+					user_id
+					,chat_admin
+					,chat_id
+					,create_date_time
+				)
 			)
-			insert into chat_participant(user_id, chat_admin, chat_id, create_date_time)
-			select idt.user_id, idt.chat_admin, $3, $4 from input_data idt
+			insert into chat_participant(
+				user_id
+				,chat_admin
+				,chat_id
+				,create_date_time
+			)
+			select 
+				idt.user_id
+				,idt.chat_admin
+				,idt.chat_id
+				,idt.create_date_time
+			from input_data idt
 			on conflict(user_id, chat_id) do nothing
-		`, GetParticipantIds(event.Participants), getParticipantChatAdmins(event.Participants), event.ChatId, event.AdditionalData.CreatedAt)
+		`, participantIds, admins, chatIds, createDateTimes)
 		if err != nil {
 			return nil, err
 		}
 
-		err = m.updateViewableParticipants(ctx, tx, event.ChatId)
+		uniqueChatIds := utils.Unique(chatIds)
+
+		err = m.updateViewableParticipants(ctx, tx, uniqueChatIds)
 		if err != nil {
 			return nil, err
 		}
 
 		return &OnParticipantAddedResponse{
-			ChatExists: true,
+			ChatExists: existedChats,
 		}, nil
 	})
 	if errOuter != nil {
@@ -58,9 +108,7 @@ func (m *CommonProjection) OnParticipantAdded(ctx context.Context, events []Part
 	}
 
 	m.lgr.InfoContext(ctx,
-		"Participant added into common chat",
-		"user_ids", GetParticipantIds(event.Participants),
-		logger.AttributeChatId, event.ChatId,
+		"Participants were added into common chat",
 	)
 
 	return res, nil
@@ -123,7 +171,7 @@ func (m *CommonProjection) OnParticipantRemoved(ctx context.Context, participant
 		}
 
 		if !isRemoveAllParticipantsFromChat { // an optimization for chat deletion
-			err = m.updateViewableParticipants(ctx, tx, chatId)
+			err = m.updateViewableParticipants(ctx, tx, []int64{chatId})
 			if err != nil {
 				return err
 			}
@@ -191,29 +239,44 @@ func (m *CommonProjection) OnParticipantRemovedSingle(ctx context.Context, parti
 	return nil
 }
 
-func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db.CommonOperations, chatId int64) error {
+func (m *CommonProjection) updateViewableParticipants(ctx context.Context, co db.CommonOperations, chatIds []int64) error {
 	_, err := co.ExecContext(ctx, `
 		with 
-		this_chat_participants as (
-			select user_id, create_date_time from chat_participant where chat_id = $1
+		these_chat_participants as (
+			select user_id, chat_id, create_date_time from chat_participant where chat_id = any(cast($1 as bigint[]))
 		),
 		chat_participant_count as (
-			select count (*) as count from this_chat_participants
+			select count(user_id) as count, chat_id from these_chat_participants group by chat_id
 		),
-		chat_participants_last_n as (
-			select user_id from this_chat_participants order by create_date_time desc limit $2
+		chat_participants_last_n as (	
+			select
+				ch.chat_id,
+				coalesce(array_agg(ltr.user_id), cast(array[] as bigint[])) as participant_ids
+			from (select * from unnest(cast($1 as bigint[])) as t(chat_id)) ch
+			join lateral (
+				select innr.*
+				from these_chat_participants innr
+				where innr.chat_id = ch.chat_id
+				order by innr.create_date_time desc
+				limit $2
+			) ltr on true
+			group by ch.chat_id
 		),
 		input_data as (
 			select 
-				(select count from chat_participant_count) as participants_count, 
-				(select coalesce(array_agg(user_id), cast(array[] as bigint[])) from chat_participants_last_n) as participant_ids
+				tcp.chat_id
+				,tcp.count as participants_count
+				,cpln.participant_ids
+			from chat_participant_count tcp
+			join chat_participants_last_n cpln on tcp.chat_id = cpln.chat_id
 		)
 		update chat_common cc
 		SET 
-			participants_count = (select participants_count from input_data),
-			last_n_participant_ids = (select participant_ids from input_data)
-		where cc.id = $1
-		`, chatId, m.cfg.Cqrs.Projections.ChatUserView.MaxViewableParticipants)
+			participants_count = idt.participants_count
+			,last_n_participant_ids = idt.participant_ids
+		from input_data idt
+		where cc.id = idt.chat_id
+		`, chatIds, m.cfg.Cqrs.Projections.ChatUserView.MaxViewableParticipants)
 	if err != nil {
 		return err
 	}

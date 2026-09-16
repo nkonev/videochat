@@ -103,6 +103,22 @@ func GetSliceWithoutSlice(exception []int64, inputData []int64) []int64 {
 	return remaining
 }
 
+func Unique[T comparable](inputData []T) []T {
+	ret := make([]T, 0, len(inputData))
+
+	m := make(map[T]struct{}, len(inputData))
+
+	for _, v := range inputData {
+		m[v] = struct{}{}
+	}
+
+	for k := range m {
+		ret = append(ret, k)
+	}
+
+	return ret
+}
+
 func StringToUrl(s string) *url.URL {
 	u, _ := url.Parse(s)
 	return u
