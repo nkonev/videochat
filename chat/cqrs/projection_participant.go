@@ -669,6 +669,34 @@ func (m *CommonProjection) IterateOverChatParticipantIdsExcepting(ctx context.Co
 	return lastError
 }
 
+func (m *CommonProjection) IterateOverChatsParticipantIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := int64(0); shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		participants, err := getParticipantsCommonOfChatIds(ctx, co, chatIds, utils.DefaultSize, offset, false)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during getting portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+		if len(participants) == 0 {
+			return nil
+		}
+		if len(participants) < utils.DefaultSize {
+			shouldContinue = false
+		}
+
+		err = consumer(participants)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during invoking consumer portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+	}
+	return lastError
+}
+
 func (m *CommonProjection) IterateOverChatParticipantIdsIncluding(ctx context.Context, co db.CommonOperations, chatId int64, including []int64, consumer func(participantIdsPortion []int64) error) error {
 	shouldContinue := true
 	var lastError error
@@ -984,6 +1012,12 @@ type ParticipantWithAdmin struct {
 	ChatAdmin     bool  `json:"chatAdmin" db:"chat_admin"`
 }
 
+type ParticipantWithChatIdWithAdmin struct {
+	ParticipantId int64 `db:"user_id"`
+	ChatAdmin     bool  `db:"chat_admin"`
+	ChatId        int64 `db:"chat_id"`
+}
+
 func (u *ParticipantWithAdmin) GetId() int64 {
 	if u != nil {
 		return u.ParticipantId
@@ -1056,6 +1090,36 @@ func getParticipantsCommonExcepting(ctx context.Context, co db.CommonOperations,
 		WHERE chat_id = $1
 			%s
 		ORDER BY create_date_time %s, user_id asc
+		LIMIT $2 OFFSET $3
+	`, condition, order)
+	err = sqlscan.Select(ctx, co, &list, sqlQuery, sqlArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("error during interacting with db: %w", err)
+	}
+	return list, nil
+}
+
+func getParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithChatIdWithAdmin, error) {
+	list := make([]*ParticipantWithChatIdWithAdmin, 0)
+
+	var err error
+
+	order := "asc"
+	if reverseOrder {
+		order = "desc"
+	}
+
+	sqlArgs := []any{chatIds, participantsSize, participantsOffset}
+	condition := ""
+	sqlQuery := fmt.Sprintf(`
+		SELECT 
+		    user_id,
+		    chat_admin,
+		    chat_id
+		FROM chat_participant
+		WHERE chat_id = any($1)
+			%s
+		ORDER BY chat_id, create_date_time %s, user_id asc
 		LIMIT $2 OFFSET $3
 	`, condition, order)
 	err = sqlscan.Select(ctx, co, &list, sqlQuery, sqlArgs...)
