@@ -196,8 +196,7 @@
     import debounce from "lodash/debounce";
     import bus, {CHAT_ADD, OPEN_CHAT_EDIT} from "./bus/bus";
     import {chat_name} from "@/router/routes";
-    import {hasLength, unescapeHtml} from "@/utils";
-    import {isNumber, isObject, isString} from "lodash";
+    import {goToPreservingQuery, hasLength, unescapeHtml} from "@/utils";
     import {mapStores} from "pinia";
     import {useChatStore} from "@/store/chatStore.js";
     import {v4 as uuidv4} from "uuid";
@@ -444,7 +443,8 @@
             onChatAdded(data) {
               if (hasLength(this.chatCorrelationId) && this.chatCorrelationId == data.correlationId) {
                 const routeDto = {name: chat_name, params: {id: data.id}};
-                this.$router.push(routeDto).then(() => this.closeModal()).finally(() => {
+
+                goToPreservingQuery(this.$route, this.$router, routeDto).then(() => this.closeModal()).finally(() => {
                   this.loading = false;
                   this.chatCorrelationId = null;
                 });
