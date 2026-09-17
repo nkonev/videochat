@@ -1057,7 +1057,7 @@ func (m *CommonProjection) GetChatDataForAuthorization(ctx context.Context, co d
 
 	r, ok := ress[correlationKey]
 	if !ok {
-		return nil, fmt.Errorf("in GetChatDataForAuthorization() missed adt for correlationKey: %v", correlationKey)
+		return dto.ChatAuthorizationData{}, fmt.Errorf("in GetChatDataForAuthorization() missed adt for correlationKey: %v", correlationKey)
 	}
 
 	return r, nil

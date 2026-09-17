@@ -23,17 +23,17 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 
 	areqs := []UserIdAndChatId{}
 	for idx, v := range eventBatch.ParticipantsAddeds {
-		areqs = append(areqs, UserIdAndChatId{UserId: v.AdditionalData.BehalfUserId, ChatId: v.ChatId, CorrelationKey: idx})
+		areqs = append(areqs, UserIdAndChatId{UserId: v.AdditionalData.BehalfUserId, ChatId: v.ChatId, CorrelationKey: int64(idx)})
 	}
 	adts, err := m.commonProjection.GetChatDataForAuthorizationBatch(ctx, m.db, areqs)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	filteredParticipantsAddeds := []ParticipantsAdded{}
 
 	for idx, event := range eventBatch.ParticipantsAddeds {
-		adt, ok := adts[idx]
+		adt, ok := adts[int64(idx)]
 		if !ok {
 			return ctx, fmt.Errorf("missed adt for correlationKey: %v", idx)
 		}
@@ -48,54 +48,58 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	// also updateViewableParticipants()
 	resp, errp := m.commonProjection.OnBatchParticipantsAdded(ctx, filteredParticipantsAddeds)
 	if errp != nil {
-		return errp
+		return ctx, errp
 	}
 
-	if !resp.ChatExists {
-		m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no chat exists. Probably it's protection against ahead creating tet-a-tet", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
-		return nil
-	}
+	for _, event := range filteredParticipantsAddeds {
+		chatExists := resp.ChatExists[event.ChatId]
 
-	userIds := event.GetParticipantIds()
-
-	// send an output event for the users themselves
-	for _, userId := range userIds {
-		ue := &UserChatParticipantAdded{
-			EventTime:     event.AdditionalData.CreatedAt,
-			CorrelationId: event.AdditionalData.CorrelationId,
-			ChatId:        event.ChatId,
-			UserId:        userId,
-			TetATet:       adt.ChatIsTetATet,
-			TetATetSelf:   event.TetATetSelf,
+		if !chatExists {
+			m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no chat exists. Probably it's protection against ahead creating tet-a-tet", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
+			continue
 		}
-		err = m.eventBus.Publish(ctx, ue)
-		if err != nil {
-			return err
-		}
-	}
 
-	errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
-		// transmit an output event with changed last participants for the existing participants
-		for _, participantId := range participantIdsPortion {
-			ue := &UserChatEdited{
-				ChatId:        event.ChatId,
-				UserId:        participantId,
-				ChatAction:    ChatActionRefresh,
+		userIds := event.GetParticipantIds()
+
+		// send an output event for the users themselves
+		for _, userId := range userIds {
+			ue := &UserChatParticipantAdded{
 				EventTime:     event.AdditionalData.CreatedAt,
 				CorrelationId: event.AdditionalData.CorrelationId,
+				ChatId:        event.ChatId,
+				UserId:        userId,
+				TetATet:       resp.ChatTetATets[event.ChatId],
+				TetATetSelf:   event.TetATetSelf,
 			}
-			errInn := m.eventBus.Publish(ctx, ue)
-			if errInn != nil {
-				return errInn
+			err = m.eventBus.Publish(ctx, ue)
+			if err != nil {
+				return ctx, err
 			}
 		}
-		return nil
-	})
-	if errOuter != nil {
-		return errOuter
+
+		errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
+			// transmit an output event with changed last participants for the existing participants
+			for _, participantId := range participantIdsPortion {
+				ue := &UserChatEdited{
+					ChatId:        event.ChatId,
+					UserId:        participantId,
+					ChatAction:    ChatActionRefresh,
+					EventTime:     event.AdditionalData.CreatedAt,
+					CorrelationId: event.AdditionalData.CorrelationId,
+				}
+				errInn := m.eventBus.Publish(ctx, ue)
+				if errInn != nil {
+					return errInn
+				}
+			}
+			return nil
+		})
+		if errOuter != nil {
+			return ctx, errOuter
+		}
 	}
 
-	return nil
+	return ctx, nil
 }
 
 func (m *EventHandler) OnParticipantRemoved(ctx context.Context, event *ParticipantDeleted) error {
