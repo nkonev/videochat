@@ -1081,7 +1081,7 @@ func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context,
 	}
 
 	ds := []dto.ChatAuthorizationData{}
-	err := sqlscan.Get(ctx, co, &ds, `
+	err := sqlscan.Select(ctx, co, &ds, `
 		with
 		provided as (
 			select * from unnest(cast($1 as bigint[]), cast($2 as bigint[]), cast($3 as bigint[])) 
@@ -1107,7 +1107,7 @@ func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context,
 			,coalesce(cc.regular_participant_can_add_participant, false) as regular_participant_can_add_participant
 			,b.id is not null as chat_is_blog
 		FROM provided pr
-		LEFT JOIN chat_info cc on pr.chat_id = cc.id
+		LEFT JOIN chat_infos cc on pr.chat_id = cc.id
 		left join chat_participant_rows cpr on (pr.user_id, pr.chat_id) = (cpr.user_id, cpr.chat_id)
 		left join blog b on cc.id = b.id
 	`, userIds, chatIds, correlationKeys)
