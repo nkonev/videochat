@@ -51,8 +51,17 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 		return ctx, errp
 	}
 
+	chatIds := []int64{}
+
+	createdAtsByChatId := map[int64]time.Time{}
+	correlationIdByChatId := map[int64]*string{}
+
 	for _, event := range filteredParticipantsAddeds {
 		chatExists := resp.ChatExists[event.ChatId]
+
+		chatIds = append(chatIds, event.ChatId)
+		createdAtsByChatId[event.ChatId] = event.AdditionalData.CreatedAt
+		correlationIdByChatId[event.ChatId] = event.AdditionalData.CorrelationId
 
 		if !chatExists {
 			m.lgr.InfoContext(ctx, "Skipping ParticipantsAdded because there is no chat exists. Probably it's protection against ahead creating tet-a-tet", logger.AttributeChatId, event.ChatId, logger.AttributeUserId, event.AdditionalData.BehalfUserId)
@@ -76,16 +85,32 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 				return ctx, err
 			}
 		}
+	}
 
-		errOuter := m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
+	chatIdsUnique := utils.Unique(chatIds)
+
+	if len(filteredParticipantsAddeds) > 0 {
+		errOuter := m.commonProjection.IterateOverChatsParticipantIds(ctx, m.db, chatIdsUnique, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
 			// transmit an output event with changed last participants for the existing participants
-			for _, participantId := range participantIdsPortion {
+			for _, participantItem := range participantIdsPortion {
+				createdAt, ok := createdAtsByChatId[participantItem.ChatId]
+				if !ok {
+					m.lgr.WarnContext(ctx, "Unable to get createdAt, fallback to the first filtered event", logger.AttributeChatId, participantItem.ChatId)
+					createdAt = filteredParticipantsAddeds[0].AdditionalData.CreatedAt
+				}
+
+				correlationId, ok := correlationIdByChatId[participantItem.ChatId]
+				if !ok {
+					m.lgr.WarnContext(ctx, "Unable to get correlationId, fallback to the first filtered event", logger.AttributeChatId, participantItem.ChatId)
+					correlationId = filteredParticipantsAddeds[0].AdditionalData.CorrelationId
+				}
+
 				ue := &UserChatEdited{
-					ChatId:        event.ChatId,
-					UserId:        participantId,
+					ChatId:        participantItem.ChatId,
+					UserId:        participantItem.ParticipantId,
 					ChatAction:    ChatActionRefresh,
-					EventTime:     event.AdditionalData.CreatedAt,
-					CorrelationId: event.AdditionalData.CorrelationId,
+					EventTime:     createdAt,
+					CorrelationId: correlationId,
 				}
 				errInn := m.eventBus.Publish(ctx, ue)
 				if errInn != nil {
