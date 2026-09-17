@@ -16,7 +16,8 @@ import (
 )
 
 type OnParticipantAddedResponse struct {
-	ChatExists map[int64]bool
+	ChatExists   map[int64]bool
+	ChatTetATets map[int64]bool
 }
 
 func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
@@ -30,7 +31,13 @@ func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
 
 func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*OnParticipantAddedResponse, error) {
-		existedChats, err := m.checkAreChatsExist(ctx, tx, getChatIdsFromPa(events))
+		cids := getChatIdsFromPa(events)
+		existedChats, err := m.checkAreChatsExist(ctx, tx, cids)
+		if err != nil {
+			return nil, err
+		}
+
+		tets, err := m.AreTetATets(ctx, tx, cids)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +107,8 @@ func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events 
 		}
 
 		return &OnParticipantAddedResponse{
-			ChatExists: existedChats,
+			ChatExists:   existedChats,
+			ChatTetATets: tets,
 		}, nil
 	})
 	if errOuter != nil {
@@ -795,6 +803,34 @@ func (m *CommonProjection) IsExistsTetATetOne(ctx context.Context, co db.CommonO
 		return false, 0, fmt.Errorf("error during interacting with db: %w", err)
 	}
 	return true, chatId, nil
+}
+
+func (m *CommonProjection) AreTetATets(ctx context.Context, co db.CommonOperations, chatIds []int64) (map[int64]bool, error) {
+	type resDto struct {
+		ChatId  int64 `db:"chat_id"`
+		TetATet bool  `db:"tet_a_tet"`
+	}
+
+	lst := []resDto{}
+
+	err := sqlscan.Get(ctx, co, &lst, `
+		select 
+			ch.chat_id
+			,ch.tet_a_tet
+		from chat_common ch 
+		where ch.id = any(cast($1 as bigint[]))
+	`, chatIds)
+	if err != nil {
+		return map[int64]bool{}, fmt.Errorf("error during interacting with db: %w", err)
+	}
+
+	res := map[int64]bool{}
+
+	for _, v := range lst {
+		res[v.ChatId] = v.TetATet
+	}
+
+	return res, nil
 }
 
 func (m *CommonProjection) HasParticipants(ctx context.Context, co db.CommonOperations, chatIds []int64) (map[int64]bool, error) {
