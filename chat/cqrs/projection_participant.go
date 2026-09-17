@@ -813,12 +813,12 @@ func (m *CommonProjection) AreTetATets(ctx context.Context, co db.CommonOperatio
 
 	lst := []resDto{}
 
-	err := sqlscan.Get(ctx, co, &lst, `
+	err := sqlscan.Select(ctx, co, &lst, `
 		select 
-			ch.chat_id
-			,ch.tet_a_tet
-		from chat_common ch 
-		where ch.id = any(cast($1 as bigint[]))
+			cc.id as chat_id
+			,cc.tet_a_tet
+		from chat_common cc
+		where cc.id = any(cast($1 as bigint[]))
 	`, chatIds)
 	if err != nil {
 		return map[int64]bool{}, fmt.Errorf("error during interacting with db: %w", err)
