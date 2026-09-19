@@ -547,7 +547,7 @@ func CommonKafkaOptions(lgr *logger.LoggerWrapper, cfg *config.AppConfig) []kgo.
 
 	opts = append(opts,
 		kgo.SeedBrokers(cfg.Kafka.BootstrapServers...),
-		kgo.MinVersions(kversion.V4_2_0()),
+		kgo.MinVersions(kversion.V4_3_0()),
 		kgo.WithLogger(kslog.New(lgr.Logger)),
 	)
 

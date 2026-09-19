@@ -452,7 +452,9 @@ func (p *KafkaListener) runKafkaListener(
 		kgo.WithHooks(p.kotelService.Hooks()...),
 		kgo.DisableAutoCommit(),
 		kgo.BlockRebalanceOnPoll(),
-		// kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), // was need for to work after import in the previous implementation. now TestImport can work without it
+		// restored for the case 1.21 behaviour (see https://github.com/twmb/franz-go/commit/46a9b2ad)
+		// was need for to work after import in the previous implementation. now TestImport can work without it
+		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
 		kgo.FetchMaxWait(p.cfg.Kafka.Consumer.FetchMaxWait),
 		// we don't set context here because it hurdles propagating committed offset into waiters
 	)
