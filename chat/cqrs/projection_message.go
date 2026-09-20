@@ -1081,6 +1081,27 @@ func (m *CommonProjection) GetMessageBasic(ctx context.Context, co db.CommonOper
 	return &msg, nil
 }
 
+func (m *CommonProjection) GetMessageBasicWithEmbed(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (*dto.MessageBasicWithEmbed, error) {
+	var msg dto.MessageBasicWithEmbed
+	err := sqlscan.Get(ctx, co, &msg, `
+	select m.id, m.owner_id, m.content, m.blog_post, m.published, m.pinned, m.file_item_uuid, m.embed
+	from message m where m.chat_id = $1 and m.id = $2
+	`, chatId, messageId)
+	if errors.Is(err, sql.ErrNoRows) {
+		// there were no rows, but otherwise no error occurred
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	msg.Embeddable, err = makeEmbeddable(msg.Embed)
+	if err != nil {
+		return nil, fmt.Errorf("error during mapping: %w", err)
+	}
+
+	return &msg, nil
+}
+
 func (m *CommonProjection) GetMessageEmbed(ctx context.Context, co db.CommonOperations, chatId, messageId int64) (dto.Embeddable, error) {
 	var embed *json.RawMessage
 	err := sqlscan.Get(ctx, co, &embed, `

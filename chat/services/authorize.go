@@ -2,13 +2,15 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
+
 	"nkonev.name/chat/cqrs"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/dto"
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/utils"
-	"strings"
 )
 
 type AuthorizationService struct {
@@ -30,7 +32,7 @@ func NewAuthorizationService(
 }
 
 func (ch *AuthorizationService) CheckAccess(ctx context.Context, params map[string]string) int {
-	chatId, err := utils.ParseInt64(params["chatId"])
+	chatId, err := utils.ParseInt64(params[dto.ChatIdQueryParam])
 	if err != nil {
 		ch.lgr.ErrorContext(ctx, "Error checking access", logger.AttributeError, err)
 		return http.StatusInternalServerError
@@ -55,7 +57,7 @@ func (ch *AuthorizationService) CheckAccess(ctx context.Context, params map[stri
 			return http.StatusInternalServerError
 		}
 
-		overrideMessage, err := ch.commonProjection.GetMessageBasic(ctx, ch.dbWrapper, overrideChatId, overrideMessageId)
+		overrideMessage, err := ch.commonProjection.GetMessageBasicWithEmbed(ctx, ch.dbWrapper, overrideChatId, overrideMessageId)
 		if err != nil {
 			ch.lgr.ErrorContext(ctx, "Error checking access", logger.AttributeError, err)
 			return http.StatusInternalServerError
@@ -69,7 +71,7 @@ func (ch *AuthorizationService) CheckAccess(ctx context.Context, params map[stri
 			return http.StatusUnauthorized
 		}
 
-		fileItemUuid := params["fileItemUuid"]
+		fileItemUuid := params[dto.FileItemUuidParam]
 		if overrideMessage != nil && (overrideChat.IsBlog || overrideMessage.Published || overrideMessage.BlogPost) {
 
 			// ... here we check that the message which we found by potentially crafted overrideMessageId / overrideChatId with malicious intent
@@ -78,6 +80,20 @@ func (ch *AuthorizationService) CheckAccess(ctx context.Context, params map[stri
 			if len(fileItemUuid) != 0 {
 				if strings.Contains(overrideMessage.Content, encodedFileItemUuid) {
 					return http.StatusOK
+				} else if overrideMessage.Embeddable != nil {
+					switch typed := overrideMessage.Embeddable.(type) {
+					case *dto.EmbedReply:
+						if strings.Contains(typed.MessageContent, encodedFileItemUuid) {
+							return http.StatusOK
+						}
+					case *dto.EmbedResend:
+						if strings.Contains(typed.MessageContent, encodedFileItemUuid) {
+							return http.StatusOK
+						}
+					default:
+						ch.lgr.ErrorContext(ctx, fmt.Sprintf("unknown embed type: %T", typed), logger.AttributeError, err)
+						return http.StatusInternalServerError
+					}
 				} else if overrideMessage.FileItemUuid != nil && *overrideMessage.FileItemUuid == fileItemUuid {
 					return http.StatusOK
 				}

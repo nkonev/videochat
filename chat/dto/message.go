@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -200,6 +201,18 @@ type MessageBasic struct {
 	Pinned       bool    `db:"pinned"`
 	Published    bool    `db:"published"`
 	FileItemUuid *string `db:"file_item_uuid"`
+}
+
+type MessageBasicWithEmbed struct {
+	Id           int64            `db:"id"`
+	OwnerId      int64            `db:"owner_id"`
+	Content      string           `db:"content"`
+	BlogPost     bool             `db:"blog_post"`
+	Pinned       bool             `db:"pinned"`
+	Published    bool             `db:"published"`
+	FileItemUuid *string          `db:"file_item_uuid"`
+	Embed        *json.RawMessage `db:"embed"`
+	Embeddable   Embeddable       `db:"-"`
 }
 
 func (m *MessageBasic) GetContentOrEmpty() string {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -4806,5 +4807,118 @@ func TestCleanAbandonedChats(t *testing.T) {
 			existsC1after, err := deps.commonProjection.IsChatExists(ctx, deps.dba, chat1Id)
 			require.NoError(t, err, "error in checking existence")
 			require.False(t, existsC1after)
+		})
+}
+
+func TestAccess(t *testing.T) {
+	const user1 int64 = 1
+	const user1Login = "admin1"
+
+	mockUser1 := dto.User{
+		Id:               user1,
+		Login:            user1Login,
+		Avatar:           nil,
+		ShortInfo:        nil,
+		LoginColor:       nil,
+		LastSeenDateTime: nil,
+		AdditionalData:   nil,
+	}
+
+	resetInfraAndStartAppTest(t,
+		func(
+			aaaRestClient client.AaaRestClient,
+		) {
+			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
+			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{&mockUser1}, nil)
+		},
+		func(deps *commonTestDeps) {
+			const chat1Name = "new blog-chat 1"
+
+			ctx := context.Background()
+
+			blogChat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionBlog(true))
+			require.NoError(t, err, "error in creating chat")
+			assert.True(t, blogChat1Id > 0)
+			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+
+			const message1Text = "new blog head message 1"
+			_, err = deps.testRestClient.CreateMessage(ctx, user1, blogChat1Id, message1Text)
+			require.NoError(t, err, "error in creating message")
+			// await before chat editing
+			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+
+			const chat2Name = "new chat 2 donor"
+			chat2DonorId, err := deps.testRestClient.CreateChat(ctx, user1, chat2Name, client.NewChatOptionResend(true))
+			require.NoError(t, err, "error in creating chat")
+			assert.True(t, chat2DonorId > 0)
+			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+
+			const fileItemUUid = "01a0bc40-72eb-7c4e-a3f9-4ba8268f6ecd"
+			const timest = 1789862617
+			var message2Text = fmt.Sprintf(`
+				<div class="message-item-text">
+					<p>test with img</p>
+					<p>
+						<img class="image-custom-class" src="/api/storage/embed/preview?file=chat/%d/%s/file.jpg&time=%d" data-original="/api/storage/download?file=chat/%d/%s/file.png">
+					</p>
+				</div>
+			`, chat2DonorId, fileItemUUid, timest, chat2DonorId, fileItemUUid)
+			messageId2Donor, err := deps.testRestClient.CreateMessage(ctx, user1, chat2DonorId, message2Text)
+			require.NoError(t, err, "error in creating message")
+			// await before chat editing
+			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+
+			commentMessageResentId2, err := deps.testRestClient.CreateMessage(ctx, user1, blogChat1Id, "", client.NewMessageCreateOptionResend(chat2DonorId, messageId2Donor))
+			require.NoError(t, err, "error in resending message")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			assert.True(t, commentMessageResentId2 > 0)
+
+			blogsW, err := deps.testRestClient.SearchBlogs(ctx)
+			require.NoError(t, err, "error in searching blog posts")
+			blogs := blogsW.Items
+			assert.Equal(t, 1, len(blogs))
+			assert.Equal(t, blogChat1Id, blogs[0].Id)
+			assert.Equal(t, chat1Name, blogs[0].Title)
+
+			commentsW, err := deps.testRestClient.SearchBlogComments(ctx, blogChat1Id)
+			require.NoError(t, err, "error in searching blog comments")
+			comments := commentsW.Items
+			assert.Equal(t, 1, len(comments))
+			assert.Equal(t, commentMessageResentId2, comments[0].Id)
+
+			doc, err := goquery.NewDocumentFromReader(strings.NewReader(comments[0].EmbedMessage.Text))
+			require.NoError(t, err, "error in parsing blog comment html")
+
+			var imgOriginalOuter string
+			var imgPreviewOuter string
+
+			doc.Find("img").Each(func(i int, s *goquery.Selection) {
+				maybeImage := s.First()
+				if maybeImage != nil {
+					original, originalExists := maybeImage.Attr("data-original")
+					if originalExists { // we have 2 tags - preview (small, tag attr) and original (data-original attr)
+						imgOriginalOuter = original
+
+						src, srcExists := maybeImage.Attr("src") // preview
+						if srcExists {
+							imgPreviewOuter = src
+						}
+					}
+				}
+			})
+
+			expectedOriginalEncoded := "/api/storage/public/download?file=" + utils.Urlencode(fmt.Sprintf(`chat/%d/%s/file.png`, chat2DonorId, fileItemUUid)) + fmt.Sprintf("&overrideChatId=%d&overrideMessageId=%d", blogChat1Id, commentMessageResentId2)
+			expectedPreviewEncoded := "/api/storage/public/download/embed/preview?file=" + utils.Urlencode(fmt.Sprintf(`chat/%d/%s/file.jpg`, chat2DonorId, fileItemUUid)) + fmt.Sprintf("&overrideChatId=%d&overrideMessageId=%d&time=%d", blogChat1Id, commentMessageResentId2, timest)
+			require.Equal(t, expectedOriginalEncoded, imgOriginalOuter)
+			require.Equal(t, expectedPreviewEncoded, imgPreviewOuter)
+
+			ok, err := deps.testRestClient.CheckAccessExtended(ctx, nil, blogChat1Id, blogChat1Id, commentMessageResentId2, fileItemUUid)
+			assert.NoError(t, err, "error in CheckAccessExtended")
+			require.True(t, ok)
 		})
 }

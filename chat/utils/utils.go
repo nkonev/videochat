@@ -318,3 +318,7 @@ func RemoveExtension(fileName string) string {
 		return fileName
 	}
 }
+
+func Urlencode(s string) string {
+	return url.QueryEscape(s)
+}

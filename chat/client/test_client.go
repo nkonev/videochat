@@ -596,3 +596,22 @@ func (rc *TestRestClient) MarkChatAsRead(ctx context.Context, behalfUserId int64
 func (rc *TestRestClient) HealthCheck(ctx context.Context) error {
 	return rc.queryNoResponse[any](ctx, dto.NonExistentUser, http.MethodGet, "/internal/health", "internal.HealthCheck", nil, nil)
 }
+
+func (rc *TestRestClient) CheckAccessExtended(ctx context.Context, userId *int64, chatId int64, overrideChatId, overrideMessageId int64, fileItemUuid string) (bool, error) {
+	queryParams := &url.Values{}
+	queryParams.Set(dto.ChatIdQueryParam, utils.ToString(chatId))
+	if userId != nil {
+		queryParams.Set(dto.UserId, utils.ToString(*userId))
+	}
+	queryParams.Set(dto.OverrideChatId, utils.ToString(overrideChatId))
+	queryParams.Set(dto.OverrideMessageId, utils.ToString(overrideMessageId))
+	queryParams.Set(dto.FileItemUuidParam, fileItemUuid)
+
+	httpResp, err := rc.queryRawResponse[any](ctx, dto.NonExistentUser, http.MethodGet, "/internal/access", "internal.CheckAccessExtended", nil, queryParams)
+	if err != nil {
+		return false, err
+	}
+	defer httpResp.Body.Close()
+
+	return httpResp.StatusCode == http.StatusOK, nil
+}
