@@ -2,7 +2,7 @@
 # It contains environment
 services:
   traefik:
-    image: traefik:v3.7.12
+    image: traefik:v3.7.13
     hostname: traefik
     restart: unless-stopped
     environment:
@@ -215,7 +215,7 @@ services:
         max-size: "50m"
 
   livekit:
-    image: livekit/livekit-server:v1.13.6
+    image: livekit/livekit-server:v1.13.7
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     network_mode: "host"
