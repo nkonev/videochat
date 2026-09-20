@@ -1121,6 +1121,9 @@ export default {
           if (newValue.params.id != oldValue.params.id) {
             console.debug("Chat id has been changed", oldValue.params.id, "->", newValue.params.id);
             if (hasLength(newValue.params.id)) {
+              // abort currently in-flight / previous requests
+              this.cancelPreviousRequests();
+
               // used for
               // 1. to prevent opening ChatVideo with old (previous) chatDto that contains old chatId
               // 2. to prevent rendering MessageList and get 401

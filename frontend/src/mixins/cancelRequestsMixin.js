@@ -8,7 +8,9 @@ export default () => {
         methods: {
             installCancelRequests() {
             },
-            restartCancelRequests() {
+            cancelPreviousRequests() {
+                this.requestAbortController.abort();
+
                 this.requestAbortController = new AbortController()
             },
             uninstallCancelRequests() {

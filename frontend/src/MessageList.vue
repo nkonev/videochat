@@ -922,10 +922,7 @@
                 if (isChatRoute(newValue) && hasLength(newValue.params.id)) { // filtering out the case when we go to profile - it also has route id
 
                   // abort currently in-flight / previous requests
-                  await this.requestAbortController.abort();
-
-                  // instantiate the new abort controller
-                  this.restartCancelRequests();
+                  this.cancelPreviousRequests();
 
                   await this.onProfileSet();
                   return
