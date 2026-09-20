@@ -202,14 +202,6 @@ func GetType(aDto interface{}) string {
 	return strName
 }
 
-func UrlEncode(input string) string {
-	params := url.Values{}
-	params.Add("prefix", input)
-	tmp := params.Encode()
-	after, _ := strings.CutPrefix(tmp, "prefix=")
-	return after
-}
-
 func Min(a, b int) int {
 	if a < b {
 		return a

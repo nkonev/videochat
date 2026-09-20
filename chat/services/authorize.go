@@ -76,7 +76,7 @@ func (ch *AuthorizationService) CheckAccess(ctx context.Context, params map[stri
 
 			// ... here we check that the message which we found by potentially crafted overrideMessageId / overrideChatId with malicious intent
 			// really contains this fileItemUuid
-			encodedFileItemUuid := utils.UrlEncode(fileItemUuid)
+			encodedFileItemUuid := utils.Urlencode(fileItemUuid)
 			if len(fileItemUuid) != 0 {
 				if strings.Contains(overrideMessage.Content, encodedFileItemUuid) {
 					return http.StatusOK
