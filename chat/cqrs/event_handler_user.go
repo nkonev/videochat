@@ -11,7 +11,9 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func (m *EventHandler) OnUserChatViewCreated(ctx context.Context, event *UserChatParticipantAdded) error {
+func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAddedBatch) (context.Context, error) {
+	ctx := events.FirstElementContext
+
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
 
 	userIds := []int64{event.UserId}
