@@ -369,8 +369,8 @@ func ListenUserTopic(
 		// which would be due to mutating userId-partitioned chat_user_view and has_unread_messages tables from the chatId-partitioned event-chat topic
 		// see also https://docs.citusdata.com/en/v13.0/reference/common_errors.html#canceling-the-transaction-since-it-was-involved-in-a-distributed-deadlock
 		// https://www.cybertec-postgresql.com/en/postgresql-understanding-deadlocks/
-		EventUserChatParticipantAdded: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnUserChatViewCreated))
+		BatchEventUserChatParticipantAdded: func(b BatchEvent) (context.Context, error) {
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnUserChatViewCreatedBatch)
 		},
 		EventUserChatEdited: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnUserChatViewUpdated))

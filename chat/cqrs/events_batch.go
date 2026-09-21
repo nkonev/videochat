@@ -89,6 +89,13 @@ type ParticipantsAddedEventBatch struct {
 	ParticipantsAddeds  []ParticipantsAdded
 }
 
+type UserChatParticipantAddedBatch struct {
+	batchCommonPart
+
+	FirstElementContext context.Context
+	UserChatAddeds      []UserChatParticipantAdded
+}
+
 func (p *MessageCreatedEventBatch) TryAppend(event EventHolder) bool {
 	if p.closedForAppendingNew {
 		return false
@@ -172,4 +179,28 @@ func (p *ParticipantsAddedEventBatch) GetContext() context.Context {
 }
 func (p *ParticipantsAddedEventBatch) GetOrder() int {
 	return 200
+}
+
+func (p *UserChatParticipantAddedBatch) TryAppend(event EventHolder) bool {
+	if p.closedForAppendingNew {
+		return false
+	}
+
+	switch typed := event.event.(type) {
+	case *UserChatParticipantAdded:
+		p.UserChatAddeds = append(p.UserChatAddeds, *typed)
+
+		return true
+	}
+
+	return false
+}
+func (p *UserChatParticipantAddedBatch) GetBatchType() string {
+	return BatchEventUserChatParticipantAdded
+}
+func (p *UserChatParticipantAddedBatch) GetContext() context.Context {
+	return p.FirstElementContext
+}
+func (p *UserChatParticipantAddedBatch) GetOrder() int {
+	return 100 // the different topic though
 }

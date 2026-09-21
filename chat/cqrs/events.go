@@ -35,6 +35,7 @@ const (
 	EventMessageReactionRemoved             = "messageReactionDeleted"
 	EventTechnicalAbandonedChatRemoved      = "technicalAbandonedChatDeleted"
 	EventUserChatParticipantAdded           = "userChatParticipantAdded"
+	BatchEventUserChatParticipantAdded      = "batchUserChatParticipantAdded"
 	EventUserChatEdited                     = "userChatEdited"
 	EventUserChatParticipantRemoved         = "userChatParticipantDeleted"
 	EventUserMessagesCreated                = "userMessagesCreated"
