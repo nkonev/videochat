@@ -51,6 +51,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 			m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 		}
 
+		// TODO это HasUnreadMessagesChanged() - вынести, то есть не повторять на каждый чат 1го юзера
 		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
 			UserId:    cv.BehalfUserId,
 			EventType: eventTypeUnreadMessagesChanged,
