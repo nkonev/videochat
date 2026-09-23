@@ -11,12 +11,26 @@ import (
 	"nkonev.name/chat/utils"
 )
 
+func getChatIds(events *UserChatParticipantAddedBatch) []int64 {
+	res := []int64{}
+	for _, v := range events.UserChatAddeds {
+		res = append(res, v.ChatId)
+	}
+
+	un := utils.Unique(res)
+	slices.Sort(un)
+
+	return un
+}
+
 func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAddedBatch) (context.Context, error) {
 	ctx := events.FirstElementContext
 
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
 
-	userIds := []int64{event.UserId}
+	userIds := []int64{events.UserId}
+
+	chatIds := getChatIds(events)
 
 	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
 	if err != nil {
@@ -29,7 +43,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	m.lgr.DebugContext(ctx, "Sending notification about the chat to participants", "event_type", eventTypeChatCreated, "user_ids", userIds)
 
 	// we don't need to change GetChatsEnriched to additionally process [behalf]userIds because we've already added users in our projection and the projection return all the users
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, chatIds, false)
 	if err != nil {
 		return err
 	}
@@ -81,7 +95,11 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	m.lgr.DebugContext(ctx, "Sending notification about the participants", "event_type", eventTypeParticipantAdded, "user_ids", userIds)
 
 	// this is an event for ChatParticipantsModal.vue
+	// we build participantAdded events behalf of each participant and send to each of the their own view
+	// ... TODO invoke by []chatIds
 	err = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
+
+		// userIds are actually 1 user, nothing to speedup
 		participantsByBehalfs, _, errInn := m.enrichingProjection.GetParticipantsEnriched(ctx, participantIdsPortion, event.ChatId, int32(len(userIds)), utils.DefaultOffset, dto.NoSearchString, false, userIds)
 		if errInn != nil {
 			return errInn
