@@ -96,7 +96,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	// this is an event for ChatParticipantsModal.vue
 	// we build participantAdded events behalf of each participant and send to each of the their own view
-	// ... TODO invoke by []chatIds
+	// ... TODO invoke this outer by []chatIds
 	err = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
 
 		// userIds are actually 1 user, nothing to speedup
