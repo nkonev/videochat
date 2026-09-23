@@ -32,6 +32,14 @@ func (p *EventHolder) MakeBatchItem() (BatchEvent, context.Context, error) {
 			},
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
+	case *UserChatParticipantAdded:
+		return &UserChatParticipantAddedBatch{
+			UserId: typed.UserId,
+			UserChatAddeds: []UserChatParticipantAdded{
+				*typed,
+			},
+			FirstElementContext: p.ctx,
+		}, p.ctx, nil
 	default:
 		return &SingleEventBatch{
 			*p,
@@ -92,6 +100,8 @@ type ParticipantsAddedEventBatch struct {
 type UserChatParticipantAddedBatch struct {
 	batchCommonPart
 
+	UserId int64
+
 	FirstElementContext context.Context
 	UserChatAddeds      []UserChatParticipantAdded
 }
@@ -109,7 +119,7 @@ func (p *MessageCreatedEventBatch) TryAppend(event EventHolder) bool {
 		p.MessageCreateds = append(p.MessageCreateds, *typed)
 
 		return true
-	// those events make gotten authorization (canReadMessage) invalid
+	// those events make gotten authorization (canWriteMessage) invalid
 	case *ChatEdited:
 		p.closedForAppendingNew = true
 		return false
@@ -188,9 +198,14 @@ func (p *UserChatParticipantAddedBatch) TryAppend(event EventHolder) bool {
 
 	switch typed := event.event.(type) {
 	case *UserChatParticipantAdded:
+		if typed.UserId != p.UserId {
+			return false
+		}
+
 		p.UserChatAddeds = append(p.UserChatAddeds, *typed)
 
 		return true
+		// we don't need p.closedForAppendingNew = true because there is noa authorization because this is a secondary topic which just does commands, w/o authorization logic
 	}
 
 	return false

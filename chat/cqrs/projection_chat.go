@@ -500,13 +500,19 @@ func processAdditionalUserIds(queryArgsInput []any, additionalFoundUserIds []int
 
 // contract: either multiple chats
 // or one chatId != nil
-func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, chatId *int64, forceNonParticipant bool) ([]dto.ChatViewEnrichedDto, map[int64]*dto.User, error) {
+func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfParticipantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, selectedChatIds []int64, forceNonParticipant bool) ([]dto.ChatViewEnrichedDto, map[int64]*dto.User, error) {
 	if len(behalfParticipantIds) == 0 {
 		return nil, nil, errors.New("Wrong invariant: len(behalfParticipantIds) == 0")
 	}
 	multipleBehalfUserId := len(behalfParticipantIds) > 1
-	if multipleBehalfUserId && chatId == nil {
-		return nil, nil, errors.New("Wrong invariant: multipleBehalfUserId is true and null chatId")
+	if multipleBehalfUserId && (len(selectedChatIds) == 0) {
+		return nil, nil, errors.New("Wrong invariant: multipleBehalfUserId is true and empty chatIds")
+	}
+
+	multipleSelectedChatIds := len(selectedChatIds) > 1
+
+	if multipleBehalfUserId && multipleSelectedChatIds {
+		return nil, nil, errors.New("Wrong invariant: multipleBehalfUserId is true and multiple chatIds")
 	}
 
 	searchString = m.SanitizeSearchString(searchString)
@@ -519,7 +525,7 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 	}
 
 	d, errOuter := db.TransactWithResult(ctx, m.cp.db, func(tx *db.Tx) (*tupleDto, error) {
-		chats, err := m.cp.GetChats(ctx, tx, behalfParticipantIds, size, startingFromItemId, includeStartingFrom, tetATetSelfFirst, reverse, searchString, additionalFoundUserIds, chatId)
+		chats, err := m.cp.GetChats(ctx, tx, behalfParticipantIds, size, startingFromItemId, includeStartingFrom, tetATetSelfFirst, reverse, searchString, additionalFoundUserIds, selectedChatIds)
 		if err != nil {
 			m.lgr.ErrorContext(ctx, "Error getting chats", logger.AttributeError, err)
 			return nil, err
@@ -536,14 +542,12 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 		var areAdminsOfUserIds = map[int64]bool{}
 		var areAdminsOfChatIds = map[int64]bool{}
 		if multipleBehalfUserId {
-			areAdminsOfUserIds, err = m.cp.getAreAdminsOfUserIds(ctx, tx, behalfParticipantIds, *chatId)
+			areAdminsOfUserIds, err = m.cp.getAreAdminsOfUserIds(ctx, tx, behalfParticipantIds, selectedChatIds[0])
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			chatIds := getChatIdsFromChats(chats)
-
-			areAdminsOfChatIds, err = m.cp.getAreAdminsOfChatIds(ctx, tx, behalfParticipantIds[0], chatIds)
+			areAdminsOfChatIds, err = m.cp.getAreAdminsOfChatIds(ctx, tx, behalfParticipantIds[0], selectedChatIds)
 			if err != nil {
 				return nil, err
 			}
@@ -682,7 +686,7 @@ func (m *EnrichingProjection) GetChat(ctx context.Context, userId, chatId int64)
 	includeStartingFrom := true
 	searchString := ""
 
-	chats, _, errG := m.GetChatsEnriched(ctx, []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, &chatId, false)
+	chats, _, errG := m.GetChatsEnriched(ctx, []int64{userId}, size, startingFromItemId, includeStartingFrom, false, reverse, searchString, []int64{chatId}, false)
 	if errG != nil {
 		m.lgr.ErrorContext(ctx, "Error getting chats", logger.AttributeError, errG)
 		err = errG
@@ -1123,7 +1127,7 @@ func (m *CommonProjection) GetChatDataForAuthorizationBatch(ctx context.Context,
 	return res, nil
 }
 
-func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, chatId *int64) ([]dto.ChatViewDto, error) {
+func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations, participantIds []int64, size int32, startingFromItemId *dto.ChatId, includeStartingFrom, tetATetSelfFirst, reverse bool, searchString string, additionalFoundUserIds []int64, selectedChatIds []int64) ([]dto.ChatViewDto, error) {
 	type chatDto struct {
 		Id                                  int64      `db:"id"`
 		UserId                              int64      `db:"user_id"`
@@ -1197,7 +1201,7 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 
 	var joinClause string
 
-	if startingFromItemId != nil && chatId != nil {
+	if startingFromItemId != nil && len(selectedChatIds) != 0 {
 		return nil, fmt.Errorf("wrong invariant: both startingFromItemId and chatId provided")
 	}
 
@@ -1245,10 +1249,9 @@ func (m *CommonProjection) GetChats(ctx context.Context, co db.CommonOperations,
 		searchClause += " ) "
 	}
 
-	if chatId != nil {
-		chatIdV := *chatId
-		queryArgs = append(queryArgs, chatIdV)
-		chatIdClause := fmt.Sprintf(" and ch.id = $%d", len(queryArgs))
+	if len(selectedChatIds) != 0 {
+		queryArgs = append(queryArgs, selectedChatIds)
+		chatIdClause := fmt.Sprintf(" and ch.id = any($%d) ", len(queryArgs))
 
 		conditionClause += chatIdClause
 		orderClause = "order by ch.update_date_time desc, ch.user_id" // to prevent flaky tests. the same as in projection_participantv :: getParticipantsCommonExcepting()
