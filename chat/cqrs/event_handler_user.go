@@ -34,7 +34,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	eventTypeChatCreated := dto.EventTypeChatCreated
@@ -45,13 +45,13 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	// we don't need to change GetChatsEnriched to additionally process [behalf]userIds because we've already added users in our projection and the projection return all the users
 	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, chatIds, false)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	var hasUnreadMessages = map[int64]bool{}
 	hasUnreadMessages, err = m.commonProjection.GetHasUnreadMessages(ctx, userIds)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	for _, cv := range chatViews {
@@ -126,7 +126,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 		m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 	}
 
-	return nil
+	return ctx, nil
 }
 
 func (m *EventHandler) OnUserChatViewUpdated(ctx context.Context, event *UserChatEdited) error {
