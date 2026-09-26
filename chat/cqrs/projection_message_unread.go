@@ -182,6 +182,60 @@ func (m *CommonProjection) setUnreadMessages(ctx context.Context, co db.CommonOp
 	return nil
 }
 
+func (m *CommonProjection) initializeMessageUnreadMultipleChatsParticipants(ctx context.Context, co db.CommonOperations, participantIds []int64, chatIds []int64) error {
+	// TODO here, savepoint
+
+	queryArgs := []any{participantId, chatId}
+
+	q := `
+		with 
+		chat_messages as (
+			select m.id from message m where m.chat_id = $2
+		),
+		max_message as (
+			select max(m.id) as max from chat_messages m
+		),
+		normalized_user as (
+			select cast ($1 as bigint) as user_id
+		),
+		normalized_considerable_message as (
+			select 
+				n.user_id,
+				0 as normalized_read_message_id
+			from normalized_user n
+		),
+		input_data as (
+			select
+				ngm.user_id as user_id,
+				cast ($2 as bigint) as chat_id,
+				(
+					SELECT count(m.id) FILTER(WHERE m.id > (select normalized_read_message_id from normalized_considerable_message n where n.user_id = ngm.user_id))
+					FROM chat_messages m
+				) as unread_messages,
+				ngm.normalized_read_message_id as last_read_message_id
+			from normalized_considerable_message ngm
+		)
+		merge into chat_user_view cuv
+		using input_data idt
+		on (idt.chat_id, idt.user_id) = (cuv.id, cuv.user_id)
+		when matched then update set 
+		   unread_messages = idt.unread_messages
+		  ,cuv_last_read_message_id = idt.last_read_message_id
+	`
+
+	_, err := co.ExecContext(ctx, q, queryArgs...)
+	if err != nil {
+		return err
+	}
+
+	err = m.updateHasUnreads(ctx, co, participantId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // see also fastForwardChatParticipantMessageReadIdInAllChats()
 func (m *CommonProjection) setNoUnreadsInAllChats(ctx context.Context, co db.CommonOperations, userId int64, size int) ([]dto.ChatUserViewBasic, error) {
 	updatedChatsPortion := []dto.ChatUserViewBasic{}

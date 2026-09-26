@@ -122,7 +122,22 @@ func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events 
 	return res, nil
 }
 
-func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, chatId int64, eventTime time.Time, tetATetSelf bool) error {
+func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, userChatAddeds []UserChatParticipantAdded) error {
+
+	var (
+		userIds      []int64 = []int64{}
+		chatIds      []int64 = []int64{}
+		eventTimes   []time.Time = []time.Time{}
+		tetATetSelfs []bool = []bool{}
+	)
+
+	for _, v := range userChatAddeds {
+		userIds = append(userIds, userId)
+		chatIds = append(chatIds, v.ChatId)
+		eventTimes = append(eventTimes, v.EventTime)
+		tetATetSelfs = append(tetATetSelfs, v.TetATetSelf)
+	}
+
 	return db.Transact(ctx, m.db, func(tx *db.Tx) error {
 		// no problems here because
 		// a) we've already added participants in the previous step
@@ -133,26 +148,40 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 		_, err := tx.ExecContext(ctx, `
 		with 
 		input_data as (
+			select * from unnest (
+				cast($1 as bigint[])
+				,cast($2 as bigint[])
+				,cast($3 as timestamp[])
+				,cast($4 as boolean[])
+			) t(
+			  chat_id
+			  ,user_id
+			  ,update_date_time
+			  ,tet_a_tet_self
+			)
+		),
+		input_data_prepared as (
 			select 
-				c.id as chat_id, 
-				false as pinned, 
-				cast ($1 as bigint) as user_id, 
-				cast ($3 as timestamp) as update_date_time,
-				cast ($4 as boolean) as tet_a_tet_self
-			from (select cc.id from chat_common cc where cc.id = $2) c 
+				idt.chat_id
+				,false as pinned
+				,idt.user_id
+				,idt.update_date_time
+				,idt.tet_a_tet_self
+			from input_data idt 
+			join chat_common cc on idt.chat_id = cc.id
 		)
 		insert into chat_user_view(id, pinned, user_id, update_date_time, tet_a_tet_self) 
-			select chat_id, pinned, user_id, update_date_time, tet_a_tet_self from input_data
+			select chat_id, pinned, user_id, update_date_time, tet_a_tet_self from input_data_prepared
 		on conflict(user_id, id) do update set
 			pinned = excluded.pinned
 			, update_date_time = excluded.update_date_time 
-		`, userId, chatId, eventTime, tetATetSelf)
+		`, userIds, chatIds, eventTimes, tetATetSelfs)
 		if err != nil {
 			return err
 		}
 
 		// recalc in case an user was added after
-		err = m.initializeMessageUnreadMultipleParticipants(ctx, tx, userId, chatId)
+		err = m.initializeMessageUnreadMultipleChatsParticipants(ctx, tx, userIds, chatIds)
 		if err != nil {
 			return err
 		}
