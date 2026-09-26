@@ -32,7 +32,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	chatIds := getChatIds(events)
 
-	err := m.commonProjection.OnUserChatViewCreated(ctx, event.UserId, event.ChatId, event.EventTime, event.TetATetSelf)
+	err := m.commonProjection.OnUserChatViewCreated(ctx, events.UserId, events.UserChatAddeds)
 	if err != nil {
 		return ctx, err
 	}
