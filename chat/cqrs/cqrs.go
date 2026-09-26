@@ -38,7 +38,7 @@ type KafkaProducer struct {
 	lgr *logger.LoggerWrapper
 }
 
-func (p *KafkaProducer) Publish(ctx context.Context, msg CqrsEvent) error {
+func (p *KafkaProducer) Publish(ctx context.Context, msgs ...CqrsEvent) error {
 	// Start a new span with options.
 	opts := []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindProducer),
@@ -47,54 +47,64 @@ func (p *KafkaProducer) Publish(ctx context.Context, msg CqrsEvent) error {
 	// End the span when function exits.
 	defer span.End()
 
-	var topic string
-
-	eventTopic := msg.GetEventTopic()
-	switch eventTopic {
-	case EventTopicChat:
-		topic = p.cfg.Kafka.TopicChat.Topic
-	case EventTopicUser:
-		topic = p.cfg.Kafka.TopicUser.Topic
-	default:
-		return fmt.Errorf("unknown eventTopic: %v", eventTopic)
+	if len(msgs) == 0 {
+		return nil
 	}
 
-	key := msg.GetPartitionKey()
+	var records []*kgo.Record = make([]*kgo.Record, 0, len(msgs))
 
-	metadata := NewMetadata(msg.GetEventType())
+	for _, msg := range msgs {
+		var topic string
 
-	headers := []kgo.RecordHeader{
-		kgo.RecordHeader{
-			Key:   kafkaHeaderEventId,
-			Value: []byte(metadata.EventId),
-		},
-		kgo.RecordHeader{
-			Key:   kafkaHeaderEventType,
-			Value: []byte(metadata.EventType),
-		},
-	}
-
-	value, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	record := &kgo.Record{
-		Topic:   topic,
-		Key:     []byte(key),
-		Headers: headers,
-		Value:   value,
-	}
-
-	if p.cfg.Cqrs.Dump {
-		if p.cfg.Cqrs.PrettyLog && !p.cfg.Logger.Json {
-			fmt.Printf("[kafka cqrs publisher] Sending record: trace_id=%s, topic=%s, event_topic=%v, event_type=%v, body: %v\n", logger.GetTraceId(ctx), record.Topic, eventTopic, metadata.EventType, string(value))
-		} else {
-			p.lgr.InfoContext(ctx, "[kafka cqrs publisher] Sending record:", "topic", record.Topic, "event_type", metadata.EventType, "key", string(record.Key), "event_topic", eventTopic, "value", string(record.Value))
+		eventTopic := msg.GetEventTopic()
+		switch eventTopic {
+		case EventTopicChat:
+			topic = p.cfg.Kafka.TopicChat.Topic
+		case EventTopicUser:
+			topic = p.cfg.Kafka.TopicUser.Topic
+		default:
+			return fmt.Errorf("unknown eventTopic: %v", eventTopic)
 		}
+
+		key := msg.GetPartitionKey()
+
+		metadata := NewMetadata(msg.GetEventType())
+
+		headers := []kgo.RecordHeader{
+			kgo.RecordHeader{
+				Key:   kafkaHeaderEventId,
+				Value: []byte(metadata.EventId),
+			},
+			kgo.RecordHeader{
+				Key:   kafkaHeaderEventType,
+				Value: []byte(metadata.EventType),
+			},
+		}
+
+		value, err := json.Marshal(msg)
+		if err != nil {
+			return err
+		}
+
+		record := &kgo.Record{
+			Topic:   topic,
+			Key:     []byte(key),
+			Headers: headers,
+			Value:   value,
+		}
+
+		if p.cfg.Cqrs.Dump {
+			if p.cfg.Cqrs.PrettyLog && !p.cfg.Logger.Json {
+				fmt.Printf("[kafka cqrs publisher] Sending record: trace_id=%s, topic=%s, event_topic=%v, event_type=%v, body: %v\n", logger.GetTraceId(ctx), record.Topic, eventTopic, metadata.EventType, string(value))
+			} else {
+				p.lgr.InfoContext(ctx, "[kafka cqrs publisher] Sending record:", "topic", record.Topic, "event_type", metadata.EventType, "key", string(record.Key), "event_topic", eventTopic, "value", string(record.Value))
+			}
+		}
+
+		records = append(records, record)
 	}
 
-	prs := p.cl.ProduceSync(ctx, record)
+	prs := p.cl.ProduceSync(ctx, records...)
 
 	var serr error
 	var aerr []error

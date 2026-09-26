@@ -56,6 +56,8 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	createdAtsByChatId := map[int64]time.Time{}
 	correlationIdByChatId := map[int64]*string{}
 
+	var ues = []CqrsEvent{}
+
 	for _, event := range filteredParticipantsAddeds {
 		chatExists := resp.ChatExists[event.ChatId]
 
@@ -80,11 +82,14 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 				TetATet:       resp.ChatTetATets[event.ChatId],
 				TetATetSelf:   event.TetATetSelf,
 			}
-			err = m.eventBus.Publish(ctx, ue)
-			if err != nil {
-				return ctx, err
-			}
+
+			ues = append(ues, ue)
 		}
+	}
+
+	err = m.eventBus.Publish(ctx, ues...)
+	if err != nil {
+		return ctx, err
 	}
 
 	chatIdsUnique := utils.Unique(chatIds)
