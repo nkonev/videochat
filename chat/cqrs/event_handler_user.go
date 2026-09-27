@@ -32,6 +32,11 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	chatIds := getChatIds(events)
 
+	correlationIdByChatId := map[int64]*string{}
+	for _, v := range events.UserChatAddeds {
+		correlationIdByChatId[v.ChatId] = v.CorrelationId
+	}
+
 	err := m.commonProjection.OnUserChatViewCreated(ctx, events.UserId, events.UserChatAddeds)
 	if err != nil {
 		return ctx, err
@@ -60,25 +65,16 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 			EventType:        eventTypeChatCreated,
 			ChatNotification: &cv,
 		}
-		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dt)
+
+		correlationId := correlationIdByChatId[cv.Id]
+
+		err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dt)
 		if err != nil {
 			m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 		}
 
-		// TODO это HasUnreadMessagesChanged() - вынести, то есть не повторять на каждый чат 1го юзера
-		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
-			UserId:    cv.BehalfUserId,
-			EventType: eventTypeUnreadMessagesChanged,
-			HasUnreadMessagesChanged: &dto.HasUnreadMessagesChanged{
-				HasUnreadMessages: hasUnreadMessages[cv.BehalfUserId],
-			},
-		})
-		if err != nil {
-			m.lgr.ErrorContext(ctx, "Error during IterateOverParticipantsChatIds", logger.AttributeError, err)
-		}
-
-		if event.TetATet {
-			err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
+		if cv.TetATet {
+			err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dto.GlobalUserEvent{
 				UserId:    cv.BehalfUserId,
 				EventType: dto.EventTypeChatTetATetUpserted,
 				ChatTetATetUpsertedDto: &dto.ChatTetATetUpsertedDto{
@@ -88,8 +84,23 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 			if err != nil {
 				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
 			}
-
 		}
+	}
+
+	var correlationId *string
+	if len(events.UserChatAddeds) > 0 {
+		correlationId = events.UserChatAddeds[0].CorrelationId
+	}
+
+	err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dto.GlobalUserEvent{
+		UserId:    events.UserId,
+		EventType: eventTypeUnreadMessagesChanged,
+		HasUnreadMessagesChanged: &dto.HasUnreadMessagesChanged{
+			HasUnreadMessages: hasUnreadMessages[events.UserId],
+		},
+	})
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "Error during IterateOverParticipantsChatIds", logger.AttributeError, err)
 	}
 
 	m.lgr.DebugContext(ctx, "Sending notification about the participants", "event_type", eventTypeParticipantAdded, "user_ids", userIds)
