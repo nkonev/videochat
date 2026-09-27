@@ -52,6 +52,7 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	}
 
 	chatIds := []int64{}
+	allUserIds := []int64{}
 
 	createdAtsByChatId := map[int64]time.Time{}
 	correlationIdByChatId := map[int64]*string{}
@@ -71,6 +72,7 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 		}
 
 		userIds := event.GetParticipantIds()
+		allUserIds = append(allUserIds, userIds...)
 
 		// send an output event for the users themselves
 		for _, userId := range userIds {
@@ -93,9 +95,10 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	}
 
 	chatIdsUnique := utils.Unique(chatIds)
+	userIdsUnique := utils.Unique(allUserIds)
 
 	if len(filteredParticipantsAddeds) > 0 {
-		errOuter := m.commonProjection.IterateOverChatsParticipantIds(ctx, m.db, chatIdsUnique, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+		errOuter := m.commonProjection.IterateOverChatsParticipantIds(ctx, m.db, chatIdsUnique, userIdsUnique, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
 			// transmit an output event with changed last participants for the existing participants
 			for _, participantItem := range participantIdsPortion {
 				createdAt, ok := createdAtsByChatId[participantItem.ChatId]

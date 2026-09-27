@@ -105,13 +105,12 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	m.lgr.DebugContext(ctx, "Sending notification about the participants", "event_type", eventTypeParticipantAdded, "user_ids", userIds)
 
+	// actually we iterate over 1 participant and bunch of chats
 	// this is an event for ChatParticipantsModal.vue
 	// we build participantAdded events behalf of each participant and send to each of the their own view
-	// ... TODO invoke this outer by []chatIds
-	err = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
-
+	err = m.commonProjection.IterateOverChatsParticipantIds(ctx, m.db, chatIds, userIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
 		// userIds are actually 1 user, nothing to speedup
-		participantsByBehalfs, _, errInn := m.enrichingProjection.GetParticipantsEnriched(ctx, participantIdsPortion, event.ChatId, int32(len(userIds)), utils.DefaultOffset, dto.NoSearchString, false, userIds)
+		participantsByBehalfs, errInn := m.enrichingProjection.GetParticipantsMultipleChatsEnriched(ctx, events.UserId, participantIdsPortion)
 		if errInn != nil {
 			return errInn
 		}
