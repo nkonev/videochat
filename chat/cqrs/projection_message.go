@@ -246,14 +246,6 @@ func (m *CommonProjection) OnMessageEdited(ctx context.Context, co db.CommonOper
 
 }
 
-func (m *CommonProjection) initializeMessageUnreadMultipleParticipants(ctx context.Context, tx *db.Tx, participantId int64, chatId int64) error {
-	err := m.setUnreadMessages(ctx, tx, participantId, chatId, dto.NoId, SetUnreadedMessagesActionInitialize)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 type MessageRemovedDto struct {
 	promotedMessageId   *int64
 	pinnedCount         int64

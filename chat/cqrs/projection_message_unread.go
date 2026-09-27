@@ -73,7 +73,7 @@ type SetUnreadedMessagesAction int16
 
 const (
 	SetUnreadedMessagesActionUnspecified SetUnreadedMessagesAction = iota
-	SetUnreadedMessagesActionInitialize
+	SetUnreadedMessagesActionInitialize                            // unused
 	SetUnreadedMessagesActionCalculateUnreadsFromTheUsersLastSavedReadedMessage
 	SetUnreadedMessagesActionCalculateUnreadsFromTheProvidedMessage
 )
@@ -85,14 +85,7 @@ func (m *CommonProjection) setUnreadMessages(ctx context.Context, co db.CommonOp
 
 	switch setUnreadedMessagesAction {
 	case SetUnreadedMessagesActionInitialize:
-		inputOptionClause = `
-		normalized_considerable_message as (
-			select 
-				n.user_id,
-				0 as normalized_read_message_id
-			from normalized_user n
-		)
-		`
+		return fmt.Errorf("unsupported SetUnreadedMessagesAction: %v", SetUnreadedMessagesActionInitialize)
 	case SetUnreadedMessagesActionCalculateUnreadsFromTheProvidedMessage:
 		queryArgs = append(queryArgs, messageId)
 		// to calculate against just from the message
