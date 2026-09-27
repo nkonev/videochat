@@ -175,38 +175,22 @@ func (m *CommonProjection) setUnreadMessages(ctx context.Context, co db.CommonOp
 	return nil
 }
 
-func (m *CommonProjection) initializeMessageUnreadMultipleChatsParticipants(ctx context.Context, co db.CommonOperations, participantIds []int64, chatIds []int64) error {
-	// TODO here, savepoint
-
-	queryArgs := []any{participantId, chatId}
+func (m *CommonProjection) initializeMessageUnreadMultipleChatsParticipants(ctx context.Context, co db.CommonOperations, participantId int64, chatIds []int64) error {
+	queryArgs := []any{participantId, chatIds}
 
 	q := `
 		with 
-		chat_messages as (
-			select m.id from message m where m.chat_id = $2
-		),
-		max_message as (
-			select max(m.id) as max from chat_messages m
-		),
-		normalized_user as (
-			select cast ($1 as bigint) as user_id
-		),
-		normalized_considerable_message as (
-			select 
-				n.user_id,
-				0 as normalized_read_message_id
-			from normalized_user n
+		provided_chats as (
+			select * from unnest($2) t(chat_id)
 		),
 		input_data as (
 			select
-				ngm.user_id as user_id,
-				cast ($2 as bigint) as chat_id,
-				(
-					SELECT count(m.id) FILTER(WHERE m.id > (select normalized_read_message_id from normalized_considerable_message n where n.user_id = ngm.user_id))
-					FROM chat_messages m
-				) as unread_messages,
-				ngm.normalized_read_message_id as last_read_message_id
-			from normalized_considerable_message ngm
+				cast($1 as bigint) as user_id
+				,m.chat_id
+				,count(m.id) as unread_messages
+			from message m
+			where m.chat_id in (select chat_id from provided_chats)
+			group by m.chat_id
 		)
 		merge into chat_user_view cuv
 		using input_data idt

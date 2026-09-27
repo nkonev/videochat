@@ -181,7 +181,7 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 		}
 
 		// recalc in case an user was added after
-		err = m.initializeMessageUnreadMultipleChatsParticipants(ctx, tx, userIds, chatIds)
+		err = m.initializeMessageUnreadMultipleChatsParticipants(ctx, tx, userId, chatIds)
 		if err != nil {
 			return err
 		}
