@@ -153,7 +153,7 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 				,cast($2 as bigint[])
 				,cast($3 as timestamp[])
 				,cast($4 as boolean[])
-			) t(
+			) as t(
 			  chat_id
 			  ,user_id
 			  ,update_date_time
@@ -1200,7 +1200,7 @@ func getParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperations,
 		    chat_admin,
 		    chat_id
 		FROM chat_participant
-		WHERE chat_id = any($1) ans user_id = any($4)
+		WHERE chat_id = any($1) and user_id = any($4)
 		ORDER BY chat_id, create_date_time %s, user_id asc
 		LIMIT $2 OFFSET $3
 	`, order)

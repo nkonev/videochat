@@ -181,7 +181,7 @@ func (m *CommonProjection) initializeMessageUnreadMultipleChatsParticipants(ctx 
 	q := `
 		with 
 		provided_chats as (
-			select * from unnest($2) t(chat_id)
+			select * from unnest(cast($2 as bigint[])) t(chat_id)
 		),
 		input_data as (
 			select
@@ -197,7 +197,7 @@ func (m *CommonProjection) initializeMessageUnreadMultipleChatsParticipants(ctx 
 		on (idt.chat_id, idt.user_id) = (cuv.id, cuv.user_id)
 		when matched then update set 
 		   unread_messages = idt.unread_messages
-		  ,cuv_last_read_message_id = idt.last_read_message_id
+		  ,cuv_last_read_message_id = 0
 	`
 
 	_, err := co.ExecContext(ctx, q, queryArgs...)
