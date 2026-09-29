@@ -632,7 +632,7 @@ func (ch *ChatHandler) ChatsFilter(g *gin.Context) {
 		additionalFoundUserIds = ch.enrichingProjection.SearchForUsers(g.Request.Context(), searchString)
 	}
 
-	chats, err := ch.commonProjection.GetChats(g.Request.Context(), ch.dbWrapper, []int64{userId}, 1, nil, false, false, false, searchString, additionalFoundUserIds, &chatId)
+	chats, err := ch.commonProjection.GetChats(g.Request.Context(), ch.dbWrapper, []int64{userId}, 1, nil, false, false, false, searchString, additionalFoundUserIds, []int64{chatId})
 	if err != nil {
 		if translateChatError(g, err) {
 			return

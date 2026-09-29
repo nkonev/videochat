@@ -158,7 +158,7 @@ func (m *EventHandler) OnUserChatViewUpdated(ctx context.Context, event *UserCha
 		eventType = dto.EventTypeChatRedraw
 	}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, []int64{event.ChatId}, false)
 	if err != nil {
 		return err
 	}
@@ -317,7 +317,7 @@ func (m *EventHandler) OnUserChatPinned(ctx context.Context, event *UserChatPinn
 
 	userIds := []int64{event.AdditionalData.BehalfUserId}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, &event.ChatId, false)
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, []int64{event.ChatId}, false)
 	if err != nil {
 		return err
 	}
