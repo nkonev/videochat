@@ -536,65 +536,35 @@ type ChatIdUserId struct {
 	UserId int64
 }
 
-func (m *EnrichingProjection) GetParticipantsMultipleChatsEnriched(ctx context.Context, behalfUserId int64, chatIdUserIds []*ParticipantWithChatIdWithAdmin) (map[int64][]*dto.UserViewEnrichedDto, error) {
-	const reverse = true
-
-	// type participants struct {
-	// 	participants       []*ParticipantWithAdmin
-	// 	areAdminsOfUserIds map[int64]bool
-	// 	chat               *dto.ChatBasic
-	// }
-
-	// pwc, errOuter := db.TransactWithResult(ctx, m.cp.db, func(tx *db.Tx) (*participants, error) {
-	// 	var participants []*ParticipantWithAdmin
-	// 	var err error
-
-	// 	participants, err = getParticipantsCommonIncluding(ctx, tx, chatId, userIds, int32(len(userIds)), 0, reverse)
-	// 	if err != nil {
-	// 		m.lgr.ErrorContext(ctx, "Error getting participants", logger.AttributeError, err)
-
-	// 		return nil, err
-	// 	}
-
-	// 	areAdminsOfUserIds, err := m.cp.getAreAdminsOfUserIds(ctx, tx, behalfUserIds, chatId)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	chat, err := m.cp.GetChatBasic(ctx, tx, chatId)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	if chat == nil {
-	// 		return nil, fmt.Errorf("No chat found, chatId = %v", chatId)
-	// 	}
-
-	// 	return &participants{
-	// 		participants:       participants,
-	// 		areAdminsOfUserIds: areAdminsOfUserIds,
-	// 		chat:               chat,
-	// 	}, nil
-	// })
-	// if errOuter != nil {
-	// 	return nil, errors.New("Error getting participants")
-	// }
-
+func (m *EnrichingProjection) GetParticipantsMultipleChatsEnriched(ctx context.Context, chatIdUserIds []*ParticipantWithChatIdWithAdmin) (map[int64][]*dto.UserViewEnrichedDto, error) {
 	participantIds := GetParticipantIdsFrom(chatIdUserIds)
+
+	chatIds := GetChatIdsFrom(chatIdUserIds)
 
 	users, err := m.aaaRestClient.GetUsers(ctx, participantIds)
 	if err != nil {
 		m.lgr.WarnContext(ctx, "unable to get users")
 	}
 
-	orderedEnrichedParticipants := makeParticipantsWithAdmin(pwc.participants, utils.ToMap(users))
+	orderedEnrichedParticipants := makeParticipantsWithAdminFrom(chatIdUserIds, utils.ToMap(users))
 
 	res := map[int64][]*dto.UserViewEnrichedDto{}
 
-	// TODO тут 1 behalfUserId
-	for _, behalfUserId := range behalfUserIds {
-		enrichedUsersBehalfUser := makeEnrichedUsers(orderedEnrichedParticipants, behalfUserId, pwc.areAdminsOfUserIds[behalfUserId], pwc.chat.TetATet)
-		res[behalfUserId] = enrichedUsersBehalfUser
+	chatsById, err := m.cp.GetChatsBasic(ctx, m.cp.db, chatIds)
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "unable to get chats")
+		return nil, err
+	}
+
+	for _, p := range chatIdUserIds {
+		cht := chatsById[p.ChatId]
+		if cht != nil {
+			enrichedUsersBehalfUser := makeEnrichedUsers(orderedEnrichedParticipants, p.ParticipantId, p.ChatAdmin, cht.TetATet)
+			res[p.ChatId] = enrichedUsersBehalfUser
+		} else {
+			m.lgr.ErrorContext(ctx, "unable to get chatById")
+			return nil, err
+		}
 	}
 
 	return res, nil
@@ -1148,6 +1118,14 @@ func GetParticipantIdsFrom(participants []*ParticipantWithChatIdWithAdmin) []int
 	return res
 }
 
+func GetChatIdsFrom(participants []*ParticipantWithChatIdWithAdmin) []int64 {
+	res := make([]int64, 0, len(participants))
+	for _, pa := range participants {
+		res = append(res, pa.ChatId)
+	}
+	return res
+}
+
 func getParticipantChatAdmins(participants []ParticipantWithAdmin) []bool {
 	res := make([]bool, 0, len(participants))
 	for _, pa := range participants {
@@ -1304,6 +1282,22 @@ func makeParticipants(participantIds []int64, users map[int64]*dto.User) []dto.U
 }
 
 func makeParticipantsWithAdmin(participants []*ParticipantWithAdmin, users map[int64]*dto.User) []*dto.UserWithAdmin {
+	res := make([]*dto.UserWithAdmin, 0, len(participants))
+
+	for _, p := range participants {
+		u := users[p.ParticipantId]
+		if u != nil {
+			res = append(res, &dto.UserWithAdmin{
+				User:      *u,
+				ChatAdmin: p.ChatAdmin,
+			})
+		}
+	}
+
+	return res
+}
+
+func makeParticipantsWithAdminFrom(participants []*ParticipantWithChatIdWithAdmin, users map[int64]*dto.User) []*dto.UserWithAdmin {
 	res := make([]*dto.UserWithAdmin, 0, len(participants))
 
 	for _, p := range participants {

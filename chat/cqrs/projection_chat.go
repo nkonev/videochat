@@ -1418,9 +1418,25 @@ func (m *CommonProjection) GetChatUserViewBasic(ctx context.Context, co db.Commo
 }
 
 func (m *CommonProjection) GetChatBasic(ctx context.Context, co db.CommonOperations, chatId int64) (*dto.ChatBasic, error) {
-	var cht dto.ChatBasic
+	chst, err := m.GetChatsBasic(ctx, co, []int64{chatId})
+	if err != nil {
+		return nil, err
+	}
+	if len(chst) == 0 {
+		// there were no rows
+		return nil, nil
+	}
+	if len(chst) > 1 {
+		return nil, fmt.Errorf("unexpected count of chats: %v", len(chst))
+	}
 
-	err := sqlscan.Get(ctx, co, &cht, `
+	return chst[chatId], nil
+}
+
+func (m *CommonProjection) GetChatsBasic(ctx context.Context, co db.CommonOperations, chatIds []int64) (map[int64]*dto.ChatBasic, error) {
+	var chts []dto.ChatBasic
+
+	err := sqlscan.Select(ctx, co, &chts, `
 		select 
 		    c.id,
 		    c.title,
@@ -1435,16 +1451,20 @@ func (m *CommonProjection) GetChatBasic(ctx context.Context, co db.CommonOperati
 			c.regular_participant_can_write_message
 		from chat_common c
 		left join blog b on c.id = b.id
-		where c.id = $1
-	`, chatId)
+		where c.id = any($1)
+	`, chatIds)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		// there were no rows, but otherwise no error occurred
-		return nil, nil
-	} else if err != nil {
+	if err != nil {
 		return nil, err
 	}
-	return &cht, nil
+
+	var res = map[int64]*dto.ChatBasic{}
+
+	for _, v := range chts {
+		res[v.Id] = &v
+	}
+
+	return res, nil
 }
 
 func getDeletedChatName(chatId int64) string {

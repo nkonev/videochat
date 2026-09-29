@@ -59,6 +59,8 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 		return ctx, err
 	}
 
+	var firstCorrelationId *string
+
 	for _, cv := range chatViews {
 		dt := dto.GlobalUserEvent{
 			UserId:           cv.BehalfUserId,
@@ -67,6 +69,9 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 		}
 
 		correlationId := correlationIdByChatId[cv.Id]
+		if firstCorrelationId == nil {
+			firstCorrelationId = correlationId
+		}
 
 		err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dt)
 		if err != nil {
@@ -87,12 +92,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 		}
 	}
 
-	var correlationId *string
-	if len(events.UserChatAddeds) > 0 {
-		correlationId = events.UserChatAddeds[0].CorrelationId
-	}
-
-	err = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationId, dto.GlobalUserEvent{
+	err = m.rabbitmqOutputEventPublisher.Publish(ctx, firstCorrelationId, dto.GlobalUserEvent{
 		UserId:    events.UserId,
 		EventType: eventTypeUnreadMessagesChanged,
 		HasUnreadMessagesChanged: &dto.HasUnreadMessagesChanged{
@@ -110,20 +110,20 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	// we build participantAdded events behalf of each participant and send to each of the their own view
 	err = m.commonProjection.IterateOverChatsParticipantIds(ctx, m.db, chatIds, userIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
 		// userIds are actually 1 user, nothing to speedup
-		participantsByBehalfs, errInn := m.enrichingProjection.GetParticipantsMultipleChatsEnriched(ctx, events.UserId, participantIdsPortion)
+		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsMultipleChatsEnriched(ctx, participantIdsPortion)
 		if errInn != nil {
 			return errInn
 		}
 
-		sortedParticipants := slices.Sorted(maps.Keys(participantsByBehalfs))
+		sortedChatIds := slices.Sorted(maps.Keys(participantsByChatIds))
 
 		// for every participant of chat we send an info about the newly added participants
-		for _, behalfUserId := range sortedParticipants {
-			hisParticipantsViews := participantsByBehalfs[behalfUserId]
-			errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.ChatEvent{
+		for _, chatId := range sortedChatIds {
+			hisParticipantsViews := participantsByChatIds[chatId]
+			errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationIdByChatId[chatId], dto.ChatEvent{
 				EventType:    eventTypeParticipantAdded,
-				UserId:       behalfUserId,
-				ChatId:       event.ChatId,
+				UserId:       events.UserId,
+				ChatId:       chatId,
 				Participants: &hisParticipantsViews,
 			})
 			if errInn != nil {
