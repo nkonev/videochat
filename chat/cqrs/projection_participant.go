@@ -154,8 +154,8 @@ func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int
 				,cast($3 as timestamp[])
 				,cast($4 as boolean[])
 			) as t(
-			  chat_id
-			  ,user_id
+			  user_id
+			  ,chat_id
 			  ,update_date_time
 			  ,tet_a_tet_self
 			)
