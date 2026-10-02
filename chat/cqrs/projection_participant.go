@@ -539,14 +539,12 @@ type ChatIdUserId struct {
 func (m *EnrichingProjection) GetParticipantsMultipleChatsEnriched(ctx context.Context, chatIdUserIds []*ParticipantWithChatIdWithAdmin) (map[int64][]*dto.UserViewEnrichedDto, error) {
 	participantIds := GetParticipantIdsFrom(chatIdUserIds)
 
-	chatIds := GetChatIdsFrom(chatIdUserIds)
+	chatIds := utils.Unique(GetChatIdsFrom(chatIdUserIds))
 
 	users, err := m.aaaRestClient.GetUsers(ctx, participantIds)
 	if err != nil {
 		m.lgr.WarnContext(ctx, "unable to get users")
 	}
-
-	orderedEnrichedParticipants := makeParticipantsWithAdminFrom(chatIdUserIds, utils.ToMap(users))
 
 	res := map[int64][]*dto.UserViewEnrichedDto{}
 
@@ -559,8 +557,15 @@ func (m *EnrichingProjection) GetParticipantsMultipleChatsEnriched(ctx context.C
 	for _, p := range chatIdUserIds {
 		cht := chatsById[p.ChatId]
 		if cht != nil {
-			enrichedUsersBehalfUser := makeEnrichedUsers(orderedEnrichedParticipants, p.ParticipantId, p.ChatAdmin, cht.TetATet)
-			res[p.ChatId] = enrichedUsersBehalfUser
+			userWithAdmin := makeParticipantWithAdminFrom(p, utils.ToMap(users))
+			if userWithAdmin != nil {
+				enriched := makeEnrichedUsers([]*dto.UserWithAdmin{userWithAdmin}, p.ParticipantId, p.ChatAdmin, cht.TetATet)
+				get := res[cht.Id]
+				get = append(get, enriched...)
+				res[cht.Id] = get
+			} else {
+				m.lgr.WarnContext(ctx, "unable to get user")
+			}
 		} else {
 			m.lgr.ErrorContext(ctx, "unable to get chatById")
 			return nil, err
@@ -737,12 +742,12 @@ func (m *CommonProjection) IterateOverChatParticipantIdsExcepting(ctx context.Co
 	return lastError
 }
 
-func (m *CommonProjection) IterateOverChatsParticipantIds(ctx context.Context, co db.CommonOperations, chatIds, userIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
+func (m *CommonProjection) IterateOverAllChatsParticipantIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := int64(0); shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
-		participants, err := getParticipantsCommonOfChatIds(ctx, co, chatIds, userIds, utils.DefaultSize, offset, false)
+		participants, err := getAllParticipantsCommonOfChatIds(ctx, co, chatIds, utils.DefaultSize, offset, false)
 		if err != nil {
 			m.lgr.ErrorContext(ctx, "Got error during getting portion", logger.AttributeError, err)
 			lastError = err
@@ -1183,7 +1188,7 @@ func getParticipantsCommonExcepting(ctx context.Context, co db.CommonOperations,
 	return list, nil
 }
 
-func getParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperations, chatIds, userIds []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithChatIdWithAdmin, error) {
+func getAllParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithChatIdWithAdmin, error) {
 	list := make([]*ParticipantWithChatIdWithAdmin, 0)
 
 	var err error
@@ -1193,14 +1198,14 @@ func getParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperations,
 		order = "desc"
 	}
 
-	sqlArgs := []any{chatIds, participantsSize, participantsOffset, userIds}
+	sqlArgs := []any{chatIds, participantsSize, participantsOffset}
 	sqlQuery := fmt.Sprintf(`
 		SELECT 
 		    user_id,
 		    chat_admin,
 		    chat_id
 		FROM chat_participant
-		WHERE chat_id = any($1) and user_id = any($4)
+		WHERE chat_id = any($1)
 		ORDER BY chat_id, create_date_time %s, user_id asc
 		LIMIT $2 OFFSET $3
 	`, order)
@@ -1297,20 +1302,16 @@ func makeParticipantsWithAdmin(participants []*ParticipantWithAdmin, users map[i
 	return res
 }
 
-func makeParticipantsWithAdminFrom(participants []*ParticipantWithChatIdWithAdmin, users map[int64]*dto.User) []*dto.UserWithAdmin {
-	res := make([]*dto.UserWithAdmin, 0, len(participants))
-
-	for _, p := range participants {
-		u := users[p.ParticipantId]
-		if u != nil {
-			res = append(res, &dto.UserWithAdmin{
-				User:      *u,
-				ChatAdmin: p.ChatAdmin,
-			})
+func makeParticipantWithAdminFrom(participant *ParticipantWithChatIdWithAdmin, users map[int64]*dto.User) *dto.UserWithAdmin {
+	u := users[participant.ParticipantId]
+	if u != nil {
+		return &dto.UserWithAdmin{
+			User:      *u,
+			ChatAdmin: participant.ChatAdmin,
 		}
+	} else {
+		return nil
 	}
-
-	return res
 }
 
 // We use pure functions for authorization, for sake simplicity and composability

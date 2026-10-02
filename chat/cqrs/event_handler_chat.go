@@ -94,11 +94,12 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 		return ctx, err
 	}
 
-	chatIdsUnique := utils.Unique(chatIds)
-	userIdsUnique := utils.Unique(allUserIds)
+	chatIdsUniqueOfAddedParticipants := utils.Unique(chatIds)
 
 	if len(filteredParticipantsAddeds) > 0 {
-		errOuter := m.commonProjection.IterateOverChatsParticipantIds(ctx, m.db, chatIdsUnique, userIdsUnique, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+		errOuter := m.commonProjection.IterateOverAllChatsParticipantIds(ctx, m.db, chatIdsUniqueOfAddedParticipants, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+			var ueds = []CqrsEvent{}
+
 			// transmit an output event with changed last participants for the existing participants
 			for _, participantItem := range participantIdsPortion {
 				createdAt, ok := createdAtsByChatId[participantItem.ChatId]
@@ -120,11 +121,16 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 					EventTime:     createdAt,
 					CorrelationId: correlationId,
 				}
-				errInn := m.eventBus.Publish(ctx, ue)
-				if errInn != nil {
-					return errInn
-				}
+
+				ueds = append(ueds, ue)
 			}
+
+			sendErr := m.eventBus.Publish(ctx, ueds...)
+			if sendErr != nil {
+				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, sendErr)
+				return nil
+			}
+
 			return nil
 		})
 		if errOuter != nil {
