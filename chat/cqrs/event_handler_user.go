@@ -109,7 +109,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	// this is an event for ChatParticipantsModal.vue
 	// we build participantAdded events behalf of each participant and send to each of the their own view
 
-	// TODO ранее для 1го добавляемого юзера мы отправляли (кого?) его всем участникам 1го чата от их лица(behalf) с помощью 
+	// TODO ранее для 1го добавляемого юзера мы отправляли (кого?) его всем участникам 1го чата от их лица(behalf) с помощью
 	// 	err = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
 	// 		participantsByBehalfs, _, errInn := m.enrichingProjection.GetParticipantsEnriched(ctx, participantIdsPortion, event.ChatId, int32(len(userIds)), utils.DefaultOffset, dto.NoSearchString, false, userIds)
 	// чтобы у них был актуальный ChatParticipantsModal.vue
@@ -119,7 +119,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	// чатов может быть несколько
 	// но терерь это 1 участник(events.UserId) - поэтому для этого кейса надо не IterateOverAllChatsParticipantIds а IterateOverAllChats__ONE__ParticipantId
 
-	err = m.commonProjection.IterateOverAllChatsParticipantIds(ctx, m.db, chatIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+	err = m.commonProjection.IterateOverAllParticipantIdsByChatIds(ctx, m.db, chatIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
 		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsMultipleChatsEnriched(ctx, participantIdsPortion)
 		if errInn != nil {
 			return errInn

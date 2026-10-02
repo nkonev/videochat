@@ -97,7 +97,7 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	chatIdsUniqueOfAddedParticipants := utils.Unique(chatIds)
 
 	if len(filteredParticipantsAddeds) > 0 {
-		errOuter := m.commonProjection.IterateOverAllChatsParticipantIds(ctx, m.db, chatIdsUniqueOfAddedParticipants, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+		errOuter := m.commonProjection.IterateOverAllParticipantIdsByChatIds(ctx, m.db, chatIdsUniqueOfAddedParticipants, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
 			var ueds = []CqrsEvent{}
 
 			// transmit an output event with changed last participants for the existing participants

@@ -742,7 +742,7 @@ func (m *CommonProjection) IterateOverChatParticipantIdsExcepting(ctx context.Co
 	return lastError
 }
 
-func (m *CommonProjection) IterateOverAllChatsParticipantIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
+func (m *CommonProjection) IterateOverAllParticipantIdsByChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
 	shouldContinue := true
 	var lastError error
 	for page := int64(0); shouldContinue; page++ {
