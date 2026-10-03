@@ -12,7 +12,7 @@
             <v-list-item title="Traces" href="/traces" target="_blank"></v-list-item>
 
             <v-list-subheader>{{ $vuetify.locale.t('$vuetify.object_storage') }}</v-list-subheader>
-            <v-list-item title="Minio" href="/minio/console" target="_blank"></v-list-item>
+            <v-list-item title="S3" href="/rustfs/console" target="_blank"></v-list-item>
 
             <v-list-subheader>{{ $vuetify.locale.t('$vuetify.queue_broker') }}</v-list-subheader>
             <v-list-item title="RabbitMQ" href="/rabbitmq/" target="_blank"></v-list-item>

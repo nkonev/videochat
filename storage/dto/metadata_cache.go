@@ -8,6 +8,10 @@ import (
 const NoFileItemUuid = ""
 const NoChatId = -1
 
+var NoCreateDateTime *time.Time = nil
+
+const NoFileName = ""
+
 type MetadataCache struct {
 	ChatId       int64
 	FileItemUuid string

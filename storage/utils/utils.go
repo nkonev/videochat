@@ -24,7 +24,10 @@ const MessageIdNonExistent = -1
 
 const converted = "converted"
 const underscoreConverted = "_" + converted
+
+// see also SetVideoPreviewExtension(), SetImagePreviewExtension()
 const ConvertedContentType = "video/webm"
+const PreviewContentType = "image/jpg"
 
 const GeneralMaxFilenameLength = 255                    // this allows filesystem
 const MaxFilenameLength = GeneralMaxFilenameLength - 32 // =223. reserve 32 symbols for things like "_converted"
@@ -424,4 +427,20 @@ func GetEventTimeFromTimestamp(timestamp int64) time.Time {
 
 	// fallback
 	return time.Now().UTC()
+}
+
+func Unique[T comparable](inputData []T) []T {
+	ret := make([]T, 0, len(inputData))
+
+	m := make(map[T]struct{}, len(inputData))
+
+	for _, v := range inputData {
+		m[v] = struct{}{}
+	}
+
+	for k := range m {
+		ret = append(ret, k)
+	}
+
+	return ret
 }

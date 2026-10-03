@@ -1,0 +1,188 @@
+package listener
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
+	"nkonev.name/storage/client"
+	"nkonev.name/storage/db"
+	"nkonev.name/storage/dto"
+	"nkonev.name/storage/logger"
+	"nkonev.name/storage/services"
+	"nkonev.name/storage/utils"
+)
+
+type MinioEventsListener func(*amqp.Delivery) error
+
+func CreateS3EventListener(
+	lgr *logger.Logger,
+	previewService *services.PreviewService,
+	eventService *services.EventService,
+	client *client.RestClient,
+	minioConfig *utils.BucketsConfig,
+	awsS3 *client.S3Wrapper,
+	convertingService *services.ConvertingService,
+	dba *db.DB,
+) MinioEventsListener {
+	tr := otel.Tracer("amqp/listener")
+
+	return func(msg *amqp.Delivery) error {
+		ctx, span := tr.Start(context.Background(), "storage.s3.listener")
+		defer span.End()
+
+		bytesData := msg.Body
+		strData := string(bytesData)
+		lgr.WithTracing(ctx).Debugf("Received %v", strData)
+
+		meDto, err := services.DeserializeMetadataFromEvent(minioConfig.Files, strData)
+		if err != nil {
+			lgr.WithTracing(ctx).Errorf("Error during parsing DeserializeMetadataFromEvent: %v", err)
+			return err
+		}
+
+		var eventServiceResponse *services.HandleEventResponse
+		var previewServiceResponse *services.PreviewResponse
+		previewAlreadyExists, err := isPreviewAlreadyExists(ctx, lgr, minioConfig, awsS3, meDto.NormalizedKey)
+		if err != nil {
+			return err
+		}
+		var eventForConvertingService = isEventForConvertingService(meDto.EventType, &meDto.S3Event, previewAlreadyExists, meDto.IsMessageRecording)
+		if isEventForEventService(meDto.EventType) {
+			eventServiceResponse = eventService.HandleEvent(ctx, meDto.NormalizedKey, meDto.ChatId, meDto.EventType, &meDto.S3Event)
+		}
+		if isEventForPreviewService(meDto.EventType, previewAlreadyExists, meDto.NormalizedKey) {
+			previewServiceResponse = previewService.HandleS3Event(ctx, &meDto.S3Event, eventForConvertingService)
+		}
+
+		var mce *dto.MetadataCache
+		// store to db before sending events
+		switch meDto.EventType {
+		case dto.FILE_CREATED:
+			fallthrough
+		case dto.FILE_UPDATED:
+			mce, err = createdDbEntity(meDto.NormalizedKey, meDto.ChatId, meDto.OwnerId, meDto.CorrelationId, meDto.Timestamp, meDto.EventType == dto.FILE_UPDATED, eventServiceResponse)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during creating db entity: %v", err)
+				return err
+			}
+			err = db.Set(ctx, dba, *mce)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during saving to database: %v", err)
+				return err
+			}
+		case dto.FILE_DELETED:
+			mck, err := utils.BuildMetadataCacheId(meDto.NormalizedKey)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during creating db key: %v", err)
+				return err
+			}
+			err = db.Remove(ctx, dba, *mck)
+			if err != nil {
+				lgr.WithTracing(ctx).Errorf("Error during removing from database: %v", err)
+				return err
+			}
+		default:
+			return fmt.Errorf("Unknown case %v", meDto.EventType)
+		}
+
+		err = client.GetChatParticipantIds(ctx, meDto.ChatId, func(participantIds []int64) error {
+			if isEventForEventService(meDto.EventType) {
+				eventService.SendToParticipants(ctx, meDto.NormalizedKey, meDto.ChatId, meDto.EventType, participantIds, eventServiceResponse, mce)
+			}
+			if isEventForPreviewService(meDto.EventType, previewAlreadyExists, meDto.NormalizedKey) {
+				previewService.SendToParticipants(ctx, &meDto.S3Event, participantIds, previewServiceResponse)
+			}
+			return nil
+		})
+		if err != nil {
+			lgr.WithTracing(ctx).Errorf("Error during getting participant ids: %v", err)
+		}
+		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
+		if eventForConvertingService {
+			convertingService.HandleEvent(ctx, &meDto.S3Event)
+		}
+
+		return nil
+	}
+}
+
+func isEventForEventService(eventType dto.EventType) bool {
+	if eventType == dto.FILE_CREATED || eventType == dto.FILE_DELETED || eventType == dto.FILE_UPDATED {
+		return true
+	} else {
+		return false
+	}
+}
+
+func isEventForPreviewService(eventType dto.EventType, previewExists bool, normalizedKey string) bool {
+	return eventType == dto.FILE_CREATED && !previewExists && utils.IsPreviewable(normalizedKey)
+}
+
+func isEventForConvertingService(eventType dto.EventType, minioEvent *dto.S3Event, previewExists, isMessageRecording bool) bool {
+	return eventType == dto.FILE_CREATED &&
+		isMessageRecording &&
+		utils.IsVideo(minioEvent.Key) &&
+		!previewExists // prevents the indefinite converting
+}
+
+func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.BucketsConfig, awsS3 *client.S3Wrapper, normalizedKey string) (bool, error) {
+	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
+	exists, _, err := awsS3.FileExists(ctx, minioConfig.FilesPreview, previewKey)
+	if err != nil {
+		lgr.WithTracing(ctx).Errorf("Error during checking existence for %v: %v", previewKey, err)
+	}
+	return exists, err
+}
+
+func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId *string, timestamp int64, isUpdate bool, eventServiceResponse *services.HandleEventResponse) (*dto.MetadataCache, error) {
+	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	filename, err := utils.ParseFileName(normalizedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	eventTime := utils.GetEventTimeFromTimestamp(timestamp)
+
+	publishedP, correlationIdFromTags, err := eventServiceResponse.GetTags()
+	if err != nil {
+		return nil, err
+	}
+	var published bool
+	if publishedP != nil {
+		published = *publishedP
+	}
+
+	if eventServiceResponse.GetS3Event().EventName == dto.ObjectCreatedPutTagging {
+		correlationId = correlationIdFromTags
+	}
+
+	me := eventServiceResponse.GetS3Event()
+	if me == nil {
+		return nil, errors.New("nil MinioEvent")
+	}
+
+	updateTime := eventTime
+	if isUpdate {
+		updateTime = time.Now().UTC()
+	}
+
+	return &dto.MetadataCache{
+		ChatId:         chatId,
+		FileItemUuid:   fileItemUuid,
+		Filename:       filename,
+		OwnerId:        ownerId,
+		CorrelationId:  correlationId,
+		Published:      published,
+		FileSize:       me.Size,
+		CreateDateTime: eventTime,
+		EditDateTime:   updateTime,
+	}, nil
+}

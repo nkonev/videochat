@@ -45,10 +45,10 @@ rabbitmq:
 otlp:
   endpoint: "localhost:34317"
 
-minio:
+s3:
   secured: false
-  internalEndpoint: 127.0.0.1:39000
-  interContainerUrl: http://minio:9000
+  internalEndpoint: http://127.0.0.1:39000
+  interContainerUrl: http://rustfs:9000
   externalS3UrlPrefix: /api/s3
   presignDownloadTtl: 24h
   presignUploadTtl: 24h
@@ -59,12 +59,19 @@ minio:
     # https://www.altostra.com/blog/multipart-uploads-with-s3-presigned-url
     # 100MB
     chunkSize: 100000000
-    expire: 24h
   bucket:
     userAvatar: "user-avatar"
     chatAvatar: "chat-avatar"
     files: "files"
     filesPreview: "files-preview"
+  delete:
+    # 1000 is maximum availabale for delete in S3 API
+    batch: 1000
+  eventListener:
+    amqp:
+      exchange: rustfs-events
+      queue: storage-s3-file-bucket
+      routingKey: routingkey1
 
 chat:
   url:
@@ -82,9 +89,6 @@ aaa:
 
 limits:
   enabled: false
-  default:
-    # 512 megabytes
-    all.users.limit: 536870912
 
 selfUrls: "http://localhost:8081,"
 
@@ -105,19 +109,25 @@ schedulers:
   cleanFilesOfDeletedChatTask:
     enabled: true
     cron: "0 * * * * *"
-    batchChats: 20
     expiration: "30m"
+    # minimum chats count to start this task
     chatCount: 100
+    # 1000 is maximum availabale for delete in S3 API
+    batch: 1000
   actualizeGeneratedFilesTask:
     enabled: true
     cron: "0 * * * * *"
     expiration: "30m"
+    # 1000 is maximum availabale for delete in S3 API
+    batch: 1000
   actualizeMetadataCacheTask:
     enabled: true
     cron: "0 */5 * * * *"
     expiration: "30m"
-    # admin
+    # admin user id
     fallbackOwnerId: 1
+    # 1000 is maximum availabale for delete in S3 API
+    batch: 1000
 
 response:
   cache:

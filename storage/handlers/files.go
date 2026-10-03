@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,11 +9,10 @@ import (
 	"strings"
 	"time"
 
-	awsS3 "github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
@@ -22,7 +20,6 @@ import (
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
-	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -30,10 +27,9 @@ import (
 const headerCorrelationId = "X-CorrelationId"
 
 type FilesHandler struct {
-	minio            *s3.InternalMinioClient
-	awsS3            *awsS3.S3
+	awsS3            *client.S3Wrapper
 	restClient       *client.RestClient
-	minioConfig      *utils.MinioConfig
+	bucketsConfig    *utils.BucketsConfig
 	filesService     *services.FilesService
 	redisInfoService *services.RedisInfoService
 	dba              *db.DB
@@ -41,19 +37,14 @@ type FilesHandler struct {
 	publisher        *producer.RabbitFileUploadedPublisher
 }
 
-type RenameDto struct {
-	Newname string `json:"newname"`
-}
-
 const NotFoundImage = "/images/covers/not_found.png"
 const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 
 func NewFilesHandler(
 	lgr *logger.Logger,
-	minio *s3.InternalMinioClient,
-	awsS3 *awsS3.S3,
+	awsS3 *client.S3Wrapper,
 	restClient *client.RestClient,
-	minioConfig *utils.MinioConfig,
+	bucketsConfig *utils.BucketsConfig,
 	filesService *services.FilesService,
 	redisInfoService *services.RedisInfoService,
 	dba *db.DB,
@@ -61,10 +52,9 @@ func NewFilesHandler(
 ) *FilesHandler {
 	return &FilesHandler{
 		lgr:              lgr,
-		minio:            minio,
 		awsS3:            awsS3,
 		restClient:       restClient,
-		minioConfig:      minioConfig,
+		bucketsConfig:    bucketsConfig,
 		filesService:     filesService,
 		redisInfoService: redisInfoService,
 		dba:              dba,
@@ -102,7 +92,7 @@ type FinishMultipartRequest struct {
 
 type MultipartFinishingPart struct {
 	Etag       string `json:"etag"`
-	PartNumber int64  `json:"partNumber"`
+	PartNumber int32  `json:"partNumber"`
 }
 
 func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
@@ -126,7 +116,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return err
 	}
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	// generated for the first file
 	chatFileItemUuid := utils.GetFileItemId()
@@ -152,7 +142,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
-	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, aKey)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, aKey)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf(err.Error())
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "error", "message": err.Error()})
@@ -163,12 +153,12 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 
 	// check enough size taking on account free disk space probe (see LimitsHandler)
-	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, reqDto.FileSize, h.restClient)
+	ok, err = checkUserLimit(userPrincipalDto)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "limited"})
 	}
 
 	correlationId := c.Request().Header.Get(headerCorrelationId)
@@ -185,23 +175,21 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, correlationIdP, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
 
-	expire := viper.GetDuration("minio.multipart.expire")
-	expTime := time.Now().UTC().Add(expire)
-	converted := convertMetadata(&metadata)
-	mpu := awsS3.CreateMultipartUploadInput{
+	uploadDuration := viper.GetDuration("s3.presignUploadTtl")
+
+	expTime := time.Now().UTC().Add(uploadDuration)
+	mpu := s3.CreateMultipartUploadInput{
 		Expires:  &expTime,
 		Bucket:   &bucketName,
 		Key:      &aKey,
-		Metadata: converted,
+		Metadata: metadata,
 	}
-	upload, err := h.awsS3.CreateMultipartUpload(&mpu)
+	upload, err := h.awsS3.CreateMultipartUpload(c.Request().Context(), &mpu)
 	if err != nil {
 		return err
 	}
 
-	uploadDuration := viper.GetDuration("minio.presignUploadTtl")
-
-	chunkSize := viper.GetInt64("minio.multipart.chunkSize")
+	chunkSize := viper.GetInt64("s3.multipart.chunkSize")
 	chunksNum := int(reqDto.FileSize / chunkSize)
 	if reqDto.FileSize%chunkSize != 0 {
 		chunksNum++
@@ -209,17 +197,25 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	presignedUrls := []PresignedUrl{}
 	for i := 1; i <= chunksNum; i++ {
-		var urlVals = url.Values{}
-		urlVals.Set("partNumber", utils.IntToString(i))
-		urlVals.Set("uploadId", *upload.UploadId)
-
-		u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
+		presReq, err := h.awsS3.PresignPutObjectProxyable(c.Request().Context(), &s3.PutObjectInput{
+			Bucket: &bucketName,
+			Key:    &aKey,
+		}, *upload.UploadId, utils.IntToString(i), s3.WithPresignExpires(uploadDuration))
 		if err != nil {
-			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting presigned put url %v", err)
 			return err
 		}
 
-		stringUrl, err := services.ChangeMinioUrl(u)
+		u, err := url.Parse(presReq.URL)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing presigned put url %v", err)
+			return err
+		}
+
+		// we do all this stuff in order not to expose s3 outside
+		// but rather have it under one domain with the different path
+		// see also traefik stripping path middlewares
+		stringUrl, err := services.ChangeS3Url(u)
 		if err != nil {
 			return err
 		}
@@ -249,16 +245,6 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	})
 }
 
-func convertMetadata(urlValues *map[string]string) map[string]*string {
-	res := map[string]*string{}
-	for k, v := range *urlValues {
-		kk := k
-		vv := v
-		res[kk] = &vv
-	}
-	return res
-}
-
 func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -274,7 +260,7 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	} else if !ok {
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	reqDto := new(FinishMultipartRequest)
 	err = c.Bind(reqDto)
@@ -282,25 +268,24 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 		return err
 	}
 
-	arr := []*awsS3.CompletedPart{}
+	arr := []types.CompletedPart{}
 
 	for _, part := range reqDto.Parts {
-		part := part
-		arr = append(arr, &awsS3.CompletedPart{
+		arr = append(arr, types.CompletedPart{
 			ETag:       &part.Etag,
 			PartNumber: &part.PartNumber,
 		})
 	}
 
-	input := awsS3.CompleteMultipartUploadInput{
+	input := s3.CompleteMultipartUploadInput{
 		Key:      &reqDto.Key,
 		Bucket:   &bucketName,
 		UploadId: &reqDto.UploadId,
-		MultipartUpload: &awsS3.CompletedMultipartUpload{
+		MultipartUpload: &types.CompletedMultipartUpload{
 			Parts: arr,
 		},
 	}
-	_, err = h.awsS3.CompleteMultipartUpload(&input)
+	_, err = h.awsS3.CompleteMultipartUpload(c.Request().Context(), &input)
 	if err != nil {
 		return err
 	}
@@ -337,7 +322,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 		return err
 	}
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	fileItemUuid := getFileItemUuid(bindTo.Id)
 
@@ -353,7 +338,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	// end check
 
 	fileSize := int64(len(bindTo.Text))
-	userLimitOk, _, _, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, fileSize, h.restClient)
+	userLimitOk, err := checkUserLimit(userPrincipalDto)
 	if err != nil {
 		return err
 	}
@@ -371,7 +356,14 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, nil, nil, nil, utils.GetUnixMilliUtc())
 
-	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
+	if _, err := h.awsS3.PutObject(c.Request().Context(), &s3.PutObjectInput{
+		Bucket:        &bucketName,
+		Key:           &aKey,
+		Body:          src,
+		ContentLength: &fileSize,
+		ContentType:   &contentType,
+		Metadata:      userMetadata,
+	}); err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return err
 	}
@@ -430,7 +422,7 @@ func (h *FilesHandler) listHandler(c echo.Context, public bool) error {
 	searchString = strings.TrimSpace(searchString)
 	searchString = strings.ToLower(searchString)
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	h.lgr.WithTracing(c.Request().Context()).Debugf("Listing bucket '%v':", bucketName)
 
@@ -635,9 +627,9 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
-	exists, obj, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Unable to check existence of %v: %v", fileId, err)
 		return c.JSON(http.StatusOK, StatusItem{
@@ -662,7 +654,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 
 		r := StatusItem{
 			Status:       "ok",
-			Filename:     services.ReadFilename(obj.Key),
+			Filename:     services.ReadFilename(fileId),
 			FileItemUuid: &fileItemUuid,
 		}
 		if mce != nil {
@@ -704,16 +696,6 @@ type StatusItem struct {
 
 	CreateDateTime *time.Time `json:"createDateTime"`
 	Filename       string     `json:"filename"`
-}
-
-func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {
-	var filenameChatPrefix string
-	if fileItemUuid == "" {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
-	} else {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	}
-	return filenameChatPrefix
 }
 
 func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
@@ -771,7 +753,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	if bindTo.FileId != nil {
 		fileId := *bindTo.FileId
@@ -790,26 +772,37 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		}
 		// end check
 
-		err = h.minio.RemoveObject(c.Request().Context(), bucketName, fileId, minio.RemoveObjectOptions{})
+		_, err = h.awsS3.DeleteObject(c.Request().Context(), &s3.DeleteObjectInput{
+			Bucket: &bucketName,
+			Key:    &fileId,
+		})
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
 		if utils.IsVideo(fileId) {
-			previewToCheck := utils.SetVideoPreviewExtension(fileId)
-			err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+			previewKey := utils.SetVideoPreviewExtension(fileId)
+			_, err = h.awsS3.DeleteObject(c.Request().Context(), &s3.DeleteObjectInput{
+				Bucket: &h.bucketsConfig.FilesPreview,
+				Key:    &previewKey,
+			})
 			if err != nil {
-				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing video preview object %v", err)
 			}
 		} else if utils.IsImage(fileId) {
-			previewToCheck := utils.SetImagePreviewExtension(fileId)
-			err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+			previewKey := utils.SetImagePreviewExtension(fileId)
+			_, err = h.awsS3.DeleteObject(c.Request().Context(), &s3.DeleteObjectInput{
+				Bucket: &h.bucketsConfig.FilesPreview,
+				Key:    &previewKey,
+			})
 			if err != nil {
-				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing pimage preview object %v", err)
 			}
 		}
 	} else if bindTo.FileItemUuid != nil {
+		// "Remove message with files" button
+
 		fileItemUuid := *bindTo.FileItemUuid
 		// check this fileItem belongs to user
 		belongs, err := db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
@@ -824,34 +817,50 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 
 		prefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 
-		// send events (they won't be sent via minio subscription, so we send them manually)
-		var fileObjects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-			Prefix:       prefix,
-			Recursive:    true,
-			WithMetadata: true,
-		})
+		maxFilesInBatch := viper.GetInt("s3.delete.batch")
 
-		batch := []minio.ObjectInfo{}
-		for fileOjInfo := range fileObjects {
-			batch = append(batch, fileOjInfo)
-			if len(batch) == utils.DefaultSize {
-				h.sendFileDeletedToUsers(c.Request().Context(), chatId, fileItemUuid, batch)
-				batch = []minio.ObjectInfo{}
+		var continuationToken *string
+		for {
+			res, err := h.awsS3.ListObjectsV2(c.Request().Context(), &s3.ListObjectsV2Input{
+				Bucket:            &bucketName,
+				ContinuationToken: continuationToken,
+				Prefix:            &prefix,
+				MaxKeys:           new(int32(maxFilesInBatch)),
+			})
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during iterating over objects fy prefix %v: %v", prefix, err)
+				return c.NoContent(http.StatusInternalServerError)
 			}
-		}
-		if len(batch) > 0 {
-			h.sendFileDeletedToUsers(c.Request().Context(), chatId, fileItemUuid, batch)
+			continuationToken = res.NextContinuationToken
+
+			objsToDelete := []types.ObjectIdentifier{}
+			for _, v := range res.Contents {
+				objsToDelete = append(objsToDelete, types.ObjectIdentifier{
+					Key: v.Key,
+				})
+			}
+
+			if len(objsToDelete) > 0 {
+				_, err = h.awsS3.DeleteObjects(c.Request().Context(), &s3.DeleteObjectsInput{
+					Bucket: &bucketName,
+					Delete: &types.Delete{
+						Objects: objsToDelete,
+					},
+				})
+				if err != nil {
+					h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deleting objects: %v", err)
+					return c.NoContent(http.StatusInternalServerError)
+				}
+			}
+
+			if len(res.Contents) < maxFilesInBatch {
+				break
+			}
 		}
 
 		err = db.RemoveFileItem(c.Request().Context(), h.dba, chatId, fileItemUuid)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object metadata %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		err = h.minio.RemoveObject(c.Request().Context(), bucketName, prefix, minio.RemoveObjectOptions{ForceDelete: true})
-		if err != nil {
-			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	} else {
@@ -860,39 +869,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
-}
-
-func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, fileItemUuid string, batch []minio.ObjectInfo) {
-	bucketName := h.minioConfig.Files
-
-	eventType := utils.FILE_DELETED
-
-	now := time.Now().UTC()
-	err := h.restClient.GetChatParticipantIds(c, chatId, func(participantIds []int64) error {
-		for _, fileOjInfo := range batch {
-			normalizedKey := utils.StripBucketName(fileOjInfo.Key, bucketName)
-
-			fileInfo := &dto.FileInfoDto{
-				Id:             normalizedKey,
-				FileItemUuid:   fileItemUuid,
-				LastModified:   now,
-				CreateDateTime: now,
-			}
-
-			for _, participantId := range participantIds {
-				err := h.publisher.PublishFileEvent(c, participantId, chatId, &dto.WrappedFileInfoDto{
-					FileInfoDto: fileInfo,
-				}, eventType, nil)
-				if err != nil {
-					h.lgr.WithTracing(c).Errorf("Error during sending object %v", err)
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error during GetChatParticipantIds %v", err)
-	}
 }
 
 func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
@@ -911,7 +887,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	var bindTo = new(PublishRequest)
 	if err := c.Bind(bindTo); err != nil {
@@ -939,6 +915,18 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
+	correlationId := c.Request().Header.Get(headerCorrelationId)
+	var correlationIdP *string
+
+	if correlationId != "" {
+		_, err = uuid.Parse(correlationId)
+		if err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		correlationIdP = &correlationId
+	}
+
 	ownerId := mce.OwnerId
 
 	if ownerId != userPrincipalDto.UserId {
@@ -947,26 +935,21 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	}
 	// end check
 
-	tagsMap := services.SerializeTags(bindTo.Public)
-	objectTags, err := tags.MapToObjectTags(tagsMap)
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during mapping tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// 1/2 pass correnaltion id in "Set public button"
+	tagsMap := services.SerializeTags(bindTo.Public, correlationIdP)
 
-	err = h.minio.PutObjectTagging(c.Request().Context(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
+	// we copy tag published=true into database in the event listener flow
+	_, err = h.awsS3.PutObjectTagging(c.Request().Context(), &s3.PutObjectTaggingInput{
+		Bucket:  &bucketName,
+		Key:     &fileId,
+		Tagging: services.ConvertTagsToTagging(tagsMap),
+	})
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during saving tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	publishedUrl, err := h.filesService.GetPublishedUrl(bindTo.Public, fileId)
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error get public url: %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error set public url: %v", err)
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "publishedUrl": publishedUrl})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
 }
 
 type CountResponse struct {
@@ -1126,21 +1109,21 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	bucketName := h.minioConfig.Files
-
 	desiredSize, err := utils.ParseInt64(c.QueryParam("desiredSize"))
 	if err != nil {
 		return err
 	}
-	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, desiredSize, h.restClient)
+	h.lgr.WithTracing(c.Request().Context()).Infof("UserId: %v, Desired size is: %v", userPrincipalDto.UserId, desiredSize)
+
+	ok, err = checkUserLimit(userPrincipalDto)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
-		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "limited"})
 	} else {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": consumption, "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
 	}
 }
 
@@ -1167,9 +1150,9 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 		return err
 	}
 
-	endpoint := viper.GetString("minio.interContainerUrl")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
+	endpoint := viper.GetString("s3.interContainerUrl")
+	accessKeyID := viper.GetString("s3.accessKeyId")
+	secretAccessKey := viper.GetString("s3.secretAccessKey")
 
 	isConferenceRecording := true
 	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, nil, &isConferenceRecording, nil, utils.GetUnixMilliUtc())
@@ -1181,9 +1164,9 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	response := S3Response{
 		AccessKey: accessKeyID,
 		Secret:    secretAccessKey,
-		Region:    viper.GetString("minio.location"),
+		Region:    viper.GetString("s3.location"),
 		Endpoint:  endpoint,
-		Bucket:    h.minioConfig.Files,
+		Bucket:    h.bucketsConfig.Files,
 		Metadata:  metadata,
 		Filepath:  aKey,
 	}
@@ -1211,7 +1194,7 @@ func (h *FilesHandler) ListCandidatesForEmbed(c echo.Context) error {
 
 	requestedMediaType := c.QueryParam("type")
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	chatId, err := utils.ParseInt64(c.Param("chatId"))
 	if err != nil {
@@ -1367,18 +1350,28 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	bucketName := h.minioConfig.FilesPreview
+	bucketName := h.bucketsConfig.FilesPreview
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
 
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, objectInfo, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+	}
+
+	if objectInfo.ContentLength == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentLength")
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if objectInfo.ContentType == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentType")
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -1398,30 +1391,44 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	object, e := h.minio.GetObject(c.Request().Context(), bucketName, fileId, minio.GetObjectOptions{})
-	if e != nil {
+	gr, err := h.awsS3.GetObject(c.Request().Context(), &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &fileId,
+	})
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error getting file preview %v", err)
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
-	defer object.Close()
+	defer gr.Body.Close()
 
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(*objectInfo.ContentLength, 10))
+	c.Response().Header().Set(echo.HeaderContentType, *objectInfo.ContentType)
 	h.previewCacheableResponse(c)
-	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+	return c.Stream(http.StatusOK, *objectInfo.ContentType, gr.Body)
 }
 
 func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
-	bucketName := h.minioConfig.FilesPreview
+	bucketName := h.bucketsConfig.FilesPreview
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, objectInfo, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+	}
+
+	if objectInfo.ContentLength == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentLength")
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if objectInfo.ContentType == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentType")
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -1450,17 +1457,21 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	object, e := h.minio.GetObject(c.Request().Context(), bucketName, fileId, minio.GetObjectOptions{})
-	if e != nil {
+	gr, err := h.awsS3.GetObject(c.Request().Context(), &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &fileId,
+	})
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error getting public file preview %v", err)
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
-	defer object.Close()
+	defer gr.Body.Close()
 
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(*objectInfo.ContentLength, 10))
+	c.Response().Header().Set(echo.HeaderContentType, *objectInfo.ContentType)
 	h.previewCacheableResponse(c)
 
-	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+	return c.Stream(http.StatusOK, *objectInfo.ContentType, gr.Body)
 }
 
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
@@ -1470,12 +1481,12 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 		return errors.New("Error during getting auth context")
 	}
 
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
 
-	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1579,11 +1590,11 @@ func getOverrideMessageIdPublicFromUrl(anUrl *url.URL) (int64, error) {
 }
 
 func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
-	bucketName := h.minioConfig.Files
+	bucketName := h.bucketsConfig.Files
 
 	// check file is public
 	fileId := c.QueryParam(utils.FileParam)
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1592,13 +1603,16 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 
-	tagging, err := h.minio.GetObjectTagging(c.Request().Context(), bucketName, fileId, minio.GetObjectTaggingOptions{})
+	tagging, err := h.awsS3.GetObjectTagging(c.Request().Context(), &s3.GetObjectTaggingInput{
+		Bucket: &bucketName,
+		Key:    &fileId,
+	})
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	isPublic, err := services.DeserializeTags(tagging)
+	isPublic, _, err := services.DeserializeTags(services.ConvertTaggingToMap(tagging.TagSet))
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1607,7 +1621,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	if !isPublic {
 		h.lgr.WithTracing(c.Request().Context()).Infof("File %v is not public, checking is chat blog", fileId)
 
-		chatId, err := utils.ParseChatId(objectInfo.Key)
+		chatId, err := utils.ParseChatId(fileId)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing chatId: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -1635,7 +1649,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), fileId)
 	if err != nil {
 		return err
 	}

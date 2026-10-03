@@ -346,7 +346,7 @@ export default {
             bus.emit(PLAYER_MODAL, dto);
         },
         getDate(item) {
-            return getHumanReadableDate(item.lastModified)
+            return getHumanReadableDate(item.createDateTime)
         },
         hasSearchString() {
             return hasLength(this.searchString)

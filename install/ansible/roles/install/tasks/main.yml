@@ -210,13 +210,6 @@
   tags:
     - videochat
 
-- name: Create Minio config directory if it does not exist
-  ansible.builtin.file:
-    path: "{{ dir_prefix }}/minio"
-    state: directory
-  tags:
-    - videochat
-
 - name: Create RabbitMQ config directory if it does not exist
   ansible.builtin.file:
     path: "{{ dir_prefix }}/rabbitmq"
@@ -245,22 +238,48 @@
   tags:
     - videochat
 
-- name: Create Minio config
-  template:
-    src: templates/config.json.j2
-    dest: "{{ dir_prefix }}/minio/config.json"
+- name: Create RustFS data directory and set owner and access on RustFS data directory non recursively
+  ansible.builtin.file:
+    path: /mnt/chat-rustfs
+    state: directory
+    mode: 0750
+    owner: 10001
+    group: 10001
   tags:
     - videochat
 
-- name: Create Minio data directory and set owner and access on Minio data directory non recursively
+# https://github.com/rustfs/rustfs/blob/1.0.5/Dockerfile#L117C19-L117C34
+- name: Create RustFS events directory and set owner and access on RustFS data directory non recursively
   ansible.builtin.file:
-    path: /mnt/chat-minio/data
+    path: /mnt/chat-rustfs/.rustfs/events
     state: directory
-    mode: u=rwx,g-rwx,o-rwx
-    # https://docs.bitnami.com/kubernetes/faq/configuration/use-non-root/
-    # https://github.com/bitnami/containers/blob/main/bitnami/minio/2024/debian-12/Dockerfile#L61C6-L61C10
-    owner: 1001
-    group: 1001
+    mode: 0750
+    owner: 10001
+    group: 10001
+  tags:
+    - videochat
+
+- name: Create RustFS audit directory and set owner and access on RustFS data directory non recursively
+  ansible.builtin.file:
+    path: /mnt/chat-rustfs/.rustfs/audit
+    state: directory
+    mode: 0750
+    owner: 10001
+    group: 10001
+  tags:
+    - videochat
+
+- name: Create RustFS commandline client config directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dir_prefix }}/rustfs/client"
+    state: directory
+  tags:
+    - videochat
+
+- name: Create RustFS commandline client config
+  template:
+    src: templates/rustfs_client_config.toml.j2
+    dest: "{{ dir_prefix }}/rustfs/client/config.toml"
   tags:
     - videochat
 

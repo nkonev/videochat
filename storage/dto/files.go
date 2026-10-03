@@ -30,10 +30,20 @@ type WrappedFileInfoDto struct {
 	FileInfoDto *FileInfoDto `json:"fileInfoDto"`
 }
 
-type MinioEvent struct {
+type S3Event struct {
 	EventName     string
 	Key           string
 	ChatId        int64
 	OwnerId       int64
 	CorrelationId *string
+	Size          int64
+}
+
+type MinioEventWithAdditionalFields struct {
+	S3Event
+	Timestamp             int64
+	IsConferenceRecording bool
+	IsMessageRecording    bool
+	EventType             EventType
+	NormalizedKey         string
 }

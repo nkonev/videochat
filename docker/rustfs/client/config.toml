@@ -1,0 +1,17 @@
+schema_version = 1
+
+[defaults]
+output = "human"
+color = "auto"
+progress = true
+
+[[aliases]]
+name = "local"
+endpoint = "http://localhost:9000"
+access_key = "AKIAIOSFODNN7EXAMPLE"
+secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+anonymous = false
+region = "europe-east"
+signature = "v4"
+bucket_lookup = "auto"
+insecure = true

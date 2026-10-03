@@ -1,0 +1,17 @@
+schema_version = 1
+
+[defaults]
+output = "human"
+color = "auto"
+progress = true
+
+[[aliases]]
+name = "local"
+endpoint = "http://localhost:9000"
+access_key = "{{ s3_user }}"
+secret_key = "{{ s3_password }}"
+anonymous = false
+region = "{{ s3_region }}"
+signature = "v4"
+bucket_lookup = "auto"
+insecure = true

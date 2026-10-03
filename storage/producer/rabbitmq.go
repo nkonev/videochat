@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
 	"github.com/streadway/amqp"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	myRabbitmq "nkonev.name/storage/rabbitmq"
 	"nkonev.name/storage/utils"
-	"time"
 )
 
 const AsyncEventsFanoutExchange = "async-events-exchange"
@@ -53,7 +54,7 @@ func (rp *RabbitFileUploadedPublisher) Publish(ctx context.Context, userId, chat
 	return nil
 }
 
-func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType utils.EventType, correlationId *string) error {
+func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, userId, chatId int64, fileInfoDto *dto.WrappedFileInfoDto, eventType dto.EventType, correlationId *string) error {
 	headers := myRabbitmq.InjectAMQPHeaders(ctx)
 	if correlationId != nil && *correlationId != "" {
 		headers[correlationIdName] = *correlationId
@@ -61,11 +62,11 @@ func (rp *RabbitFileUploadedPublisher) PublishFileEvent(ctx context.Context, use
 
 	var outputEventType string
 	switch eventType {
-	case utils.FILE_CREATED:
+	case dto.FILE_CREATED:
 		outputEventType = "file_created"
-	case utils.FILE_DELETED:
+	case dto.FILE_DELETED:
 		outputEventType = "file_removed"
-	case utils.FILE_UPDATED:
+	case dto.FILE_UPDATED:
 		outputEventType = "file_updated"
 	default:
 		rp.lgr.WithTracing(ctx).Errorf("Error during determining rabbitmq output event type")
