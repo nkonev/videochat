@@ -41,10 +41,6 @@ http:
       loadBalancer:
         servers:
           - url: http://minio:9000
-    jaeger-ui-service:
-      loadBalancer:
-        servers:
-          - url: http://jaeger:16686
     minio-ui-service:
       loadBalancer:
         servers:
@@ -62,6 +58,11 @@ http:
       loadBalancer:
         servers:
           - url: http://victoria-logs:9428
+    victoria-traces-ui-service:
+      loadBalancer:
+        servers:
+          - url: http://victoria-traces:10428
+
     kafka-ui-service:
       loadBalancer:
         servers:
@@ -196,12 +197,6 @@ http:
         - "minio-strip-prefix-middleware"
         - "retry-middleware"
         - "minio-fix-host-middleware"
-    jaeger-ui-router:
-      rule: "PathPrefix(`/jaeger`)"
-      service: jaeger-ui-service
-      middlewares:
-        - "auth-middleware"
-        - "retry-middleware"
     minio-ui-router:
       rule: "PathPrefix(`/minio`)"
       service: minio-ui-service
@@ -225,7 +220,13 @@ http:
       rule: "PathPrefix(`/logs`)"
       service: victoria-logs-ui-service
       middlewares:
-        - "victoria-logs-auth-middleware"
+        - "noaccept-logs-auth-middleware"
+        - "retry-middleware"
+    victoria-traces-ui-router:
+      rule: "PathPrefix(`/traces`)"
+      service: victoria-traces-ui-service
+      middlewares:
+        - "noaccept-logs-auth-middleware"
         - "retry-middleware"
     kafka-ui-router:
       rule: "PathPrefix(`/kafka`)"
@@ -291,7 +292,7 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
-    victoria-logs-auth-middleware:
+    noaccept-logs-auth-middleware:
       forwardAuth:
         address: "http://host.docker.internal:8060/internal/profile/auth"
         headerField: "X-Auth-UserId"

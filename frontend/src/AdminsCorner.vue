@@ -9,7 +9,7 @@
             <v-list-item title="Logs" href="/logs" target="_blank"></v-list-item>
 
             <v-list-subheader>{{ $vuetify.locale.t('$vuetify.tracing') }}</v-list-subheader>
-            <v-list-item title="Jaeger" href="/jaeger" target="_blank"></v-list-item>
+            <v-list-item title="Traces" href="/traces" target="_blank"></v-list-item>
 
             <v-list-subheader>{{ $vuetify.locale.t('$vuetify.object_storage') }}</v-list-subheader>
             <v-list-item title="Minio" href="/minio/console" target="_blank"></v-list-item>

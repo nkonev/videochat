@@ -221,7 +221,7 @@ custom.allowed-avatar-urls: ""
 
 custom.admins-corner:
   management-urls:
-    - "/jaeger"
+    - "/traces"
     - "/minio"
     - "/rabbitmq"
     - "/postgresql"
