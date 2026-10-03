@@ -157,7 +157,7 @@ services:
         max-file: "1"
 
   minio:
-    image: quay.io/minio/aistor/minio:RELEASE.2025-07-30T15-53-03Z
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
     hostname: minio
     restart: unless-stopped
     ports:
