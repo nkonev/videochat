@@ -43,7 +43,7 @@ services:
       - CHAT_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/chat?sslmode=disable&application_name=chat-app
       - CHAT_AAA.URL.BASE=http://aaa:8060
       - CHAT_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
-      - CHAT_OTLP.ENDPOINT=jaeger:4317
+      - CHAT_OTLP.ENDPOINT=victoria-traces:4317
       - CHAT_FRONTENDURL=https://{{ domain }}
       - CHAT_MESSAGE.ALLOWEDMEDIAURLS=
       - CHAT_MESSAGE.ALLOWEDIFRAMEURLS=https://www.youtube.com,https://coub.com,https://vk.com,https://rutube.ru,https://player.vimeo.com,https://player.smotrim.ru,https://vkvideo.ru

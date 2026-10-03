@@ -32,5 +32,6 @@ accessLog:
 tracing:
   sampleRate: 1.0
   otlp:
-    http:
-      endpoint: http://jaeger:4318/v1/traces
+    grpc:
+      endpoint: victoria-traces:4317
+      insecure: true

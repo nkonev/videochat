@@ -745,11 +745,11 @@ public class UserProfileControllerTest extends AbstractMockMvcTestRunner {
 
     @WithUserDetails(USER_ALICE)
     @Test
-    public void userCannotAccessToJaeger() throws Exception {
+    public void userCannotAccessToVictoriaTraces() throws Exception {
 
         mockMvc.perform(
                 get(Constants.Urls.INTERNAL_API + Constants.Urls.PROFILE + Constants.Urls.AUTH)
-                    .header("x-forwarded-uri", "/jaeger")
+                    .header("x-forwarded-uri", "/traces")
             )
             .andDo(result -> {
                 LOGGER.info(result.getResponse().getContentAsString());

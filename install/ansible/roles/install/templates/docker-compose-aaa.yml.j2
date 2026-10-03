@@ -69,7 +69,7 @@ services:
       # Lax needed to have possibility to go by confirmation link in change email confirmation and to take the existing cookie
       - server.servlet.session.cookie.same-site=Lax
       - server.servlet.session.cookie.secure=true
-      - management.otlp.tracing.endpoint=http://jaeger:4318/v1/traces
+      - management.otlp.tracing.endpoint=http://victoria-traces:10428/traces/insert/opentelemetry/v1/traces
       - spring.data.redis.url=redis://redis:6379/0
       - CUSTOM_INITIAL_ADMIN_PASSWORD={{ initial_admin_password | password_hash(hashtype='bcrypt', salt=initial_admin_password_salt, rounds=10) | replace('$', '$$') }}
       - CUSTOM_REQUEST_DUMP={{ aaa_request_dump }}

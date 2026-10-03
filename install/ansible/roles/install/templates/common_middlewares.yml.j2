@@ -12,7 +12,7 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
-    victoria-logs-auth-middleware:
+    noaccept-header-auth-middleware:
       forwardAuth:
         address: "http://aaa:8060/internal/profile/auth"
         headerField: "X-Auth-UserId"

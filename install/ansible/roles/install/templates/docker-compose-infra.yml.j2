@@ -278,32 +278,6 @@ services:
       options:
         tag: chat-egress
 
-  jaeger:
-    # https://www.jaegertracing.io/docs/2.0/getting-started/
-    image: jaegertracing/jaeger:2.18.0
-    hostname: jaeger
-    networks:
-      backend:
-    deploy:
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.services.jaeger-ui-service.loadbalancer.server.port=16686" # ui port
-        - "traefik.http.routers.jaeger-ui-router.rule=PathPrefix(`/jaeger`) && Host(`{{ domain }}`)"
-        - "traefik.http.routers.jaeger-ui-router.entrypoints=https"
-        - "traefik.http.routers.jaeger-ui-router.tls=true"
-        - "traefik.http.routers.jaeger-ui-router.tls.certresolver=myresolver"
-        - "traefik.http.routers.jaeger-ui-router.middlewares=auth-middleware@file,retry-middleware@file"
-    volumes:
-      - ./jaeger/config.yaml:/jaeger/config.yaml
-    command: [
-      "--config",
-      "/jaeger/config.yaml",
-    ]
-    logging:
-      driver: "journald"
-      options:
-        tag: chat-jaeger
-
   pgadmin:
     image: dcagatay/pwless-pgadmin4:8.13
     hostname: pgadmin
@@ -349,37 +323,6 @@ services:
       options:
         tag: chat-fluentbit
 
-  opensearch:
-    image: opensearchproject/opensearch:3.6.0
-    hostname: opensearch
-    environment:
-      - node.name=opensearch
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
-      # - OPENSEARCH_INITIAL_ADMIN_PASSWORD=yourStrongPassword123!
-      # https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/
-      - DISABLE_SECURITY_PLUGIN=true
-      - DISABLE_INSTALL_DEMO_CONFIG=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
-        hard: 65536
-    networks:
-      backend:
-    volumes:
-      - opensearch_data_dir:/usr/share/opensearch/data
-      - ./opensearch/docker-entrypoint-init.d.sh:/docker-entrypoint-init.d.sh:z
-      - ./opensearch/docker-entrypoint-init.d:/docker-entrypoint-init.d:z
-    logging:
-      driver: "journald"
-      options:
-        tag: chat-opensearch
-    entrypoint: ["/docker-entrypoint-init.d.sh"]
-
   kafka-ui:
     image: docker.redpanda.com/redpandadata/console:v2.8.13
     hostname: kafka-ui
@@ -417,7 +360,7 @@ services:
         - "traefik.http.routers.victoria-logs-router.entrypoints=https"
         - "traefik.http.routers.victoria-logs-router.tls=true"
         - "traefik.http.routers.victoria-logs-router.tls.certresolver=myresolver"
-        - "traefik.http.routers.victoria-logs-router.middlewares=victoria-logs-auth-middleware@file,retry-middleware@file"
+        - "traefik.http.routers.victoria-logs-router.middlewares=noaccept-header-auth-middleware@file,retry-middleware@file"
     command:
       - "-http.pathPrefix"
       - "/logs"
@@ -430,12 +373,38 @@ services:
       options:
         tag: chat-victoria-logs
 
+  victoria-traces:
+    image: docker.io/victoriametrics/victoria-traces:v0.12.0
+    hostname: victoria-traces
+    networks:
+      backend:
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.victoria-traces-service.loadbalancer.server.port=10428" # http port
+        - "traefik.http.routers.victoria-traces-router.rule=PathPrefix(`/traces`) && Host(`{{ domain }}`)"
+        - "traefik.http.routers.victoria-traces-router.entrypoints=https"
+        - "traefik.http.routers.victoria-traces-router.tls=true"
+        - "traefik.http.routers.victoria-traces-router.tls.certresolver=myresolver"
+        - "traefik.http.routers.victoria-traces-router.middlewares=noaccept-header-auth-middleware@file,retry-middleware@file"
+    command:
+      - "-http.pathPrefix=/traces"
+      - "-retentionPeriod={{ trace_retention }}"
+      - "-otlpGRPC.tls=false"
+      - "-otlpGRPCListenAddr=:4317"
+    volumes:
+      - victoria_traces_data:/victoria-traces-data:z
+    logging:
+      driver: "journald"
+      options:
+        tag: chat-victoria-traces
+
 volumes:
   redis_data_dir:
   rabbitmq_data_dir:
   egress_tmp:
-  opensearch_data_dir:
   victoria_logs_data:
+  victoria_traces_data:
 
 networks:
   backend:

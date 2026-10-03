@@ -62,7 +62,7 @@ Click on image to open a screenshot gallery.
 * Horizontal scaling, including video server itself thanks to Livekit.
 * Simple setup with Ansible and Docker Swarm.
 * No vendor lock on cloud provider.
-* Known and popular technologies: PostgreSQL, RabbitMQ, ~Redis~ Valkey, Jaeger, Minio, Traefik, Nginx, Node.js with their communities, no rare nor exotic technologies.
+* Known and popular technologies: PostgreSQL, RabbitMQ, ~Redis~ Valkey, Victoria-Logs, Victoria-Traces, Minio, Traefik, Nginx, Node.js with their communities, no rare nor exotic technologies.
 * Self-contained frontend bundle without any CDN downloads - it can work in a closed network without internet access.
 * No need to edit `/etc/hosts` for local demo installation or development.
 * Send the message when finishing media (image, video) or file has been uploaded.

@@ -70,13 +70,12 @@ run: infra check-env download generate package-go
 	./$(EXECUTABLE)
 
 infra:
-	docker compose -f ../docker-compose.yml up -d redis rabbitmq opensearch jaeger victoria-logs fluentbit
+	docker compose -f ../docker-compose.yml up -d redis rabbitmq victoria-traces victoria-logs fluentbit
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36379 -- echo 'redis is up'
 	../scripts/wait-for-it.sh -t 30 127.0.0.1:36672 -- echo 'rabbitmq is up'
 	../scripts/wait-for-http.sh 'localhost:35672' 120 '' 'RabbitMQ' # wait for rabbitmq http port will be available
-	../scripts/wait-for-http.sh 'localhost:9200' 120 '' 'OpenSearch'
 	../scripts/wait-for-http.sh 'localhost:39428' 120 '/logs' 'Victoria-Logs'
-	../scripts/wait-for-it.sh -t 30 127.0.0.1:36686 -- echo 'jaeger web ui is up'
+	../scripts/wait-for-http.sh 'localhost:30428' 120 '/traces' 'Victoria-Traces'
 
 infra-test:
 	echo "No test infra"

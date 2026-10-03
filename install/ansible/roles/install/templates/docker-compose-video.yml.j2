@@ -36,7 +36,7 @@ services:
       - VIDEO_REDIS.ADDRESS=redis:6379
       - VIDEO_REDIS.DB=4
       - VIDEO_RESTRICTRECORDING={{ video_restrict_recording }}
-      - VIDEO_OTLP.ENDPOINT=jaeger:4317
+      - VIDEO_OTLP.ENDPOINT=victoria-traces:4317
       - VIDEO_LIVEKIT.API.KEY={{ livekit_api_key }}
       - VIDEO_LIVEKIT.API.SECRET={{ livekit_api_secret }}
       - VIDEO_LOGGER.WRITETOFILE=false

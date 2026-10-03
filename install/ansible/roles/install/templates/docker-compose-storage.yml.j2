@@ -46,7 +46,7 @@ services:
         - STORAGE_LIMITS.ENABLED={{ storage_limits_enabled }}
         - STORAGE_LIMITS.DEFAULT.ALL.USERS.LIMIT={{ storage_all_user_limit }}
         - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
-        - STORAGE_OTLP.ENDPOINT=jaeger:4317
+        - STORAGE_OTLP.ENDPOINT=victoria-traces:4317
         - STORAGE_SELFURLS=https://{{ domain }},
         - STORAGE_LOGGER.WRITETOFILE=false
         - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
