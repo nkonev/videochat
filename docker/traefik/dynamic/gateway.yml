@@ -220,13 +220,13 @@ http:
       rule: "PathPrefix(`/logs`)"
       service: victoria-logs-ui-service
       middlewares:
-        - "noaccept-logs-auth-middleware"
+        - "noaccept-header-auth-middleware"
         - "retry-middleware"
     victoria-traces-ui-router:
       rule: "PathPrefix(`/traces`)"
       service: victoria-traces-ui-service
       middlewares:
-        - "noaccept-logs-auth-middleware"
+        - "noaccept-header-auth-middleware"
         - "retry-middleware"
     kafka-ui-router:
       rule: "PathPrefix(`/kafka`)"
@@ -292,7 +292,7 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
-    noaccept-logs-auth-middleware:
+    noaccept-header-auth-middleware:
       forwardAuth:
         address: "http://host.docker.internal:8060/internal/profile/auth"
         headerField: "X-Auth-UserId"
