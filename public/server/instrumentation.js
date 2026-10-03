@@ -19,7 +19,7 @@ const collectorOptions = {
 };
 
 if (!process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
-    collectorOptions.url = 'http://localhost:34318/v1/traces';
+    collectorOptions.url = 'http://localhost:30428/traces/insert/opentelemetry/v1/traces';
 }
 
 // https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http
