@@ -33,24 +33,28 @@ services:
         - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
     environment:
         - STORAGE_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/storage?sslmode=disable&application_name=storage-app
-        - STORAGE_MINIO.INTERNALENDPOINT=minio:9000
-        - STORAGE_MINIO.INTERCONTAINERURL=http://minio:9000
-        - STORAGE_MINIO.PUBLICDOWNLOADTTL=24h
-        - STORAGE_MINIO.PUBLICUPLOADTTL=24h
-        - STORAGE_MINIO.ACCESSKEYID={{ minio_user }}
-        - STORAGE_MINIO.SECRETACCESSKEY={{ minio_password }}
+        - STORAGE_S3.INTERNALENDPOINT=http://rustfs:9000
+        - STORAGE_S3.INTERCONTAINERURL=http://rustfs:9000
+        - STORAGE_S3.PRESIGNDOWNLOADTTL=24h
+        - STORAGE_S3.PRESIGNUPLOADTTL=24h
+        - STORAGE_S3.ACCESSKEYID={{ s3_user }}
+        - STORAGE_S3.SECRETACCESSKEY={{ s3_password }}
+        - STORAGE_S3.LOCATION={{ s3_region }}
+        - STORAGE_S3.EVENTLISTENER.AMQP.EXCHANGE={{ s3_amqp_exchange }}
+        - STORAGE_S3.EVENTLISTENER.AMQP.QUEUE={{ s3_amqp_queue }}
+        - STORAGE_S3.EVENTLISTENER.AMQP.ROUTINGKEY={{ s3_amqp_routingkey }}
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_REDIS.ADDRESS=redis:6379
         - STORAGE_REDIS.DB=3
         - STORAGE_LIMITS.ENABLED={{ storage_limits_enabled }}
-        - STORAGE_LIMITS.DEFAULT.ALL.USERS.LIMIT={{ storage_all_user_limit }}
         - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
         - STORAGE_OTLP.ENDPOINT=victoria-traces:4317
         - STORAGE_SELFURLS=https://{{ domain }},
         - STORAGE_LOGGER.WRITETOFILE=false
         - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
         - STORAGE_SCHEDULERS.ACTUALIZEGENERATEDFILESTASK.ENABLED=true
+        - STORAGE_SCHEDULERS.ACTUALIZEMETADATACACHETASK.ENABLED=true
         - STORAGE_LOGGER.LEVEL=info
 
     volumes:

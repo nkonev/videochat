@@ -56,35 +56,93 @@ const getMetadataSql = `select ` +
 `
 
 func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCache) error {
-	_, err := co.ExecContext(ctx, fmt.Sprintf(`
-		insert into metadata_cache(
-			%s
-		) values (
-		    $1,
-		    $2,
-		    $3, 
-		    $4,
-		    $5,
-		    $6,
-		  	$7,
-		    $8,
-		    $9
-		) on conflict (chat_id, file_item_uuid, filename) 
-		do update set 
-			published = $6,
-		    file_size = $7,
-			edit_date_time = $9
-	`, metadataColumns),
-		metadataCache.ChatId,
-		metadataCache.FileItemUuid,
-		metadataCache.Filename,
+	err := SetList(ctx, co, []dto.MetadataCache{metadataCache})
 
-		metadataCache.OwnerId,
-		metadataCache.CorrelationId,
-		metadataCache.Published,
-		metadataCache.FileSize,
-		metadataCache.CreateDateTime,
-		metadataCache.EditDateTime,
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+
+	return nil
+}
+
+func SetList(ctx context.Context, co CommonOperations, metadataCaches []dto.MetadataCache) error {
+	chatIds := []int64{}
+	fileItemUuids := []string{}
+	filenames := []string{}
+
+	ownerIds := []int64{}
+	correlationIds := []*string{}
+	publisheds := []bool{}
+	fileSizes := []int64{}
+	createDateTimes := []time.Time{}
+	editDateTimes := []time.Time{}
+
+	for _, v := range metadataCaches {
+		chatIds = append(chatIds, v.ChatId)
+		fileItemUuids = append(fileItemUuids, v.FileItemUuid)
+		filenames = append(filenames, v.Filename)
+		ownerIds = append(ownerIds, v.OwnerId)
+		correlationIds = append(correlationIds, v.CorrelationId)
+		publisheds = append(publisheds, v.Published)
+		fileSizes = append(fileSizes, v.FileSize)
+		createDateTimes = append(createDateTimes, v.CreateDateTime)
+		editDateTimes = append(editDateTimes, v.EditDateTime)
+	}
+
+	_, err := co.ExecContext(ctx, `
+		with input_data as (
+			select * from unnest (
+				cast ($1 as bigint[])
+				,cast ($2 as varchar(36)[])
+				,cast ($3 as varchar(255)[])
+				,cast ($4 as bigint[])
+				,cast ($5 as varchar(36)[])
+				,cast ($6 as boolean[])
+				,cast ($7 as bigint[])
+				,cast ($8 as timestamp[])
+				,cast ($9 as timestamp[])
+			) as t (
+				chat_id
+				,file_item_uuid
+				,filename
+				,owner_user_id
+				,correlation_id
+				,published
+				,file_size
+				,create_date_time
+				,edit_date_time
+			)
+		)
+		insert into metadata_cache(
+			chat_id,
+			file_item_uuid,
+			filename,
+			owner_user_id,                        
+			correlation_id,
+			published,
+			file_size,
+			create_date_time,
+			edit_date_time
+		)
+		select * from input_data
+		on conflict (chat_id, file_item_uuid, filename) 
+		do update set
+			owner_user_id = excluded.owner_user_id
+			,correlation_id = excluded.correlation_id
+			,published = excluded.published
+			,file_size = excluded.file_size
+			,create_date_time = excluded.create_date_time
+			,edit_date_time = excluded.edit_date_time
+	`,
+		chatIds,
+		fileItemUuids,
+		filenames,
+		ownerIds,
+		correlationIds,
+		publisheds,
+		fileSizes,
+		createDateTimes,
+		editDateTimes,
 	)
 
 	if err != nil {
@@ -547,6 +605,41 @@ func Remove(ctx context.Context, co CommonOperations, metadataCacheId dto.Metada
 	_, err := co.ExecContext(ctx, `delete from metadata_cache 
 								where (chat_id, file_item_uuid, filename) = ($1, $2, $3)`,
 		metadataCacheId.ChatId, metadataCacheId.FileItemUuid, metadataCacheId.Filename)
+	if err != nil {
+		return eris.Wrap(err, "error during interacting with db")
+	}
+	return nil
+}
+
+func RemoveList(ctx context.Context, co CommonOperations, metadataCacheIds []dto.MetadataCacheId) error {
+	chatIds := []int64{}
+	fileItemUuids := []string{}
+	filenames := []string{}
+
+	for _, v := range metadataCacheIds {
+		chatIds = append(chatIds, v.ChatId)
+		fileItemUuids = append(fileItemUuids, v.FileItemUuid)
+		filenames = append(filenames, v.Filename)
+	}
+
+	_, err := co.ExecContext(ctx, `
+		with input_data as (
+			select * from unnest (
+				cast ($1 as bigint[])
+				,cast ($2 as varchar(36)[])
+				,cast ($3 as varchar(255)[])
+			) as t (
+			    chat_id
+			    ,file_item_uuid
+			    ,filename
+			)
+		)
+		delete from metadata_cache 
+		where (chat_id, file_item_uuid, filename) in (
+			select chat_id, file_item_uuid, filename from input_data
+		)
+	`,
+		chatIds, fileItemUuids, filenames)
 	if err != nil {
 		return eris.Wrap(err, "error during interacting with db")
 	}

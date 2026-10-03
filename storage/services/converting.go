@@ -4,43 +4,44 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/minio/minio-go/v7"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/url"
-	"nkonev.name/storage/dto"
-	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
-	"nkonev.name/storage/utils"
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/spf13/viper"
+	"nkonev.name/storage/client"
+	"nkonev.name/storage/dto"
+	"nkonev.name/storage/logger"
+	"nkonev.name/storage/utils"
 )
 
 type ConvertingService struct {
-	minio            *s3.InternalMinioClient
-	minioConfig      *utils.MinioConfig
+	awsS3            *client.S3Wrapper
+	bucketsConfig    *utils.BucketsConfig
 	tempDirPrefix    string
 	redisInfoService *RedisInfoService
 	lgr              *logger.Logger
 }
 
-func NewConvertingService(lgr *logger.Logger, minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
+func NewConvertingService(lgr *logger.Logger, awsS3 *client.S3Wrapper, bucketsConfig *utils.BucketsConfig, redisInfoService *RedisInfoService) *ConvertingService {
 	tempDirPrefix := viper.GetString("converting.tempDir")
 	lgr.Infof("Ensuring temp root dir for the converting videos using ffmpeg: %v", tempDirPrefix)
 	os.MkdirAll(tempDirPrefix, os.ModePerm)
 
 	return &ConvertingService{
-		minio:            minio,
-		minioConfig:      minioConfig,
+		awsS3:            awsS3,
+		bucketsConfig:    bucketsConfig,
 		tempDirPrefix:    tempDirPrefix,
 		redisInfoService: redisInfoService,
 		lgr:              lgr,
 	}
 }
 
-func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.MinioEvent) {
-	normalizedKey := utils.StripBucketName(event.Key, s.minioConfig.Files)
+func (s *ConvertingService) HandleEvent(ctx context.Context, event *dto.S3Event) {
+	normalizedKey := utils.StripBucketName(event.Key, s.bucketsConfig.Files)
 	s.Convert(ctx, normalizedKey)
 }
 
@@ -70,12 +71,23 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 
 	// run ffmpeg
 	d := viper.GetDuration("converting.presignedDuration")
-	presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
+
+	pres, err := s.awsS3.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: &s.bucketsConfig.Files,
+		Key:    &normalizedKey,
+	}, s3.WithPresignExpires(d))
 	if err != nil {
-		s.lgr.WithTracing(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
+		s.lgr.WithTracing(ctx).Errorf("Error during getting presigned url for %v: %v", normalizedKey, err)
 		return
 	}
-	stringPresingedUrl := presignedUrl.String()
+
+	u, err := url.Parse(pres.URL)
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during parsing presigned put url %v", err)
+		return
+	}
+
+	stringPresingedUrl := u.String()
 	ffCmd := exec.Command(viper.GetString("converting.ffmpegPath"),
 		"-i", stringPresingedUrl,
 		// convert to format, which can be played in both Firefox and Chrome
@@ -100,13 +112,37 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 	}
 
 	// copy the tag messageRecording=true in order to correct work utils.GetEventType in minio_listener in pass 2
-	objectInfo, err := s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
+	objectInfo, err := s.awsS3.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: &s.bucketsConfig.Files,
+		Key:    &normalizedKey,
+	})
 	if err != nil {
 		s.lgr.WithTracing(ctx).Errorf("Error during stat for key %v: %v", normalizedKey, err)
 		return
 	}
+
+	convertedFile, err := os.Open(pathOfConvertedFile)
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during opening file '%v': %v", pathOfConvertedFile, err)
+		return
+	}
+	defer convertedFile.Close()
+
+	st, err := convertedFile.Stat()
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during stat file '%v': %v", pathOfConvertedFile, err)
+		return
+	}
+
 	// put recording_123_converted.webm to minio
-	_, err = s.minio.FPutObject(ctx, s.minioConfig.Files, convertedKey, pathOfConvertedFile, minio.PutObjectOptions{ContentType: utils.ConvertedContentType, UserMetadata: objectInfo.UserMetadata})
+	_, err = s.awsS3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:        &s.bucketsConfig.Files,
+		Key:           &convertedKey,
+		Body:          convertedFile,
+		ContentType:   new(utils.ConvertedContentType),
+		ContentLength: new(st.Size()),
+		Metadata:      objectInfo.Metadata,
+	})
 	if err != nil {
 		s.lgr.WithTracing(ctx).Errorf("Error during storing to minio %v: %v", pathOfConvertedFile, err)
 		return
@@ -117,7 +153,10 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 
 	if viper.GetBool("converting.removeOriginal") {
 		s.lgr.WithTracing(ctx).Infof("Going to remove original from minio %v", normalizedKey)
-		err = s.minio.RemoveObject(ctx, s.minioConfig.Files, normalizedKey, minio.RemoveObjectOptions{})
+		_, err = s.awsS3.DeleteObject(ctx, &s3.DeleteObjectInput{
+			Bucket: &s.bucketsConfig.Files,
+			Key:    &normalizedKey,
+		})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during removing original from minio %v: %v", normalizedKey, err)
 			return

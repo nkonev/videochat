@@ -3,15 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	awsS3 "github.com/aws/aws-sdk-go/service/s3"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/minio/minio-go/v7/pkg/notification"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -31,12 +27,12 @@ import (
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/config"
 	"nkonev.name/storage/db"
+	"nkonev.name/storage/dto"
 	"nkonev.name/storage/handlers"
 	"nkonev.name/storage/listener"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
-	"nkonev.name/storage/s3"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/tasks"
 	"nkonev.name/storage/utils"
@@ -57,9 +53,8 @@ func main() {
 		}),
 		fx.Provide(
 			configureTracer,
-			configureInternalMinio,
-			configureAwsS3,
-			configureMinioEntities,
+			client.ConfigureAwsS3v2,
+			configureS3Entities,
 			configureEcho,
 			db.ConfigureDb,
 			configureMigrations,
@@ -77,7 +72,7 @@ func main() {
 			handlers.NewUserAvatarHandler,
 			handlers.NewChatAvatarHandler,
 			handlers.NewFilesHandler,
-			listener.CreateMinioEventsListener,
+			listener.CreateS3EventListener,
 			producer.NewRabbitFileUploadedPublisher,
 			rabbitmq.CreateRabbitMqConnection,
 			services.NewFilesService,
@@ -240,51 +235,6 @@ func configureEcho(
 	return e
 }
 
-func configureInternalMinio() (*s3.InternalMinioClient, error) {
-	endpoint := viper.GetString("minio.internalEndpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	location := viper.GetString("minio.location")
-	secured := viper.GetBool("minio.secured")
-
-	// Initialize minio client object.
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: secured,
-		Region: location,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &s3.InternalMinioClient{minioClient}, nil
-}
-
-// https://github.com/aws/aws-sdk-go
-func configureAwsS3() *awsS3.S3 {
-	endpoint := viper.GetString("minio.internalEndpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	location := viper.GetString("minio.location")
-	secured := viper.GetBool("minio.secured")
-
-	creds := awsCredentials.NewStaticCredentials(accessKeyID, secretAccessKey, "")
-
-	nonSecured := !secured
-
-	forcePath := true
-	cfg := aws.Config{
-		Endpoint:         &endpoint,
-		Credentials:      creds,
-		S3ForcePathStyle: &forcePath,
-		Region:           &location,
-		DisableSSL:       &nonSecured,
-	}
-	sess := session.Must(session.NewSession(&cfg))
-	svc := awsS3.New(sess)
-	return svc
-}
-
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
 	lgr.Infof("Configuring Jaeger tracing")
 	conn, err := grpc.DialContext(context.Background(), viper.GetString("otlp.endpoint"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
@@ -345,54 +295,83 @@ func runEcho(lgr *logger.Logger, e *echo.Echo) {
 	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
+func ensureAndGetUserAvatarBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("s3.bucket.userAvatar")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func ensureAndGetChatAvatarBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("s3.bucket.chatAvatar")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func ensureAndGetFilesBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("s3.bucket.files")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func ensureAndGetFilesPreviewBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("s3.bucket.filesPreview")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func configureS3Entities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*utils.BucketsConfig, error) {
 	var ua, ca, f, p string
 	var err error
-	if ua, err = utils.EnsureAndGetUserAvatarBucket(lgr, client); err != nil {
+
+	ctx := context.Background()
+	if ua, err = ensureAndGetUserAvatarBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if ca, err = utils.EnsureAndGetChatAvatarBucket(lgr, client); err != nil {
+	if ca, err = ensureAndGetChatAvatarBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if f, err = utils.EnsureAndGetFilesBucket(lgr, client); err != nil {
+	if f, err = ensureAndGetFilesBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if p, err = utils.EnsureAndGetFilesPreviewBucket(lgr, client); err != nil {
+	if p, err = ensureAndGetFilesPreviewBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	bucketNotification, err := client.GetBucketNotification(context.Background(), f)
+
+	bucketNotification, err := s3Client.GetBucketNotificationConfiguration(ctx, &s3.GetBucketNotificationConfigurationInput{
+		Bucket: &f,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	arn := notification.Arn{
-		Partition: "minio",
-		Service:   "sqs",
-		Region:    "",
-		AccountID: "primary",
-		Resource:  "amqp",
-	}
-	subscriptionName := arn.String()
+	location := viper.GetString("s3.location")
+
+	arn := "arn:rustfs:sqs:" + location + ":primary:amqp"
+
 	shouldCreateSubscription := true
-	queueConfigs := bucketNotification.QueueConfigs
-	if queueConfigs != nil {
-		for _, qc := range queueConfigs {
-			if qc.Queue == subscriptionName {
-				shouldCreateSubscription = false
-				break
-			}
+	queueConfigs := bucketNotification.QueueConfigurations
+	for _, qc := range queueConfigs {
+		if *qc.QueueArn == arn {
+			shouldCreateSubscription = false
+			break
 		}
 	}
 	if shouldCreateSubscription {
 		lgr.Infof("Will create subscription for bucket %v to arn %v", f, arn)
-		err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
-			QueueConfigs: []notification.QueueConfig{
-				notification.QueueConfig{
-					Queue: subscriptionName,
-					Config: notification.Config{
-						Events: []notification.EventType{
-							utils.ObjectCreated + ":*",
-							utils.ObjectRemoved + ":*",
+
+		bucketName := f
+
+		// see also storage/listener/s3_event_listener.go
+		output, err := s3Client.PutBucketNotificationConfiguration(ctx, &s3.PutBucketNotificationConfigurationInput{
+			Bucket: new(bucketName),
+			NotificationConfiguration: &types.NotificationConfiguration{
+				QueueConfigurations: []types.QueueConfiguration{
+					types.QueueConfiguration{
+						QueueArn: &arn,
+						Events: []types.Event{
+							types.Event(dto.ObjectCreated + ":*"),
+							types.Event(dto.ObjectRemoved + ":*"),
+							types.Event(dto.ObjectCreatedPutTagging),
 						},
 					},
 				},
@@ -401,8 +380,9 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) 
 		if err != nil {
 			return nil, err
 		}
+		lgr.Info("PutBucketNotificationConfiguration response is: %v", output)
 	}
-	return &utils.MinioConfig{
+	return &utils.BucketsConfig{
 		UserAvatar:   ua,
 		ChatAvatar:   ca,
 		Files:        f,

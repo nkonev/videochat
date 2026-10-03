@@ -4,111 +4,101 @@ import (
 	"context"
 	"time"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/tags"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
-	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 )
 
-func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
+func NewEventService(lgr *logger.Logger, client *client.RestClient, awsS3 *client.S3Wrapper, bucketsConfig *utils.BucketsConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
 	return &EventService{
-		client:       client,
-		minio:        minio,
-		minioConfig:  minioConfig,
-		filesService: filesService,
-		publisher:    publisher,
-		lgr:          lgr,
+		client:        client,
+		awsS3:         awsS3,
+		bucketsConfig: bucketsConfig,
+		filesService:  filesService,
+		publisher:     publisher,
+		lgr:           lgr,
 	}
 }
 
 type EventService struct {
-	client       *client.RestClient
-	minio        *s3.InternalMinioClient
-	minioConfig  *utils.MinioConfig
-	filesService *FilesService
-	publisher    *producer.RabbitFileUploadedPublisher
-	lgr          *logger.Logger
+	client        *client.RestClient
+	awsS3         *client.S3Wrapper
+	bucketsConfig *utils.BucketsConfig
+	filesService  *FilesService
+	publisher     *producer.RabbitFileUploadedPublisher
+	lgr           *logger.Logger
 }
 
-func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) *HandleEventResponse {
+func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType dto.EventType, s3Event *dto.S3Event) *HandleEventResponse {
 	s.lgr.WithTracing(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
 	var err error
 
-	var objectInfo minio.ObjectInfo
-	var tagging *tags.Tags
-	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
-		if err != nil {
-			s.lgr.WithTracing(ctx).Errorf("Error during stat %v", err)
-			return nil
-		}
-
-		tagging, err = s.minio.GetObjectTagging(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectTaggingOptions{})
+	var tm map[string]string
+	if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
+		tagging, err := s.awsS3.GetObjectTagging(ctx, &s3.GetObjectTaggingInput{
+			Bucket: &s.bucketsConfig.Files,
+			Key:    &normalizedKey,
+		})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during getting tags %v", err)
 			return nil
 		}
+
+		tm = ConvertTaggingToMap(tagging.TagSet)
 	}
 
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
-	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
-		if err != nil {
-			s.lgr.WithTracing(ctx).Errorf("Error get metadata: %v", err)
+	if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
+		if s3Event == nil {
+			s.lgr.WithTracing(ctx).Errorf("nil minioEvent %v", err)
 			return nil
 		}
-
-		var participantIdSet = map[int64]bool{}
-		participantIdSet[fileOwnerId] = true
-		users = GetUsersRemotelyOrEmpty(s.lgr, participantIdSet, s.client, ctx)
+		users = GetUsersRemotelyOrEmpty(s.lgr, map[int64]bool{fileOwnerId: true}, s.client, ctx)
 	}
 	return &HandleEventResponse{
-		objectInfo:  &objectInfo,
-		tagging:     tagging,
-		users:       users,
-		fileOwnerId: fileOwnerId,
+		s3Event: s3Event,
+		tagging: tm,
+		users:   users,
 	}
 }
 
 type HandleEventResponse struct {
-	objectInfo  *minio.ObjectInfo
-	tagging     *tags.Tags
-	users       map[int64]*dto.User
-	fileOwnerId int64
+	s3Event *dto.S3Event
+	tagging map[string]string
+	users   map[int64]*dto.User
 }
 
-func (r *HandleEventResponse) GetTags() (*bool, error) {
+func (r *HandleEventResponse) GetTags() (*bool, *string, error) {
 	if r == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
-	published, err := DeserializeTags(r.tagging)
+	published, correlationId, err := DeserializeTags(r.tagging)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return &published, nil
+	return &published, correlationId, nil
 }
 
-func (r *HandleEventResponse) GetObjectInfo() *minio.ObjectInfo {
+func (r *HandleEventResponse) GetS3Event() *dto.S3Event {
 	if r == nil {
 		return nil
 	}
-	return r.objectInfo
+	return r.s3Event
 }
 
-func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
+func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType dto.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
 	now := time.Now().UTC()
 
 	// iterate over chat participants
 	for _, participantId := range participantIds {
 		var fileInfo *dto.FileInfoDto
 		var err error
-		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+		if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
 			if mce != nil {
 				userId := &participantId
 				fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
@@ -116,12 +106,20 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 					s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
 					continue
 				}
-				fileInfo.Owner = response.users[response.fileOwnerId]
+				if fileInfo == nil {
+					s.lgr.WithTracing(ctx).Errorf("nil file info, skipping")
+					continue
+				}
+				if response.s3Event == nil {
+					s.lgr.WithTracing(ctx).Errorf("nil minioEvent, skipping", err)
+					continue
+				}
+				fileInfo.Owner = response.users[response.s3Event.OwnerId]
 			} else {
 				s.lgr.WithTracing(ctx).Errorf("Missed objectInfo for %v", normalizedKey)
 				continue
 			}
-		} else if eventType == utils.FILE_DELETED {
+		} else if eventType == dto.FILE_DELETED {
 			fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
 			if err != nil {
 				s.lgr.WithTracing(ctx).Errorf("Error parsing fileItemUuid for %v: %v", normalizedKey, err)
@@ -136,8 +134,10 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 			}
 		}
 		var correlationId *string
-		if mce != nil && mce.CorrelationId != nil {
-			correlationId = mce.CorrelationId
+		if mce != nil {
+			if mce.CorrelationId != nil {
+				correlationId = mce.CorrelationId
+			}
 		}
 		err = s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,

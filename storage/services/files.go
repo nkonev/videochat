@@ -8,38 +8,38 @@ import (
 	"strings"
 	"time"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/tags"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 )
 
 type FilesService struct {
-	minio       *s3.InternalMinioClient
-	restClient  *client.RestClient
-	minioConfig *utils.MinioConfig
-	dba         *db.DB
-	lgr         *logger.Logger
+	awsS3         *client.S3Wrapper
+	restClient    *client.RestClient
+	bucketsConfig *utils.BucketsConfig
+	dba           *db.DB
+	lgr           *logger.Logger
 }
 
 func NewFilesService(
 	lgr *logger.Logger,
-	minio *s3.InternalMinioClient,
+	awsS3 *client.S3Wrapper,
 	chatClient *client.RestClient,
 	dba *db.DB,
-	minioConfig *utils.MinioConfig,
+	bucketsConfig *utils.BucketsConfig,
 ) *FilesService {
 	return &FilesService{
-		minio:       minio,
-		restClient:  chatClient,
-		minioConfig: minioConfig,
-		dba:         dba,
-		lgr:         lgr,
+		awsS3:         awsS3,
+		restClient:    chatClient,
+		bucketsConfig: bucketsConfig,
+		dba:           dba,
+		lgr:           lgr,
 	}
 }
 
@@ -148,14 +148,23 @@ func (h *FilesService) GetListFilesItemUuids(
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
-	ttl := viper.GetDuration("minio.presignDownloadTtl")
+	ttl := viper.GetDuration("s3.presignDownloadTtl")
 
-	u, err := h.minio.PresignedGetObject(ctx, h.minioConfig.Files, aKey, ttl, url.Values{})
+	pres, err := h.awsS3.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: &h.bucketsConfig.Files,
+		Key:    &aKey,
+	}, s3.WithPresignExpires(ttl))
 	if err != nil {
 		return "", time.Second, err
 	}
 
-	downloadUrl, err := ChangeMinioUrl(u)
+	u, err := url.Parse(pres.URL)
+	if err != nil {
+		h.lgr.WithTracing(ctx).Errorf("Error during parsing presigned put url %v", err)
+		return "", time.Second, err
+	}
+
+	downloadUrl, err := ChangeS3Url(u)
 	if err != nil {
 		return "", time.Second, err
 	}
@@ -177,8 +186,8 @@ func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
 	return downloadUrlStr, nil
 }
 
-func ChangeMinioUrl(url *url.URL) (string, error) {
-	externalS3UrlPrefix := viper.GetString("minio.externalS3UrlPrefix")
+func ChangeS3Url(url *url.URL) (string, error) {
+	externalS3UrlPrefix := viper.GetString("s3.externalS3UrlPrefix")
 	parsed, err := url.Parse(externalS3UrlPrefix)
 	if err != nil {
 		return "", err
@@ -419,8 +428,8 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 		query := respUrl.Query()
 		query.Set(utils.FileParam, previewMinioKey)
 
-		exists, obj, _ := h.minio.FileExists(c, h.minioConfig.FilesPreview, previewMinioKey)
-		if exists {
+		exists, obj, _ := h.awsS3.FileExists(c, h.bucketsConfig.FilesPreview, previewMinioKey)
+		if exists && obj.LastModified != nil {
 			// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
 			query.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
 		}
@@ -471,17 +480,16 @@ func SerializeMetadataSimple(userId int64, correlationId *string, isConferenceRe
 	return userMetadata
 }
 
-const xAmzMetaPrefix = "X-Amz-Meta-"
-
 // intended to use only in events processing and restoring,
 // not to use in the regular code - metadata can be absent because of poor backup
-func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, string, int64, error) {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
+func DeserializeMetadataFromMap(userMetadata0 map[string]string) (int64, string, int64, error) {
+	copied := map[string]string{}
+	for k, v := range userMetadata0 {
+		// At least stat() returns Capitalized
+		copied[strings.ToLower(k)] = v
 	}
 
-	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
+	ownerIdString, ok := copied[ownerIdKey]
 	if !ok {
 		return 0, "", 0, errors.New("Unable to get owner id")
 	}
@@ -490,15 +498,63 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 		return 0, "", 0, err
 	}
 
-	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
+	correlationId := copied[correlationIdKey]
 
 	var timestamp int64
-	timestampString, ok := userMetadata[prefix+strings.Title(timestampKey)]
+
+	timestampString, ok := copied[timestampKey]
 	if ok {
 		timestamp, _ = utils.ParseInt64(timestampString)
 	}
 
 	return ownerId, correlationId, timestamp, nil
+}
+
+func DeserializeMetadataFromEvent(filesBucketName, strData string) (*dto.MinioEventWithAdditionalFields, error) {
+	eventName := gjson.Get(strData, "EventName").String()
+	key := gjson.Get(strData, "Key").String()
+	userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
+	size := gjson.Get(strData, "Records.0.s3.object.size").Int()
+	ownerId := userMetadata.Get(OwnerIdKey()).Int()
+	correlationIdStr := userMetadata.Get(CorrelationIdKey()).String()
+	isConferenceRecording := userMetadata.Get(ConferenceRecordingKey()).Bool()
+	isMessageRecording := userMetadata.Get(MessageRecordingKey()).Bool()
+	var correlationId *string
+	if correlationIdStr != "" {
+		correlationId = &correlationIdStr
+	}
+	timestamp := userMetadata.Get(TimestampKey()).Int() // unix milli in UTC
+
+	normalizedKey := utils.StripBucketName(key, filesBucketName)
+	workingChatId, err := utils.ParseChatId(normalizedKey)
+	if err != nil {
+		err = fmt.Errorf("Error during parsing chatId: %v", err)
+		return nil, err
+	}
+
+	var minioEvent = &dto.S3Event{
+		EventName:     eventName,
+		Key:           key,
+		ChatId:        workingChatId,
+		OwnerId:       ownerId,
+		CorrelationId: correlationId,
+		Size:          size,
+	}
+
+	eventType, err := dto.GetEventType(eventName, isConferenceRecording || isMessageRecording)
+	if err != nil {
+		err = fmt.Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
+		return nil, err
+	}
+
+	return &dto.MinioEventWithAdditionalFields{
+		S3Event:               *minioEvent,
+		Timestamp:             timestamp,
+		IsConferenceRecording: isConferenceRecording,
+		IsMessageRecording:    isMessageRecording,
+		EventType:             eventType,
+		NormalizedKey:         normalizedKey,
+	}, nil
 }
 
 func GetKey(filename string, chatFileItemUuid string, chatId int64) string {
@@ -516,76 +572,90 @@ func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
 	return userMetadata
 }
 
-func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (string, error) {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-
-	originalKeyParam, ok := userMetadata[prefix+strings.Title(originalKey)]
+func GetOriginalKeyFromMetadata(userMetadata map[string]string) (string, error) {
+	originalKeyParam, ok := userMetadata[originalKey]
 	if !ok {
 		return "", errors.New("Unable to get originalKey")
 	}
 	return originalKeyParam, nil
 }
 
-func OwnerIdKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(ownerIdKey)
+func OwnerIdKey() string {
+	return ownerIdKey
 }
 
-func CorrelationIdKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(correlationIdKey)
+func CorrelationIdKey() string {
+	return correlationIdKey
 }
 
-func ConferenceRecordingKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(conferenceRecordingKey)
+func ConferenceRecordingKey() string {
+	return conferenceRecordingKey
 }
 
-func MessageRecordingKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(messageRecordingKey)
+func MessageRecordingKey() string {
+	return messageRecordingKey
 }
 
-func TimestampKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(timestampKey)
+func TimestampKey() string {
+	return timestampKey
 }
 
-func SerializeTags(published bool) map[string]string {
+func SerializeTags(published bool, correlationId *string) map[string]string {
 	var userTags = map[string]string{}
 	userTags[publishedKey] = fmt.Sprintf("%v", published)
+	if correlationId != nil {
+		userTags[correlationIdKey] = *correlationId
+	}
 	return userTags
 }
 
-func DeserializeTags(tagging *tags.Tags) (bool, error) {
-	if tagging == nil {
-		return false, nil
+func DeserializeTags(tagsMap map[string]string) (bool, *string, error) {
+	if tagsMap == nil {
+		return false, nil, nil
 	}
 
-	var tagsMap map[string]string = tagging.ToMap()
+	var err error
+	var published bool
+	var correlationId *string
+
 	publishedString, ok := tagsMap[publishedKey]
-	if !ok {
-		return false, nil
+	if ok {
+		published, err = utils.ParseBoolean(publishedString)
+		if err != nil {
+			return false, nil, err
+		}
 	}
-	return utils.ParseBoolean(publishedString)
+
+	correlationIdStr, ok := tagsMap[correlationIdKey]
+	if ok {
+		correlationId = &correlationIdStr
+	}
+
+	return published, correlationId, nil
+}
+
+func ConvertTagsToTagging(tm map[string]string) *types.Tagging {
+	res := &types.Tagging{
+		TagSet: []types.Tag{},
+	}
+
+	for k, v := range tm {
+		res.TagSet = append(res.TagSet, types.Tag{Key: &k, Value: &v})
+	}
+
+	return res
+}
+
+func ConvertTaggingToMap(ts []types.Tag) map[string]string {
+	res := map[string]string{}
+
+	for _, v := range ts {
+		if v.Key != nil && v.Value != nil {
+			res[*v.Key] = *v.Value
+		}
+	}
+
+	return res
 }
 
 func GetUsersRemotelyOrEmpty(lgr *logger.Logger, userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {

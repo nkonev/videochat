@@ -1,23 +1,16 @@
 package handlers
 
 import (
-	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"math/big"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
 	"github.com/labstack/echo/v4"
-	"github.com/prometheus/common/expfmt"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/auth"
-	"nkonev.name/storage/client"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
 	"nkonev.name/storage/utils"
 )
 
@@ -110,108 +103,12 @@ func Convert(h http.Handler) echo.HandlerFunc {
 	}
 }
 
-func getMaxAllowedConsumption(ctx context.Context, lgr *logger.Logger, restClient *client.RestClient, isUnlimited bool) (int64, error) {
-	if isUnlimited {
-		return calcTotalSize(ctx, lgr, restClient)
-	} else {
-		return viper.GetInt64("limits.default.all.users.limit"), nil
-	}
-}
-
-func calcTotalSize(ctx context.Context, lgr *logger.Logger, restClient *client.RestClient) (int64, error) {
-	var totalClusterSize = big.NewFloat(0)
-
-	clusterMetrics, err := restClient.GetMinioMetricsCluster(ctx)
-	if err != nil {
-		lgr.WithTracing(ctx).Errorf("Error during getting bucket consumption %v", err)
-		return 0, err
-	}
-
-	var parser expfmt.TextParser
-
-	mf, err := parser.TextToMetricFamilies(strings.NewReader(clusterMetrics))
-	if err != nil {
-		lgr.WithTracing(ctx).Errorf("Error during parsing bucket consumption %v", err)
-		return 0, err
-	}
-
-	mfi := mf["minio_cluster_capacity_usable_total_bytes"]
-
-	for _, me := range mfi.Metric {
-		if me != nil && me.Gauge != nil && me.Gauge.Value != nil {
-			addable := big.NewFloat(*me.Gauge.Value)
-			newV := big.NewFloat(0)
-			newV.Add(totalClusterSize, addable)
-			totalClusterSize = newV
-		}
-	}
-
-	resV, _ := totalClusterSize.Int64()
-
-	return resV, nil
-}
-
-func calcBucketsConsumption(ctx context.Context, lgr *logger.Logger, restClient *client.RestClient) (int64, error) {
-	var totalBucketConsumption = big.NewFloat(0)
-
-	bucketMetrics, err := restClient.GetMinioMetricsBucket(ctx)
-	if err != nil {
-		lgr.WithTracing(ctx).Errorf("Error during getting bucket consumption %v", err)
-		return 0, err
-	}
-
-	var parser expfmt.TextParser
-
-	mf, err := parser.TextToMetricFamilies(strings.NewReader(bucketMetrics))
-	if err != nil {
-		lgr.WithTracing(ctx).Errorf("Error during parsing bucket consumption %v", err)
-		return 0, err
-	}
-
-	mfi := mf["minio_bucket_usage_total_bytes"]
-
-	if mfi == nil {
-		return 0, errors.New("bucket usage still is not ready")
-	}
-
-	for _, me := range mfi.Metric {
-		if me != nil && me.Gauge != nil && me.Gauge.Value != nil {
-			addable := big.NewFloat(*me.Gauge.Value)
-			newV := big.NewFloat(0)
-			newV.Add(totalBucketConsumption, addable)
-			totalBucketConsumption = newV
-		}
-	}
-
-	resV, _ := totalBucketConsumption.Int64()
-
-	return resV, nil
-}
-
-func checkUserLimit(ctx context.Context, lgr *logger.Logger, minioClient *s3.InternalMinioClient, bucketName string, userPrincipalDto *auth.AuthResult, desiredSize int64, restClient *client.RestClient) (bool, int64, int64, error) {
+func checkUserLimit(userPrincipalDto *auth.AuthResult) (bool, error) {
 	limitsEnabled := viper.GetBool("limits.enabled")
-	// TODO take into account userId
-	consumption, err := calcBucketsConsumption(ctx, lgr, restClient)
-	if err != nil {
-		lgr.WithTracing(ctx).Errorf("Error during getting consumption %v", err)
-		return false, 0, 0, err
-	}
 
 	isUnlimited := (userPrincipalDto != nil && userPrincipalDto.HasPermission("CAN_UNLIMITED_UPLOAD")) || !limitsEnabled
 
-	maxAllowed, err := getMaxAllowedConsumption(ctx, lgr, restClient, isUnlimited)
-	if err != nil {
-		lgr.WithTracing(ctx).Errorf("Error during calculating max allowed %v", err)
-		return false, 0, 0, err
-	}
-	available := maxAllowed - consumption
-	lgr.WithTracing(ctx).Debugf("Max allowed %v, isUnlimited %v, consumption %v, available %v", maxAllowed, isUnlimited, consumption, available)
-
-	if desiredSize > available {
-		lgr.WithTracing(ctx).Infof("Upload too large %v+%v>%v bytes", consumption, desiredSize, maxAllowed)
-		return false, consumption, available, nil
-	}
-	return true, consumption, available, nil
+	return isUnlimited, nil
 }
 
 func cacheableResponse(c echo.Context, ttl time.Duration) {
