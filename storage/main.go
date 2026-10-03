@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -282,6 +283,14 @@ func configureAwsS3() *awsS3.S3 {
 	}
 	sess := session.Must(session.NewSession(&cfg))
 	svc := awsS3.New(sess)
+
+	//svc.GetBucketNotificationConfiguration()
+	// svc.PutBucketNotificationConfiguration(&awsS3.PutBucketNotificationConfigurationInput{
+	// 	Bucket: new("files"),
+	// 	NotificationConfiguration: &awsS3.NotificationConfiguration{
+	// 	},
+	// })
+
 	return svc
 }
 
@@ -365,14 +374,7 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) 
 		return nil, err
 	}
 
-	arn := notification.Arn{
-		Partition: "minio",
-		Service:   "sqs",
-		Region:    "",
-		AccountID: "primary",
-		Resource:  "amqp",
-	}
-	subscriptionName := arn.String()
+	subscriptionName := "arn:rustfs:sqs:us-east-1:primary:amqp"
 	shouldCreateSubscription := true
 	queueConfigs := bucketNotification.QueueConfigs
 	if queueConfigs != nil {
