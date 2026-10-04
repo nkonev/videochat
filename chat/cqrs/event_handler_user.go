@@ -124,7 +124,7 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 			if hisParticipantsView != nil {
 				errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationIdByChatId[participant.ChatId], dto.ChatEvent{
 					EventType:    eventTypeParticipantAdded,
-					UserId:       events.UserId,
+					UserId:       participant.ParticipantId,
 					ChatId:       participant.ChatId,
 					Participants: &[]*dto.UserViewEnrichedDto{hisParticipantsView},
 				})
