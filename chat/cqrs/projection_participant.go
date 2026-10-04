@@ -536,38 +536,36 @@ type ChatIdUserId struct {
 	UserId int64
 }
 
-func (m *EnrichingProjection) GetParticipantsMultipleChatsEnriched(ctx context.Context, chatIdUserIds []*ParticipantWithChatIdWithAdmin) (map[int64][]*dto.UserViewEnrichedDto, error) {
-	participantIds := GetParticipantIdsFrom(chatIdUserIds)
+func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx context.Context, behalfs []*ParticipantWithChatIdWithAdmin, consideredUserId int64, usersMap map[int64]*dto.User) (map[ChatIdUserId]*dto.UserViewEnrichedDto, error) {
+	uniqueChatIds := utils.Unique(GetChatIdsFrom(behalfs))
 
-	chatIds := utils.Unique(GetChatIdsFrom(chatIdUserIds))
+	res := map[ChatIdUserId]*dto.UserViewEnrichedDto{}
 
-	users, err := m.aaaRestClient.GetUsers(ctx, participantIds)
-	if err != nil {
-		m.lgr.WarnContext(ctx, "unable to get users")
-	}
-
-	res := map[int64][]*dto.UserViewEnrichedDto{}
-
-	chatsById, err := m.cp.GetChatsBasic(ctx, m.cp.db, chatIds)
+	chatsById, err := m.cp.GetChatsBasic(ctx, m.cp.db, uniqueChatIds)
 	if err != nil {
 		m.lgr.ErrorContext(ctx, "unable to get chats")
 		return nil, err
 	}
 
-	for _, p := range chatIdUserIds {
+	consideredUserWithAdminByChatIds, err := m.makeConsideredUserWithAdminByChatIds(ctx, consideredUserId, uniqueChatIds, usersMap)
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "unable to consideredUserWithAdminByChatIds")
+		return nil, err
+	}
+
+	for _, p := range behalfs {
 		cht := chatsById[p.ChatId]
 		if cht != nil {
-			userWithAdmin := makeParticipantWithAdminFrom(p, utils.ToMap(users))
-			if userWithAdmin != nil {
-				enriched := makeEnrichedUsers([]*dto.UserWithAdmin{userWithAdmin}, p.ParticipantId, p.ChatAdmin, cht.TetATet)
-				get := res[cht.Id]
-				get = append(get, enriched...)
-				res[cht.Id] = get
+			cu := consideredUserWithAdminByChatIds[p.ChatId]
+			if cu != nil {
+				// build enriched considered user behalf p
+				eu := makeEnrichedUser(cu, p.ParticipantId, p.ChatAdmin, cht.TetATet)
+				res[ChatIdUserId{ChatId: p.ChatId, UserId: p.ParticipantId}] = eu
 			} else {
-				m.lgr.WarnContext(ctx, "unable to get user")
+				m.lgr.WarnContext(ctx, "unable to consideredUserWithAdminByChatIds", logger.AttributeChatId, p.ChatId)
 			}
 		} else {
-			m.lgr.ErrorContext(ctx, "unable to get chatById")
+			m.lgr.ErrorContext(ctx, "unable to get chatById", logger.AttributeChatId, p.ChatId)
 			return nil, err
 		}
 	}
@@ -575,19 +573,47 @@ func (m *EnrichingProjection) GetParticipantsMultipleChatsEnriched(ctx context.C
 	return res, nil
 }
 
+func (m *EnrichingProjection) makeConsideredUserWithAdminByChatIds(ctx context.Context, consideredUserId int64, chatIds []int64, usersMap map[int64]*dto.User) (map[int64]*dto.UserWithAdmin, error) {
+	consideredUserAdminByChatIds, err := m.cp.getAreAdminsOfChatIds(ctx, m.cp.db, consideredUserId, chatIds)
+	if err != nil {
+		return nil, err
+	}
+
+	consideredUserWithAdminByChatIds := map[int64]*dto.UserWithAdmin{}
+	for chatId, admin := range consideredUserAdminByChatIds {
+		u := usersMap[consideredUserId]
+		if u != nil {
+			consideredUserWithAdminByChatIds[chatId] = &dto.UserWithAdmin{
+				User:      *u,
+				ChatAdmin: admin,
+			}
+		} else {
+			m.lgr.InfoContext(ctx, "unable to find user", logger.AttributeUserId, consideredUserId)
+		}
+	}
+
+	return consideredUserWithAdminByChatIds, nil
+}
+
 func makeEnrichedUsers(users []*dto.UserWithAdmin, behalfUserId int64, behalfIsChatAdmin bool, isTetATetChat bool) []*dto.UserViewEnrichedDto {
 	var res = make([]*dto.UserViewEnrichedDto, 0, len(users))
 	for _, u := range users {
-		enriched := dto.UserViewEnrichedDto{
-			BehalfUserId:  behalfUserId,
-			UserWithAdmin: *u,
-			CanChange:     CanChangeParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, u.Id),
-			CanDelete:     CanRemoveParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, false, true, u.Id, false),
-		}
-		res = append(res, &enriched)
+		enriched := makeEnrichedUser(u, behalfUserId, behalfIsChatAdmin, isTetATetChat)
+		res = append(res, enriched)
 	}
 
 	return res
+}
+
+func makeEnrichedUser(u *dto.UserWithAdmin, behalfUserId int64, behalfIsChatAdmin bool, isTetATetChat bool) *dto.UserViewEnrichedDto {
+	enriched := dto.UserViewEnrichedDto{
+		BehalfUserId:  behalfUserId,
+		UserWithAdmin: *u,
+		CanChange:     CanChangeParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, u.Id),
+		CanDelete:     CanRemoveParticipant(behalfUserId, behalfIsChatAdmin, isTetATetChat, false, true, u.Id, false),
+	}
+
+	return &enriched
 }
 
 func (m *EnrichingProjection) SearchUsersContaining(ctx context.Context, co db.CommonOperations, searchString string, chatId int64, pageSize int32, requestOffset int64, reverse bool, needCount bool) ([]*dto.UserWithAdmin, int64, error) {
@@ -748,6 +774,34 @@ func (m *CommonProjection) IterateOverAllParticipantIdsByChatIds(ctx context.Con
 	for page := int64(0); shouldContinue; page++ {
 		offset := utils.GetOffset(page, utils.DefaultSize)
 		participants, err := getAllParticipantsCommonOfChatIds(ctx, co, chatIds, utils.DefaultSize, offset, false)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during getting portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+		if len(participants) == 0 {
+			return nil
+		}
+		if len(participants) < utils.DefaultSize {
+			shouldContinue = false
+		}
+
+		err = consumer(participants)
+		if err != nil {
+			m.lgr.ErrorContext(ctx, "Got error during invoking consumer portion", logger.AttributeError, err)
+			lastError = err
+			break
+		}
+	}
+	return lastError
+}
+
+func (m *CommonProjection) IterateOverAllParticipantsByChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, consumer func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error) error {
+	shouldContinue := true
+	var lastError error
+	for page := int64(0); shouldContinue; page++ {
+		offset := utils.GetOffset(page, utils.DefaultSize)
+		participants, err := getAllParticipantsByChatIds(ctx, co, chatIds, utils.DefaultSize, offset, false)
 		if err != nil {
 			m.lgr.ErrorContext(ctx, "Got error during getting portion", logger.AttributeError, err)
 			lastError = err
@@ -1216,6 +1270,34 @@ func getAllParticipantsCommonOfChatIds(ctx context.Context, co db.CommonOperatio
 	return list, nil
 }
 
+func getAllParticipantsByChatIds(ctx context.Context, co db.CommonOperations, chatIds []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithChatIdWithAdmin, error) {
+	list := make([]*ParticipantWithChatIdWithAdmin, 0)
+
+	var err error
+
+	order := "asc"
+	if reverseOrder {
+		order = "desc"
+	}
+
+	sqlArgs := []any{chatIds, participantsSize, participantsOffset}
+	sqlQuery := fmt.Sprintf(`
+		SELECT 
+		    user_id,
+		    chat_admin,
+		    chat_id
+		FROM chat_participant
+		WHERE chat_id = any($1)
+		ORDER BY chat_id, create_date_time %s, user_id asc
+		LIMIT $2 OFFSET $3
+	`, order)
+	err = sqlscan.Select(ctx, co, &list, sqlQuery, sqlArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("error during interacting with db: %w", err)
+	}
+	return list, nil
+}
+
 func getParticipantsCommonIncluding(ctx context.Context, co db.CommonOperations, chatId int64, including []int64, participantsSize int32, participantsOffset int64, reverseOrder bool) ([]*ParticipantWithAdmin, error) {
 	list := make([]*ParticipantWithAdmin, 0)
 
@@ -1300,18 +1382,6 @@ func makeParticipantsWithAdmin(participants []*ParticipantWithAdmin, users map[i
 	}
 
 	return res
-}
-
-func makeParticipantWithAdminFrom(participant *ParticipantWithChatIdWithAdmin, users map[int64]*dto.User) *dto.UserWithAdmin {
-	u := users[participant.ParticipantId]
-	if u != nil {
-		return &dto.UserWithAdmin{
-			User:      *u,
-			ChatAdmin: participant.ChatAdmin,
-		}
-	} else {
-		return nil
-	}
 }
 
 // We use pure functions for authorization, for sake simplicity and composability

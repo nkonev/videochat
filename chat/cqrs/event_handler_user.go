@@ -3,7 +3,6 @@ package cqrs
 import (
 	"context"
 	"fmt"
-	"maps"
 	"slices"
 
 	"nkonev.name/chat/dto"
@@ -105,39 +104,35 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	m.lgr.DebugContext(ctx, "Sending notification about the participants", "event_type", eventTypeParticipantAdded, "user_ids", userIds)
 
-	// actually we iterate over 1 participant and bunch of chats
-	// this is an event for ChatParticipantsModal.vue
-	// we build participantAdded events behalf of each participant and send to each of the their own view
+	users, err := m.aaaRestClient.GetUsers(ctx, []int64{events.UserId})
+	if err != nil {
+		m.lgr.WarnContext(ctx, "unable to get users")
+	}
 
-	// TODO ранее для 1го добавляемого юзера мы отправляли (кого?) его всем участникам 1го чата от их лица(behalf) с помощью
-	// 	err = m.commonProjection.IterateOverChatParticipantIdsExcepting(ctx, m.db, event.ChatId, nil, func(participantIdsPortion []int64) error {
-	// 		participantsByBehalfs, _, errInn := m.enrichingProjection.GetParticipantsEnriched(ctx, participantIdsPortion, event.ChatId, int32(len(userIds)), utils.DefaultOffset, dto.NoSearchString, false, userIds)
-	// чтобы у них был актуальный ChatParticipantsModal.vue
+	usersMap := utils.ToMap(users)
 
-	// теперь у нас пачка UserChatAddeds []UserChatParticipantAdded
-	// и её нужно отправить всем участникам
-	// чатов может быть несколько
-	// но терерь это 1 участник(events.UserId) - поэтому для этого кейса надо не IterateOverAllChatsParticipantIds а IterateOverAllChats__ONE__ParticipantId
-
-	err = m.commonProjection.IterateOverAllParticipantIdsByChatIds(ctx, m.db, chatIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
-		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsMultipleChatsEnriched(ctx, participantIdsPortion)
+	// send an event participant_added for ChatParticipantsModal.vue to all the participants of the chosen chats
+	err = m.commonProjection.IterateOverAllParticipantsByChatIds(ctx, m.db, chatIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
+		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsBehalfOfGivenParticipants(ctx, participantIdsPortion, events.UserId, usersMap)
 		if errInn != nil {
 			return errInn
 		}
 
-		sortedChatIds := slices.Sorted(maps.Keys(participantsByChatIds))
-
 		// for every participant of chat we send an info about the newly added participants
-		for _, chatId := range sortedChatIds {
-			hisParticipantsViews := participantsByChatIds[chatId]
-			errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationIdByChatId[chatId], dto.ChatEvent{
-				EventType:    eventTypeParticipantAdded,
-				UserId:       events.UserId,
-				ChatId:       chatId,
-				Participants: &hisParticipantsViews,
-			})
-			if errInn != nil {
-				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+		for _, participant := range participantIdsPortion {
+			hisParticipantsView := participantsByChatIds[ChatIdUserId{ChatId: participant.ChatId, UserId: participant.ParticipantId}]
+			if hisParticipantsView != nil {
+				errInn = m.rabbitmqOutputEventPublisher.Publish(ctx, correlationIdByChatId[participant.ChatId], dto.ChatEvent{
+					EventType:    eventTypeParticipantAdded,
+					UserId:       events.UserId,
+					ChatId:       participant.ChatId,
+					Participants: &[]*dto.UserViewEnrichedDto{hisParticipantsView},
+				})
+				if errInn != nil {
+					m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+				}
+			} else {
+				m.lgr.InfoContext(ctx, "Not found view behalf", logger.AttributeChatId, participant.ChatId, logger.AttributeUserId, participant.ParticipantId)
 			}
 		}
 		return nil
