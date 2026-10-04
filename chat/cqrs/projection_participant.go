@@ -541,7 +541,7 @@ func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx conte
 
 	consideredUserWithAdminByChatIds, err := m.makeConsideredUserWithAdminByChatIds(ctx, consideredUserId, consideredUserAdminByChatIds, usersMap)
 	if err != nil {
-		m.lgr.ErrorContext(ctx, "unable to consideredUserWithAdminByChatIds")
+		m.lgr.ErrorContext(ctx, "unable to makeConsideredUserWithAdminByChatIds", logger.AttributeError, err)
 		return nil, err
 	}
 
