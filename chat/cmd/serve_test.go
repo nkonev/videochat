@@ -4048,16 +4048,21 @@ func TestBlog(t *testing.T) {
 }
 
 func TestChatPaginate(t *testing.T) {
+	const user1 int64 = 1
+	const user1Login = "user1"
+
 	resetInfraAndStartAppTest(t,
 		func(
 			aaaRestClient client.AaaRestClient,
 		) {
 			mockAaaClient := aaaRestClient.(*client.MockAaaRestClient)
-			mockAaaClient.EXPECT().GetUsers(mock.Anything, mock.Anything).Return([]*dto.User{}, nil)
+			mockAaaClient.EXPECT().GetUsers(mock.Anything, []int64{user1}).Return([]*dto.User{{
+				Id:    user1,
+				Login: user1Login,
+			}}, nil)
 			mockAaaClient.EXPECT().SearchGetUsers(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*dto.User{}, 0, nil)
 		},
 		func(deps *commonTestDeps) {
-			const user1 int64 = 1
 			const num = 1000
 			const chatPrefix = "generated_chat"
 
