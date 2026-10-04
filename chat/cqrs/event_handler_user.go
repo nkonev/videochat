@@ -111,9 +111,20 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 
 	usersMap := utils.ToMap(users)
 
+	consideredUserAdminByChatIds, err := m.enrichingProjection.cp.getAreAdminsOfChatIds(ctx, m.enrichingProjection.cp.db, events.UserId, chatIds)
+	if err != nil {
+		return nil, err
+	}
+
+	chatsById, err := m.enrichingProjection.cp.GetChatsBasic(ctx, m.enrichingProjection.cp.db, chatIds)
+	if err != nil {
+		m.lgr.ErrorContext(ctx, "unable to get chats")
+		return nil, err
+	}
+
 	// send an event participant_added for ChatParticipantsModal.vue to all the participants of the chosen chats
 	err = m.commonProjection.IterateOverAllParticipantsByChatIds(ctx, m.db, chatIds, func(participantIdsPortion []*ParticipantWithChatIdWithAdmin) error {
-		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsBehalfOfGivenParticipants(ctx, participantIdsPortion, events.UserId, usersMap)
+		participantsByChatIds, errInn := m.enrichingProjection.GetParticipantsBehalfOfGivenParticipants(ctx, participantIdsPortion, events.UserId, consideredUserAdminByChatIds, usersMap, chatsById)
 		if errInn != nil {
 			return errInn
 		}

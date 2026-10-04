@@ -536,18 +536,10 @@ type ChatIdUserId struct {
 	UserId int64
 }
 
-func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx context.Context, behalfs []*ParticipantWithChatIdWithAdmin, consideredUserId int64, usersMap map[int64]*dto.User) (map[ChatIdUserId]*dto.UserViewEnrichedDto, error) {
-	uniqueChatIds := utils.Unique(GetChatIdsFrom(behalfs))
-
+func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx context.Context, behalfs []*ParticipantWithChatIdWithAdmin, consideredUserId int64, consideredUserAdminByChatIds map[int64]bool, usersMap map[int64]*dto.User, chatsById map[int64]*dto.ChatBasic) (map[ChatIdUserId]*dto.UserViewEnrichedDto, error) {
 	res := map[ChatIdUserId]*dto.UserViewEnrichedDto{}
 
-	chatsById, err := m.cp.GetChatsBasic(ctx, m.cp.db, uniqueChatIds)
-	if err != nil {
-		m.lgr.ErrorContext(ctx, "unable to get chats")
-		return nil, err
-	}
-
-	consideredUserWithAdminByChatIds, err := m.makeConsideredUserWithAdminByChatIds(ctx, consideredUserId, uniqueChatIds, usersMap)
+	consideredUserWithAdminByChatIds, err := m.makeConsideredUserWithAdminByChatIds(ctx, consideredUserId, consideredUserAdminByChatIds, usersMap)
 	if err != nil {
 		m.lgr.ErrorContext(ctx, "unable to consideredUserWithAdminByChatIds")
 		return nil, err
@@ -573,12 +565,7 @@ func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx conte
 	return res, nil
 }
 
-func (m *EnrichingProjection) makeConsideredUserWithAdminByChatIds(ctx context.Context, consideredUserId int64, chatIds []int64, usersMap map[int64]*dto.User) (map[int64]*dto.UserWithAdmin, error) {
-	consideredUserAdminByChatIds, err := m.cp.getAreAdminsOfChatIds(ctx, m.cp.db, consideredUserId, chatIds)
-	if err != nil {
-		return nil, err
-	}
-
+func (m *EnrichingProjection) makeConsideredUserWithAdminByChatIds(ctx context.Context, consideredUserId int64, consideredUserAdminByChatIds map[int64]bool, usersMap map[int64]*dto.User) (map[int64]*dto.UserWithAdmin, error) {
 	consideredUserWithAdminByChatIds := map[int64]*dto.UserWithAdmin{}
 	for chatId, admin := range consideredUserAdminByChatIds {
 		u := usersMap[consideredUserId]
