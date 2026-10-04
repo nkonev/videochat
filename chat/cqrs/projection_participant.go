@@ -554,7 +554,7 @@ func (m *EnrichingProjection) GetParticipantsBehalfOfGivenParticipants(ctx conte
 				eu := makeEnrichedUser(cu, p.ParticipantId, p.ChatAdmin, cht.TetATet)
 				res[ChatIdUserId{ChatId: p.ChatId, UserId: p.ParticipantId}] = eu
 			} else {
-				m.lgr.WarnContext(ctx, "unable to consideredUserWithAdminByChatIds", logger.AttributeChatId, p.ChatId)
+				m.lgr.InfoContext(ctx, "unable to consideredUserWithAdminByChatIds", logger.AttributeChatId, p.ChatId)
 			}
 		} else {
 			m.lgr.ErrorContext(ctx, "unable to get chatById", logger.AttributeChatId, p.ChatId)
