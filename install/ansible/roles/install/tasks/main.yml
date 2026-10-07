@@ -17,6 +17,14 @@
   tags:
     - services
 
+- name: Ensure dnf cache is not running
+  ansible.builtin.systemd:
+    name: dnf-makecache.timer
+    state: stopped
+    enabled: false
+  tags:
+    - services
+
 - name: Ensure Rsyslog is not running
   service:
     name: rsyslog
