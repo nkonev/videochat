@@ -914,10 +914,12 @@ func (m *CommonProjection) IsExistsTetATetTwo(ctx context.Context, co db.CommonO
 
 	err := sqlscan.Get(ctx, co, &chatId, `
 		select p1.chat_id from
-		(select chat_id, user_id from chat_participant where user_id = $1) p1
+		(select chat_id, user_id, create_date_time from chat_participant where user_id = $1) p1
 		join (select chat_id, user_id from chat_participant where user_id = $2) p2 on p1.chat_id = p2.chat_id
 		join chat_common ch on ch.id = p1.chat_id
 		where ch.tet_a_tet = true and ch.tet_a_tet_self = false
+		order by p1.create_date_time desc
+		limit 1 -- for broken data in a dump
 		`, participant1, participant2)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
@@ -937,6 +939,8 @@ func (m *CommonProjection) IsExistsTetATetOne(ctx context.Context, co db.CommonO
 		from chat_participant cp 
 		join chat_common ch on ch.id = cp.chat_id 
 		where ch.tet_a_tet = true and ch.tet_a_tet_self = true and cp.user_id = $1
+		order by cp.create_date_time desc
+		limit 1 -- for (potentially) broken data in a dump
 	`, participant1)
 	if errors.Is(err, sql.ErrNoRows) {
 		// there were no rows, but otherwise no error occurred
